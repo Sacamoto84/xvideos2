@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.saved
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,10 +32,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 
 /**
  * Контент экрана «Сохранённое» (загруженные превью-mp4).
@@ -45,6 +49,7 @@ import com.client.xvideos.x.model.ItemsX
 @Composable
 fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 
+    val navigator = LocalNavigator.currentOrThrow
     val list = saved.downloads.list.collectAsStateWithLifecycle().value
 
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
@@ -86,7 +91,11 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
         } else {
             LazyColumn {
                 items(list) { item ->
-                    SavedRow(item = item, onDelete = { pendingDelete = item })
+                    SavedRow(
+                        item = item,
+                        onPlay = { navigator.push(ScreenX_LocalVideoPlayer(saved.downloads.localUrl(item.id))) },
+                        onDelete = { pendingDelete = item },
+                    )
                 }
             }
         }
@@ -94,7 +103,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SavedRow(item: ItemsX, onDelete: () -> Unit) {
+private fun SavedRow(item: ItemsX, onPlay: () -> Unit, onDelete: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -105,6 +114,7 @@ private fun SavedRow(item: ItemsX, onDelete: () -> Unit) {
                 .fillMaxWidth()
                 .aspectRatio(352f / 198f)
                 .background(Color.DarkGray)
+                .clickable { onPlay() }
         ) {
             UrlImage(url = item.previewImage, modifier = Modifier.fillMaxSize())
 
