@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "890737582019",
+    "project_id": "xvideos-38d56",
+    "storage_bucket": "xvideos-38d56.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890737582019:android:8b31f7a4477701114f2776",
+        "android_client_info": {
+          "package_name": "com.client.xvideos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "890737582019-h9j10ahu99koma90j2fhht5qkc3fruv6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.client.xvideos",
+            "certificate_hash": "38e73b84511ef4c12f244d8805322b12c883c890"
+          }
+        },
+        {
+          "client_id": "890737582019-glldc8vfc7rfk6d36coc7d5qfrld5ini.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSbroLxrF9A3ZH89dIgY7p8OKxiMceHXM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "890737582019-glldc8vfc7rfk6d36coc7d5qfrld5ini.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

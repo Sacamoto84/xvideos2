@@ -1,0 +1,321 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+
+    alias(libs.plugins.kotlin.serialization)
+
+    alias(libs.plugins.ksp)
+    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.google.gms.google.services)
+
+    alias(libs.plugins.kotlin.parcelize)
+
+    //https://github.com/skydoves/compose-stability-analyzer
+    alias(libs.plugins.stability.analyzer)
+
+}
+
+
+android {
+    namespace = 'com.client.xvideos'
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = "com.client.xvideos"
+        minSdk = 26
+        targetSdk = 37
+        versionCode = 1
+        versionName = "158.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled = true
+    }
+
+//    signingConfigs {
+//        debug {
+//            storeFile file('D:\\AndroidKey\\MyKey.jks')
+//            //storeFile file('/home/ivan/Android/AndroidKey/MyKey.jks')
+//            storePassword '11111111'
+//            keyAlias 'Sakamoto'
+//            keyPassword '11111111'
+//        }
+//        release {
+//            storeFile file('D:\\AndroidKey\\MyKey.jks')
+//            storePassword '11111111'
+//            keyPassword '11111111'
+//            keyAlias 'Sakamoto'
+//        }
+//    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+            //shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig = signingConfigs.debug
+        }
+        benchmark {
+            initWith release
+            matchingFallbacks = ['release']
+            debuggable = false
+        }
+    }
+    compileOptions {
+
+        coreLibraryDesugaringEnabled = true
+
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    lint {
+        checkReleaseBuilds = false
+    }
+
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add('-XXLanguage:+PropertyParamAnnotationDefaultTargetMode')
+    }
+}
+
+dependencies {
+
+    // Видеоплеер вынесен в отдельный Gradle-модуль (Этап 2 рефакторинга плеера)
+    //implementation project(':core-player')
+
+    implementation(libs.androidx.compose.ui.android)
+
+    implementation(libs.androidx.runtime)
+
+    implementation libs.androidx.compose.runtime
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    // Lottie для Compose
+    implementation libs.lottie.compose
+    // Коррутины
+    //implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
+    //implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+    //implementation("com.github.LottieFiles:dotlottie-android:0.5.0")
+    implementation (libs.lottie)
+
+    implementation(libs.androidx.core.splashscreen)
+
+    implementation libs.androidx.compose.runtime.saved.instance.state
+    //testImplementation(libs.junit)
+    //androidTestImplementation(libs.androidx.junit)
+    //androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    //androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    // SLF4J к Timber мост
+
+    implementation libs.slf4j.android
+
+    implementation libs.lazycolumnscrollbar
+
+    implementation(libs.compose.zoom)
+    implementation libs.compose.extended.gestures
+
+    implementation libs.androidx.activity.ktx
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.hilt.navigation.compose
+
+    //implementation "androidx.core:core:1.16.0" // или последнюю доступную версию
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.activity.compose
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.ui
+    implementation libs.androidx.ui.graphics
+    implementation libs.androidx.ui.tooling.preview
+
+    implementation libs.material
+    implementation libs.compose.theme.adapter
+    implementation libs.androidx.material
+
+    implementation libs.androidx.material3
+
+    implementation libs.androidx.storage
+    implementation libs.volley
+    implementation libs.androidx.animation.core
+    implementation libs.ui
+    implementation libs.androidx.foundation.layout
+    //implementation libs.androidx.junit.ktx
+
+    //implementation libs.firebase.auth
+    //implementation libs.firebase.firestore.ktx
+
+    //testImplementation libs.junit
+    //androidTestImplementation libs.androidx.junit
+    //androidTestImplementation libs.androidx.espresso.core
+    androidTestImplementation platform(libs.androidx.compose.bom)
+    //androidTestImplementation libs.androidx.ui.test.junit4
+    debugImplementation libs.androidx.ui.tooling
+    debugImplementation libs.androidx.ui.test.manifest
+
+    //Json
+    implementation libs.gson
+
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.logging)
+    //implementation("io.ktor:ktor-client-jetty:2.2.3")
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.network)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    //Ебанное логирование
+    //implementation(libs.ktor.client.logging)
+    //implementation libs.slf4j.api
+    //implementation libs.slf4j.simple
+
+    // jsoup HTML parser library @ https://jsoup.org/
+    implementation libs.jsoup
+    implementation libs.timber
+    implementation libs.disk.lru.cache
+
+    //implementation ('com.github.kittinunf.fuse:fuse:1.3.0')
+    //implementation ('com.github.kittinunf.fuse:fuse-android:1.3.0')
+
+    //implementation ("com.github.kernel0x:falcon:1.0.3")
+
+//    implementation(libs.coil.compose)
+//    implementation(libs.coil.network.okhttp)
+//    implementation(libs.coil.compose.core)
+//    //implementation(libs.coil.network.ktor)
+//    implementation(libs.coil.mp)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    implementation(libs.voyager.navigator)
+    implementation(libs.voyager.screenmodel)
+    implementation(libs.voyager.bottom.sheet.navigator)
+    implementation(libs.voyager.tab.navigator)
+    implementation(libs.voyager.transitions)
+    implementation(libs.voyager.hilt)
+    implementation(libs.voyager.livedata)
+
+    // Optional - Included automatically by material, only add when you need
+    // the icons but not the material library (e.g. when using Material3 or a
+    // custom design system based on Foundation)
+    implementation libs.androidx.material.icons.core
+    // Optional - Add full set of material icons
+    implementation libs.androidx.material.icons.extended
+    // Optional - Add window size utils
+    implementation libs.androidx.adaptive
+
+    ///////////////////////////////////////////////////////////////////////////
+    implementation libs.androidx.media3.ui
+    implementation libs.androidx.media3.exoplayer
+    implementation libs.androidx.media3.exoplayer.dash
+    implementation libs.androidx.media3.exoplayer.smoothstreaming
+    implementation libs.androidx.media3.exoplayer.hls
+    implementation libs.androidx.media3.exoplayer.workmanager
+    implementation libs.androidx.media3.common
+    // For loading data using the Cronet network stack
+    //implementation "androidx.media3:media3-datasource-cronet:$media3_version"
+    // For loading data using the OkHttp network stack
+    //implementation "androidx.media3:media3-datasource-okhttp:$media3_version"
+    // For loading data using librtmp
+    //implementation "androidx.media3:media3-datasource-rtmp:$media3_version"
+    implementation libs.androidx.media3.ui.leanback
+    implementation libs.androidx.media3.session
+    implementation libs.androidx.media3.extractor
+    implementation libs.androidx.media3.cast
+    implementation libs.androidx.media3.transformer
+    //implementation "androidx.media3:media3-database:$media3_version"
+    implementation libs.androidx.media3.decoder
+    implementation libs.androidx.media3.datasource
+    implementation libs.androidx.media3.exoplayer.rtsp
+    implementation(libs.androidx.media3.ui.compose)
+    implementation libs.androidx.media3.effect
+    ///////////////////////////////////////////////////////////////////////////
+
+    implementation libs.kotlinx.serialization.json
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.gif)
+    implementation(libs.coil.network.cache.control)
+
+    //implementation('network.chaintech:compose-multiplatform-media-player:1.0.40')
+
+    implementation libs.components.resources
+
+    //implementation "io.sanghun:compose-video:1.2.0"
+
+    //implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
+    // Required only if Facebook login support is required
+    // Find the latest Facebook SDK releases here: https://goo.gl/Ce5L94
+    //implementation 'com.facebook.android:facebook-android-sdk:8.x'
+
+    //implementation platform(libs.firebase.bom)
+    //implementation libs.firebase.analytics
+    // Add the dependency for the Firebase Authentication library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    //implementation(libs.google.firebase.auth)
+
+    // Also add the dependency for the Google Play services library and specify its version
+    //implementation(libs.play.services.auth)
+
+    //implementation ("androidx.credentials:credentials")
+    //implementation ("androidx.credentials:credentials-play-services-auth")
+    //implementation ("com.google.android.libraries.identity.googleid:googleid")
+
+    implementation(libs.core)
+
+//    implementation("org.seleniumhq.selenium:selenium-java:4.15.0")
+//    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.15.0")
+
+
+//    // For AppWidgets support
+//    implementation "androidx.glance:glance-appwidget:1.1.1"
+//
+//    // For Wear-Tiles support
+//    implementation "androidx.glance:glance-wear-tiles:1.0.0-alpha05"
+
+    implementation(libs.material3)
+
+    implementation(libs.androidx.paging.runtime)   // core
+    implementation(libs.androidx.paging.compose)   // compose
+
+    //implementation("network.chaintech:sdp-ssp-compose-multiplatform:1.0.6")
+
+    //https://github.com/usuiat/Zoomable
+    implementation libs.zoomable
+
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.image.loader)
+
+    //https://github.com/amitshekhariitbhu/PRDownloader
+    //implementation("com.github.amitshekhariitbhu:PRDownloader:1.0.2")
+
+    implementation(libs.warden)
+
+    implementation(libs.accompanist.systemuicontroller)
+
+    //implementation("androidx.compose.runtime:runtime-tracing:1.8.1")
+    //implementation("androidx.compose.runtime:runtime-tracing")
+
+    implementation libs.kotlinx.collections.immutable
+
+    //implementation(libs.androidx.benchmark.macro.junit4)
+    //implementation(libs.androidx.junit)
+    //implementation(libs.androidx.uiautomator)
+
+
+
+    //https://github.com/ioannisa/KSafe
+    //implementation(libs.ksafe)
+    //implementation(libs.ksafe.compose)
+
+}
