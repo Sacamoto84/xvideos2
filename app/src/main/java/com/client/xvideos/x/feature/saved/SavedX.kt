@@ -14,6 +14,9 @@ class SavedX @Inject constructor(
 
     val favorites = SavedX_Favorites(scope)
 
+    /** «Сохранённое» — загрузки превью-mp4 (зелёный прогресс + снекбар, как в R). */
+    val downloads = SavedX_Downloads(scope)
+
     //val collection = SavedL_Collection(snackBarEvent)
 
     //val albums = SavedL_Albums(snackBarEvent, db, scope)

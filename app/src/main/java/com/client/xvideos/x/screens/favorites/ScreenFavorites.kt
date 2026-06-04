@@ -23,6 +23,10 @@ import androidx.compose.material.icons.filled.ArrowCircleDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +39,7 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.profile.ScreenProfile
@@ -52,7 +57,20 @@ class ScreenFavorites() : Screen {
 
         val favorites = vm.favorites
 
-        Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
+        // Подтверждение удаления из избранного (диалог).
+        var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
+        pendingDelete?.let { item ->
+            ConfirmDeleteFavoriteDialog(
+                item = item,
+                onConfirm = {
+                    vm.removeFavorite(item)
+                    pendingDelete = null
+                },
+                onDismiss = { pendingDelete = null },
+            )
+        }
+
+        Scaffold(modifier = Modifier.fillMaxSize(), backgroundColor = ThemeL.grey6, topBar = {
 
             Column {
 
@@ -60,7 +78,7 @@ class ScreenFavorites() : Screen {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.Black),
+                        .background(ThemeL.grey6),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -157,11 +175,11 @@ class ScreenFavorites() : Screen {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.Black)
+                                .background(ThemeL.grey6)
                         ) {
 
 
-                            IconButton(onClick = { vm.removeFavorite(it) }) {
+                            IconButton(onClick = { pendingDelete = it }) {
                                 Icon(
                                     imageVector = Icons.Filled.Delete,
                                     contentDescription = null,
@@ -183,7 +201,7 @@ class ScreenFavorites() : Screen {
                                 )
                             }
 
-                            IconButton(onClick = { }) {
+                            IconButton(onClick = { vm.download(it) }) {
                                 Icon(
                                     imageVector = Icons.Filled.ArrowCircleDown,
                                     contentDescription = null,

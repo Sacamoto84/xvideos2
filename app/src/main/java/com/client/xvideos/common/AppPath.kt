@@ -37,6 +37,7 @@ object AppPath {
 
     //--- X ---
     val x_favorites : String = "${main}/${Folder.X.value}/Favorites"
+    val x_cache_download : String = "${main}/${Folder.X.value}/Download"
 
     //--- R ---
     /**
@@ -102,6 +103,7 @@ object AppPath {
         File(l_collection).mkdirs()
 
         File(x_favorites).mkdirs()
+        File(x_cache_download).mkdirs()
 
     }
 

@@ -14,14 +14,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
@@ -35,6 +38,8 @@ import com.client.xvideos.x.feature.country.ComposeCountry
 import com.client.xvideos.x.screens.dashboards.DashboardsPaginatedListScreen
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
+import com.client.xvideos.x.screens.saved.X_SavedContent
+import com.redgifs.common.downloader.ui.DownloadIndicator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -45,9 +50,10 @@ import kotlinx.coroutines.launch
  *   `Dashboards` и `Savable`.
  * - Второй ряд над ним зависит от выбранного таба:
  *     - `Dashboards` → [DashboardControlsRow]: кнопка страны + выбор текущей страницы;
- *     - `Savable`    → под-[TabRow] (уровень [ThemeRed.colorTabLevel1]) с единственным
- *                      пока пунктом `Favorites`.
- * - Тело переключается между пейджером дашбордов и инлайн-контентом «Избранного».
+ *     - `Savable`    → под-[TabRow] (уровень [ThemeRed.colorTabLevel1]) с под-вкладками
+ *                      `Favorites` и `Сохранённое`.
+ * - Самым нижним элементом панели идёт зелёный [DownloadIndicator] (как в R-root).
+ * - Тело переключается между пейджером дашбордов, «Избранным» и «Сохранённым».
  */
 class ScreenXDashBoards : Screen {
 
@@ -60,6 +66,9 @@ class ScreenXDashBoards : Screen {
 
         // Стабильный экземпляр «Избранного» для инлайн-рендера (как object-табы saved в R/L).
         val favoritesScreen = remember { ScreenFavorites() }
+
+        // Прогресс загрузки для зелёного индикатора снизу (как в R).
+        val downloadPercent by vm.saved.downloads.percent.collectAsStateWithLifecycle()
 
         Scaffold(
             bottomBar = {
@@ -84,6 +93,9 @@ class ScreenXDashBoards : Screen {
                         onChangeState = { vm.mainTab = it },
                         containerColor = ThemeRed.colorTabLevel0,
                     )
+
+                    // Зелёный индикатор загрузки (как в R-root).
+                    DownloadIndicator(downloadPercent)
                 }
             },
             modifier = Modifier.fillMaxSize(),
@@ -92,7 +104,10 @@ class ScreenXDashBoards : Screen {
 
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
                 when (vm.mainTab) {
-                    SAVABLE -> favoritesScreen.Content()
+                    SAVABLE -> when (vm.savedTab) {
+                        SAVED_DOWNLOADS -> X_SavedContent(vm.saved)
+                        else -> favoritesScreen.Content()
+                    }
                     else -> HorizontalPager(
                         state = vm.pagerState,
                         modifier = Modifier.fillMaxSize(),
@@ -114,8 +129,10 @@ class ScreenXDashBoards : Screen {
     }
 
     companion object {
-        private const val DASHBOARDS = 0
         private const val SAVABLE = 1
+
+        // Под-табы раздела Savable.
+        private const val SAVED_DOWNLOADS = 1
 
         /** Иконки главного таб-ряда: дашборды + сохранённое. */
         private val mainTabs: List<ImageVector> = listOf(
@@ -123,9 +140,10 @@ class ScreenXDashBoards : Screen {
             Icons.Outlined.BookmarkBorder,
         )
 
-        /** Под-табы раздела Savable (пока только «Избранное»). */
+        /** Под-табы раздела Savable: «Избранное» + «Сохранённое». */
         private val savedTabs: List<ImageVector> = listOf(
             Icons.Outlined.FavoriteBorder,
+            Icons.Outlined.Save,
         )
     }
 }

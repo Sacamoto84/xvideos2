@@ -245,8 +245,11 @@ private fun DropMenu(cell: ItemsX, vm: ScreenXDashBoardsScreenModel) {
             )
 
             DropdownMenuItem(
-                text = { Text("TODO") },
-                onClick = { /* Handle settings! */ },
+                text = { Text("Сохранить") },
+                onClick = {
+                    expanded = false
+                    vm.download(cell)
+                },
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Save,

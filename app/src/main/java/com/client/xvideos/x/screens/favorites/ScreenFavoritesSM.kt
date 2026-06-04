@@ -24,6 +24,9 @@ class ScreenFavoritesSM @Inject constructor(
 
     fun removeFavorite(item: ItemsX) = screenModelScope.launch { saved.favorites.remove(item) }
 
+    /** Скачать (сохранить) видео в раздел «Сохранённое». */
+    fun download(item: ItemsX) = saved.downloads.download(item)
+
 }
 
 
