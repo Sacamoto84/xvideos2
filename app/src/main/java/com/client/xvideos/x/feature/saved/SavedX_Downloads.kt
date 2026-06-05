@@ -55,6 +55,15 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     fun localUrl(id: Long): String = Uri.fromFile(File(dir, "$id.mp4")).toString()
 
     /**
+     * Абсолютный путь к локальной картинке превью (`<id>.jpg`), если она скачана, иначе null.
+     * UrlImage сам грузит локальный файл, если строка не начинается с `https://`.
+     */
+    fun localPosterPath(id: Long): String? {
+        val f = File(dir, "$id.jpg")
+        return if (f.exists()) f.absolutePath else null
+    }
+
+    /**
      * Скачать оригинальное видео в наилучшем качестве (`videoUrlHigh`, прямой mp4)
      * в [AppPath.x_cache_download].
      *

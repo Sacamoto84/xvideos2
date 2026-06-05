@@ -1,16 +1,23 @@
 package com.client.xvideos.x.screens.favorites
 
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.x.model.ItemsX
 
 /**
  * Диалог подтверждения удаления видео из «Избранного».
  *
- * Тёмный стиль под фон раздела (как у L, 0xFF262626).
+ * Для ориентира показываем миниатюру превью (как в L), а не текст названия.
  */
 @Composable
 fun ConfirmDeleteFavoriteDialog(
@@ -20,13 +27,16 @@ fun ConfirmDeleteFavoriteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Удалить из избранного?", color = Color.White) },
-        text = {
-            Text(
-                "Удалить «${item.title}» из избранного?",
-                color = Color(0xFFCCCCCC),
+        icon = {
+            UrlImage(
+                url = item.previewImage,
+                modifier = Modifier
+                    .width(160.dp)
+                    .aspectRatio(352f / 198f)
+                    .clip(RoundedCornerShape(8.dp))
             )
         },
+        title = { Text("Удалить из избранного?", color = Color.White) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text("Удалить", color = Color(0xFFFF6B6B))

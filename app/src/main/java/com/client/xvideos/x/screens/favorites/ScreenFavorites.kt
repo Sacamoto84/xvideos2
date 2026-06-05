@@ -74,6 +74,10 @@ class ScreenFavorites() : Screen {
             localUrlOf = { item ->
                 if (item.id in downloadedIds) vm.saved.downloads.localUrl(item.id) else null
             },
+            posterUrlOf = { item ->
+                if (item.id in downloadedIds) (vm.saved.downloads.localPosterPath(item.id) ?: item.previewImage)
+                else item.previewImage
+            },
             onProfile = { navigator.push(ScreenProfile()) },
             onDelete = { vm.removeFavorite(it) },
             onDownload = { vm.download(it) },
@@ -92,6 +96,7 @@ class ScreenFavorites() : Screen {
 private fun FavoritesContent(
     favorites: List<ItemsX>,
     localUrlOf: (ItemsX) -> String?,
+    posterUrlOf: (ItemsX) -> String,
     onProfile: () -> Unit,
     onDelete: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
@@ -149,6 +154,7 @@ private fun FavoritesContent(
                 FavoriteRow(
                     item = item,
                     localUrl = localUrlOf(item),
+                    posterUrl = posterUrlOf(item),
                     onDelete = { pendingDelete = item },
                     onDownload = { onDownload(item) },
                     onPlayLocal = onPlayLocal,
@@ -162,6 +168,7 @@ private fun FavoritesContent(
 private fun FavoriteRow(
     item: ItemsX,
     localUrl: String?,
+    posterUrl: String,
     onDelete: () -> Unit,
     onDownload: () -> Unit,
     onPlayLocal: (String) -> Unit,
@@ -169,8 +176,8 @@ private fun FavoriteRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp)
-            .padding(horizontal = 4.dp)
+            .padding(vertical = 1.dp)
+            .padding(horizontal = 2.dp)
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, Color.DarkGray, RoundedCornerShape(8.dp))
     ) {
@@ -184,7 +191,7 @@ private fun FavoriteRow(
                 // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.
                 localUrl != null -> {
                     UrlImage(
-                        item.previewImage,
+                        posterUrl,
                         modifier = Modifier
                             .fillMaxSize()
                             .clickable { onPlayLocal(localUrl) }
@@ -194,7 +201,7 @@ private fun FavoriteRow(
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .padding(6.dp)
-                            .background(Color(0x99000000), RoundedCornerShape(50))
+                            //.background(Color(0x99000000), RoundedCornerShape(50))
                             .padding(4.dp)
                     ) {
                         IconSave18()
@@ -302,6 +309,7 @@ private fun ScreenFavoritesPreview() {
             ),
         ),
         localUrlOf = { null },
+        posterUrlOf = { it.previewImage },
         onProfile = {},
         onDelete = {},
         onDownload = {},

@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
@@ -27,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,7 +59,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     pendingDelete?.let { item ->
         ConfirmDeleteVideoDialog(
             title = "Удалить из сохранённого?",
-            body = "Удалить «${item.title}» из сохранённого?",
+            imageUrl = saved.downloads.localPosterPath(item.id) ?: item.previewImage,
             onConfirm = {
                 saved.downloads.delete(item)
                 pendingDelete = null
@@ -91,8 +94,12 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
         } else {
             LazyColumn {
                 items(list) { item ->
+                    val posterUrl = remember(item.id) {
+                        saved.downloads.localPosterPath(item.id) ?: item.previewImage
+                    }
                     SavedRow(
                         item = item,
+                        posterUrl = posterUrl,
                         onPlay = { navigator.push(ScreenX_LocalVideoPlayer(saved.downloads.localUrl(item.id))) },
                         onDelete = { pendingDelete = item },
                     )
@@ -103,7 +110,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SavedRow(item: ItemsX, onPlay: () -> Unit, onDelete: () -> Unit) {
+private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDelete: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -116,7 +123,7 @@ private fun SavedRow(item: ItemsX, onPlay: () -> Unit, onDelete: () -> Unit) {
                 .background(Color.DarkGray)
                 .clickable { onPlay() }
         ) {
-            UrlImage(url = item.previewImage, modifier = Modifier.fillMaxSize())
+            UrlImage(url = posterUrl, modifier = Modifier.fillMaxSize())
 
             // Продолжительность видео в правом верхнем углу.
             Text(
@@ -160,14 +167,22 @@ private fun SavedRow(item: ItemsX, onPlay: () -> Unit, onDelete: () -> Unit) {
 @Composable
 fun ConfirmDeleteVideoDialog(
     title: String,
-    body: String,
+    imageUrl: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = {
+            UrlImage(
+                url = imageUrl,
+                modifier = Modifier
+                    .width(160.dp)
+                    .aspectRatio(352f / 198f)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        },
         title = { Text(title, color = Color.White) },
-        text = { Text(body, color = Color(0xFFCCCCCC)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text("Удалить", color = Color(0xFFFF6B6B))
