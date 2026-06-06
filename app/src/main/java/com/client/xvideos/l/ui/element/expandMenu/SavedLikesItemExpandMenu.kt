@@ -5,16 +5,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.RemoveCircleOutline
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,17 +19,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.theme.ThemeL.ExpandMenu
 import com.client.xvideos.l.theme.ThemeL.ExpandMenu.backgroundColor
-import com.client.xvideos.l.theme.ThemeL.ExpandMenu.style
-import com.client.xvideos.l.theme.ThemeL.ExpandMenu.tintColor
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.ui.element.expandMenu.atom.DropdownMenuItem_Delete
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_AddCollection
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Delete
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
+import com.client.xvideos.ui.theme.XvideosTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,59 +83,24 @@ fun SavedLikesItemExpandMenu(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+@Preview(showBackground = true, backgroundColor = 0xFF303030)
 @Composable
-fun DropdownMenuItem_AddCollection(item: PicsDetails? = null, savedL: SavedL? = null, idAlbum: String = "", onDismiss: () -> Unit){
-    DropdownMenuItem(
-        leadingIcon = {
-            Icon(
-                Icons.Default.AddCircleOutline,
-                contentDescription = "",
-                tint = tintColor
+private fun SavedLikesItemExpandMenuPreview() {
+    XvideosTheme(darkTheme = true) {
+        SavedLikesItemExpandMenu(
+            item = PicsDetails(
+                height = 1080,
+                width = 1920,
+                is_animated = false,
+                url_to_original = null,
+                url_to_video = null,
+                album = "preview-album",
+                thumbnails = emptyList(),
             )
-        },
-        text = { Text("Add to Collection", style = style) },
-        onClick = {
-            if (item == null || savedL == null) return@DropdownMenuItem
-            // Update item with album info if provided
-            val itemWithAlbum = if (idAlbum.isNotEmpty()) {
-                item.copy(album = idAlbum)
-            } else {
-                item
-            }
-            savedL.collection.beginAddToCollection(itemWithAlbum)
-            onDismiss.invoke()
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DropdownMenuItem_RemoveFromCollection(item: PicsDetails? = null, onRefresh: (PicsDetails) -> Unit = {}, savedL: SavedL? = null, onDismiss: () -> Unit){
-
-    val selectedCollection = savedL?.collection?.currentCollectionName
-
-    DropdownMenuItem(
-        leadingIcon = {
-            Icon(
-                Icons.Default.RemoveCircleOutline,
-                contentDescription = "",
-                tint = tintColor
-            )
-        },
-        text = { Text("Remove from Collection", style = style) },
-        onClick = {
-            if (item == null || savedL == null) return@DropdownMenuItem
-            if (selectedCollection == null) {
-                onDismiss.invoke()
-                return@DropdownMenuItem
-            }
-            savedL.collection.remove(item, selectedCollection)
-            onRefresh(item)
-
-            onDismiss.invoke()
-        }
-    )
+        )
+    }
 }
 //@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 //@Composable
@@ -191,61 +150,3 @@ fun DropdownMenuItem_RemoveFromCollection(item: PicsDetails? = null, onRefresh: 
 //        }, contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
 //    )
 //}
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun DropdownMenuItem_AddCollection(item: GifsInfo? = null, savedRed: SavedRed, onDismiss: () -> Unit){
-//    DropdownMenuItem(
-//        leadingIcon = {
-//            Icon(
-//                Icons.Default.AddCircleOutline,
-//                contentDescription = "",
-//                tint = tintColor
-//            )
-//        },
-//        text = { Text("Add to Collection", style = style) },
-//        onClick = {
-//            if (item == null) return@DropdownMenuItem
-//            savedRed.collections.collectionItemGifInfo = item
-//            savedRed.collections.collectionVisibleDialog = true
-//            onDismiss.invoke()
-//        }, contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-//    )
-//}
-//
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun DropdownMenuItem_RemoveFromCollection(item: GifsInfo? = null, onRefresh: () -> Unit, savedRed: SavedRed, onDismiss: () -> Unit){
-//
-//    val selectedCollection = savedRed.collections.selectedCollection.collectAsStateWithLifecycle().value
-//
-//    DropdownMenuItem(
-//        leadingIcon = {
-//            Icon(
-//                Icons.Default.RemoveCircleOutline,
-//                contentDescription = "",
-//                tint = tintColor
-//            )
-//        },
-//        text = { Text("Remove from Collection", style = style) },
-//        onClick = {
-//            if (item == null) return@DropdownMenuItem
-//            if (selectedCollection == null) {
-//                onDismiss.invoke()
-//                return@DropdownMenuItem
-//            }
-//            savedRed.collections.deleteItemFromCollection(item.id, selectedCollection)
-//            onRefresh.invoke()
-//
-//            onDismiss.invoke()
-//        }, contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-//    )
-//}
-
-
-
-
-
-
-

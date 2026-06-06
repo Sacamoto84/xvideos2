@@ -284,6 +284,18 @@ private fun DurationOverlay(duration: String) {
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
+private fun DurationOverlayPreview() {
+    Box(
+        modifier = Modifier
+            .size(width = 96.dp, height = 32.dp)
+            .background(Color(0xFF3A3A3A))
+    ) {
+        DurationOverlay("12:34")
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
 private fun ScreenFavoritesPreview() {
     FavoritesContent(
         favorites = listOf(

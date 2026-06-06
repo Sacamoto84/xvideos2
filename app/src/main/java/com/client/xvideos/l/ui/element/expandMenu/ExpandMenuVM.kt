@@ -42,8 +42,6 @@ class ExpandMenuViewModel @Inject constructor(
 ) : ViewModel() {
 
 
-
-
     @Composable
     fun ExpandMenu(type: ExpandMenuType, item: PicsDetails, idAlbum: String, isCollection: Boolean = false) {
         when (type) {
