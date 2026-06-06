@@ -2,16 +2,13 @@ package com.client.xvideos.l.ui.screens.explorer
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Topic
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,11 +23,8 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
-import cafe.adriel.voyager.navigator.tab.Tab
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.screenRoot.LocalRootScreenModel
 import com.client.xvideos.l.ui.screens.LLoginContent
 import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.L_ScreenAlbumSearch
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.L_ScreenAlbumTopHits
@@ -40,6 +34,7 @@ import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddColumn
 import com.client.xvideos.r.ui.explorer.top.TabRow
 import com.client.xvideos.r.ui.ui.atom.TabBarPoints
+import com.client.xvideos.screenRoot.LocalRootScreenModel
 import com.redgifs.common.downloader.ui.DownloadIndicator
 import dagger.Binds
 import dagger.Module
@@ -48,17 +43,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
-
-@Composable
-private fun RowScope.TabNavigationItem(tab: Tab) {
-    val tabNavigator = LocalTabNavigator.current
-
-    BottomNavigationItem(
-        selected = tabNavigator.current.key == tab.key,
-        onClick = { tabNavigator.current = tab },
-        icon = { Icon(painter = tab.options.icon!!, contentDescription = tab.options.title) }
-    )
-}
 
 class L_ScreenExplorer : Screen {
 
@@ -71,6 +55,7 @@ class L_ScreenExplorer : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<L_ScreenExplorerSM>()
+
         val savedL = vm.savedL
         val rootVm = LocalRootScreenModel.current
 
@@ -84,7 +69,8 @@ class L_ScreenExplorer : Screen {
                 initialLogin = savedLogin,
                 initialPassword = savedPassword,
                 onSaved = {},
-                onBack = { navigator.pop() }
+                onBack = { navigator.pop() },
+                onSkip = { }
             )
             return
         }

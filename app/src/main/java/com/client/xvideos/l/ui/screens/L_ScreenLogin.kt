@@ -23,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -58,29 +59,15 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.theme.ThemeL
 
-class L_ScreenLogin : Screen {
-
-    override val key: ScreenKey = uniqueScreenKey
-
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        LLoginContent(
-            initialLogin = Settings.l_login.field.value,
-            initialPassword = Settings.l_pass.field.value,
-            onSaved = { navigator.pop() },
-            onBack = { navigator.pop() }
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LLoginContent(
     initialLogin: String = "",
     initialPassword: String = "",
     onSaved: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onSkip: () -> Unit
+
 ) {
     var login by remember(initialLogin) { mutableStateOf(initialLogin) }
     var password by remember(initialPassword) { mutableStateOf(initialPassword) }
@@ -240,6 +227,21 @@ fun LLoginContent(
                 fontFamily = ThemeL.fontFamilyKarla
             )
         }
+
+        OutlinedButton(
+            onClick = onSkip,
+            modifier = Modifier.fillMaxWidth().height(64.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeL.b0),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                "Пропустить",
+                fontSize = 22.sp,
+                fontFamily = ThemeL.fontFamilyKarla
+            )
+        }
+
+
     }
 }
 
@@ -248,6 +250,7 @@ fun LLoginContent(
 fun LLoginContentPreview() {
     LLoginContent(
         onSaved = {},
-        onBack = {}
+        onBack = {},
+        onSkip = {}
     )
 }
