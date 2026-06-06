@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -25,7 +27,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowCircleDown
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,9 +56,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.icons.IconSave18
+import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.profile.ScreenProfile
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import com.composables.core.HorizontalSeparator
@@ -144,11 +151,11 @@ private fun FavoritesContent(
             }
             HorizontalSeparator(color = Color(0xFF9E9E9E))
         }
-    }) { padding ->
+    }) { _ ->
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            modifier = Modifier.padding(padding)
+            modifier = Modifier//.padding(padding)
         ) {
             items(favorites) { item ->
                 FavoriteRow(
@@ -173,21 +180,20 @@ private fun FavoriteRow(
     onDownload: () -> Unit,
     onPlayLocal: (String) -> Unit,
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 1.dp)
-            .padding(horizontal = 2.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Color.DarkGray, RoundedCornerShape(8.dp))
+            .padding(horizontal = 1.dp)
+            //.clip(RoundedCornerShape(8.dp))
+            //.border(1.dp, Color.DarkGray, RoundedCornerShape(8.dp))
+            .aspectRatio(352f / 198f)
+            .background(Color.DarkGray)
+
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(352f / 198f)
-                .background(Color.DarkGray)
-        ) {
+
             when {
+
                 // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.
                 localUrl != null -> {
                     UrlImage(
@@ -197,60 +203,109 @@ private fun FavoriteRow(
                             .clickable { onPlayLocal(localUrl) }
                     )
                     // Значок «скачано» (как в R — IconSave18).
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(6.dp)
+                        //.align(Alignment.TopStart)
+                        //.padding(6.dp)
                             //.background(Color(0x99000000), RoundedCornerShape(50))
-                            .padding(4.dp)
+                        .padding(4.dp)
                     ) {
                         IconSave18()
                     }
                 }
+
                 // В preview видео-компонент не поднимаем (нет контекста/сети) — только оверлей.
-                LocalInspectionMode.current -> DurationOverlay(item.duration)
+                //LocalInspectionMode.current -> DurationOverlay(item.duration)
                 // Не скачано: обычный сетевой превью-компонент.
                 else -> UrlVideoImageAndLongClickX(item, onLongClick = {}, onDoubleClick = {})
             }
+
+
+        Row(Modifier.align(Alignment.TopEnd)) {
+            FavoriteActionsExpandMenu(
+                onDelete = onDelete,
+                onDownload = onDownload,
+            )
         }
 
-        Row(
+        Row(Modifier.align(Alignment.BottomEnd).padding(end = 8.dp)) { DurationOverlay(item.duration) }
+
+
+
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FavoriteActionsExpandMenu(
+    onDelete: () -> Unit,
+    onDownload: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        IconButton(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(ThemeL.grey6), verticalAlignment = Alignment.CenterVertically
+                .size(48.dp)
+                .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
+            onClick = {}
         ) {
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+            Icon(
+                Icons.Default.MoreVert,
+                contentDescription = "Действия",
+                tint = Color.Black,
+                modifier = Modifier
+                    .size(24.dp)
+                    .offset(0.5.dp, 0.5.dp)
+            )
+            Icon(
+                Icons.Default.MoreVert,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
 
-            IconButton(onClick = { }) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.width(IntrinsicSize.Min),
+            containerColor = ThemeL.ExpandMenu.backgroundColor
+        ) {
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        Icons.Filled.ArrowCircleDown,
+                        contentDescription = null,
+                        tint = ThemeL.ExpandMenu.tintColor
+                    )
+                },
+                text = { Text("Скачать", style = ThemeL.ExpandMenu.style) },
+                onClick = {
+                    onDownload()
+                    expanded = false
+                },
+                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+            )
 
-            IconButton(onClick = onDownload) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowCircleDown,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-
-            Box(modifier = Modifier.padding(end = 8.dp)) {
-                DurationOverlay(item.duration)
-            }
-
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = ThemeL.ExpandMenu.tintColor
+                    )
+                },
+                text = { Text("Удалить", style = ThemeL.ExpandMenu.style) },
+                onClick = {
+                    onDelete()
+                    expanded = false
+                },
+                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+            )
         }
     }
 }
@@ -260,7 +315,7 @@ private fun FavoriteRow(
 private fun DurationOverlay(duration: String) {
     val offsetY = (-3).dp
     val text = duration.dropLast(1)
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier) {
         Text(
             text = text,
             modifier = Modifier

@@ -1,4 +1,4 @@
-package com.client.xvideos.screens.dashboards
+package com.client.xvideos.x.screens.dashboards.bottomBar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
