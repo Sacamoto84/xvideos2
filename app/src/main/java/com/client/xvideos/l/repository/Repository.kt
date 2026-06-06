@@ -103,14 +103,15 @@ class Repository(
             authMutex.withLock {
                 val username = Settings.l_login.field.value.trim()
                 val password = Settings.l_pass.field.value
-                if (username.isBlank() || password.isBlank()) {
-                    return Result.failure(IllegalStateException("Luscious credentials are not configured"))
-                }
-                handler.setCredentials(username, password)
-                if (!handler.loggedIn) {
-                    val loggedIn = handler.login()
-                    if (!loggedIn) {
-                        return Result.failure(IllegalStateException("Luscious login failed"))
+                // Анонимный режим: без логина/пароля работаем без авторизации
+                // (Luscious отдаёт меньше альбомов). С кредами — авторизуемся.
+                if (username.isNotBlank() && password.isNotBlank()) {
+                    handler.setCredentials(username, password)
+                    if (!handler.loggedIn) {
+                        val loggedIn = handler.login()
+                        if (!loggedIn) {
+                            return Result.failure(IllegalStateException("Luscious login failed"))
+                        }
                     }
                 }
             }

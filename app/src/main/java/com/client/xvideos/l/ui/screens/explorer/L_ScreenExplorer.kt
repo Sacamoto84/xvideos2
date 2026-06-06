@@ -24,6 +24,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.l.LSession
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.screens.LLoginContent
 import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.L_ScreenAlbumSearch
@@ -64,13 +65,13 @@ class L_ScreenExplorer : Screen {
         val savedLogin = Settings.l_login.field.collectAsStateWithLifecycle().value
         val savedPassword = Settings.l_pass.field.collectAsStateWithLifecycle().value
 
-        if (savedLogin.isBlank() || savedPassword.isBlank()) {
+        if ((savedLogin.isBlank() || savedPassword.isBlank()) && !LSession.loginSkipped) {
             LLoginContent(
                 initialLogin = savedLogin,
                 initialPassword = savedPassword,
                 onSaved = {},
                 onBack = { navigator.pop() },
-                onSkip = { }
+                onSkip = { LSession.loginSkipped = true }
             )
             return
         }
