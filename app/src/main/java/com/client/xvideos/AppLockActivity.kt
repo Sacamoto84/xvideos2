@@ -50,6 +50,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockRepository
@@ -110,11 +111,9 @@ internal fun AppLockScreen(
         mutableLongStateOf(AppLockRepository.lockoutRemainingMillis(context))
     }
     val focusManager = LocalFocusManager.current
-    val isLockedOut = lockoutRemainingMs > 0L
-    val lockoutSeconds = ceil(lockoutRemainingMs / 1000.0).toInt()
 
     // Пока действует блокировка — обновляем обратный отсчёт раз в полсекунды.
-    LaunchedEffect(isLockedOut) {
+    LaunchedEffect(lockoutRemainingMs > 0L) {
         while (AppLockRepository.lockoutRemainingMillis(context) > 0L) {
             lockoutRemainingMs = AppLockRepository.lockoutRemainingMillis(context)
             delay(500)
@@ -144,6 +143,33 @@ internal fun AppLockScreen(
             }
         }
     }
+
+    AppLockScreenContent(
+        password = password,
+        onPasswordChange = {
+            password = it
+            errorText = null
+        },
+        showPassword = showPassword,
+        onShowPasswordToggle = { showPassword = !showPassword },
+        errorText = errorText,
+        lockoutRemainingMs = lockoutRemainingMs,
+        onSubmit = ::submit
+    )
+}
+
+@Composable
+private fun AppLockScreenContent(
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    showPassword: Boolean,
+    onShowPasswordToggle: () -> Unit,
+    errorText: String?,
+    lockoutRemainingMs: Long,
+    onSubmit: () -> Unit
+) {
+    val isLockedOut = lockoutRemainingMs > 0L
+    val lockoutSeconds = ceil(lockoutRemainingMs / 1000.0).toInt()
 
     Box(
         modifier = Modifier
@@ -184,10 +210,7 @@ internal fun AppLockScreen(
             Spacer(Modifier.height(22.dp))
             OutlinedTextField(
                 value = password,
-                onValueChange = {
-                    password = it
-                    errorText = null
-                },
+                onValueChange = onPasswordChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !isLockedOut,
@@ -198,10 +221,10 @@ internal fun AppLockScreen(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done
                 ),
-                keyboardActions = KeyboardActions(onDone = { if (password.isNotEmpty() && !isLockedOut) submit() }),
+                keyboardActions = KeyboardActions(onDone = { if (password.isNotEmpty() && !isLockedOut) onSubmit() }),
                 textStyle = ThemeL.Type.body.copy(color = Color.White),
                 trailingIcon = {
-                    IconButton(onClick = { showPassword = !showPassword }) {
+                    IconButton(onClick = onShowPasswordToggle) {
                         Icon(
                             imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                             contentDescription = null,
@@ -210,15 +233,18 @@ internal fun AppLockScreen(
                     }
                 },
                 supportingText = {
-                    Text(
-                        text = if (isLockedOut) "Повторите через $lockoutSeconds с" else (errorText ?: ""),
-                        color = Color(0xFFFF7A7A)
-                    )
+                    if (errorText != null || isLockedOut) {
+                        Text(
+                            text = if (isLockedOut) "Повторите через $lockoutSeconds с" else (errorText
+                                ?: ""),
+                            color = Color(0xFFFF7A7A)
+                        )
+                    }
                 }
             )
             Spacer(Modifier.height(16.dp))
             Button(
-                onClick = { submit() },
+                onClick = onSubmit,
                 enabled = password.isNotBlank() && !isLockedOut,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -232,5 +258,53 @@ internal fun AppLockScreen(
                 style = ThemeL.Type.caption.copy(color = Color.White)
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AppLockScreenPreview() {
+    XvideosTheme(darkTheme = true) {
+        AppLockScreenContent(
+            password = "123",
+            onPasswordChange = {},
+            showPassword = false,
+            onShowPasswordToggle = {},
+            errorText = null,
+            lockoutRemainingMs = 0L,
+            onSubmit = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AppLockScreenErrorPreview() {
+    XvideosTheme(darkTheme = true) {
+        AppLockScreenContent(
+            password = "123",
+            onPasswordChange = {},
+            showPassword = true,
+            onShowPasswordToggle = {},
+            errorText = "Неверный код доступа",
+            lockoutRemainingMs = 0L,
+            onSubmit = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AppLockScreenLockedOutPreview() {
+    XvideosTheme(darkTheme = true) {
+        AppLockScreenContent(
+            password = "",
+            onPasswordChange = {},
+            showPassword = false,
+            onShowPasswordToggle = {},
+            errorText = null,
+            lockoutRemainingMs = 45000L,
+            onSubmit = {}
+        )
     }
 }

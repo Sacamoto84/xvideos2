@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,6 +37,7 @@ import com.client.xvideos.ui.theme.PornHubOrange
 import com.client.xvideos.ui.theme.grayColor
 import com.client.xvideos.urlStart
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
+import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.composables.core.Menu
 import com.composables.core.MenuButton
 import com.composables.core.MenuContent
@@ -46,6 +48,7 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import timber.log.Timber
+
 
 // Data class для представления страны
 // Страна: Австралия, Ссылка: /change-country/au, Класс флага: flag-au
@@ -65,7 +68,6 @@ private val countries: List<Country> by lazy { parserCountry() }
  */
 object CountryState {
     var current: String by mutableStateOf("❓")    // Текущая страна
-    var updateTrigger: Int by mutableIntStateOf(0) // Инкремент при каждой смене страны
 }
 
 @Composable
@@ -79,25 +81,15 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
 
     val scope = rememberCoroutineScope()
 
-    Box(
-        Modifier
-            //.padding(horizontal = (0.5).dp)
-            .height(48.dp)
-            .width(48.dp)
-            .then(modifier)
-    ) {
+    Box(  Modifier.size(48.dp).then(modifier) )
+    {
 
-        Menu(
-            modifier = Modifier,
-            state = state
-        ) {
+        Menu( modifier = Modifier, state = state )
+        {
 
             //Сама кнопка для вызова диалога
-            MenuButton(
-                Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF151515))
-            ) {
+            MenuButton( Modifier.fillMaxSize().background(Color(0xFF151515)) )
+            {
 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     BasicText(
@@ -128,20 +120,23 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
 
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 3.dp)
-                                //.background(if (getFlagEmoji(it.flagClass) == currentCountries) Color(0x20FFFF00) else Color.Transparent)
+                                .fillMaxWidth().padding(vertical = 3.dp)
                                 .padding(start = 8.dp)
-                                //.border(1.dp, Color.Magenta)
                                 .clickable {
                                     scope.launch {
-                                        readHtmlFromURLWebView(urlStart + it.url)
+
+                                        val s = readHtmlFromURLWebView(urlStart + it.url)
+                                        parseSiteCountryFlag(s)?.let { it1 -> CountryState.current = it1 }
+
                                         withContext(Dispatchers.Main) {
-                                            CountryState.updateTrigger++
+                                            //CountryState.updateTrigger++
                                             Toast.makeText(
                                                 App.Companion.instance.applicationContext,
-                                                "${getFlagEmoji(it.flagClass)} ${it.name}", Toast.LENGTH_SHORT).show()
+                                                "${getFlagEmoji(it.flagClass)} ${it.name}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
+
                                     }
                                 }
                         ) {
@@ -160,21 +155,6 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                     }
 
                 }
-
-
-//                Box(
-//                    modifier = Modifier
-//                        .padding(top = 8.dp)
-//                        .padding(horizontal = 8.dp), contentAlignment = Alignment.Center
-//                ) {
-//                    //Клавиатура возвращает число
-//                    KeyboardNumber(
-//                        value,
-//                        { onChange.invoke(it); state.expanded = false },
-//                        max = max
-//                    )
-//                }
-
 
             }
 

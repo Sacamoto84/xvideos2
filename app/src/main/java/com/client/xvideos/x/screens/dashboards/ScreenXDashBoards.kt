@@ -4,9 +4,7 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
@@ -20,11 +18,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -34,14 +30,11 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.l.ui.screens.TabRow
 import com.client.xvideos.r.common.ThemeRed
-import com.client.xvideos.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
-import com.client.xvideos.x.feature.country.ComposeCountry
+import com.client.xvideos.x.screens.dashboards.bottomBar.DashboardControlsRow
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.saved.X_SavedContent
 import com.redgifs.common.downloader.ui.DownloadIndicator
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
@@ -163,31 +156,4 @@ class ScreenXDashBoards : Screen {
     }
 }
 
-/**
- * Второй ряд дашборда: кнопка страны + выбор текущей страницы.
- * Объединяет в одну строку бывший `TopBarDashboard` (страна) и ряд навигации страниц.
- */
-@Composable
-private fun DashboardControlsRow(
-    isCurrentPage: Int,
-    isMax: Int,
-    onChange: suspend (Int) -> Unit
-) {
-    val job = rememberCoroutineScope()
-
-    Row(modifier = Modifier.fillMaxWidth()) {
-        ComposeCountry()
-        Box(modifier = Modifier.weight(1f)) {
-            BottomListDashBoardNavigationButtons2(
-                value = isCurrentPage,
-                onChange = { job.launch(Dispatchers.Main) { onChange.invoke(it) } },
-                max = isMax,
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun PreviewDashboardControlsRow() { DashboardControlsRow( isCurrentPage = 1, isMax = 10,  onChange = {}) }
 

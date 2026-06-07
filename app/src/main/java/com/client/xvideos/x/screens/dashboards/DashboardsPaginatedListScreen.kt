@@ -13,47 +13,34 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material.Icon
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Save
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.icons.IconFavorite18
 import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
-import com.client.xvideos.urlStart
-import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.ui.theme.XvideosTheme
+import com.client.xvideos.urlStart
 import com.client.xvideos.x.feature.country.CountryState
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.client.xvideos.x.parcer.parserListVideo
+import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -87,22 +74,26 @@ fun DashboardsPaginatedListScreen(
 
     val l = remember { mutableStateListOf<ItemsX>() }
 
-    LaunchedEffect(key1 = pageIndex, key2 = CountryState.updateTrigger) {
+    LaunchedEffect(key1 = pageIndex, key2 = CountryState.current) {
         withContext(Dispatchers.IO) {
             l.clear()
             l.addAll(openNew(pageIndex).filter { !it.href.contains("THUMBNUM") })
-            l
         }
     }
 
-    DashboardsPaginatedListContent(
-        items = l.toImmutableList(),
-        isFavorite = isFavorite,
-        onFavoriteAdd = onFavoriteAdd,
-        onFavoriteRemove = onFavoriteRemove,
-        onDownload = onDownload,
-        openVideoPlayer = openVideoPlayer
-    )
+
+    if (l.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){ CircularProgressIndicator(modifier = Modifier.size(40.dp)) }
+    } else {
+        DashboardsPaginatedListContent(
+            items = l.toImmutableList(),
+            isFavorite = isFavorite,
+            onFavoriteAdd = onFavoriteAdd,
+            onFavoriteRemove = onFavoriteRemove,
+            onDownload = onDownload,
+            openVideoPlayer = openVideoPlayer
+        )
+    }
 }
 
 @Composable
@@ -192,7 +183,7 @@ fun DashboardsPaginatedListContent(
                     }
 
                 Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                    DropMenu(
+                    X_DashboardExpandMenu(
                         isFavorite = isFavorite(cell.id),//vm.isFavorite(cell.id),
                         onFavoriteAdd = { onFavoriteAdd(cell) },
                         onFavoriteRemove = { onFavoriteRemove(cell) },
@@ -206,92 +197,6 @@ fun DashboardsPaginatedListContent(
 
 }
 
-@Composable
-private fun DropMenu(
-    isFavorite: Boolean,
-    onFavoriteAdd: () -> Unit,
-    onFavoriteRemove: () -> Unit,
-    onDownload: () -> Unit
-) {
-
-    var expanded by remember { mutableStateOf(false) }
-
-    //val count = vm.countRow.field.collectAsStateWithLifecycle().value
-
-    val size = 26.dp
-
-    val scope = rememberCoroutineScope()
-
-    Box(
-        modifier = Modifier,
-        contentAlignment = Alignment.Center
-    ) {
-
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                Icons.Default.MoreVert,
-                contentDescription = "Localized description",
-                tint = Color.Black, modifier = Modifier
-                    .size(size)
-                    .offset(0.5.dp, 0.5.dp)
-            )
-
-            Icon(
-                Icons.Default.MoreVert,
-                contentDescription = "Localized description",
-                tint = Color.White, modifier = Modifier
-                    .size(size)
-                    .offset(0.dp, 0.dp)
-            )
-
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = Color(0xFFF2EDF7),
-            shadowElevation = 2.dp, tonalElevation = 16.dp
-        )
-        {
-
-            DropdownMenuItem(
-                text = { Text("Избранное") },
-                onClick = {
-                    expanded = false
-                    scope.launch {
-                        delay(50)
-                        when (isFavorite) {
-                            true -> onFavoriteRemove()
-                            false -> onFavoriteAdd()
-                        }
-                    }
-                },
-                leadingIcon = {
-                    Icon(
-                        if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = null
-                    )
-                }
-            )
-
-            DropdownMenuItem(
-                text = { Text("Сохранить") },
-                onClick = {
-                    expanded = false
-                    onDownload()
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Outlined.Save,
-                        contentDescription = null
-                    )
-                }
-            )
-
-        }
-
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
