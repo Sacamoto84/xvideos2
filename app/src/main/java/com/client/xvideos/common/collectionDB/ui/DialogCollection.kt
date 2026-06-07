@@ -1,5 +1,7 @@
 package com.client.xvideos.common.collectionDB.ui
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,7 +38,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
@@ -118,7 +119,7 @@ fun DialogCollectionContent(
                         Text(
                             it.collection,
                             color = Color.White,
-                            fontFamily = ThemeRed.fontFamilyDMsanss
+                            fontFamily = Theme.R.fontFamilyDMsanss
                         )
                     }
                 }
@@ -143,7 +144,7 @@ fun DialogCollectionContent(
             Spacer(Modifier.width(8.dp))
 
             Button(
-                colors = ButtonDefaults.buttonColors(containerColor = ThemeRed.colorYellow),
+                colors = ButtonDefaults.buttonColors(containerColor = Theme.R.colorYellow),
                 onClick = {
                     onClickNewCollection()
                     onDismiss()

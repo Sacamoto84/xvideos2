@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.expand_menu_video
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -11,7 +13,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -53,10 +54,10 @@ private fun DropdownMenuItem_LikeContent(
             Icon(
                 textLikedIcon,
                 contentDescription = "",
-                tint = ThemeL.ExpandMenu.tintColor
+                tint = Theme.L.ExpandMenu.tintColor
             )
         },
-        text = { Text(textLiked, style = ThemeL.ExpandMenu.style) },
+        text = { Text(textLiked, style = Theme.L.ExpandMenu.style) },
         onClick = onClick,
         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
     )

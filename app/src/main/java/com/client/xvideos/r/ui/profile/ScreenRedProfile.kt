@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.profile
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -103,7 +105,7 @@ fun RedProfileScreenContent(
     savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed
 ) {
 
-    Scaffold(containerColor = Color(0xFF303030),
+    Scaffold(containerColor = Theme.background,
 
 
 

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.top_this_week.row1
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +22,6 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.ui.top_this_week.ProfileInfo1
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.UserInfo
@@ -101,7 +102,7 @@ fun TikTokPow1(
         Text(
             "${pagerState.currentPage} / ${lazyPagingItems.itemCount} ",
             color = Color.White,
-            fontFamily = ThemeRed.fontFamilyPopinsRegular,
+            fontFamily = Theme.R.fontFamilyPopinsRegular,
             fontSize = 14.sp
         )
     }

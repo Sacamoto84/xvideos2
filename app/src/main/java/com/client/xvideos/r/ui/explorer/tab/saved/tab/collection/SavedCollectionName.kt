@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.collection
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
@@ -28,7 +30,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -91,9 +92,9 @@ class ScreenCollectionName(
             Text(
                 ">Коллекция>${selectedCollection ?: collectionName}",
                 modifier = Modifier.padding(start = 8.dp),
-                color = ThemeRed.colorYellow,
+                color = Theme.R.colorYellow,
                 fontSize = 18.sp,
-                fontFamily = ThemeRed.fontFamilyPopinsRegular
+                fontFamily = Theme.R.fontFamilyPopinsRegular
             )
         }) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.gifs
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -46,7 +48,6 @@ import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -137,7 +138,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
                 }
             )
         },
-        containerColor = ThemeRed.colorCommonBackground
+        containerColor = Theme.background
     ) { padding ->
         Box( modifier = Modifier
             .padding(bottom = padding.calculateBottomPadding())
@@ -165,11 +166,11 @@ private fun StatelessGifsTabBottomBar(
     onSortSelect: (Order) -> Unit,
     onUpClick: () -> Unit
 ) {
-    Column(Modifier.background(ThemeRed.colorTabLevel1)) {
-        HorizontalDivider(color = ThemeRed.colorBorderGray)
+    Column(Modifier.background(Theme.tabLevel1)) {
+        HorizontalDivider(color = Theme.R.colorBorderGray)
         Row( modifier = Modifier
             .padding(top = 1.dp, start = 1.dp)
-            .background(ThemeRed.colorTabLevel1), verticalAlignment = Alignment.Bottom )
+            .background(Theme.tabLevel1), verticalAlignment = Alignment.Bottom )
         {
 
             AnimatedVisibility(
@@ -185,7 +186,7 @@ private fun StatelessGifsTabBottomBar(
                     }
                 }
                 SortByOrder(
-                    containerColor = ThemeRed.colorTabLevel0,
+                    containerColor = Theme.tabLevel0,
                     list = orders,
                     selected = sortType,
                     onSelect = onSortSelect
@@ -209,8 +210,8 @@ private fun StatelessGifsTabBottomBar(
             }
         }
         Spacer(modifier = Modifier.height(1.dp))
-        HorizontalDivider(color = ThemeRed.colorCommonBackground)
-        HorizontalDivider(color = ThemeRed.colorBorderGray)
+        HorizontalDivider(color = Theme.R.colorCommonBackground)
+        HorizontalDivider(color = Theme.R.colorBorderGray)
     }
 }
 
@@ -288,7 +289,7 @@ private fun R_ScreenGifsTabSkeletonPreview() {
                     onUpClick = {}
                 )
             },
-            containerColor = ThemeRed.colorCommonBackground
+            containerColor = Theme.background
         ) { padding ->
             Box(
                 modifier = Modifier

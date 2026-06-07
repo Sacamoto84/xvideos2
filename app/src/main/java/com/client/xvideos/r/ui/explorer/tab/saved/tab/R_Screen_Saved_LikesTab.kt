@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -67,7 +69,7 @@ object R_Screen_Saved_LikesTab : Screen {
 
         LaunchedEffect(vm.savedRed.likes.list){ pager.refresh() }
 
-        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF303030))) {
+        Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
             LazyRow123(
                 host = vm.likedHost,

@@ -1,5 +1,7 @@
 package com.client.xvideos
 
+import com.client.xvideos.common.theme.Theme
+
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -105,7 +107,6 @@ import com.client.xvideos.common.util.toPrettyCount3
 import com.client.xvideos.l.model.ThumbnailsSize
 import com.client.xvideos.l.featured.saved.LDownloadRecoveryReport
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 import com.client.xvideos.r.common.saved.SavedRed
@@ -268,7 +269,7 @@ private fun AppSettingsScreenContent(
                     currentPage.title,
                     modifier = Modifier.weight(1f),
                     color = SettingsRowTextPrimary,
-                    style = ThemeL.Type.rowTitle.copy(
+                    style = Theme.L.Type.rowTitle.copy(
                         color = SettingsRowTextPrimary,
                         textAlign = TextAlign.Center
                     )
@@ -1095,14 +1096,14 @@ private fun BackupModeSelector(
                     activeContentColor = SettingsScreenBackground,
                     activeBorderColor = SettingsAccentColor,
                     inactiveContainerColor = SettingsCardColor,
-                    inactiveContentColor = ThemeL.textColor,
+                    inactiveContentColor = Theme.L.textColor,
                     inactiveBorderColor = SettingsDividerColor
                 ),
                 label = {
                     Text(
                         text = item.title,
                         color = if (selected == item) SettingsScreenBackground else SettingsRowTextPrimary,
-                        style = ThemeL.Type.button
+                        style = Theme.L.Type.button
                     )
                 }
             )
@@ -1207,15 +1208,15 @@ private fun BackupConsoleLine(line: String) {
             lower.contains("нет ")
     val color = when {
         isSummary -> SettingsAccentColor
-        isError -> ThemeL.r0
-        isSuccess -> ThemeL.g0
-        isWarning -> ThemeL.lavender
+        isError -> Theme.L.r0
+        isSuccess -> Theme.L.g0
+        isWarning -> Theme.L.lavender
         else -> SettingsRowTextPrimary
     }
     val style = if (isSummary) {
-        ThemeL.Type.rowTitle.copy(color = color)
+        Theme.L.Type.rowTitle.copy(color = color)
     } else {
-        ThemeL.Type.rowSubtitle.copy(color = color)
+        Theme.L.Type.rowSubtitle.copy(color = color)
     }
 
     Text(
@@ -1483,7 +1484,7 @@ private fun AppSettingsScreenPreview() {
                     "Настройки",
                     modifier = Modifier.weight(1f),
                     color = SettingsRowTextPrimary,
-                    style = ThemeL.Type.rowTitle.copy(
+                    style = Theme.L.Type.rowTitle.copy(
                         color = SettingsRowTextPrimary,
                         textAlign = TextAlign.Center
                     )

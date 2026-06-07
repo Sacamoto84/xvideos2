@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,7 +38,6 @@ import androidx.compose.ui.window.Dialog
 import com.client.xvideos.common.collectionDB.ui.DaialogNewCollection
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.theme.ThemeL
 
 @Composable
 fun LCollectionDialogs(savedL: SavedL) {
@@ -127,7 +128,7 @@ fun L_DialogCollection(savedL: SavedL) {
                             Text(
                                 collectionItem.collection,
                                 color = Color.White,
-                                fontFamily = ThemeL.fontFamilyDMsanss
+                                fontFamily = Theme.L.fontFamilyDMsanss
                             )
                         }
                     }
@@ -155,7 +156,7 @@ fun L_DialogCollection(savedL: SavedL) {
                         savedL.collection.visibleDialogCreateNew = true
                     },
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ThemeL.primaryColor)
+                    colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor)
                 ) {
                     Text(text = "Создать", color = Color.Black)
                 }

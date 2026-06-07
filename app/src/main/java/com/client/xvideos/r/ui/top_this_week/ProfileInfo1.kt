@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.top_this_week
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,7 +28,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import com.client.xvideos.r.model.UserInfo
@@ -70,7 +71,7 @@ fun ProfileInfo1(
 //                        minLines = 1,
 //                        maxLines = 1,
 //                        color = Color.White,
-//                        fontFamily = ThemeRed.fontFamilyPopinsRegular,
+//                        fontFamily = Theme.R.fontFamilyPopinsRegular,
 //                        fontSize = 18.sp,
 //                        modifier = Modifier.padding(start = 4.dp).offset(y= (-3).dp)
 //                    )
@@ -80,7 +81,7 @@ fun ProfileInfo1(
                         minLines = 1,
                         maxLines = 1,
                         color = Color.White,
-                        fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(start = 4.dp).offset(y= (-3).dp)
                     )

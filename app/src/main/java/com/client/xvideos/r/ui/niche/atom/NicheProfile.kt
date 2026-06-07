@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.niche.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.util.toPrettyCount
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -89,7 +90,7 @@ fun NicheProfileContent(
                 val color = if (niche().id == "id") Color.Transparent else Color.Gray
 
                 if (niche().id != "id") {
-                    Text(niche().name, color = Color.White, fontFamily = ThemeRed.fontFamilyDMsanss)
+                    Text(niche().name, color = Color.White, fontFamily = Theme.R.fontFamilyDMsanss)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -131,13 +132,13 @@ fun NicheProfileContent(
 //                    niche.subscribers.toPrettyCount(),
 //                    color = color,
 //                    modifier = Modifier,
-//                    fontFamily = ThemeRed.fontFamilyDMsanss
+//                    fontFamily = Theme.R.fontFamilyDMsanss
 //                )
 //
 //                Text(
 //                    niche.gifs.toPrettyCount(),
 //                    color = color,
-//                    fontFamily = ThemeRed.fontFamilyDMsanss
+//                    fontFamily = Theme.R.fontFamilyDMsanss
 //                )
 
                 if (niche().id != "id") {
@@ -187,7 +188,7 @@ private fun ButtonFollowContent(
             .border(
                 1.dp, if (isFollowed) Color.White else Color.Transparent, RoundedCornerShape(8.dp)
             )
-            .background(if (isFollowed) ThemeRed.colorTabLevel1 else ThemeRed.colorYellow)
+            .background(if (isFollowed) Theme.tabLevel1 else Theme.R.colorYellow)
             .clickable(onClick = onClick), contentAlignment = Alignment.Center
     ) {
         Text(

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.profile.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
 import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.UserInfo
@@ -92,7 +93,7 @@ fun RedProfileCreaterInfo(
                     verticalAlignment = Alignment.Top
                 ) {
                     Spacer(Modifier.width(8.dp))
-                    Text( item.username, color = Color.White, fontFamily = ThemeRed.fontFamilyPopinsMedium, fontSize = 28.sp, modifier = Modifier )
+                    Text( item.username, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium, fontSize = 28.sp, modifier = Modifier )
                     Spacer(Modifier.width(8.dp))
                     Image(
                         painter = painterResource(id = R.drawable.verificed),
@@ -109,7 +110,7 @@ fun RedProfileCreaterInfo(
                         .fillMaxWidth()
                         .height(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isFollow) ThemeRed.colorTabLevel1 else ThemeRed.colorYellow)
+                        .background(if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow)
                         .border(
                             1.dp,
                             if (isFollow) Color.White else Color.Transparent,
@@ -122,7 +123,7 @@ fun RedProfileCreaterInfo(
                     Text(
                         if (isFollow) "Unfollow" else "Follow",
                         color = if (isFollow) Color.White else Color.Black,
-                        fontFamily = ThemeRed.fontFamilyDMsanss,
+                        fontFamily = Theme.R.fontFamilyDMsanss,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -143,8 +144,8 @@ fun RedProfileCreaterInfo(
 
             Column( horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().weight(1f) )
             {
-                Text( item.followers.toPrettyCount().toString(), color = Color.White, fontFamily = ThemeRed.fontFamilyPopinsMedium )
-                Text( "Подписчиков", color = Color(0xFF9E9DA9), fontFamily = ThemeRed.fontFamilyPopinsRegular )
+                Text( item.followers.toPrettyCount().toString(), color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium )
+                Text( "Подписчиков", color = Color(0xFF9E9DA9), fontFamily = Theme.R.fontFamilyPopinsRegular )
             }
 
             Box( Modifier.width(1.dp).height(24.dp).background(Color(0xFF3D3C53)) )
@@ -158,13 +159,13 @@ fun RedProfileCreaterInfo(
                 Text(
                     item.views.toPrettyCount(),
                     color = Color.White,
-                    fontFamily = ThemeRed.fontFamilyPopinsMedium
+                    fontFamily = Theme.R.fontFamilyPopinsMedium
                 )
 
                 Text(
                     "Просмотров",
                     color = Color(0xFF9E9DA9),
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular
+                    fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
             }
 
@@ -185,13 +186,13 @@ fun RedProfileCreaterInfo(
                 Text(
                     item.publishedGifs.toPrettyCount(),
                     color = Color.White,
-                    fontFamily = ThemeRed.fontFamilyPopinsMedium
+                    fontFamily = Theme.R.fontFamilyPopinsMedium
                 )
 
                 Text(
                     "Постов",
                     color = Color(0xFF9E9DA9),
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular
+                    fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
 
             }
@@ -200,9 +201,9 @@ fun RedProfileCreaterInfo(
         if (item.description != null) {
             Text(
                 "About ${item.username}:",
-                color = ThemeRed.colorTextGray,
+                color = Theme.R.colorTextGray,
                 fontSize = 14.sp,
-                fontFamily = ThemeRed.fontFamilyPopinsRegular
+                fontFamily = Theme.R.fontFamilyPopinsRegular
             )
 
             Spacer(Modifier.height(4.dp))
@@ -210,7 +211,7 @@ fun RedProfileCreaterInfo(
             Text(
                 item.description.toString().trimMargin(),
                 color = Color.White,
-                fontSize = 14.sp, fontFamily = ThemeRed.fontFamilyPopinsRegular
+                fontSize = 14.sp, fontFamily = Theme.R.fontFamilyPopinsRegular
             )
         }
 
@@ -234,7 +235,7 @@ fun RedProfileCreaterInfoPreview() {
     )
 
     XvideosTheme {
-        Box(modifier = Modifier.background(ThemeRed.colorCommonBackground)) {
+        Box(modifier = Modifier.background(Theme.R.colorCommonBackground)) {
             RedProfileCreaterInfo(
                 item = sampleUserInfo,
                 isFollow = false,

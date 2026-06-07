@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.search
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -59,7 +61,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.util.toPrettyCount2
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 
@@ -107,10 +108,10 @@ fun CustomBasicTextFieldContent(
         modifier = modifier
             .padding(top = if (isFocused) 4.dp else 0.dp)
             .fillMaxWidth()
-            .background(ThemeRed.colorCommonBackground2, RoundedCornerShape(8.dp))
+            .background(Theme.background, RoundedCornerShape(8.dp))
             .border(
                 width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) ThemeRed.colorBorderSelect else ThemeRed.colorBorderGray,
+                color = if (isFocused) Theme.R.colorBorderSelect else Theme.R.colorBorderGray,
                 shape = RoundedCornerShape(8.dp)
             ),
     ) {
@@ -166,7 +167,7 @@ private fun SuggestionList(
             }
         }
         HorizontalDivider(
-            color = ThemeRed.colorBorderGray.copy(alpha = 0.5f),
+            color = Theme.R.colorBorderGray.copy(alpha = 0.5f),
             thickness = 1.dp,
             modifier = Modifier.padding(horizontal = 8.dp)
         )
@@ -185,7 +186,7 @@ private fun SuggestionItem(
             val startIndex = text.indexOf(query, ignoreCase = true)
             if (startIndex != -1 && query.isNotEmpty()) {
                 append(text.substring(0, startIndex))
-                withStyle(style = SpanStyle(color = ThemeRed.colorYellow)) {
+                withStyle(style = SpanStyle(color = Theme.R.colorYellow)) {
                     append(text.substring(startIndex, startIndex + query.length))
                 }
                 append(text.substring(startIndex + query.length))
@@ -197,8 +198,8 @@ private fun SuggestionItem(
 
     Row( modifier = Modifier.fillMaxWidth().height(34.dp).padding(horizontal = 12.dp).clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween )
     {
-        Text( text = annotatedString, fontFamily = ThemeRed.fontFamilyDMsanss, fontSize = 18.sp, color = Color.White, maxLines = 1 )
-        Text( text = suggestion.count.toPrettyCount2(), fontFamily = ThemeRed.fontFamilyDMsanss, fontSize = 16.sp, color = Color.Gray, maxLines = 1 )
+        Text( text = annotatedString, fontFamily = Theme.R.fontFamilyDMsanss, fontSize = 18.sp, color = Color.White, maxLines = 1 )
+        Text( text = suggestion.count.toPrettyCount2(), fontFamily = Theme.R.fontFamilyDMsanss, fontSize = 16.sp, color = Color.Gray, maxLines = 1 )
     }
 }
 
@@ -221,11 +222,11 @@ private fun SearchInputRow(
             textStyle = TextStyle(
                 fontSize = 18.sp,
                 color = Color.White,
-                fontFamily = ThemeRed.fontFamilyDMsanss,
+                fontFamily = Theme.R.fontFamilyDMsanss,
                 textAlign = TextAlign.Left
             ),
             modifier = Modifier.weight(1f).onFocusChanged { onFocusChanged(it.isFocused) },
-            cursorBrush = SolidColor(ThemeRed.colorYellow),
+            cursorBrush = SolidColor(Theme.R.colorYellow),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = KeyboardType.Text ),
             keyboardActions = KeyboardActions(onDone = { onDone(value.text) })
         )

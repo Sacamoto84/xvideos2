@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.albumSearch
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,7 +55,6 @@ import com.client.xvideos.l.model.Landing_page_albumType
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.net.Luscious
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.element.AlbumListItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
@@ -88,7 +89,7 @@ object L_ScreenAlbumSearch : Screen {
         val sections = result?.sections
 
         Scaffold(
-            containerColor = ThemeL.greyBackground,
+            containerColor = Theme.background,
             modifier = Modifier.fillMaxSize()
         ) {
 
@@ -104,15 +105,15 @@ object L_ScreenAlbumSearch : Screen {
                             .padding(horizontal = 4.dp, vertical = 4.dp),
                         singleLine = true,
                         label = { Text("Search") },
-                        textStyle = ThemeL.Type.body.copy(color = ThemeL.textColor),
+                        textStyle = Theme.L.Type.body.copy(color = Theme.L.textColor),
                         trailingIcon = {
                             if (searchText.isNotEmpty()) {
                                 IconButton(onClick = { vm.searchText.value = "" }) {
-                                    Icon(Icons.Default.Close, contentDescription = null, tint = ThemeL.textColor)
+                                    Icon(Icons.Default.Close, contentDescription = null, tint = Theme.L.textColor)
                                 }
                             } else {
                                 IconButton(onClick = { vm.search(); keyboard?.hide() }) {
-                                    Icon(Icons.Default.Search, contentDescription = null, tint = ThemeL.textColor)
+                                    Icon(Icons.Default.Search, contentDescription = null, tint = Theme.L.textColor)
                                 }
                             }
                         },
@@ -125,9 +126,9 @@ object L_ScreenAlbumSearch : Screen {
                     if (result?.title != null) {
                         Text(
                             result.title,
-                            color = ThemeL.textColor,
+                            color = Theme.L.textColor,
                             fontSize = 32.sp,
-                            fontFamily = ThemeL.fontFamilyKarla,
+                            fontFamily = Theme.L.fontFamilyKarla,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(start = 4.dp)
                         )
@@ -150,9 +151,9 @@ object L_ScreenAlbumSearch : Screen {
 
                     Text(
                         section.title,
-                        color = ThemeL.textColor,
+                        color = Theme.L.textColor,
                         fontSize = 24.sp,
-                        fontFamily = ThemeL.fontFamilyKarla,
+                        fontFamily = Theme.L.fontFamilyKarla,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                     )
@@ -191,7 +192,7 @@ object L_ScreenAlbumSearch : Screen {
                             .padding(horizontal = 4.dp)
                             .fillMaxWidth()
                             .height(40.dp)
-                            .border(2.dp, ThemeL.grey3, RoundedCornerShape(8.dp))
+                            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
                             .clickable(onClick = {
                                 navigator.push(
                                     L_ScreenAlbumList.create(
@@ -204,10 +205,10 @@ object L_ScreenAlbumSearch : Screen {
                     ) {
                         Text(
                             "See All >",
-                            color = ThemeL.textColor,
+                            color = Theme.L.textColor,
                             textAlign = TextAlign.Center,
                             fontSize = 22.sp,
-                            fontFamily = ThemeL.fontFamilyKarla,
+                            fontFamily = Theme.L.fontFamilyKarla,
                             fontWeight = FontWeight.Medium,
                         )
                     }

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.fullscreen.bottom_bar
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
 import com.client.xvideos.common.util.toTwoDecimalPlacesWithColon
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
-import com.client.xvideos.r.common.ThemeRed
 
 @Composable
 private fun Divider(){
@@ -45,7 +46,7 @@ private fun Divider(){
 @Composable
 fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
 
-    val border = Modifier.border(1.dp, ThemeRed.colorBorderGray)
+    val border = Modifier.border(1.dp, Theme.R.colorBorderGray)
 
     Row(
         modifier = Modifier
@@ -60,7 +61,7 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
                 .padding(horizontal = 4.dp)
                 .height(46.dp)
                 .width(46.dp)//.border(1.dp, Color.White)
-                //.border(1.dp, ThemeRed.colorBorderGray, RoundedCornerShape(8.dp))
+                //.border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
                 .clickable { vm.timeA = vm.currentPlayerTime }, verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
         ) {
             BasicText(
@@ -68,7 +69,7 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 10.sp,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     textAlign = TextAlign.Center
                 ),
                 modifier = Modifier.fillMaxWidth()
@@ -77,7 +78,7 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
                 "A",
                 color = Color.White,
                 fontSize = 20.sp,
-                fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                fontFamily = Theme.R.fontFamilyPopinsRegular,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
             )
@@ -87,7 +88,7 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
 
         Column(
             modifier = Modifier.height(46.dp).width(46.dp)
-                //.border(1.dp, ThemeRed.colorBorderGray, RoundedCornerShape(8.dp))
+                //.border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
                 .clickable { vm.timeB = vm.currentPlayerTime },verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -96,13 +97,13 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 10.sp,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     textAlign = TextAlign.Center
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("B", color = Color.White, fontSize = 20.sp, fontFamily = ThemeRed.fontFamilyPopinsRegular, textAlign = TextAlign.Center)
+            Text("B", color = Color.White, fontSize = 20.sp, fontFamily = Theme.R.fontFamilyPopinsRegular, textAlign = TextAlign.Center)
 
         }
 
@@ -111,7 +112,7 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
         IconButton( onClick = { vm.enableAB = vm.enableAB.not() }, modifier = Modifier.size(46.dp) ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(painter = painterResource(R.drawable.rg_button), contentDescription = null, tint = if (vm.enableAB) Color.Green else Color.LightGray)
-                Text("AB", color = if (vm.enableAB) Color.Green else Color.LightGray, fontSize = 8.sp, fontFamily = ThemeRed.fontFamilyPopinsRegular)
+                Text("AB", color = if (vm.enableAB) Color.Green else Color.LightGray, fontSize = 8.sp, fontFamily = Theme.R.fontFamilyPopinsRegular)
             }
         }
 

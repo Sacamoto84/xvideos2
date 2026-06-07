@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.expand_menu_video
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material3.DropdownMenuItem
@@ -9,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -41,10 +42,10 @@ fun DropdownMenuItem_BlockContent(
             Icon(
                 Icons.Default.Block,
                 contentDescription = "",
-                tint = ThemeL.ExpandMenu.tintColor,
+                tint = Theme.L.ExpandMenu.tintColor,
             )
         },
-        text = { Text("Блокировать", style = ThemeL.ExpandMenu.style) },
+        text = { Text("Блокировать", style = Theme.L.ExpandMenu.style) },
         onClick = {
             if (item == null) return@DropdownMenuItem
             onBlockClick.invoke()

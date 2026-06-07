@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.search
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,7 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.tag.TagInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -101,8 +102,8 @@ fun ExpandMenuHelperContentStateless(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.7f)
-                .border(1.dp, ThemeRed.colorTabLevel3, RoundedCornerShape(16.dp)),
-            containerColor = ThemeRed.colorTabLevel2,
+                .border(1.dp, Theme.tabLevel3, RoundedCornerShape(16.dp)),
+            containerColor = Theme.tabLevel2,
             shape = RoundedCornerShape(16.dp)
         ) {
             TagGrid(
@@ -153,8 +154,8 @@ private fun TagChip(
         modifier = Modifier
             .padding(2.dp)
             .clip(RoundedCornerShape(25))
-            .border(1.dp, ThemeRed.colorTextGray, RoundedCornerShape(25))
-            .background(ThemeRed.colorTabLevel1)
+            .border(1.dp, Theme.R.colorTextGray, RoundedCornerShape(25))
+            .background(Theme.tabLevel1)
             .clickable(onClick = onClick)
             .padding(vertical = 4.dp, horizontal = 8.dp)
     ) {
@@ -172,7 +173,7 @@ private fun TagChip(
 @Composable
 fun PreviewTagChip() {
     XvideosTheme {
-        Surface(color = ThemeRed.colorCommonBackground, modifier = Modifier.padding(16.dp)) {
+        Surface(color = Theme.R.colorCommonBackground, modifier = Modifier.padding(16.dp)) {
             TagChip(tag = TagInfo("Example Tag", 1000), onClick = {})
         }
     }
@@ -182,7 +183,7 @@ fun PreviewTagChip() {
 @Composable
 fun PreviewHelperCollapsed() {
     XvideosTheme {
-        Surface(color = ThemeRed.colorCommonBackground) {
+        Surface(color = Theme.R.colorCommonBackground) {
             ExpandMenuHelperContentStateless(
                 expanded = false,
                 onExpandedChange = {},
@@ -198,7 +199,7 @@ fun PreviewHelperCollapsed() {
 fun PreviewHelperExpanded() {
     val sampleTags = List(15) { TagInfo("Tag $it", (100 - it).toLong()) }
     XvideosTheme {
-        Surface(color = ThemeRed.colorCommonBackground) {
+        Surface(color = Theme.R.colorCommonBackground) {
             Column(modifier = Modifier.height(300.dp).fillMaxWidth()) {
                 ExpandMenuHelperContentStateless(
                     expanded = true,

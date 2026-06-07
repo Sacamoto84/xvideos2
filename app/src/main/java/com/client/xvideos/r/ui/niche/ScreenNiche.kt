@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.niche
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +44,6 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.NichesResponse
@@ -249,7 +250,7 @@ private fun NicheHeaderContent(
                 "Related Niches",
                 color = Color.White,
                 modifier = Modifier.padding(start = 4.dp, top = 8.dp),
-                fontFamily = ThemeRed.fontFamilyDMsanss
+                fontFamily = Theme.R.fontFamilyDMsanss
             )
             LazyRow(
                 modifier = Modifier
@@ -273,7 +274,7 @@ private fun NicheHeaderContent(
                 "✨ Top Creators in ${niche.name}",
                 color = Color.White,
                 modifier = Modifier.padding(start = 4.dp, top = 8.dp),
-                fontFamily = ThemeRed.fontFamilyDMsanss
+                fontFamily = Theme.R.fontFamilyDMsanss
             )
             LazyRow(
                 modifier = Modifier.padding(vertical = 4.dp),

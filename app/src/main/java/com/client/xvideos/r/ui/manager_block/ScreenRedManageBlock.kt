@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.manager_block
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,7 +32,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.ui.manager_block.bottomr_bar.BottomrBar
-import com.client.xvideos.r.common.ThemeRed
 
 class ScreenRedManageBlock() : Screen {
 
@@ -59,7 +60,7 @@ class ScreenRedManageBlock() : Screen {
                 items(blockList) { item ->
                     Row(
                         modifier = Modifier.padding(vertical = 4.dp).fillMaxWidth().height(128.dp).background(Color.Transparent)
-                            .border(1.dp, ThemeRed.colorBorderGray, RoundedCornerShape(8.dp))
+                            .border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
                     ) {
 
                         UrlImage(

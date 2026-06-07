@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.albumLandingTag
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,7 +43,6 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.screenRoot.NavigationDepthState
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Cover
@@ -90,7 +91,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val haptic = LocalHapticFeedback.current
 
         Scaffold(
-            containerColor = ThemeL.greyBackground,
+            containerColor = Theme.background,
             modifier = Modifier.fillMaxSize()
         ) {
 
@@ -101,9 +102,9 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
 
                         Text(
                             "Tag: $title",
-                            color = ThemeL.textColor,
+                            color = Theme.L.textColor,
                             fontSize = 32.sp,
-                            fontFamily = ThemeL.fontFamilyKarla,
+                            fontFamily = Theme.L.fontFamilyKarla,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.displayCutoutPadding().padding(start = 4.dp)
                         )
@@ -117,9 +118,9 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
 
                     Text(
                         item.title,
-                        color = ThemeL.textColor,
+                        color = Theme.L.textColor,
                         fontSize = 24.sp,
-                        fontFamily = ThemeL.fontFamilyKarla,
+                        fontFamily = Theme.L.fontFamilyKarla,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                     )
@@ -158,7 +159,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                             .padding(horizontal = 4.dp)
                             .fillMaxWidth()
                             .height(40.dp)
-                            .border(2.dp, ThemeL.grey3, RoundedCornerShape(8.dp))
+                            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
                             .clickable(onClick = {
 
                                 val filter = vm.createFilter(item)
@@ -177,11 +178,11 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                     ) {
                         Text(
                             "See All >",
-                            color = ThemeL.textColor,
+                            color = Theme.L.textColor,
                             modifier = Modifier,
                             textAlign = TextAlign.Center,
                             fontSize = 22.sp,
-                            fontFamily = ThemeL.fontFamilyKarla,
+                            fontFamily = Theme.L.fontFamilyKarla,
                             fontWeight = FontWeight.Medium,
                         )
                     }
@@ -202,15 +203,15 @@ private fun ScreenLAlbumLandingTagPreview() {
     val data = lAlbumLandingTagPreviewData()
 
     Scaffold(
-        containerColor = ThemeL.greyBackground,
+        containerColor = Theme.background,
     ) {
         LazyColumn(state = rememberLazyListState()) {
             item {
                 Text(
                     "Tag: ${data.title}",
-                    color = ThemeL.textColor,
+                    color = Theme.L.textColor,
                     fontSize = 32.sp,
-                    fontFamily = ThemeL.fontFamilyKarla,
+                    fontFamily = Theme.L.fontFamilyKarla,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                 )
@@ -221,9 +222,9 @@ private fun ScreenLAlbumLandingTagPreview() {
 
                 Text(
                     section.title,
-                    color = ThemeL.textColor,
+                    color = Theme.L.textColor,
                     fontSize = 24.sp,
-                    fontFamily = ThemeL.fontFamilyKarla,
+                    fontFamily = Theme.L.fontFamilyKarla,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                 )
@@ -261,15 +262,15 @@ private fun ScreenLAlbumLandingTagPreview() {
                         .padding(horizontal = 4.dp)
                         .fillMaxWidth()
                         .height(40.dp)
-                        .border(2.dp, ThemeL.grey3, RoundedCornerShape(8.dp)),
+                        .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         "See All >",
-                        color = ThemeL.textColor,
+                        color = Theme.L.textColor,
                         textAlign = TextAlign.Center,
                         fontSize = 22.sp,
-                        fontFamily = ThemeL.fontFamilyKarla,
+                        fontFamily = Theme.L.fontFamilyKarla,
                         fontWeight = FontWeight.Medium,
                     )
                 }

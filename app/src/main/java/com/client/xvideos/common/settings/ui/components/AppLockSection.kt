@@ -1,5 +1,7 @@
 package com.client.xvideos.common.settings.ui.components
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +30,6 @@ import com.client.xvideos.R
 import com.client.xvideos.common.applock.DisableAppLockAutofill
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.l.theme.ThemeL
 
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
@@ -202,7 +203,7 @@ internal fun AppLockPasswordDialog(
                 }
 
                 errorText?.let {
-                    Text(it, color = Color(0xFFFF7A7A), style = ThemeL.Type.dialogBody.copy(color = Color(0xFFFF7A7A)))
+                    Text(it, color = Color(0xFFFF7A7A), style = Theme.L.Type.dialogBody.copy(color = Color(0xFFFF7A7A)))
                 }
             }
         },
@@ -258,7 +259,7 @@ fun PasswordSettingField(
             imeAction = ImeAction.Done
         ),
         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() }),
-        textStyle = ThemeL.Type.body.copy(color = Color.White)
+        textStyle = Theme.L.Type.body.copy(color = Color.White)
     )
 }
 

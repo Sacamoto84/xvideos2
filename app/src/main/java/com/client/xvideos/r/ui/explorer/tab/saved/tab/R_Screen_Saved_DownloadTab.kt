@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,7 +56,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.util.toPrettyCount3
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
@@ -106,9 +107,9 @@ object R_Screen_Saved_DownloadTab : Screen {
             Text(
                 ">Загрузки",
                 modifier = Modifier.padding(start = 8.dp),
-                color = ThemeRed.colorYellow,
+                color = Theme.R.colorYellow,
                 fontSize = 18.sp,
-                fontFamily = ThemeRed.fontFamilyPopinsRegular
+                fontFamily = Theme.R.fontFamilyPopinsRegular
             )
         }) { padding ->
             Box(
@@ -160,10 +161,10 @@ private fun DownloadListItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .border(
-                1.dp, ThemeRed.colorBorderGray,
+                1.dp, Theme.R.colorBorderGray,
                 RoundedCornerShape(8.dp)
             )
-            .background(ThemeRed.colorTabLevel3)
+            .background(Theme.tabLevel3)
             .clickable(onClick = onItemClick)
     ) {
         val imagePath = AppPath.r_cache_download + "/" + item.userName + "/" + item.id + ".jpg"
@@ -194,7 +195,7 @@ private fun DownloadListItem(
                 Text(
                     "Name: " + item.userName,
                     color = Color.White,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     fontSize = 18.sp,
                     maxLines = 1
                 )
@@ -203,7 +204,7 @@ private fun DownloadListItem(
                     text = "ID: " + item.id,
                     style = TextStyle(
                         color = Color.White,
-                        fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular,
                         fontSize = 18.sp
                     ),
                     autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 18.sp),
@@ -213,7 +214,7 @@ private fun DownloadListItem(
                 Text(
                     "Size: $size",
                     color = Color.White,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     fontSize = 18.sp
                 )
 

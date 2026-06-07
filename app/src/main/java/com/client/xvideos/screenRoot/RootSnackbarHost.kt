@@ -1,5 +1,7 @@
 package com.client.xvideos.screenRoot
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.client.xvideos.common.snackbar.UiMessage
 import com.client.xvideos.common.snackbar.UiSnackbarVisuals
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 
@@ -70,7 +71,7 @@ fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
                 ) {
                     Icon(icon, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text(data.visuals.message, fontFamily = ThemeRed.fontFamilyDMsanss)
+                    Text(data.visuals.message, fontFamily = Theme.R.fontFamilyDMsanss)
                     data.visuals.actionLabel?.let { label ->
                         TextButton(onClick = { data.performAction() }) {
                             Text(label)

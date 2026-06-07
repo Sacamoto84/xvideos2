@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -65,7 +67,6 @@ import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
 import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.composeunstyled.Text
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.common.block.BlockRed
@@ -116,15 +117,15 @@ object R_Screen_CreatorsTab : Screen {
         )
 
         Scaffold(
-containerColor = Color(0xFF303030)
+containerColor = Theme.background
 ,
             topBar = {
             Text(
                 ">Авторы",
                 modifier = Modifier.padding(start = 8.dp),
-                color = ThemeRed.colorYellow,
+                color = Theme.R.colorYellow,
                 fontSize = 18.sp,
-                fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                fontFamily = Theme.R.fontFamilyPopinsRegular,
             )
         }) { padding ->
             Box(
@@ -179,7 +180,7 @@ private fun CreatorListItem(
             .padding(vertical = 2.dp, horizontal = 6.dp)
             .clip(RoundedCornerShape(8.dp))
             .fillMaxWidth()
-            .background(ThemeRed.colorTabLevel3)
+            .background(Theme.tabLevel3)
             .clickable { onClick(item.username) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -218,7 +219,7 @@ private fun CreatorListItem(
                 displayName,
                 color = Color.White,
                 fontSize = 20.sp,
-                fontFamily = ThemeRed.fontFamilyDMsanss,
+                fontFamily = Theme.R.fontFamilyDMsanss,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -228,7 +229,7 @@ private fun CreatorListItem(
                     "@${item.username}",
                     color = Color(0xFF9E9DA9),
                     fontSize = 12.sp,
-                    fontFamily = ThemeRed.fontFamilyDMsanss,
+                    fontFamily = Theme.R.fontFamilyDMsanss,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -290,14 +291,14 @@ private fun CreatorMetric(
             value.toPrettyCount(),
             color = Color.White,
             fontSize = 12.sp,
-            fontFamily = ThemeRed.fontFamilyPopinsRegular,
+            fontFamily = Theme.R.fontFamilyPopinsRegular,
             maxLines = 1
         )
         Text(
             label,
             color = Color(0xFF9E9DA9),
             fontSize = 9.sp,
-            fontFamily = ThemeRed.fontFamilyDMsanss,
+            fontFamily = Theme.R.fontFamilyDMsanss,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

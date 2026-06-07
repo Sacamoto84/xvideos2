@@ -1,5 +1,7 @@
 package com.client.xvideos.common.snackbar
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
-import com.client.xvideos.r.common.ThemeRed
 
 object SnackBar{
     //------------------------------------------------------------------------------
@@ -166,7 +167,7 @@ fun RenderSnackBarFilled (uiMsg: UiMessage){
 
             Spacer(Modifier.width(8.dp))
 
-            Text( uiMsg.text, Modifier, fontFamily = ThemeRed.fontFamilyPopinsMedium , color = Color.Black)
+            Text( uiMsg.text, Modifier, fontFamily = Theme.R.fontFamilyPopinsMedium , color = Color.Black)
 //            data.visuals.actionLabel?.let { label ->
 //                TextButton(onClick = { data.performAction() }) { Text(label) }
 //            }
@@ -217,7 +218,7 @@ fun RenderSnackBar2 (uiMsg: UiMessage){
 
 
             Spacer(Modifier.width(8.dp))
-            Text( uiMsg.text, Modifier, fontFamily = ThemeRed.fontFamilyDMsanss )
+            Text( uiMsg.text, Modifier, fontFamily = Theme.R.fontFamilyDMsanss )
 //            data.visuals.actionLabel?.let { label ->
 //                TextButton(onClick = { data.performAction() }) { Text(label) }
 //            }
@@ -264,7 +265,7 @@ fun RenderSnackBar3 (uiMsg: UiMessage){
 
 
             Spacer(Modifier.width(8.dp))
-            Text( uiMsg.text, Modifier, fontFamily = ThemeRed.fontFamilyDMsanss )
+            Text( uiMsg.text, Modifier, fontFamily = Theme.R.fontFamilyDMsanss )
 //            data.visuals.actionLabel?.let { label ->
 //                TextButton(onClick = { data.performAction() }) { Text(label) }
 //            }

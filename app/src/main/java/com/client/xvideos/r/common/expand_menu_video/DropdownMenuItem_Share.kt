@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.expand_menu_video
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenuItem
@@ -9,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -17,8 +18,8 @@ import com.client.xvideos.ui.theme.XvideosTheme
 @Composable
 fun DropdownMenuItem_Share(item: GifsInfo? = null, onClick: (GifsInfo) -> Unit, onDismiss: () -> Unit){
     DropdownMenuItem(
-        leadingIcon = {Icon(Icons.Default.Share, contentDescription = "", tint = ThemeL.ExpandMenu.tintColor)},
-        text = { Text("Поделиться", style = ThemeL.ExpandMenu.style) },
+        leadingIcon = {Icon(Icons.Default.Share, contentDescription = "", tint = Theme.L.ExpandMenu.tintColor)},
+        text = { Text("Поделиться", style = Theme.L.ExpandMenu.style) },
         onClick = {
             if (item == null) return@DropdownMenuItem
             //DownloadRed.downloadItem(item)

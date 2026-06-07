@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.likes
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -102,7 +104,7 @@ object L_ScreenSavedLikesTab : Screen {
                                 selected = index == selectedIndex,
                                 label = { Text(label) },
                                 colors = SegmentedButtonDefaults.colors(
-                                    activeContainerColor =  Color(0xFF938F99)// ThemeL.b0
+                                    activeContainerColor =  Color(0xFF938F99)// Theme.L.b0
                                 )
                             )
                         }

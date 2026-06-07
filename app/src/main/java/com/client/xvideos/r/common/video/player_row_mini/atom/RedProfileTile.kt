@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.video.player_row_mini.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -18,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.R
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.common.util.toMinSec
 import com.client.xvideos.common.util.toPrettyCount
 import com.composables.core.Icon
@@ -39,7 +40,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
             index.toString(),
             color = Color.Gray,
             modifier = Modifier.padding(start = 8.dp).offset(1.dp, 1.dp),
-            fontFamily = ThemeRed.fontFamilyPopinsMedium
+            fontFamily = Theme.R.fontFamilyPopinsMedium
         )
 
         //Нижний ряд с лайками и длительностью
@@ -76,7 +77,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                             modifier = Modifier
                                 .padding(start = 8.dp)
                                 .offset(1.dp, 1.dp),
-                            fontFamily = ThemeRed.fontFamilyPopinsMedium
+                            fontFamily = Theme.R.fontFamilyPopinsMedium
                         )
 
                         Text(
@@ -84,7 +85,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                             color = Color.White,
                             modifier = Modifier
                                 .padding(start = 8.dp),
-                            fontFamily = ThemeRed.fontFamilyPopinsMedium
+                            fontFamily = Theme.R.fontFamilyPopinsMedium
                         )
                     }
 
@@ -100,7 +101,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                         modifier = Modifier
                             .padding(8.dp)
                             .offset(1.dp, 1.dp),
-                        fontFamily = ThemeRed.fontFamilyPopinsMedium
+                        fontFamily = Theme.R.fontFamilyPopinsMedium
                     )
 
                     Text(
@@ -108,7 +109,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                         color = Color.White,
                         modifier = Modifier
                             .padding(8.dp),
-                        fontFamily = ThemeRed.fontFamilyPopinsMedium
+                        fontFamily = Theme.R.fontFamilyPopinsMedium
                     )
                 }
             }

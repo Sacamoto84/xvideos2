@@ -1,5 +1,7 @@
 package com.client.xvideos.common.settings.ui.components
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,16 +40,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.R
 import com.client.xvideos.common.settings.ui.DialogButton
-import com.client.xvideos.l.theme.ThemeL
 import kotlin.math.roundToInt
 
-internal val SettingsScreenBackground = ThemeL.grey6
-internal val SettingsTopBarColor = ThemeL.grey5
-internal val SettingsCardColor = ThemeL.grey4
-internal val SettingsAccentColor = ThemeL.primaryColor
-internal val SettingsRowTextPrimary = ThemeL.grey0
-internal val SettingsRowTextSecondary = ThemeL.grey1
-internal val SettingsDividerColor = ThemeL.grey3
+internal val SettingsScreenBackground = Theme.L.grey6
+internal val SettingsTopBarColor = Theme.L.grey5
+internal val SettingsCardColor = Theme.L.grey4
+internal val SettingsAccentColor = Theme.L.primaryColor
+internal val SettingsRowTextPrimary = Theme.L.grey0
+internal val SettingsRowTextSecondary = Theme.L.grey1
+internal val SettingsDividerColor = Theme.L.grey3
 internal val WhatsAppGreen = SettingsAccentColor
 
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
@@ -58,7 +59,7 @@ fun SettingsSectionTitle(text: String) {
         text = text.uppercase(),
         modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp),
         color = SettingsRowTextSecondary,
-        style = ThemeL.Type.caption.copy(color = SettingsRowTextSecondary)
+        style = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
     )
 }
 
@@ -147,14 +148,14 @@ fun SettingsListItem(
             Text(
                 text = text,
                 color = SettingsRowTextPrimary,
-                style = ThemeL.Type.rowTitle.copy(color = SettingsRowTextPrimary)
+                style = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
             )
             if (subtitle != null) {
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     color = SettingsRowTextSecondary,
-                    style = ThemeL.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
+                    style = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
                 )
             }
         }

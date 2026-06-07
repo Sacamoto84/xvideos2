@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.top_this_week
 
+import com.client.xvideos.common.theme.Theme
+
 //object ScreenRedTopThisWeek : Screen {
 //
 //    private fun readResolve(): Any = ScreenRedTopThisWeek
@@ -54,7 +56,7 @@ package com.client.xvideos.r.ui.top_this_week
 //                )
 //            },
 //
-//            containerColor = ThemeRed.colorCommonBackground,
+//            containerColor = Theme.R.colorCommonBackground,
 //            modifier = Modifier.fillMaxSize()
 //        ) { padding ->
 //

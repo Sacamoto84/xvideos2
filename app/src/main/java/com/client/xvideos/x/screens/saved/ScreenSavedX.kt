@@ -1,5 +1,7 @@
 package com.client.xvideos.x.screens.saved
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -38,7 +40,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
@@ -71,11 +72,11 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(ThemeL.grey6)
+            .background(Theme.L.grey6)
     ) {
 
         Row(
-            modifier = Modifier.fillMaxWidth().background(ThemeL.grey6),
+            modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -140,7 +141,7 @@ private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDele
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ThemeL.grey6),
+                .background(Theme.L.grey6),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(

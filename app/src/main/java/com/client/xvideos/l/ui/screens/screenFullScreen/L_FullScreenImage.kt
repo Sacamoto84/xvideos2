@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenFullScreen
 
+import com.client.xvideos.common.theme.Theme
+
 import android.os.Build
 import android.os.Parcelable
 import androidx.activity.compose.BackHandler
@@ -95,7 +97,6 @@ import com.client.xvideos.l.model.lFullScreenImageUrls
 import com.client.xvideos.l.model.lImageMediaUrl
 import com.client.xvideos.l.model.lMediaRequestHeaders
 import com.client.xvideos.l.model.lPreviewImageUrl
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
@@ -364,7 +365,7 @@ class L_FullScreenImage(
             }
             }
 
-            Box(modifier = Modifier.align(Alignment.TopStart)) { Text( currentIndex.toString(), color = Color.Gray, modifier = Modifier.padding(start = 8.dp), fontFamily = ThemeL.fontFamilyKarla )}
+            Box(modifier = Modifier.align(Alignment.TopStart)) { Text( currentIndex.toString(), color = Color.Gray, modifier = Modifier.padding(start = 8.dp), fontFamily = Theme.L.fontFamilyKarla )}
 
             AnimatedVisibility(visible = !isFullScreen, enter = fadeIn(), exit = fadeOut())
             {
@@ -636,13 +637,13 @@ private fun LPictureInfoDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Альбом: ", color = Color.LightGray, fontFamily = ThemeL.fontFamilyKarla)
+                    Text("Альбом: ", color = Color.LightGray, fontFamily = Theme.L.fontFamilyKarla)
                     if (albumId != null && onAlbumClick != null) {
                         TextButton(onClick = { onAlbumClick(albumId) }) {
                             Text(albumId.toString())
                         }
                     } else {
-                        Text(item.album ?: "-", color = Color.LightGray, fontFamily = ThemeL.fontFamilyKarla)
+                        Text(item.album ?: "-", color = Color.LightGray, fontFamily = Theme.L.fontFamilyKarla)
                     }
                 }
 
@@ -674,7 +675,7 @@ private fun LPictureInfoText(
         text = annotatedText,
         style = TextStyle(
             color = Color.LightGray,
-            fontFamily = ThemeL.fontFamilyKarla
+            fontFamily = Theme.L.fontFamilyKarla
         ),
         onClick = { offset ->
             annotatedText
@@ -885,7 +886,7 @@ private fun LFullScreenImagePreviewContent(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(start = 8.dp),
-            fontFamily = ThemeL.fontFamilyKarla
+            fontFamily = Theme.L.fontFamilyKarla
         )
 
         Row(

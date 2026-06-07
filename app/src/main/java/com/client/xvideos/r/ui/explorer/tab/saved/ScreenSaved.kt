@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +33,6 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_CreatorsTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_DownloadTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_LikesTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.SavedNichesTab
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddRColumn
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_SubscriptionsTab
 import com.client.xvideos.r.ui.ui.atom.TabBarPoints
@@ -76,8 +77,8 @@ object R_ScreenSavedTab : Screen {
                     HorizontalDivider()
                     TabRow(
                         value = screenType,
-                        containerColor = ThemeRed.colorTabLevel1,
-                        //containerColor = ThemeRed.colorBottomBarBackground,
+                        containerColor = Theme.tabLevel1,
+                        //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = l,
                         onChangeState = {
                             if (it == screenType) {
@@ -95,7 +96,7 @@ object R_ScreenSavedTab : Screen {
             },
 
             modifier = Modifier.fillMaxSize(),
-            containerColor = ThemeRed.colorCommonBackground2
+            containerColor = Theme.background
         ) { paddingValues ->
 
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {

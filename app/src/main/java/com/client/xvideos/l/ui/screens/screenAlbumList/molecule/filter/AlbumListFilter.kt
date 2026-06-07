@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -28,7 +30,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
@@ -68,7 +69,7 @@ fun AlbumListFilter(
 
             Text("Filters",
                 color = palette.textPrimary,
-                style = ThemeL.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
+                style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp, top = 4.dp)
             )
 
@@ -85,12 +86,12 @@ fun AlbumListFilter(
 //                Spacer( modifier = Modifier.fillMaxHeight().width(4.dp) )
 //                Box(
 //                    modifier = Modifier.fillMaxHeight().fillMaxWidth().weight(1f)
-//                        .border(0.5.dp, ThemeL.grey2, RoundedCornerShape(4.dp)),
+//                        .border(0.5.dp, Theme.L.grey2, RoundedCornerShape(4.dp)),
 //                    contentAlignment = Alignment.Center
 //                ) {
 //                    Text(
 //                        "Close", textAlign = TextAlign.Center,
-//                        color = ThemeL.textColor, fontFamily = ThemeL.fontFamilyKarla,
+//                        color = Theme.L.textColor, fontFamily = Theme.L.fontFamilyKarla,
 //                        fontSize = 20.sp, modifier = Modifier
 //                    )
 //                }
@@ -113,13 +114,13 @@ fun AlbumListFilter(
                     Text(
                         "Search:",
                         color = palette.textSecondary,
-                        style = ThemeL.Type.rowSubtitle
+                        style = Theme.L.Type.rowSubtitle
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         filter.searchQuery,
                         color = palette.textPrimary,
-                        style = ThemeL.Type.rowValue,
+                        style = Theme.L.Type.rowValue,
                         maxLines = 1
                     )
                 }

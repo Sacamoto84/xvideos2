@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -50,7 +52,6 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.element.AlbumListItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.bottomBar.AlbumListBottomBar
@@ -185,7 +186,7 @@ private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, titl
                         }
                     )
                 },
-                containerColor = ThemeL.greyBackground
+                containerColor = Theme.background
             ) { padding ->
                 HorizontalPager(
                     vm.statePager,
@@ -223,9 +224,9 @@ private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, titl
                                 Box(
                                     Modifier
                                         .height(32.dp)
-                                        .background(ThemeL.red).padding(start = 24.dp), contentAlignment = Alignment.CenterStart
+                                        .background(Theme.L.red).padding(start = 24.dp), contentAlignment = Alignment.CenterStart
                                 ) {
-                                    Text(text = title, color = Color.White, fontFamily = ThemeL.fontFamilyKarla)
+                                    Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
                                 }
                             }
 

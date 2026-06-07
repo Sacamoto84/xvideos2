@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,9 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 
-private val style = ThemeL.Type.rowValue
+private val style = Theme.L.Type.rowValue
 
 @Composable
 fun AlbumListFilterAlbumType(start : Int, onChange: (Int) -> Unit) {

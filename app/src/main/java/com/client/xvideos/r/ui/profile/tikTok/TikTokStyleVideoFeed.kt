@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.profile.tikTok
 
+import com.client.xvideos.common.theme.Theme
+
 //@OptIn(ExperimentalFoundationApi::class)
 //@Composable
 //fun TikTokStyleVideoFeed(
@@ -40,13 +42,13 @@ package com.client.xvideos.r.ui.profile.tikTok
 //        Box(
 //            modifier = Modifier
 //                .fillMaxSize()
-//                .background(ThemeRed.colorCommonBackground),
+//                .background(Theme.R.colorCommonBackground),
 //            contentAlignment = Alignment.Center
 //        ) {
 //            Text(
 //                "Нет видео для отображения",
 //                color = Color.LightGray,
-//                fontFamily = ThemeRed.fontFamilyPopinsRegular,
+//                fontFamily = Theme.R.fontFamilyPopinsRegular,
 //                fontSize = 20.sp
 //            )
 //        }

@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens
 
+import com.client.xvideos.common.theme.Theme
+
 import android.view.autofill.AutofillManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,7 +60,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.l.theme.ThemeL
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +105,7 @@ fun LLoginContent(
             text = "https://www.luscious.net",
             fontStyle = FontStyle.Italic,
             textDecoration = TextDecoration.Underline,
-            color = ThemeL.b0,
+            color = Theme.L.b0,
             modifier = Modifier.clickable { uriHandler.openUri("https://www.luscious.net") },
             fontSize = 24.sp
         )
@@ -114,16 +115,16 @@ fun LLoginContent(
         Text(
             text = "Авторизация",
             style = MaterialTheme.typography.headlineMedium,
-            color = ThemeL.textColor
+            color = Theme.L.textColor
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             "Логин",
-            color = ThemeL.textColor,
+            color = Theme.L.textColor,
             fontSize = 22.sp,
-            fontFamily = ThemeL.fontFamilyKarla
+            fontFamily = Theme.L.fontFamilyKarla
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -155,9 +156,9 @@ fun LLoginContent(
 
         Text(
             "Пароль",
-            color = ThemeL.textColor,
+            color = Theme.L.textColor,
             fontSize = 22.sp,
-            fontFamily = ThemeL.fontFamilyKarla
+            fontFamily = Theme.L.fontFamilyKarla
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -205,13 +206,13 @@ fun LLoginContent(
         Button(
             onClick = { saveCredentials() },
             modifier = Modifier.fillMaxWidth().height(64.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeL.primaryColor),
+            colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
                 "Сохранить",
                 fontSize = 22.sp,
-                fontFamily = ThemeL.fontFamilyKarla
+                fontFamily = Theme.L.fontFamilyKarla
             )
         }
         Spacer(modifier = Modifier.height(32.dp))
@@ -219,13 +220,13 @@ fun LLoginContent(
         Button(
             onClick = onBack,
             modifier = Modifier.fillMaxWidth().height(64.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeL.b0),
+            colors = ButtonDefaults.buttonColors(containerColor = Theme.L.b0),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
                 "Назад",
                 fontSize = 22.sp,
-                fontFamily = ThemeL.fontFamilyKarla
+                fontFamily = Theme.L.fontFamilyKarla
             )
         }
 
@@ -233,14 +234,14 @@ fun LLoginContent(
         TextButton(
             onClick = onSkip,
             modifier = Modifier.padding(top = 24.dp).fillMaxWidth().height(64.dp),
-            //colors = ButtonDefaults.buttonColors(containerColor = ThemeL.b0),
+            //colors = ButtonDefaults.buttonColors(containerColor = Theme.L.b0),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
                 text = "Пропустить",
                 fontSize = 22.sp,
-                fontFamily = ThemeL.fontFamilyKarla,
-                color = ThemeL.b0,
+                fontFamily = Theme.L.fontFamilyKarla,
+                color = Theme.L.b0,
             )
         }
 

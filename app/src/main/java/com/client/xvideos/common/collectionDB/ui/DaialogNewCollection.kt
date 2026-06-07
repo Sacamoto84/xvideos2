@@ -1,5 +1,7 @@
 package com.client.xvideos.common.collectionDB.ui
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -100,7 +102,7 @@ fun DaialogNewCollection(
                 TextButton( onClick = onDismiss ) { Text("Отмена") }
                 Spacer(Modifier.width(8.dp))
                 Button(
-                    //colors = ButtonDefaults.buttonColors(containerColor = ThemeRed.colorYellow),
+                    //colors = ButtonDefaults.buttonColors(containerColor = Theme.R.colorYellow),
                     onClick = {
                         onBlockConfirmed(text)
                         onDismiss()

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.fullscreen
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -70,7 +72,6 @@ import com.client.xvideos.R
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.UsersRed
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
@@ -244,14 +245,14 @@ private fun RedFullScreenScaffold(
 ) {
     Scaffold(
         bottomBar = {
-            Column(modifier = Modifier.background(ThemeRed.colorCommonBackground)) {
+            Column(modifier = Modifier.background(Theme.R.colorCommonBackground)) {
                 Box(
                     Modifier
                         .padding(bottom = 1.dp)
                         .clip(RoundedCornerShape(0))
                         .height(32.dp)
                         .fillMaxWidth()
-                        .background(ThemeRed.colorTabLevel0),
+                        .background(Theme.tabLevel0),
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     CanvasTimeDurationLine1(
@@ -268,7 +269,7 @@ private fun RedFullScreenScaffold(
                     )
                 }
 
-                Box(modifier = Modifier.background(ThemeRed.colorTabLevel1)) {
+                Box(modifier = Modifier.background(Theme.tabLevel1)) {
                     FeedControls_Container_Line0(vm)
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                         DownloadIndicator(vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value)

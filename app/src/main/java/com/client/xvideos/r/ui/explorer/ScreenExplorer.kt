@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -21,7 +23,6 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.ui.screens.TabRow
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddRColumn
 import com.client.xvideos.r.ui.explorer.tab.gifs.R_ScreenGifsTab
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
@@ -58,7 +59,7 @@ class ScreenRedExplorer : Screen {
         Scaffold(bottomBar = {
 
             TabRow(
-                containerColor = ThemeRed.colorTabLevel0,
+                containerColor = Theme.tabLevel0,
                 titlesIcon = l,
                 value = screenType,
                 onChangeState = {
@@ -73,7 +74,7 @@ class ScreenRedExplorer : Screen {
             )
 
 
-        }, containerColor = ThemeRed.colorCommonBackground2) { paddingValues ->
+        }, containerColor = Theme.background) { paddingValues ->
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
                 when (screenType) {
                     0 -> R_ScreenGifsTab.Content()

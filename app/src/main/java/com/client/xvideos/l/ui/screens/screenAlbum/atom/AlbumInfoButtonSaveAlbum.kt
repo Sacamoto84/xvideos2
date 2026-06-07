@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 
 
 @Composable
@@ -29,20 +30,20 @@ fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick : ()->Unit) {
             .height(46.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(4.dp))
-            .border(1.dp, ThemeL.grey3, RoundedCornerShape(4.dp))
-            .background(if (!saved) ThemeL.red else ThemeL.grey6)
+            .border(1.dp, Theme.L.grey3, RoundedCornerShape(4.dp))
+            .background(if (!saved) Theme.L.red else Theme.L.grey6)
             .clickable(onClick = { onClick() }),
         contentAlignment = Alignment.Center
     ) {
         if (!saved) Text(
             "Save Album",
             color = Color.White,
-            style = ThemeL.Type.button.copy(color = Color.White)
+            style = Theme.L.Type.button.copy(color = Color.White)
         )
         else Text(
             "Remove Album",
             color = Color.White,
-            style = ThemeL.Type.button.copy(color = Color.White)
+            style = Theme.L.Type.button.copy(color = Color.White)
         )
     }
 

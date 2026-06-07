@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Content
@@ -32,8 +33,8 @@ fun AlbumInfoGreeting(
     {
         Text(
             "Genres: ",
-            color = ThemeL.textColor,
-            style = ThemeL.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp),
+            color = Theme.L.textColor,
+            style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp),
 
             modifier = Modifier
                 .padding(horizontal = 2.dp)
@@ -52,11 +53,11 @@ fun AlbumInfoGreeting(
                 modifier = Modifier
                     .padding(horizontal = 2.dp)
                     .padding(vertical = 2.dp)
-                    .border(1.dp, ThemeL.secondaryColor, RoundedCornerShape(4.dp))
+                    .border(1.dp, Theme.L.secondaryColor, RoundedCornerShape(4.dp))
                     .clickable(onClick = { onGenreClick(item) })
                     .padding(4.dp),
-                color = ThemeL.primaryColor,
-                style = ThemeL.Type.rowValue.copy(color = ThemeL.primaryColor, fontSize = 14.sp)
+                color = Theme.L.primaryColor,
+                style = Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = 14.sp)
             )
 
         }

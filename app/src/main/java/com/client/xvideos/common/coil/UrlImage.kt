@@ -1,5 +1,7 @@
 package com.client.xvideos.common.coil
 
+import com.client.xvideos.common.theme.Theme
+
 import android.graphics.drawable.AnimatedImageDrawable
 import android.os.Build
 import androidx.compose.foundation.background
@@ -49,7 +51,6 @@ import coil3.request.ImageRequest
 import coil3.size.Precision
 import coil3.size.Scale
 import com.client.xvideos.common.AppPath
-import com.client.xvideos.l.theme.ThemeL
 import com.composeunstyled.Text
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -245,7 +246,7 @@ fun UrlImage(
 //                alpha = 0.5f,
 //            ),
                 modifier = Modifier
-                    .background(ThemeL.grey6)
+                    .background(Theme.L.grey6)
                     .then(if (!isFullScreen) Modifier.then(sizeResolver) else Modifier)
                     .then(
                         if (isFullScreen && rotate) {
@@ -385,7 +386,7 @@ private fun ProgressText(
             text,
             color = Color.White,
             modifier = Modifier.offset((-1).dp, 7.dp),
-            fontFamily = ThemeL.fontFamilyKarla,
+            fontFamily = Theme.L.fontFamilyKarla,
             fontSize = 9.sp
         )
     }

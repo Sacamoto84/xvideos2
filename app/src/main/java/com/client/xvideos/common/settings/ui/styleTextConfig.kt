@@ -1,6 +1,7 @@
 package com.client.xvideos.common.settings.ui
 
-import androidx.compose.ui.text.TextStyle
-import com.client.xvideos.l.theme.ThemeL
+import com.client.xvideos.common.theme.Theme
 
-val styleTextConfig: TextStyle = ThemeL.Type.rowTitle
+import androidx.compose.ui.text.TextStyle
+
+val styleTextConfig: TextStyle = Theme.L.Type.rowTitle

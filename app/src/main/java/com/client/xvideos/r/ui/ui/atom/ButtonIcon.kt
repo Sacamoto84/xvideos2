@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.ui.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,7 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
@@ -27,7 +28,7 @@ fun ButtonIcon(imageVector: ImageVector, onClick: () -> Unit) {
             .size(46.dp)
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, Color(0x80757575), RoundedCornerShape(8.dp))
-            .background(ThemeRed.colorCommonBackground)
+            .background(Theme.R.colorCommonBackground)
             .clickable(
                 onClick = onClick
             ),

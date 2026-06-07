@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,10 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.enum.PictureCountRank
 
-private val style = ThemeL.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
+private val style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +83,7 @@ fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -
                     a,
                     modifier = Modifier.padding(start = 8.dp),
                     maxLines = 1,
-                    style = ThemeL.Type.rowTitle.copy(color = palette.textPrimary, fontWeight = FontWeight.Bold)
+                    style = Theme.L.Type.rowTitle.copy(color = palette.textPrimary, fontWeight = FontWeight.Bold)
                 )
                 Icon(
                     Icons.Default.ArrowDropDown,
@@ -103,7 +104,7 @@ fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -
                             Text(
                                 item,
                                 color = palette.textPrimary,
-                                style = ThemeL.Type.rowValue.copy(color = palette.textPrimary)
+                                style = Theme.L.Type.rowValue.copy(color = palette.textPrimary)
                             )
                         },
                         onClick = {

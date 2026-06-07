@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.expand_menu_video
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.DropdownMenuItem
@@ -11,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -50,10 +51,10 @@ fun DropdownMenuItem_RemoveFromCollection(
             Icon(
                 Icons.Default.RemoveCircleOutline,
                 contentDescription = "",
-                tint = ThemeL.ExpandMenu.tintColor
+                tint = Theme.L.ExpandMenu.tintColor
             )
         },
-        text = { Text("Remove from Collection", style = ThemeL.ExpandMenu.style) },
+        text = { Text("Remove from Collection", style = Theme.L.ExpandMenu.style) },
         onClick = {
             if (item == null) return@DropdownMenuItem
             if (selectedCollection == null) {

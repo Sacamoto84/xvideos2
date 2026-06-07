@@ -1,5 +1,7 @@
 package com.client.xvideos.common.collectionDB.ui
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -47,7 +49,7 @@ data class CollectionGridItem(
 
 /**
  * Цветовая и типографическая тема для [CollectionsGrid]. Заполняется на стороне
- * каждого раздела (см. `ThemeL.toCollectionsGridStyle()` / аналог для R).
+ * каждого раздела (см. `Theme.L.toCollectionsGridStyle()` / аналог для R).
  */
 data class CollectionsGridStyle(
     val backgroundColor: Color,

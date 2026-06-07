@@ -1,5 +1,7 @@
 package com.client.xvideos.x.screens.dashboards
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
@@ -29,7 +31,6 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.l.ui.screens.TabRow
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.x.screens.dashboards.bottomBar.DashboardControlsRow
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
@@ -39,11 +40,11 @@ import com.redgifs.common.downloader.ui.DownloadIndicator
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
  *
- * - Главный таб-ряд снизу (общий компонент [TabRow], уровень [ThemeRed.colorTabLevel0]):
+ * - Главный таб-ряд снизу (общий компонент [TabRow], уровень [Theme.tabLevel0]):
  *   `Dashboards` и `Savable`.
  * - Второй ряд над ним зависит от выбранного таба:
  *     - `Dashboards` → [DashboardControlsRow]: кнопка страны + выбор текущей страницы;
- *     - `Savable`    → под-[TabRow] (уровень [ThemeRed.colorTabLevel1]) с под-вкладками
+ *     - `Savable`    → под-[TabRow] (уровень [Theme.tabLevel1]) с под-вкладками
  *                      `Favorites` и `Сохранённое`.
  * - Самым нижним элементом панели идёт зелёный [DownloadIndicator] (как в R-root).
  * - Тело переключается между пейджером дашбордов, «Избранным» и «Сохранённым».
@@ -74,7 +75,7 @@ class ScreenXDashBoards : Screen {
                             titlesIcon = savedTabs,
                             value = vm.savedTab,
                             onChangeState = { vm.savedTab = it },
-                            containerColor = ThemeRed.colorTabLevel1,
+                            containerColor = Theme.tabLevel1,
                         )
                         else -> DashboardControlsRow(
                             isCurrentPage = vm.pagerState.currentPage,
@@ -88,7 +89,7 @@ class ScreenXDashBoards : Screen {
                         titlesIcon = mainTabs,
                         value = vm.mainTab,
                         onChangeState = { vm.mainTab = it },
-                        containerColor = ThemeRed.colorTabLevel0,
+                        containerColor = Theme.tabLevel0,
                     )
 
                     // Зелёный индикатор загрузки (как в R-root).
@@ -96,7 +97,7 @@ class ScreenXDashBoards : Screen {
                 }
             },
             modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Black,
+            containerColor = Theme.background,
         ) { innerPadding ->
 
             Box(

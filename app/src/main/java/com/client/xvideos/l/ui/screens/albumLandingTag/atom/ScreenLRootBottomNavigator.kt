@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.albumLandingTag.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +23,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.enum.SelectIndex
 
 @Composable
@@ -32,13 +33,13 @@ fun ScreenLRootBottomNavigator(
 
     val haptic = LocalHapticFeedback.current
 
-    val colorSelect = ThemeL.grey2
+    val colorSelect = Theme.L.grey2
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .background(ThemeL.grey4),
+            .background(Theme.L.grey4),
     ) {
 
         Row(
@@ -62,7 +63,7 @@ fun ScreenLRootBottomNavigator(
                         }
                     ), contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.Menu, contentDescription = null, tint = ThemeL.textColor)
+                Icon(Icons.Filled.Menu, contentDescription = null, tint = Theme.L.textColor)
             }
             VerticalDivider()
             Box(
@@ -86,9 +87,9 @@ fun ScreenLRootBottomNavigator(
             {
                 Text(
                     "Manga",
-                    color = ThemeL.textColor,
+                    color = Theme.L.textColor,
                     fontSize = 16.sp,
-                    fontFamily = ThemeL.fontFamilyKarla
+                    fontFamily = Theme.L.fontFamilyKarla
                 )
             }
             VerticalDivider()
@@ -111,9 +112,9 @@ fun ScreenLRootBottomNavigator(
             {
                 Text(
                     "Hentai",
-                    color = ThemeL.textColor,
+                    color = Theme.L.textColor,
                     fontSize = 16.sp,
-                    fontFamily = ThemeL.fontFamilyKarla
+                    fontFamily = Theme.L.fontFamilyKarla
                 )
             }
             VerticalDivider()
@@ -136,9 +137,9 @@ fun ScreenLRootBottomNavigator(
             {
                 Text(
                     "Porn",
-                    color = ThemeL.textColor,
+                    color = Theme.L.textColor,
                     fontSize = 16.sp,
-                    fontFamily = ThemeL.fontFamilyKarla
+                    fontFamily = Theme.L.fontFamilyKarla
                 )
             }
 

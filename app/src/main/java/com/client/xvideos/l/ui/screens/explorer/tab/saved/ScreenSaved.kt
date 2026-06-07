@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +31,6 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLik
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab_AddColumn
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddColumn
 import com.client.xvideos.r.ui.ui.atom.TabBarPoints
-import com.client.xvideos.r.common.ThemeRed
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -69,8 +70,8 @@ object L_SavedTab : Screen {
                     HorizontalDivider()
                     TabRow(
                         value = screenType,
-                        containerColor = ThemeRed.colorTabLevel1,
-                        //containerColor = ThemeRed.colorBottomBarBackground,
+                        containerColor = Theme.tabLevel1,
+                        //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = l,
                         onChangeState = {
                             if (it == screenType) {
@@ -88,7 +89,7 @@ object L_SavedTab : Screen {
             },
 
             modifier = Modifier.fillMaxSize(),
-            containerColor = ThemeRed.colorCommonBackground2
+            containerColor = Theme.background
         ) { paddingValues ->
 
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {

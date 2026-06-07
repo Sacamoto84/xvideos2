@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,7 +35,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.albumFilterDisplay
 
 
@@ -86,7 +87,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                     selected.primary,
                     modifier = Modifier.padding(start = 4.dp),
                     maxLines = 1,
-                    style = ThemeL.Type.rowValue.copy(color = palette.textPrimary)
+                    style = Theme.L.Type.rowValue.copy(color = palette.textPrimary)
                 )
                 Icon(
                     Icons.Default.ArrowDropDown,
@@ -106,7 +107,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                             Text(
                                 item,
                                 color = palette.textPrimary,
-                                style = ThemeL.Type.rowValue.copy(color = palette.textPrimary)
+                                style = Theme.L.Type.rowValue.copy(color = palette.textPrimary)
                             )
                         },
                         onClick = {
@@ -142,7 +143,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                     selected.secondary,
                     modifier = Modifier.padding(start = 4.dp),
                     maxLines = 1,
-                    style = ThemeL.Type.rowValue.copy(color = palette.textPrimary)
+                    style = Theme.L.Type.rowValue.copy(color = palette.textPrimary)
                 )
                 Icon(
                     Icons.Default.ArrowDropDown,
@@ -163,7 +164,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                             Text(
                                 item.secondary,
                                 color = palette.textPrimary,
-                                style = ThemeL.Type.rowValue.copy(color = palette.textPrimary),
+                                style = Theme.L.Type.rowValue.copy(color = palette.textPrimary),
                                 maxLines = 1
                             )
                         },
@@ -190,7 +191,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                 .clickable(onClick = { onRequestApply(selected.request) }),
             contentAlignment = Alignment.Center
         ) {
-            Text("Apply", color = Color.White, style = ThemeL.Type.button.copy(color = Color.White))
+            Text("Apply", color = Color.White, style = Theme.L.Type.button.copy(color = Color.White))
         }
     }
 

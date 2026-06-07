@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.video.player_with_menu
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -24,7 +26,6 @@ import com.client.xvideos.BuildConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerEvent
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
-import com.client.xvideos.r.common.ThemeRed
 import com.redgifs.common.video.PlayerControls
 import com.redgifs.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -135,7 +136,7 @@ fun CurrentTimeText(
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(8.dp),
-            fontFamily = ThemeRed.fontFamilyPopinsRegular,
+            fontFamily = Theme.R.fontFamilyPopinsRegular,
             fontSize = 10.sp
         )
     }

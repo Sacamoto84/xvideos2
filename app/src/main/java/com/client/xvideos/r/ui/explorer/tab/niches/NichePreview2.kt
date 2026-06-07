@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.niches
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.util.toPrettyCountInt
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
@@ -83,7 +84,7 @@ private fun NichePreview2Content(
             .fillMaxWidth()
             .height(78.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(ThemeRed.colorTabLevel3)
+            .background(Theme.tabLevel3)
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -113,7 +114,7 @@ private fun NichePreview2Content(
                     .height((70 / 3).dp),
                 color = Color.White,
                 fontSize = 18.sp,
-                fontFamily = ThemeRed.fontFamilyDMsanss
+                fontFamily = Theme.R.fontFamilyDMsanss
             )
 
             Row(
@@ -140,7 +141,7 @@ private fun NichePreview2Content(
                             modifier = Modifier.padding(start = 4.dp),
                             color = Color.LightGray,
                             fontSize = 16.sp,
-                            fontFamily = ThemeRed.fontFamilyDMsanss
+                            fontFamily = Theme.R.fontFamilyDMsanss
                         )
                     }
                     Row(
@@ -158,7 +159,7 @@ private fun NichePreview2Content(
                             modifier = Modifier.padding(start = 4.dp),
                             color = Color.LightGray,
                             fontSize = 16.sp,
-                            fontFamily = ThemeRed.fontFamilyDMsanss
+                            fontFamily = Theme.R.fontFamilyDMsanss
                         )
                     }
                 }
@@ -174,7 +175,7 @@ private fun NichePreview2Content(
                             if (isFollowed) Color.White else Color.Transparent,
                             RoundedCornerShape(10.dp)
                         )
-                        .background(if (isFollowed) ThemeRed.colorTabLevel0 else ThemeRed.colorYellow)
+                        .background(if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow)
                         .clickable(onClick = onFollowClick), contentAlignment = Alignment.Center
                 ) {
                     Text(

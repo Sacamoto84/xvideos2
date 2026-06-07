@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.niche
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.atom.ButtonUpCircle
@@ -36,13 +37,13 @@ fun NicheBottomBar(
     onUpClick: () -> Unit
 ) {
     Column {
-        //HorizontalDivider(color = ThemeRed.colorBorderGray)
+        //HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
             modifier = Modifier
                 //.fillMaxWidth()
                 //.clip(RoundedCornerShape(50f))
                 .height(48.dp)
-                //.background(ThemeRed.colorTabLevel1)
+                //.background(Theme.tabLevel1)
                 .padding(horizontal = 0.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -54,7 +55,7 @@ fun NicheBottomBar(
                     listOf(Order.TRENDING, Order.TOP, Order.LATEST),
                     currentSort,
                     onSelect = onSortChange,
-                    containerColor = ThemeRed.colorTabLevel0,
+                    containerColor = Theme.tabLevel0,
                     circle = true
                 )
 
@@ -76,7 +77,7 @@ fun NicheBottomBar(
 //                style = TextStyle(
 //                    color = Color.LightGray,
 //                    fontSize = 18.sp,
-//                    fontFamily = ThemeRed.fontFamilyDMsanss
+//                    fontFamily = Theme.R.fontFamilyDMsanss
 //                ),
 //                autoSize = TextAutoSize.StepBased(10.sp, 18.sp)
 //            )
@@ -86,7 +87,7 @@ fun NicheBottomBar(
                 Box(
                     modifier = Modifier.size(44.dp).clip(CircleShape)
                         .border(1.dp, Color.DarkGray, CircleShape)
-                        .background(ThemeRed.colorTabLevel0), contentAlignment = Alignment.Center
+                        .background(Theme.tabLevel0), contentAlignment = Alignment.Center
                 ) {
                     TabBarPoints(columns, true)
                 }

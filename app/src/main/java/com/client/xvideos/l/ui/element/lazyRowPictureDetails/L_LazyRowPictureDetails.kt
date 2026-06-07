@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.element.lazyRowPictureDetails
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -59,7 +61,6 @@ import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lAnimationVideoUrl
 import com.client.xvideos.l.model.lMediaRequestHeaders
 import com.client.xvideos.l.model.lPreviewImageUrl
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenFullScreen.L_FullScreenImage
@@ -225,8 +226,8 @@ fun L_LazyRowPictureDetails(
                         Text(
                             index.toString(),
                             modifier = Modifier.padding(start = 4.dp).align(Alignment.TopStart),
-                            color = ThemeL.textColor,
-                            style = ThemeL.Type.mediaIndex
+                            color = Theme.L.textColor,
+                            style = Theme.L.Type.mediaIndex
                         )
 
                         Box(modifier = Modifier.align(Alignment.TopEnd)) { expandMenuViewModel.ExpandMenu( expandMenu, item, host.idAlbum, isCollection ) }
@@ -264,12 +265,12 @@ private fun InitialPictureItemsLoading() {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = ThemeL.g0)
+            CircularProgressIndicator(color = Theme.L.g0)
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "Загрузка элементов...",
-                color = ThemeL.textColor,
-                style = ThemeL.Type.rowSubtitle
+                color = Theme.L.textColor,
+                style = Theme.L.Type.rowSubtitle
             )
         }
     }
@@ -339,7 +340,7 @@ private fun LInlineAnimationVideo(
 @Composable
 private fun AnimatedVideoPlaceholder(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.background(ThemeL.grey6),
+        modifier = modifier.background(Theme.L.grey6),
         contentAlignment = Alignment.Center
     ) {
         Icon(

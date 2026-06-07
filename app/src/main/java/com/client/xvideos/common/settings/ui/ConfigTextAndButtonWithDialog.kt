@@ -1,5 +1,7 @@
 package com.client.xvideos.common.settings.ui
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.l.theme.ThemeL
 
 @Composable
 fun ConfigTextAndButtonWithDialog(
@@ -67,7 +68,7 @@ fun ConfigTextAndButtonWithDialog(
                 .background(Color(0xFF323153))
                 .clickable(onClick = { visible = true }), contentAlignment = Alignment.Center
         ) {
-            Text(value, style = ThemeL.Type.button)
+            Text(value, style = Theme.L.Type.button)
         }
     }
 }

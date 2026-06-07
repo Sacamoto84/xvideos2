@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +34,6 @@ import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.L_ScreenAlbumSea
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.L_ScreenAlbumTopHits
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.L_SavedTab
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddColumn
 import com.client.xvideos.r.ui.explorer.top.TabRow
 import com.client.xvideos.r.ui.ui.atom.TabBarPoints
@@ -104,7 +105,7 @@ class L_ScreenExplorer : Screen {
             Column {
                 DownloadIndicator(percentDownload)
                 TabRow(
-                    containerColor = ThemeRed.colorTabLevel0,
+                    containerColor = Theme.tabLevel0,
                     titlesIcon = l,
                     value = vm.screenType,
                     onChangeState = {
@@ -119,7 +120,7 @@ class L_ScreenExplorer : Screen {
                     tags = tags
                 )
             }
-        }, containerColor = ThemeRed.colorCommonBackground2) { paddingValues ->
+        }, containerColor = Theme.background) { paddingValues ->
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
 
 

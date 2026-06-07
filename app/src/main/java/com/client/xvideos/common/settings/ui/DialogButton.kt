@@ -1,5 +1,7 @@
 package com.client.xvideos.common.settings.ui
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
-import com.client.xvideos.l.theme.ThemeL
 import com.composables.core.HorizontalSeparator
 
 @Composable
@@ -61,13 +62,13 @@ fun DialogButton(
                     Column(Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp)) {
                         Text(
                             text = title,
-                            style = ThemeL.Type.dialogTitle.copy(color = Color.Black)
+                            style = Theme.L.Type.dialogTitle.copy(color = Color.Black)
                         )
                         if (body.isNotEmpty()) {
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 text = body,
-                                style = ThemeL.Type.dialogBody.copy(color = Color(0xFF474747))
+                                style = Theme.L.Type.dialogBody.copy(color = Color(0xFF474747))
                             )
                         }
                     }

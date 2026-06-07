@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenFullScreen
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
@@ -150,7 +152,7 @@ fun SwipeableBottomPanel(
 //                    .height(indicatorHeight)
 //                    .offset(y = 2.dp)
 //                    .background(
-//                        ThemeL.grey2,
+//                        Theme.L.grey2,
 //                        RoundedCornerShape(2.dp)
 //                    )
 //            )

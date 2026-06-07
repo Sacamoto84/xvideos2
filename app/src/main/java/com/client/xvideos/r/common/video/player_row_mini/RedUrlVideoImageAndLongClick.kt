@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.video.player_row_mini
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -30,7 +32,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.common.video.player_row_mini.atom.Red_Video_Lite_Row2
@@ -167,7 +168,7 @@ fun RedUrlVideoImageAndLongClick(
             Text(
                 text = index.toString(),
                 color = Color.Gray,
-                fontFamily = ThemeRed.fontFamilyDMsanss,
+                fontFamily = Theme.R.fontFamilyDMsanss,
                 fontSize = 14.sp
             )
         }

@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.bottomBar
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListPageSelector
-import com.client.xvideos.r.common.ThemeRed
 
 @Composable
 fun AlbumListBottomBar(
@@ -40,7 +41,7 @@ fun AlbumListBottomBar(
                 .padding(start = 4.dp)
                 .fillMaxWidth()
                 .height(48.dp)
-                .background(ThemeRed.colorTabLevel1),
+                .background(Theme.tabLevel1),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

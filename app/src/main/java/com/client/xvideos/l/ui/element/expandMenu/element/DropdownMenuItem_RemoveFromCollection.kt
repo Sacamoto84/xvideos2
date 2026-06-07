@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.element.expandMenu.element
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.DropdownMenuItem
@@ -9,8 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.theme.ThemeL.ExpandMenu.style
-import com.client.xvideos.l.theme.ThemeL.ExpandMenu.tintColor
+import com.client.xvideos.common.theme.Theme.L.ExpandMenu.style
+import com.client.xvideos.common.theme.Theme.L.ExpandMenu.tintColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

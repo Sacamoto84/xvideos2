@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,7 +43,6 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
@@ -87,12 +88,12 @@ object SavedNichesTab : Screen {
             Text(
                 ">Группы",
                 modifier = Modifier.padding(start = 8.dp),
-                color = ThemeRed.colorYellow,
+                color = Theme.R.colorYellow,
                 fontSize = 18.sp,
-                fontFamily = ThemeRed.fontFamilyPopinsRegular
+                fontFamily = Theme.R.fontFamilyPopinsRegular
             )
         },
-            containerColor = Color(0xFF303030)
+            containerColor = Theme.background
         ) { padding ->
 
             Box(
@@ -113,7 +114,7 @@ object SavedNichesTab : Screen {
                                 .padding(vertical = 2.dp, horizontal = 6.dp)
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(ThemeRed.colorTabLevel3)
+                                .background(Theme.tabLevel3)
                                 .clickable(onClick = {
                                     navigator.push( R_ScreenNiche(item.id) )
                                 }),
@@ -126,7 +127,7 @@ object SavedNichesTab : Screen {
                                 item.name,
                                 color = Color.White,
                                 fontSize = 20.sp,
-                                fontFamily = ThemeRed.fontFamilyDMsanss,
+                                fontFamily = Theme.R.fontFamilyDMsanss,
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
@@ -144,7 +145,7 @@ object SavedNichesTab : Screen {
                             ) {
                                 Text(
                                     "Выйти",
-                                    fontFamily = ThemeRed.fontFamilyDMsanss,
+                                    fontFamily = Theme.R.fontFamilyDMsanss,
                                     fontSize = 18.sp,
                                     color = Color.White
                                 )

@@ -1,5 +1,7 @@
 package com.client.xvideos.common.traficStatistic
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.App
 import com.client.xvideos.common.util.formatBytes
-import com.client.xvideos.l.theme.ThemeL
 
 @Composable
 fun AppNetworkSpeedMonitor() {
@@ -42,8 +43,8 @@ fun AppNetworkSpeedMonitorContent(trafficData: TrafficData) {
             text = "Трафик приложения",
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
-            color = ThemeL.textColor,
-            fontFamily = ThemeL.fontFamilyKarla,
+            color = Theme.L.textColor,
+            fontFamily = Theme.L.fontFamilyKarla,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
@@ -86,13 +87,13 @@ fun SpeedRow(
             text = label,
             fontSize = 18.sp,
             fontWeight = FontWeight.Normal,
-            color = ThemeL.textColor, fontFamily = ThemeL.fontFamilyKarla
+            color = Theme.L.textColor, fontFamily = Theme.L.fontFamilyKarla
         )
         Text(
             text = value,
             fontSize = 18.sp,
             fontWeight = FontWeight.Normal,
-            color = ThemeL.textColor, fontFamily = ThemeL.fontFamilyKarla
+            color = Theme.L.textColor, fontFamily = Theme.L.fontFamilyKarla
         )
     }
 }

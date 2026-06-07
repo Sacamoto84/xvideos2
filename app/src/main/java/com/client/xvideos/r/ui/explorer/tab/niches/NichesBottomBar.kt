@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.niches
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +17,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.atom.ButtonUp
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
@@ -32,16 +33,16 @@ fun NichesBottomBar(
 
     val haptic = LocalHapticFeedback.current
 
-    Column(Modifier.background(ThemeRed.colorTabLevel1)) {
-        HorizontalDivider(color = ThemeRed.colorBorderGray)
+    Column(Modifier.background(Theme.tabLevel1)) {
+        HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).background(ThemeRed.colorTabLevel1),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).background(Theme.tabLevel1),
             horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom
         )
         {
             AnimatedVisibility(visible = !isSearchFocused) {
                 SortByOrder( list = listOf( Order.NICHES_SUBSCRIBERS_D, Order.NICHES_SUBSCRIBERS_A, Order.NICHES_POST_D, Order.NICHES_POST_A, Order.NICHES_NAME_A_Z, Order.NICHES_NAME_Z_A ),
-                    selected = sortType, onSelect = onSortTypeChange, containerColor = ThemeRed.colorTabLevel0 )
+                    selected = sortType, onSelect = onSortTypeChange, containerColor = Theme.tabLevel0 )
             }
 
             searchWidget(Modifier.padding(horizontal = 4.dp).weight(1f))
@@ -53,7 +54,7 @@ fun NichesBottomBar(
                 }
             }
         }
-        HorizontalDivider(color = ThemeRed.colorBorderGray)
+        HorizontalDivider(color = Theme.R.colorBorderGray)
     }
 }
 

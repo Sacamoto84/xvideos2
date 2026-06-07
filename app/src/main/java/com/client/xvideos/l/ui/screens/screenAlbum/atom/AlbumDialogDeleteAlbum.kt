@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -16,7 +18,6 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
-import com.client.xvideos.l.theme.ThemeL
 
 @Composable
 fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick: () -> Unit) {
@@ -27,7 +28,7 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
         title = {
             com.composeunstyled.Text(
                 "Удалить Альбом?",
-                style = ThemeL.Type.dialogTitle.copy(color = Color.Black, fontWeight = FontWeight.Bold)
+                style = Theme.L.Type.dialogTitle.copy(color = Color.Black, fontWeight = FontWeight.Bold)
             )
         },
         text = {
@@ -35,7 +36,7 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
                 append("Удалить «")
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.title) }
                 append("» из сохранённых?")
-            }, style = ThemeL.Type.dialogBody.copy(color = Color(0xFF474747)))
+            }, style = Theme.L.Type.dialogBody.copy(color = Color(0xFF474747)))
         },
 
         confirmButton = {
@@ -43,7 +44,7 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
                 com.composeunstyled.Text(
                     "Удалить",
                     color = Color(0xFF6552A5),
-                    style = ThemeL.Type.button.copy(color = Color(0xFF6552A5))
+                    style = Theme.L.Type.button.copy(color = Color(0xFF6552A5))
                 )
             }
         },
@@ -52,7 +53,7 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
                 com.composeunstyled.Text(
                     "Отмена",
                     color = Color(0xFF6552A5),
-                    style = ThemeL.Type.button.copy(color = Color(0xFF6552A5))
+                    style = Theme.L.Type.button.copy(color = Color(0xFF6552A5))
                 )
             }
         },

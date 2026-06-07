@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,7 +31,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.net.graphQl.Genre
@@ -77,7 +78,7 @@ fun AlbumListFilterGenres(
                             val filter1 = filter.copy(genresPlus = plus)
                             onChange(filter1)
                         }),
-                    style = ThemeL.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold)
+                    style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold)
                 )
             }
 
@@ -99,7 +100,7 @@ fun AlbumListFilterGenres(
                             val filter1 = filter.copy(genresMinus = minus)
                             onChange(filter1)
                         }),
-                    style = ThemeL.Type.bodyLarge.copy(color = StyleGenresTags.colorExcludedTextItem, fontWeight = FontWeight.Bold)
+                    style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorExcludedTextItem, fontWeight = FontWeight.Bold)
                 )
             }
         }
@@ -157,7 +158,7 @@ fun AlbumListFilterGenres(
                                     Text(
                                         item.title,
                                         color = palette.textPrimary,
-                                        style = ThemeL.Type.rowTitle.copy(color = palette.textPrimary, fontWeight = FontWeight.Bold)
+                                        style = Theme.L.Type.rowTitle.copy(color = palette.textPrimary, fontWeight = FontWeight.Bold)
                                     )
 
                                     Icon(
@@ -185,7 +186,7 @@ fun AlbumListFilterGenres(
                                 Text(
                                     count.toString(),
                                     color = palette.textSecondary,
-                                    style = ThemeL.Type.rowTitle.copy(color = palette.textSecondary, fontWeight = FontWeight.Bold)
+                                    style = Theme.L.Type.rowTitle.copy(color = palette.textSecondary, fontWeight = FontWeight.Bold)
                                 )
                             }
 

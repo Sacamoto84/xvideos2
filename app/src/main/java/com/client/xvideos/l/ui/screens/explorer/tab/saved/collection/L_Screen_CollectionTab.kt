@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -59,7 +61,6 @@ import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.featured.saved.LSmartCollectionCandidate
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.composeunstyled.Text
 import dagger.Binds
@@ -124,14 +125,14 @@ object L_Screen_CollectionTab : Screen {
                         "Действие с коллекцией",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = ThemeL.textColor
+                        color = Theme.L.textColor
                     )
                 },
                 text = {
                     Column {
-                        Text(pending, fontSize = 16.sp, color = ThemeL.grey2)
+                        Text(pending, fontSize = 16.sp, color = Theme.L.grey2)
                         DropdownMenuItem(
-                            text = { Text("Переименовать", style = ThemeL.Type.menuItem) },
+                            text = { Text("Переименовать", style = Theme.L.Type.menuItem) },
                             onClick = {
                                 renameValue = pending
                                 itemPendingRename = pending
@@ -139,7 +140,7 @@ object L_Screen_CollectionTab : Screen {
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Удалить коллекцию", style = ThemeL.Type.menuItem.copy(color = ThemeL.red)) },
+                            text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Theme.L.red)) },
                             onClick = {
                                 itemPendingDelete = pending
                                 itemPendingAction = null
@@ -151,11 +152,11 @@ object L_Screen_CollectionTab : Screen {
                 dismissButton = {
                     TextButton(
                         onClick = { itemPendingAction = null }
-                    ) { Text("Отмена", style = ThemeL.Type.button.copy(color = ThemeL.primaryColor)) }
+                    ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
                 },
-                containerColor = ThemeL.grey5,
-                titleContentColor = ThemeL.textColor,
-                textContentColor = ThemeL.textColor
+                containerColor = Theme.L.grey5,
+                titleContentColor = Theme.L.textColor,
+                textContentColor = Theme.L.textColor
             )
         }
 
@@ -167,7 +168,7 @@ object L_Screen_CollectionTab : Screen {
                         "Переименовать коллекцию",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = ThemeL.textColor
+                        color = Theme.L.textColor
                     )
                 },
                 text = {
@@ -175,7 +176,7 @@ object L_Screen_CollectionTab : Screen {
                         value = renameValue,
                         onValueChange = { renameValue = it },
                         singleLine = true,
-                        textStyle = ThemeL.Type.body
+                        textStyle = Theme.L.Type.body
                     )
                 },
                 confirmButton = {
@@ -185,16 +186,16 @@ object L_Screen_CollectionTab : Screen {
                                 itemPendingRename = null
                             }
                         }
-                    ) { Text("Сохранить", style = ThemeL.Type.button.copy(color = ThemeL.primaryColor)) }
+                    ) { Text("Сохранить", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { itemPendingRename = null }
-                    ) { Text("Отмена", style = ThemeL.Type.button.copy(color = ThemeL.primaryColor)) }
+                    ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
                 },
-                containerColor = ThemeL.grey5,
-                titleContentColor = ThemeL.textColor,
-                textContentColor = ThemeL.textColor
+                containerColor = Theme.L.grey5,
+                titleContentColor = Theme.L.textColor,
+                textContentColor = Theme.L.textColor
             )
         }
 
@@ -209,7 +210,7 @@ object L_Screen_CollectionTab : Screen {
                         "Удалить коллекцию?",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = ThemeL.textColor
+                        color = Theme.L.textColor
                     )
                 },
 
@@ -218,7 +219,7 @@ object L_Screen_CollectionTab : Screen {
                         append("Удалить «")
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
                         append("» из коллекции")
-                    }, fontSize = 16.sp, color = ThemeL.textColor)
+                    }, fontSize = 16.sp, color = Theme.L.textColor)
                 },
 
                 confirmButton = {
@@ -227,17 +228,17 @@ object L_Screen_CollectionTab : Screen {
                             savedL.collection.deleteCollection(pending)
                             itemPendingDelete = null
                         }
-                    ) { Text("Удалить", style = ThemeL.Type.button.copy(color = ThemeL.red)) }
+                    ) { Text("Удалить", style = Theme.L.Type.button.copy(color = Theme.L.red)) }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { itemPendingDelete = null }
-                    ) { Text("Отмена", style = ThemeL.Type.button.copy(color = ThemeL.primaryColor)) }
+                    ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
                 },
 
-                containerColor = ThemeL.grey5,
-                titleContentColor = ThemeL.textColor,
-                textContentColor = ThemeL.textColor
+                containerColor = Theme.L.grey5,
+                titleContentColor = Theme.L.textColor,
+                textContentColor = Theme.L.textColor
             )
         }
 
@@ -288,13 +289,13 @@ fun L_SavedCollectionTabContent(
         },
         gridState = gridState,
         style = CollectionsGridStyle(
-            backgroundColor = ThemeL.greyBackground,
-            titleColor = ThemeL.primaryColor,
-            titleFontFamily = ThemeL.fontFamilyPopinsRegular,
+            backgroundColor = Theme.background,
+            titleColor = Theme.L.primaryColor,
+            titleFontFamily = Theme.L.fontFamilyPopinsRegular,
             itemNameColor = androidx.compose.ui.graphics.Color.White,
             itemSecondaryColor = androidx.compose.ui.graphics.Color.LightGray,
-            itemFontFamily = ThemeL.fontFamilyDMsanss,
-            addButtonBackground = ThemeL.primaryColor
+            itemFontFamily = Theme.L.fontFamilyDMsanss,
+            addButtonBackground = Theme.L.primaryColor
         ),
         onCollectionClick = onCollectionClick,
         onCollectionLongClick = onCollectionLongClick,
@@ -323,50 +324,50 @@ private fun LCollectionsTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ThemeL.greyBackground)
+            .background(Theme.background)
             .padding(start = 8.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 ">Коллекция>${selectedCollection.orEmpty()}",
-                color = ThemeL.primaryColor,
+                color = Theme.L.primaryColor,
                 fontSize = 18.sp,
-                fontFamily = ThemeL.fontFamilyPopinsRegular
+                fontFamily = Theme.L.fontFamilyPopinsRegular
             )
             if (selectedCollection == null) {
                 Text(
                     sortOrder.title,
-                    color = ThemeL.grey2,
+                    color = Theme.L.grey2,
                     fontSize = 12.sp,
-                    fontFamily = ThemeL.fontFamilyDMsanss
+                    fontFamily = Theme.L.fontFamilyDMsanss
                 )
             }
         }
 
         if (selectedCollection == null) {
             TextButton(onClick = onSmartCollectionsClick) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = ThemeL.primaryColor)
+                Icon(Icons.Default.Add, contentDescription = null, tint = Theme.L.primaryColor)
                 Spacer(Modifier.width(4.dp))
-                Text("Smart", color = ThemeL.primaryColor, style = ThemeL.Type.button)
+                Text("Smart", color = Theme.L.primaryColor, style = Theme.L.Type.button)
             }
 
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null, tint = ThemeL.textColor)
+                    Icon(Icons.Default.MoreVert, contentDescription = null, tint = Theme.L.textColor)
                 }
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
-                    containerColor = ThemeL.grey5
+                    containerColor = Theme.L.grey5
                 ) {
                     LCollectionSortOrder.entries.forEach { order ->
                         DropdownMenuItem(
                             text = {
                                 Text(
                                     order.title,
-                                    style = ThemeL.Type.menuItem.copy(
-                                        color = if (order == sortOrder) ThemeL.primaryColor else ThemeL.textColor
+                                    style = Theme.L.Type.menuItem.copy(
+                                        color = if (order == sortOrder) Theme.L.primaryColor else Theme.L.textColor
                                     )
                                 )
                             },
@@ -395,15 +396,15 @@ private fun LSmartCollectionsDialog(
                 "Smart collections",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = ThemeL.textColor
+                color = Theme.L.textColor
             )
         },
         text = {
             if (candidates.isEmpty()) {
                 Text(
                     "Пока мало метаданных для авто-коллекций. Добавь несколько элементов из альбомов, где есть теги, авторы или общий album id.",
-                    color = ThemeL.grey2,
-                    style = ThemeL.Type.body
+                    color = Theme.L.grey2,
+                    style = Theme.L.Type.body
                 )
             } else {
                 LazyColumn(
@@ -423,15 +424,15 @@ private fun LSmartCollectionsDialog(
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(ThemeL.primaryColor.copy(alpha = 0.22f)),
+                                    .background(Theme.L.primaryColor.copy(alpha = 0.22f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(candidate.count.toString(), color = ThemeL.primaryColor, fontWeight = FontWeight.Bold)
+                                Text(candidate.count.toString(), color = Theme.L.primaryColor, fontWeight = FontWeight.Bold)
                             }
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(candidate.title, color = Color.White, style = ThemeL.Type.rowTitle)
-                                Text(candidate.subtitle, color = ThemeL.grey2, style = ThemeL.Type.rowSubtitle)
+                                Text(candidate.title, color = Color.White, style = Theme.L.Type.rowTitle)
+                                Text(candidate.subtitle, color = Theme.L.grey2, style = Theme.L.Type.rowSubtitle)
                             }
                         }
                     }
@@ -441,12 +442,12 @@ private fun LSmartCollectionsDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Закрыть", style = ThemeL.Type.button.copy(color = ThemeL.primaryColor))
+                Text("Закрыть", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor))
             }
         },
-        containerColor = ThemeL.grey5,
-        titleContentColor = ThemeL.textColor,
-        textContentColor = ThemeL.textColor
+        containerColor = Theme.L.grey5,
+        titleContentColor = Theme.L.textColor,
+        textContentColor = Theme.L.textColor
     )
 }
 

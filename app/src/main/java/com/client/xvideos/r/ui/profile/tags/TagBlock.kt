@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.profile.tags
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,7 +32,6 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.r.common.ThemeRed
 
 @Composable
 fun TagsBlock(
@@ -136,13 +137,13 @@ private fun TagChip(text: String, select: Boolean, onClick: (String) -> Unit) {
         text = text,
         color = if (select) Color.Black else Color.White,
         fontSize = 14.sp,
-        fontFamily = ThemeRed.fontFamilyPopinsRegular,
+        fontFamily = Theme.R.fontFamilyPopinsRegular,
         modifier = Modifier
             .padding(horizontal = 4.dp, vertical = 2.dp)
             .height(32.dp)
             .clip(RoundedCornerShape(16.dp)) // Используем фиксированный радиус для скорости
-            .background(if (select) ThemeRed.colorYellow else Color.Transparent)
-            .border(1.dp, ThemeRed.colorYellow, RoundedCornerShape(16.dp))
+            .background(if (select) Theme.R.colorYellow else Color.Transparent)
+            .border(1.dp, Theme.R.colorYellow, RoundedCornerShape(16.dp))
             .clickable { onClick(text) }
             .padding(horizontal = 12.dp, vertical = 4.dp)
             .wrapContentWidth()
@@ -157,7 +158,7 @@ private fun ExpandCollapseButton(expanded: Boolean, onClick: () -> Unit) {
             .size(32.dp)
             .clip(CircleShape)
             .background(Color.Transparent)
-            .border(1.dp, ThemeRed.colorYellow, CircleShape)
+            .border(1.dp, Theme.R.colorYellow, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

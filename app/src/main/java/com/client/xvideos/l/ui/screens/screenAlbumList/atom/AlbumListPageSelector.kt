@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,7 +37,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.screens.common.bottomKeyboard.KeyboardNumber
 import com.client.xvideos.screens.common.bottomKeyboard.KeyboardNumberTheme
 
@@ -68,7 +69,7 @@ fun AlbumListPageSelector(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(1f)
-                .background(ThemeL.red)
+                .background(Theme.L.red)
                 .clickable(onClick = { onChange((page - 1).coerceAtLeast(1)) }),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.Default.KeyboardArrowLeft, tint = Color.White, contentDescription = null) }
@@ -79,18 +80,18 @@ fun AlbumListPageSelector(
                 .weight(2f)
                 .drawBehind {
                     val strokeWidth = 1.dp.toPx()
-                    val color = ThemeL.grey3.toArgb()
+                    val color = Theme.L.grey3.toArgb()
 
                     // верхняя линия
                     drawLine(
-                        color = ThemeL.grey3,
+                        color = Theme.L.grey3,
                         start = Offset(0f, 0f),
                         end = Offset(size.width, 0f),
                         strokeWidth = strokeWidth
                     )
                     // нижняя линия
                     drawLine(
-                        color = ThemeL.grey3,
+                        color = Theme.L.grey3,
                         start = Offset(0f, size.height),
                         end = Offset(size.width, size.height),
                         strokeWidth = strokeWidth
@@ -104,8 +105,8 @@ fun AlbumListPageSelector(
         ) {
             Text(
                 "Page ${page + 1} of $pageMax",
-                color = ThemeL.textColor,
-                style = ThemeL.Type.rowTitle.copy(textAlign = TextAlign.Center)
+                color = Theme.L.textColor,
+                style = Theme.L.Type.rowTitle.copy(textAlign = TextAlign.Center)
             )
         }
 
@@ -113,7 +114,7 @@ fun AlbumListPageSelector(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(1f)
-                .background(ThemeL.red)
+                .background(Theme.L.red)
                 .clickable(
                     onClick = { onChange((page + 1).coerceAtMost(pageMax)) }
                 ),

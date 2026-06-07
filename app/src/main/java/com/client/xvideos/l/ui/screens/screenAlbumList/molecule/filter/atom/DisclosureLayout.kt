@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloatAsState
@@ -24,13 +26,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 import com.composeunstyled.Disclosure
 import com.composeunstyled.DisclosureHeading
 import com.composeunstyled.DisclosurePanel
 import com.composeunstyled.rememberDisclosureState
 
-private val style = ThemeL.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
+private val style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
 
 @Composable
 fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @Composable () -> Unit ) {

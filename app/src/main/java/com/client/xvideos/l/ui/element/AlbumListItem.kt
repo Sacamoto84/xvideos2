@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.element
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,7 +23,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.l.theme.ThemeL
 
 //.aspectRatio(640f/935)
 @Composable
@@ -39,7 +40,7 @@ fun AlbumListItem(
             .then(modifier)
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, ThemeL.grey3, RoundedCornerShape(8.dp))
+            .border(1.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
     ) {
 
@@ -59,7 +60,7 @@ fun AlbumListItem(
                 title.removePrefix(" "),
                 modifier = Modifier.padding(horizontal = 4.dp),
                 color = Color.White,
-                style = ThemeL.Type.rowTitle.copy(color = Color.White),
+                style = Theme.L.Type.rowTitle.copy(color = Color.White),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -78,8 +79,8 @@ fun AlbumListItem(
                 Text(
                     str.toString(),
                     modifier = Modifier,
-                    color = ThemeL.textColor,
-                    style = ThemeL.Type.rowSubtitle
+                    color = Theme.L.textColor,
+                    style = Theme.L.Type.rowSubtitle
                 )
             }
         }

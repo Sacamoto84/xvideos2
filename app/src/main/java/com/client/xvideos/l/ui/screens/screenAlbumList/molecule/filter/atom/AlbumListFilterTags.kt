@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,7 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.composeunstyled.Icon
@@ -69,7 +70,7 @@ fun AlbumListFilterTags(
                             val filter1 = filter.copy(tagPlus = plus)
                             onChange(filter1)
                         }),
-                    style = ThemeL.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold)
+                    style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold)
                 )
             }
 
@@ -92,7 +93,7 @@ fun AlbumListFilterTags(
                             val filter1 = filter.copy(tagMinus = minus)
                             onChange(filter1)
                         }),
-                    style = ThemeL.Type.bodyLarge.copy(color = StyleGenresTags.colorExcludedTextItem, fontWeight = FontWeight.Bold)
+                    style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorExcludedTextItem, fontWeight = FontWeight.Bold)
                 )
             }
         }
@@ -142,7 +143,7 @@ fun AlbumListFilterTags(
 
 
 
-                                    Text(item, color = palette.textPrimary, style = ThemeL.Type.rowTitle.copy(color = palette.textPrimary, fontWeight = FontWeight.Bold))
+                                    Text(item, color = palette.textPrimary, style = Theme.L.Type.rowTitle.copy(color = palette.textPrimary, fontWeight = FontWeight.Bold))
 
                                     Icon(
                                         Icons.Default.Remove,
@@ -165,7 +166,7 @@ fun AlbumListFilterTags(
                                 }
 
                                 val count = tagCountItems.find { it1 -> it1.term == item }?.count ?: -1
-                                Text(count.toString(), color = palette.textSecondary, style = ThemeL.Type.rowTitle.copy(color = palette.textSecondary, fontWeight = FontWeight.Bold))
+                                Text(count.toString(), color = palette.textSecondary, style = Theme.L.Type.rowTitle.copy(color = palette.textSecondary, fontWeight = FontWeight.Bold))
 
                             }
 

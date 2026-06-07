@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -38,7 +40,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.l.net.AlbumTopHitsImpl
 import com.client.xvideos.l.net.Luscious
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.element.AlbumListItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import dagger.Binds
@@ -89,7 +90,7 @@ object L_ScreenAlbumTopHits : Screen {
 
 
         Scaffold(
-            containerColor = ThemeL.greyBackground,
+            containerColor = Theme.background,
         ) {
 
             LazyColumn(state = vm.state) {
@@ -100,9 +101,9 @@ object L_ScreenAlbumTopHits : Screen {
 
                     Text(
                         item.title,
-                        color = ThemeL.textColor,
+                        color = Theme.L.textColor,
                         fontSize = 24.sp,
-                        fontFamily = ThemeL.fontFamilyKarla,
+                        fontFamily = Theme.L.fontFamilyKarla,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                     )
@@ -151,17 +152,17 @@ private fun ButtonSeeAll() {
             .padding(horizontal = 4.dp)
             .fillMaxWidth()
             .height(32.dp)
-            .border(1.dp, ThemeL.grey2, RoundedCornerShape(8.dp))
-            .background(ThemeL.grey3),
+            .border(1.dp, Theme.L.grey2, RoundedCornerShape(8.dp))
+            .background(Theme.L.grey3),
         contentAlignment = Alignment.Center
     ) {
         Text(
             "See All >",
-            color = ThemeL.textColor,
+            color = Theme.L.textColor,
             modifier = Modifier,
             textAlign = TextAlign.Center,
             fontSize = 20.sp,
-            fontFamily = ThemeL.fontFamilyKarla,
+            fontFamily = Theme.L.fontFamilyKarla,
             fontWeight = FontWeight.Medium,
         )
     }

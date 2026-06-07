@@ -1,5 +1,7 @@
 package com.client.xvideos.common.traficStatistic
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.App
 import com.client.xvideos.common.util.formatBytes
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlin.math.roundToInt
 
@@ -71,7 +72,7 @@ private val style = TextStyle(
     color = Color.Black,
     fontSize = 8.sp,
     fontWeight = FontWeight.Medium,
-    fontFamily = ThemeL.fontFamilyKarla,
+    fontFamily = Theme.L.fontFamilyKarla,
     lineHeight = 8.sp
 )
 

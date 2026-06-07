@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,7 +47,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -141,7 +142,7 @@ fun SubscriptionsTabContent(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = Color(0xFF303030)
+        containerColor = Theme.background
     ) { padding ->
         Box(
             modifier = Modifier
@@ -247,7 +248,7 @@ fun CreatorChip(
             text = creator,
             fontSize = 16.sp,
             color = Color.White,
-            fontFamily = ThemeRed.fontFamilyPopinsRegular
+            fontFamily = Theme.R.fontFamilyPopinsRegular
         )
         Spacer(Modifier.width(4.dp))
     }

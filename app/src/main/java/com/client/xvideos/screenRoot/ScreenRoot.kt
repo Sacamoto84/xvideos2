@@ -1,5 +1,7 @@
 package com.client.xvideos.screenRoot
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,7 +46,6 @@ import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.snackbar.show
 import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.screens.explorer.LCollectionDialogs
 import dagger.Binds
 import dagger.Module
@@ -119,7 +120,7 @@ object ScreenRoot : Screen {
                 floatingActionButton = {
                     //HomeFloatingActionButton(mainNavigator)
                 },
-                containerColor = ThemeL.greyBackground,
+                containerColor = Theme.backgroundAppRoot,
                 snackbarHost = {
                     RootSnackbarHost(snackBarHostState)
                 }

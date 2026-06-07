@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.video
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -35,7 +37,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.util.toMinSec
-import com.client.xvideos.r.common.ThemeRed
 import kotlinx.coroutines.coroutineScope
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -123,7 +124,7 @@ fun CanvasTimeDurationLine1(
                     " " + currentTime.toDouble().toMinSec(),
                     color = Color.Black,
                     fontSize = 12.sp,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     modifier = Modifier
                         .width(44.dp)
                         .offset(0.5.dp, 0.5.dp)//.background(Color.Green)
@@ -133,7 +134,7 @@ fun CanvasTimeDurationLine1(
                     " " + currentTime.toDouble().toMinSec(),
                     color = Color.White,
                     fontSize = 12.sp,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     modifier = Modifier.width(44.dp)//.background(Color.Green)
                 )
             }
@@ -222,7 +223,7 @@ fun CanvasTimeDurationLine1(
                     color = Color.Black,
                     fontSize = 12.sp,
                     textAlign = TextAlign.End,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     modifier = Modifier
                         .width(44.dp)
                         .offset(0.5.dp, 0.5.dp)//.background(Color.Green)
@@ -233,7 +234,7 @@ fun CanvasTimeDurationLine1(
                     color = Color.White,
                     fontSize = 12.sp,
                     textAlign = TextAlign.End,
-                    fontFamily = ThemeRed.fontFamilyPopinsRegular,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
                     modifier = Modifier.width(44.dp)//.background(Color.Green)
                 )
             }

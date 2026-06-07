@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,7 +30,6 @@ import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.enum.AudiencesType
 import com.client.xvideos.l.net.graphQl.Audience
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
-import com.client.xvideos.l.theme.ThemeL
 
 @Composable
 fun AlbumListFilterAudiences(
@@ -107,7 +108,7 @@ private fun AudienceSelectionChip(
         color = if (selected) palette.selectedText else palette.textPrimary,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
-        style = ThemeL.Type.bodyLarge.copy(
+        style = Theme.L.Type.bodyLarge.copy(
             color = if (selected) palette.selectedText else palette.textPrimary,
             fontWeight = FontWeight.Bold
         ),
@@ -145,7 +146,7 @@ private fun AudienceOptionRow(
             color = textColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = ThemeL.Type.rowTitle.copy(color = textColor, fontWeight = FontWeight.Bold),
+            style = Theme.L.Type.rowTitle.copy(color = textColor, fontWeight = FontWeight.Bold),
             modifier = Modifier.weight(1f)
         )
         if (selected) {

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.ui.sortByOrder
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,7 +35,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.Order
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,7 +107,7 @@ fun SortByOrder(
                     .align(Alignment.CenterVertically),
                 style = TextStyle(
                     color = Color.White,
-                    fontFamily = ThemeRed.fontFamilyDMsanss,
+                    fontFamily = Theme.R.fontFamilyDMsanss,
                     fontSize = 18.sp
                 ),
                 autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 18.sp),
@@ -130,7 +131,7 @@ fun SortByOrder(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.width(IntrinsicSize.Min), containerColor = Color(0xFF090909),
-            shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, ThemeRed.colorBorderGray)
+            shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Theme.R.colorBorderGray)
         ) {
             list.forEach { option ->
 
@@ -172,7 +173,7 @@ fun SortByOrder(
 //                                text,
 //                                style = TextStyle(
 //                                    color = Color.White,
-//                                    fontFamily = ThemeRed.fontFamilyDMsanss,
+//                                    fontFamily = Theme.R.fontFamilyDMsanss,
 //                                    fontSize = 16.sp
 //                                ),
 //                                modifier = Modifier
@@ -183,7 +184,7 @@ fun SortByOrder(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 style = TextStyle(
                                     color = Color.White,
-                                    fontFamily = ThemeRed.fontFamilyDMsanss,
+                                    fontFamily = Theme.R.fontFamilyDMsanss,
                                     fontSize = 18.sp
                                 ),
                                 autoSize = TextAutoSize.StepBased(

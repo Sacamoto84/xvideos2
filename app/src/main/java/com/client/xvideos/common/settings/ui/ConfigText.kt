@@ -1,5 +1,7 @@
 package com.client.xvideos.common.settings.ui
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.theme.ThemeL
 
 /**
  * Отображает строку конфигурации с меткой и значением.
@@ -26,7 +27,7 @@ fun ConfigText(text: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text, style = styleTextConfig)
-        Text(value, style = ThemeL.Type.rowValue)
+        Text(value, style = Theme.L.Type.rowValue)
     }
 }
 

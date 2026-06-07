@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbum
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -52,7 +54,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.screenRoot.LocalRootScreenModel
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Audience
@@ -164,7 +165,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                 }
             },
 
-            containerColor = ThemeL.greyBackground
+            containerColor = Theme.background
         ) { padding ->
 
             Box(modifier = Modifier.fillMaxSize())
@@ -181,8 +182,8 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                     UrlImage( parsed.cover.url, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(72.dp) )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Column {
-                                        Text(parsed.title, color = ThemeL.textColor, style = ThemeL.Type.rowTitle)
-                                        Text( "${parsed.number_of_animated_pictures} gifs / ${parsed.number_of_pictures} pictures", color = ThemeL.textColor )
+                                        Text(parsed.title, color = Theme.L.textColor, style = Theme.L.Type.rowTitle)
+                                        Text( "${parsed.number_of_animated_pictures} gifs / ${parsed.number_of_pictures} pictures", color = Theme.L.textColor )
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -286,17 +287,17 @@ private fun LAlbumNetworkIssuePanel(
             .padding(top = 8.dp, bottom = 4.dp)
             .border(
                 width = 1.dp,
-                color = if (htmlChallenge) Color(0xFFFFC857) else ThemeL.grey2,
+                color = if (htmlChallenge) Color(0xFFFFC857) else Theme.L.grey2,
                 shape = RoundedCornerShape(8.dp)
             )
-            .background(ThemeL.grey5, RoundedCornerShape(8.dp))
+            .background(Theme.L.grey5, RoundedCornerShape(8.dp))
             .padding(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                tint = if (htmlChallenge) Color(0xFFFFC857) else ThemeL.grey2
+                tint = if (htmlChallenge) Color(0xFFFFC857) else Theme.L.grey2
             )
             Spacer(Modifier.width(8.dp))
             Text(
@@ -309,23 +310,23 @@ private fun LAlbumNetworkIssuePanel(
                 } else {
                     "Часть страниц альбома не загрузилась."
                 },
-                color = ThemeL.textColor,
-                style = ThemeL.Type.rowTitle,
+                color = Theme.L.textColor,
+                style = Theme.L.Type.rowTitle,
                 modifier = Modifier.weight(1f)
             )
         }
 
         Text(
             text = "Если старая страница была в кэше, она уже показана. Недогруженные страницы: $failedPagesText",
-            color = ThemeL.grey2,
-            style = ThemeL.Type.rowSubtitle,
+            color = Theme.L.grey2,
+            style = Theme.L.Type.rowSubtitle,
             modifier = Modifier.padding(top = 6.dp)
         )
 
         Button(
             onClick = onRetryFailedPages,
             enabled = failedPages.isNotEmpty() && !albumPicsDetails.isRetryingFailedPages,
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeL.primaryColor),
+            colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.padding(top = 8.dp)
         ) {
@@ -334,7 +335,7 @@ private fun LAlbumNetworkIssuePanel(
             Text(
                 if (albumPicsDetails.isRetryingFailedPages) "Повторяю..." else "Повторить страницы",
                 color = Color.Black,
-                style = ThemeL.Type.button
+                style = Theme.L.Type.button
             )
         }
     }

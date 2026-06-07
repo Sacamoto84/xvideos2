@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.ui.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.ui.profile.ScreenRedProfileSM
 import com.client.xvideos.r.ui.profile.TypeGifs
 import com.composeunstyled.Text
@@ -44,7 +45,7 @@ fun GifTypes_Control(
             onTypeSelected(typeGifsList[0])
         }
 
-        Box(Modifier.width(1.dp).height(48.dp).background(ThemeRed.colorBorderGray))
+        Box(Modifier.width(1.dp).height(48.dp).background(Theme.R.colorBorderGray))
 
         TextAndLine(Modifier.weight(1f), typeGifsList[1].value, typeGifsList[1] == selectedType) {
             onTypeSelected(typeGifsList[1])
@@ -71,8 +72,8 @@ private fun TextAndLine(
         Text(
             str,
             fontSize = 18.sp,
-            color = if (select) Color.White else ThemeRed.colorTextGray,
-            fontFamily = ThemeRed.fontFamilyPopinsRegular
+            color = if (select) Color.White else Theme.R.colorTextGray,
+            fontFamily = Theme.R.fontFamilyPopinsRegular
         )
 
         Box(
@@ -81,7 +82,7 @@ private fun TextAndLine(
                 .offset(0.dp, 16.dp)
                 .width(48.dp)
                 .height(4.dp)
-                .background(if (select) ThemeRed.colorRed else Color.Transparent)
+                .background(if (select) Theme.R.colorRed else Color.Transparent)
         )
 
     }
@@ -92,7 +93,7 @@ private fun TextAndLine(
 @Preview
 @Composable
 fun GifTypes_ControlPreview() {
-    Box(modifier = Modifier.background(ThemeRed.colorCommonBackground2)) {
+    Box(modifier = Modifier.background(Theme.background)) {
         GifTypes_Control(
             typeGifsList = listOf(TypeGifs.GIFS, TypeGifs.IMAGES),
             selectedType = TypeGifs.GIFS,
@@ -104,7 +105,7 @@ fun GifTypes_ControlPreview() {
 @Preview
 @Composable
 private fun TextAndLinePreviewSelected() {
-    Box(modifier = Modifier.background(ThemeRed.colorCommonBackground2)) {
+    Box(modifier = Modifier.background(Theme.background)) {
         TextAndLine(
             str = "Gifs",
             select = true,
@@ -116,7 +117,7 @@ private fun TextAndLinePreviewSelected() {
 @Preview
 @Composable
 private fun TextAndLinePreviewUnselected() {
-    Box(modifier = Modifier.background(ThemeRed.colorCommonBackground2)) {
+    Box(modifier = Modifier.background(Theme.background)) {
         TextAndLine(
             str = "Images",
             select = false,

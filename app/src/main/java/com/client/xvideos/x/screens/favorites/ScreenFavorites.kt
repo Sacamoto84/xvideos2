@@ -1,5 +1,7 @@
 package com.client.xvideos.x.screens.favorites
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -57,7 +59,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.profile.ScreenProfile
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
@@ -122,12 +123,12 @@ private fun FavoritesContent(
         )
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize(), backgroundColor = ThemeL.grey6, topBar = {
+    Scaffold(modifier = Modifier.fillMaxSize(), backgroundColor = Theme.L.grey6, topBar = {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(ThemeL.grey6),
+                    .background(Theme.L.grey6),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -273,17 +274,17 @@ private fun FavoriteActionsExpandMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = ThemeL.ExpandMenu.backgroundColor
+            containerColor = Theme.L.ExpandMenu.backgroundColor
         ) {
             DropdownMenuItem(
                 leadingIcon = {
                     Icon(
                         Icons.Filled.ArrowCircleDown,
                         contentDescription = null,
-                        tint = ThemeL.ExpandMenu.tintColor
+                        tint = Theme.L.ExpandMenu.tintColor
                     )
                 },
-                text = { Text("Скачать", style = ThemeL.ExpandMenu.style) },
+                text = { Text("Скачать", style = Theme.L.ExpandMenu.style) },
                 onClick = {
                     onDownload()
                     expanded = false
@@ -296,10 +297,10 @@ private fun FavoriteActionsExpandMenu(
                     Icon(
                         Icons.Filled.Delete,
                         contentDescription = null,
-                        tint = ThemeL.ExpandMenu.tintColor
+                        tint = Theme.L.ExpandMenu.tintColor
                     )
                 },
-                text = { Text("Удалить", style = ThemeL.ExpandMenu.style) },
+                text = { Text("Удалить", style = Theme.L.ExpandMenu.style) },
                 onClick = {
                     onDelete()
                     expanded = false

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.expand_menu_video
 
+import com.client.xvideos.common.theme.Theme
+
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,13 +32,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
 
 private val tintColor = Color(0xFF48454E)
-private val style = TextStyle(color = tintColor, fontFamily = ThemeRed.fontFamilyPopinsRegular, fontSize = 20.sp)
+private val style = TextStyle(color = tintColor, fontFamily = Theme.R.fontFamilyPopinsRegular, fontSize = 20.sp)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +72,7 @@ fun ExpandMenuVideoTags(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = ThemeRed.colorTabLevel3
+            containerColor = Theme.tabLevel3
         ) {
 
             FlowRow {
@@ -80,7 +81,7 @@ fun ExpandMenuVideoTags(
                         modifier = Modifier
                             .padding(horizontal = 4.dp)
                             .padding(vertical = 4.dp)
-                            .border(1.dp, ThemeRed.colorYellow, RoundedCornerShape(4.dp))
+                            .border(1.dp, Theme.R.colorYellow, RoundedCornerShape(4.dp))
                             .clickable(onClick = {
                                 onClick(it)
                                 expanded = false
@@ -90,7 +91,7 @@ fun ExpandMenuVideoTags(
                         Text(
                             it,
                             color = Color.White,
-                            fontFamily = ThemeRed.fontFamilyDMsanss,
+                            fontFamily = Theme.R.fontFamilyDMsanss,
                             fontSize = 20.sp,
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)

@@ -1,6 +1,10 @@
 package com.client.xvideos.x.screens.ui.expandMenu
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -9,6 +13,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.ButtonMoveVert
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
@@ -34,11 +40,9 @@ fun X_DashboardExpandMenu(
     isExpanded: Boolean = false
 ) {
 
-    var expanded by remember { mutableStateOf(isExpanded) }
+    var expanded by remember(isExpanded) { mutableStateOf(isExpanded) }
 
     val size = 26.dp
-
-    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier,
@@ -51,48 +55,65 @@ fun X_DashboardExpandMenu(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            containerColor = Color(0xFFF2EDF7),
+            containerColor = Theme.X.expandMenuBackground,
             shadowElevation = 2.dp, tonalElevation = 16.dp
         )
         {
-
-            DropdownMenuItem(
-                text = { Text("Избранное") },
-                onClick = {
-                    expanded = false
-                    scope.launch {
-                        delay(50)
-                        when (isFavorite) {
-                            true -> onFavoriteRemove()
-                            false -> onFavoriteAdd()
-                        }
-                    }
-                },
-                leadingIcon = {
-                    Icon(
-                        if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = null
-                    )
-                }
+            X_DashboardExpandMenuContent(
+                isFavorite = isFavorite,
+                onFavoriteAdd = onFavoriteAdd,
+                onFavoriteRemove = onFavoriteRemove,
+                onDownload = onDownload,
+                onDismiss = { expanded = false }
             )
-
-            DropdownMenuItem(
-                text = { Text("Сохранить") },
-                onClick = {
-                    expanded = false
-                    onDownload()
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Outlined.Save,
-                        contentDescription = null
-                    )
-                }
-            )
-
         }
 
     }
+}
+
+@Composable
+fun X_DashboardExpandMenuContent(
+    isFavorite: Boolean,
+    onFavoriteAdd: () -> Unit,
+    onFavoriteRemove: () -> Unit,
+    onDownload: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+
+    DropdownMenuItem(
+        text = { Text("Избранное") },
+        onClick = {
+            onDismiss()
+            scope.launch {
+                delay(50)
+                when (isFavorite) {
+                    true -> onFavoriteRemove()
+                    false -> onFavoriteAdd()
+                }
+            }
+        },
+        leadingIcon = {
+            Icon(
+                if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = null
+            )
+        }
+    )
+
+    DropdownMenuItem(
+        text = { Text("Сохранить") },
+        onClick = {
+            onDismiss()
+            onDownload()
+        },
+        leadingIcon = {
+            Icon(
+                Icons.Outlined.Save,
+                contentDescription = null
+            )
+        }
+    )
 }
 
 @Preview(showBackground = true)
@@ -110,14 +131,22 @@ fun Preview_X_DashboardExpandMenu_NotFavorite() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_X_DashboardExpandMenu_Favorite() {
+fun Preview_X_DashboardExpandMenu_Content() {
     XvideosTheme {
-        X_DashboardExpandMenu(
-            isFavorite = true,
-            onFavoriteAdd = {},
-            onFavoriteRemove = {},
-            onDownload = {},
-            isExpanded = true
-        )
+        Surface(
+            color = Color(0xFFF2EDF7),
+            tonalElevation = 16.dp,
+            shadowElevation = 2.dp
+        ) {
+            Column {
+                X_DashboardExpandMenuContent(
+                    isFavorite = false,
+                    onFavoriteAdd = {},
+                    onFavoriteRemove = {},
+                    onDownload = {},
+                    onDismiss = {}
+                )
+            }
+        }
     }
 }

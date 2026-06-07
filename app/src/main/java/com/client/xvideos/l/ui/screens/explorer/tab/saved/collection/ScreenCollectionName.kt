@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -53,7 +55,6 @@ import com.client.xvideos.l.featured.saved.LCollectionDuplicateGroup
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.featured.saved.lPicsDetailsIdentityKey
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
@@ -191,40 +192,40 @@ private fun LCollectionDetailTopBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ThemeL.greyBackground)
+            .background(Theme.background)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 ">Коллекция>$collectionName",
                 modifier = Modifier.weight(1f),
-                color = ThemeL.primaryColor,
+                color = Theme.L.primaryColor,
                 fontSize = 18.sp,
-                fontFamily = ThemeL.fontFamilyPopinsRegular
+                fontFamily = Theme.L.fontFamilyPopinsRegular
             )
             if (duplicateCount > 0) {
                 TextButton(onClick = onDuplicatesClick) {
-                    Text("Дубли: $duplicateCount", color = ThemeL.primaryColor, style = ThemeL.Type.button)
+                    Text("Дубли: $duplicateCount", color = Theme.L.primaryColor, style = Theme.L.Type.button)
                 }
             }
             IconButton(onClick = { searchVisible = !searchVisible }) {
                 Icon(
                     imageVector = if (searchVisible) Icons.Default.Close else Icons.Default.Search,
                     contentDescription = null,
-                    tint = ThemeL.textColor
+                    tint = Theme.L.textColor
                 )
             }
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null, tint = ThemeL.textColor)
+                    Icon(Icons.Default.MoreVert, contentDescription = null, tint = Theme.L.textColor)
                 }
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
-                    containerColor = ThemeL.grey5
+                    containerColor = Theme.L.grey5
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Проверить дубли", color = ThemeL.textColor, style = ThemeL.Type.menuItem) },
+                        text = { Text("Проверить дубли", color = Theme.L.textColor, style = Theme.L.Type.menuItem) },
                         onClick = {
                             onDuplicatesClick()
                             menuExpanded = false
@@ -241,7 +242,7 @@ private fun LCollectionDetailTopBar(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 label = { Text("Поиск в коллекции") },
-                textStyle = ThemeL.Type.body.copy(color = ThemeL.textColor)
+                textStyle = Theme.L.Type.body.copy(color = Theme.L.textColor)
             )
         }
     }
@@ -256,24 +257,24 @@ private fun LCollectionDuplicatesDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Детектор дублей", color = ThemeL.textColor, style = ThemeL.Type.dialogTitle)
+            Text("Детектор дублей", color = Theme.L.textColor, style = Theme.L.Type.dialogTitle)
         },
         text = {
             if (groups.isEmpty()) {
-                Text("Дубли не найдены", color = ThemeL.grey2, style = ThemeL.Type.body)
+                Text("Дубли не найдены", color = Theme.L.grey2, style = Theme.L.Type.body)
             } else {
                 Column {
                     Text(
                         "Найдено групп: ${groups.size}. При очистке останется самый новый элемент в каждой группе.",
-                        color = ThemeL.grey2,
-                        style = ThemeL.Type.body
+                        color = Theme.L.grey2,
+                        style = Theme.L.Type.body
                     )
                     Spacer(Modifier.height(8.dp))
                     groups.take(6).forEach { group ->
                         Text(
                             "• ${group.items.size} элемента: ${lPicsDetailsIdentityKey(group.items.first())}",
                             color = Color.White,
-                            style = ThemeL.Type.rowSubtitle
+                            style = Theme.L.Type.rowSubtitle
                         )
                     }
                 }
@@ -282,18 +283,18 @@ private fun LCollectionDuplicatesDialog(
         confirmButton = {
             if (groups.isNotEmpty()) {
                 TextButton(onClick = onRemoveDuplicates) {
-                    Text("Удалить дубли", color = ThemeL.red, style = ThemeL.Type.button)
+                    Text("Удалить дубли", color = Theme.L.red, style = Theme.L.Type.button)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Закрыть", color = ThemeL.primaryColor, style = ThemeL.Type.button)
+                Text("Закрыть", color = Theme.L.primaryColor, style = Theme.L.Type.button)
             }
         },
-        containerColor = ThemeL.grey5,
-        titleContentColor = ThemeL.textColor,
-        textContentColor = ThemeL.textColor
+        containerColor = Theme.L.grey5,
+        titleContentColor = Theme.L.textColor,
+        textContentColor = Theme.L.textColor
     )
 }
 

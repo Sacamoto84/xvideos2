@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -27,7 +29,6 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
@@ -99,15 +100,15 @@ object R_Screen_CollectionTab : Screen {
                             savedRed.collections.deleteCollection(pending)
                             itemPendingDelete = null
                         }
-                    ) { Text("Удалить", fontSize = 16.sp, color = ThemeRed.colorRed) }
+                    ) { Text("Удалить", fontSize = 16.sp, color = Theme.R.colorRed) }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { itemPendingDelete = null }
-                    ) { Text("Отмена", fontSize = 16.sp, color = ThemeRed.colorYellow) }
+                    ) { Text("Отмена", fontSize = 16.sp, color = Theme.R.colorYellow) }
                 },
 
-                containerColor = ThemeRed.colorTabLevel1,
+                containerColor = Theme.tabLevel1,
                 titleContentColor = Color.White,
                 textContentColor = Color.White
             )
@@ -151,12 +152,12 @@ fun R_SavedCollectionTabContent(
         gridState = gridState,
         style = com.client.xvideos.common.collectionDB.ui.CollectionsGridStyle(
             backgroundColor = Color.Transparent,
-            titleColor = ThemeRed.colorYellow,
-            titleFontFamily = ThemeRed.fontFamilyPopinsRegular,
+            titleColor = Theme.R.colorYellow,
+            titleFontFamily = Theme.R.fontFamilyPopinsRegular,
             itemNameColor = Color.White,
             itemSecondaryColor = Color.LightGray,
-            itemFontFamily = ThemeRed.fontFamilyDMsanss,
-            addButtonBackground = ThemeRed.colorYellow
+            itemFontFamily = Theme.R.fontFamilyDMsanss,
+            addButtonBackground = Theme.R.colorYellow
         ),
         onCollectionClick = onCollectionClick,
         onCollectionLongClick = onCollectionLongClick,

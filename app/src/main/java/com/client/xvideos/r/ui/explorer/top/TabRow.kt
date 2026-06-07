@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.top
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
@@ -29,7 +31,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.ui.screens.TabRow
-import com.client.xvideos.r.common.ThemeRed
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
@@ -38,7 +39,7 @@ fun TabRow(
     titlesIcon: ImmutableList<ImageVector>,
     onChangeState: (Int) -> Unit,
     value: Int,
-    containerColor: Color = ThemeRed.colorCommonBackground2,
+    containerColor: Color = Theme.background,
     overlay0: @Composable () -> Unit = {},
     overlay1: @Composable () -> Unit = {},
     overlay2: @Composable () -> Unit = {},
@@ -62,7 +63,7 @@ fun TabRow(
             TabRowDefaults.Indicator(
                 Modifier.tabIndicatorOffset(state, matchContentSize = false),
                 height = 4.dp,
-                color = ThemeRed.colorRed
+                color = Theme.R.colorRed
             )
         }
     ) {

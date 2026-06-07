@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.expand_menu_video
 
+import com.client.xvideos.common.theme.Theme
+
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -102,7 +104,7 @@ fun ExpandMenuVideoContent(
             expanded = expanded,
             onDismissRequest = onDismissRequest,
             modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = Color(0xFFF1EDF4)//ThemeRed.colorCommonBackground
+            containerColor = Color(0xFFF1EDF4)//Theme.R.colorCommonBackground
         ) {
             content()
         }

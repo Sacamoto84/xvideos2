@@ -1,5 +1,7 @@
 package com.client.xvideos.common.settings.ui.components
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.R
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.util.formatBytes
-import com.client.xvideos.l.theme.ThemeL
 import java.io.File
 
 internal data class StorageStat(
@@ -97,12 +98,12 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
                 Text(
                     text = stat.title,
                     color = SettingsRowTextPrimary,
-                    style = ThemeL.Type.rowTitle.copy(color = SettingsRowTextPrimary)
+                    style = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
                 )
                 Text(
                     text = formatBytes(stat.sizeBytes),
                     color = SettingsRowTextSecondary,
-                    style = ThemeL.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
+                    style = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -119,7 +120,7 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
             Text(
                 text = "${sectionSubtitle(stat.key)} \u2022 файлов: ${stat.fileCount}",
                 color = SettingsRowTextSecondary,
-                style = ThemeL.Type.caption.copy(color = SettingsRowTextSecondary)
+                style = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
             )
         }
     }

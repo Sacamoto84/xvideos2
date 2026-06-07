@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.search
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
@@ -96,7 +97,7 @@ fun ExpandMenuHistoryContentStateless(
             expanded = expanded,
             onDismissRequest = { onExpandedChange(false) },
             modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = ThemeRed.colorBottomBarDivider,
+            containerColor = Theme.R.colorBottomBarDivider,
             shadowElevation = 8.dp
         ) {
             val reversedItems = remember(items) { items.reversed() }
@@ -126,13 +127,13 @@ private fun HistoryMenuItem(
             Text(
                 text = text, color = Color.Black, fontSize = 18.sp,
                 modifier = Modifier.padding(vertical = 0.dp).padding(start = 16.dp).offset(0.75.dp, 0.75.dp),
-                fontFamily = ThemeRed.fontFamilyDMsanss
+                fontFamily = Theme.R.fontFamilyDMsanss
             )
 
             Text(
                 text = text, color = Color.White, fontSize = 18.sp,
                 modifier = Modifier.padding(vertical = 0.dp).padding(start = 16.dp),
-                fontFamily = ThemeRed.fontFamilyDMsanss
+                fontFamily = Theme.R.fontFamilyDMsanss
             )
         }
 
@@ -150,7 +151,7 @@ private fun HistoryMenuItem(
 @Composable
 fun PreviewExpandMenuHistoryCollapsed() {
     XvideosTheme {
-        Surface(color = ThemeRed.colorCommonBackground) {
+        Surface(color = Theme.R.colorCommonBackground) {
             ExpandMenuHistoryContentStateless(
                 expanded = false,
                 onExpandedChange = {},
@@ -165,7 +166,7 @@ fun PreviewExpandMenuHistoryCollapsed() {
 fun PreviewExpandMenuHistoryExpanded() {
     val sampleItems = listOf("Search Query 1", "Search Query 2", "Search Query 3")
     XvideosTheme {
-        Surface(color = ThemeRed.colorCommonBackground) {
+        Surface(color = Theme.R.colorCommonBackground) {
             Column(modifier = Modifier.height(250.dp)) {
                 ExpandMenuHistoryContentStateless(
                     expanded = true,

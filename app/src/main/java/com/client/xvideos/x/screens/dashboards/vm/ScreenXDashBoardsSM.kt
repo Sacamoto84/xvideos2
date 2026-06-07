@@ -23,8 +23,7 @@ import javax.inject.Inject
 class ScreenXDashBoardsScreenModel @Inject constructor(
     val saved : SavedX
 ) : ScreenModel {
-    /** Количество колонок true-2 false-1 */
-    val countRow = Settings.xvideos_row2
+
     val pagerState: PagerState = PagerState(0) { 20000 }
 
     /** Текущий главный таб нижней панели: 0 — Dashboards, 1 — Savable (сохранённое). */

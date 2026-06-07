@@ -1,5 +1,7 @@
 package com.client.xvideos
 
+import com.client.xvideos.common.theme.Theme
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -56,7 +58,6 @@ import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.applock.DisableAppLockAutofill
-import com.client.xvideos.l.theme.ThemeL
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlin.math.ceil
@@ -204,8 +205,8 @@ private fun AppLockScreenContent(
             Spacer(Modifier.height(10.dp))
             Text(
                 text = "Введите код доступа",
-                color = ThemeL.textColor,
-                style = ThemeL.Type.heroTitle.copy(textAlign = TextAlign.Center)
+                color = Theme.L.textColor,
+                style = Theme.L.Type.heroTitle.copy(textAlign = TextAlign.Center)
             )
             Spacer(Modifier.height(22.dp))
             OutlinedTextField(
@@ -222,7 +223,7 @@ private fun AppLockScreenContent(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = { if (password.isNotEmpty() && !isLockedOut) onSubmit() }),
-                textStyle = ThemeL.Type.body.copy(color = Color.White),
+                textStyle = Theme.L.Type.body.copy(color = Color.White),
                 trailingIcon = {
                     IconButton(onClick = onShowPasswordToggle) {
                         Icon(
@@ -255,7 +256,7 @@ private fun AppLockScreenContent(
                 text = "XVIDEOS",
                 modifier = Modifier.alpha(0.26f),
                 color = Color.White,
-                style = ThemeL.Type.caption.copy(color = Color.White)
+                style = Theme.L.Type.caption.copy(color = Color.White)
             )
         }
     }

@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.niches
 
+import com.client.xvideos.common.theme.Theme
+
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -61,7 +63,6 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.model.Niche
@@ -252,7 +253,7 @@ fun NichesTabContent(
                     searchWidget = searchWidget
                 )
             },
-            containerColor = ThemeRed.colorTabLevel1,
+            containerColor = Theme.tabLevel1,
             modifier = Modifier.fillMaxSize()
         ) { paddingValues ->
             Box(
@@ -284,7 +285,7 @@ fun NichesTabContent(
                                 Text(
                                     text = "No results",
                                     color = Color.Gray,
-                                    fontFamily = ThemeRed.fontFamilyDMsanss
+                                    fontFamily = Theme.R.fontFamilyDMsanss
                                 )
                             }
                         }
@@ -297,14 +298,14 @@ fun NichesTabContent(
                                     // Placeholder for Preview
                                     Box(
                                         modifier = Modifier
-                                            .padding(horizontal = 8.dp).fillMaxWidth().height(78.dp).background( ThemeRed.colorTabLevel3, RoundedCornerShape(16.dp) ),
+                                            .padding(horizontal = 8.dp).fillMaxWidth().height(78.dp).background( Theme.tabLevel3, RoundedCornerShape(16.dp) ),
                                         contentAlignment = Alignment.CenterStart
                                     ) {
                                         Text(
                                             text = item.name,
                                             color = Color.White,
                                             modifier = Modifier.padding(start = 16.dp),
-                                            fontFamily = ThemeRed.fontFamilyDMsanss
+                                            fontFamily = Theme.R.fontFamilyDMsanss
                                         )
                                     }
                                 }
@@ -344,7 +345,7 @@ fun Refresh(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ThemeRed.colorTabLevel1),
+            .background(Theme.tabLevel1),
         verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
@@ -353,7 +354,7 @@ fun Refresh(
         Spacer(Modifier.height(8.dp))
         Button(
             onClick = onRefreshNichesCacheClick,
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeRed.colorBlue)
+            colors = ButtonDefaults.buttonColors(containerColor = Theme.R.colorBlue)
         ) {
             Text("Скачать список ", style = styleTest.copy(fontSize = 18.sp))
         }
@@ -383,7 +384,7 @@ fun RefreshMini(
     }
 
     Row(
-        modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 4.dp).fillMaxSize().background(ThemeRed.colorTabLevel1), verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 4.dp).fillMaxSize().background(Theme.tabLevel1), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     )
     {
@@ -401,7 +402,7 @@ fun RefreshMini(
                         contentDescription = "Refresh",
                         tint = Color.White,
                         modifier = Modifier.size(34.dp).background(
-                            ThemeRed.colorBlue,
+                            Theme.R.colorBlue,
                             CircleShape
                         ).padding(4.dp)
                     )
@@ -448,7 +449,7 @@ fun R_ScreenNichesTabPreview() {
         savedRed = { null },
         searchWidget = { modifier ->
             Box(
-                modifier.height(44.dp).background(ThemeRed.colorTabLevel0, RoundedCornerShape(8.dp)),
+                modifier.height(44.dp).background(Theme.tabLevel0, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
@@ -496,7 +497,7 @@ fun RefreshPreview() {
     XvideosTheme {
         Column(
             modifier = Modifier
-                .background(ThemeRed.colorTabLevel1)
+                .background(Theme.tabLevel1)
                 .padding(8.dp)
         ) {
             Refresh(
@@ -515,5 +516,5 @@ fun RefreshPreview() {
 private val styleTest = androidx.compose.ui.text.TextStyle(
     fontSize = 20.sp,
     color = Color.White,
-    fontFamily = com.client.xvideos.r.common.ThemeRed.fontFamilyDMsanss
+    fontFamily = Theme.R.fontFamilyDMsanss
 )

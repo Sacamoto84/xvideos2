@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.niche.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.util.toPrettyCount
-import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.Preview as NichePreviewModel
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -38,7 +39,7 @@ fun NichePreview(niches: () -> Niche, onClick: () -> Unit) {
     Column(modifier = Modifier.height(80.dp).padding(horizontal = 4.dp)
         .shadow(10.dp, RoundedCornerShape(8.dp))
         .clip(RoundedCornerShape(8.dp))
-        .background(ThemeRed.colorTabLevel3)
+        .background(Theme.tabLevel3)
         .clickable{onClick()}
     )
     {

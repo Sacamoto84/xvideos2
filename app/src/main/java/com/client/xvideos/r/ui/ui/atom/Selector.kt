@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.ui.atom
 
+import com.client.xvideos.common.theme.Theme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,7 +21,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.R
-import com.client.xvideos.r.common.ThemeRed
 
 @Preview
 @Composable
@@ -34,13 +35,13 @@ fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
 
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, ThemeRed.colorBorderGray, RoundedCornerShape(8.dp))
+            .border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
     ) {
 
         Box(
             modifier = Modifier
                 .size(46.dp)
-                .background(if (selectedIndex == 2) ThemeRed.colorBorderSelect else ThemeRed.colorCommonBackground2)
+                .background(if (selectedIndex == 2) Theme.R.colorBorderSelect else Theme.background)
                 .clickable { onSelect(2) },
 
             contentAlignment = Alignment.Center
@@ -49,7 +50,7 @@ fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
             Icon(
                 painter = painterResource(R.drawable.select_2),
                 contentDescription = null,
-                tint = if (selectedIndex == 2) Color.White else ThemeRed.colorTextGray, modifier = Modifier.size(24.dp)
+                tint = if (selectedIndex == 2) Color.White else Theme.R.colorTextGray, modifier = Modifier.size(24.dp)
             )
         }
 
@@ -57,19 +58,19 @@ fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
             modifier = Modifier
                 .width(1.dp)
                 .height(46.dp)
-                .background(ThemeRed.colorBorderGray)
+                .background(Theme.R.colorBorderGray)
         )
         Box(
             modifier = Modifier
                 .size(46.dp)
-                .background(if (selectedIndex == 1) ThemeRed.colorBorderSelect else ThemeRed.colorCommonBackground2)
+                .background(if (selectedIndex == 1) Theme.R.colorBorderSelect else Theme.background)
                 .clickable { onSelect(1) }, contentAlignment = Alignment.Center
         )
         {
             Icon(
                 painter = painterResource(R.drawable.select_1),
                 contentDescription = null,
-                tint = if (selectedIndex == 1) Color.White else ThemeRed.colorTextGray, modifier = Modifier.size(24.dp)
+                tint = if (selectedIndex == 1) Color.White else Theme.R.colorTextGray, modifier = Modifier.size(24.dp)
             )
         }
 
