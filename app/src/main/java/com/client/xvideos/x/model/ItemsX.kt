@@ -1,5 +1,8 @@
 package com.client.xvideos.x.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class ItemsX(
     val id : Long,                    //   Номер 234234233 берется из сайта
     val title : String,               // - Название видео(Зависит от выбранного языка)

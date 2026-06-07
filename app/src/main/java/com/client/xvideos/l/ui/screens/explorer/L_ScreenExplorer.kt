@@ -2,6 +2,7 @@ package com.client.xvideos.l.ui.screens.explorer
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
@@ -100,7 +101,7 @@ class L_ScreenExplorer : Screen {
         val columnR_ScreenGifsTab = Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle().value
 
         Scaffold(bottomBar = {
-            androidx.compose.foundation.layout.Column {
+            Column {
                 DownloadIndicator(percentDownload)
                 TabRow(
                     containerColor = ThemeRed.colorTabLevel0,

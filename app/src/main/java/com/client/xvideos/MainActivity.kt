@@ -69,7 +69,7 @@ import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.root.R_Screen_Root
 import com.client.xvideos.screenRoot.ScreenRoot
-import com.client.xvideos.screens.dashboards.ScreenXDashBoards
+import com.client.xvideos.x.screens.dashboards.ScreenXDashBoards
 import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -249,8 +249,7 @@ object MenuScreen : Screen {
                 }
 
                 ButtonSelect(R.drawable.icon_luscious, "buttonL") {
-                    navigator.
-                    push(L_ScreenExplorer()) // или ScreenLusciousRoot()
+                    navigator.push(L_ScreenExplorer()) // или ScreenLusciousRoot()
                 }
                 ButtonSelect(R.drawable.icon_red) {
                     navigator.push(R_Screen_Root()) // или ScreenRedRoot()

@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.dashboards
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +25,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,22 +36,21 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.icons.IconFavorite18
-import com.client.xvideos.x.parcer.parserListVideo
-import com.client.xvideos.x.parcer.parseSiteCountryFlag
+import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 import com.client.xvideos.urlStart
+import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.feature.country.CountryState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
-import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
+import com.client.xvideos.x.parcer.parseSiteCountryFlag
+import com.client.xvideos.x.parcer.parserListVideo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -78,7 +75,15 @@ private suspend fun openNew(numberScreen: Int = 0): SnapshotStateList<ItemsX> {
  *
  */
 @Composable
-fun DashboardsPaginatedListScreen(pageIndex: Int, vm: ScreenXDashBoardsScreenModel) {
+fun DashboardsPaginatedListScreen(
+    pageIndex: Int,
+    openVideoPlayer: (String) -> Unit,
+
+    isFavorite: (Long) -> Boolean,
+    onFavoriteAdd: (ItemsX) -> Unit,
+    onFavoriteRemove: (ItemsX) -> Unit,
+    onDownload: (ItemsX) -> Unit
+) {
 
     val l = remember { mutableStateListOf<ItemsX>() }
 
@@ -90,19 +95,30 @@ fun DashboardsPaginatedListScreen(pageIndex: Int, vm: ScreenXDashBoardsScreenMod
         }
     }
 
-    val navigator = LocalNavigator.currentOrThrow
+    DashboardsPaginatedListContent(
+        items = l.toImmutableList(),
+        isFavorite = isFavorite,
+        onFavoriteAdd = onFavoriteAdd,
+        onFavoriteRemove = onFavoriteRemove,
+        onDownload = onDownload,
+        openVideoPlayer = openVideoPlayer
+    )
+}
 
-    val itemsPerRow =
-        if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else if (vm.countRow.field.collectAsState().value) 2 else 1
-
-
-    val count = vm.countRow.field.collectAsStateWithLifecycle().value
-
+@Composable
+fun DashboardsPaginatedListContent(
+    items: ImmutableList<ItemsX>,
+    isFavorite: (Long) -> Boolean,
+    onFavoriteAdd: (ItemsX) -> Unit,
+    onFavoriteRemove: (ItemsX) -> Unit,
+    onDownload: (ItemsX) -> Unit,
+    openVideoPlayer: (String) -> Unit
+) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(itemsPerRow),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        itemsIndexed(l, key = { index, it -> "${it.id}_$index" })
+        columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
+    )
+    {
+        itemsIndexed(items, key = { index, it -> "${it.id}_$index" })
         { index, cell ->
 
             Box(
@@ -111,16 +127,17 @@ fun DashboardsPaginatedListScreen(pageIndex: Int, vm: ScreenXDashBoardsScreenMod
                     .aspectRatio(352f / 198f)
                     .padding(1.dp)
                     .background(Color.DarkGray)
-            ) {
+            )
+            {
                 //Отобразить карточку картинка видео
                 UrlVideoImageAndLongClickX(
                     cell,
                     onLongClick = {
                         //Открыть экран плеера
-                        vm.openVideoPlayer(urlStart + cell.href, navigator)
+                        openVideoPlayer(urlStart + cell.href)
                     },
                     onDoubleClick = {
-                        vm.openVideoPlayer(urlStart + cell.href, navigator)
+                        openVideoPlayer(urlStart + cell.href)
                     }
                 )
                 {
@@ -131,7 +148,9 @@ fun DashboardsPaginatedListScreen(pageIndex: Int, vm: ScreenXDashBoardsScreenMod
                         //Продолжительность видео
                         Text(
                             text = cell.duration.dropLast(1),
-                            modifier = Modifier.fillMaxWidth().offset(0.5.dp, offsetY + 0.5.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset(0.5.dp, offsetY + 0.5.dp),
                             textAlign = TextAlign.Right,
                             fontSize = 14.sp,
                             color = Color.Black
@@ -152,39 +171,54 @@ fun DashboardsPaginatedListScreen(pageIndex: Int, vm: ScreenXDashBoardsScreenMod
 
                     //Название канала
                     Box(
-                        modifier = Modifier.align(Alignment.TopStart).background(Color(0x60000000)), contentAlignment = Alignment.Center
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .background(Color(0x60000000)), contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = cell.channel,
-                            modifier = Modifier.align(Alignment.Center), fontSize = 14.sp,
+                            modifier = Modifier.align(Alignment.Center),
+                            fontSize = 14.sp,
                             color = Color.White
                         )
                     }
 
                     Row(modifier = Modifier.align(Alignment.BottomEnd), horizontalArrangement = Arrangement.End) {
-                        if (vm.saved.favorites.contains(cell.id)) {
+                        //if (vm.saved.favorites.contains(cell.id)) {
+                        if (isFavorite(cell.id))
                             //Индикатор что видео в фаворитах
                             Box(modifier = Modifier) { IconFavorite18(Modifier.padding(bottom = 6.dp, end = 6.dp)) }
                         }
                     }
 
-                    Box(modifier = Modifier.align(Alignment.TopEnd)) { DropMenu( cell, vm ) }
+                Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                    DropMenu(
+                        isFavorite = isFavorite(cell.id),//vm.isFavorite(cell.id),
+                        onFavoriteAdd = { onFavoriteAdd(cell) },
+                        onFavoriteRemove = { onFavoriteRemove(cell) },
+                        onDownload = { onDownload(cell) }
+                    )
+                }
 
                 }
             }
         }
 
-    }
 }
 
 @Composable
-private fun DropMenu(cell: ItemsX, vm: ScreenXDashBoardsScreenModel) {
+private fun DropMenu(
+    isFavorite: Boolean,
+    onFavoriteAdd: () -> Unit,
+    onFavoriteRemove: () -> Unit,
+    onDownload: () -> Unit
+) {
 
     var expanded by remember { mutableStateOf(false) }
 
-    val count = vm.countRow.field.collectAsStateWithLifecycle().value
+    //val count = vm.countRow.field.collectAsStateWithLifecycle().value
 
-    val size = if (count) 26.dp else 32.dp
+    val size = 26.dp
 
     val scope = rememberCoroutineScope()
 
@@ -220,8 +254,6 @@ private fun DropMenu(cell: ItemsX, vm: ScreenXDashBoardsScreenModel) {
         )
         {
 
-            val isFavorite = vm.isFavorite(cell.id)
-
             DropdownMenuItem(
                 text = { Text("Избранное") },
                 onClick = {
@@ -229,10 +261,8 @@ private fun DropMenu(cell: ItemsX, vm: ScreenXDashBoardsScreenModel) {
                     scope.launch {
                         delay(50)
                         when (isFavorite) {
-                            true -> vm.removeFavorite(cell)
-                            false -> {
-                                vm.addFavorite(cell)
-                            }
+                            true -> onFavoriteRemove()
+                            false -> onFavoriteAdd()
                         }
                     }
                 },
@@ -248,7 +278,7 @@ private fun DropMenu(cell: ItemsX, vm: ScreenXDashBoardsScreenModel) {
                 text = { Text("Сохранить") },
                 onClick = {
                     expanded = false
-                    vm.download(cell)
+                    onDownload()
                 },
                 leadingIcon = {
                     Icon(
@@ -260,5 +290,41 @@ private fun DropMenu(cell: ItemsX, vm: ScreenXDashBoardsScreenModel) {
 
         }
 
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DashboardsPaginatedListScreenPreview() {
+    XvideosTheme {
+        DashboardsPaginatedListContent(
+            items = listOf(
+                ItemsX(
+                    id = 1L,
+                    title = "Sample video with a fairly long title to test wrapping",
+                    duration = "12:34",
+                    views = "1.2M",
+                    channel = "Old4k",
+                    href = "/video1",
+                    nameProfile = "Old4k",
+                    linkProfile = "/old4k",
+                ),
+                ItemsX(
+                    id = 2L,
+                    title = "Another sample",
+                    duration = "03:10",
+                    views = "500K",
+                    channel = "Channel2",
+                    href = "/video2",
+                    nameProfile = "Channel2",
+                    linkProfile = "/channel2",
+                ),
+            ).toImmutableList(),
+            isFavorite = { it == 1L },
+            onFavoriteAdd = {},
+            onFavoriteRemove = {},
+            onDownload = {},
+            openVideoPlayer = {}
+        )
     }
 }

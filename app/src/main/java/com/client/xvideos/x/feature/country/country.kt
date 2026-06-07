@@ -81,7 +81,7 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
 
     Box(
         Modifier
-            .padding(horizontal = (0.5).dp)
+            //.padding(horizontal = (0.5).dp)
             .height(48.dp)
             .width(48.dp)
             .then(modifier)

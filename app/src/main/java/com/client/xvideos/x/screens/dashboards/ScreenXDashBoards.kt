@@ -1,4 +1,4 @@
-package com.client.xvideos.screens.dashboards
+package com.client.xvideos.x.screens.dashboards
 
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
@@ -24,6 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -35,7 +36,6 @@ import com.client.xvideos.l.ui.screens.TabRow
 import com.client.xvideos.r.common.ThemeRed
 import com.client.xvideos.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.feature.country.ComposeCountry
-import com.client.xvideos.x.screens.dashboards.DashboardsPaginatedListScreen
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.saved.X_SavedContent
@@ -83,7 +83,11 @@ class ScreenXDashBoards : Screen {
                             onChangeState = { vm.savedTab = it },
                             containerColor = ThemeRed.colorTabLevel1,
                         )
-                        else -> DashboardControlsRow(vm)
+                        else -> DashboardControlsRow(
+                            isCurrentPage = vm.pagerState.currentPage,
+                            isMax = vm.pagerState.pageCount,
+                            onChange = { vm.pagerState.scrollToPage(it.coerceAtLeast(0)) }
+                        )
                     }
 
                     // Главный таб-ряд (R/L-стиль).
@@ -102,7 +106,11 @@ class ScreenXDashBoards : Screen {
             containerColor = Color.Black,
         ) { innerPadding ->
 
-            Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+                    .fillMaxSize()
+            ) {
                 when (vm.mainTab) {
                     SAVABLE -> when (vm.savedTab) {
                         SAVED_DOWNLOADS -> X_SavedContent(vm.saved)
@@ -121,7 +129,14 @@ class ScreenXDashBoards : Screen {
                             )
                         )
                     ) { pageIndex ->
-                        DashboardsPaginatedListScreen(pageIndex, vm)
+                        DashboardsPaginatedListScreen(
+                            pageIndex,
+                            openVideoPlayer = { vm.openVideoPlayer(it, navigator) },
+                            isFavorite = { vm.isFavorite(it) },
+                            onFavoriteAdd = { vm.addFavorite(it) },
+                            onFavoriteRemove = { vm.removeFavorite(it) },
+                            onDownload = { vm.download(it) },
+                        )
                     }
                 }
             }
@@ -153,16 +168,26 @@ class ScreenXDashBoards : Screen {
  * Объединяет в одну строку бывший `TopBarDashboard` (страна) и ряд навигации страниц.
  */
 @Composable
-private fun DashboardControlsRow(vm: ScreenXDashBoardsScreenModel) {
+private fun DashboardControlsRow(
+    isCurrentPage: Int,
+    isMax: Int,
+    onChange: suspend (Int) -> Unit
+) {
     val job = rememberCoroutineScope()
+
     Row(modifier = Modifier.fillMaxWidth()) {
         ComposeCountry()
         Box(modifier = Modifier.weight(1f)) {
             BottomListDashBoardNavigationButtons2(
-                value = vm.pagerState.currentPage,
-                onChange = { job.launch(Dispatchers.Main) { vm.pagerState.scrollToPage(it.coerceAtLeast(0)) } },
-                max = vm.pagerState.pageCount,
+                value = isCurrentPage,
+                onChange = { job.launch(Dispatchers.Main) { onChange.invoke(it) } },
+                max = isMax,
             )
         }
     }
 }
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+private fun PreviewDashboardControlsRow() { DashboardControlsRow( isCurrentPage = 1, isMax = 10,  onChange = {}) }
+
