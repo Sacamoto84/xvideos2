@@ -1,7 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbum
 
-import com.client.xvideos.common.theme.Theme
-
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -44,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -53,28 +52,32 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.screenRoot.LocalRootScreenModel
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
-import com.client.xvideos.l.net.graphQl.Genre as FilterGenre
 import com.client.xvideos.l.net.AlbumPicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
+import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumDialogDeleteAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoTags
-import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
-import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.ScrollToTopButton
+import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
+import com.client.xvideos.screenRoot.LocalRootScreenModel
 import kotlinx.coroutines.delay
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import timber.log.Timber
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
+import com.client.xvideos.l.net.graphQl.Genre as FilterGenre
 
 class ScreenLAlbum(val idAlbum: Long) : Screen {
 
@@ -175,17 +178,48 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                     expandMenu = ExpandMenuType.ALBUM,
                     showInitialLoading = showInitialItemsLoading,
                     itemBefore = {
-                        Column(modifier = Modifier.displayCutoutPadding().padding(horizontal = 4.dp)) {
+                        Column(modifier = Modifier
+                            .displayCutoutPadding()
+                            .padding(horizontal = 4.dp)) {
                             if (parsed != null) {
 
                                 Row {
-                                    UrlImage( parsed.cover.url, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(72.dp) )
+                                    UrlImage( parsed.cover.url, modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .size(72.dp) )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Column {
                                         Text(parsed.title, color = Theme.L.textColor, style = Theme.L.Type.rowTitle)
                                         Text( "${parsed.number_of_animated_pictures} gifs / ${parsed.number_of_pictures} pictures", color = Theme.L.textColor )
                                     }
                                 }
+
+
+                                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+
+                                val textCreated =
+                                    Instant.ofEpochSecond(parsed.created.toLong()) // или ofEpochMilli
+                                        .atZone(ZoneId.systemDefault()).format(formatter)
+
+                                val textModified =
+                                    Instant.ofEpochSecond(parsed.modified.toLong()) // или ofEpochMilli
+                                        .atZone(ZoneId.systemDefault()).format(formatter)
+
+
+                                Text(
+                                    "Created: " + textCreated,
+                                    color = Theme.L.textColor,
+                                    style = Theme.L.Type.rowTitle
+                                )
+
+                                if (parsed.modified != 0.0) {
+                                    Text(
+                                        "Modified: " + textModified,
+                                        color = Theme.L.textColor,
+                                        style = Theme.L.Type.rowTitle
+                                    )
+                                }
+
                                 Spacer(modifier = Modifier.height(4.dp))
                                 AlbumInfoGreeting(parsed) { genre ->
                                     navigator.push(
@@ -203,7 +237,9 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                         )
                                     )
                                 }
-                                AlbumInfoTags(parsed) { navigator.push(ScreenLAlbumLandingTag(it)) }
+                                AlbumInfoTags({
+                                    parsed.tags.reversed().filter { it.count > 0 }
+                                }) { navigator.push(ScreenLAlbumLandingTag(it)) }
                                 AlbumInfoButtonSaveAlbum(saved, onClick = { if (!saved) { vm.saveAlbum() } else { itemPendingDelete = parsed } })
                                 AlbumInfoFilterButton( parsed, vm.showOnlyAnimated, { vm.showOnlyAnimated = it })
                                 LAlbumNetworkIssuePanel(
@@ -339,5 +375,74 @@ private fun LAlbumNetworkIssuePanel(
             )
         }
     }
+}
+
+
+// ----------------------------------------------------------------------------
+// PREVIEW
+//
+// ScreenLAlbum.Content() завязан на ScreenModel (getScreenModel) и stateful
+// L_LazyRowPictureDetails(host=...), поэтому реальный экран в @Preview не
+// построить. Ниже — stateless-копия раскладки (Scaffold + нижний прогресс-бар
+// + плашка-шапка альбома) с фейковыми данными. Только для визуальной проверки.
+// ----------------------------------------------------------------------------
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+private fun ScreenLAlbumPreviewBody(
+    title: String,
+    animatedCount: Int,
+    pictureCount: Int,
+    percentLoad: Float,
+) {
+    Scaffold(
+        bottomBar = {
+            if (percentLoad != 1.0f) {
+                LinearProgressIndicator(
+                    progress = { percentLoad },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = ProgressIndicatorDefaults.linearColor,
+                    trackColor = ProgressIndicatorDefaults.linearTrackColor,
+                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap
+                )
+            }
+        },
+        containerColor = Theme.background
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 4.dp)
+        ) {
+            Row {
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .size(72.dp)
+                        .background(Theme.tabLevel1)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Column {
+                    Text(title, color = Theme.L.textColor, style = Theme.L.Type.rowTitle)
+                    Text(
+                        "$animatedCount gifs / $pictureCount pictures",
+                        color = Theme.L.textColor
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360, heightDp = 720)
+@Composable
+private fun ScreenLAlbumPreview() {
+    ScreenLAlbumPreviewBody(
+        title = "Example Album Title",
+        animatedCount = 12,
+        pictureCount = 48,
+        percentLoad = 0.4f,
+    )
 }
 

@@ -3,7 +3,9 @@ package com.client.xvideos.l.model
 import com.google.gson.annotations.SerializedName
 
 data class AlbumDetails(
-    @SerializedName("created") val created: Long,
+    @SerializedName("created") val created: Double, // Время создания альбома 1780919842.393262
+    @SerializedName("modified") val modified: Double, // Время последнего изменения альбома 1780920373.633646
+
     @SerializedName("id") val id: String,
     @SerializedName("title") val title: String,
     @SerializedName("tags") val tags: List<Tag>,

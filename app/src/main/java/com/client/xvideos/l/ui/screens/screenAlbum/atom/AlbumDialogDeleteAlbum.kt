@@ -68,7 +68,8 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
 @Composable
 fun AlbumDialogDeleteAlbumPreview() {
     val sampleAlbumDetails = AlbumDetails(
-        created = 1678886400L, // Example timestamp
+        created = 1678886400.0, // Example timestamp
+        modified = 1678886400.0, // Example timestamp
         id = "album123",
         title = "Summer Vacation",
         tags = emptyList(),

@@ -1,5 +1,6 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.albums
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +9,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,6 +21,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.element.AlbumListItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
@@ -44,26 +45,20 @@ object L_ScreenSavedAlbumsTab : Screen {
     override fun Content() {
 
         val navigator = LocalNavigator.currentOrThrow
-
         val vm: ScreenLSavedAlbumsSM = getScreenModel()
-
         val state = vm.state
 
-        Scaffold()
-        { padding ->
-            Box(modifier = Modifier.padding(padding)) {
+        Box(modifier = Modifier.background(Theme.background)) {
 
-                LazyVerticalGridScrollbar(
-                    state = state,
-                    settings = ScrollbarSettings.Default
-                ) {
-
+            LazyVerticalGridScrollbar(state = state, settings = ScrollbarSettings.Default)
+            {
                     LazyVerticalGrid(
                         state = state,
                         columns = GridCells.Fixed(2),
                         modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
+                    )
+                    {
                         items(vm.albums) {
                             val albumId = it.id.toLongOrNull()
                             AlbumListItem(
@@ -81,10 +76,8 @@ object L_ScreenSavedAlbumsTab : Screen {
                             }
                         }
                     }
-
                 }
             }
-        }
 
     }
 

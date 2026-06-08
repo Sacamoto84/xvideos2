@@ -42,7 +42,8 @@ class AlbumInfo(
             number_of_animated_pictures = 0,
             url = "",
             download_url = "",
-            created = 0L
+            created = 0.0,
+            modified = 0.0
         )
     )
 

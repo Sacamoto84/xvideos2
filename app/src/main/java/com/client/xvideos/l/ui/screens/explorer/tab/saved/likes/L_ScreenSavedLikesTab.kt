@@ -3,6 +3,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.likes
 import com.client.xvideos.common.theme.Theme
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -64,7 +65,6 @@ object L_ScreenSavedLikesTab : Screen {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
 
         val vm: ScreenSavedLLikesSM = getScreenModel()
 
@@ -77,20 +77,23 @@ object L_ScreenSavedLikesTab : Screen {
         }
 
         var selectedIndex by remember { mutableIntStateOf(0) }
+
         val options = listOf("All", "Image", "Gif")
 
         LaunchedEffect(vm.original.size, selectedIndex) {
             vm.filterSelect(selectedIndex)
         }
 
-        Scaffold(modifier = Modifier.fillMaxSize()) {
+        Scaffold(modifier = Modifier.fillMaxSize().background(Theme.background)) {
+
             L_LazyRowPictureDetails(
                 vm.host,
                 expandMenu = ExpandMenuType.LIKES,
                 tag = "lLikes",
                 itemBefore = {
 
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.displayCutoutPadding().padding(horizontal = 8.dp)) {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.displayCutoutPadding().padding(horizontal = 4.dp)) {
+
                         options.forEachIndexed { index, label ->
                             SegmentedButton(
                                 shape = SegmentedButtonDefaults.itemShape(
@@ -108,6 +111,7 @@ object L_ScreenSavedLikesTab : Screen {
                                 )
                             )
                         }
+
                     }
 
 

@@ -11,6 +11,7 @@ fun getAlbumInfo(albumId: Int): String {
         }
         fragment AlbumStandard on Album {
            created 
+           modified
            id 
            title 
            tags 

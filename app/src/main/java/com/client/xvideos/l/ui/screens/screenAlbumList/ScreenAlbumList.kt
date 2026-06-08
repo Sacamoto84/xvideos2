@@ -37,12 +37,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -123,7 +125,11 @@ private class ScreenLAlbumList(
 @OptIn(ExperimentalZoomableApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, title: String = "") {
+private fun Screen.ScreenAlbumListContent(
+    initialFilter: LAlbumListFilter?,
+    title: String = ""
+)
+{
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenLAlbumListSM, ScreenLAlbumListSM.Factory> { factory ->
             factory.create(initialFilter)
@@ -187,7 +193,9 @@ private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, titl
                     )
                 },
                 containerColor = Theme.background
-            ) { padding ->
+            )
+            { padding ->
+
                 HorizontalPager(
                     vm.statePager,
                     Modifier
@@ -196,13 +204,9 @@ private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, titl
                     beyondViewportPageCount = 1,
                     key = { page -> "${key}_page_$page" }
                 ) { page ->
-                    val items = bigList[page]?.albumListImplInfoAndList?.items
-                    val stateGrid = if (vm.stateGrid.containsKey(page)) {
-                        vm.stateGrid[page]!!
-                    } else {
-                        vm.stateGrid.put(page, LazyGridState())
-                        vm.stateGrid[page]!!
-                    }
+
+                    val pageItems = bigList[page]?.albumListImplInfoAndList?.items.orEmpty()
+                    val stateGrid = rememberSaveable(page, saver = LazyGridState.Saver) { LazyGridState() }
 
                     LazyVerticalGridScrollbar(
                         state = stateGrid,
@@ -211,45 +215,39 @@ private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, titl
                             thumbSelectedColor = Color(0xFFB3B3B3),
                             thumbThickness = 3.dp,
                             scrollbarPadding = 0.dp,
-                            alwaysShowScrollbar = true
+                            alwaysShowScrollbar = false
                         )
                     ) {
-                        LazyVerticalGrid(
-                            state = stateGrid,
-                            modifier = Modifier.fillMaxSize(),
-                            columns = GridCells.Fixed(2)
-                        )
+                        LazyVerticalGrid( state = stateGrid, modifier = Modifier.fillMaxSize(),  columns = GridCells.Fixed(2) )
                         {
                             item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
                                 Box(
-                                    Modifier
-                                        .height(32.dp)
-                                        .background(Theme.L.red).padding(start = 24.dp), contentAlignment = Alignment.CenterStart
+                                    Modifier.height(32.dp).background(Theme.L.red).padding(start = 24.dp), contentAlignment = Alignment.CenterStart
                                 ) {
                                     Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
                                 }
                             }
 
                             items(
-                                items?.size ?: 0,
-                                key = { items?.get(it)?.id!! }
+                                count = pageItems.size,
+                                key = { pageItems[it].id }
                             ) { index ->
-                                val item = items?.get(index)
-                                if (item != null) {
-                                    Box(
-                                        Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
-                                        contentAlignment = Alignment.Center
-                                    )
-                                    {
-                                        AlbumListItem(
-                                            title = item.title,
-                                            coverUrl = item.cover.url,
-                                            numberOfAnimatedPictures = item.numberOfAnimatedPictures,
-                                            numberOfPictures = item.numberOfPictures,
-                                        ) {
-                                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                            navigator.push(ScreenLAlbum(item.id.toLong()))
-                                        }
+
+                                val item = pageItems[index]
+
+                                Box(
+                                    Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
+                                    contentAlignment = Alignment.Center
+                                )
+                                {
+                                    AlbumListItem(
+                                        title = item.title,
+                                        coverUrl = item.cover.url,
+                                        numberOfAnimatedPictures = item.numberOfAnimatedPictures,
+                                        numberOfPictures = item.numberOfPictures,
+                                    ) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        navigator.push(ScreenLAlbum(item.id.toLong()))
                                     }
                                 }
                             }
@@ -257,16 +255,13 @@ private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, titl
                     }
 
                     val status = vm.bigList[page]?.status
-                    if (status == StatusAlbumList.DOWNLOADING) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Magenta),
-                            contentAlignment = Alignment.Center
-                        ) { CircularProgressIndicator() }
+                    if ((status == StatusAlbumList.DOWNLOADING) && (pageItems.isEmpty())){
+                        Box( modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center ) { CircularProgressIndicator() }
                     }
-                }
-            }
+
+                } //HorizontalPager(
+
+            } //Scaffold
         }
 
         // ✅ ДИАЛОГ С ФИЛЬТРОМ
@@ -316,4 +311,91 @@ private fun Screen.ScreenAlbumListContent(initialFilter: LAlbumListFilter?, titl
                 }
             }
         }
+}
+
+
+// ----------------------------------------------------------------------------
+// PREVIEW
+//
+// Экран завязан на ScreenModel (getScreenModel), поэтому реальный
+// ScreenAlbumListContent в @Preview не построить. Ниже — stateless-копия
+// раскладки одной страницы (прогресс-бар + грид с плашкой-заголовком +
+// карточки + нижний бар) с фейковыми данными. Только для визуальной проверки.
+// ----------------------------------------------------------------------------
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+private fun AlbumListPreviewBody(
+    title: String,
+    isRequest: Boolean,
+    currentPage: Int,
+    totalPages: Int,
+    itemCount: Int,
+) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            if (isRequest) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(Color(0xff0c94ff))
+                )
+            }
+        },
+        bottomBar = {
+            AlbumListBottomBar(
+                onClickVisibleFilter = {},
+                currentPage = currentPage,
+                totalPages = totalPages,
+                onChange = {}
+            )
+        },
+        containerColor = Theme.background
+    ) { padding ->
+        LazyVerticalGrid(
+            modifier = Modifier
+                .padding(bottom = padding.calculateBottomPadding())
+                .fillMaxSize(),
+            columns = GridCells.Fixed(2)
+        ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Box(
+                    Modifier
+                        .height(32.dp)
+                        .background(Theme.L.red)
+                        .padding(start = 24.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
+                }
+            }
+            items(itemCount) { index ->
+                Box(
+                    Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AlbumListItem(
+                        title = "Album #$index",
+                        coverUrl = "",
+                        numberOfAnimatedPictures = index,
+                        numberOfPictures = index * 7,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360, heightDp = 720)
+@Composable
+private fun ScreenAlbumListPreview() {
+    AlbumListPreviewBody(
+        title = "Genre: Example",
+        isRequest = true,
+        currentPage = 2,
+        totalPages = 8,
+        itemCount = 6,
+    )
 }

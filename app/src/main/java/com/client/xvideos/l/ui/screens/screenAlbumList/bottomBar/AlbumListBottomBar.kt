@@ -38,7 +38,7 @@ fun AlbumListBottomBar(
 
         Row(
             modifier = Modifier
-                .padding(start = 4.dp)
+                .padding(start = 0.dp)
                 .fillMaxWidth()
                 .height(48.dp)
                 .background(Theme.tabLevel1),
@@ -48,9 +48,9 @@ fun AlbumListBottomBar(
 
             Box(
                 modifier = Modifier
-                    .padding(end = 4.dp)
-                    .width(46.dp)
-                    .height(46.dp)
+                    .padding(end = 2.dp)
+                    .width(48.dp)
+                    .height(48.dp)
                     .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
                     .background(Color(0xFF414141))
                     .clickable(onClick = { onClickVisibleFilter() }),
@@ -63,18 +63,11 @@ fun AlbumListBottomBar(
                 AlbumListPageSelector(currentPage, totalPages) { onChange(it) }
             }
 
-//            Row {
-//                ButtonRev(onClick = onClickPrev)
-//                Spacer(Modifier.width(4.dp))
-//                ButtonNext(onClick = onClickNext)
-//                Spacer(Modifier.width(4.dp))
-//            }
-
             Box(
                 modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .width(46.dp)
-                    .height(46.dp)
+                    .padding(start = 2.dp, end = 0.dp)
+                    .width(48.dp)
+                    .height(48.dp)
                     .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
                     .background(Color(0xFF414141))
                     .clickable(onClick = { onClickVisibleFilter() }),

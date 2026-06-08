@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
@@ -41,11 +42,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -109,7 +112,7 @@ fun L_LazyRowPictureDetails(
 
     val scope = rememberCoroutineScope()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
         LazyVerticalStaggeredGrid(
             state = host.state,
@@ -121,6 +124,7 @@ fun L_LazyRowPictureDetails(
 
             if (showInitialLoading) {
                 item(span = StaggeredGridItemSpan.FullLine) {
+                    //Загрузка элементов...
                     InitialPictureItemsLoading()
                 }
             }
@@ -130,7 +134,7 @@ fun L_LazyRowPictureDetails(
 
                 //if (item.url_to_original != null)
                 //{
-                    Box( modifier = Modifier.fillMaxWidth(),      contentAlignment = Alignment.Center )
+                    Box( modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center )
                     {
                         val aspect = item.width.toFloat() / item.height
 
@@ -163,14 +167,14 @@ fun L_LazyRowPictureDetails(
 
                         Box(
                             modifier = Modifier
-                                .padding(2.dp)
+                                .padding(1.dp)
                                 .aspectRatio(aspect)
-                                .clipToBounds()
-                                .border(
-                                    width = 0.5.dp,
-                                    color = Color.Gray
-                                )
-                        ) {
+                                //.clipToBounds()
+                                .border( width = 0.5.dp, color = Theme.tabLevel4, shape = RoundedCornerShape(4.dp) )
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(Color(0xFF212121))
+                        )
+                        {
                             if (playInline && videoUrl != null) {
                                 LInlineAnimationVideo(
                                     url = videoUrl,
@@ -179,14 +183,14 @@ fun L_LazyRowPictureDetails(
                                     modifier = Modifier.fillMaxSize()
                                 )
                             } else if (previewUrl.isNotBlank() && !previewUrl.isLVideoFileUrl()) {
-                                UrlImage(
-                                    url = previewUrl,
-                                    contentScale = ContentScale.FillHeight,
-                                    urlGif = item.url_to_original,
-                                    modifier = Modifier.fillMaxSize(),
-                                    albumName = host.albumName,
-                                    isAnimated = false
-                                )
+//                                UrlImage(
+//                                    url = previewUrl,
+//                                    contentScale = ContentScale.FillHeight,
+//                                    urlGif = item.url_to_original,
+//                                    modifier = Modifier.fillMaxSize(),
+//                                    albumName = host.albumName,
+//                                    isAnimated = false
+//                                )
                             } else {
                                 AnimatedVideoPlaceholder(modifier = Modifier.fillMaxSize())
                             }
@@ -283,6 +287,7 @@ private fun LInlineAnimationVideo(
     albumName: String,
     modifier: Modifier = Modifier
 ) {
+    val isInspection = androidx.compose.ui.platform.LocalInspectionMode.current
     val playerHost = remember(url) {
         MediaPlayerHost(
             mediaUrl = url,
@@ -294,24 +299,28 @@ private fun LInlineAnimationVideo(
     var playbackError by remember(url) { mutableStateOf(false) }
 
     LaunchedEffect(playerHost) {
-        playerHost.videoFitMode = ScreenResize.FILL
-        playerHost.onError = {
-            playbackError = true
-            Timber.e("!!! L inline video error: ${it.message}")
+        if (!isInspection) {
+            playerHost.videoFitMode = ScreenResize.FILL
+            playerHost.onError = {
+                playbackError = true
+                Timber.e("!!! L inline video error: ${it.message}")
+            }
+            playerHost.play()
         }
-        playerHost.play()
     }
 
     Box(modifier = modifier) {
-        VideoPlayerWithMenuContent(
-            modifier = Modifier.fillMaxSize(),
-            playerHost = playerHost,
-            onClick = {},
-            autoRotate = false
-        )
+        if (!isInspection) {
+            VideoPlayerWithMenuContent(
+                modifier = Modifier.fillMaxSize(),
+                playerHost = playerHost,
+                onClick = {},
+                autoRotate = false
+            )
+        }
 
         AnimatedVisibility(
-            visible = playerHost.poster || playbackError,
+            visible = playerHost.poster || playbackError || isInspection,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
@@ -328,7 +337,7 @@ private fun LInlineAnimationVideo(
             }
         }
 
-        if (playerHost.poster && !playbackError) {
+        if (playerHost.poster && !playbackError && !isInspection) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
                 color = Color.LightGray
@@ -347,6 +356,41 @@ private fun AnimatedVideoPlaceholder(modifier: Modifier = Modifier) {
             imageVector = Icons.Default.PlayArrow,
             contentDescription = null,
             tint = Color.White
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
+private fun AnimatedVideoPlaceholderPreview() {
+    com.client.xvideos.ui.theme.XvideosTheme {
+        AnimatedVideoPlaceholder(
+            modifier = Modifier
+                .width(200.dp)
+                .height(150.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
+private fun InitialPictureItemsLoadingPreview() {
+    com.client.xvideos.ui.theme.XvideosTheme {
+        InitialPictureItemsLoading()
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
+private fun LInlineAnimationVideoPreview() {
+    com.client.xvideos.ui.theme.XvideosTheme {
+        LInlineAnimationVideo(
+            url = "https://sample.com/video.mp4",
+            previewUrl = "https://ah-img.luscious.net/Joking42/499900/sample_3941cb87cea03_01J9ZXQ9XTDKY6PQ01ZRWF1FFZ.1680x0.jpg",
+            albumName = "Sample Album",
+            modifier = Modifier
+                .width(200.dp)
+                .height(150.dp)
         )
     }
 }

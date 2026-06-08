@@ -58,7 +58,8 @@ fun AlbumInfoAudiences(
 @Composable
 fun AlbumInfoAudiencesPreview() {
     val parsed = AlbumDetails(
-        created = 1678886400L,
+        created = 1678886400.0,
+        modified = 1678886400.0,
         id = "123",
         title = "Sample Album",
         tags = emptyList(),
