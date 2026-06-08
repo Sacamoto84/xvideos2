@@ -35,12 +35,7 @@ fun AlbumInfoGreeting(
             "Genres: ",
             color = Theme.L.textColor,
             style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp),
-
-            modifier = Modifier
-                .padding(horizontal = 2.dp)
-                .padding(vertical = 4.dp)
-                //.padding(4.dp),
-
+            modifier = Modifier.padding(vertical = 4.dp)
         )
 
         parsed.genres.forEachIndexed { index, item ->

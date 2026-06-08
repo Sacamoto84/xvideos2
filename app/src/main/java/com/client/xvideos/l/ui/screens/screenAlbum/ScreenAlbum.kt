@@ -42,8 +42,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -58,6 +62,9 @@ import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
 import com.client.xvideos.l.net.AlbumPicsDetails
+import com.client.xvideos.l.net.LAlbumPageLoadIssue
+import com.client.xvideos.l.repository.LRepositoryProtectionUiState
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
@@ -206,35 +213,34 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                         .atZone(ZoneId.systemDefault()).format(formatter)
 
 
-                                Text(
-                                    "Created: " + textCreated,
-                                    color = Theme.L.textColor,
-                                    style = Theme.L.Type.rowTitle
-                                )
+                                val str = buildAnnotatedString {
+                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Created: ") }
+                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textCreated) }
+                                }
+
+                                if (parsed.created != 0.0) {
+                                    Text(str, color = Theme.L.textColor)
+                                }
+
+                                val str1 = buildAnnotatedString {
+                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Modified: ") }
+                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textModified) }
+                                }
 
                                 if (parsed.modified != 0.0) {
-                                    Text(
-                                        "Modified: " + textModified,
-                                        color = Theme.L.textColor,
-                                        style = Theme.L.Type.rowTitle
-                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text( str1, color = Theme.L.textColor)
                                 }
 
                                 Spacer(modifier = Modifier.height(4.dp))
                                 AlbumInfoGreeting(parsed) { genre ->
                                     navigator.push(
-                                        L_ScreenAlbumList.create(
-                                            filter = albumListFilterForGenre(genre),
-                                            title = "Genre: ${genre.title}"
-                                        )
+                                        L_ScreenAlbumList.create( filter = albumListFilterForGenre(genre), title = "Genre: ${genre.title}" )
                                     )
                                 }
                                 AlbumInfoAudiences(parsed) { audience ->
                                     navigator.push(
-                                        L_ScreenAlbumList.create(
-                                            filter = albumListFilterForAudience(audience),
-                                            title = "Audience: ${audience.title}"
-                                        )
+                                        L_ScreenAlbumList.create( filter = albumListFilterForAudience(audience), title = "Audience: ${audience.title}" )
                                     )
                                 }
                                 AlbumInfoTags({
@@ -295,9 +301,21 @@ private fun LAlbumNetworkIssuePanel(
     onRetryFailedPages: () -> Unit
 ) {
     if (albumPicsDetails == null) return
+    LAlbumNetworkIssuePanel(
+        failedPages = albumPicsDetails.failedPages.toList(),
+        protectionState = albumPicsDetails.protectionUiState,
+        isRetryingFailedPages = albumPicsDetails.isRetryingFailedPages,
+        onRetryFailedPages = onRetryFailedPages
+    )
+}
 
-    val failedPages = albumPicsDetails.failedPages.toList()
-    val protectionState = albumPicsDetails.protectionUiState
+@Composable
+private fun LAlbumNetworkIssuePanel(
+    failedPages: List<LAlbumPageLoadIssue>,
+    protectionState: LRepositoryProtectionUiState,
+    isRetryingFailedPages: Boolean,
+    onRetryFailedPages: () -> Unit
+) {
     val shouldShow = failedPages.isNotEmpty() || protectionState.active
     if (!shouldShow) return
 
@@ -361,7 +379,7 @@ private fun LAlbumNetworkIssuePanel(
 
         Button(
             onClick = onRetryFailedPages,
-            enabled = failedPages.isNotEmpty() && !albumPicsDetails.isRetryingFailedPages,
+            enabled = failedPages.isNotEmpty() && !isRetryingFailedPages,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.padding(top = 8.dp)
@@ -369,7 +387,7 @@ private fun LAlbumNetworkIssuePanel(
             Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Black)
             Spacer(Modifier.width(6.dp))
             Text(
-                if (albumPicsDetails.isRetryingFailedPages) "Повторяю..." else "Повторить страницы",
+                if (isRetryingFailedPages) "Повторяю..." else "Повторить страницы",
                 color = Color.Black,
                 style = Theme.L.Type.button
             )
@@ -445,4 +463,42 @@ private fun ScreenLAlbumPreview() {
         percentLoad = 0.4f,
     )
 }
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360)
+@Composable
+private fun LAlbumNetworkIssuePanelPreview() {
+    XvideosTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Failed Pages only:", color = Color.White)
+            LAlbumNetworkIssuePanel(
+                failedPages = listOf(
+                    LAlbumPageLoadIssue(1, "Error", false),
+                    LAlbumPageLoadIssue(2, "Error", false)
+                ),
+                protectionState = LRepositoryProtectionUiState(active = false),
+                isRetryingFailedPages = false,
+                onRetryFailedPages = {}
+            )
+
+            Spacer(Modifier.height(16.dp))
+            Text("HTML Challenge active:", color = Color.White)
+            LAlbumNetworkIssuePanel(
+                failedPages = emptyList(),
+                protectionState = LRepositoryProtectionUiState(active = true, retryAtMs = System.currentTimeMillis() + 30000),
+                isRetryingFailedPages = false,
+                onRetryFailedPages = {}
+            )
+
+            Spacer(Modifier.height(16.dp))
+            Text("Retrying state:", color = Color.White)
+            LAlbumNetworkIssuePanel(
+                failedPages = listOf(LAlbumPageLoadIssue(1, "Error", false)),
+                protectionState = LRepositoryProtectionUiState(active = false),
+                isRetryingFailedPages = true,
+                onRetryFailedPages = {}
+            )
+        }
+    }
+}
+
 

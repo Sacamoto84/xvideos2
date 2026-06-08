@@ -30,9 +30,7 @@ fun AlbumInfoAudiences(
             "Audiences: ",
             color = Theme.L.textColor,
             style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp),
-            modifier = Modifier
-                .padding(horizontal = 2.dp)
-                .padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = 4.dp)
         )
         parsed.audiences.forEachIndexed { index, item ->
             Text(

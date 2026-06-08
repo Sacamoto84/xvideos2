@@ -172,7 +172,7 @@ fun L_LazyRowPictureDetails(
                                 //.clipToBounds()
                                 .border( width = 0.5.dp, color = Theme.tabLevel4, shape = RoundedCornerShape(4.dp) )
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFF212121))
+                                .background(Theme.tabLevel1)
                         )
                         {
                             if (playInline && videoUrl != null) {
@@ -183,14 +183,15 @@ fun L_LazyRowPictureDetails(
                                     modifier = Modifier.fillMaxSize()
                                 )
                             } else if (previewUrl.isNotBlank() && !previewUrl.isLVideoFileUrl()) {
-//                                UrlImage(
-//                                    url = previewUrl,
-//                                    contentScale = ContentScale.FillHeight,
-//                                    urlGif = item.url_to_original,
-//                                    modifier = Modifier.fillMaxSize(),
-//                                    albumName = host.albumName,
-//                                    isAnimated = false
-//                                )
+                                UrlImage(
+                                    url = previewUrl,
+                                    contentScale = ContentScale.FillHeight,
+                                    urlGif = item.url_to_original,
+                                    modifier = Modifier.fillMaxSize(),
+                                    albumName = host.albumName,
+                                    isAnimated = false,
+                                    backgroung = Theme.tabLevel1
+                                )
                             } else {
                                 AnimatedVideoPlaceholder(modifier = Modifier.fillMaxSize())
                             }

@@ -23,7 +23,6 @@ fun AlbumInfoTags(tags: () -> (List<Tag>), onClick: (String) -> Unit) {
             Text(
                 "${it.text.capitalizeEachWord()} (${it.count})",
                 modifier = Modifier
-                    .padding(horizontal = 2.dp)
                     .padding(vertical = 2.dp)
                     .border(1.dp, Theme.L.secondaryColor, RoundedCornerShape(4.dp))
                     .padding(4.dp)

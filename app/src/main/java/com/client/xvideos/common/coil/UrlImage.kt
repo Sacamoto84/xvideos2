@@ -91,7 +91,10 @@ fun UrlImage(
 
     isVisibleProgressText: Boolean = false,    //Показ текста скачанных данных
 
-    isFullScreen: Boolean = false //Режим полного экрана с поддержкой поворота
+    isFullScreen: Boolean = false, //Режим полного экрана с поддержкой поворота
+
+    backgroung : Color = Color.Transparent,
+
 ) {
 
 //    if (!isVisible) {
@@ -246,7 +249,7 @@ fun UrlImage(
 //                alpha = 0.5f,
 //            ),
                 modifier = Modifier
-                    .background(Theme.L.grey6)
+                    .background(backgroung)
                     .then(if (!isFullScreen) Modifier.then(sizeResolver) else Modifier)
                     .then(
                         if (isFullScreen && rotate) {

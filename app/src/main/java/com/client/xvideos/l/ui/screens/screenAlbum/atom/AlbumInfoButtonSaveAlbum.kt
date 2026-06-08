@@ -25,7 +25,6 @@ fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick : ()->Unit) {
 
     Box(
         modifier = Modifier
-            .padding(horizontal = 2.dp)
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
