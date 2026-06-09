@@ -105,6 +105,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         // полноэкранная картинка — в этом случае back перехватывает L_FullScreenImage
         // (закрывает картинку), и выход из альбома не происходит.
         val haptic = LocalHapticFeedback.current
+
         BackHandler(enabled = vm.host.selectedImage == null) {
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             navigator.pop()
@@ -202,6 +203,15 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                 }
 
 
+                                Spacer(modifier = Modifier.height(4.dp))
+                                val strId = buildAnnotatedString {
+                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Id: ") }
+                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(idAlbum.toString()) }
+                                }
+                                Text(strId, color = Theme.L.textColor)
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
                                 val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
 
                                 val textCreated =
@@ -247,7 +257,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                     parsed.tags.reversed().filter { it.count > 0 }
                                 }) { navigator.push(ScreenLAlbumLandingTag(it)) }
                                 AlbumInfoButtonSaveAlbum(saved, onClick = { if (!saved) { vm.saveAlbum() } else { itemPendingDelete = parsed } })
-                                AlbumInfoFilterButton( parsed, vm.showOnlyAnimated, { vm.showOnlyAnimated = it })
+                                AlbumInfoFilterButton( parsed, vm.showOnlyAnimated) { vm.showOnlyAnimated = it }
                                 LAlbumNetworkIssuePanel(
                                     albumPicsDetails = albumPicsDetails,
                                     onRetryFailedPages = { vm.retryFailedAlbumPages() }

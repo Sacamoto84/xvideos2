@@ -143,14 +143,14 @@ fun R_SavedCollectionTabContent(
     com.client.xvideos.common.collectionDB.ui.CollectionsGrid(
         selectedCollection = selectedCollection,
         collections = collectionList.map {
-            com.client.xvideos.common.collectionDB.ui.CollectionGridItem(
+            com.client.xvideos.common.collectionDB.model.CollectionGridItem(
                 name = it.collection,
                 previewUrl = it.items.lastOrNull()?.urls?.thumbnail,
                 itemsCount = null
             )
         },
         gridState = gridState,
-        style = com.client.xvideos.common.collectionDB.ui.CollectionsGridStyle(
+        style = com.client.xvideos.common.collectionDB.model.CollectionsGridStyle(
             backgroundColor = Color.Transparent,
             titleColor = Theme.R.colorYellow,
             titleFontFamily = Theme.R.fontFamilyPopinsRegular,

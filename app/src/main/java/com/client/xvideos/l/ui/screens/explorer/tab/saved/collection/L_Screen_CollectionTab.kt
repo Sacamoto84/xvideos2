@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,9 +55,6 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import com.client.xvideos.common.collectionDB.ui.CollectionGridItem
-import com.client.xvideos.common.collectionDB.ui.CollectionsGrid
-import com.client.xvideos.common.collectionDB.ui.CollectionsGridStyle
 import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.featured.saved.LSmartCollectionCandidate
@@ -71,6 +69,10 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
 import javax.inject.Inject
+import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.collectionDB.model.CollectionGridItem
+import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
+import com.client.xvideos.ui.theme.XvideosTheme
 
 object L_Screen_CollectionTab : Screen {
 
@@ -89,15 +91,14 @@ object L_Screen_CollectionTab : Screen {
 
         val selectedCollection = savedL.collection.currentCollectionName
 
-        BackHandler(enabled = selectedCollection != null) {
-            Timber.i("iii BackHandler SavedCollectionTab")
-            savedL.collection.currentCollectionName = null
-        }
+        // Back обрабатывается внутри L_CollectionNameContent (через onExitCollection),
+        // когда коллекция открыта. Отдельный BackHandler на уровне таба не нужен.
 
         var itemPendingAction by remember { mutableStateOf<String?>(null) }
         var itemPendingRename by remember { mutableStateOf<String?>(null) }
         var itemPendingDelete by remember { mutableStateOf<String?>(null) }
         var renameValue by remember { mutableStateOf("") }
+
         var smartCollectionsVisible by remember { mutableStateOf(false) }
 
         LaunchedEffect(smartCollectionsVisible) {
@@ -125,12 +126,12 @@ object L_Screen_CollectionTab : Screen {
                         "Действие с коллекцией",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = Theme.L.textColor
+                        color = Theme.L.grey7
                     )
                 },
                 text = {
                     Column {
-                        Text(pending, fontSize = 16.sp, color = Theme.L.grey2)
+                        Text(pending, fontSize = 16.sp, color = Theme.L.grey7)
                         DropdownMenuItem(
                             text = { Text("Переименовать", style = Theme.L.Type.menuItem) },
                             onClick = {
@@ -154,9 +155,9 @@ object L_Screen_CollectionTab : Screen {
                         onClick = { itemPendingAction = null }
                     ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
                 },
-                containerColor = Theme.L.grey5,
-                titleContentColor = Theme.L.textColor,
-                textContentColor = Theme.L.textColor
+                containerColor = Theme.L.grey0,
+                titleContentColor = Theme.L.grey7,
+                textContentColor = Theme.L.grey6
             )
         }
 
@@ -198,7 +199,6 @@ object L_Screen_CollectionTab : Screen {
                 textContentColor = Theme.L.textColor
             )
         }
-
         /* ---------- Диалог подтверждения ---------- */
         itemPendingDelete?.let { pending ->
             AlertDialog(
@@ -242,32 +242,33 @@ object L_Screen_CollectionTab : Screen {
             )
         }
 
-        L_SavedCollectionTabContent(
-            selectedCollection = selectedCollection,
-            collectionList = savedL.collection.collectionList,
-            sortOrder = savedL.collection.sortOrder,
-            gridState = vm.gridState,
-            onSortOrderClick = { savedL.collection.applySortOrder(it) },
-            onSmartCollectionsClick = { smartCollectionsVisible = true },
-            onCollectionClick = { savedL.collection.setCollection(it) },
-            onCollectionLongClick = { itemPendingAction = it },
-            onCreateNewCollectionClick = { savedL.collection.visibleDialogCreateNew = true },
-            navigationContent = {
-                if (selectedCollection != null) {
-                    L_CollectionNameContent(
-                        collectionName = selectedCollection,
-                        savedL = savedL,
-                        host = vm.hostFor(selectedCollection)
-                    )
-                }
-            }
-        )
+        // Таб показывает ЛИБО список коллекций, ЛИБО одну открытую коллекцию.
+        // Раньше открытая коллекция рендерилась ВНУТРИ Scaffold-а грида
+        // (вложенные Scaffold + двойной topBar + мигание). Теперь это сосед.
+        if (selectedCollection == null) {
+            L_SavedCollectionTabContent(
+                collectionList = savedL.collection.collectionList,
+                sortOrder = savedL.collection.sortOrder,
+                gridState = vm.gridState,
+                onSortOrderClick = { savedL.collection.applySortOrder(it) },
+                onSmartCollectionsClick = { smartCollectionsVisible = true },
+                onCollectionClick = { savedL.collection.setCollection(it) },
+                onCollectionLongClick = { itemPendingAction = it },
+                onCreateNewCollectionClick = { savedL.collection.visibleDialogCreateNew = true }
+            )
+        } else {
+            L_CollectionNameContent(
+                collectionName = selectedCollection,
+                savedL = savedL,
+                host = vm.hostFor(selectedCollection),
+                onExitCollection = { savedL.collection.currentCollectionName = null }
+            )
+        }
     }
 }
 
 @Composable
 fun L_SavedCollectionTabContent(
-    selectedCollection: String?,
     collectionList: List<LCollectionEntity>,
     sortOrder: LCollectionSortOrder,
     gridState: LazyGridState,
@@ -275,11 +276,9 @@ fun L_SavedCollectionTabContent(
     onSmartCollectionsClick: () -> Unit,
     onCollectionClick: (String) -> Unit,
     onCollectionLongClick: (String) -> Unit,
-    onCreateNewCollectionClick: () -> Unit,
-    navigationContent: @Composable () -> Unit
+    onCreateNewCollectionClick: () -> Unit
 ) {
     CollectionsGrid(
-        selectedCollection = selectedCollection,
         collections = collectionList.map {
             CollectionGridItem(
                 name = it.collection,
@@ -292,8 +291,8 @@ fun L_SavedCollectionTabContent(
             backgroundColor = Theme.background,
             titleColor = Theme.L.primaryColor,
             titleFontFamily = Theme.L.fontFamilyPopinsRegular,
-            itemNameColor = androidx.compose.ui.graphics.Color.White,
-            itemSecondaryColor = androidx.compose.ui.graphics.Color.LightGray,
+            itemNameColor = Color.White,
+            itemSecondaryColor = Color.LightGray,
             itemFontFamily = Theme.L.fontFamilyDMsanss,
             addButtonBackground = Theme.L.primaryColor
         ),
@@ -302,13 +301,12 @@ fun L_SavedCollectionTabContent(
         onCreateNewCollectionClick = onCreateNewCollectionClick,
         topBar = {
             LCollectionsTopBar(
-                selectedCollection = selectedCollection,
+                selectedCollection = null,
                 sortOrder = sortOrder,
                 onSortOrderClick = onSortOrderClick,
                 onSmartCollectionsClick = onSmartCollectionsClick
             )
-        },
-        navigationContent = navigationContent
+        }
     )
 }
 
@@ -473,4 +471,51 @@ abstract class ScreenModuleLSavedCollection {
     @IntoMap
     @ScreenModelKey(ScreenSavedCollectionSM::class)
     abstract fun bindScreenLSavedCollectionScreenModel(hiltListScreenModel: ScreenSavedCollectionSM): ScreenModel
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
+private fun PreviewLCollectionsTopBarSelectionNull() {
+    XvideosTheme(darkTheme = true) {
+        LCollectionsTopBar(
+            selectedCollection = null,
+            sortOrder = LCollectionSortOrder.RECENT,
+            onSortOrderClick = {},
+            onSmartCollectionsClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
+private fun PreviewLCollectionsTopBarWithSelection() {
+    XvideosTheme(darkTheme = true) {
+        LCollectionsTopBar(
+            selectedCollection = "My Private Collection",
+            sortOrder = LCollectionSortOrder.NAME,
+            onSortOrderClick = {},
+            onSmartCollectionsClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
+private fun PreviewL_SavedCollectionTabContent() {
+    XvideosTheme(darkTheme = true) {
+        L_SavedCollectionTabContent(
+            collectionList = listOf(
+                LCollectionEntity("Favorites", null, 10, 0, 0, false),
+                LCollectionEntity("Travel", null, 5, 0, 0, false),
+                LCollectionEntity("Work", null, 2, 0, 0, false)
+            ),
+            sortOrder = LCollectionSortOrder.RECENT,
+            gridState = rememberLazyGridState(),
+            onSortOrderClick = {},
+            onSmartCollectionsClick = {},
+            onCollectionClick = {},
+            onCollectionLongClick = {},
+            onCreateNewCollectionClick = {}
+        )
+    }
 }

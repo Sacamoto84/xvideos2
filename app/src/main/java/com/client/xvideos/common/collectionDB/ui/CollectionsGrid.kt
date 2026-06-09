@@ -1,7 +1,5 @@
 package com.client.xvideos.common.collectionDB.ui
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -27,41 +25,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.collectionDB.model.CollectionGridItem
+import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 import com.composeunstyled.Text
-
-/**
- * Универсальное представление одной коллекции в гриде (общее для L и R).
- *
- * @param name             отображаемое имя коллекции (оно же id папки)
- * @param previewUrl       url или локальный путь к превью; null — серая заглушка
- * @param itemsCount       подпись со счётчиком; null — счётчик не показывать
- */
-data class CollectionGridItem(
-    val name: String,
-    val previewUrl: String?,
-    val itemsCount: Int?
-)
-
-/**
- * Цветовая и типографическая тема для [CollectionsGrid]. Заполняется на стороне
- * каждого раздела (см. `Theme.L.toCollectionsGridStyle()` / аналог для R).
- */
-data class CollectionsGridStyle(
-    val backgroundColor: Color,
-    val titleColor: Color,
-    val titleFontFamily: FontFamily,
-    val itemNameColor: Color,
-    val itemSecondaryColor: Color,
-    val itemFontFamily: FontFamily,
-    val addButtonBackground: Color,
-    val addButtonIconColor: Color = Color.Black,
-    val placeholderColor: Color = Color.Gray
-)
 
 /**
  * Универсальная сетка коллекций c заголовком и кнопкой «+».
@@ -97,6 +66,7 @@ fun CollectionsGrid(
         },
         containerColor = style.backgroundColor
     ) { padding ->
+
         if (selectedCollection == null) {
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize().padding(padding),
