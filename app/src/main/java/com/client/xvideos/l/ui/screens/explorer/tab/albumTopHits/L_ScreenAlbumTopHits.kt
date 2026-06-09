@@ -5,6 +5,7 @@ import com.client.xvideos.common.theme.Theme
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
@@ -23,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,10 +40,14 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.l.model.AlbumListFilter
+import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.net.AlbumTopHitsImpl
 import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.ui.element.AlbumListItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
+import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
+import java.net.URLDecoder
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -134,26 +140,76 @@ object L_ScreenAlbumTopHits : Screen {
                             }
                         }
                     }
-                    ButtonSeeAll()
+                    ButtonSeeAll(
+                        onClick = {
+                            navigator.push(
+                                L_ScreenAlbumList.create(
+                                    filter = albumListFilterFromTopHitsUrl(item.url),
+                                    title = item.title
+                                )
+                            )
+                        }
+                    )
                 }
             }
         }
     }
 }
 
+/**
+ * Строит [AlbumListFilter] из URL категории top-hits, например:
+ * `/albums/list/?album_type=manga&audience_ids=%2B1%2B2&display=date_trending&tagged=%2Bcollared&page=1`
+ *
+ * Параметры, которых нет в URL, берутся из дефолтов [AlbumListFilter].
+ */
+private fun albumListFilterFromTopHitsUrl(url: String): AlbumListFilter {
+    val params: Map<String, String> = url
+        .substringAfter('?', "")
+        .split('&')
+        .mapNotNull { pair ->
+            val i = pair.indexOf('=')
+            if (i <= 0) return@mapNotNull null
+            val name = URLDecoder.decode(pair.substring(0, i), "UTF-8")
+            val value = URLDecoder.decode(pair.substring(i + 1), "UTF-8")
+            name to value
+        }
+        .toMap()
+
+    val default = AlbumListFilter()
+
+    val albumType = params["album_type"]
+        ?.let { v -> AlbumType.entries.find { it.value == v } }
+        ?: default.album_type
+
+    // "tagged" приходит как "+tag1+tag2" → ["tag1", "tag2"]
+    val tagPlus = params["tagged"].orEmpty()
+        .split('+')
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+
+    return AlbumListFilter(
+        display = params["display"] ?: default.display,
+        album_type = albumType,
+        audienceIds = params["audience_ids"] ?: default.audienceIds,
+        languageIds = params["language_ids"] ?: default.languageIds,
+        tagPlus = tagPlus
+    )
+}
 
 
-@Preview
+
 @Composable
-private fun ButtonSeeAll() {
+private fun ButtonSeeAll(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .padding(top = 4.dp)
             .padding(horizontal = 4.dp)
             .fillMaxWidth()
             .height(32.dp)
+            .clip(RoundedCornerShape(8.dp))
             .border(1.dp, Theme.L.grey2, RoundedCornerShape(8.dp))
-            .background(Theme.L.grey3),
+            .background(Theme.L.grey3)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -166,6 +222,12 @@ private fun ButtonSeeAll() {
             fontWeight = FontWeight.Medium,
         )
     }
+}
+
+@Preview
+@Composable
+private fun ButtonSeeAllPreview() {
+    ButtonSeeAll(onClick = {})
 }
 
 

@@ -55,6 +55,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
+import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.featured.saved.LSmartCollectionCandidate
@@ -257,12 +258,9 @@ object L_Screen_CollectionTab : Screen {
                 onCreateNewCollectionClick = { savedL.collection.visibleDialogCreateNew = true }
             )
         } else {
-            L_CollectionNameContent(
-                collectionName = selectedCollection,
-                savedL = savedL,
-                host = vm.hostFor(selectedCollection),
-                onExitCollection = { savedL.collection.currentCollectionName = null }
-            )
+            // Открытая коллекция — отдельный Screen (свой ScreenModel/host/lifecycle)
+            // во вложенном Navigator. Back внутри сбрасывает currentCollectionName.
+            Navigator(ScreenCollectionName(selectedCollection))
         }
     }
 }
