@@ -178,9 +178,7 @@ private fun HomeFloatingActionButton(mainNavigator: Navigator?) {
                         }
                     }
                 },
-                content = {
-                    Icon(imageVector = Icons.Default.Home, contentDescription = "Home")
-                }
+                content = { Icon(imageVector = Icons.Default.Home, contentDescription = "Home") }
             )
 
             if (navigationDepth > 0) {
