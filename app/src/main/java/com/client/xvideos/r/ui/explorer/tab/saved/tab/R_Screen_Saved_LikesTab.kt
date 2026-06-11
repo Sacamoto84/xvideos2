@@ -67,7 +67,12 @@ object R_Screen_Saved_LikesTab : Screen {
         //Изменение количества отображаемых элементов
         LaunchedEffect(columnSelect) { vm.likedHost.columns = columnSelect }
 
-        LaunchedEffect(vm.savedRed.likes.list){ pager.refresh() }
+        // Ключ-ссылка на list никогда не меняется — подписываемся на размер:
+        // добавление (в т.ч. приём по P2P) и удаление лайка перезагружают pager.
+        LaunchedEffect(Unit) {
+            androidx.compose.runtime.snapshotFlow { vm.savedRed.likes.list.size }
+                .collect { pager.refresh() }
+        }
 
         Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 

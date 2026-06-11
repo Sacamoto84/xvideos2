@@ -72,7 +72,12 @@ class P2pReceiveController(
                 nearby.stopAdvertising() // Останавливаем рекламу после подключения для стабильности
                 _state.value = ReceiveState.Receiving(0, 0)
             }
-            is P2pEvent.TransferProgress -> _state.value = ReceiveState.Receiving(event.transferred, event.total)
+            is P2pEvent.TransferProgress ->
+                // GMS шлёт статусы payload'ов и после завершения сессии —
+                // не затираем Advertising/Done поздним прогрессом.
+                if (_state.value is ReceiveState.Receiving) {
+                    _state.value = ReceiveState.Receiving(event.transferred, event.total)
+                }
             is P2pEvent.FilePayloadReceived -> {
                 receivedFiles[event.payloadId] = event.file
                 tryImport()

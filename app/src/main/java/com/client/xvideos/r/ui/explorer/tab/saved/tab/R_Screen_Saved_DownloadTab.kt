@@ -112,10 +112,8 @@ object R_Screen_Saved_DownloadTab : Screen {
             P2pSendChooserDialog(
                 onSystem = { useCaseShareGifs(context, item) },
                 onP2p = {
-                    val bundle = RExporter.export(File(AppPath.r_cache_download), item.userName, item.id)
-                    if (bundle == null) {
-                        SnackBar.error("Нет скачанных файлов для P2P")
-                    } else {
+                    // Шлём только метаданные (.info + .jpg) — видео получатель стримит по URL.
+                    vm.downloadRed.shareMetaByP2p(item) { bundle ->
                         navigator.push(ScreenP2pSend(bundle))
                     }
                 },

@@ -1,9 +1,13 @@
 package com.client.xvideos.r.common.downloader
 
+import android.content.Context
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.p2p.P2pExportBundle
+import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +39,8 @@ private data class RedDownloadRecoveryCandidate(
 @Singleton
 class DownloadRed @Inject constructor(
     val downloader: Downloader,
-    @ApplicationScope private val scope: CoroutineScope
+    @ApplicationScope private val scope: CoroutineScope,
+    @ApplicationContext private val appContext: Context,
 ) {
 
     //var downloadList = mutableStateSetOf<String>()
@@ -57,6 +62,49 @@ class DownloadRed @Inject constructor(
             } catch (e: Exception) {
                 Timber.e(e, "Ошибка при загрузке: ${item.id}")
             }
+        }
+    }
+
+    /**
+     * Гарантирует наличие файла в кеше: уже скачан — [onReady] сразу,
+     * нет — скачиваем и зовём [onReady] по завершению. [onReady] всегда на Main.
+     */
+    fun ensureDownloaded(item: GifsInfo, onReady: () -> Unit) {
+        scope.launch(Dispatchers.Main) {
+            if (downloader.findVideoInDownload(item.id, item.userName)) {
+                onReady()
+            } else {
+                downloader.downloadRedName(item, onComplete = {
+                    refreshDownloadList()
+                    // Колбэк загрузчика приходит не с Main — Toast/Intent/навигация требуют Main.
+                    scope.launch(Dispatchers.Main) { onReady() }
+                })
+            }
+        }
+    }
+
+    /** «Поделиться»: файл уже в кеше — шарим сразу, иначе скачиваем и шарим по завершению. */
+    fun downloadItemAndShare(context: Context, item: GifsInfo) {
+        val ctx = context.applicationContext
+        ensureDownloaded(item) { useCaseShareGifs(ctx, item) }
+    }
+
+    /**
+     * P2P для R: бандл — только `.info` (метаданные [GifsInfo]) во временной папке.
+     * Получатель добавляет item в свои R Likes (FileDB), превью и видео грузит по URL —
+     * физические файлы не передаются вовсе.
+     * В r_cache_download ничего не пишем — иначе мусор в «Загрузках» отправителя.
+     * [onReady] всегда на Main.
+     */
+    fun shareMetaByP2p(item: GifsInfo, onReady: (P2pExportBundle) -> Unit) {
+        if (item.id.isBlank() || item.userName.isBlank()) return
+
+        scope.launch(Dispatchers.IO) {
+            val tmpRoot = File(appContext.cacheDir, "p2p_r_export")
+            tmpRoot.deleteRecursively()
+            val infoJson = GsonBuilder().create().toJson(item)
+            val bundle = buildRMetaBundle(tmpRoot, item.userName, item.id, infoJson)
+            withContext(Dispatchers.Main) { onReady(bundle) }
         }
     }
 

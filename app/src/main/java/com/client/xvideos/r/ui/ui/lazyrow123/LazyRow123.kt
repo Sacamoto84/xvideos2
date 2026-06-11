@@ -180,16 +180,23 @@ fun LazyRow123Content(
         }
     }
 
+    // paging-compose itemKey зовёт peek(index) и кидает IndexOutOfBounds, когда снапшот
+    // синхронно сжался (unlike в R Likes), а грид ещё запрашивает ключи по старому
+    // диапазону. Защищаем границу: за пределами снапшота отдаём индекс-заглушку.
+    val pagingItemKey = listGifs.itemKey { it.id }
+
     LazyRow123ContentStateless(
         columns = host.columns,
         state = state,
         itemCount = listGifs.itemCount,
         loadState = loadState,
-        itemKey = listGifs.itemKey { it.id },
+        itemKey = { index -> if (index < listGifs.itemCount) pagingItemKey(index) else index },
         modifier = modifier,
         contentPadding = contentPadding,
         contentBeforeList = contentBeforeList,
     ) { index ->
+        // Та же защита границы, что и для itemKey (см. выше).
+        if (index >= listGifs.itemCount) return@LazyRow123ContentStateless
         listGifs[index]?.let { item ->
             val isDownloaded = remember(item.id, downloadList) {
                 downloadList.any { it.id == item.id }

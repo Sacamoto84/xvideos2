@@ -95,6 +95,22 @@ class P2pReceiveControllerTest {
         }
 
     @Test
+    fun `late transfer progress after restart does not revert advertising state`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val fake = FakeNearbyClient()
+            val controller = P2pReceiveController(fake, { _, _ -> }, backgroundScope, "Pixel-Test")
+            controller.start()
+
+            // Поздний статус payload'а от прошлой сессии (например, байты манифеста).
+            fake.emit(P2pEvent.TransferProgress(371L, 371L, 371L))
+            assertEquals(ReceiveState.Advertising, controller.state.value)
+
+            // И следом запоздавший disconnect — тоже не должен ронять в Error.
+            fake.emit(P2pEvent.Disconnected("E-old"))
+            assertEquals(ReceiveState.Advertising, controller.state.value)
+        }
+
+    @Test
     fun `restart after done is not killed by delayed cleanup`() =
         runTest(UnconfinedTestDispatcher()) {
             val fake = FakeNearbyClient()

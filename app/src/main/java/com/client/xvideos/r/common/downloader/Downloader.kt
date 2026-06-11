@@ -255,15 +255,15 @@ class Downloader @Inject constructor(
         return file.exists()
     }
 
-    private fun GifsInfo.downloadVideoUrl(): String? {
-        return urls.hd?.takeIf { it.isNotBlank() }
-            ?: urls.sd.takeIf { it.isNotBlank() }
-            ?: urls.silent?.takeIf { it.isNotBlank() }
-    }
+}
 
-    private fun GifsInfo.previewUrl(): String? {
-        return urls.poster?.takeIf { it.isNotBlank() }
-            ?: urls.thumbnail.takeIf { it.isNotBlank() }
-    }
+internal fun GifsInfo.downloadVideoUrl(): String? {
+    return urls.hd?.takeIf { it.isNotBlank() }
+        ?: urls.sd.takeIf { it.isNotBlank() }
+        ?: urls.silent?.takeIf { it.isNotBlank() }
+}
 
+internal fun GifsInfo.previewUrl(): String? {
+    return urls.poster?.takeIf { it.isNotBlank() }
+        ?: urls.thumbnail.takeIf { it.isNotBlank() }
 }

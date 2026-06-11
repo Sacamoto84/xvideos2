@@ -50,9 +50,27 @@ fun ExpandMenuVideo(
 ) {
 
     var expanded by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val navigator = cafe.adriel.voyager.navigator.LocalNavigator.current
+
+    // Локальный state этого экземпляра меню — диалог показывает только тот item, где кликнули.
+    var chooserItem by remember { mutableStateOf<GifsInfo?>(null) }
 
     LaunchedEffect(expanded) {
         haptic.invoke()
+    }
+
+    chooserItem?.let { ci ->
+        com.client.xvideos.common.p2p.ui.P2pSendChooserDialog(
+            onSystem = { downloadRed.invoke().downloadItemAndShare(context, ci) },
+            onP2p = {
+                // Шлём только метаданные (.info + .jpg) — видео получатель стримит по URL.
+                downloadRed.invoke().shareMetaByP2p(ci) { bundle ->
+                    navigator?.push(com.client.xvideos.common.p2p.ui.ScreenP2pSend(bundle))
+                }
+            },
+            onDismiss = { chooserItem = null },
+        )
     }
 
     ExpandMenuVideoContent(
@@ -66,7 +84,7 @@ fun ExpandMenuVideo(
             onClick = { downloadRed.invoke().downloadItem(it) }) { expanded = false }
         DropdownMenuItem_Share(
             item,
-            onClick = { downloadRed.invoke().downloadItem(it) }) { expanded = false }
+            onClick = { chooserItem = it }) { expanded = false }
         DropdownMenuItem_Block(item = item, block = block) { expanded = false }
         DropdownMenuItem_Like(item, onRunLike, savedRed) { expanded = false }
         DropdownMenuItem_Follow(item, redApi, savedRed) { expanded = false }

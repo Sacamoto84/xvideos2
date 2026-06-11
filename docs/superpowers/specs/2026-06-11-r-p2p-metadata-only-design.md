@@ -3,6 +3,21 @@
 Дата: 2026-06-11
 Статус: одобрено пользователем
 
+## УТОЧНЕНИЕ (после проверки на устройствах)
+
+Получатель кладёт R-item в **R Likes**, а не в «Загрузки»:
+
+- R Likes — это `FileDB` объектов `GifsInfo` (`AppPath.r_likes`), LikesTab
+  рендерит превью и видео **по URL** из метаданных. Физические файлы не нужны.
+- Бандл теперь — **только `.info`** (jpg тоже убран): `DownloadRed.shareMetaByP2p`
+  больше не качает/копирует превью.
+- Получатель: `RLikesBundleImporter` парсит `.info` → `GifsInfo` →
+  `savedRed.likes.add(item)`. В `r_cache_download` ничего не раскладывается,
+  `refreshDownloadList` для R не нужен (Compose-state обновляется через
+  `likes.list.add`). EntryPoint: `downloadRed()` заменён на `savedRed()`.
+- Секции «Получатель» и «.jpg» ниже описывают первоначальный дизайн и
+  в этой части устарели.
+
 ## Контекст
 
 P2P-передача в R сейчас шлёт полный бандл (mp4 + jpg + info) и требует

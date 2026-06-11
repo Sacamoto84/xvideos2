@@ -7,7 +7,10 @@ import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.p2p.imports.StoreBundleImporter
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
+import com.client.xvideos.common.p2p.imports.BundleImporter
+import com.client.xvideos.common.p2p.imports.RLikesBundleImporter
 import com.client.xvideos.l.featured.saved.SavedL
+import com.client.xvideos.r.common.saved.SavedRed
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -47,23 +50,34 @@ object P2pReceiveManager {
         Timber.d("P2P Manager: Starting")
         val nearby = NearbyClientImpl(context.applicationContext)
 
-        val importer = StoreBundleImporter(
+        val entryPoint = EntryPointAccessors
+            .fromApplication(context.applicationContext, P2pRefreshEntryPoint::class.java)
+
+        val storeImporter = StoreBundleImporter(
             storeRootFor = { type ->
                 when (type) {
                     P2pType.X -> File(AppPath.x_cache_download)
+                    // R сюда не попадает — идёт через RLikesBundleImporter.
                     P2pType.R -> File(AppPath.r_cache_download)
                     P2pType.L -> File(AppPath.l_likes)
                 }
             },
             refreshFor = { type ->
-                // X и R экраны Saved перечитывают список при открытии — живой refresh нужен только L.
-                if (type == P2pType.L) {
-                    EntryPointAccessors
-                        .fromApplication(context.applicationContext, P2pRefreshEntryPoint::class.java)
-                        .savedL().likes.refresh()
-                }
+                // X: экран Saved перечитывает список при открытии.
+                if (type == P2pType.L) entryPoint.savedL().likes.refresh()
             }
         )
+
+        // R: «лайк» — запись метаданных в FileDB, файлы не раскладываем
+        // (LikesTab рендерит по URL); list.add сам обновляет Compose-state.
+        val rLikesImporter = RLikesBundleImporter(addLike = { entryPoint.savedRed().likes.add(it) })
+
+        val importer = BundleImporter { manifest, files ->
+            when (manifest.type) {
+                P2pType.R -> rLikesImporter.import(manifest, files)
+                else -> storeImporter.import(manifest, files)
+            }
+        }
 
         val newController = P2pReceiveController(
             nearby = nearby,
@@ -135,6 +149,7 @@ object P2pReceiveManager {
 @InstallIn(SingletonComponent::class)
 interface P2pRefreshEntryPoint {
     fun savedL(): SavedL
+    fun savedRed(): SavedRed
 }
 
 fun toggleP2pService(context: Context, enabled: Boolean) {
