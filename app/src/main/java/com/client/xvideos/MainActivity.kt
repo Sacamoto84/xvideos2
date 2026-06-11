@@ -31,6 +31,8 @@ import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.Wifi
+import com.client.xvideos.common.p2p.ui.ScreenP2pReceive
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -234,6 +236,21 @@ object MenuScreen : Screen {
                             contentDescription = "Haptic demo",
                             tint = Color.White,
                             modifier = Modifier.size(30.dp))
+                    }
+
+                    // Приём item по P2P (Nearby)
+                    IconButton(
+                        onClick = { navigator.push(ScreenP2pReceive()) },
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .displayCutoutPadding()
+                            .size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Wifi,
+                            contentDescription = "Приём P2P",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp))
                     }
                 }
             }

@@ -59,6 +59,13 @@ import com.client.xvideos.common.util.toPrettyCount3
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.client.xvideos.common.p2p.P2pExportBundle
+import com.client.xvideos.common.p2p.export.RExporter
+import com.client.xvideos.common.p2p.ui.P2pDeviceSearchSheet
+import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
 import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
 import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
@@ -95,8 +102,25 @@ object R_Screen_Saved_DownloadTab : Screen {
             { item: GifsInfo -> navigator.push(ScreenRedFullScreen(item)) }
         }
 
+        var chooserItem by remember { mutableStateOf<GifsInfo?>(null) }
+        var p2pBundle by remember { mutableStateOf<P2pExportBundle?>(null) }
+
         val onShareClickHandler = remember(context) {
-            { item: GifsInfo -> useCaseShareGifs(context, item) }
+            { item: GifsInfo -> chooserItem = item }
+        }
+
+        chooserItem?.let { item ->
+            P2pSendChooserDialog(
+                onSystem = { useCaseShareGifs(context, item) },
+                onP2p = {
+                    val bundle = RExporter.export(File(AppPath.r_cache_download), item.userName, item.id)
+                    if (bundle == null) SnackBar.error("Нет скачанных файлов для P2P") else p2pBundle = bundle
+                },
+                onDismiss = { chooserItem = null },
+            )
+        }
+        p2pBundle?.let { bundle ->
+            P2pDeviceSearchSheet(bundle = bundle, onDismiss = { p2pBundle = null })
         }
 
         val onDeleteClickHandler = remember(vm) {

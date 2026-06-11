@@ -1,0 +1,123 @@
+package com.client.xvideos.common.p2p.ui
+
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.p2p.P2pPermissions
+import com.client.xvideos.common.p2p.P2pReceiveController
+import com.client.xvideos.common.p2p.P2pType
+import com.client.xvideos.common.p2p.ReceiveState
+import com.client.xvideos.common.p2p.imports.StoreBundleImporter
+import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import java.io.File
+
+/** Экран «Приём P2P»: рекламируется и принимает один item. */
+class ScreenP2pReceive : Screen {
+
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
+        val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
+
+        val controller = remember {
+            P2pReceiveController(
+                nearby = NearbyClientImpl(context),
+                importer = StoreBundleImporter(
+                    storeRootFor = { type ->
+                        when (type) {
+                            P2pType.X -> File(AppPath.x_cache_download)
+                            P2pType.R -> File(AppPath.r_cache_download)
+                            P2pType.L -> File(AppPath.l_likes)
+                        }
+                    },
+                    refreshFor = { /* экраны Saved перечитывают список при открытии */ },
+                ),
+                scope = scope,
+                deviceName = Build.MODEL ?: "Android",
+            )
+        }
+
+        val permissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { result ->
+            if (result.values.all { it }) controller.start()
+        }
+
+        LaunchedEffect(Unit) {
+            if (P2pPermissions.allGranted(context)) controller.start()
+            else permissionLauncher.launch(P2pPermissions.required())
+        }
+
+        DisposableEffect(Unit) {
+            onDispose { controller.stop() }
+        }
+
+        val state by controller.state.collectAsState()
+
+        Scaffold { padding ->
+            Column(
+                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                when (val s = state) {
+                    is ReceiveState.Idle,
+                    is ReceiveState.Advertising -> {
+                        CircularProgressIndicator()
+                        Text("Ожидание отправителя…", modifier = Modifier.padding(top = 16.dp))
+                    }
+                    is ReceiveState.Connecting -> {
+                        Text("Запрос от: ${s.endpointName}", style = MaterialTheme.typography.titleMedium)
+                        Text("Код: ${s.authDigits}", modifier = Modifier.padding(vertical = 8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Button(onClick = { controller.confirmConnection() }) { Text("Принять") }
+                            OutlinedButton(onClick = { controller.reject() }) { Text("Отклонить") }
+                        }
+                    }
+                    is ReceiveState.Receiving -> {
+                        CircularProgressIndicator()
+                        val pct = if (s.total > 0) (s.transferred * 100 / s.total) else 0
+                        Text("Приём… $pct%", modifier = Modifier.padding(top = 16.dp))
+                    }
+                    is ReceiveState.Done -> {
+                        Text("Принято ✓", style = MaterialTheme.typography.titleLarge)
+                        Button(onClick = { navigator.pop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Готово") }
+                    }
+                    is ReceiveState.Error -> {
+                        Text("Ошибка: ${s.message}", color = MaterialTheme.colorScheme.error)
+                        Button(onClick = { navigator.pop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Закрыть") }
+                    }
+                }
+            }
+        }
+    }
+}

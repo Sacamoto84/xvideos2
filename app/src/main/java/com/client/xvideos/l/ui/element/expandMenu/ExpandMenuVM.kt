@@ -13,6 +13,16 @@ import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
 import com.client.xvideos.l.featured.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.p2p.P2pExportBundle
+import com.client.xvideos.common.p2p.export.LExporter
+import com.client.xvideos.common.p2p.ui.P2pDeviceSearchSheet
+import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
+import com.client.xvideos.l.featured.saved.lFindLikeFolder
+import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -64,7 +74,7 @@ class ExpandMenuViewModel @Inject constructor(
 
         AlbumItemExpandMenu(
             item = item, onDownload = { it1 -> downloadLike(it1, album) },
-            onShare = { it1 -> share(it1) },
+            onShare = { it1 -> onShareClicked(it1) },
             isCollection = isCollection,
             savedL = saved,
             onRemoveFromCollection = { it ->
@@ -72,6 +82,7 @@ class ExpandMenuViewModel @Inject constructor(
             },
             idAlbum = idAlbum
         )
+        P2pShareHost()
     }
 
 
@@ -118,6 +129,42 @@ class ExpandMenuViewModel @Inject constructor(
                 Timber.e(e, "L share -> ошибка при работе с файлом")
                 SnackBar.error("Ошибка при попытке поделиться файлом")
             }
+        }
+    }
+
+    // ---- P2P share ----
+
+    var p2pChooserItem by mutableStateOf<PicsDetails?>(null)
+        private set
+    var p2pBundle by mutableStateOf<P2pExportBundle?>(null)
+        private set
+
+    fun onShareClicked(item: PicsDetails) { p2pChooserItem = item }
+    fun dismissChooser() { p2pChooserItem = null }
+    fun dismissP2p() { p2pBundle = null }
+
+    fun startP2p(item: PicsDetails) {
+        val url = item.url_to_original
+        val folder = url?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
+        val bundle = folder?.let { LExporter.export(it) }
+        if (bundle == null) {
+            SnackBar.error("Сначала сохрани (Like) — нет файлов для P2P")
+            return
+        }
+        p2pBundle = bundle
+    }
+
+    @Composable
+    fun P2pShareHost() {
+        p2pChooserItem?.let { item ->
+            P2pSendChooserDialog(
+                onSystem = { share(item) },
+                onP2p = { startP2p(item) },
+                onDismiss = { dismissChooser() },
+            )
+        }
+        p2pBundle?.let { bundle ->
+            P2pDeviceSearchSheet(bundle = bundle, onDismiss = { dismissP2p() })
         }
     }
 
