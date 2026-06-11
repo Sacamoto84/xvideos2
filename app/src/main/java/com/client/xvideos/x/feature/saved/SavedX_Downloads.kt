@@ -159,7 +159,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 SnackBar.error("Не удалось получить ссылку на видео")
                 return@launch
             }
-            GallerySaver.saveFromUrl(context, kDownloader, videoUrl, fileName)
+            GallerySaver.saveFromUrl(context, kDownloader, videoUrl, fileName, progress = percent)
         }
     }
 

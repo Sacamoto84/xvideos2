@@ -104,7 +104,7 @@ class DownloadRed @Inject constructor(
             SnackBar.error("Нет ссылки на видео")
             return
         }
-        GallerySaver.saveFromUrl(appContext, downloader.kDownloader, url, fileName)
+        GallerySaver.saveFromUrl(appContext, downloader.kDownloader, url, fileName, progress = downloader.percent)
     }
 
     /** «Поделиться»: файл уже в кеше — шарим сразу, иначе скачиваем и шарим по завершению. */

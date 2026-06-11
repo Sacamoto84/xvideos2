@@ -46,8 +46,18 @@ object GallerySaver {
         }
     }
 
-    /** Качает файл по [url] прямо в галерею-папку. Fire-and-forget, снекбары внутри. */
-    fun saveFromUrl(context: Context, kDownloader: KDownloader, url: String, fileName: String) {
+    /**
+     * Качает файл по [url] прямо в галерею-папку. Fire-and-forget, снекбары внутри.
+     * [progress] — существующий flow зелёного бара раздела
+     * (`0..1` — прогресс, `-2` — покой, `-3` — ошибка).
+     */
+    fun saveFromUrl(
+        context: Context,
+        kDownloader: KDownloader,
+        url: String,
+        fileName: String,
+        progress: kotlinx.coroutines.flow.MutableStateFlow<Float>? = null,
+    ) {
         val appContext = context.applicationContext
         val dst = File(root, fileName)
         if (dst.exists()) {
@@ -60,11 +70,15 @@ object GallerySaver {
         val request = kDownloader.newRequestBuilder(url, root.absolutePath, fileName).build()
         kDownloader.enqueue(
             request,
+            onStart = { progress?.value = 0f },
+            onProgress = { p -> progress?.value = p / 100f },
             onCompleted = {
+                progress?.value = -2f
                 scan(appContext, dst)
                 SnackBar.success("Сохранено в галерею")
             },
             onError = { error ->
+                progress?.value = -3f
                 Timber.e("GallerySaver: ошибка скачивания $fileName: $error")
                 SnackBar.error("Ошибка сохранения: $error")
             },
