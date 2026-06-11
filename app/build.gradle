@@ -273,6 +273,13 @@ dependencies {
 
     implementation(libs.core)
 
+    // P2P Nearby Connections
+    implementation libs.play.services.nearby
+
+    // Unit-тесты ядра P2P
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+
 //    implementation("org.seleniumhq.selenium:selenium-java:4.15.0")
 //    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.15.0")
 

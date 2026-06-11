@@ -54,6 +54,8 @@ junitKtx = "1.3.0"
 runtimeSavedInstanceState = "1.0.0-alpha11"
 uiautomator = "2.3.0"
 benchmarkMacroJunit4 = "1.4.1"
+playServicesNearby = "19.3.0"
+kotlinxCoroutinesTest = "1.10.2"
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
@@ -129,6 +131,8 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 #Test
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+play-services-nearby = { group = "com.google.android.gms", name = "play-services-nearby", version.ref = "playServicesNearby" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
