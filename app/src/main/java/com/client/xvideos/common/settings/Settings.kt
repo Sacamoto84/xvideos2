@@ -42,6 +42,9 @@ object Settings {
 
     val app_lock_enabled by lazy { SettingElementBoolean(pref, "app_lock_enabled", false) }
 
+    val p2p_background_receive by lazy { SettingElementBoolean(pref, "p2p_background_receive", false) }
+
+
 
     //-- red ---
 

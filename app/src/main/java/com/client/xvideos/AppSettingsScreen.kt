@@ -2,6 +2,7 @@ package com.client.xvideos
 
 import com.client.xvideos.common.theme.Theme
 
+import com.client.xvideos.common.p2p.toggleP2pService
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -70,6 +71,10 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.p2p.P2pBackgroundService
+import android.content.Intent
+import android.os.Build
+import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
 import com.client.xvideos.common.backup.XlrBackupManager
@@ -386,6 +391,7 @@ private fun AppSettingsScreenBody(
                     savedL = savedL,
                     onDataChanged = onBackupDataChanged
                 )
+                SettingsPage.P2P -> P2PSettingsSection()
             }
         }
     }
@@ -435,10 +441,15 @@ private enum class SettingsPage(
         title = "Backup",
         icon = R.drawable.hard_drive_2_24,
         subtitle = "X, L, R в ZIP"
+    ),
+    P2P(
+        title = "P2P",
+        icon = R.drawable.icon_red, // Replace with appropriate icon if available
+        subtitle = "Передача файлов рядом"
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Cache, Storage, Backup)
+        val primaryPages: List<SettingsPage> = listOf(Privacy, Cache, Storage, Backup, P2P)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
@@ -695,6 +706,46 @@ private fun RSettingsSection(
         )
     }
 }
+
+@Composable
+private fun P2PSettingsSection() {
+    val context = LocalContext.current
+    val bgReceive = Settings.p2p_background_receive.field.collectAsStateWithLifecycle().value
+    
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        if (result.values.all { it }) {
+            toggleP2pService(context, true)
+        } else {
+            Settings.p2p_background_receive.setValue(false)
+            SnackBar.error("Нужны разрешения для работы P2P в фоне")
+        }
+    }
+
+    SettingsGroup {
+        SettingsSwitchRow(
+            icon = R.drawable.icon_red,
+            text = "Приём в фоне",
+            subtitle = if (bgReceive) "Включён" else "Выключен",
+            value = bgReceive,
+            onValueChange = { enabled ->
+                Settings.p2p_background_receive.setValue(enabled)
+                if (enabled) {
+                    if (P2pPermissions.allGranted(context)) {
+                        toggleP2pService(context, true)
+                    } else {
+                        permissionLauncher.launch(P2pPermissions.required())
+                    }
+                } else {
+                    toggleP2pService(context, false)
+                }
+                SnackBar.success(if (enabled) "Приём в фоне включен" else "Приём в фоне выключен")
+            }
+        )
+    }
+}
+
 
 private fun redDownloadRecoveryText(
     report: RedDownloadRecoveryReport?,

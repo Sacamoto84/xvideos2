@@ -39,6 +39,9 @@ class P2pShareController(
     private var targetEndpoint: String? = null
 
     fun start() {
+        Timber.d("P2P Sender: Starting discovery...")
+        endpoints.clear()
+        targetEndpoint = null
         _state.value = ShareState.Searching(emptyList())
         scope.launch { nearby.events.collect { handle(it) } }
         nearby.startDiscovery()
@@ -77,8 +80,19 @@ class P2pShareController(
             }
             is P2pEvent.TransferProgress -> _state.value = ShareState.Sending(event.transferred, event.total)
             is P2pEvent.ConnectionRejected -> _state.value = ShareState.Error("Получатель отклонил")
-            is P2pEvent.Disconnected ->
-                if (_state.value !is ShareState.Done) _state.value = ShareState.Error("Соединение разорвано")
+            is P2pEvent.Disconnected -> {
+                Timber.d("P2P Sender: Disconnected from ${event.endpointId}")
+                if (_state.value !is ShareState.Done) {
+                    _state.value = ShareState.Error("Соединение разорвано")
+                }
+                // После разрыва возвращаемся в поиск, чтобы можно было отправить снова
+                scope.launch {
+                    kotlinx.coroutines.delay(1000)
+                    if (_state.value is ShareState.Error || _state.value is ShareState.Done) {
+                        start()
+                    }
+                }
+            }
             is P2pEvent.Failed -> _state.value = ShareState.Error(event.message)
             else -> Unit
         }
@@ -98,7 +112,10 @@ class P2pShareController(
                     payloadIds = payloadIds,
                 )
                 nearby.sendBytes(endpointId, P2pManifestCodec.toBytes(manifest))
+                Timber.d("P2P Sender: Manifest sent SUCCESS")
+                _state.value = ShareState.Done
             } catch (e: Exception) {
+                Timber.e(e, "P2P Sender: Transfer failed")
                 _state.value = ShareState.Error(e.message ?: "Ошибка отправки")
             }
         }

@@ -35,6 +35,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:targetApi="31" />
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" tools:targetApi="33" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
 
 
 
@@ -104,6 +108,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <service
+            android:name=".common.p2p.P2pBackgroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
     </application>
 
 </manifest>

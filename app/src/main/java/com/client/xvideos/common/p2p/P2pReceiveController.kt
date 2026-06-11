@@ -39,6 +39,10 @@ class P2pReceiveController(
     private var currentEndpoint: String? = null
 
     fun start() {
+        Timber.d("P2P Receiver: Starting advertising...")
+        receivedFiles.clear()
+        manifest = null
+        currentEndpoint = null
         _state.value = ReceiveState.Advertising
         scope.launch { nearby.events.collect { handle(it) } }
         nearby.startAdvertising(deviceName)
@@ -78,10 +82,16 @@ class P2pReceiveController(
         val m = manifest ?: return
         if (!m.files.all { receivedFiles.containsKey(it.payloadId) }) return
         try {
+            Timber.d("P2P Receiver: All files received, importing bundle...")
             importer.import(m, receivedFiles.toMap())
             _state.value = ReceiveState.Done
-            nearby.stopAll()
+            // Не вызываем stopAll сразу, даем время отправителю получить подтверждение
+            scope.launch {
+                kotlinx.coroutines.delay(2000)
+                nearby.stopAll()
+            }
         } catch (e: Exception) {
+            Timber.e(e, "P2P Receiver: Import failed")
             _state.value = ReceiveState.Error(e.message ?: "Ошибка импорта")
         }
     }
