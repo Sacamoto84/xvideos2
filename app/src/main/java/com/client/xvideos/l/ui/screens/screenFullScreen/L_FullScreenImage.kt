@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -381,12 +382,18 @@ class L_FullScreenImage(
                                 tint = Color.White
                             )
                         }
-                        IconButton(onClick = { showInfoDialog = true }) { Icon( Icons.Default.Info, contentDescription = null, tint = Color.White ) }
                     }
 
-                    Box( modifier = Modifier) { expandMenuViewModel.ExpandMenu( expandMenu, filteredPic[pagerState.currentPage], albumName, isCollection ) }
+                    Row {
+                        IconButton(onClick = { showInfoDialog = true }) { Icon( Icons.Default.Info, contentDescription = null, tint = Color.White ) }
+                        Box(modifier = Modifier) { expandMenuViewModel.ExpandMenu( expandMenu, filteredPic[pagerState.currentPage], albumName, isCollection ) }
+                    }
                 }
             }
+
+            /** Единственный экземпляр P2P-хоста на экран — вне AnimatedVisibility,
+             *  чтобы диалог/навигация не умирали при скрытии панели. */
+            expandMenuViewModel.P2pShareHost()
 
             AnimatedVisibility(
                 visible = !isFullScreen,

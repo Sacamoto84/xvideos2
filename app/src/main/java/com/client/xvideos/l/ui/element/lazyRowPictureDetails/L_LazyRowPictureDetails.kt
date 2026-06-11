@@ -241,6 +241,9 @@ fun L_LazyRowPictureDetails(
             }
         }
 
+        /** Единственный экземпляр P2P-хоста на весь список (не в item'ах!) */
+        expandMenuViewModel.P2pShareHost()
+
         /** Вертикальный индикатор прокрутки */
         Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar(scrollPercent) }
 

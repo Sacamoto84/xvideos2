@@ -82,8 +82,6 @@ class ExpandMenuViewModel @Inject constructor(
             },
             idAlbum = idAlbum
         )
-
-        P2pShareHost()
     }
 
 
@@ -103,7 +101,6 @@ class ExpandMenuViewModel @Inject constructor(
                 // Refresh will be handled by the collection screen
             }
         )
-        P2pShareHost()
     }
 
 
@@ -157,6 +154,11 @@ class ExpandMenuViewModel @Inject constructor(
         p2pBundle = bundle
     }
 
+    /**
+     * Хост диалога P2P-шаринга. Должен компоноваться РОВНО ОДИН РАЗ на контейнер
+     * (список/экран), не внутри per-item элементов — state общий на ViewModel,
+     * каждый экземпляр хоста показал бы свой диалог.
+     */
     @Composable
     fun P2pShareHost() {
         val navigator = cafe.adriel.voyager.navigator.LocalNavigator.current
@@ -168,8 +170,12 @@ class ExpandMenuViewModel @Inject constructor(
             )
         }
         p2pBundle?.let { bundle ->
-            navigator?.push(ScreenP2pSend(bundle))
-            dismissP2p()
+            // Навигация — side effect, нельзя звать прямо из композиции:
+            // рекомпозиции дублировали бы push.
+            androidx.compose.runtime.LaunchedEffect(bundle) {
+                navigator?.push(ScreenP2pSend(bundle))
+                dismissP2p()
+            }
         }
     }
 
