@@ -82,6 +82,7 @@ class ExpandMenuViewModel @Inject constructor(
             },
             idAlbum = idAlbum
         )
+
         P2pShareHost()
     }
 
@@ -95,12 +96,14 @@ class ExpandMenuViewModel @Inject constructor(
                 item.url_to_original?.let { url -> saved.likes.remove(url) }
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
+            onShare = { it -> onShareClicked(it) },
             isCollection = isCollection,
             savedL = saved,
             onRemoveFromCollection = { it ->
                 // Refresh will be handled by the collection screen
             }
         )
+        P2pShareHost()
     }
 
 

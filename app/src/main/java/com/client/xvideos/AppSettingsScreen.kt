@@ -71,9 +71,6 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.AppPath
-import com.client.xvideos.common.p2p.P2pBackgroundService
-import android.content.Intent
-import android.os.Build
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem

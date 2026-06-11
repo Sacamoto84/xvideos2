@@ -29,6 +29,7 @@ import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_AddCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Delete
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
 import com.client.xvideos.ui.theme.XvideosTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +40,7 @@ fun SavedLikesItemExpandMenu(
     onDelete: (PicsDetails) -> Unit = {},
     onAddCollection: (PicsDetails) -> Unit = {},
     onRemoveFromCollection: (PicsDetails) -> Unit = {},
+    onShare: (PicsDetails) -> Unit = {},
     isCollection: Boolean = false,
     savedL: SavedL? = null,
     haptic : ()->Unit = {}
@@ -66,6 +68,8 @@ fun SavedLikesItemExpandMenu(
             modifier = Modifier.width(IntrinsicSize.Min),
             containerColor = backgroundColor
         ) {
+
+            DropdownMenuItem_Share(item, onClick = { onShare(it) }) { expanded = false }
 
             // Show Delete only when NOT in collection view
             if (!isCollection) {

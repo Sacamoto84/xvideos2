@@ -15,7 +15,7 @@ import java.io.File
 sealed interface ReceiveState {
     data object Idle : ReceiveState
     data object Advertising : ReceiveState
-    data class Connecting(val endpointName: String, val authDigits: String) : ReceiveState
+    data class Connecting(val endpointName: String) : ReceiveState
     data class Receiving(val transferred: Long, val total: Long) : ReceiveState
     data object Done : ReceiveState
     data class Error(val message: String) : ReceiveState
@@ -54,12 +54,13 @@ class P2pReceiveController(
             is P2pEvent.ConnectionInitiated -> {
                 Timber.d("P2P Receiver: Connection initiated from ${event.endpointName}")
                 currentEndpoint = event.endpointId
-                _state.value = ReceiveState.Connecting(event.endpointName, event.authDigits)
+                _state.value = ReceiveState.Connecting(event.endpointName)
                 // Автоматически принимаем соединение
                 confirmConnection()
             }
             is P2pEvent.Connected -> {
                 Timber.d("P2P Receiver: Connected to $currentEndpoint")
+                nearby.stopAdvertising() // Останавливаем рекламу после подключения для стабильности
                 _state.value = ReceiveState.Receiving(0, 0)
             }
             is P2pEvent.TransferProgress -> _state.value = ReceiveState.Receiving(event.transferred, event.total)

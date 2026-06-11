@@ -17,7 +17,7 @@ data class P2pEndpoint(val id: String, val name: String)
 sealed interface ShareState {
     data object Idle : ShareState
     data class Searching(val endpoints: List<P2pEndpoint>) : ShareState
-    data class Connecting(val authDigits: String?) : ShareState
+    data object Connecting : ShareState
     data class Sending(val transferred: Long, val total: Long) : ShareState
     data object Done : ShareState
     data class Error(val message: String) : ShareState
@@ -50,7 +50,7 @@ class P2pShareController(
     fun connectTo(endpointId: String) {
         if (_state.value is ShareState.Searching) {
             targetEndpoint = endpointId
-            _state.value = ShareState.Connecting(null)
+            _state.value = ShareState.Connecting
             nearby.requestConnection(endpointId, myName)
         }
     }
@@ -69,13 +69,14 @@ class P2pShareController(
                 if (_state.value is ShareState.Searching) _state.value = ShareState.Searching(endpoints.values.toList())
             }
             is P2pEvent.ConnectionInitiated -> {
-                Timber.d("P2P Sender: Connection initiated with code ${event.authDigits}")
-                _state.value = ShareState.Connecting(event.authDigits)
+                Timber.d("P2P Sender: Connection initiated")
+                _state.value = ShareState.Connecting
                 // Автоматически принимаем соединение на стороне отправителя тоже
                 nearby.acceptConnection(event.endpointId)
             }
             is P2pEvent.Connected -> {
                 Timber.d("P2P Sender: Connected to ${event.endpointId}, starting transfer")
+                nearby.stopDiscovery() // Останавливаем поиск после подключения для стабильности
                 sendBundle(event.endpointId)
             }
             is P2pEvent.TransferProgress -> _state.value = ShareState.Sending(event.transferred, event.total)

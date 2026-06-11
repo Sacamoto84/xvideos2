@@ -109,11 +109,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <service
-            android:name=".common.p2p.P2pBackgroundService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice" />
     </application>
 
 </manifest>

@@ -136,9 +136,6 @@ data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.height(16.dp))
                             Text("Подключение…", style = MaterialTheme.typography.headlineSmall)
-                            s.authDigits?.let {
-                                Text("Код подтверждения: $it", modifier = Modifier.padding(top = 8.dp))
-                            }
                         }
                     }
                     is ShareState.Sending -> {

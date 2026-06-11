@@ -7,7 +7,7 @@ import java.io.File
 sealed interface P2pEvent {
     data class EndpointFound(val endpointId: String, val name: String) : P2pEvent
     data class EndpointLost(val endpointId: String) : P2pEvent
-    data class ConnectionInitiated(val endpointId: String, val endpointName: String, val authDigits: String) : P2pEvent
+    data class ConnectionInitiated(val endpointId: String, val endpointName: String) : P2pEvent
     data class Connected(val endpointId: String) : P2pEvent
     data class ConnectionRejected(val endpointId: String) : P2pEvent
     data class Disconnected(val endpointId: String) : P2pEvent
@@ -36,5 +36,7 @@ interface NearbyClient {
     /** Отправить control-сообщение (манифест). */
     fun sendBytes(endpointId: String, bytes: ByteArray)
 
+    fun stopDiscovery()
+    fun stopAdvertising()
     fun stopAll()
 }

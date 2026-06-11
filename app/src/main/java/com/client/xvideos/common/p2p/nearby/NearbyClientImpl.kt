@@ -110,6 +110,14 @@ class NearbyClientImpl(context: Context) : NearbyClient {
         client.sendPayload(endpointId, Payload.fromBytes(bytes))
     }
 
+    override fun stopDiscovery() {
+        client.stopDiscovery()
+    }
+
+    override fun stopAdvertising() {
+        client.stopAdvertising()
+    }
+
     override fun stopAll() {
         runCatching { client.stopAllEndpoints() }
         runCatching { client.stopAdvertising() }
@@ -131,7 +139,7 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     private val connectionLifecycle = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             Timber.d("P2P: onConnectionInitiated(id=$endpointId, name=${info.endpointName}, auth=${info.authenticationDigits})")
-            emit(P2pEvent.ConnectionInitiated(endpointId, info.endpointName, info.authenticationDigits))
+            emit(P2pEvent.ConnectionInitiated(endpointId, info.endpointName))
         }
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
             val status = resolution.status

@@ -5,13 +5,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -34,6 +33,7 @@ import com.client.xvideos.common.p2p.P2pType
 import com.client.xvideos.common.p2p.ReceiveState
 import com.client.xvideos.common.p2p.imports.StoreBundleImporter
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
+import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -83,38 +83,70 @@ class ScreenP2pReceive : Screen {
 
         val state by controller.state.collectAsState()
 
-        Scaffold { padding ->
-            Column(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                when (val s = state) {
-                    is ReceiveState.Idle,
-                    is ReceiveState.Advertising -> {
-                        CircularProgressIndicator()
-                        Text("Ожидание отправителя…", modifier = Modifier.padding(top = 16.dp))
-                    }
-                    is ReceiveState.Connecting -> {
-                        CircularProgressIndicator()
-                        Text("Подключение к: ${s.endpointName}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
-                        Text("Код: ${s.authDigits}", modifier = Modifier.padding(top = 8.dp))
-                    }
-                    is ReceiveState.Receiving -> {
-                        CircularProgressIndicator()
-                        val pct = if (s.total > 0) (s.transferred * 100 / s.total) else 0
-                        Text("Приём… $pct%", modifier = Modifier.padding(top = 16.dp))
-                    }
-                    is ReceiveState.Done -> {
-                        Text("Принято ✓", style = MaterialTheme.typography.titleLarge)
-                        Button(onClick = { navigator.pop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Готово") }
-                    }
-                    is ReceiveState.Error -> {
-                        Text("Ошибка: ${s.message}", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { navigator.pop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Закрыть") }
-                    }
+        ScreenP2pReceiveContent(
+            state = state,
+            onPop = { navigator.pop() },
+        )
+    }
+}
+
+@Composable
+private fun ScreenP2pReceiveContent(
+    state: ReceiveState,
+    onPop: () -> Unit,
+) {
+    Scaffold { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            when (val s = state) {
+                is ReceiveState.Idle,
+                is ReceiveState.Advertising -> {
+                    CircularProgressIndicator()
+                    Text("Ожидание отправителя…", modifier = Modifier.padding(top = 16.dp))
+                }
+                is ReceiveState.Connecting -> {
+                    CircularProgressIndicator()
+                    Text("Подключение к: ${s.endpointName}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
+                }
+                is ReceiveState.Receiving -> {
+                    CircularProgressIndicator()
+                    val pct = if (s.total > 0) (s.transferred * 100 / s.total) else 0
+                    Text("Приём… $pct%", modifier = Modifier.padding(top = 16.dp))
+                }
+                is ReceiveState.Done -> {
+                    Text("Принято ✓", style = MaterialTheme.typography.titleLarge)
+                    Button(onClick = { onPop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Готово") }
+                }
+                is ReceiveState.Error -> {
+                    Text("Ошибка: ${s.message}", color = MaterialTheme.colorScheme.error)
+                    Button(onClick = { onPop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Закрыть") }
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewScreenP2pReceiveConnecting() {
+    XvideosTheme {
+        ScreenP2pReceiveContent(
+            state = ReceiveState.Connecting("Pixel 6"),
+            onPop = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewScreenP2pReceiveReceiving() {
+    XvideosTheme {
+        ScreenP2pReceiveContent(
+            state = ReceiveState.Receiving(transferred = 45, total = 100),
+            onPop = {}
+        )
     }
 }
