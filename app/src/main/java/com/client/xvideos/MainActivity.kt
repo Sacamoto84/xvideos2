@@ -273,7 +273,8 @@ private fun P2pBackgroundOverlay() {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
+                // Бары спрятаны (hide(systemBars)), их инсет всегда 0 — отступаем от выреза камеры.
+                .displayCutoutPadding()
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             color = if (isError) Theme.L.r0 else if (isSuccess) Theme.L.g0 else Color(0xFF2C2C2C),

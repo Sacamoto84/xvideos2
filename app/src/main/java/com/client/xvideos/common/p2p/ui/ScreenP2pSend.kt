@@ -160,6 +160,12 @@ data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
                         }
                     }
                     is ShareState.Done -> {
+                        // Показываем «Готово» секунду и закрываем экран сами.
+                        // Уход с экрана отменяет эффект — двойного pop не будет.
+                        LaunchedEffect(Unit) {
+                            kotlinx.coroutines.delay(1_000)
+                            navigator.pop()
+                        }
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             horizontalAlignment = Alignment.CenterHorizontally,

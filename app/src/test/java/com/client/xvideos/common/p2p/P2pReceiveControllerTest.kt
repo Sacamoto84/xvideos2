@@ -70,6 +70,17 @@ class P2pReceiveControllerTest {
     }
 
     @Test
+    fun `peer name captured from connection initiated`() = runTest(UnconfinedTestDispatcher()) {
+        val fake = FakeNearbyClient()
+        val controller = P2pReceiveController(fake, { _, _ -> }, backgroundScope, "Pixel-Test")
+        controller.start()
+
+        fake.emit(P2pEvent.ConnectionInitiated("E1", "Galaxy S24"))
+
+        assertEquals("Galaxy S24", controller.peerName)
+    }
+
+    @Test
     fun `disconnect while advertising keeps advertising instead of error`() =
         runTest(UnconfinedTestDispatcher()) {
             val fake = FakeNearbyClient()

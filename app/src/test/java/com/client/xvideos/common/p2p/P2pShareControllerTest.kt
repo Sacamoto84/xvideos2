@@ -39,4 +39,26 @@ class P2pShareControllerTest {
             assertEquals(setOf("3.mp4", "3.info"), manifest.files.map { it.name }.toSet())
             assertTrue(manifest.files.all { it.payloadId >= 1000L })
         }
+
+    @Test
+    fun `late transfer progress after done does not revert state to sending`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val root = tmp.newFolder("xdl")
+            val mp4 = File(root, "3.mp4").apply { writeText("VVV") }
+            val bundle = P2pExportBundle(P2pType.X, root, listOf(mp4), null)
+
+            val fake = FakeNearbyClient()
+            val controller = P2pShareController(fake, backgroundScope, myName = "Sender", bundle = bundle)
+            controller.start()
+
+            fake.emit(P2pEvent.EndpointFound("E1", "Receiver"))
+            controller.connectTo("E1")
+            fake.emit(P2pEvent.Connected("E1"))
+            assertEquals(ShareState.Done, controller.state.value)
+
+            // GMS шлёт статусы payload'ов и после завершения — Done не должен откатиться.
+            fake.emit(P2pEvent.TransferProgress(1000L, 3L, 3L))
+
+            assertEquals(ShareState.Done, controller.state.value)
+        }
 }

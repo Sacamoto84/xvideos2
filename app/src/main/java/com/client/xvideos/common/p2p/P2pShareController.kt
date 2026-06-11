@@ -80,7 +80,11 @@ class P2pShareController(
                 nearby.stopDiscovery() // Останавливаем поиск после подключения для стабильности
                 sendBundle(event.endpointId)
             }
-            is P2pEvent.TransferProgress -> _state.value = ShareState.Sending(event.transferred, event.total)
+            is P2pEvent.TransferProgress ->
+                // GMS шлёт статусы payload'ов и после отправки манифеста — не затираем Done.
+                if (_state.value is ShareState.Sending) {
+                    _state.value = ShareState.Sending(event.transferred, event.total)
+                }
             is P2pEvent.ConnectionRejected -> _state.value = ShareState.Error("Получатель отклонил")
             is P2pEvent.Disconnected -> {
                 Timber.d("P2P Sender: Disconnected from ${event.endpointId}")

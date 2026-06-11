@@ -37,6 +37,10 @@ class P2pReceiveController(
     private val receivedFiles = mutableMapOf<Long, File>()
     private var manifest: P2pManifest? = null
     private var currentEndpoint: String? = null
+
+    /** Имя телефона-отправителя текущей/последней сессии — для уведомлений. */
+    var peerName: String = DEFAULT_PEER_NAME
+        private set
     private var eventsJob: kotlinx.coroutines.Job? = null
     private var pendingStopJob: kotlinx.coroutines.Job? = null
 
@@ -59,6 +63,7 @@ class P2pReceiveController(
             is P2pEvent.ConnectionInitiated -> {
                 Timber.d("P2P Receiver: Connection initiated from ${event.endpointName} (id=${event.endpointId}). Automatically accepting.")
                 currentEndpoint = event.endpointId
+                peerName = event.endpointName
                 _state.value = ReceiveState.Connecting(event.endpointName)
                 nearby.acceptConnection(event.endpointId)
             }
@@ -120,5 +125,9 @@ class P2pReceiveController(
         pendingStopJob = null
         nearby.stopAll()
         _state.value = ReceiveState.Idle
+    }
+
+    private companion object {
+        const val DEFAULT_PEER_NAME = "Устройство"
     }
 }

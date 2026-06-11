@@ -7,6 +7,11 @@ import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.p2p.imports.StoreBundleImporter
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
+import com.client.xvideos.l.featured.saved.SavedL
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -50,7 +55,14 @@ object P2pReceiveManager {
                     P2pType.L -> File(AppPath.l_likes)
                 }
             },
-            refreshFor = { /* ... */ }
+            refreshFor = { type ->
+                // X и R экраны Saved перечитывают список при открытии — живой refresh нужен только L.
+                if (type == P2pType.L) {
+                    EntryPointAccessors
+                        .fromApplication(context.applicationContext, P2pRefreshEntryPoint::class.java)
+                        .savedL().likes.refresh()
+                }
+            }
         )
 
         val newController = P2pReceiveController(
@@ -94,17 +106,19 @@ object P2pReceiveManager {
         }
     }
 
+    private fun peerName(): String = _controller.value?.peerName ?: "Устройство"
+
     private suspend fun handleStateChange(state: ReceiveState) {
         when (state) {
             is ReceiveState.Receiving -> {
-                EventBus.postEvent(Event.P2pTransferUpdate.Progress("Устройство", state.transferred, state.total))
+                EventBus.postEvent(Event.P2pTransferUpdate.Progress(peerName(), state.transferred, state.total))
             }
             is ReceiveState.Done -> {
-                EventBus.postEvent(Event.P2pTransferUpdate.Success("Устройство"))
+                EventBus.postEvent(Event.P2pTransferUpdate.Success(peerName()))
                 _controller.value?.start()
             }
             is ReceiveState.Error -> {
-                EventBus.postEvent(Event.P2pTransferUpdate.Error("Устройство", state.message))
+                EventBus.postEvent(Event.P2pTransferUpdate.Error(peerName(), state.message))
                 Timber.w("P2P Manager: Error state: ${state.message}. Restarting advertising in 5s.")
                 // Пауза защищает от горячего цикла ошибок; collectLatest отменит
                 // перезапуск, если состояние успеет смениться.
@@ -114,6 +128,13 @@ object P2pReceiveManager {
             else -> {}
         }
     }
+}
+
+/** Доступ к Hilt-синглтонам из [P2pReceiveManager] — обычного object вне DI-графа. */
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface P2pRefreshEntryPoint {
+    fun savedL(): SavedL
 }
 
 fun toggleP2pService(context: Context, enabled: Boolean) {
