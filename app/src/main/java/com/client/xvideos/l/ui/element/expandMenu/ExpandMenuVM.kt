@@ -19,8 +19,8 @@ import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.export.LExporter
-import com.client.xvideos.common.p2p.ui.P2pDeviceSearchSheet
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
+import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.featured.saved.lFindLikeFolder
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -156,6 +156,7 @@ class ExpandMenuViewModel @Inject constructor(
 
     @Composable
     fun P2pShareHost() {
+        val navigator = cafe.adriel.voyager.navigator.LocalNavigator.current
         p2pChooserItem?.let { item ->
             P2pSendChooserDialog(
                 onSystem = { share(item) },
@@ -164,7 +165,8 @@ class ExpandMenuViewModel @Inject constructor(
             )
         }
         p2pBundle?.let { bundle ->
-            P2pDeviceSearchSheet(bundle = bundle, onDismiss = { dismissP2p() })
+            navigator?.push(ScreenP2pSend(bundle))
+            dismissP2p()
         }
     }
 

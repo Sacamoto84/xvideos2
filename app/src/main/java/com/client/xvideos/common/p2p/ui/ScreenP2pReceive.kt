@@ -96,12 +96,9 @@ class ScreenP2pReceive : Screen {
                         Text("Ожидание отправителя…", modifier = Modifier.padding(top = 16.dp))
                     }
                     is ReceiveState.Connecting -> {
-                        Text("Запрос от: ${s.endpointName}", style = MaterialTheme.typography.titleMedium)
-                        Text("Код: ${s.authDigits}", modifier = Modifier.padding(vertical = 8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Button(onClick = { controller.confirmConnection() }) { Text("Принять") }
-                            OutlinedButton(onClick = { controller.reject() }) { Text("Отклонить") }
-                        }
+                        CircularProgressIndicator()
+                        Text("Подключение к: ${s.endpointName}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
+                        Text("Код: ${s.authDigits}", modifier = Modifier.padding(top = 8.dp))
                     }
                     is ReceiveState.Receiving -> {
                         CircularProgressIndicator()

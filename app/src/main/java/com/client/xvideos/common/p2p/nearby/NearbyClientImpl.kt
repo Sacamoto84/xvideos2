@@ -1,6 +1,7 @@
 package com.client.xvideos.common.p2p.nearby
 
 import android.content.Context
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
@@ -39,29 +40,58 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     private fun emit(event: P2pEvent) { events.tryEmit(event) }
 
     override fun startAdvertising(name: String) {
+        Timber.d("P2P: startAdvertising(name=$name, serviceId=$serviceId)")
+        client.stopAdvertising()
         val options = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()
         client.startAdvertising(name, serviceId, connectionLifecycle, options)
-            .addOnFailureListener { emit(P2pEvent.Failed("Advertising: ${it.message}")) }
+            .addOnSuccessListener { Timber.d("P2P: startAdvertising SUCCESS") }
+            .addOnFailureListener { e ->
+                Timber.e(e, "P2P: startAdvertising FAILURE")
+                if (e is ApiException && e.statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) return@addOnFailureListener
+                emit(P2pEvent.Failed("Advertising: ${e.message}"))
+            }
     }
 
     override fun startDiscovery() {
+        Timber.d("P2P: startDiscovery(serviceId=$serviceId)")
+        client.stopDiscovery()
         val options = DiscoveryOptions.Builder().setStrategy(STRATEGY).build()
         client.startDiscovery(serviceId, discoveryCallback, options)
-            .addOnFailureListener { emit(P2pEvent.Failed("Discovery: ${it.message}")) }
+            .addOnSuccessListener { Timber.d("P2P: startDiscovery SUCCESS") }
+            .addOnFailureListener { e ->
+                Timber.e(e, "P2P: startDiscovery FAILURE")
+                if (e is ApiException && e.statusCode == ConnectionsStatusCodes.STATUS_ALREADY_DISCOVERING) return@addOnFailureListener
+                emit(P2pEvent.Failed("Discovery: ${e.message}"))
+            }
     }
 
     override fun requestConnection(endpointId: String, myName: String) {
+        Timber.d("P2P: requestConnection(endpointId=$endpointId, myName=$myName)")
         client.requestConnection(myName, endpointId, connectionLifecycle)
-            .addOnFailureListener { emit(P2pEvent.Failed("Connect: ${it.message}")) }
+            .addOnSuccessListener { Timber.d("P2P: requestConnection request sent") }
+            .addOnFailureListener { e ->
+                Timber.e(e, "P2P: requestConnection FAILURE")
+                if (e is ApiException && e.statusCode == ConnectionsStatusCodes.STATUS_OUT_OF_ORDER_API_CALL) return@addOnFailureListener
+                emit(P2pEvent.Failed("Connect: ${e.message}"))
+            }
     }
 
     override fun acceptConnection(endpointId: String) {
+        Timber.d("P2P: acceptConnection(endpointId=$endpointId)")
         client.acceptConnection(endpointId, payloadCallback)
-            .addOnFailureListener { emit(P2pEvent.Failed("Accept: ${it.message}")) }
+            .addOnSuccessListener { Timber.d("P2P: acceptConnection SUCCESS (waiting for other side)") }
+            .addOnFailureListener { e ->
+                Timber.e(e, "P2P: acceptConnection FAILURE")
+                if (e is ApiException && e.statusCode == ConnectionsStatusCodes.STATUS_OUT_OF_ORDER_API_CALL) return@addOnFailureListener
+                emit(P2pEvent.Failed("Accept: ${e.message}"))
+            }
     }
 
     override fun rejectConnection(endpointId: String) {
         client.rejectConnection(endpointId)
+            .addOnFailureListener { e ->
+                if (e is ApiException && e.statusCode == ConnectionsStatusCodes.STATUS_OUT_OF_ORDER_API_CALL) return@addOnFailureListener
+            }
     }
 
     override suspend fun sendFile(endpointId: String, file: java.io.File): Long =
@@ -89,25 +119,32 @@ class NearbyClientImpl(context: Context) : NearbyClient {
 
     private val discoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
+            Timber.d("P2P: onEndpointFound(id=$endpointId, name=${info.endpointName})")
             emit(P2pEvent.EndpointFound(endpointId, info.endpointName))
         }
         override fun onEndpointLost(endpointId: String) {
+            Timber.d("P2P: onEndpointLost(id=$endpointId)")
             emit(P2pEvent.EndpointLost(endpointId))
         }
     }
 
     private val connectionLifecycle = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
+            Timber.d("P2P: onConnectionInitiated(id=$endpointId, name=${info.endpointName}, auth=${info.authenticationDigits})")
             emit(P2pEvent.ConnectionInitiated(endpointId, info.endpointName, info.authenticationDigits))
         }
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
-            when (resolution.status.statusCode) {
+            val status = resolution.status
+            Timber.d("P2P: onConnectionResult(id=$endpointId, status=${status.statusCode}, msg=${status.statusMessage})")
+            when (status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> emit(P2pEvent.Connected(endpointId))
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> emit(P2pEvent.ConnectionRejected(endpointId))
-                else -> emit(P2pEvent.Failed("Result: ${resolution.status.statusCode}"))
+                ConnectionsStatusCodes.STATUS_ERROR -> emit(P2pEvent.Failed("Ошибка соединения (Status Error)"))
+                else -> emit(P2pEvent.Failed("Результат: ${status.statusCode} ${status.statusMessage ?: ""}"))
             }
         }
         override fun onDisconnected(endpointId: String) {
+            Timber.d("P2P: onDisconnected(id=$endpointId)")
             emit(P2pEvent.Disconnected(endpointId))
         }
     }
@@ -135,6 +172,6 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     }
 
     private companion object {
-        val STRATEGY: Strategy = Strategy.P2P_POINT_TO_POINT
+        val STRATEGY: Strategy = Strategy.P2P_STAR
     }
 }

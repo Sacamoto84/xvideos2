@@ -47,7 +47,7 @@ import androidx.compose.material.icons.filled.Share
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.export.XExporter
-import com.client.xvideos.common.p2p.ui.P2pDeviceSearchSheet
+import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.snackbar.SnackBar
 import java.io.File
 
@@ -119,10 +119,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDelete: () -> Unit) {
-    var p2pBundle by remember { mutableStateOf<P2pExportBundle?>(null) }
-    p2pBundle?.let { bundle ->
-        P2pDeviceSearchSheet(bundle = bundle, onDismiss = { p2pBundle = null })
-    }
+    val navigator = LocalNavigator.currentOrThrow
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -165,7 +162,11 @@ private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDele
 
             IconButton(onClick = {
                 val bundle = XExporter.export(File(AppPath.x_cache_download), item.id)
-                if (bundle == null) SnackBar.error("Нет скачанного видео для P2P") else p2pBundle = bundle
+                if (bundle == null) {
+                    SnackBar.error("Нет скачанного видео для P2P")
+                } else {
+                    navigator.push(ScreenP2pSend(bundle))
+                }
             }) {
                 Icon(
                     imageVector = Icons.Filled.Share,

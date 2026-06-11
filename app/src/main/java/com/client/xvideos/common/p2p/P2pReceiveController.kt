@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 
 /** Состояние экрана приёма. */
@@ -44,12 +45,19 @@ class P2pReceiveController(
     }
 
     private suspend fun handle(event: P2pEvent) {
+        Timber.d("P2P Receiver: handle event $event")
         when (event) {
             is P2pEvent.ConnectionInitiated -> {
+                Timber.d("P2P Receiver: Connection initiated from ${event.endpointName}")
                 currentEndpoint = event.endpointId
                 _state.value = ReceiveState.Connecting(event.endpointName, event.authDigits)
+                // Автоматически принимаем соединение
+                confirmConnection()
             }
-            is P2pEvent.Connected -> _state.value = ReceiveState.Receiving(0, 0)
+            is P2pEvent.Connected -> {
+                Timber.d("P2P Receiver: Connected to $currentEndpoint")
+                _state.value = ReceiveState.Receiving(0, 0)
+            }
             is P2pEvent.TransferProgress -> _state.value = ReceiveState.Receiving(event.transferred, event.total)
             is P2pEvent.FilePayloadReceived -> {
                 receivedFiles[event.payloadId] = event.file
@@ -78,7 +86,12 @@ class P2pReceiveController(
         }
     }
 
-    fun confirmConnection() { currentEndpoint?.let { nearby.acceptConnection(it) } }
+    fun confirmConnection() {
+        val ep = currentEndpoint ?: return
+        if (_state.value is ReceiveState.Connecting) {
+            nearby.acceptConnection(ep)
+        }
+    }
     fun reject() {
         currentEndpoint?.let { nearby.rejectConnection(it) }
         nearby.stopAll()

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 
 /** Найденный рядом телефон. */
@@ -44,23 +45,36 @@ class P2pShareController(
     }
 
     fun connectTo(endpointId: String) {
-        targetEndpoint = endpointId
-        _state.value = ShareState.Connecting(null)
-        nearby.requestConnection(endpointId, myName)
+        if (_state.value is ShareState.Searching) {
+            targetEndpoint = endpointId
+            _state.value = ShareState.Connecting(null)
+            nearby.requestConnection(endpointId, myName)
+        }
     }
 
     private fun handle(event: P2pEvent) {
+        Timber.d("P2P Sender: handle event $event")
         when (event) {
             is P2pEvent.EndpointFound -> {
+                Timber.d("P2P Sender: Endpoint found: ${event.name}")
                 endpoints[event.endpointId] = P2pEndpoint(event.endpointId, event.name)
                 if (_state.value is ShareState.Searching) _state.value = ShareState.Searching(endpoints.values.toList())
             }
             is P2pEvent.EndpointLost -> {
+                Timber.d("P2P Sender: Endpoint lost: ${event.endpointId}")
                 endpoints.remove(event.endpointId)
                 if (_state.value is ShareState.Searching) _state.value = ShareState.Searching(endpoints.values.toList())
             }
-            is P2pEvent.ConnectionInitiated -> _state.value = ShareState.Connecting(event.authDigits)
-            is P2pEvent.Connected -> sendBundle(event.endpointId)
+            is P2pEvent.ConnectionInitiated -> {
+                Timber.d("P2P Sender: Connection initiated with code ${event.authDigits}")
+                _state.value = ShareState.Connecting(event.authDigits)
+                // Автоматически принимаем соединение на стороне отправителя тоже
+                nearby.acceptConnection(event.endpointId)
+            }
+            is P2pEvent.Connected -> {
+                Timber.d("P2P Sender: Connected to ${event.endpointId}, starting transfer")
+                sendBundle(event.endpointId)
+            }
             is P2pEvent.TransferProgress -> _state.value = ShareState.Sending(event.transferred, event.total)
             is P2pEvent.ConnectionRejected -> _state.value = ShareState.Error("Получатель отклонил")
             is P2pEvent.Disconnected ->
