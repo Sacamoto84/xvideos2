@@ -37,6 +37,9 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
     /** Скачать (сохранить) видео в раздел «Сохранённое». */
     fun download(item: ItemsX) = saved.downloads.download(item)
 
+    /** Сохранить видео целиком в галерею (/sdcard/xvideos_download). */
+    fun saveToGallery(item: ItemsX) = saved.downloads.saveToGallery(item)
+
     fun addFavorite(item: ItemsX) = screenModelScope.launch { saved.favorites.add(item) }
     fun removeFavorite(item: ItemsX) = screenModelScope.launch { saved.favorites.remove(item) }
     fun isFavorite(id: Long): Boolean = saved.favorites.contains(id) // O(1) по множеству id

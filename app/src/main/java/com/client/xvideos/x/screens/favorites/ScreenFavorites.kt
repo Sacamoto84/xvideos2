@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowCircleDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -89,6 +90,7 @@ class ScreenFavorites() : Screen {
             onProfile = { navigator.push(ScreenProfile()) },
             onDelete = { vm.removeFavorite(it) },
             onDownload = { vm.download(it) },
+            onSaveToGallery = { vm.saveToGallery(it) },
             onPlayLocal = { url -> navigator.push(ScreenX_LocalVideoPlayer(url)) },
         )
     }
@@ -109,6 +111,7 @@ private fun FavoritesContent(
     onDelete: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     onPlayLocal: (String) -> Unit,
+    onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
     // Подтверждение удаления из избранного (диалог).
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
@@ -165,6 +168,7 @@ private fun FavoritesContent(
                     posterUrl = posterUrlOf(item),
                     onDelete = { pendingDelete = item },
                     onDownload = { onDownload(item) },
+                    onSaveToGallery = { onSaveToGallery(item) },
                     onPlayLocal = onPlayLocal,
                 )
             }
@@ -180,6 +184,7 @@ private fun FavoriteRow(
     onDelete: () -> Unit,
     onDownload: () -> Unit,
     onPlayLocal: (String) -> Unit,
+    onSaveToGallery: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -226,6 +231,7 @@ private fun FavoriteRow(
             FavoriteActionsExpandMenu(
                 onDelete = onDelete,
                 onDownload = onDownload,
+                onSaveToGallery = onSaveToGallery,
             )
         }
 
@@ -241,6 +247,7 @@ private fun FavoriteRow(
 private fun FavoriteActionsExpandMenu(
     onDelete: () -> Unit,
     onDownload: () -> Unit,
+    onSaveToGallery: () -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -287,6 +294,22 @@ private fun FavoriteActionsExpandMenu(
                 text = { Text("Скачать", style = Theme.L.ExpandMenu.style) },
                 onClick = {
                     onDownload()
+                    expanded = false
+                },
+                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+            )
+
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        Icons.Filled.SaveAlt,
+                        contentDescription = null,
+                        tint = Theme.L.ExpandMenu.tintColor
+                    )
+                },
+                text = { Text("В галерею", style = Theme.L.ExpandMenu.style) },
+                onClick = {
+                    onSaveToGallery()
                     expanded = false
                 },
                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding

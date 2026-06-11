@@ -3,6 +3,7 @@ package com.client.xvideos.x.feature.saved
 import android.net.Uri
 import com.client.xvideos.App
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.gallery.GallerySaver
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.urlStart
@@ -81,14 +82,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         SnackBar.info("Получение ссылки на видео…")
 
         scope.launch(Dispatchers.IO) {
-            // Резолвим прямой mp4 (лучшее качество) со страницы видео.
-            val videoUrl = runCatching {
-                val pageUrl = if (item.href.startsWith("http")) item.href else urlStart + item.href
-                val html = readHtmlFromURLDirect(pageUrl)
-                val config = parserItemVideo(html)?.let { parseHTML5Player(it) }
-                config?.videoUrlHigh?.takeIf { it.isNotBlank() }
-                    ?: config?.videoUrlLow?.takeIf { it.isNotBlank() }
-            }.getOrNull()
+            val videoUrl = resolveDirectVideoUrl(item)
 
             if (videoUrl.isNullOrBlank()) {
                 percent.value = -3f
@@ -128,6 +122,44 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                     refresh()
                 },
             )
+        }
+    }
+
+    /**
+     * Прямой mp4 наилучшего качества со страницы видео ([ItemsX.href]) —
+     * тем же путём, что и плеер: `readHtmlFromURLDirect` → [parserItemVideo] →
+     * [parseHTML5Player]. null, если не удалось.
+     */
+    suspend fun resolveDirectVideoUrl(item: ItemsX): String? = runCatching {
+        val pageUrl = if (item.href.startsWith("http")) item.href else urlStart + item.href
+        val html = readHtmlFromURLDirect(pageUrl)
+        val config = parserItemVideo(html)?.let { parseHTML5Player(it) }
+        config?.videoUrlHigh?.takeIf { it.isNotBlank() }
+            ?: config?.videoUrlLow?.takeIf { it.isNotBlank() }
+    }.getOrNull()
+
+    /**
+     * «В галерею»: видео уже в кеше — копия в [GallerySaver.root],
+     * иначе резолвим прямой mp4 и качаем туда целиком.
+     */
+    fun saveToGallery(item: ItemsX) {
+        val context = App.instance.applicationContext
+        val fileName = "x_${item.id}.mp4"
+
+        val local = File(dir, "${item.id}.mp4")
+        if (local.exists()) {
+            GallerySaver.saveLocal(context, local, fileName)
+            return
+        }
+
+        SnackBar.info("Получение ссылки на видео…")
+        scope.launch(Dispatchers.IO) {
+            val videoUrl = resolveDirectVideoUrl(item)
+            if (videoUrl.isNullOrBlank()) {
+                SnackBar.error("Не удалось получить ссылку на видео")
+                return@launch
+            }
+            GallerySaver.saveFromUrl(context, kDownloader, videoUrl, fileName)
         }
     }
 

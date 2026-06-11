@@ -17,11 +17,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.gallery.GallerySaver
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
+import com.client.xvideos.l.featured.saved.L_METADATA_FILE_NAME
 import com.client.xvideos.l.featured.saved.lFindLikeFolder
+import com.client.xvideos.l.featured.saved.readLSavedLikeMetadata
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -75,6 +78,7 @@ class ExpandMenuViewModel @Inject constructor(
         AlbumItemExpandMenu(
             item = item, onDownload = { it1 -> downloadLike(it1, album) },
             onShare = { it1 -> onShareClicked(it1) },
+            onSaveToGallery = { it1 -> saveToGallery(it1) },
             isCollection = isCollection,
             savedL = saved,
             onRemoveFromCollection = { it ->
@@ -95,6 +99,7 @@ class ExpandMenuViewModel @Inject constructor(
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
             onShare = { it -> onShareClicked(it) },
+            onSaveToGallery = { it -> saveToGallery(it) },
             isCollection = isCollection,
             savedL = saved,
             onRemoveFromCollection = { it ->
@@ -128,6 +133,38 @@ class ExpandMenuViewModel @Inject constructor(
             } catch (e: Exception) {
                 Timber.e(e, "L share -> ошибка при работе с файлом")
                 SnackBar.error("Ошибка при попытке поделиться файлом")
+            }
+        }
+    }
+
+    /**
+     * «В галерею»: большой файл (оригинал/видео, не превью) → /sdcard/xvideos_download.
+     * Сохранённый лайк — файл берётся из папки item (metadata.mediaFileName),
+     * иначе оригинал скачивается через share-кеш.
+     */
+    fun saveToGallery(item: PicsDetails) {
+        scope.launch(Dispatchers.IO) {
+            try {
+                val folder = item.url_to_original?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
+                val localBig = folder
+                    ?.let { f ->
+                        readLSavedLikeMetadata(File(f, L_METADATA_FILE_NAME))
+                            ?.let { File(f, it.mediaFileName) }
+                    }
+                    ?.takeIf { it.exists() }
+
+                val src = localBig ?: run {
+                    SnackBar.info("Сохранение в галерею…")
+                    lDownloadMediaToShareCache(item)
+                }
+                if (src == null) {
+                    SnackBar.error("Нет файла для сохранения")
+                    return@launch
+                }
+                GallerySaver.saveLocal(context, src, src.name)
+            } catch (e: Exception) {
+                Timber.e(e, "L saveToGallery -> ошибка")
+                SnackBar.error("Ошибка сохранения в галерею")
             }
         }
     }

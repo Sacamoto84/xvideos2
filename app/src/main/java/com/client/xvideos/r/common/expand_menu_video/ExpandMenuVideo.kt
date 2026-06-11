@@ -85,6 +85,9 @@ fun ExpandMenuVideo(
         DropdownMenuItem_Share(
             item,
             onClick = { chooserItem = it }) { expanded = false }
+        DropdownMenuItem_SaveToGallery(
+            item,
+            onClick = { downloadRed.invoke().saveToGallery(it) }) { expanded = false }
         DropdownMenuItem_Block(item = item, block = block) { expanded = false }
         DropdownMenuItem_Like(item, onRunLike, savedRed) { expanded = false }
         DropdownMenuItem_Follow(item, redApi, savedRed) { expanded = false }

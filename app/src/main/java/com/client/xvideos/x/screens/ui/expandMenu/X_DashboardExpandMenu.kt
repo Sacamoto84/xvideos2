@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Surface
@@ -37,6 +38,7 @@ fun X_DashboardExpandMenu(
     onFavoriteAdd: () -> Unit,
     onFavoriteRemove: () -> Unit,
     onDownload: () -> Unit,
+    onSaveToGallery: () -> Unit = {},
     isExpanded: Boolean = false
 ) {
 
@@ -64,6 +66,7 @@ fun X_DashboardExpandMenu(
                 onFavoriteAdd = onFavoriteAdd,
                 onFavoriteRemove = onFavoriteRemove,
                 onDownload = onDownload,
+                onSaveToGallery = onSaveToGallery,
                 onDismiss = { expanded = false }
             )
         }
@@ -77,7 +80,8 @@ fun X_DashboardExpandMenuContent(
     onFavoriteAdd: () -> Unit,
     onFavoriteRemove: () -> Unit,
     onDownload: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSaveToGallery: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
 
@@ -110,6 +114,20 @@ fun X_DashboardExpandMenuContent(
         leadingIcon = {
             Icon(
                 Icons.Outlined.Save,
+                contentDescription = null
+            )
+        }
+    )
+
+    DropdownMenuItem(
+        text = { Text("В галерею") },
+        onClick = {
+            onDismiss()
+            onSaveToGallery()
+        },
+        leadingIcon = {
+            Icon(
+                Icons.Outlined.SaveAlt,
                 contentDescription = null
             )
         }

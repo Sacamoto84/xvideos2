@@ -3,6 +3,7 @@ package com.client.xvideos.r.common.downloader
 import android.content.Context
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
+import com.client.xvideos.common.gallery.GallerySaver
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.r.common.share.useCaseShareGifs
@@ -81,6 +82,29 @@ class DownloadRed @Inject constructor(
                 })
             }
         }
+    }
+
+    /**
+     * «В галерею»: видеофайл (не превью) → /sdcard/xvideos_download.
+     * Уже скачан в кеш R — копия; нет — качаем видео напрямую в галерею-папку,
+     * мимо кеша (не плодим записи в «Загрузках»).
+     */
+    fun saveToGallery(item: GifsInfo) {
+        if (item.id.isBlank() || item.userName.isBlank()) return
+        val fileName = "r_${item.userName}_${item.id}.mp4"
+
+        val local = File("${AppPath.r_cache_download}/${item.userName}/${item.id}.mp4")
+        if (local.exists()) {
+            GallerySaver.saveLocal(appContext, local, fileName)
+            return
+        }
+
+        val url = item.downloadVideoUrl()
+        if (url == null) {
+            SnackBar.error("Нет ссылки на видео")
+            return
+        }
+        GallerySaver.saveFromUrl(appContext, downloader.kDownloader, url, fileName)
     }
 
     /** «Поделиться»: файл уже в кеше — шарим сразу, иначе скачиваем и шарим по завершению. */

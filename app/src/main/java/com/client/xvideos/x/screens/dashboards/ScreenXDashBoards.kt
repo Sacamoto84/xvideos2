@@ -130,6 +130,7 @@ class ScreenXDashBoards : Screen {
                             onFavoriteAdd = { vm.addFavorite(it) },
                             onFavoriteRemove = { vm.removeFavorite(it) },
                             onDownload = { vm.download(it) },
+                            onSaveToGallery = { vm.saveToGallery(it) },
                         )
                     }
                 }

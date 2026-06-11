@@ -69,7 +69,8 @@ fun DashboardsPaginatedListScreen(
     isFavorite: (Long) -> Boolean,
     onFavoriteAdd: (ItemsX) -> Unit,
     onFavoriteRemove: (ItemsX) -> Unit,
-    onDownload: (ItemsX) -> Unit
+    onDownload: (ItemsX) -> Unit,
+    onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
 
     val l = remember { mutableStateListOf<ItemsX>() }
@@ -91,6 +92,7 @@ fun DashboardsPaginatedListScreen(
             onFavoriteAdd = onFavoriteAdd,
             onFavoriteRemove = onFavoriteRemove,
             onDownload = onDownload,
+            onSaveToGallery = onSaveToGallery,
             openVideoPlayer = openVideoPlayer
         )
     }
@@ -103,7 +105,8 @@ fun DashboardsPaginatedListContent(
     onFavoriteAdd: (ItemsX) -> Unit,
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
-    openVideoPlayer: (String) -> Unit
+    openVideoPlayer: (String) -> Unit,
+    onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
@@ -187,7 +190,8 @@ fun DashboardsPaginatedListContent(
                         isFavorite = isFavorite(cell.id),//vm.isFavorite(cell.id),
                         onFavoriteAdd = { onFavoriteAdd(cell) },
                         onFavoriteRemove = { onFavoriteRemove(cell) },
-                        onDownload = { onDownload(cell) }
+                        onDownload = { onDownload(cell) },
+                        onSaveToGallery = { onSaveToGallery(cell) },
                     )
                 }
 

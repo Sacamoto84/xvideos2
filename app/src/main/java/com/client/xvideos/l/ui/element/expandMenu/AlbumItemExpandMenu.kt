@@ -29,6 +29,7 @@ import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_AddCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Download
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveToGallery
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -40,6 +41,7 @@ fun AlbumItemExpandMenu(
     onClick: () -> Unit = {},
     onDownload : (PicsDetails) -> Unit = {},
     onShare: (PicsDetails) -> Unit = {},
+    onSaveToGallery: (PicsDetails) -> Unit = {},
     isCollection: Boolean = false,
     savedL: SavedL? = null,
     onRemoveFromCollection: (PicsDetails) -> Unit = {},
@@ -76,6 +78,8 @@ fun AlbumItemExpandMenu(
 
             DropdownMenuItem_Share(item, onClick = {onShare(it)}
             ){ expanded = false }
+
+            DropdownMenuItem_SaveToGallery(item, onClick = { onSaveToGallery(it) }) { expanded = false }
 
             DropdownMenuItem_AddCollection(item, savedL, idAlbum) { expanded = false }
 
