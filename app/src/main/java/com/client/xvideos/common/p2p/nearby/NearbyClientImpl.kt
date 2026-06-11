@@ -24,7 +24,9 @@ import kotlin.coroutines.resumeWithException
 
 /**
  * Реализация [NearbyClient] поверх Google Nearby Connections.
- * Стратегия P2P_POINT_TO_POINT (1:1, максимальная скорость, BT + Wi-Fi).
+ * Стратегия P2P_CLUSTER (M:N, позволяет одновременно рекламироваться и искать).
+ * ВАЖНО: advertiser и discoverer обязаны использовать одинаковую стратегию —
+ * телефон со старой сборкой (P2P_STAR) не увидит телефон с новой.
  */
 class NearbyClientImpl(context: Context) : NearbyClient {
 
@@ -68,7 +70,9 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     override fun requestConnection(endpointId: String, myName: String) {
         Timber.d("P2P: requestConnection(endpointId=$endpointId, myName=$myName)")
         client.requestConnection(myName, endpointId, connectionLifecycle)
-            .addOnSuccessListener { Timber.d("P2P: requestConnection request sent") }
+            .addOnSuccessListener { 
+                Timber.d("P2P: requestConnection request SUCCESS (awaiting onConnectionInitiated)") 
+            }
             .addOnFailureListener { e ->
                 Timber.e(e, "P2P: requestConnection FAILURE")
                 if (e is ApiException && e.statusCode == ConnectionsStatusCodes.STATUS_OUT_OF_ORDER_API_CALL) return@addOnFailureListener
@@ -180,6 +184,6 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     }
 
     private companion object {
-        val STRATEGY: Strategy = Strategy.P2P_STAR
+        val STRATEGY: Strategy = Strategy.P2P_CLUSTER
     }
 }

@@ -12,13 +12,15 @@ class FakeNearbyClient : NearbyClient {
     val sentFiles = mutableListOf<Pair<String, File>>()
     val sentBytes = mutableListOf<ByteArray>()
     val accepted = mutableListOf<String>()
+    var advertising = false
+    var discovering = false
     var stopped = false
     var nextPayloadId = 1000L
 
     suspend fun emit(event: P2pEvent) { events.emit(event) }
 
-    override fun startAdvertising(name: String) {}
-    override fun startDiscovery() {}
+    override fun startAdvertising(name: String) { advertising = true }
+    override fun startDiscovery() { discovering = true }
     override fun requestConnection(endpointId: String, myName: String) {}
     override fun acceptConnection(endpointId: String) { accepted += endpointId }
     override fun rejectConnection(endpointId: String) {}
@@ -28,5 +30,11 @@ class FakeNearbyClient : NearbyClient {
         return id
     }
     override fun sendBytes(endpointId: String, bytes: ByteArray) { sentBytes += bytes }
-    override fun stopAll() { stopped = true }
+    override fun stopDiscovery() { discovering = false }
+    override fun stopAdvertising() { advertising = false }
+    override fun stopAll() {
+        stopped = true
+        advertising = false
+        discovering = false
+    }
 }

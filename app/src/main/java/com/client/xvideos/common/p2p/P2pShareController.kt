@@ -37,13 +37,15 @@ class P2pShareController(
 
     private val endpoints = linkedMapOf<String, P2pEndpoint>()
     private var targetEndpoint: String? = null
+    private var eventsJob: kotlinx.coroutines.Job? = null
 
     fun start() {
         Timber.d("P2P Sender: Starting discovery...")
         endpoints.clear()
         targetEndpoint = null
         _state.value = ShareState.Searching(emptyList())
-        scope.launch { nearby.events.collect { handle(it) } }
+        eventsJob?.cancel()
+        eventsJob = scope.launch { nearby.events.collect { handle(it) } }
         nearby.startDiscovery()
     }
 
@@ -69,9 +71,8 @@ class P2pShareController(
                 if (_state.value is ShareState.Searching) _state.value = ShareState.Searching(endpoints.values.toList())
             }
             is P2pEvent.ConnectionInitiated -> {
-                Timber.d("P2P Sender: Connection initiated")
+                Timber.d("P2P Sender: Connection initiated. Automatically accepting for endpoint: ${event.endpointId}")
                 _state.value = ShareState.Connecting
-                // Автоматически принимаем соединение на стороне отправителя тоже
                 nearby.acceptConnection(event.endpointId)
             }
             is P2pEvent.Connected -> {

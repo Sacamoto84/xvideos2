@@ -1,8 +1,8 @@
 package com.client.xvideos.common.p2p.ui
 
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,10 +13,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,18 +26,11 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.p2p.P2pPermissions
-import com.client.xvideos.common.p2p.P2pReceiveController
-import com.client.xvideos.common.p2p.P2pType
+import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.ReceiveState
-import com.client.xvideos.common.p2p.imports.StoreBundleImporter
-import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import java.io.File
 
 /** Экран «Приём P2P»: рекламируется и принимает один item. */
 class ScreenP2pReceive : Screen {
@@ -46,42 +39,25 @@ class ScreenP2pReceive : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
-        val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
-
-        val controller = remember {
-            P2pReceiveController(
-                nearby = NearbyClientImpl(context),
-                importer = StoreBundleImporter(
-                    storeRootFor = { type ->
-                        when (type) {
-                            P2pType.X -> File(AppPath.x_cache_download)
-                            P2pType.R -> File(AppPath.r_cache_download)
-                            P2pType.L -> File(AppPath.l_likes)
-                        }
-                    },
-                    refreshFor = { /* экраны Saved перечитывают список при открытии */ },
-                ),
-                scope = scope,
-                deviceName = Build.MODEL ?: "Android",
-            )
-        }
+        
+        val activeController by P2pReceiveManager.controller.collectAsState()
 
         val permissionLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { result ->
-            if (result.values.all { it }) controller.start()
+            if (result.values.all { it }) P2pReceiveManager.start(context)
         }
 
         LaunchedEffect(Unit) {
-            if (P2pPermissions.allGranted(context)) controller.start()
+            if (P2pPermissions.allGranted(context)) P2pReceiveManager.start(context)
             else permissionLauncher.launch(P2pPermissions.required())
         }
 
-        DisposableEffect(Unit) {
-            onDispose { controller.stop() }
+        val state by if (activeController != null) {
+            activeController!!.state.collectAsState()
+        } else {
+            remember { mutableStateOf(ReceiveState.Idle) }
         }
-
-        val state by controller.state.collectAsState()
 
         ScreenP2pReceiveContent(
             state = state,
@@ -95,7 +71,9 @@ private fun ScreenP2pReceiveContent(
     state: ReceiveState,
     onPop: () -> Unit,
 ) {
-    Scaffold { padding ->
+
+    Scaffold(modifier = Modifier.background(Theme.background)) { padding ->
+
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

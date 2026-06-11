@@ -25,6 +25,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pPermissions
+import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pShareController
 import com.client.xvideos.common.p2p.ShareState
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
@@ -82,7 +83,13 @@ data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
             }
         }
 
-        DisposableEffect(Unit) { onDispose { controller.stop() } }
+        DisposableEffect(Unit) {
+            onDispose {
+                controller.stop()
+                // stopAll() гасит рекламу всего процесса — оживляем фоновый приём, если он был запущен.
+                P2pReceiveManager.ensureAdvertising()
+            }
+        }
 
         val state by controller.state.collectAsState()
 

@@ -37,14 +37,19 @@ class P2pReceiveController(
     private val receivedFiles = mutableMapOf<Long, File>()
     private var manifest: P2pManifest? = null
     private var currentEndpoint: String? = null
+    private var eventsJob: kotlinx.coroutines.Job? = null
+    private var pendingStopJob: kotlinx.coroutines.Job? = null
 
     fun start() {
         Timber.d("P2P Receiver: Starting advertising...")
+        pendingStopJob?.cancel()
+        pendingStopJob = null
         receivedFiles.clear()
         manifest = null
         currentEndpoint = null
         _state.value = ReceiveState.Advertising
-        scope.launch { nearby.events.collect { handle(it) } }
+        eventsJob?.cancel()
+        eventsJob = scope.launch { nearby.events.collect { handle(it) } }
         nearby.startAdvertising(deviceName)
     }
 
@@ -52,11 +57,10 @@ class P2pReceiveController(
         Timber.d("P2P Receiver: handle event $event")
         when (event) {
             is P2pEvent.ConnectionInitiated -> {
-                Timber.d("P2P Receiver: Connection initiated from ${event.endpointName}")
+                Timber.d("P2P Receiver: Connection initiated from ${event.endpointName} (id=${event.endpointId}). Automatically accepting.")
                 currentEndpoint = event.endpointId
                 _state.value = ReceiveState.Connecting(event.endpointName)
-                // Автоматически принимаем соединение
-                confirmConnection()
+                nearby.acceptConnection(event.endpointId)
             }
             is P2pEvent.Connected -> {
                 Timber.d("P2P Receiver: Connected to $currentEndpoint")
@@ -73,7 +77,11 @@ class P2pReceiveController(
                 if (manifest == null) _state.value = ReceiveState.Error("Битый манифест") else tryImport()
             }
             is P2pEvent.Disconnected ->
-                if (_state.value !is ReceiveState.Done) _state.value = ReceiveState.Error("Соединение разорвано")
+                // Ошибка только если разрыв случился посреди активной сессии.
+                // Запоздавший disconnect от предыдущей сессии не должен ронять рекламу.
+                if (_state.value is ReceiveState.Connecting || _state.value is ReceiveState.Receiving) {
+                    _state.value = ReceiveState.Error("Соединение разорвано")
+                }
             is P2pEvent.Failed -> _state.value = ReceiveState.Error(event.message)
             else -> Unit
         }
@@ -86,10 +94,12 @@ class P2pReceiveController(
             Timber.d("P2P Receiver: All files received, importing bundle...")
             importer.import(m, receivedFiles.toMap())
             _state.value = ReceiveState.Done
-            // Не вызываем stopAll сразу, даем время отправителю получить подтверждение
-            scope.launch {
+            // Не вызываем stopAll сразу, даем время отправителю получить подтверждение.
+            // Если рекламу успели перезапустить (start() отменяет job и проверка state
+            // не пройдёт) — очистка не должна убить новую рекламу.
+            pendingStopJob = scope.launch {
                 kotlinx.coroutines.delay(2000)
-                nearby.stopAll()
+                if (_state.value is ReceiveState.Done) nearby.stopAll()
             }
         } catch (e: Exception) {
             Timber.e(e, "P2P Receiver: Import failed")
@@ -97,16 +107,18 @@ class P2pReceiveController(
         }
     }
 
-    fun confirmConnection() {
-        val ep = currentEndpoint ?: return
-        if (_state.value is ReceiveState.Connecting) {
-            nearby.acceptConnection(ep)
-        }
-    }
     fun reject() {
         currentEndpoint?.let { nearby.rejectConnection(it) }
         nearby.stopAll()
         _state.value = ReceiveState.Idle
     }
-    fun stop() { nearby.stopAll() }
+
+    fun stop() {
+        eventsJob?.cancel()
+        eventsJob = null
+        pendingStopJob?.cancel()
+        pendingStopJob = null
+        nearby.stopAll()
+        _state.value = ReceiveState.Idle
+    }
 }
