@@ -28,15 +28,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.IconButton
 import androidx.compose.material.Surface
@@ -193,16 +198,20 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             XvideosTheme(darkTheme = true) {
                 //EdgeToEdgeFix()
 
+                // Подложка: на API 35+ системный бар прозрачный, полосу #212121 под
+                // кнопками рисует это приложение. tappableElement снизу = высота
+                // кнопочного бара, 0 на жестовой навигации.
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF212121))
+                ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .systemBarsPadding()
+                        .windowInsetsPadding(WindowInsets.tappableElement.only(WindowInsetsSides.Bottom))
                         .background(Color.Black)
                         .semantics { testTagsAsResourceId = true }
-                    //.windowInsetsPadding(WindowInsets.ime)
-                    //.consumeWindowInsets(WindowInsets.ime)
-                    //.displayCutoutPadding()
-                    //.systemBarsPadding())
                 )
                 {
 
@@ -230,6 +239,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                     }
 
                 }
+                } // Box-подложка
             }
         }
     }
