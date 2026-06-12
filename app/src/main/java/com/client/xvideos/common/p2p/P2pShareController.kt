@@ -39,10 +39,16 @@ class P2pShareController(
     private var targetEndpoint: String? = null
     private var eventsJob: kotlinx.coroutines.Job? = null
 
+    /** Payload'ы, поставленные в очередь и ещё не подтверждённые доставкой. */
+    private val pendingPayloads = mutableSetOf<Long>()
+    private var allEnqueued = false
+
     fun start() {
         Timber.d("P2P Sender: Starting discovery...")
         endpoints.clear()
         targetEndpoint = null
+        pendingPayloads.clear()
+        allEnqueued = false
         _state.value = ShareState.Searching(emptyList())
         eventsJob?.cancel()
         eventsJob = scope.launch { nearby.events.collect { handle(it) } }
@@ -85,6 +91,19 @@ class P2pShareController(
                 if (_state.value is ShareState.Sending) {
                     _state.value = ShareState.Sending(event.transferred, event.total)
                 }
+            is P2pEvent.PayloadTransferred -> {
+                // Done только когда ВСЁ реально доставлено: sendFile/sendBytes лишь ставят
+                // в очередь, и на медленном канале (Bluetooth без upgrade) закрытие экрана
+                // после раннего Done обрывало передачу у получателя.
+                pendingPayloads.remove(event.payloadId)
+                maybeDone()
+            }
+            is P2pEvent.PayloadTransferFailed -> {
+                Timber.w("P2P Sender: payload ${event.payloadId} не доставлен")
+                if (_state.value !is ShareState.Done) {
+                    _state.value = ShareState.Error("Передача прервана")
+                }
+            }
             is P2pEvent.ConnectionRejected -> _state.value = ShareState.Error("Получатель отклонил")
             is P2pEvent.Disconnected -> {
                 Timber.d("P2P Sender: Disconnected from ${event.endpointId}")
@@ -106,10 +125,16 @@ class P2pShareController(
 
     private fun sendBundle(endpointId: String) {
         _state.value = ShareState.Sending(0, 0)
+        pendingPayloads.clear()
+        allEnqueued = false
         scope.launch {
             try {
                 val payloadIds = HashMap<File, Long>()
-                for (file in bundle.files) payloadIds[file] = nearby.sendFile(endpointId, file)
+                for (file in bundle.files) {
+                    val id = nearby.sendFile(endpointId, file)
+                    payloadIds[file] = id
+                    pendingPayloads.add(id)
+                }
                 val manifest = P2pManifestFactory.create(
                     type = bundle.type,
                     storeRoot = bundle.storeRoot,
@@ -117,13 +142,22 @@ class P2pShareController(
                     metadataFile = bundle.metadataFile,
                     payloadIds = payloadIds,
                 )
-                nearby.sendBytes(endpointId, P2pManifestCodec.toBytes(manifest))
-                Timber.d("P2P Sender: Manifest sent SUCCESS")
-                _state.value = ShareState.Done
+                pendingPayloads.add(nearby.sendBytes(endpointId, P2pManifestCodec.toBytes(manifest)))
+                allEnqueued = true
+                Timber.d("P2P Sender: всё в очереди, ждём подтверждений доставки (${pendingPayloads.size})")
+                // Подтверждения могли прийти раньше, чем мы дошли сюда.
+                maybeDone()
             } catch (e: Exception) {
                 Timber.e(e, "P2P Sender: Transfer failed")
                 _state.value = ShareState.Error(e.message ?: "Ошибка отправки")
             }
+        }
+    }
+
+    private fun maybeDone() {
+        if (allEnqueued && pendingPayloads.isEmpty() && _state.value is ShareState.Sending) {
+            Timber.d("P2P Sender: все payload'ы доставлены")
+            _state.value = ShareState.Done
         }
     }
 

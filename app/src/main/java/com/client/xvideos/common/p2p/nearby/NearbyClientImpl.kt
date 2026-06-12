@@ -110,8 +110,10 @@ class NearbyClientImpl(context: Context) : NearbyClient {
             }
         }
 
-    override fun sendBytes(endpointId: String, bytes: ByteArray) {
-        client.sendPayload(endpointId, Payload.fromBytes(bytes))
+    override fun sendBytes(endpointId: String, bytes: ByteArray): Long {
+        val payload = Payload.fromBytes(bytes)
+        client.sendPayload(endpointId, payload)
+        return payload.id
     }
 
     override fun stopDiscovery() {
@@ -171,14 +173,24 @@ class NearbyClientImpl(context: Context) : NearbyClient {
         }
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
             emit(P2pEvent.TransferProgress(update.payloadId, update.bytesTransferred, update.totalBytes))
-            if (update.status == PayloadTransferUpdate.Status.SUCCESS) {
-                val payload = incomingFiles.remove(update.payloadId) ?: return
-                val javaFile = payload.asFile()?.asJavaFile()
-                if (javaFile != null) {
-                    emit(P2pEvent.FilePayloadReceived(update.payloadId, javaFile))
-                } else {
-                    Timber.w("P2P: FILE payload ${update.payloadId} без javaFile")
+            when (update.status) {
+                PayloadTransferUpdate.Status.SUCCESS -> {
+                    // Отправителю — подтверждение доставки (Done только после всех).
+                    emit(P2pEvent.PayloadTransferred(update.payloadId))
+                    val payload = incomingFiles.remove(update.payloadId) ?: return
+                    val javaFile = payload.asFile()?.asJavaFile()
+                    if (javaFile != null) {
+                        emit(P2pEvent.FilePayloadReceived(update.payloadId, javaFile))
+                    } else {
+                        Timber.w("P2P: FILE payload ${update.payloadId} без javaFile")
+                    }
                 }
+                PayloadTransferUpdate.Status.FAILURE,
+                PayloadTransferUpdate.Status.CANCELED -> {
+                    Timber.w("P2P: payload ${update.payloadId} не доставлен (status=${update.status})")
+                    emit(P2pEvent.PayloadTransferFailed(update.payloadId))
+                }
+                else -> Unit
             }
         }
     }

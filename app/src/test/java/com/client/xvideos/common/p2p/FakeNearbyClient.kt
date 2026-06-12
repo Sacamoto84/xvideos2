@@ -29,7 +29,10 @@ class FakeNearbyClient : NearbyClient {
         sentFiles += endpointId to file
         return id
     }
-    override fun sendBytes(endpointId: String, bytes: ByteArray) { sentBytes += bytes }
+    override fun sendBytes(endpointId: String, bytes: ByteArray): Long {
+        sentBytes += bytes
+        return nextPayloadId++
+    }
     override fun stopDiscovery() { discovering = false }
     override fun stopAdvertising() { advertising = false }
     override fun stopAll() {

@@ -17,6 +17,13 @@ sealed interface P2pEvent {
         override fun hashCode() = bytes.contentHashCode()
     }
     data class TransferProgress(val payloadId: Long, val transferred: Long, val total: Long) : P2pEvent
+
+    /** Payload доставлен другой стороне (Status.SUCCESS) — приходит и отправителю. */
+    data class PayloadTransferred(val payloadId: Long) : P2pEvent
+
+    /** Передача payload'а провалена/отменена (Status.FAILURE / CANCELED). */
+    data class PayloadTransferFailed(val payloadId: Long) : P2pEvent
+
     data class Failed(val message: String) : P2pEvent
 }
 
@@ -33,8 +40,8 @@ interface NearbyClient {
     /** Отправить файл; возвращает payloadId (одинаков на обоих телефонах). */
     suspend fun sendFile(endpointId: String, file: File): Long
 
-    /** Отправить control-сообщение (манифест). */
-    fun sendBytes(endpointId: String, bytes: ByteArray)
+    /** Отправить control-сообщение (манифест); возвращает payloadId. */
+    fun sendBytes(endpointId: String, bytes: ByteArray): Long
 
     fun stopDiscovery()
     fun stopAdvertising()
