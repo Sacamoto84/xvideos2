@@ -30,6 +30,8 @@ object Theme {
     val tabLevel4 = Color(0xFF555555)
     val tabLevel5 = Color(0xFF666666)
 
+    val tabLevel6 = Color(0xFF777777)
+
     /** Уникальные токены R (выделения, бордеры, шрифты). */
     object R {
         /** Legacy фон компонентов R (кнопки/боксы/дивайдеры). */

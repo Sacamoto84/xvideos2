@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -24,11 +26,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -317,65 +321,82 @@ private fun LCollectionsTopBar(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Theme.background)
-            .padding(start = 8.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                ">Коллекция>${selectedCollection.orEmpty()}",
-                color = Theme.L.primaryColor,
-                fontSize = 18.sp,
-                fontFamily = Theme.L.fontFamilyPopinsRegular
-            )
-            if (selectedCollection == null) {
-                Text(
-                    sortOrder.title,
-                    color = Theme.L.grey2,
-                    fontSize = 12.sp,
-                    fontFamily = Theme.L.fontFamilyDMsanss
-                )
-            }
-        }
+    Column() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Theme.tabLevel1)
+                .displayCutoutPadding()
+                .padding(start = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
 
-        if (selectedCollection == null) {
-            TextButton(onClick = onSmartCollectionsClick) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = Theme.L.primaryColor)
-                Spacer(Modifier.width(4.dp))
-                Text("Smart", color = Theme.L.primaryColor, style = Theme.L.Type.button)
-            }
-
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null, tint = Theme.L.textColor)
+                if (!selectedCollection.isNullOrEmpty()) {
+                    Text(
+                        ">${selectedCollection}",
+                        color = Theme.L.primaryColor,
+                        fontSize = 18.sp,
+                        fontFamily = Theme.L.fontFamilyPopinsRegular
+                    )
                 }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                    containerColor = Theme.L.grey5
-                ) {
-                    LCollectionSortOrder.entries.forEach { order ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    order.title,
-                                    style = Theme.L.Type.menuItem.copy(
-                                        color = if (order == sortOrder) Theme.L.primaryColor else Theme.L.textColor
-                                    )
-                                )
-                            },
-                            onClick = {
-                                onSortOrderClick(order)
-                                menuExpanded = false
-                            }
+
+                if (selectedCollection == null) {
+                    Text(
+                        sortOrder.title,
+                        color = Theme.L.grey2,
+                        fontSize = 12.sp,
+                        fontFamily = Theme.L.fontFamilyDMsanss
+                    )
+                }
+
+
+
+            }
+
+            if (selectedCollection == null) {
+
+                TextButton(onClick = onSmartCollectionsClick) {
+                    Text("Smart", color = Theme.L.primaryColor, style = Theme.L.Type.button)
+                }
+
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            Icons.Default.FilterList,
+                            contentDescription = null,
+                            tint = Theme.L.textColor
                         )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                        containerColor = Theme.L.grey3
+                    ) {
+                        LCollectionSortOrder.entries.forEach { order ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        order.title,
+                                        style = Theme.L.Type.menuItem.copy(
+                                            color = if (order == sortOrder) Color.White else Theme.L.grey2
+                                        )
+                                    )
+                                },
+                                onClick = {
+                                    onSortOrderClick(order)
+                                    menuExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
+
+        HorizontalDivider()
+
     }
 }
 

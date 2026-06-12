@@ -360,6 +360,7 @@ private fun AppSettingsScreenBody(
             when (currentPage) {
                 SettingsPage.Main -> Unit
                 SettingsPage.Privacy -> AppLockSettingsSection()
+                SettingsPage.Display -> DisplaySettingsSection()
                 SettingsPage.Cache -> CacheSettingsSection(
                     ramCachePercent = ramCachePercent,
                     diskCacheEnabled = diskCacheEnabled,
@@ -409,6 +410,11 @@ private enum class SettingsPage(
         icon = R.drawable.icon_red,
         subtitle = "Пароль и блокировка приложения"
     ),
+    Display(
+        title = "Отображение",
+        icon = R.drawable.crop_free,
+        subtitle = "Вырез экрана и отступы"
+    ),
     Cache(
         title = "Кэш",
         icon = R.drawable.hard_disk_24,
@@ -446,7 +452,7 @@ private enum class SettingsPage(
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Cache, Storage, Backup, P2P)
+        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Cache, Storage, Backup, P2P)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
@@ -700,6 +706,20 @@ private fun RSettingsSection(
                     Text("Обновить")
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun DisplaySettingsSection() {
+    val useCutout = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
+    SettingsGroup {
+        SettingsSwitchRow(
+            icon = R.drawable.crop_free,
+            text = "Учитывать верхний вырез",
+            subtitle = if (useCutout) "Включено" else "Выключено",
+            value = useCutout,
+            onValueChange = { Settings.useCutoutPadding.setValue(it) }
         )
     }
 }
