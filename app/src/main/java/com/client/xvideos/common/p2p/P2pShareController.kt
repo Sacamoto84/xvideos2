@@ -16,6 +16,8 @@ data class P2pEndpoint(val id: String, val name: String)
 /** Состояние экрана отправки. */
 sealed interface ShareState {
     data object Idle : ShareState
+    /** Подготовка файлов: скачивание item'а в outbox перед поиском устройств. */
+    data object Preparing : ShareState
     data class Searching(val endpoints: List<P2pEndpoint>) : ShareState
     data object Connecting : ShareState
     data class Sending(val transferred: Long, val total: Long) : ShareState
@@ -24,35 +26,62 @@ sealed interface ShareState {
 }
 
 /**
- * Отправляющая сторона: ищет телефоны, по подключению шлёт файлы [bundle], затем манифест.
+ * Отправляющая сторона: готовит бандл ([bundleProvider] — мгновенно для store
+ * или скачивание в outbox), ищет телефоны, по подключению шлёт файлы, затем манифест.
  */
 class P2pShareController(
     private val nearby: NearbyClient,
     private val scope: CoroutineScope,
     private val myName: String,
-    private val bundle: P2pExportBundle,
+    private val bundleProvider: suspend () -> P2pExportBundle,
 ) {
+    /** Готовый бандл (store): без фазы скачивания. */
+    constructor(
+        nearby: NearbyClient,
+        scope: CoroutineScope,
+        myName: String,
+        bundle: P2pExportBundle,
+    ) : this(nearby, scope, myName, bundleProvider = { bundle })
+
     private val _state = MutableStateFlow<ShareState>(ShareState.Idle)
     val state: StateFlow<ShareState> = _state.asStateFlow()
 
     private val endpoints = linkedMapOf<String, P2pEndpoint>()
     private var targetEndpoint: String? = null
     private var eventsJob: kotlinx.coroutines.Job? = null
+    private var prepareJob: kotlinx.coroutines.Job? = null
+
+    /** Бандл, закешированный после первой подготовки — рестарт не качает заново. */
+    private var bundle: P2pExportBundle? = null
 
     /** Payload'ы, поставленные в очередь и ещё не подтверждённые доставкой. */
     private val pendingPayloads = mutableSetOf<Long>()
     private var allEnqueued = false
 
     fun start() {
-        Timber.d("P2P Sender: Starting discovery...")
+        Timber.d("P2P Sender: Starting (prepare + discovery)...")
         endpoints.clear()
         targetEndpoint = null
         pendingPayloads.clear()
         allEnqueued = false
-        _state.value = ShareState.Searching(emptyList())
         eventsJob?.cancel()
-        eventsJob = scope.launch { nearby.events.collect { handle(it) } }
-        nearby.startDiscovery()
+        prepareJob?.cancel()
+        _state.value = ShareState.Preparing
+        prepareJob = scope.launch {
+            val prepared = try {
+                bundle ?: bundleProvider().also { bundle = it }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "P2P Sender: prepare failed")
+                _state.value = ShareState.Error("Не удалось скачать файлы")
+                return@launch
+            }
+            Timber.d("P2P Sender: bundle ready (${prepared.files.size} файлов), starting discovery")
+            _state.value = ShareState.Searching(emptyList())
+            eventsJob = scope.launch { nearby.events.collect { handle(it) } }
+            nearby.startDiscovery()
+        }
     }
 
     fun connectTo(endpointId: String) {
@@ -124,22 +153,26 @@ class P2pShareController(
     }
 
     private fun sendBundle(endpointId: String) {
+        val b = bundle ?: run {
+            _state.value = ShareState.Error("Файлы не готовы")
+            return
+        }
         _state.value = ShareState.Sending(0, 0)
         pendingPayloads.clear()
         allEnqueued = false
         scope.launch {
             try {
                 val payloadIds = HashMap<File, Long>()
-                for (file in bundle.files) {
+                for (file in b.files) {
                     val id = nearby.sendFile(endpointId, file)
                     payloadIds[file] = id
                     pendingPayloads.add(id)
                 }
                 val manifest = P2pManifestFactory.create(
-                    type = bundle.type,
-                    storeRoot = bundle.storeRoot,
-                    files = bundle.files,
-                    metadataFile = bundle.metadataFile,
+                    type = b.type,
+                    storeRoot = b.storeRoot,
+                    files = b.files,
+                    metadataFile = b.metadataFile,
                     payloadIds = payloadIds,
                 )
                 pendingPayloads.add(nearby.sendBytes(endpointId, P2pManifestCodec.toBytes(manifest)))
@@ -161,5 +194,8 @@ class P2pShareController(
         }
     }
 
-    fun stop() { nearby.stopAll() }
+    fun stop() {
+        prepareJob?.cancel()
+        nearby.stopAll()
+    }
 }

@@ -1,8 +1,10 @@
 package com.client.xvideos.common.p2p
 
 import com.client.xvideos.common.p2p.nearby.P2pEvent
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -111,5 +113,65 @@ class P2pShareControllerTest {
             fake.emit(P2pEvent.TransferProgress(1000L, 3L, 3L))
 
             assertEquals(ShareState.Done, controller.state.value)
+        }
+
+    @Test
+    fun `stays in preparing while provider downloads then searches`() = runTest {
+        val gate = CompletableDeferred<P2pExportBundle>()
+        val fake = FakeNearbyClient()
+        val controller = P2pShareController(
+            nearby = fake,
+            scope = backgroundScope,
+            myName = "Sender",
+            bundleProvider = { gate.await() },
+        )
+
+        controller.start()
+        runCurrent()
+        assertEquals(ShareState.Preparing, controller.state.value)
+
+        val root = tmp.newFolder("outbox")
+        val mp4 = File(root, "3.mp4").apply { writeText("V") }
+        gate.complete(P2pExportBundle(P2pType.X, root, listOf(mp4), null))
+        runCurrent()
+        assertTrue(controller.state.value is ShareState.Searching)
+    }
+
+    @Test
+    fun `prepare failure puts controller into error`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val fake = FakeNearbyClient()
+            val controller = P2pShareController(
+                nearby = fake,
+                scope = backgroundScope,
+                myName = "Sender",
+                bundleProvider = { error("network down") },
+            )
+
+            controller.start()
+
+            assertTrue(controller.state.value is ShareState.Error)
+        }
+
+    @Test
+    fun `bundle is prepared once across restarts`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val root = tmp.newFolder("outbox")
+            val mp4 = File(root, "3.mp4").apply { writeText("V") }
+            val bundle = P2pExportBundle(P2pType.X, root, listOf(mp4), null)
+            var calls = 0
+            val fake = FakeNearbyClient()
+            val controller = P2pShareController(
+                nearby = fake,
+                scope = backgroundScope,
+                myName = "Sender",
+                bundleProvider = { calls++; bundle },
+            )
+
+            controller.start()
+            controller.start() // рестарт после разрыва — скачивание не повторяется
+
+            assertEquals(1, calls)
+            assertTrue(controller.state.value is ShareState.Searching)
         }
 }

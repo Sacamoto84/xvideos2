@@ -113,6 +113,17 @@ data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 when (val s = state) {
+                    is ShareState.Preparing -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Подготовка файлов…", style = MaterialTheme.typography.headlineSmall)
+                        }
+                    }
                     is ShareState.Idle,
                     is ShareState.Searching -> {
                         Text("Поиск устройств рядом…", style = MaterialTheme.typography.titleMedium)
