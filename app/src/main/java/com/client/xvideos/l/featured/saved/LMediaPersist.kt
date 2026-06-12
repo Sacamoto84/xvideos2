@@ -291,13 +291,15 @@ private fun String.parseAlbumDetails(): AlbumDetails? = runCatching {
  *
  * Используется и в likes, и в collection — единственное отличие L_Likes/L_Collection
  * это корневая директория [root].
+ *
+ * @return папка сохранённого item'а.
  */
 internal suspend fun lPersistPicsDetailsToFolder(
     item: PicsDetails,
     root: File,
     luscious: Luscious,
     progress: LDownloadProgress
-): Result<Unit> {
+): Result<File> {
     var progressStarted = false
     return runCatching {
         val previewSources = item.lPreviewSources()
@@ -384,7 +386,7 @@ internal suspend fun lPersistPicsDetailsToFolder(
         } finally {
             client.close()
         }
-        Unit
+        folder
     }.also {
         if (progressStarted) progress.finish()
     }
