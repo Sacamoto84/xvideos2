@@ -99,18 +99,20 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             val window = activity?.window
             val prevOrientation = activity?.requestedOrientation
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            // Edge-to-edge включён глобально (MainActivity) и не перенастраивается.
+            // Статус-бар скрыт глобально — прячем/возвращаем только навигацию.
             window?.let {
-                WindowCompat.setDecorFitsSystemWindows(it, false)
                 WindowCompat.getInsetsController(it, it.decorView)
-                    .hide(WindowInsetsCompat.Type.systemBars())
+                    .hide(WindowInsetsCompat.Type.navigationBars())
             }
             onDispose {
                 activity?.requestedOrientation =
                     prevOrientation ?: ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 window?.let {
-                    WindowCompat.setDecorFitsSystemWindows(it, true)
-                    WindowCompat.getInsetsController(it, it.decorView)
-                        .show(WindowInsetsCompat.Type.systemBars())
+                    val controller = WindowCompat.getInsetsController(it, it.decorView)
+                    controller.show(WindowInsetsCompat.Type.navigationBars())
+                    // Страховка: статус-бар обязан остаться скрытым
+                    controller.hide(WindowInsetsCompat.Type.statusBars())
                 }
             }
         }
