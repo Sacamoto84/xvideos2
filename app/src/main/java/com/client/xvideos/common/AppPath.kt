@@ -63,6 +63,15 @@ object AppPath {
     val l_albums: String = "${main}/${Folder.L.value}/Album"
     val l_collection: String = "${main}/${Folder.L.value}/Collection"
 
+    //--- P2P staging ---
+    /**
+     * Временные папки P2P. Содержимое зеркалирует структуру `/xvideos`
+     * (`inbox/L/Likes/...`), что позволяет переносить принятое в корень
+     * одним merge. Очищаются при старте приложения и после успешной передачи.
+     */
+    val p2p_inbox: String = "$main/inbox"
+    val p2p_outbox: String = "$main/outbox"
+
     /**
      * Создаёт базовую структуру директорий при первом обращении к `AppPath`.
      *
@@ -105,6 +114,9 @@ object AppPath {
         File(x_favorites).mkdirs()
         File(x_cache_download).mkdirs()
 
+        File(p2p_inbox).mkdirs()
+        File(p2p_outbox).mkdirs()
+
     }
 
     fun initInternalStorage(context: Context) {
@@ -117,6 +129,8 @@ object AppPath {
         migrateLegacyRNichesCache(rNichesCacheDir)
 
         clearLShareCache()
+        clearP2pInbox()
+        clearP2pOutbox()
     }
 
     private fun migrateLegacyRNichesCache(targetDir: File) {
@@ -141,6 +155,15 @@ object AppPath {
         if (!::l_cacheDownload.isInitialized) return
         File(l_cacheDownload).deleteRecursively()
         File(l_cacheDownload).mkdirs()
+    }
+
+    fun clearP2pInbox() = clearStagingDir(File(p2p_inbox))
+
+    fun clearP2pOutbox() = clearStagingDir(File(p2p_outbox))
+
+    private fun clearStagingDir(dir: File) {
+        dir.deleteRecursively()
+        dir.mkdirs()
     }
 
 }
