@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Xvideos" parent="android:Theme.Material.Light.NoActionBar.Fullscreen">
-        <item name="android:windowFullscreen">true</item>
+    <style name="Theme.Xvideos" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowNoTitle">true</item>
 
-        <!--        <item name="android:windowIsTranslucent">true</item>-->
-
-        <!-- Установка прозрачности для статус-бара -->
+        <!-- Статус-бар прозрачный (скрывается кодом в MainActivity) -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <!--        <item name="android:windowTranslucentStatus">true</item>-->
 
-        <!-- Чёрный фон -->
-        <!--        <item name="android:background">#000000</item>-->
+        <!-- Кнопочный навигационный бар: тёмный фон, светлые кнопки -->
+        <item name="android:navigationBarColor">#212121</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Фон окна: виден сквозь прозрачный бар на API 35+ -->
         <item name="android:windowBackground">#212121</item>
 
     </style>

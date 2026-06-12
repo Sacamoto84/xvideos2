@@ -7,20 +7,13 @@
         <!-- Статус-бар прозрачный (скрывается кодом в MainActivity) -->
         <item name="android:statusBarColor">@android:color/transparent</item>
 
-        <!-- Кнопочный навигационный бар: тёмный до применения enableEdgeToEdge -->
+        <!-- Кнопочный навигационный бар: тёмный фон, светлые кнопки -->
         <item name="android:navigationBarColor">#212121</item>
+        <item name="android:windowLightNavigationBar">false</item>
 
         <!-- Чёрный фон -->
         <item name="android:windowBackground">#000000</item>
 
     </style>
-
-    <style name="Theme.MyApp.Splash" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Фон сплэша -->
-        <item name="android:windowBackground">@color/black</item>
-        <!-- Лого/иконка -->
-
-    </style>
-
 
 </resources>
