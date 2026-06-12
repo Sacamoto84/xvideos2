@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -191,6 +192,7 @@ class L_FullScreenImage(
         // Состояние для LazyRow
         val lazyRowState = rememberLazyListState( cacheWindow = LazyLayoutCacheWindow( ahead = 200.dp, behind = 200.dp ) )
 
+
         LaunchedEffect(isClosing) {
             if (isClosing) {
                 onClose( if (corruptCancel) filteredPic.indexOf(dataItem).coerceIn(0, filteredPic.lastIndex) else -1 )
@@ -199,6 +201,10 @@ class L_FullScreenImage(
         }
 
         BackHandler { isClosing = true }
+
+
+        val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
+
 
         // Текущий индекс из pagerState
         val currentIndex = pagerState.currentPage
@@ -374,22 +380,16 @@ class L_FullScreenImage(
             AnimatedVisibility(visible = !isFullScreen, enter = fadeIn(), exit = fadeOut())
             {
                 //Верхние кнопки
-                Row(modifier = Modifier.fillMaxWidth().align(Alignment.TopStart).offset(y = 8.dp), horizontalArrangement = Arrangement.SpaceBetween)
+                Row(modifier = Modifier.fillMaxWidth().align(Alignment.TopStart).offset(y = 4.dp), horizontalArrangement = Arrangement.SpaceBetween)
                 {
                     Row {
                         IconButton(onClick = { rotate = rotate.not() }) { Icon(Icons.Default.ScreenRotation, contentDescription = null, tint = Color.White) }
-                        IconButton(onClick = { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) }) {
-                            Icon(
-                                if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz,
-                                contentDescription = null,
-                                tint = Color.White
-                            )
-                        }
+                        IconButton(onClick = { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) }) { Icon( if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz, contentDescription = null, tint = Color.White) }
                     }
 
                     Row {
                         IconButton(onClick = { showInfoDialog = true }) { Icon( Icons.Default.Info, contentDescription = null, tint = Color.White ) }
-                        Box(modifier = Modifier) { expandMenuViewModel.ExpandMenu( expandMenu, filteredPic[pagerState.currentPage], albumName, isCollection ) }
+                        expandMenuViewModel.ExpandMenu( expandMenu, filteredPic[pagerState.currentPage], albumName, isCollection )
                     }
                 }
             }
@@ -826,179 +826,3 @@ fun Modifier.checkerboardBackground(
         }
     }
 )
-
-@Preview(
-    name = "L FullScreen Image",
-    showBackground = true,
-    backgroundColor = 0xFF181818,
-    device = "spec:width=411dp,height=891dp"
-)
-@Composable
-private fun LFullScreenImagePreview() {
-    val items = remember { lFullScreenImagePreviewItems() }
-    LFullScreenImagePreviewContent(items = items, currentIndex = 1)
-}
-
-@Composable
-private fun LFullScreenImagePreviewContent(
-    items: List<PicsDetails>,
-    currentIndex: Int,
-    rotate: Boolean = false
-) {
-    val currentItem = items.getOrElse(currentIndex) { items.first() }
-    val imageUrl = currentItem.lFullScreenImageUrls().firstOrNull().orEmpty()
-    var showInfoDialog by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .checkerboardBackground(
-                squareSize = 12.dp,
-                lightColor = Color(0xFF252525),
-                darkColor = Color(0xFF181818)
-            )
-    ) {
-        if (showInfoDialog) {
-            LPictureInfoDialog(
-                item = currentItem,
-                position = currentIndex,
-                total = items.size,
-                onDismiss = { showInfoDialog = false }
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .aspectRatio(
-                    if (rotate) currentItem.height.toFloat() / currentItem.width
-                    else currentItem.width.toFloat() / currentItem.height,
-                    matchHeightConstraintsFirst = false
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            if (imageUrl.isNotBlank()) {
-                UrlImage(
-                    rotate = rotate,
-                    contentScale = ContentScale.Fit,
-                    url = imageUrl,
-                    modifier = Modifier.fillMaxSize(),
-                    albumName = "preview",
-                    isFullScreen = true
-                )
-            } else {
-                Text("Нет ссылки на изображение", color = Color.Gray)
-            }
-        }
-
-        Text(
-            currentIndex.toString(),
-            color = Color.Gray,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 8.dp),
-            fontFamily = Theme.L.fontFamilyKarla
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopStart)
-                .offset(y = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.ScreenRotation, contentDescription = null, tint = Color.White)
-                }
-                IconButton(onClick = { showInfoDialog = true }) {
-                    Icon(Icons.Default.Info, contentDescription = null, tint = Color.White)
-                }
-            }
-        }
-
-        LazyRow(
-            modifier = Modifier
-                .height(72.dp)
-                .align(Alignment.BottomCenter)
-        ) {
-            itemsIndexed(items, key = { index, item -> item.url_to_original ?: index }) { index, item ->
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 1.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .aspectRatio(item.width.toFloat() / item.height)
-                        .border(
-                            2.dp,
-                            if (index == currentIndex) Color.Yellow else Color.Transparent,
-                            RoundedCornerShape(4.dp)
-                        )
-                        .padding(2.dp)
-                ) {
-                    val thumbUrl = item.lPreviewImageUrl("large_thumbnail")
-                    if (thumbUrl.isNotBlank()) {
-                        UrlImage(
-                            url = thumbUrl,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .fillMaxSize(),
-                            contentScale = ContentScale.FillBounds,
-                            albumName = "preview",
-                            autoPlay = false,
-                            isAnimated = false,
-                            sizeButton = 20.dp,
-                            sizeButtonIcon = 12.dp
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun lFullScreenImagePreviewItems(): List<PicsDetails> {
-    return listOf(
-        lFullScreenImagePreviewItem(
-            width = 900,
-            height = 1300,
-            album = "preview_album",
-            baseName = "preview_1"
-        ),
-        lFullScreenImagePreviewItem(
-            width = 1600,
-            height = 2400,
-            album = "preview_album",
-            baseName = "preview_2"
-        ),
-        lFullScreenImagePreviewItem(
-            width = 1200,
-            height = 900,
-            album = "preview_album",
-            baseName = "preview_3"
-        )
-    )
-}
-
-private fun lFullScreenImagePreviewItem(
-    width: Int,
-    height: Int,
-    album: String,
-    baseName: String
-): PicsDetails {
-    val baseUrl = "https://preview.luscious.local/$album/$baseName"
-    return PicsDetails(
-        height = height,
-        width = width,
-        is_animated = false,
-        url_to_original = "$baseUrl.1680x0.jpg",
-        url_to_video = null,
-        album = album,
-        thumbnails = listOf(
-            Thumbnails(width = width, height = height, size = "xMax", url = "$baseUrl.1680x0.jpg"),
-            Thumbnails(width = 640, height = (height * (640f / width)).toInt(), size = "small", url = "$baseUrl.640x0.jpg"),
-            Thumbnails(width = 315, height = (height * (315f / width)).toInt(), size = "large_thumbnail", url = "$baseUrl.315x0.jpg")
-        )
-    )
-}
-
-

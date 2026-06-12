@@ -1,12 +1,8 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
-import com.client.xvideos.common.theme.Theme
-
 import android.annotation.SuppressLint
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -25,11 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -37,8 +29,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,8 +43,10 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -60,11 +54,16 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.Navigator
+import com.client.xvideos.common.collectionDB.model.CollectionGridItem
+import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
+import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.featured.saved.LSmartCollectionCandidate
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.composeunstyled.Text
 import dagger.Binds
 import dagger.Module
@@ -72,12 +71,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.DelicateCoroutinesApi
-import timber.log.Timber
 import javax.inject.Inject
-import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.common.collectionDB.model.CollectionGridItem
-import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
-import com.client.xvideos.ui.theme.XvideosTheme
 
 object L_Screen_CollectionTab : Screen {
 
@@ -321,12 +315,20 @@ private fun LCollectionsTopBar(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Column() {
+    val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
+
+    Column(
+        modifier = Modifier
+            .then(
+                if (usePadding) Modifier.displayCutoutPadding()
+                else Modifier
+            )
+    )
+    {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Theme.tabLevel1)
-                .displayCutoutPadding()
+                //.background(Theme.tabLevel1)
                 .padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
