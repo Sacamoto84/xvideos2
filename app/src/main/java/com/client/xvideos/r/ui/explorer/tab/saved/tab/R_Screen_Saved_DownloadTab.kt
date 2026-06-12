@@ -62,6 +62,7 @@ import com.client.xvideos.r.model.GifsInfo
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.p2p.P2pExportBundle
+import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.export.RExporter
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
@@ -114,7 +115,7 @@ object R_Screen_Saved_DownloadTab : Screen {
                 onP2p = {
                     // Шлём только метаданные (.info + .jpg) — видео получатель стримит по URL.
                     vm.downloadRed.shareMetaByP2p(item) { bundle ->
-                        navigator.push(ScreenP2pSend(bundle))
+                        navigator.push(ScreenP2pSend(P2pSendSource.Ready(bundle)))
                     }
                 },
                 onDismiss = { chooserItem = null },

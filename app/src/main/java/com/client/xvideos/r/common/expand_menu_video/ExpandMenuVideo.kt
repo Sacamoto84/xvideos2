@@ -66,7 +66,11 @@ fun ExpandMenuVideo(
             onP2p = {
                 // Шлём только метаданные (.info + .jpg) — видео получатель стримит по URL.
                 downloadRed.invoke().shareMetaByP2p(ci) { bundle ->
-                    navigator?.push(com.client.xvideos.common.p2p.ui.ScreenP2pSend(bundle))
+                    navigator?.push(
+                        com.client.xvideos.common.p2p.ui.ScreenP2pSend(
+                            com.client.xvideos.common.p2p.P2pSendSource.Ready(bundle)
+                        )
+                    )
                 }
             },
             onDismiss = { chooserItem = null },

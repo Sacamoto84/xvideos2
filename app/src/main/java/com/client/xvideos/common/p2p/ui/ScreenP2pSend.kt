@@ -23,15 +23,28 @@ import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.P2pReceiveManager
+import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.P2pShareController
 import com.client.xvideos.common.p2p.ShareState
+import com.client.xvideos.common.p2p.export.LExporter
+import com.client.xvideos.common.p2p.mirrorRoot
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
+import com.client.xvideos.l.featured.saved.LDownloadProgress
+import com.client.xvideos.l.featured.saved.lPersistPicsDetailsToFolder
+import com.client.xvideos.l.net.Luscious
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.withContext
+import java.io.File
 
 private fun Context.findActivity(): ComponentActivity? {
     var context = this
@@ -42,10 +55,44 @@ private fun Context.findActivity(): ComponentActivity? {
     return null
 }
 
+/** Доступ к Hilt-синглтонам из Voyager-экрана — объекта вне DI-графа. */
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface P2pSendEntryPoint {
+    fun luscious(): Luscious
+}
+
 /**
- * Экран «Отправка P2P»: поиск устройств и передача [bundle].
+ * Ready — бандл уже в store. DownloadL — качаем item в outbox-зеркало
+ * `outbox/L/Likes` (структура повторяет /xvideos, поэтому relativePath
+ * манифеста совпадает с боевым) и экспортируем оттуда.
  */
-data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
+private suspend fun prepareBundle(
+    context: Context,
+    source: P2pSendSource,
+    progress: LDownloadProgress,
+): P2pExportBundle = when (source) {
+    is P2pSendSource.Ready -> source.bundle
+    is P2pSendSource.DownloadL -> withContext(Dispatchers.IO) {
+        val item = source.item() ?: error("Битые данные item")
+        val luscious = EntryPointAccessors
+            .fromApplication(context.applicationContext, P2pSendEntryPoint::class.java)
+            .luscious()
+        val outboxLikes = mirrorRoot(
+            base = File(AppPath.p2p_outbox),
+            mainRoot = File(AppPath.main),
+            storeRoot = File(AppPath.l_likes),
+        )
+        val folder = lPersistPicsDetailsToFolder(item, outboxLikes, luscious, progress).getOrThrow()
+        LExporter.export(folder) ?: error("Не удалось подготовить файлы")
+    }
+}
+
+/**
+ * Экран «Отправка P2P»: подготовка файлов (outbox при необходимости),
+ * поиск устройств и передача.
+ */
+data class ScreenP2pSend(val source: P2pSendSource) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -58,12 +105,13 @@ data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
         var showPermissionDialog by remember { mutableStateOf(!hasPermissions) }
 
         val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
+        val downloadProgress = remember { LDownloadProgress(scope) }
         val controller = remember {
             P2pShareController(
                 nearby = NearbyClientImpl(context),
                 scope = scope,
                 myName = Build.MODEL ?: "Android",
-                bundle = bundle,
+                bundleProvider = { prepareBundle(context.applicationContext, source, downloadProgress) },
             )
         }
 
@@ -114,14 +162,22 @@ data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
             ) {
                 when (val s = state) {
                     is ShareState.Preparing -> {
+                        val pct by downloadProgress.percentDownload.collectAsState()
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("Подготовка файлов…", style = MaterialTheme.typography.headlineSmall)
+                            if (pct in 0f..1f) {
+                                LinearProgressIndicator(
+                                    progress = { pct },
+                                    modifier = Modifier.fillMaxWidth().height(8.dp)
+                                )
+                                Text("Подготовка файлов: ${(pct * 100).toInt()}%", modifier = Modifier.padding(top = 8.dp))
+                            } else {
+                                CircularProgressIndicator()
+                                Text("Подготовка файлов…", modifier = Modifier.padding(top = 16.dp))
+                            }
                         }
                     }
                     is ShareState.Idle,
@@ -174,6 +230,8 @@ data class ScreenP2pSend(val bundle: P2pExportBundle) : Screen {
                         // Показываем «Готово» секунду и закрываем экран сами.
                         // Уход с экрана отменяет эффект — двойного pop не будет.
                         LaunchedEffect(Unit) {
+                            // Передача подтверждена — outbox-staging больше не нужен.
+                            withContext(Dispatchers.IO) { AppPath.clearP2pOutbox() }
                             kotlinx.coroutines.delay(1_000)
                             navigator.pop()
                         }

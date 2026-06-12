@@ -46,6 +46,7 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import androidx.compose.material.icons.filled.Share
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.p2p.P2pExportBundle
+import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.export.XExporter
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.snackbar.SnackBar
@@ -165,7 +166,7 @@ private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDele
                 if (bundle == null) {
                     SnackBar.error("Нет скачанного видео для P2P")
                 } else {
-                    navigator.push(ScreenP2pSend(bundle))
+                    navigator.push(ScreenP2pSend(P2pSendSource.Ready(bundle)))
                 }
             }) {
                 Icon(

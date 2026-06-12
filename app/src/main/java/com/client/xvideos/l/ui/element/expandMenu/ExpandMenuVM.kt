@@ -18,7 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.gallery.GallerySaver
-import com.client.xvideos.common.p2p.P2pExportBundle
+import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
@@ -173,22 +173,20 @@ class ExpandMenuViewModel @Inject constructor(
 
     var p2pChooserItem by mutableStateOf<PicsDetails?>(null)
         private set
-    var p2pBundle by mutableStateOf<P2pExportBundle?>(null)
+    var p2pSource by mutableStateOf<P2pSendSource?>(null)
         private set
 
     fun onShareClicked(item: PicsDetails) { p2pChooserItem = item }
     fun dismissChooser() { p2pChooserItem = null }
-    fun dismissP2p() { p2pBundle = null }
+    fun dismissP2p() { p2pSource = null }
 
     fun startP2p(item: PicsDetails) {
         val url = item.url_to_original
         val folder = url?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
         val bundle = folder?.let { LExporter.export(it) }
-        if (bundle == null) {
-            SnackBar.error("Сначала сохрани (Like) — нет файлов для P2P")
-            return
-        }
-        p2pBundle = bundle
+        // Нет в Likes (или бандл битый) — экран отправки скачает item в outbox,
+        // не помечая его сохранённым.
+        p2pSource = if (bundle != null) P2pSendSource.Ready(bundle) else P2pSendSource.DownloadL.of(item)
     }
 
     /**
@@ -206,11 +204,11 @@ class ExpandMenuViewModel @Inject constructor(
                 onDismiss = { dismissChooser() },
             )
         }
-        p2pBundle?.let { bundle ->
+        p2pSource?.let { source ->
             // Навигация — side effect, нельзя звать прямо из композиции:
             // рекомпозиции дублировали бы push.
-            androidx.compose.runtime.LaunchedEffect(bundle) {
-                navigator?.push(ScreenP2pSend(bundle))
+            androidx.compose.runtime.LaunchedEffect(source) {
+                navigator?.push(ScreenP2pSend(source))
                 dismissP2p()
             }
         }
