@@ -27,4 +27,14 @@ class P2pManifestCodecTest {
         val back = P2pManifestCodec.fromBytes(bytes)
         assertEquals(sample, back)
     }
+
+    @Test
+    fun `album manifest round trip`() {
+        val m = P2pManifest(
+            type = P2pType.L_ALBUM,
+            metadataFileName = "42.album",
+            files = listOf(P2pManifestFile("42.album", "42.album", 1L, 10L)),
+        )
+        assertEquals(m, P2pManifestCodec.fromBytes(P2pManifestCodec.toBytes(m)))
+    }
 }

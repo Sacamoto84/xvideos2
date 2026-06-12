@@ -60,11 +60,16 @@ object P2pReceiveManager {
                     // R сюда не попадает — идёт через RLikesBundleImporter.
                     P2pType.R -> File(AppPath.r_cache_download)
                     P2pType.L -> File(AppPath.l_likes)
+                    P2pType.L_ALBUM -> File(AppPath.l_albums)
                 }
             },
             refreshFor = { type ->
                 // X: экран Saved перечитывает список при открытии.
-                if (type == P2pType.L) entryPoint.savedL().likes.refresh()
+                when (type) {
+                    P2pType.L -> entryPoint.savedL().likes.refresh()
+                    P2pType.L_ALBUM -> entryPoint.savedL().albums.refresh()
+                    else -> Unit
+                }
             },
             inboxRoot = File(AppPath.p2p_inbox),
             mainRoot = File(AppPath.main),

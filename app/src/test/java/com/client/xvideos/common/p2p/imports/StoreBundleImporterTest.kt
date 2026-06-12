@@ -45,4 +45,33 @@ class StoreBundleImporterTest {
         assertTrue(inbox.listFiles().isNullOrEmpty())
         assertEquals(P2pType.X, refreshed)
     }
+
+    @Test
+    fun `L_ALBUM manifest lands in albums root and refreshes`() = runTest {
+        val main = tmp.newFolder("xvideos")
+        val albumsRoot = File(main, "L/Album").apply { mkdirs() }
+        val inbox = File(main, "inbox").apply { mkdirs() }
+        val received = tmp.newFile("p2").apply { writeText("{json}") }
+        var refreshed: P2pType? = null
+
+        val importer = StoreBundleImporter(
+            storeRootFor = { type -> if (type == P2pType.L_ALBUM) albumsRoot else error("unexpected") },
+            refreshFor = { refreshed = it },
+            inboxRoot = inbox,
+            mainRoot = main,
+        )
+
+        importer.import(
+            P2pManifest(
+                type = P2pType.L_ALBUM,
+                metadataFileName = "42.album",
+                files = listOf(P2pManifestFile("42.album", "42.album", 1L, 6L)),
+            ),
+            mapOf(1L to received),
+        )
+
+        assertEquals("{json}", File(albumsRoot, "42.album").readText())
+        assertTrue(inbox.listFiles().isNullOrEmpty())
+        assertEquals(P2pType.L_ALBUM, refreshed)
+    }
 }
