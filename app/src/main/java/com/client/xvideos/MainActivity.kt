@@ -9,8 +9,10 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -134,7 +136,12 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     @OptIn(ExperimentalVoyagerApi::class, ExperimentalLayoutApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        //enableEdgeToEdge(statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT))
+        // Edge-to-edge: на 26-28 красит navigationBarColor, на 29-34 дополнительно
+        // снимает contrast-scrim, на 35+ цвет задаёт приложение (корневой Box в setContent).
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(0xFF212121.toInt()),
+        )
         super.onCreate(savedInstanceState)
 
         val window = this.window
@@ -142,15 +149,14 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         val windowInsetsController = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
         windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
-        window?.let { WindowCompat.setDecorFitsSystemWindows(window, false) }
+        // Статус-бар скрыт всегда (раньше это делал windowFullscreen из темы)
+        windowInsetsController?.hide(WindowInsetsCompat.Type.statusBars())
+
         window?.attributes = window.attributes?.apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
-
-        //windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
-
 
         if (!PermissionStorage.hasPermissions(this)) {
             val intent = Intent(this, PermissionScreenActivity::class.java)
