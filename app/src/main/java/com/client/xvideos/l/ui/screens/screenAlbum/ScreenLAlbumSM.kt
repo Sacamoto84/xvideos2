@@ -8,9 +8,15 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
+import com.client.xvideos.common.p2p.P2pSendSource
+import com.client.xvideos.common.p2p.export.LAlbumExporter
+import com.client.xvideos.common.p2p.mirrorRoot
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.featured.saved.SavedL
+import com.client.xvideos.l.model.AlbumDetails
+import java.io.File
 import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
 import com.client.xvideos.l.featured.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
@@ -63,6 +69,34 @@ class ScreenLAlbumSM @AssistedInject constructor(
     fun saveAlbum() {
         scope.launch {
             albumInfo.value?.let { saved.albums.add(it.albumInfo.value) }
+        }
+    }
+
+    /** Источник для экрана P2P-отправки альбома; экран наблюдает и пушит ScreenP2pSend. */
+    var p2pAlbumSource by mutableStateOf<P2pSendSource?>(null)
+        private set
+
+    fun dismissP2pAlbum() { p2pAlbumSource = null }
+
+    /**
+     * Поделиться альбомом по P2P: бандл — только файл метаданных `<id>.album`
+     * (из l_albums, если альбом сохранён, иначе пишется в outbox-зеркало).
+     */
+    fun shareAlbumP2p(album: AlbumDetails) {
+        scope.launch(Dispatchers.IO) {
+            val outboxAlbumRoot = mirrorRoot(
+                base = File(AppPath.p2p_outbox),
+                mainRoot = File(AppPath.main),
+                storeRoot = File(AppPath.l_albums),
+            )
+            val bundle = LAlbumExporter.export(album, File(AppPath.l_albums), outboxAlbumRoot)
+            if (bundle == null) {
+                SnackBar.error("Не удалось подготовить альбом для P2P")
+                return@launch
+            }
+            withContext(Dispatchers.Main) {
+                p2pAlbumSource = P2pSendSource.Ready(bundle)
+            }
         }
     }
 

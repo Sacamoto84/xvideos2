@@ -70,7 +70,9 @@ import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDet
 import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumDialogDeleteAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
+import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum
+import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonShareAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoTags
@@ -156,6 +158,14 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
             })
         }
         /* ---------- /Диалог ---------- */
+
+        vm.p2pAlbumSource?.let { source ->
+            // Навигация — side effect, нельзя звать прямо из композиции.
+            LaunchedEffect(source) {
+                navigator.push(ScreenP2pSend(source))
+                vm.dismissP2pAlbum()
+            }
+        }
 
         Scaffold(
             floatingActionButton = {
@@ -257,6 +267,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                     parsed.tags.reversed().filter { it.count > 0 }
                                 }) { navigator.push(ScreenLAlbumLandingTag(it)) }
                                 AlbumInfoButtonSaveAlbum(saved, onClick = { if (!saved) { vm.saveAlbum() } else { itemPendingDelete = parsed } })
+                                AlbumInfoButtonShareAlbum(onClick = { vm.shareAlbumP2p(parsed) })
                                 AlbumInfoFilterButton( parsed, vm.showOnlyAnimated) { vm.showOnlyAnimated = it }
                                 LAlbumNetworkIssuePanel(
                                     albumPicsDetails = albumPicsDetails,
