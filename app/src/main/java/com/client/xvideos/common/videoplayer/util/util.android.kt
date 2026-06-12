@@ -54,23 +54,25 @@ fun LandscapeOrientation(
         WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
     fun reset() {
+        // Возврат к глобальной конфигурации MainActivity: SHORT_EDGES, edge-to-edge
+        // не выключаем (setDecorFitsSystemWindows(true) ломал прозрачные бары).
         if (enableFullEdgeToEdge) {
-            window?.let {  WindowCompat.setDecorFitsSystemWindows(window, true) }
             window?.attributes = window.attributes?.apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
                 }
             }
         }
-        windowInsetsController?.show(WindowInsetsCompat.Type.systemBars())
+        windowInsetsController?.show(WindowInsetsCompat.Type.navigationBars())
+        // Страховка: статус-бар обязан остаться скрытым
+        windowInsetsController?.hide(WindowInsetsCompat.Type.statusBars())
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     LaunchedEffect(isLandscape) {
         if (isLandscape) {
             if (enableFullEdgeToEdge) {
-                window?.let {  WindowCompat.setDecorFitsSystemWindows(window, false) }
                 window?.attributes = window.attributes?.apply {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         layoutInDisplayCutoutMode =
@@ -78,7 +80,7 @@ fun LandscapeOrientation(
                     }
                 }
             }
-            windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
+            windowInsetsController?.hide(WindowInsetsCompat.Type.navigationBars())
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         } else {
             reset()
