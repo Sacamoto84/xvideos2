@@ -1,7 +1,6 @@
 package com.client.xvideos
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
@@ -37,8 +36,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -67,7 +64,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -196,7 +192,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
             KeepScreenOn()
             XvideosTheme(darkTheme = true) {
-                //EdgeToEdgeFix()
 
                 // Подложка: на API 35+ системный бар прозрачный, полосу #212121 под
                 // кнопками рисует это приложение. tappableElement снизу = высота
@@ -452,28 +447,4 @@ private fun ButtonSelect(iconId: Int, tag : String= "", onClick: () -> Unit) {
 @Composable
 private fun MenuPreview() {
     MenuScreen.Content()
-}
-
-/**
- * Вспомогательный composable для дополнительной коррекции edge-to-edge поведения.
- *
- * Принудительно обновляет insets и скрывает status bar, когда это необходимо.
- */
-@Composable
-fun EdgeToEdgeFix() {
-    val context = LocalContext.current
-    val window = (context as? Activity)?.window ?: return
-    val controller = WindowCompat.getInsetsController(window, window.decorView)
-
-    LaunchedEffect(Unit) {
-        // Поведение: показывать панели при свайпе
-        controller.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-
-        // Не скрываем навигацию — только статус-бар (если нужно)
-        controller.hide(WindowInsetsCompat.Type.statusBars())
-
-        // "Пинаем" для корректного обновления insets
-        window.decorView.requestApplyInsets()
-    }
 }
