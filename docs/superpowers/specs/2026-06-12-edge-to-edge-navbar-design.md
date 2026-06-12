@@ -106,8 +106,10 @@ Box(Modifier.fillMaxSize().background(Color(0xFF212121))) {
 - **Запрещено**: `setDecorFitsSystemWindows(true)` при выходе —
   edge-to-edge постоянный, окно не перенастраивается. Оба текущих вызова
   удалить.
-- Переключения cutout-режима в `util.android.kt`
-  (SHORT_EDGES ↔ DEFAULT при повороте) — оставить как есть.
+- Переключения cutout-режима в `util.android.kt`: логика «когда» не
+  меняется, но reset() восстанавливает `SHORT_EDGES` (глобальная
+  конфигурация MainActivity), а не `DEFAULT` — иначе после выхода из
+  плеера у выреза появляется чёрная полоса.
 
 ### 4. Граничные случаи
 
