@@ -65,7 +65,9 @@ object P2pReceiveManager {
             refreshFor = { type ->
                 // X: экран Saved перечитывает список при открытии.
                 if (type == P2pType.L) entryPoint.savedL().likes.refresh()
-            }
+            },
+            inboxRoot = File(AppPath.p2p_inbox),
+            mainRoot = File(AppPath.main),
         )
 
         // R: «лайк» — запись метаданных в FileDB, файлы не раскладываем

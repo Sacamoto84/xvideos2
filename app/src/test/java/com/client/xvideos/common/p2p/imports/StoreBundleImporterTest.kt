@@ -16,14 +16,18 @@ class StoreBundleImporterTest {
     @get:Rule val tmp = TemporaryFolder()
 
     @Test
-    fun `imports into store root for type and triggers refresh`() = runTest {
-        val xRoot = tmp.newFolder("xRoot")
+    fun `installs via inbox then merges into store root and triggers refresh`() = runTest {
+        val main = tmp.newFolder("xvideos")
+        val xRoot = File(main, "X/Download").apply { mkdirs() }
+        val inbox = File(main, "inbox").apply { mkdirs() }
         val received = tmp.newFile("p1").apply { writeText("VID") }
         var refreshed: P2pType? = null
 
         val importer = StoreBundleImporter(
             storeRootFor = { type -> if (type == P2pType.X) xRoot else error("unexpected") },
             refreshFor = { type -> refreshed = type },
+            inboxRoot = inbox,
+            mainRoot = main,
         )
 
         val manifest = P2pManifest(
@@ -37,6 +41,8 @@ class StoreBundleImporterTest {
         val target = File(xRoot, "8.mp4")
         assertTrue(target.exists())
         assertEquals("VID", target.readText())
+        // staging опустошён после merge
+        assertTrue(inbox.listFiles().isNullOrEmpty())
         assertEquals(P2pType.X, refreshed)
     }
 }
