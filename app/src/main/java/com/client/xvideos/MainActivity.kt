@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.IconButton
@@ -147,7 +148,8 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
-        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
+
+        //windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
 
 
         if (!PermissionStorage.hasPermissions(this)) {
@@ -188,6 +190,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
+                        .systemBarsPadding()
                         .background(Color.Black)
                         .semantics { testTagsAsResourceId = true }
                     //.windowInsetsPadding(WindowInsets.ime)

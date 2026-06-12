@@ -13,7 +13,7 @@
 
         <!-- Чёрный фон -->
         <!--        <item name="android:background">#000000</item>-->
-        <item name="android:windowBackground">#00FF00</item>
+        <item name="android:windowBackground">#212121</item>
 
     </style>
 

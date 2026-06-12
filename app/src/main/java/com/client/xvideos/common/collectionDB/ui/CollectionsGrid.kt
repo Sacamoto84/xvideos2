@@ -7,11 +7,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -25,11 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
+import com.client.xvideos.common.theme.Theme
 import com.composeunstyled.Text
 
 /**
@@ -55,13 +61,25 @@ fun CollectionsGrid(
             if (topBar != null) {
                 topBar()
             } else {
-                Text(
-                    ">Коллекция>$selectedCollection",
-                    modifier = Modifier.padding(start = 8.dp),
-                    color = style.titleColor,
-                    fontSize = 18.sp,
-                    fontFamily = style.titleFontFamily
-                )
+
+                Box(
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        // Высота = вырез камеры, минимум 16dp (union = max).
+                        // statusBars не годится: бары спрятаны, их инсет всегда 0.
+                        .windowInsetsTopHeight(WindowInsets.displayCutout.union(WindowInsets(top = 16.dp))),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Text(
+                        ">Коллекция>$selectedCollection",
+                        modifier = Modifier,
+                        color = Theme.R.colorYellow,
+                        fontSize = 18.sp,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         },
         containerColor = style.backgroundColor

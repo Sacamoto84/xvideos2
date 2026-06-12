@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -85,7 +86,9 @@ object R_Screen_Saved_LikesTab : Screen {
                 },
                 //gotoPosition = vm.likedHost.currentIndexGoto,
                 contentPadding = PaddingValues(0.dp),
-                contentBeforeList = { },
+                contentBeforeList = {
+                    Box(modifier = Modifier.displayCutoutPadding()){}
+                },
                 isRunLike = true
             )
 

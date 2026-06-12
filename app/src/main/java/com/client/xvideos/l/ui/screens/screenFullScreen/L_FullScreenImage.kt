@@ -7,8 +7,11 @@ import android.os.Parcelable
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -397,7 +400,8 @@ class L_FullScreenImage(
 
             AnimatedVisibility(
                 visible = !isFullScreen,
-                enter = fadeIn() ,
+                // Панель выезжает снизу и уезжает вниз ({ it } = на полную свою высоту).
+                enter = fadeIn(),
                 exit  = fadeOut(),
             )
             {

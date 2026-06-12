@@ -7,6 +7,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
@@ -22,14 +24,25 @@ import com.google.gson.stream.JsonWriter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
+import okhttp3.ConnectionSpec
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
     val USER_AGENT: String =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 
     @SuppressLint("CheckResult")
     val client = HttpClient(OkHttp) {
+        engine {
+            config {
+                connectTimeout(30, TimeUnit.SECONDS)
+                readTimeout(30, TimeUnit.SECONDS)
+                writeTimeout(30, TimeUnit.SECONDS)
+                followRedirects(true)
+                connectionSpecs(listOf(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+            }
+        }
         install(ContentNegotiation) {
             gson {
                 this.registerTypeAdapter(UInt::class.java, UIntAdapter()).create()
@@ -37,14 +50,23 @@ object ApiClient {
                 this.registerTypeAdapter(Long::class.java, LongAdapter()).create()
             }
         }
+        install(HttpRequestRetry) {
+            retryOnExceptionOrServerErrors(maxRetries = 3)
+            exponentialDelay()
+            modifyRequest { if (it.url.pathSegments.contains("auth")) it.headers.remove(HttpHeaders.Authorization) }
+        }
         defaultRequest {
             headers.append("Referer", "https://www.redgifs.com/")
             headers.append("Origin", "https://www.redgifs.com")
             headers.append(HttpHeaders.UserAgent, USER_AGENT)
-            headers.append(HttpHeaders.Accept, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-            headers.append(HttpHeaders.AcceptEncoding, "identity")
-            headers.append(HttpHeaders.AcceptLanguage, "ru,en;q=0.9")
+            headers.append(HttpHeaders.Accept, "application/json, text/plain, */*")
+            headers.append(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
             //headers.append(HttpHeaders.Range, "bytes=0-500000")
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 30000
+            connectTimeoutMillis = 30000
+            socketTimeoutMillis = 30000
         }
         expectSuccess = true
     }

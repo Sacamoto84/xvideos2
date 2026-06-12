@@ -1,7 +1,5 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
-import com.client.xvideos.common.theme.Theme
-
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,13 +9,16 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -45,6 +46,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,22 +63,23 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.toPrettyCount
-import com.client.xvideos.r.ui.profile.ScreenRedProfile
-import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
-import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
-import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
-import com.composeunstyled.Text
-import com.client.xvideos.r.model.Order
-import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.common.search.R_SearchNiches
+import com.client.xvideos.r.model.Order
+import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.network.api.RedApi
+import com.client.xvideos.r.ui.profile.ScreenRedProfile
+import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
+import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
+import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import com.client.xvideos.ui.theme.XvideosTheme
+import com.composeunstyled.Text
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -117,16 +120,26 @@ object R_Screen_CreatorsTab : Screen {
         )
 
         Scaffold(
-containerColor = Theme.background
-,
+            containerColor = Theme.background,
             topBar = {
-            Text(
-                ">Авторы",
-                modifier = Modifier.padding(start = 8.dp),
-                color = Theme.R.colorYellow,
-                fontSize = 18.sp,
-                fontFamily = Theme.R.fontFamilyPopinsRegular,
-            )
+                Box(
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        // Высота = вырез камеры, минимум 16dp (union = max).
+                        // statusBars не годится: бары спрятаны, их инсет всегда 0.
+                        .windowInsetsTopHeight(WindowInsets.displayCutout.union(WindowInsets(top = 16.dp))),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Text(
+                        "Авторы",
+                        modifier = Modifier,
+                        color = Theme.R.colorYellow,
+                        fontSize = 18.sp,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular,
+                        textAlign = TextAlign.Center
+                    )
+                }
         }) { padding ->
             Box(
                 modifier = Modifier
@@ -315,7 +328,11 @@ private fun DeleteCreatorDialog(
         AlertDialog(
             icon = {
                 pending.profileImageUrl?.let {
-                    UrlImage(it, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(96.dp))
+                    UrlImage(
+                        it, modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .size(96.dp)
+                    )
                 }
             },
             onDismissRequest = onDismiss,

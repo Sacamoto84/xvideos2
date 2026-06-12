@@ -96,7 +96,9 @@
             android:theme="@style/Theme.Xvideos"
             android:windowBackground="@color/black"
             android:windowIsTranslucent="false"
+            android:fitsSystemWindows="true"
             android:windowSoftInputMode="adjustResize">
+
         </activity>
 
         <provider

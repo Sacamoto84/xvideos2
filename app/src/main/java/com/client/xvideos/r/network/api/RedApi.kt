@@ -427,10 +427,18 @@ private suspend fun cacheMediaResponse(
         Timber.i("!!! Берем данные из Сети ${route.url}")
         // Запрос из сети
         val res = redApi.api.request<MediaResponse>(route)
-        // Сохраняем в кеш (с текущим временем)
-        val jsonContent = gson.toJson(res.getOrNull())
-        cache.put(route.url, jsonContent)
-        return res.getOrNull()!!
+        
+        val result = res.getOrNull()
+        if (result != null) {
+            // Сохраняем в кеш (с текущим временем)
+            val jsonContent = gson.toJson(result)
+            cache.put(route.url, jsonContent)
+            return result
+        } else {
+            // Если ошибка сети и нет в кеше — бросаем исключение или возвращаем пустой объект
+            Timber.e(res.exceptionOrNull(), "!!! Ошибка сети при запросе ${route.url}")
+            return MediaResponse(0, 0, 0, emptyList(), emptyList(), emptyList(), emptyList())
+        }
     }
 
 }

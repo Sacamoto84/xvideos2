@@ -51,12 +51,12 @@ fun SwipeableBottomPanel(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(swipeAreaHeight)
-                .swipeable(
-                    state = swipeableState,
-                    anchors = anchors,
-                    thresholds = { _, _ -> FractionalThreshold(0.3f) },
-                    orientation = Orientation.Vertical
-                )
+//                .swipeable(
+//                    state = swipeableState,
+//                    anchors = anchors,
+//                    thresholds = { _, _ -> FractionalThreshold(0.3f) },
+//                    orientation = Orientation.Vertical
+//                )
         )
 
         // Основная панель
@@ -65,12 +65,12 @@ fun SwipeableBottomPanel(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(contentHeight)
-                .offset {
-                    IntOffset(
-                        x = 0,
-                        y = swipeableState.offset.value.roundToInt()
-                    )
-                }
+//                .offset {
+//                    IntOffset(
+//                        x = 0,
+//                        y = swipeableState.offset.value.roundToInt()
+//                    )
+//                }
                 .background(Color.DarkGray, RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
         ) {
             // Индикатор
