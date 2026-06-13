@@ -53,8 +53,12 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
+import com.client.xvideos.common.p2p.P2pSendSource
+import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
@@ -87,6 +91,8 @@ object L_Screen_CollectionTab : Screen {
         val vm = getScreenModel<ScreenSavedCollectionSM>()
 
         val savedL = vm.savedL
+
+        val navigator = LocalNavigator.currentOrThrow
 
         val selectedCollection = savedL.collection.currentCollectionName
 
@@ -144,6 +150,13 @@ object L_Screen_CollectionTab : Screen {
                             onClick = {
                                 itemPendingDelete = pending
                                 itemPendingAction = null
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem) },
+                            onClick = {
+                                itemPendingAction = null
+                                navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
                             }
                         )
                     }
