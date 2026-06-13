@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -77,10 +78,7 @@ fun SavedLikesItemExpandMenu(
             DropdownMenuItem_SaveToGallery(item, onClick = { onSaveToGallery(it) }) { expanded = false }
 
             // Show Delete only when NOT in collection view
-            if (!isCollection) {
-                DropdownMenuItem_Delete(item, onClick = {onDelete(it)}
-                ){ expanded = false }
-            }
+            if (!isCollection) { DropdownMenuItem_Delete(item, onClick = {onDelete(it)} ){ expanded = false } }
 
             DropdownMenuItem_AddCollection(item, savedL) { expanded = false }
 

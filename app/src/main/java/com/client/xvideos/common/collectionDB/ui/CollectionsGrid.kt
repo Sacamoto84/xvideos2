@@ -72,7 +72,7 @@ fun CollectionsGrid(
                 ) {
 
                     Text(
-                        ">Коллекция>$selectedCollection",
+                        ">$selectedCollection",
                         modifier = Modifier,
                         color = Theme.R.colorYellow,
                         fontSize = 18.sp,

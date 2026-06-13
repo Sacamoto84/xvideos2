@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.screenRoot.LocalMainNavigator
 import com.client.xvideos.screenRoot.LocalRootScreenModel
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.settings.Settings
@@ -100,6 +101,10 @@ fun L_LazyRowPictureDetails(
 ) {
     val expandMenuViewModel: ExpandMenuViewModel = hiltViewModel()
     val navigator = LocalNavigator.currentOrThrow
+    // FullScreen — глобальный оверлей: пушим на корневой навигатор, иначе из
+    // вложенного навигатора (открытая коллекция) экран впишется в область таба,
+    // оставив нижние навбары. Fallback на локальный, если корневой недоступен.
+    val mainNavigator = LocalMainNavigator.current
     val rootVm = LocalRootScreenModel.current
     val haptic = LocalHapticFeedback.current
 
@@ -144,7 +149,7 @@ fun L_LazyRowPictureDetails(
 
                         fun openFullScreen() {
                             fullScreenImageFilteredPicArray = host.filteredPic.toList()
-                            navigator.push(
+                            (mainNavigator ?: navigator).push(
                                 L_FullScreenImage(
                                     item = item,
                                     onClose = { position ->

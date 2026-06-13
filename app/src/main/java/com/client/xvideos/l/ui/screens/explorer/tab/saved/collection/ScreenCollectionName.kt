@@ -190,14 +190,12 @@ private fun LCollectionDetailTopBar(
     var menuExpanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Theme.background)
+        modifier = Modifier.fillMaxWidth().background(Theme.background)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                ">Коллекция>$collectionName",
+                ">$collectionName",
                 modifier = Modifier.weight(1f),
                 color = Theme.L.primaryColor,
                 fontSize = 18.sp,
@@ -208,13 +206,15 @@ private fun LCollectionDetailTopBar(
                     Text("Дубли: $duplicateCount", color = Theme.L.primaryColor, style = Theme.L.Type.button)
                 }
             }
-            IconButton(onClick = { searchVisible = !searchVisible }) {
-                Icon(
-                    imageVector = if (searchVisible) Icons.Default.Close else Icons.Default.Search,
-                    contentDescription = null,
-                    tint = Theme.L.textColor
-                )
-            }
+
+//            IconButton(onClick = { searchVisible = !searchVisible }) {
+//                Icon(
+//                    imageVector = if (searchVisible) Icons.Default.Close else Icons.Default.Search,
+//                    contentDescription = null,
+//                    tint = Theme.L.textColor
+//                )
+//            }
+
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(Icons.Default.MoreVert, contentDescription = null, tint = Theme.L.textColor)
@@ -224,6 +224,7 @@ private fun LCollectionDetailTopBar(
                     onDismissRequest = { menuExpanded = false },
                     containerColor = Theme.L.grey5
                 ) {
+
                     DropdownMenuItem(
                         text = { Text("Проверить дубли", color = Theme.L.textColor, style = Theme.L.Type.menuItem) },
                         onClick = {
@@ -231,6 +232,7 @@ private fun LCollectionDetailTopBar(
                             menuExpanded = false
                         }
                     )
+
                 }
             }
         }

@@ -20,7 +20,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -123,7 +126,11 @@ object L_Screen_CollectionTab : Screen {
             )
         }
 
+        val colorDialogConteiner = Theme.tabLevel4
+
+
         itemPendingAction?.let { pending ->
+
             AlertDialog(
                 onDismissRequest = { itemPendingAction = null },
                 title = {
@@ -131,43 +138,53 @@ object L_Screen_CollectionTab : Screen {
                         "Действие с коллекцией",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = Theme.L.grey7
+                        color = Color.White
                     )
                 },
                 text = {
                     Column {
-                        Text(pending, fontSize = 16.sp, color = Theme.L.grey7)
+
+                        //Название коллекции
+                        Text(pending, fontSize = 16.sp, color = Theme.L.b0)
+
                         DropdownMenuItem(
-                            text = { Text("Переименовать", style = Theme.L.Type.menuItem) },
+                            text = { Text("Переименовать",  style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                             onClick = {
                                 renameValue = pending
                                 itemPendingRename = pending
                                 itemPendingAction = null
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.Edit, contentDescription = null, tint = Color.White)
                             }
                         )
+
                         DropdownMenuItem(
-                            text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Theme.L.red)) },
-                            onClick = {
-                                itemPendingDelete = pending
-                                itemPendingAction = null
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem) },
+                            text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                             onClick = {
                                 itemPendingAction = null
                                 navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                            onClick = {
+                                itemPendingDelete = pending
+                                itemPendingAction = null
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White)
                             }
                         )
                     }
                 },
                 confirmButton = {},
-                dismissButton = {
-                    TextButton(
-                        onClick = { itemPendingAction = null }
-                    ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
-                },
-                containerColor = Theme.L.grey0,
+                dismissButton = {},
+                containerColor = colorDialogConteiner,
                 titleContentColor = Theme.L.grey7,
                 textContentColor = Theme.L.grey6
             )
@@ -206,7 +223,7 @@ object L_Screen_CollectionTab : Screen {
                         onClick = { itemPendingRename = null }
                     ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
                 },
-                containerColor = Theme.L.grey5,
+                containerColor = colorDialogConteiner,
                 titleContentColor = Theme.L.textColor,
                 textContentColor = Theme.L.textColor
             )
@@ -248,7 +265,7 @@ object L_Screen_CollectionTab : Screen {
                     ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
                 },
 
-                containerColor = Theme.L.grey5,
+                containerColor = colorDialogConteiner,
                 titleContentColor = Theme.L.textColor,
                 textContentColor = Theme.L.textColor
             )
