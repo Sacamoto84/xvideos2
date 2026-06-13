@@ -2,6 +2,7 @@ package com.client.xvideos.common.p2p.export
 
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pType
+import com.client.xvideos.common.zip.ZipUtils
 import com.client.xvideos.l.model.AlbumDetails
 import com.google.gson.GsonBuilder
 import java.io.File
@@ -57,6 +58,29 @@ object LAlbumExporter {
             val outFile = File(outboxAlbumRoot, fileName)
             outFile.writeText(gson.toJson(album), Charsets.UTF_8)
             P2pExportBundle(P2pType.L_ALBUM, outboxAlbumRoot, listOf(outFile), outFile)
+        }.getOrNull()
+    }
+}
+
+/**
+ * Коллекция L — вся папка коллекции одним zip-архивом (реальные файлы, не
+ * только метаданные). Архив пишется в [outboxDir] как `<имя>.zip`; записи
+ * внутри начинаются с имени коллекции, поэтому на приёме распаковка в зеркало
+ * `inbox/L/Collection` сразу даёт `inbox/L/Collection/<имя>/...`.
+ * Возвращает null, если коллекции нет или она пуста (нет ни одного файла).
+ */
+object LCollectionExporter {
+
+    fun export(collectionName: String, collectionRoot: File, outboxDir: File): P2pExportBundle? {
+        val source = File(collectionRoot, collectionName)
+        if (!source.isDirectory) return null
+        if (source.walkTopDown().none { it.isFile }) return null
+
+        return runCatching {
+            outboxDir.mkdirs()
+            val zipFile = File(outboxDir, "$collectionName.zip")
+            ZipUtils.zipDirectory(source, zipFile)
+            P2pExportBundle(P2pType.L_COLLECTION, outboxDir, listOf(zipFile), null)
         }.getOrNull()
     }
 }

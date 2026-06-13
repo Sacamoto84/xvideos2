@@ -3,6 +3,7 @@ package com.client.xvideos.common.p2p.export
 import com.client.xvideos.common.p2p.P2pManifestFactory
 import com.client.xvideos.common.p2p.P2pType
 import com.client.xvideos.common.p2p.mirrorRoot
+import com.client.xvideos.common.zip.ZipUtils
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Content
 import com.client.xvideos.l.model.Cover
@@ -137,5 +138,39 @@ class ExportersTest {
                 File(main, "outbox/L/Album"),
             )
         )
+    }
+
+    @Test
+    fun `L collection exporter zips collection into outbox`() {
+        val main = tmp.newFolder("xvideos")
+        val collectionRoot = File(main, "L/Collection").apply { mkdirs() }
+        val outboxDir = File(main, "outbox").apply { mkdirs() }
+        val col = File(collectionRoot, "MyCol/item1").apply { mkdirs() }
+        File(col, "media.jpg").writeText("M")
+        File(col, "metadata.json").writeText("{}")
+
+        val bundle = LCollectionExporter.export("MyCol", collectionRoot, outboxDir)!!
+
+        assertEquals(P2pType.L_COLLECTION, bundle.type)
+        assertEquals(outboxDir, bundle.storeRoot)
+        val zip = bundle.files.single()
+        assertEquals("MyCol.zip", zip.name)
+        // содержимое архива воспроизводит коллекцию с именем-префиксом
+        val check = File(main, "check").apply { mkdirs() }
+        ZipUtils.unzip(zip, check)
+        assertEquals("M", File(check, "MyCol/item1/media.jpg").readText())
+    }
+
+    @Test
+    fun `L collection exporter returns null for missing or empty collection`() {
+        val main = tmp.newFolder("xvideos")
+        val collectionRoot = File(main, "L/Collection").apply { mkdirs() }
+        val outboxDir = File(main, "outbox").apply { mkdirs() }
+
+        // нет папки
+        assertNull(LCollectionExporter.export("Nope", collectionRoot, outboxDir))
+        // папка есть, но пустая
+        File(collectionRoot, "Empty").mkdirs()
+        assertNull(LCollectionExporter.export("Empty", collectionRoot, outboxDir))
     }
 }
