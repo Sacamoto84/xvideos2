@@ -23,6 +23,16 @@
 - `get_screenshot` of the node → visual sanity vs the Compose source / real screen.
 - `get_design_context` or `get_variable_defs` on the node → confirm fills reference a Variable (named token), not a raw hex literal.
 
+**Starter-plan constraint (discovered at execution).** The Figma account is on the
+Starter plan, and the Figma MCP cannot persist additional pages on it (only the
+file's single default page survives a commit). So the 8 logical pages `00–07`
+become **8 Figma Sections on one page** `Design Copy (as-is)` (file key
+`7NP57du3gbSpG3RtjQMTG1`). File-level Variables are unaffected (still one shared
+source of truth). Section ids: `00`=`8:2`, `01`=`8:3`, `02`=`8:4`, `03`=`8:5`,
+`04`=`8:6`, `05`=`8:7`, `06`=`8:8`, `07`=`8:9`. Everywhere the plan says "page NN",
+read "section NN". Also: `use_figma` returns **no values** — read state only via
+`get_metadata` / `get_screenshot` / `get_variable_defs`.
+
 **Frame size:** phone `360×800` dp. One frame per screen; add a second frame for a state (loading/empty/content) **only if colors differ**.
 
 **Annotation format:** numbered callouts on the frame → a side legend mapping `element → token (hex)`. Every frame and component fill must reference a Variable (exception: deliberate `Unsorted/*` entries).
