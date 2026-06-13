@@ -8,6 +8,7 @@ import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.p2p.imports.StoreBundleImporter
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
 import com.client.xvideos.common.p2p.imports.BundleImporter
+import com.client.xvideos.common.p2p.imports.LCollectionBundleImporter
 import com.client.xvideos.common.p2p.imports.RLikesBundleImporter
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.r.common.saved.SavedRed
@@ -80,9 +81,18 @@ object P2pReceiveManager {
         // (LikesTab рендерит по URL); list.add сам обновляет Compose-state.
         val rLikesImporter = RLikesBundleImporter(addLike = { entryPoint.savedRed().likes.add(it) })
 
+        // L_COLLECTION: принятый zip распаковывается в зеркало inbox и мёржится в store.
+        val lCollectionImporter = LCollectionBundleImporter(
+            inboxRoot = File(AppPath.p2p_inbox),
+            mainRoot = File(AppPath.main),
+            collectionStoreRoot = File(AppPath.l_collection),
+            refresh = { entryPoint.savedL().collection.refreshCollectionList() },
+        )
+
         val importer = BundleImporter { manifest, files ->
             when (manifest.type) {
                 P2pType.R -> rLikesImporter.import(manifest, files)
+                P2pType.L_COLLECTION -> lCollectionImporter.import(manifest, files)
                 else -> storeImporter.import(manifest, files)
             }
         }

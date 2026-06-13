@@ -30,6 +30,7 @@ import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.P2pShareController
 import com.client.xvideos.common.p2p.ShareState
+import com.client.xvideos.common.p2p.export.LCollectionExporter
 import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.common.p2p.mirrorRoot
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
@@ -85,6 +86,13 @@ private suspend fun prepareBundle(
         )
         val folder = lPersistPicsDetailsToFolder(item, outboxLikes, luscious, progress).getOrThrow()
         LExporter.export(folder) ?: error("Не удалось подготовить файлы")
+    }
+    is P2pSendSource.ShareCollection -> withContext(Dispatchers.IO) {
+        LCollectionExporter.export(
+            collectionName = source.collectionName,
+            collectionRoot = File(AppPath.l_collection),
+            outboxDir = File(AppPath.p2p_outbox),
+        ) ?: error("Не удалось подготовить коллекцию")
     }
 }
 

@@ -27,4 +27,7 @@ sealed interface P2pSendSource : Serializable {
             fun of(item: PicsDetails) = DownloadL(Gson().toJson(item))
         }
     }
+
+    /** Коллекция L: зипуется в outbox на экране отправки и шлётся одним архивом. */
+    data class ShareCollection(val collectionName: String) : P2pSendSource
 }
