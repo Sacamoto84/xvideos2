@@ -61,6 +61,7 @@ object P2pReceiveManager {
                     P2pType.R -> File(AppPath.r_cache_download)
                     P2pType.L -> File(AppPath.l_likes)
                     P2pType.L_ALBUM -> File(AppPath.l_albums)
+                    P2pType.L_COLLECTION -> File(AppPath.l_collection)
                 }
             },
             refreshFor = { type ->
