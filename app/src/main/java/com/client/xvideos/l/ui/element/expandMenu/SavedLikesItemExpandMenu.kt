@@ -30,6 +30,7 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_AddCo
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Delete
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveToGallery
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SetCover
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -86,6 +87,7 @@ fun SavedLikesItemExpandMenu(
             // Show RemoveFromCollection always (when in collection view or when item is in any collection)
             if (isCollection) {
                 DropdownMenuItem_RemoveFromCollection(item, onRemoveFromCollection, savedL) { expanded = false }
+                DropdownMenuItem_SetCover(item, savedL) { expanded = false }
             }
 
         }
