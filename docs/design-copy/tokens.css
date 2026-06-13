@@ -1,0 +1,181 @@
+/* App color tokens — source of truth, 1:1 with code.
+   Theme.* / Theme.R / Theme.L / Theme.X  -> common/theme/Theme.kt
+   Legacy PornHub* + Material seeds        -> ui/theme/Color.kt, ui/theme/Theme.kt
+   misc-*  -> hardcoded Color(0x..) literals not in the token system
+             (audit: docs/superpowers/specs/2026-06-13-figma-design-copy-unsorted-colors.md)
+   Dark-only app; single mode. */
+
+:root {
+  /* ---- Theme/Shared (backgrounds) ---- */
+  --sh-background: #262626;
+  --sh-backgroundAppRoot: #262626;
+  --sh-tabLevel0: #212121;
+  --sh-tabLevel1: #282828;
+  --sh-tabLevel2: #333333;
+  --sh-tabLevel3: #444444;
+  --sh-tabLevel4: #555555;
+  --sh-tabLevel5: #666666;
+  --sh-tabLevel6: #777777;
+
+  /* ---- Theme/R (unique R) ---- */
+  --r-colorCommonBackground: #303030;
+  --r-colorBottomBarDivider: #323153;
+  --r-colorYellow: #EBFA63;
+  --r-colorBlue: #61B2EB;
+  --r-colorRed: #EA616F;
+  --r-colorTextGray: #8B8B8B;
+  --r-colorBorderSelect: #444444;
+  --r-colorBorderGray: #3F3F3F;
+
+  /* ---- Theme/L (unique L) ---- */
+  --l-grey0: #dedede;
+  --l-grey1: #bababa;
+  --l-grey2: #9c9c9c;
+  --l-grey3: #3b3b3b;
+  --l-grey4: #333333;
+  --l-grey5: #292929;
+  --l-grey6: #262626;
+  --l-grey7: #1c1c1c;
+  --l-g0: #4CAF50;
+  --l-r0: #F44336;
+  --l-b0: #2196F3;
+  --l-lavender: #a3aff5;
+  --l-primaryColor: #ff96a3;
+  --l-red: #C9554C;
+  --l-secondaryColor: #3b3b3b;
+  --l-textColor: #bababa; /* = grey1 */
+  --l-expandMenu-tint: #1F1F1F;
+  --l-expandMenu-bg: #FFFAF5;
+
+  /* ---- Theme/X (unique X) ---- */
+  --x-expandMenuBackground: #F2EDF7;
+
+  /* ---- Legacy / PornHub ---- */
+  --ph-orange: #EF9E00;
+  --ph-red: #E01E5A;
+  --ph-green: #1ED760;
+  --ph-blue: #0095F6;
+  --ph-purple: #9C27B0;
+  --ph-yellow: #FFD600;
+  --ph-pink: #F06292;
+  --ph-brown: #A1887F;
+  --ph-grey: #9E9E9E;
+  --ph-separator: #9E9E9E;
+  --ph-gray0E: #0E0E0E;
+  --ph-gray10: #101010;
+  --ph-gray15: #151515;
+  --ph-gray1F: #1F1F1F;
+  --ph-gray21: #212121;
+  --ph-gray25: #252525;
+  --ph-gray3F: #3F3F3F;
+  --ph-gray96: #969696;
+  --ph-grayC6: #C6C6C6;
+  --ph-black: #000000;
+  --ph-white: #FFFFFF;
+
+  /* ---- Material / XvideosTheme (dynamic color, rarely visible) ---- */
+  --mat-purple80: #D0BCFF;
+  --mat-purpleGrey80: #CCC2DC;
+  --mat-pink80: #EFB8C8;
+  --mat-purple40: #6650A4;
+  --mat-purpleGrey40: #625B71;
+  --mat-pink40: #7D5260;
+
+  /* ---- Unsorted/Misc — hardcoded literals (96) ---- */
+  --misc-101014: #101014; /* AppLockActivity.kt:183 */
+  --misc-ffe800: #FFE800; /* AppLockActivity.kt:202 */
+  --misc-ff7a7a: #FF7A7A; /* AppLockActivity.kt:241 */
+  --misc-090909: #090909; /* DaialogNewCollection.kt:74 */
+  --misc-363636: #363636; /* DaialogNewCollection.kt:89 */
+  --misc-232323: #232323; /* DaialogNewCollection.kt:95 */
+  --misc-e4e4e4: #E4E4E4; /* DialogButton.kt:57 */
+  --misc-474747: #474747; /* DialogButton.kt:71 */
+  --misc-cccccc: #CCCCCC; /* DialogButton.kt:79 */
+  --misc-01b671: #01B671; /* SnackBarEvent.kt:140 */
+  --misc-e5553a: #E5553A; /* SnackBarEvent.kt:141 */
+  --misc-4276fe: #4276FE; /* SnackBarEvent.kt:142 */
+  --misc-ff8e0c: #FF8E0C; /* SnackBarEvent.kt:143 */
+  --misc-43c558: #43C558; /* SnackBarEvent.kt:189 */
+  --misc-fd6969: #FD6969; /* SnackBarEvent.kt:190 */
+  --misc-bddbfd: #BDDBFD; /* SnackBarEvent.kt:191 */
+  --misc-22c55c: #22C55C; /* SnackBarEvent.kt:213 */
+  --misc-141414: #141414; /* Theme.kt:63 (commented) */
+  --misc-353535: #353535; /* Theme.kt:66 (commented) */
+  --misc-414141: #414141; /* Theme.kt:69 (commented) */
+  --misc-c5c8c6: #C5C8C6; /* Theme.kt:71 (commented) */
+  --misc-45687a: #45687A; /* Theme.kt:72 (commented) */
+  --misc-202020: #202020; /* UrlVideoLite.kt:141 */
+  --misc-b8b5b5: #B8B5B5; /* shimmerEffect.kt:36 */
+  --misc-8f8b8b: #8F8B8B; /* shimmerEffect.kt:37 */
+  --misc-222222: #222222; /* constant.kt:7 */
+  --misc-fed766: #FED766; /* constant.kt:8 */
+  --misc-1b1b1b: #1B1B1B; /* HapticDemoScreen.kt:88 */
+  --misc-b0b0b0: #B0B0B0; /* HapticDemoScreen.kt:111 */
+  --misc-2a2a2a: #2A2A2A; /* HapticDemoScreen.kt:117 */
+  --misc-4a3b00: #4A3B00; /* HapticDemoScreen.kt:145 */
+  --misc-3a3a3a: #3A3A3A; /* HapticDemoScreen.kt:166 */
+  --misc-bfbfbf: #BFBFBF; /* HapticDemoScreen.kt:182 */
+  --misc-4a4a4a: #4A4A4A; /* CollectionsGrid.kt:164 */
+  --misc-938f99: #938F99; /* L_ScreenSavedLikesTab.kt:110 */
+  --misc-484848: #484848; /* L_ScreenLogin.kt:144 */
+  --misc-b8b7b7: #B8B7B7; /* L_ScreenLogin.kt:146 */
+  --misc-888888: #888888; /* L_ScreenLogin.kt:148 */
+  --misc-6552a5: #6552A5; /* AlbumDialogDeleteAlbum.kt:46 */
+  --misc-ebe6ee: #EBE6EE; /* AlbumDialogDeleteAlbum.kt:62 */
+  --misc-ffc857: #FFC857; /* ScreenAlbum.kt:365 */
+  --misc-3e3e3e: #3E3E3E; /* AlbumListPageSelector.kt:138 */
+  --misc-373737: #373737; /* AlbumListPageSelector.kt:139 */
+  --misc-2d2d2d: #2D2D2D; /* AlbumListPageSelector.kt:146 */
+  --misc-434343: #434343; /* AlbumListBottomBar.kt:54 */
+  --misc-171717: #171717; /* StyleGenresTags.kt:16 */
+  --misc-242424: #242424; /* StyleGenresTags.kt:17 */
+  --misc-606060: #606060; /* StyleGenresTags.kt:21 */
+  --misc-f4f4f4: #F4F4F4; /* StyleGenresTags.kt:22 */
+  --misc-d0d0d0: #D0D0D0; /* StyleGenresTags.kt:23 */
+  --misc-ff7468: #FF7468; /* StyleGenresTags.kt:24 */
+  --misc-2d4d2f: #2D4D2F; /* StyleGenresTags.kt:26 */
+  --misc-85ce6d: #85CE6D; /* StyleGenresTags.kt:27 */
+  --misc-f0ffe9: #F0FFE9; /* StyleGenresTags.kt:28 */
+  --misc-63373a: #63373A; /* StyleGenresTags.kt:29 */
+  --misc-ff8277: #FF8277; /* StyleGenresTags.kt:30 */
+  --misc-ffe1dd: #FFE1DD; /* StyleGenresTags.kt:31 */
+  --misc-1d1d1d: #1D1D1D; /* StyleGenresTags.kt:32 */
+  --misc-0c94ff: #0C94FF; /* ScreenAlbumList.kt:174 */
+  --misc-a3a3a3: #A3A3A3; /* ScreenAlbumList.kt:214 */
+  --misc-b3b3b3: #B3B3B3; /* ScreenAlbumList.kt:215 */
+  --misc-181818: #181818; /* L_FullScreenImage.kt:249 */
+  --misc-8ab4f8: #8AB4F8; /* L_FullScreenImage.kt:718 */
+  --misc-2c2c2c: #2C2C2C; /* MainActivity.kt:294 */
+  --misc-565656: #565656; /* MainActivity.kt:420 */
+  --misc-f1edf4: #F1EDF4; /* ExpandMenuVideo.kt:132 */
+  --misc-48454e: #48454E; /* ExpandMenuVideoTags.kt:39 */
+  --misc-757575: #757575; /* CustomBasicTextFieldContent.kt:249 */
+  --misc-cdecfb: #CDECFB; /* CanvasTimeDurationLine.kt:64 */
+  --misc-137cbd: #137CBD; /* CanvasTimeDurationLine.kt:65 */
+  --misc-73cdf1: #73CDF1; /* CanvasTimeDurationLine.kt:66 */
+  --misc-909090: #909090; /* CanvasTimeDurationLine.kt:150 */
+  --misc-e73538: #E73538; /* CanvasTimeDurationLine.kt:186 */
+  --misc-8bc34a: #8BC34A; /* CanvasTimeDurationLine.kt:204 */
+  --misc-9e9da9: #9E9DA9; /* R_Screen_CreatorsTab.kt:243 */
+  --misc-aaaaaa: #AAAAAA; /* R_Screen_CreatorsTab.kt:282 */
+  --misc-0f0f0f: #0F0F0F; /* ScreenNiche.kt:189 */
+  --misc-505050: #505050; /* ScreenNiche.kt:197 */
+  --misc-3d3c53: #3D3C53; /* RedProfileUserImage.kt:151 */
+  --misc-923117: #923117; /* ErrorState.kt:25 */
+  --misc-0f9960: #0F9960; /* RootSnackbarHost.kt:43 */
+  --misc-d13913: #D13913; /* RootSnackbarHost.kt:44 */
+  --misc-fffbfe: #FFFBFE; /* ui/theme/Theme.kt:30 (Material light) */
+  --misc-1c1b1f: #1C1B1F; /* ui/theme/Theme.kt:35 (Material light) */
+  --misc-3d3f4a: #3D3F4A; /* KeyboardNumber.kt:45 */
+  --misc-dee1ef: #DEE1EF; /* KeyboardNumber.kt:49 */
+  --misc-5a5d6c: #5A5D6C; /* KeyboardNumber.kt:52 */
+  --misc-ff7043: #FF7043; /* KeyboardNumber.kt:193 */
+  --misc-ff9000: #FF9000; /* MenuDot.kt:48 */
+  --misc-23242a: #23242A; /* MenuDot.kt:97 */
+  --misc-ff6b6b: #FF6B6B; /* FavoritesDeleteDialog.kt:44 */
+  --misc-2e2e2e: #2E2E2E; /* FavoritesDeleteDialog.kt:52 */
+  --misc-787878: #787878; /* ScreenTags.kt:34 */
+  --misc-de2600: #DE2600; /* ComposeTags.kt:39 */
+  --misc-d9d9d9: #D9D9D9; /* ComposeTags.kt:54 */
+  --misc-040404: #040404; /* ScreenX_LocalVideoPlayer.kt:43 */
+}

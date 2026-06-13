@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App — Design Copy · Screens</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="doc-nav">
+  <b>App · Design Copy — Screens</b>
+  <a href="index.html">Color System</a>
+  <a href="#x">X</a><a href="#l">L</a><a href="#r">R</a><a href="#common">Common</a>
+  <a href="dialogs.html">Dialogs &amp; Menus</a>
+</nav>
+
+<!-- ============================== X ============================== -->
+<section class="section" id="x">
+  <h2>X — xvideos section</h2>
+  <p class="sub">Content bg <span class="tok">--sh-background</span>, bars <span class="tok">--sh-tabLevel0/1</span>. Accent neutral (grey).</p>
+  <div class="screen-grid">
+
+    <!-- X Dashboards -->
+    <div class="screen">
+      <p class="cap">Dashboards</p><p class="src">x/screens/dashboards/ScreenXDashBoards.kt</p>
+      <div class="phone" style="--accent:var(--l-grey0)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><div class="icon"></div><span class="t-rowTitle">Discover</span><span class="grow"></span><div class="icon"></div></div>
+        <div class="scroll">
+          <div class="grid2">
+            <div class="card"><span class="badge">12:03</span></div><div class="card"><span class="badge">08:41</span></div>
+            <div class="card"><span class="badge">22:10</span></div><div class="card"><span class="badge">04:55</span></div>
+            <div class="card"><span class="badge">15:30</span></div><div class="card"><span class="badge">31:12</span></div>
+          </div>
+        </div>
+        <div class="bottomnav" style="border-top:1px solid var(--sh-tabLevel2)">
+          <div class="nav"><div class="ico ico--on"></div><span class="on">Dashboard</span></div>
+          <div class="nav"><div class="ico"></div><span>Saved</span></div>
+          <div class="nav"><div class="ico"></div><span>Favorites</span></div>
+          <div class="nav"><div class="ico"></div><span>Save</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Content bg — <span class="tok">--sh-background #262626</span></li>
+        <li><span class="dot">2</span> Bottom TabRow — <span class="tok">--sh-tabLevel0 #212121</span>, divider <span class="tok">#333333</span></li>
+        <li><span class="dot">3</span> Video card — <span class="tok">--sh-tabLevel2 #333333</span>, duration badge dark scrim</li>
+      </ol>
+    </div>
+
+    <!-- X Tags -->
+    <div class="screen">
+      <p class="cap">Tags</p><p class="src">x/screens/tags/ScreenTags.kt</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Tags</span><span class="grow"></span><div class="icon"></div></div>
+        <div class="scroll" style="padding:8px">
+          <div>
+            <span class="chip">amateur</span><span class="chip">milf</span><span class="chip">teen</span>
+            <span class="chip">anal</span><span class="chip">pov</span><span class="chip">asian</span>
+            <span class="chip">latina</span><span class="chip">ebony</span><span class="chip">vintage</span>
+            <span class="chip" style="color:var(--misc-787878)">+ more</span>
+          </div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Chip bg — <span class="tok">--sh-tabLevel2</span>, label <span class="tok">--l-grey0</span></li>
+        <li><span class="dot">2</span> Muted "+more" — <span class="tok">--misc-787878 #787878</span></li>
+      </ol>
+    </div>
+
+    <!-- X Favorites -->
+    <div class="screen">
+      <p class="cap">Favorites</p><p class="src">x/screens/favorites/ScreenFavorites.kt</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Favorites</span><span class="grow"></span><div class="icon"></div></div>
+        <div class="scroll">
+          <div class="grid3">
+            <div class="card tall"><span class="idx">1</span></div><div class="card tall"><span class="idx">2</span></div><div class="card tall"><span class="idx">3</span></div>
+            <div class="card tall"><span class="idx">4</span></div><div class="card tall"><span class="idx">5</span></div><div class="card tall"><span class="idx">6</span></div>
+          </div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Index badge — <span class="tok">--t-mediaIndex</span> on dark scrim</li>
+        <li><span class="dot">2</span> Delete → <a href="dialogs.html">FavoritesDeleteDialog</a></li>
+      </ol>
+    </div>
+
+    <!-- X Video Player -->
+    <div class="screen">
+      <p class="cap">Video player</p><p class="src">x/screens/videoplayer/ScreenX_VideoPlayer.kt</p>
+      <div class="phone" style="background:var(--misc-040404)">
+        <div class="scroll" style="display:flex;flex-direction:column">
+          <div style="aspect-ratio:16/9;background:#000;position:relative;display:flex;align-items:center;justify-content:center">
+            <div style="width:54px;height:54px;border-radius:50%;background:#ffffff22"></div>
+          </div>
+          <div style="padding:14px">
+            <div class="t-rowTitle" style="color:var(--l-grey0)">Video title goes here</div>
+            <div class="t-rowSubtitle">channel · 1.2M views</div>
+            <div style="margin-top:10px"><span class="chip">tag</span><span class="chip">tag</span><span class="chip">pov</span></div>
+          </div>
+          <div style="margin-top:auto;padding:12px 14px;background:#0c0c0c">
+            <div style="height:3px;background:#ffffff33;border-radius:3px;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:42%;background:var(--ph-orange);border-radius:3px"></div></div>
+            <div style="display:flex;gap:18px;margin-top:12px;align-items:center;color:var(--l-grey0)">▶ ⏮ ⏭ <span class="grow"></span> 1.0× ⤢</div>
+          </div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Player bg — <span class="tok">--misc-040404 #040404</span></li>
+        <li><span class="dot">2</span> Seek progress — accent <span class="tok">--ph-orange #EF9E00</span></li>
+        <li><span class="dot">3</span> Controls/labels — <span class="tok">--l-grey0</span></li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================== L ============================== -->
+<section class="section" id="l">
+  <h2>L — albums (luscious-style)</h2>
+  <p class="sub">Accent <span class="tok">--l-primaryColor #ff96a3</span>. Text <span class="tok">--l-textColor</span>.</p>
+  <div class="screen-grid">
+
+    <!-- L Login -->
+    <div class="screen">
+      <p class="cap">Login</p><p class="src">l/ui/screens/L_ScreenLogin.kt</p>
+      <div class="phone" style="--accent:var(--l-primaryColor);background:var(--sh-tabLevel0)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="scroll" style="display:flex;flex-direction:column;justify-content:center;gap:14px;padding:28px">
+          <div style="width:64px;height:64px;border-radius:16px;background:var(--l-b0);align-self:center"></div>
+          <div class="t-heroTitle" style="text-align:center">Welcome back</div>
+          <div class="t-rowSubtitle" style="text-align:center">Sign in to continue</div>
+          <div style="margin-top:8px;background:var(--misc-3a3a3a);border-radius:10px;padding:14px 12px;color:var(--misc-b8b7b7)">login</div>
+          <div style="background:var(--misc-484848);border-radius:10px;padding:14px 12px;color:var(--misc-b8b7b7);border-bottom:2px solid var(--misc-888888)">password</div>
+          <button class="btn btn--primary" style="margin-top:6px">Sign in</button>
+          <div class="t-caption" style="text-align:center;color:var(--l-b0)">Forgot password?</div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Screen bg — <span class="tok">--sh-tabLevel0 #212121</span></li>
+        <li><span class="dot">2</span> Logo / links — <span class="tok">--l-b0 #2196F3</span></li>
+        <li><span class="dot">3</span> Field unfocused <span class="tok">--misc-3a3a3a</span> / focused <span class="tok">--misc-484848</span>, text <span class="tok">--misc-b8b7b7</span>, indicator <span class="tok">--misc-888888</span></li>
+        <li><span class="dot">4</span> Button — <span class="tok">--l-primaryColor</span></li>
+      </ol>
+    </div>
+
+    <!-- L AlbumList / Explorer -->
+    <div class="screen">
+      <p class="cap">Explorer · Album list</p><p class="src">l/ui/screens/screenAlbumList/ScreenAlbumList.kt</p>
+      <div class="phone" style="--accent:var(--l-primaryColor)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Albums</span><span class="grow"></span><div class="icon"></div><div class="icon"></div></div>
+        <div class="scroll">
+          <div class="grid2">
+            <div class="card tall"></div><div class="card tall"></div>
+            <div class="card tall"></div><div class="card tall"></div>
+            <div class="card tall"></div><div class="card tall"></div>
+          </div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav"><div class="ico ico--on"></div><span class="on">Albums</span></div>
+          <div class="nav"><div class="ico"></div><span>Saved</span></div>
+          <div class="nav"><div class="ico"></div><span>Top</span></div>
+          <div class="nav"><div class="ico"></div><span>Search</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Bottom nav — <span class="tok">--sh-tabLevel0</span>, active <span class="tok">--l-primaryColor</span></li>
+        <li><span class="dot">2</span> Album cover — <span class="tok">--sh-tabLevel2</span> placeholder</li>
+      </ol>
+    </div>
+
+    <!-- L Saved -->
+    <div class="screen">
+      <p class="cap">Saved (Likes / Collection / Albums)</p><p class="src">l/ui/screens/explorer/tab/saved/ScreenSaved.kt</p>
+      <div class="phone" style="--accent:var(--l-primaryColor)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Saved</span></div>
+        <div class="tabrow"><div class="tab tab--active">Likes</div><div class="tab">Collection</div><div class="tab">Albums</div></div>
+        <div class="scroll"><div class="grid3">
+          <div class="card tall"></div><div class="card tall"></div><div class="card tall"></div>
+          <div class="card tall"></div><div class="card tall"></div><div class="card tall"></div>
+        </div></div>
+        <div class="bottomnav">
+          <div class="nav"><div class="ico"></div><span>Albums</span></div>
+          <div class="nav"><div class="ico ico--on"></div><span class="on">Saved</span></div>
+          <div class="nav"><div class="ico"></div><span>Top</span></div>
+          <div class="nav"><div class="ico"></div><span>Search</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Sub-tab row — <span class="tok">--sh-tabLevel1 #282828</span>, active underline <span class="tok">--l-primaryColor</span></li>
+        <li><span class="dot">2</span> Item long-press → <a href="dialogs.html">AlbumItemExpandMenu</a></li>
+      </ol>
+    </div>
+
+    <!-- L Album -->
+    <div class="screen">
+      <p class="cap">Album</p><p class="src">l/ui/screens/screenAlbum/ScreenAlbum.kt</p>
+      <div class="phone" style="--accent:var(--l-primaryColor)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><div class="icon"></div><span class="t-rowTitle">Album</span></div>
+        <div class="scroll">
+          <div style="padding:14px">
+            <div class="t-rowTitle" style="color:var(--l-textColor)">Album title</div>
+            <div class="t-rowSubtitle">128 gifs / 342 pictures</div>
+            <div class="t-caption" style="margin-top:6px">Id: 90210 · Created: 2024 · Modified: 2025</div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn--secondary">Save</button><button class="btn btn--text">Share</button><button class="btn btn--text">Filter</button>
+            </div>
+          </div>
+          <div class="grid3" style="padding-top:0">
+            <div class="card tall"></div><div class="card tall"></div><div class="card tall"></div>
+            <div class="card tall"></div><div class="card tall"></div><div class="card tall"></div>
+          </div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Header text — <span class="tok">--l-textColor</span>, styles <span class="tok">rowTitle</span></li>
+        <li><span class="dot">2</span> Save btn <span class="tok">--sh-tabLevel3</span>, content bg <span class="tok">--sh-background</span></li>
+        <li><span class="dot">3</span> Delete → <a href="dialogs.html">AlbumDialogDeleteAlbum</a></li>
+      </ol>
+    </div>
+
+    <!-- L FullScreen image -->
+    <div class="screen">
+      <p class="cap">Fullscreen image (overlay)</p><p class="src">l/ui/screens/screenFullScreen/L_FullScreenImage.kt</p>
+      <div class="phone" style="background:var(--misc-181818)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="scroll" style="display:flex;align-items:center;justify-content:center">
+          <div style="width:100%;aspect-ratio:3/4;background:var(--sh-tabLevel2)"></div>
+        </div>
+        <div style="position:absolute;top:26px;left:0;right:0;height:48px;display:flex;align-items:center;gap:12px;padding:0 14px;background:#00000066;color:var(--l-grey0)">✕ <span class="grow"></span> ⤓ ⋯</div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Backdrop — <span class="tok">--misc-181818 #181818</span></li>
+        <li><span class="dot">2</span> Overlay bar — translucent black, icons <span class="tok">--l-grey0</span>; link color <span class="tok">--misc-8ab4f8</span></li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================== R ============================== -->
+<section class="section" id="r">
+  <h2>R — gifs (redgifs-style)</h2>
+  <p class="sub">Accents <span class="tok">--r-colorYellow #EBFA63</span> / <span class="tok">--r-colorBlue #61B2EB</span> / <span class="tok">--r-colorRed</span>. Bottom-bar divider <span class="tok">--r-colorBottomBarDivider #323153</span>.</p>
+  <div class="screen-grid">
+
+    <div class="screen">
+      <p class="cap">Explorer · Gifs</p><p class="src">r/ui/explorer/tab/gifs/R_ScreenGifsTab.kt</p>
+      <div class="phone" style="--accent:var(--r-colorBlue)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Browse</span><span class="grow"></span><div class="icon"></div></div>
+        <div class="tabrow"><div class="tab tab--active">Gifs</div><div class="tab">Niches</div><div class="tab">Saved</div></div>
+        <div class="scroll"><div class="grid2">
+          <div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div>
+        </div></div>
+        <div class="bottomnav">
+          <div class="nav"><div class="ico ico--on" style="background:var(--r-colorBlue)"></div><span class="on">Home</span></div>
+          <div class="nav"><div class="ico"></div><span>Search</span></div>
+          <div class="nav"><div class="ico"></div><span>Saved</span></div>
+          <div class="nav"><div class="ico"></div><span>Profile</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Tab row <span class="tok">--sh-tabLevel1</span>, active underline <span class="tok">--r-colorBorderSelect #444444</span></li>
+        <li><span class="dot">2</span> Bottom bar <span class="tok">--sh-tabLevel0</span>, top divider <span class="tok">--r-colorBottomBarDivider</span>, active <span class="tok">--r-colorBlue</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Niches</p><p class="src">r/ui/niche/ScreenNiche.kt</p>
+      <div class="phone" style="--accent:var(--r-colorBlue);background:var(--misc-0f0f0f)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar" style="background:var(--misc-0f0f0f)"><span class="t-rowTitle">Niches</span></div>
+        <div class="scroll"><div class="grid2">
+          <div class="card" style="background:var(--misc-505050)"></div><div class="card" style="background:var(--misc-505050)"></div>
+          <div class="card" style="background:var(--misc-505050)"></div><div class="card" style="background:var(--misc-505050)"></div>
+        </div></div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Niche bg — <span class="tok">--misc-0f0f0f #0F0F0F</span></li>
+        <li><span class="dot">2</span> Tiles — <span class="tok">--misc-505050 #505050</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Saved · Creators</p><p class="src">r/ui/explorer/tab/saved/tab/R_Screen_CreatorsTab.kt</p>
+      <div class="phone" style="--accent:var(--r-colorBlue)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Saved</span></div>
+        <div class="tabrow" style="font-size:11px"><div class="tab">Coll</div><div class="tab tab--active">Creators</div><div class="tab">Likes</div><div class="tab">DL</div><div class="tab">Subs</div></div>
+        <div class="scroll">
+          <div class="row"><div class="av"></div><div class="tcol"><div class="t-rowTitle">creator_name</div><div class="t-rowSubtitle">1.2k posts</div></div><span style="color:var(--misc-9e9da9)">following</span></div>
+          <div class="row"><div class="av"></div><div class="tcol"><div class="t-rowTitle">another_one</div><div class="t-rowSubtitle">540 posts</div></div><span style="color:var(--misc-9e9da9)">following</span></div>
+          <div class="row"><div class="av"></div><div class="tcol"><div class="t-rowTitle">third_creator</div><div class="t-rowSubtitle">88 posts</div></div><span style="color:var(--misc-aaaaaa)">follow</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Row divider <span class="tok">--l-grey4</span>, title <span class="tok">rowTitle</span></li>
+        <li><span class="dot">2</span> Status text <span class="tok">--misc-9e9da9</span> / <span class="tok">--misc-aaaaaa</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Profile</p><p class="src">r/ui/profile/ScreenRedProfile.kt</p>
+      <div class="phone" style="--accent:var(--r-colorBlue)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="scroll">
+          <div style="padding:18px;display:flex;gap:14px;align-items:center;background:var(--misc-3d3c53)">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--sh-tabLevel3)"></div>
+            <div><div class="t-rowTitle" style="color:var(--l-grey0)">@username</div><div class="t-rowSubtitle">2.1k followers</div></div>
+          </div>
+          <div class="grid3"><div class="card tall"></div><div class="card tall"></div><div class="card tall"></div><div class="card tall"></div><div class="card tall"></div><div class="card tall"></div></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Profile header tint — <span class="tok">--misc-3d3c53 #3D3C53</span></li>
+        <li><span class="dot">2</span> Content bg <span class="tok">--sh-background</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Top this week</p><p class="src">r/ui/top_this_week/ScreenRedTopThisWeek.kt</p>
+      <div class="phone" style="--accent:var(--r-colorYellow)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Top this week</span></div>
+        <div class="scroll">
+          <div class="row"><span class="t-heroTitle" style="color:var(--r-colorYellow)">1</span><div class="av" style="border-radius:8px"></div><div class="tcol"><div class="t-rowTitle">top creator</div></div></div>
+          <div class="row"><span class="t-heroTitle" style="color:var(--l-grey1)">2</span><div class="av" style="border-radius:8px"></div><div class="tcol"><div class="t-rowTitle">second</div></div></div>
+          <div class="row"><span class="t-heroTitle" style="color:var(--ph-brown)">3</span><div class="av" style="border-radius:8px"></div><div class="tcol"><div class="t-rowTitle">third</div></div></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Rank #1 highlight — <span class="tok">--r-colorYellow #EBFA63</span></li>
+        <li><span class="dot">2</span> Error state uses <span class="tok">--misc-923117 #923117</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Manage block</p><p class="src">r/ui/manager_block/ScreenRedManageBlock.kt</p>
+      <div class="phone" style="--accent:var(--r-colorRed)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><div class="icon"></div><span class="t-rowTitle">Blocked</span></div>
+        <div class="scroll">
+          <div class="row"><div class="av"></div><div class="tcol"><div class="t-rowTitle">blocked_user</div></div><span style="color:var(--r-colorRed)">unblock</span></div>
+          <div class="row"><div class="av"></div><div class="tcol"><div class="t-rowTitle">another</div></div><span style="color:var(--r-colorRed)">unblock</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Destructive action — <span class="tok">--r-colorRed #EA616F</span></li>
+        <li><span class="dot">2</span> Block flow → <a href="dialogs.html">DialogBlock</a></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Fullscreen</p><p class="src">r/ui/fullscreen/ScreenRedFullScreen.kt</p>
+      <div class="phone" style="background:#000">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="scroll" style="display:flex;align-items:center;justify-content:center"><div style="width:100%;aspect-ratio:9/16;background:var(--sh-tabLevel2)"></div></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:14px;display:flex;gap:16px;color:var(--l-grey0);background:#00000066">♥ ⤓ ⋯ <span class="grow"></span> ⤢</div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Backdrop pure black <span class="tok">--ph-black #000000</span></li>
+        <li><span class="dot">2</span> Overlay controls — <span class="tok">--l-grey0</span></li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================== Common ============================== -->
+<section class="section" id="common">
+  <h2>Common — menu, settings, P2P, app-lock</h2>
+  <p class="sub">App root bg <span class="tok">--sh-backgroundAppRoot</span>; Settings bg <span class="tok">--l-grey6</span>, top bar <span class="tok">--l-grey5</span>.</p>
+  <div class="screen-grid">
+
+    <div class="screen">
+      <p class="cap">Main menu</p><p class="src">screenRoot/ScreenRoot.kt</p>
+      <div class="phone phone--root">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div style="padding:24px 18px"><div class="t-heroTitle">Menu</div></div>
+        <div class="scroll">
+          <div class="row"><div class="av" style="border-radius:12px;background:var(--l-primaryColor)"></div><div class="tcol"><div class="t-rowTitle">L · Albums</div></div></div>
+          <div class="row"><div class="av" style="border-radius:12px;background:var(--r-colorBlue)"></div><div class="tcol"><div class="t-rowTitle">R · Gifs</div></div></div>
+          <div class="row"><div class="av" style="border-radius:12px;background:var(--ph-orange)"></div><div class="tcol"><div class="t-rowTitle">X · Videos</div></div></div>
+          <div class="row"><div class="av" style="border-radius:12px"></div><div class="tcol"><div class="t-rowTitle">Settings</div></div></div>
+          <div class="row"><div class="av" style="border-radius:12px"></div><div class="tcol"><div class="t-rowTitle">P2P share</div></div></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Root bg — <span class="tok">--sh-backgroundAppRoot #262626</span></li>
+        <li><span class="dot">2</span> Section icons use each section's accent (L pink / R blue / X orange)</li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Settings</p><p class="src">AppSettingsScreen.kt · SettingsListItems.kt</p>
+      <div class="phone" style="background:var(--l-grey6)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar" style="background:var(--l-grey5)"><div class="icon"></div><span class="t-rowTitle">Settings</span></div>
+        <div class="scroll">
+          <div class="row"><div class="tcol"><div class="t-rowTitle">Theme</div></div><span class="val">Dark</span></div>
+          <div class="row"><div class="tcol"><div class="t-rowTitle">Thumbnail size</div></div><span class="val">Medium</span></div>
+          <div class="row"><div class="tcol"><div class="t-rowTitle">App lock</div></div><span style="width:38px;height:22px;border-radius:11px;background:var(--l-g0)"></span></div>
+          <div class="row"><div class="tcol"><div class="t-rowTitle">Clear cache</div></div><span class="val">512 MB</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Screen bg <span class="tok">--l-grey6 #262626</span>, top bar <span class="tok">--l-grey5 #292929</span></li>
+        <li><span class="dot">2</span> Row title <span class="tok">rowTitle</span>, value <span class="tok">--l-grey2</span>; toggle on <span class="tok">--l-g0</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">P2P Send</p><p class="src">common/p2p/ui/ScreenP2pSend.kt</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><div class="icon"></div><span class="t-rowTitle">Send nearby</span></div>
+        <div class="scroll">
+          <div style="padding:14px"><div class="t-sectionTitle">NEARBY DEVICES</div></div>
+          <div class="row"><div class="av"></div><div class="tcol"><div class="t-rowTitle">Pixel 7</div><div class="t-rowSubtitle">ready</div></div><span style="color:var(--l-g0)">●</span></div>
+          <div class="row"><div class="av"></div><div class="tcol"><div class="t-rowTitle">Mi 8</div><div class="t-rowSubtitle">connecting…</div></div><span style="color:var(--r-colorYellow)">●</span></div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Section label <span class="tok">sectionTitle</span> (<span class="tok">--l-grey2</span>)</li>
+        <li><span class="dot">2</span> Status dots — ready <span class="tok">--l-g0</span>, busy <span class="tok">--r-colorYellow</span>; chooser → <a href="dialogs.html">P2pSendChooserDialog</a></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">P2P Receive</p><p class="src">common/p2p/ui/ScreenP2pReceive.kt</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="topbar"><span class="t-rowTitle">Receiving</span></div>
+        <div class="scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px">
+          <div style="width:96px;height:96px;border-radius:50%;border:3px solid var(--l-b0);display:flex;align-items:center;justify-content:center;color:var(--l-b0)">↓</div>
+          <div class="t-rowTitle">Waiting for sender…</div>
+          <div class="t-rowSubtitle">device visible as "Pixel 7"</div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Progress ring — <span class="tok">--l-b0 #2196F3</span></li>
+        <li><span class="dot">2</span> Content bg <span class="tok">--sh-background</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">App lock (code entry)</p><p class="src">common/applock · KeyboardNumber.kt</p>
+      <div class="phone" style="background:var(--misc-101014)">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="scroll" style="display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:50px">
+          <div class="t-bodyLarge" style="color:var(--misc-dee1ef)">Enter code</div>
+          <div style="display:flex;gap:14px">
+            <span style="width:14px;height:14px;border-radius:50%;background:var(--misc-dee1ef)"></span>
+            <span style="width:14px;height:14px;border-radius:50%;background:var(--misc-dee1ef)"></span>
+            <span style="width:14px;height:14px;border-radius:50%;border:2px solid var(--misc-5a5d6c)"></span>
+            <span style="width:14px;height:14px;border-radius:50%;border:2px solid var(--misc-5a5d6c)"></span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,64px);gap:14px;margin-top:10px">
+            <div class="kb">1</div><div class="kb">2</div><div class="kb">3</div>
+            <div class="kb">4</div><div class="kb">5</div><div class="kb">6</div>
+            <div class="kb">7</div><div class="kb">8</div><div class="kb">9</div>
+            <div class="kb" style="background:transparent"></div><div class="kb">0</div><div class="kb" style="background:transparent;color:var(--misc-ff7043)">⌫</div>
+          </div>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Bg <span class="tok">--misc-101014 #101014</span>; key <span class="tok">--misc-3d3f4a</span>, text <span class="tok">--misc-dee1ef</span></li>
+        <li><span class="dot">2</span> Empty dot border <span class="tok">--misc-5a5d6c</span>; delete <span class="tok">--misc-ff7043</span></li>
+      </ol>
+    </div>
+
+    <div class="screen">
+      <p class="cap">Permission</p><p class="src">PermissionScreenActivity.kt</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G ▮</span></div>
+        <div class="scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px;text-align:center">
+          <div style="width:72px;height:72px;border-radius:18px;background:var(--sh-tabLevel2)"></div>
+          <div class="t-heroTitle">Permission needed</div>
+          <div class="t-body" style="color:var(--l-grey2)">Grant storage access to save and share media.</div>
+          <button class="btn btn--primary">Grant access</button>
+        </div>
+      </div>
+      <ol class="annot">
+        <li><span class="dot">1</span> Body text <span class="tok">--l-grey2</span>, title <span class="tok">heroTitle</span></li>
+        <li><span class="dot">2</span> CTA <span class="tok">--l-primaryColor</span></li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+
+<style>
+.kb { width:64px;height:64px;border-radius:50%;background:var(--misc-3d3f4a);color:var(--misc-dee1ef);
+  display:flex;align-items:center;justify-content:center;font:500 22px 'DM Sans'; }
+</style>
+
+</body>
+</html>

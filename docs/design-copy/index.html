@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App — Design Copy (as-is) · Color System</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="doc-nav">
+  <b>App · Design Copy (as-is)</b>
+  <a href="#catalog">Catalog</a>
+  <a href="#typography">Typography</a>
+  <a href="#misc">Unsorted</a>
+  <a href="screens.html">Screens (X/L/R/Common)</a>
+  <a href="dialogs.html">Dialogs &amp; Menus</a>
+</nav>
+
+<section class="section">
+  <h2>Color System — source of truth</h2>
+  <p class="sub">Designer copy of the app, "as-is". Every value below mirrors the code tokens
+  (<code>common/theme/Theme.kt</code>, <code>ui/theme/Color.kt</code>). CSS variables in
+  <code>tokens.css</code> are the single source of truth — change one, the whole copy updates.
+  Medium is HTML/CSS (local, in git) after the Figma Starter plan blocked further authoring.</p>
+  <ul style="line-height:1.9;font-size:14px">
+    <li><b>This page</b> — color variables catalog (63 tokens + 96 unsorted), typography, contrast.</li>
+    <li><a href="screens.html"><b>Screens</b></a> — X / L / R / Common as phone frames with per-screen color annotations.</li>
+    <li><a href="dialogs.html"><b>Dialogs &amp; Menus</b></a> — dialogs, light expand-menus, filter selectors.</li>
+  </ul>
+  <p class="sub">View locally: <code>python -m http.server -d docs/design-copy</code> then open the printed URL.</p>
+</section>
+
+<section class="section" id="catalog">
+  <h2>Variables catalog</h2>
+  <p class="sub">63 named tokens across 6 collections. Hex is read live from <code>tokens.css</code>.</p>
+  <div id="catalog-root"></div>
+
+  <div class="group-title">Contrast — dark section backgrounds vs light expand-menus</div>
+  <div class="contrast">
+    <div class="sw-chip" style="background:var(--sh-tabLevel0)"></div>
+    <div class="sw-chip" style="background:var(--sh-tabLevel1)"></div>
+    <div class="sw-chip" style="background:var(--sh-tabLevel2)"></div>
+    <div class="sw-chip" style="background:var(--sh-tabLevel3)"></div>
+    <div class="sw-chip" style="background:var(--l-expandMenu-bg)"></div>
+    <div class="sw-chip" style="background:var(--x-expandMenuBackground)"></div>
+  </div>
+</section>
+
+<section class="section" id="typography">
+  <h2>Typography — Theme.L.Type{} (DM Sans)</h2>
+  <p class="sub">Poppins is also bundled in code; app text styles use DM Sans.</p>
+  <div class="specimen" id="type-root"></div>
+</section>
+
+<section class="section" id="misc">
+  <h2>Unsorted/Misc — hardcoded literals (96)</h2>
+  <p class="sub"><code>Color(0x…)</code> values found in Compose not covered by tokens. Full source map in
+  <code>docs/superpowers/specs/2026-06-13-figma-design-copy-unsorted-colors.md</code>.</p>
+  <div id="misc-root" class="swatches misc-grid"></div>
+</section>
+
+<script>
+const collections = {
+  "Theme/Shared": [["background","--sh-background"],["backgroundAppRoot","--sh-backgroundAppRoot"],
+    ["tabLevel0","--sh-tabLevel0"],["tabLevel1","--sh-tabLevel1"],["tabLevel2","--sh-tabLevel2"],
+    ["tabLevel3","--sh-tabLevel3"],["tabLevel4","--sh-tabLevel4"],["tabLevel5","--sh-tabLevel5"],["tabLevel6","--sh-tabLevel6"]],
+  "Theme/R": [["colorCommonBackground","--r-colorCommonBackground"],["colorBottomBarDivider","--r-colorBottomBarDivider"],
+    ["colorYellow","--r-colorYellow"],["colorBlue","--r-colorBlue"],["colorRed","--r-colorRed"],
+    ["colorTextGray","--r-colorTextGray"],["colorBorderSelect","--r-colorBorderSelect"],["colorBorderGray","--r-colorBorderGray"]],
+  "Theme/L": [["grey0","--l-grey0"],["grey1","--l-grey1"],["grey2","--l-grey2"],["grey3","--l-grey3"],["grey4","--l-grey4"],
+    ["grey5","--l-grey5"],["grey6","--l-grey6"],["grey7","--l-grey7"],["g0","--l-g0"],["r0","--l-r0"],["b0","--l-b0"],
+    ["lavender","--l-lavender"],["primaryColor","--l-primaryColor"],["red","--l-red"],["secondaryColor","--l-secondaryColor"],
+    ["textColor","--l-textColor"],["ExpandMenu.tint","--l-expandMenu-tint"],["ExpandMenu.bg","--l-expandMenu-bg"]],
+  "Theme/X": [["expandMenuBackground","--x-expandMenuBackground"]],
+  "Legacy/PornHub": [["Orange","--ph-orange"],["Red","--ph-red"],["Green","--ph-green"],["Blue","--ph-blue"],
+    ["Purple","--ph-purple"],["Yellow","--ph-yellow"],["Pink","--ph-pink"],["Brown","--ph-brown"],["Grey","--ph-grey"],
+    ["separator","--ph-separator"],["gray0E","--ph-gray0E"],["gray10","--ph-gray10"],["gray15","--ph-gray15"],
+    ["gray1F","--ph-gray1F"],["gray21","--ph-gray21"],["gray25","--ph-gray25"],["gray3F","--ph-gray3F"],
+    ["gray96","--ph-gray96"],["grayC6","--ph-grayC6"],["Black","--ph-black"],["White","--ph-white"]],
+  "Material/XvideosTheme": [["Purple80","--mat-purple80"],["PurpleGrey80","--mat-purpleGrey80"],["Pink80","--mat-pink80"],
+    ["Purple40","--mat-purple40"],["PurpleGrey40","--mat-purpleGrey40"],["Pink40","--mat-pink40"]]
+};
+const cs = getComputedStyle(document.documentElement);
+const hex = v => cs.getPropertyValue(v).trim();
+const root = document.getElementById('catalog-root');
+for (const [name, vars] of Object.entries(collections)) {
+  const h = document.createElement('div'); h.className = 'group-title'; h.textContent = name; root.appendChild(h);
+  const grid = document.createElement('div'); grid.className = 'swatches';
+  for (const [tn, vn] of vars) {
+    const s = document.createElement('div'); s.className = 'swatch';
+    s.innerHTML = `<div class="sw-chip" style="background:var(${vn})"></div>
+      <div class="sw-meta"><span class="sw-name">${tn}</span><span class="sw-hex">${hex(vn).toUpperCase()}</span></div>`;
+    grid.appendChild(s);
+  }
+  root.appendChild(grid);
+}
+const types = [["t-screenTitle","screenTitle 24/30"],["t-heroTitle","heroTitle 28/34"],["t-sectionTitle","sectionTitle 13/18"],
+  ["t-rowTitle","rowTitle 16/22"],["t-rowValue","rowValue 16/22"],["t-rowSubtitle","rowSubtitle 13/18"],["t-body","body 16/22"],
+  ["t-bodyLarge","bodyLarge 18/24"],["t-button","button 16/20"],["t-caption","caption 12/16"],["t-mediaIndex","mediaIndex 12/16"],
+  ["t-menuItem","menuItem 18/24"],["t-dialogTitle","dialogTitle 18/24"],["t-dialogBody","dialogBody 14/20"]];
+const troot = document.getElementById('type-root');
+troot.style.background = 'var(--sh-background)';
+troot.style.padding = '20px'; troot.style.borderRadius = '12px';
+for (const [cls, lbl] of types) {
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="lbl">${lbl}</span><span class="${cls}">The quick brown fox 0123</span>`;
+  troot.appendChild(d);
+}
+const misc = ["101014","ffe800","ff7a7a","090909","363636","232323","e4e4e4","474747","cccccc","01b671","e5553a","4276fe",
+  "ff8e0c","43c558","fd6969","bddbfd","22c55c","141414","353535","414141","c5c8c6","45687a","202020","b8b5b5","8f8b8b",
+  "222222","fed766","1b1b1b","b0b0b0","2a2a2a","4a3b00","3a3a3a","bfbfbf","4a4a4a","938f99","484848","b8b7b7","888888",
+  "6552a5","ebe6ee","ffc857","3e3e3e","373737","2d2d2d","434343","171717","242424","606060","f4f4f4","d0d0d0","ff7468",
+  "2d4d2f","85ce6d","f0ffe9","63373a","ff8277","ffe1dd","1d1d1d","0c94ff","a3a3a3","b3b3b3","181818","8ab4f8","2c2c2c",
+  "565656","f1edf4","48454e","757575","cdecfb","137cbd","73cdf1","909090","e73538","8bc34a","9e9da9","aaaaaa","0f0f0f",
+  "505050","3d3c53","923117","0f9960","d13913","fffbfe","1c1b1f","3d3f4a","dee1ef","5a5d6c","ff7043","ff9000","23242a",
+  "ff6b6b","2e2e2e","787878","de2600","d9d9d9","040404"];
+const mroot = document.getElementById('misc-root');
+for (const h of misc) {
+  const s = document.createElement('div'); s.className = 'swatch';
+  s.innerHTML = `<div class="sw-chip" style="background:var(--misc-${h})"></div>
+    <div class="sw-meta"><span class="sw-hex">#${h.toUpperCase()}</span></div>`;
+  mroot.appendChild(s);
+}
+</script>
+</body>
+</html>

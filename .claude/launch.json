@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "design-copy",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4599", "--directory", "docs/design-copy"],
+      "port": 4599
+    }
+  ]
+}
