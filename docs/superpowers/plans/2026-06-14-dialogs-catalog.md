@@ -66,6 +66,24 @@ Expected: candidates in `common/p2p/ui/ScreenP2pSend.kt` and any filter/sort sel
 
 For each found composable, record one row: `name | file | trigger surface | bg color (token) | text/accent colors | corner/padding`. Append as a markdown checklist under this task. Each row becomes one card in Task 7 (menus) or Task 8 (sheets). Mark any that are NOT popups (e.g. inline rows) as "skip — not a popup".
 
+**Enumeration result (done):**
+
+Menus (5) → Task 7:
+- [ ] **ThumbnailSizeSelector** — `common/settings/ui/components/ThumbnailSizeSelector.kt` — trigger Button — bg M3 default surface — items = `ThumbnailsSize.displayNames` (размеры миниатюр).
+- [ ] **AlbumItemExpandMenu (L)** — `l/ui/element/expandMenu/AlbumItemExpandMenu.kt` — trigger MoreVert — bg `--l-expandMenu-bg` (#FFFAF5) — item tint `--l-expandMenu-tint` (#1F1F1F) — items EN: Download / Share / SaveToGallery / Add to Collection / Remove from Collection.
+- [ ] **ExpandMenuVideo (R)** — `r/common/expand_menu_video/ExpandMenuVideo.kt` — trigger MoreVert — bg hardcoded `#F1EDF4` (add token `--misc-f1edf4` if absent) — items EN: Download / Share / SaveToGallery / Block / Like / Follow / Add to Collection / Remove from Collection / Subscribtion.
+- [ ] **X_DashboardExpandMenu** — `x/screens/ui/expandMenu/X_DashboardExpandMenu.kt` — trigger MoreVert — bg `--x-expandMenuBackground`.
+- [ ] **FavoriteActionsExpandMenu** — `x/screens/favorites/ScreenFavorites.kt:247` — trigger MoreVert — bg `--l-expandMenu-bg` (#FFFAF5, reuses L) — item tint `--l-expandMenu-tint` — items RU: Скачать / В галерею / Удалить.
+
+Legacy dialog (1) → Task 7 (with ⚠):
+- [ ] **MenuDotConfig** — `x/screens/common/bottomKeyboard/MenuDot.kt:123` — `Dialog` white Surface corner 16dp, title "Set value" 24sp bold + Cancel icon, separator #9E9E9E, full-width pill "Done" (corner 50dp). ⚠ legacy: sibling `MenuDot` полностью закомментирован, кнопка ничего не делает.
+
+Bottom sheets → Task 8: **none found** (grep пуст). Task 8 = заметка «нет».
+
+Discovered inconsistencies (flag with ⚠ in Task 7):
+- 4 разных фона меню: M3 default / #FFFAF5 (L, X-favorites) / #F1EDF4 (R) / `--x-expandMenuBackground` (X-dashboard).
+- Язык пунктов: L/R меню — **English** (Download/Share/Block…), X-favorites — **русский** (Скачать/В галерею/Удалить). i18n-расхождение.
+
 - [ ] **Step 4: Commit**
 
 ```bash
