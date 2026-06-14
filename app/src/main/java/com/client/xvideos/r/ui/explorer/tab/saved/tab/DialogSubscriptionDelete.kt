@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.common.saved.SelectedCreator
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.composeunstyled.Text
@@ -33,17 +34,16 @@ fun DialogSubscriptionDelete(
     onConfirm: (String) -> Unit
 ) {
     user()?.let { pending ->
-        AlertDialog(
+        LavenderDialog(
+            title = "Удалить подписку?",
+            onDismiss = onDismiss,
             icon = {
                 Box(modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .size(96.dp).background(Color.DarkGray), contentAlignment = Alignment.Center) {
-
-
                     if (pending.urlProfile != null) {
-                        UrlImage( url = pending.urlProfile )
-                    }
-                    else {
+                        UrlImage(url = pending.urlProfile)
+                    } else {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
@@ -53,26 +53,14 @@ fun DialogSubscriptionDelete(
                     }
                 }
             },
-            onDismissRequest = onDismiss,
-            title = { Text("Удалить подписку?", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
-            text = {
-                Text(buildAnnotatedString {
-                    append("Удалить автора «")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                    append("» из подписок?")
-                }, fontSize = 16.sp)
+            body = buildAnnotatedString {
+                append("Удалить автора «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                append("» из подписок?")
             },
-            confirmButton = {
-                TextButton(onClick = { onConfirm(pending.name) }) {
-                    Text("Удалить", fontSize = 16.sp, color = Color(0xFF6552A5))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text("Отмена", fontSize = 16.sp, color = Color(0xFF6552A5))
-                }
-            },
-            containerColor = Color(0xFFEBE6EE)
+            confirmText = "Удалить",
+            onConfirm = { onConfirm(pending.name) },
+            destructive = true,
         )
     }
 }

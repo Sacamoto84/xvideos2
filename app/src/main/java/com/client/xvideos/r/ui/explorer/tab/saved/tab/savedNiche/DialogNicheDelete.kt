@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.composeunstyled.Text
@@ -27,30 +28,20 @@ fun DialogNicheDelete(
     onConfirm: (NichesInfo) -> Unit
 ) {
     item?.let { pending ->
-        AlertDialog(
+        LavenderDialog(
+            title = "Удалить группу?",
+            onDismiss = onDismiss,
             icon = { UrlImage(pending.thumbnail, modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .size(96.dp)) },
-            onDismissRequest = onDismiss,
-            title = { Text("Удалить группу?", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
-            text = {
-                Text(buildAnnotatedString {
-                    append("Удалить «")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                    append("» из сохранённых?")
-                }, fontSize = 16.sp)
+            body = buildAnnotatedString {
+                append("Удалить «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                append("» из сохранённых?")
             },
-            confirmButton = {
-                TextButton(onClick = { onConfirm(pending) }) {
-                    Text("Удалить", fontSize = 16.sp, color = Color(0xFF6552A5))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text("Отмена", fontSize = 16.sp, color = Color(0xFF6552A5))
-                }
-            },
-            containerColor = Color(0xFFEBE6EE)
+            confirmText = "Удалить",
+            onConfirm = { onConfirm(pending) },
+            destructive = true,
         )
     }
 }
