@@ -41,7 +41,50 @@ section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
 <h1>Каталог диалогов приложения (as-is)</h1>
 <p class="lead">Все всплывающие окна, точно как в приложении, сгруппированы по визуальным стилям. Цвета из tokens.css (1:1 с кодом). Расхождения и баги помечены ⚠.</p>
 
-<section id="famA"><h2>A — лавандовый Material3 (раздел L)</h2><p class="fdesc">Фон #EBE6EE, иконка 96dp по центру, акцент фиолетовый #6552A5. Внутри расхождение: filled-кнопка против только-текста.</p><div class="dlg-grid"></div></section>
+<section id="famA"><h2>A — лавандовый Material3 (раздел L)</h2><p class="fdesc">Фон #EBE6EE, иконка 96dp по центру, акцент фиолетовый #6552A5. Внутри расхождение: filled-кнопка против только-текста.</p><div class="dlg-grid">
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
+  <div class="ph" style="width:72px;height:72px;border-radius:6px;margin:0 auto 16px">▦</div>
+  <div class="ttl">Заголовок</div>
+  <div class="body" style="color:var(--misc-474747)">Текст диалога</div>
+  <div class="acts"><span class="btn-text" style="color:var(--misc-6552a5)">Отмена</span>
+  <span class="btn-fill" style="background:var(--misc-6552a5);color:#fff">Удалить</span></div>
+</div></div>
+<div class="dlg-cap"><b>DialogTemplate</b><br>common/theme/DialogTemplate.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>filled --misc-6552a5</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
+  <div class="ph" style="width:72px;height:72px;border-radius:6px;margin:0 auto 16px">▦</div>
+  <div class="ttl">Удалить Альбом?</div>
+  <div class="body" style="color:var(--misc-474747)">Удалить «<b>Summer Vacation</b>» из сохранённых?</div>
+  <div class="acts"><span class="btn-text" style="color:var(--misc-6552a5)">Отмена</span>
+  <span class="btn-fill" style="background:var(--misc-6552a5);color:#fff">Удалить</span></div>
+</div></div>
+<div class="dlg-cap"><b>AlbumDialogDeleteAlbum</b><br>l/.../screenAlbum/dialog/AlbumDialogDeleteAlbum.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>filled --misc-6552a5</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
+  <div class="ph" style="width:72px;height:72px;border-radius:8px;margin:0 auto 16px;background:#444;color:#fff">☻</div>
+  <div class="ttl" style="font-size:20px">Удалить подписку?</div>
+  <div class="body" style="font-size:16px;color:#000">Удалить автора «<b>SampleUser</b>» из подписок?</div>
+  <div class="acts"><span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Отмена</span>
+  <span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Удалить</span></div>
+</div></div>
+<div class="dlg-cap"><b>DialogSubscriptionDelete</b><br>r/.../saved/tab/DialogSubscriptionDelete.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>text --misc-6552a5</span></div>
+<div class="dlg-warn">⚠ обе кнопки текстовые (в DialogTemplate/Album — filled): расхождение</div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
+  <div class="ph" style="width:72px;height:72px;border-radius:8px;margin:0 auto 16px">▦</div>
+  <div class="ttl" style="font-size:20px">Удалить группу?</div>
+  <div class="body" style="font-size:16px;color:#000">Удалить «<b>Sample Niche</b>» из сохранённых?</div>
+  <div class="acts"><span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Отмена</span>
+  <span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Удалить</span></div>
+</div></div>
+<div class="dlg-cap"><b>DialogNicheDelete</b><br>r/.../savedNiche/DialogNicheDelete.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>text --misc-6552a5</span></div></div>
+
+</div></section>
 <section id="famA2"><h2>A2 — дефолтный Material3</h2><p class="fdesc">containerColor не задан → дефолтная светлая M3-поверхность.</p><div class="dlg-grid"></div></section>
 <section id="famB"><h2>B — тёмный Material3 (раздел X)</h2><p class="fdesc">Фон #2E2E2E, иконка = превью 16:9, акцент коралл #FF6B6B.</p><div class="dlg-grid"></div></section>
 <section id="famC"><h2>C — тёмный кастом «список коллекций»</h2><p class="fdesc">Фон #090909, рамка #3F3F3F 12dp, футер 56dp #232323. Один макет — жёлтый (R) против розового (L).</p><div class="dlg-grid"></div></section>
