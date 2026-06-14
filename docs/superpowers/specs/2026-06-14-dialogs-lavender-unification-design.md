@@ -28,8 +28,8 @@
 
 ## Канонический composable `LavenderDialog`
 
-Переиспользуем сейчас **неиспользуемый** `common/theme/DialogTemplate.kt` → переименуем
-composable в `LavenderDialog` (файл `common/theme/LavenderDialog.kt`). Построен на M3
+Создаём **новый** `common/theme/LavenderDialog.kt` (прежний `DialogTemplate.kt` удалён
+вне этой задачи и нигде не вызывался — не воссоздаём). Построен на M3
 `BasicAlertDialog` + `Surface(color = Theme.L.DialogLavande.content, shape =
 RoundedCornerShape(DialogLavande.cornerRadius))`, внутри `Column`:
 
@@ -79,7 +79,7 @@ fun LavenderDialog(
 
 | Диалог | Файл | Иконка | Контент | Главная кнопка |
 |---|---|---|---|---|
-| DialogTemplate→LavenderDialog | common/theme/ | опц. | — | по параметрам |
+| LavenderDialog (новый, канон) | common/theme/LavenderDialog.kt | опц. | опц. слот | по параметрам |
 | AlbumDialogDeleteAlbum | l/.../screenAlbum/dialog/ | обложка 96 | — | «Удалить» красная |
 | DialogSubscriptionDelete | r/.../saved/tab/ | аватар 96 | — | «Удалить» красная |
 | DialogNicheDelete | r/.../savedNiche/ | превью 96 | — | «Удалить» красная |
