@@ -85,8 +85,31 @@ section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
 <div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>text --misc-6552a5</span></div></div>
 
 </div></section>
-<section id="famA2"><h2>A2 — дефолтный Material3</h2><p class="fdesc">containerColor не задан → дефолтная светлая M3-поверхность.</p><div class="dlg-grid"></div></section>
-<section id="famB"><h2>B — тёмный Material3 (раздел X)</h2><p class="fdesc">Фон #2E2E2E, иконка = превью 16:9, акцент коралл #FF6B6B.</p><div class="dlg-grid"></div></section>
+<section id="famA2"><h2>A2 — дефолтный Material3</h2><p class="fdesc">containerColor не задан → дефолтная светлая M3-поверхность.</p><div class="dlg-grid">
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:#FEF7FF;color:#1d1b20;text-align:left">
+  <div style="font-size:20px;font-weight:500;margin-bottom:14px">Поделиться</div>
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <span style="color:#65558F;font-size:14px;font-weight:500;padding:10px 12px;text-align:center">Системное (через приложения)</span>
+    <span style="color:#65558F;font-size:14px;font-weight:500;padding:10px 12px;text-align:center">P2P рядом (Nearby)</span></div>
+  <div style="display:flex;justify-content:flex-end;margin-top:16px"><span style="color:#65558F;font-size:14px;font-weight:500;padding:8px 12px">Отмена</span></div>
+</div></div>
+<div class="dlg-cap"><b>P2pSendChooserDialog</b><br>common/p2p/ui/P2pSendChooserDialog.kt</div>
+<div class="dlg-chips"><span class="dlg-chip">bg M3 default (#FEF7FF)</span><span class="dlg-chip">контент = текст-кнопки</span></div></div>
+
+</div></section>
+<section id="famB"><h2>B — тёмный Material3 (раздел X)</h2><p class="fdesc">Фон #2E2E2E, иконка = превью 16:9, акцент коралл #FF6B6B.</p><div class="dlg-grid">
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-2e2e2e);color:#fff">
+  <div class="ph" style="width:170px;height:96px;border-radius:8px;margin:0 auto 16px">▶</div>
+  <div class="ttl" style="font-size:18px;font-weight:500;margin-bottom:4px">Удалить из избранного?</div>
+  <div class="acts"><span class="btn-text" style="color:var(--misc-cccccc)">Отмена</span>
+  <span class="btn-text" style="color:var(--misc-ff6b6b)">Удалить</span></div>
+</div></div>
+<div class="dlg-cap"><b>ConfirmDeleteFavoriteDialog</b><br>x/screens/favorites/FavoritesDeleteDialog.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-2e2e2e)"></span>bg --misc-2e2e2e</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-ff6b6b)"></span>text --misc-ff6b6b</span></div></div>
+
+</div></section>
 <section id="famC"><h2>C — тёмный кастом «список коллекций»</h2><p class="fdesc">Фон #090909, рамка #3F3F3F 12dp, футер 56dp #232323. Один макет — жёлтый (R) против розового (L).</p><div class="dlg-grid"></div></section>
 <section id="famD"><h2>D — тёмный кастом «ввод»</h2><p class="fdesc">Тот же корпус с OutlinedTextField. Кнопка без явного цвета → дефолтный M3.</p><div class="dlg-grid"></div></section>
 <section id="famE"><h2>E — белый кастом (настройки/блок)</h2><p class="fdesc">Фон белый, рамка #E4E4E4 12dp, кнопка радиус 4dp. Синий против красного.</p><div class="dlg-grid"></div></section>
