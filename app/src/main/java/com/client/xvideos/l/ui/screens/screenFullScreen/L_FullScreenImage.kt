@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenFullScreen
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.theme.LavenderDialog
 
 import android.os.Build
 import android.os.Parcelable
@@ -638,23 +639,23 @@ private fun LPictureInfoDialog(
     val albumId = item.album?.toLongOrNull()
     val uriHandler = LocalUriHandler.current
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Информация") },
-        text = {
+    LavenderDialog(
+        title = "Информация",
+        onDismiss = onDismiss,
+        content = {
             Column(
                 modifier = Modifier
                     .heightIn(max = 520.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Альбом: ", color = Color.LightGray, fontFamily = Theme.L.fontFamilyKarla)
+                    Text("Альбом: ", color = Color.DarkGray, fontFamily = Theme.L.fontFamilyKarla)
                     if (albumId != null && onAlbumClick != null) {
                         TextButton(onClick = { onAlbumClick(albumId) }) {
                             Text(albumId.toString())
                         }
                     } else {
-                        Text(item.album ?: "-", color = Color.LightGray, fontFamily = Theme.L.fontFamilyKarla)
+                        Text(item.album ?: "-", color = Color.DarkGray, fontFamily = Theme.L.fontFamilyKarla)
                     }
                 }
 
@@ -664,14 +665,8 @@ private fun LPictureInfoDialog(
                 )
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("OK")
-            }
-        },
-        containerColor = Color(0xFF202020),
-        titleContentColor = Color.White,
-        textContentColor = Color.LightGray
+        confirmText = "OK",
+        onConfirm = onDismiss,
     )
 }
 
@@ -685,7 +680,7 @@ private fun LPictureInfoText(
     ClickableText(
         text = annotatedText,
         style = TextStyle(
-            color = Color.LightGray,
+            color = Color.DarkGray,
             fontFamily = Theme.L.fontFamilyKarla
         ),
         onClick = { offset ->

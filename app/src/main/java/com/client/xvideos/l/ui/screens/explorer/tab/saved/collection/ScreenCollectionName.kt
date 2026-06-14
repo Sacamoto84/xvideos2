@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.theme.LavenderDialog
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
@@ -256,12 +257,10 @@ private fun LCollectionDuplicatesDialog(
     onDismiss: () -> Unit,
     onRemoveDuplicates: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text("Детектор дублей", color = Theme.L.textColor, style = Theme.L.Type.dialogTitle)
-        },
-        text = {
+    LavenderDialog(
+        title = "Детектор дублей",
+        onDismiss = onDismiss,
+        content = {
             if (groups.isEmpty()) {
                 Text("Дубли не найдены", color = Theme.L.grey2, style = Theme.L.Type.body)
             } else {
@@ -275,28 +274,17 @@ private fun LCollectionDuplicatesDialog(
                     groups.take(6).forEach { group ->
                         Text(
                             "• ${group.items.size} элемента: ${lPicsDetailsIdentityKey(group.items.first())}",
-                            color = Color.White,
+                            color = Color.Black,
                             style = Theme.L.Type.rowSubtitle
                         )
                     }
                 }
             }
         },
-        confirmButton = {
-            if (groups.isNotEmpty()) {
-                TextButton(onClick = onRemoveDuplicates) {
-                    Text("Удалить дубли", color = Theme.L.red, style = Theme.L.Type.button)
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Закрыть", color = Theme.L.primaryColor, style = Theme.L.Type.button)
-            }
-        },
-        containerColor = Theme.L.grey5,
-        titleContentColor = Theme.L.textColor,
-        textContentColor = Theme.L.textColor
+        confirmText = if (groups.isNotEmpty()) "Удалить дубли" else null,
+        onConfirm = onRemoveDuplicates,
+        destructive = true,
+        dismissText = "Закрыть",
     )
 }
 

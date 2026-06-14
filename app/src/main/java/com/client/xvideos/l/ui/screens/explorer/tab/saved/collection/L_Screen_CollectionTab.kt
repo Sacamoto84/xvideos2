@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -131,77 +132,48 @@ object L_Screen_CollectionTab : Screen {
 
         itemPendingAction?.let { pending ->
 
-            AlertDialog(
-                onDismissRequest = { itemPendingAction = null },
-                title = {
-                    Text(
-                        "Действие с коллекцией",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color.White
+            LavenderDialog(
+                title = "Действие с коллекцией",
+                onDismiss = { itemPendingAction = null },
+                content = {
+                    Text(pending, fontSize = 16.sp, color = Theme.L.b0)
+
+                    DropdownMenuItem(
+                        text = { Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        onClick = {
+                            renameValue = pending
+                            itemPendingRename = pending
+                            itemPendingAction = null
+                        },
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        onClick = {
+                            itemPendingAction = null
+                            navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
+                        },
+                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        onClick = {
+                            itemPendingDelete = pending
+                            itemPendingAction = null
+                        },
+                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
                     )
                 },
-                text = {
-                    Column {
-
-                        //Название коллекции
-                        Text(pending, fontSize = 16.sp, color = Theme.L.b0)
-
-                        DropdownMenuItem(
-                            text = { Text("Переименовать",  style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                            onClick = {
-                                renameValue = pending
-                                itemPendingRename = pending
-                                itemPendingAction = null
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Edit, contentDescription = null, tint = Color.White)
-                            }
-                        )
-
-                        DropdownMenuItem(
-                            text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                            onClick = {
-                                itemPendingAction = null
-                                navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
-                            }
-                        )
-
-                        DropdownMenuItem(
-                            text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                            onClick = {
-                                itemPendingDelete = pending
-                                itemPendingAction = null
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White)
-                            }
-                        )
-                    }
-                },
-                confirmButton = {},
-                dismissButton = {},
-                containerColor = colorDialogConteiner,
-                titleContentColor = Theme.L.grey7,
-                textContentColor = Theme.L.grey6
             )
         }
 
         itemPendingRename?.let { pending ->
-            AlertDialog(
-                onDismissRequest = { itemPendingRename = null },
-                title = {
-                    Text(
-                        "Переименовать коллекцию",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Theme.L.textColor
-                    )
-                },
-                text = {
+            LavenderDialog(
+                title = "Переименовать коллекцию",
+                onDismiss = { itemPendingRename = null },
+                content = {
                     OutlinedTextField(
                         value = renameValue,
                         onValueChange = { renameValue = it },
@@ -209,65 +181,30 @@ object L_Screen_CollectionTab : Screen {
                         textStyle = Theme.L.Type.body
                     )
                 },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            if (savedL.collection.renameCollection(pending, renameValue)) {
-                                itemPendingRename = null
-                            }
-                        }
-                    ) { Text("Сохранить", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
+                confirmText = "Сохранить",
+                onConfirm = {
+                    if (savedL.collection.renameCollection(pending, renameValue)) {
+                        itemPendingRename = null
+                    }
                 },
-                dismissButton = {
-                    TextButton(
-                        onClick = { itemPendingRename = null }
-                    ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
-                },
-                containerColor = colorDialogConteiner,
-                titleContentColor = Theme.L.textColor,
-                textContentColor = Theme.L.textColor
             )
         }
         /* ---------- Диалог подтверждения ---------- */
         itemPendingDelete?.let { pending ->
-            AlertDialog(
-
-                onDismissRequest = { itemPendingDelete = null },
-
-                title = {
-                    Text(
-                        "Удалить коллекцию?",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Theme.L.textColor
-                    )
+            LavenderDialog(
+                title = "Удалить коллекцию?",
+                onDismiss = { itemPendingDelete = null },
+                body = buildAnnotatedString {
+                    append("Удалить «")
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
+                    append("» из коллекции")
                 },
-
-                text = {
-                    Text(buildAnnotatedString {
-                        append("Удалить «")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
-                        append("» из коллекции")
-                    }, fontSize = 16.sp, color = Theme.L.textColor)
+                confirmText = "Удалить",
+                onConfirm = {
+                    savedL.collection.deleteCollection(pending)
+                    itemPendingDelete = null
                 },
-
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            savedL.collection.deleteCollection(pending)
-                            itemPendingDelete = null
-                        }
-                    ) { Text("Удалить", style = Theme.L.Type.button.copy(color = Theme.L.red)) }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { itemPendingDelete = null }
-                    ) { Text("Отмена", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor)) }
-                },
-
-                containerColor = colorDialogConteiner,
-                titleContentColor = Theme.L.textColor,
-                textContentColor = Theme.L.textColor
+                destructive = true,
             )
         }
 
@@ -438,17 +375,10 @@ private fun LSmartCollectionsDialog(
     onDismiss: () -> Unit,
     onCreate: (LSmartCollectionCandidate) -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                "Smart collections",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = Theme.L.textColor
-            )
-        },
-        text = {
+    LavenderDialog(
+        title = "Smart collections",
+        onDismiss = onDismiss,
+        content = {
             if (candidates.isEmpty()) {
                 Text(
                     "Пока мало метаданных для авто-коллекций. Добавь несколько элементов из альбомов, где есть теги, авторы или общий album id.",
@@ -480,7 +410,7 @@ private fun LSmartCollectionsDialog(
                             }
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(candidate.title, color = Color.White, style = Theme.L.Type.rowTitle)
+                                Text(candidate.title, color = Color.Black, style = Theme.L.Type.rowTitle)
                                 Text(candidate.subtitle, color = Theme.L.grey2, style = Theme.L.Type.rowSubtitle)
                             }
                         }
@@ -488,15 +418,7 @@ private fun LSmartCollectionsDialog(
                 }
             }
         },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Закрыть", style = Theme.L.Type.button.copy(color = Theme.L.primaryColor))
-            }
-        },
-        containerColor = Theme.L.grey5,
-        titleContentColor = Theme.L.textColor,
-        textContentColor = Theme.L.textColor
+        dismissText = "Закрыть",
     )
 }
 
