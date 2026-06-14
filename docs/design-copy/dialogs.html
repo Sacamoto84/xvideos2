@@ -171,7 +171,77 @@ section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
 <div class="dlg-warn">⚠ тот же макет, что DialogButton, но акцент красный вместо синего</div></div>
 
 </div></section>
-<section id="menus"><h2>Меню (dropdown / контекст)</h2><p class="fdesc">Заполняется в Task 7. Расхождения: 4 разных фона меню и язык пунктов (L/R — English, X — русский).</p><div class="dlg-grid"></div></section>
+<section id="menus"><h2>Меню (dropdown / контекст)</h2><p class="fdesc">Заполняется в Task 7. Расхождения: 4 разных фона меню и язык пунктов (L/R — English, X — русский).</p><div class="dlg-grid">
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="menu" style="background:var(--l-expandMenu-bg);color:var(--l-expandMenu-tint)">
+  <div class="mi"><span class="ico"></span>Скачать</div>
+  <div class="mi"><span class="ico"></span>Поделиться</div>
+  <div class="mi"><span class="ico"></span>В галерею</div>
+  <div class="mi"><span class="ico"></span>Add to Collection</div>
+  <div class="mi"><span class="ico"></span>Remove from Collection</div>
+</div></div>
+<div class="dlg-cap"><b>AlbumItemExpandMenu</b> (L)<br>l/ui/element/expandMenu/AlbumItemExpandMenu.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--l-expandMenu-bg)"></span>bg --l-expandMenu-bg</span><span class="dlg-chip"><span class="sw" style="background:var(--l-expandMenu-tint)"></span>tint --l-expandMenu-tint</span></div>
+<div class="dlg-warn">⚠ язык пунктов смешан: русский + English</div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="menu" style="background:var(--misc-f1edf4);color:#1f1f1f">
+  <div class="mi"><span class="ico"></span>Download</div>
+  <div class="mi"><span class="ico"></span>Share</div>
+  <div class="mi"><span class="ico"></span>Save to gallery</div>
+  <div class="mi"><span class="ico"></span>Block</div>
+  <div class="mi"><span class="ico"></span>Like</div>
+  <div class="mi"><span class="ico"></span>Follow</div>
+  <div class="mi"><span class="ico"></span>Add to Collection</div>
+  <div class="mi"><span class="ico"></span>Subscribtion</div>
+</div></div>
+<div class="dlg-cap"><b>ExpandMenuVideo</b> (R)<br>r/common/expand_menu_video/ExpandMenuVideo.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-f1edf4)"></span>bg --misc-f1edf4</span><span class="dlg-chip">пункты English</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="menu" style="background:var(--sh-tabLevel3);color:#eaeaea">
+  <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px">
+    <span style="border:1px solid var(--r-colorYellow);border-radius:4px;padding:4px 8px;font-size:13px">Action</span>
+    <span style="border:1px solid var(--r-colorYellow);border-radius:4px;padding:4px 8px;font-size:13px">Adventure</span>
+    <span style="border:1px solid var(--r-colorYellow);border-radius:4px;padding:4px 8px;font-size:13px">Comedy</span>
+    <span style="border:1px solid var(--r-colorYellow);border-radius:4px;padding:4px 8px;font-size:13px">Drama</span>
+    <span style="border:1px solid var(--r-colorYellow);border-radius:4px;padding:4px 8px;font-size:13px">Sci-Fi</span></div>
+</div></div>
+<div class="dlg-cap"><b>ExpandMenuVideoTags</b> (R)<br>r/common/expand_menu_video/ExpandMenuVideoTags.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--sh-tabLevel3)"></span>bg --sh-tabLevel3 (тёмный)</span><span class="dlg-chip"><span class="sw" style="background:var(--r-colorYellow)"></span>чип-рамка --r-colorYellow</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="menu" style="background:var(--x-expandMenuBackground);color:#1f1f1f">
+  <div class="mi"><span class="ico"></span>Избранное</div>
+  <div class="mi"><span class="ico"></span>Сохранить</div>
+  <div class="mi"><span class="ico"></span>В галерею</div>
+</div></div>
+<div class="dlg-cap"><b>X_DashboardExpandMenu</b><br>x/screens/ui/expandMenu/X_DashboardExpandMenu.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--x-expandMenuBackground)"></span>bg --x-expandMenuBackground</span><span class="dlg-chip">пункты русский</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="menu" style="background:var(--l-expandMenu-bg);color:var(--l-expandMenu-tint)">
+  <div class="mi"><span class="ico"></span>Скачать</div>
+  <div class="mi"><span class="ico"></span>В галерею</div>
+  <div class="mi"><span class="ico"></span>Удалить</div>
+</div></div>
+<div class="dlg-cap"><b>FavoriteActionsExpandMenu</b> (X)<br>x/screens/favorites/ScreenFavorites.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--l-expandMenu-bg)"></span>bg --l-expandMenu-bg (reuse L)</span><span class="dlg-chip">пункты русский</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="menu" style="background:#FEF7FF;color:#1d1b20;width:180px">
+  <div class="mi"><span class="ico"></span>Small</div>
+  <div class="mi"><span class="ico"></span>Medium</div>
+  <div class="mi"><span class="ico"></span>Large</div>
+</div></div>
+<div class="dlg-cap"><b>ThumbnailSizeSelector</b><br>common/settings/ui/components/ThumbnailSizeSelector.kt</div>
+<div class="dlg-chips"><span class="dlg-chip">bg M3 default</span><span class="dlg-chip">items = ThumbnailsSize.displayNames</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div style="width:280px;background:#fff;border-radius:16px;padding:20px">
+  <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:24px;font-weight:700;color:#000">Set value</span><span style="color:#9e9e9e;font-size:20px">✕</span></div>
+  <div style="height:1px;background:#9E9E9E;margin:12px 0"></div>
+  <div style="padding:0 40px"><div style="background:#65558F;color:#fff;text-align:center;font-size:14px;font-weight:500;padding:14px;border-radius:50px">Done</div></div>
+</div></div>
+<div class="dlg-cap"><b>MenuDotConfig</b><br>x/screens/common/bottomKeyboard/MenuDot.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:#fff;border:1px solid #555"></span>bg #fff · corner 16dp</span><span class="dlg-chip">pill-кнопка 50dp</span></div>
+<div class="dlg-warn">⚠ legacy: соседний MenuDot полностью закомментирован</div></div>
+
+</div></section>
 <section id="selectors"><h2>Селекторы (sort / size / page)</h2><p class="fdesc">Компактные попапы выбора. Заполняется в Task 7.</p><div class="dlg-grid"></div></section>
 <section id="sheets"><h2>Bottom sheets</h2><p class="fdesc">Заполняется в Task 8.</p><div class="dlg-grid"></div></section>
 </body>
