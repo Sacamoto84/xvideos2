@@ -5,6 +5,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.R as Res
 
@@ -59,19 +60,6 @@ object Theme {
     /** Уникальные токены L (палитра, выделения, текст-стили, шрифты). */
     object L {
 
-//        val grayLevel = object : ThemeBackgroundLevel {
-//            override val gray0 = Color(0xFF141414)
-//            override val gray1 = Color(0xFF1F1F1F)
-//            override val gray2 = Color(0xFF282828)
-//            override val gray3 = Color(0xFF353535)
-//            override val gray4 = Color(0xFF3B3B3B)
-//            override val gray5 = Color(0xFF3F3F3F)
-//            override val gray6 = Color(0xFF414141)
-//            override val gray7 = Color(0xFF474747)
-//            override val textColor = Color(0xFFC5C8C6)
-//            override val blue = Color(0xFF45687A)
-//        }
-
         val g0 = Color(0xFF4CAF50)
         val r0 = Color(0xFFF44336)
         val b0 = Color(0xFF2196F3)
@@ -105,6 +93,41 @@ object Theme {
         val fontFamilyDMsanss = fontFamilyApp
 
         val fontFamilyKarla = fontFamilyApp
+
+
+        /**
+         * Цвета и стили для диалогов.
+         */
+        object DialogLavande {
+
+            val content = Color(0xFFEBE6EE) //Цвет фона диалогового окна
+            val buttonBackground = Color(0xFF6552A5) //Цвет фона кнопки
+            val buttonTextColor = Color.White //Цвет текста кнопки
+            val buttonBorderColor = Color(0xFF6552A5) //Цвет границы кнопки
+            val buttonBorderWidth = 1.dp //Толщина границы кнопки
+            val buttonBorderRadius = 16.dp //Радиус границы кнопки
+
+
+
+            val button = TextStyle(
+                fontSize = 16.sp,
+                lineHeight = 20.sp,
+                color = buttonTextColor,
+                fontFamily = fontFamilyApp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.sp
+            )
+
+            val bodyColor = Color(0xFF474747)                   // Цвет текста тела
+            val dismissTextColor = Color(0xFF6552A5)            // Цвет текста кнопки отмены
+            val buttonBackgroundDestructive = Color(0xFFF44336) // Красный для деструктива
+            val cornerRadius = 28.dp                            // Скругление диалога
+            val iconSize = 96.dp                                // Размер иконки
+        }
+
+
+
+
 
         object Type {
             val screenTitle = TextStyle(
