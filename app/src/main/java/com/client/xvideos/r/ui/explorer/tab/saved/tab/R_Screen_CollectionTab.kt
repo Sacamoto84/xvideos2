@@ -46,6 +46,10 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.p2p.P2pSendSource
+import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -75,6 +79,8 @@ object R_Screen_CollectionTab : Screen {
     override fun Content() {
 
         val vm = getScreenModel<ScreenSavedCollectionSM>()
+
+        val navigator = LocalNavigator.currentOrThrow
 
         val savedRed = vm.savedRed
 
@@ -113,9 +119,11 @@ object R_Screen_CollectionTab : Screen {
                         leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
                     )
                     DropdownMenuItem(
-                        enabled = false,
-                        text = { androidx.compose.material3.Text("Поделиться (P2P) — скоро", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
-                        onClick = { },
+                        text = { androidx.compose.material3.Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        onClick = {
+                            itemPendingAction = null
+                            navigator.push(ScreenP2pSend(P2pSendSource.ShareCollectionR(pending)))
+                        },
                         leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
                     )
                     DropdownMenuItem(
