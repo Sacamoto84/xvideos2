@@ -1,215 +1,54 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>App — Design Copy · Dialogs &amp; Menus</title>
+<title>Каталог диалогов (as-is)</title>
 <link rel="stylesheet" href="tokens.css">
-<link rel="stylesheet" href="styles.css">
 <style>
-  .matrix { display: flex; flex-wrap: wrap; gap: 30px; }
-  .item { width: 340px; }
-  .item .cap { font-size: 13px; font-weight: 600; margin: 0 0 2px; }
-  .item .src { font-size: 11px; color: #888; margin: 0 0 8px; font-family: ui-monospace, monospace; }
-  .menu--rlight { --menu-bg: var(--misc-f1edf4); }
-  .menu--rdark  { --menu-bg: var(--misc-48454e); }
-  .menu--rdark .menu-item { color: var(--l-grey0); }
-  .menu--rdark .menu-item .mi-ico { background: var(--l-grey0); }
-  .sel { width: 220px; background: var(--l-expandMenu-bg); border-radius: 12px; padding: 6px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
-  .sel .opt { padding: 11px 14px; border-radius: 8px; color: var(--l-expandMenu-tint); font: 400 16px 'DM Sans'; display:flex; justify-content:space-between; }
-  .sel .opt--on { font-weight: 600; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+body{font-family:'DM Sans',sans-serif;margin:0;padding:24px;background:#1b1b1f;color:#eee}
+h1{font-size:22px;font-weight:500;margin:0 0 4px}
+.lead{color:#aaa;font-size:14px;margin:0 0 24px;max-width:760px}
+section{margin:0 0 32px}
+section>h2{font-size:18px;font-weight:500;margin:0 0 2px}
+section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
+.dlg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.dlg-cell{display:flex;flex-direction:column;gap:8px}
+.dlg-scrim{background:#000;display:flex;align-items:center;justify-content:center;padding:28px 18px;border-radius:8px}
+.dlg-cap{font-size:12px;color:#bbb}
+.dlg-cap b{color:#fff;font-weight:500}
+.dlg-chips{display:flex;flex-wrap:wrap;gap:6px}
+.dlg-chip{font-size:11px;color:#ddd;border:1px solid #444;border-radius:4px;padding:2px 6px}
+.dlg-chip .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.dlg-warn{font-size:11px;color:#FFD08A;border:1px solid #6b5520;background:#2a2410;border-radius:4px;padding:3px 7px}
+.ph{display:flex;align-items:center;justify-content:center;background:#3a3a3a;color:#888;font-size:24px}
+.m3{width:280px;border-radius:28px;padding:24px;text-align:center}
+.m3 .ttl{font-size:18px;font-weight:700;margin-bottom:8px}
+.m3 .body{font-size:14px;line-height:1.4}
+.m3 .acts{display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-top:22px}
+.btn-text{font-size:14px;font-weight:500;padding:8px 12px}
+.btn-fill{font-size:14px;font-weight:500;padding:10px 22px;border-radius:20px}
+.card-dark{width:280px;background:var(--misc-090909);border:1px solid var(--r-colorBorderGray);border-radius:12px;overflow:hidden}
+.card-white{width:280px;background:#fff;border:1px solid var(--misc-e4e4e4);border-radius:12px;overflow:hidden}
+.foot-dark{display:flex;justify-content:flex-end;align-items:center;gap:8px;height:50px;background:var(--misc-232323);padding:0 8px}
+.menu{width:240px;border-radius:8px;padding:6px 0;overflow:hidden}
+.menu .mi{display:flex;align-items:center;gap:12px;padding:11px 16px;font-size:16px}
+.menu .mi .ico{width:18px;height:18px;border-radius:3px;background:currentColor;opacity:.55;flex:none}
 </style>
 </head>
 <body>
+<h1>Каталог диалогов приложения (as-is)</h1>
+<p class="lead">Все всплывающие окна, точно как в приложении, сгруппированы по визуальным стилям. Цвета из tokens.css (1:1 с кодом). Расхождения и баги помечены ⚠.</p>
 
-<nav class="doc-nav">
-  <b>App · Design Copy — Dialogs &amp; Menus</b>
-  <a href="index.html">Color System</a>
-  <a href="screens.html">Screens</a>
-  <a href="#dialogs">Dialogs</a><a href="#menus">Expand-menus</a><a href="#selectors">Selectors</a>
-</nav>
-
-<!-- ===== Dialogs ===== -->
-<section class="section" id="dialogs">
-  <h2>Dialogs</h2>
-  <p class="sub">On <code>DialogShell</code>: dark backdrop, <span class="tok">dialogTitle</span> + <span class="tok">dialogBody</span> + actions. Backgrounds vary per dialog (mostly hardcoded → <span class="tok">--misc-*</span>).</p>
-  <div class="matrix">
-
-    <div class="item">
-      <p class="cap">Delete album? (L)</p><p class="src">screenAlbum/atom/AlbumDialogDeleteAlbum.kt</p>
-      <div class="dialog-stage">
-        <div class="dialog-shell" style="--dlg-bg:var(--misc-ebe6ee);color:#1a1a1a">
-          <div class="t-dialogTitle">Delete album?</div>
-          <div class="t-dialogBody" style="color:#555">"Album title" will be removed from saved.</div>
-          <div class="dialog-actions"><button class="btn btn--text">Cancel</button><button class="btn" style="background:var(--misc-6552a5);color:#fff">Delete</button></div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Sheet bg <span class="tok">--misc-ebe6ee</span>, accent <span class="tok">--misc-6552a5 #6552A5</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">New collection (L / common)</p><p class="src">common/collectionDB/ui/DaialogNewCollection.kt</p>
-      <div class="dialog-stage">
-        <div class="dialog-shell" style="--dlg-bg:var(--misc-232323)">
-          <div class="t-dialogTitle" style="color:var(--l-grey0)">New collection</div>
-          <div style="margin-top:12px;background:var(--misc-090909);border-radius:8px;padding:12px;color:var(--l-grey2)">name…</div>
-          <div class="dialog-actions"><button class="btn btn--text">Cancel</button><button class="btn btn--primary">Create</button></div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Sheet <span class="tok">--misc-232323</span>, input <span class="tok">--misc-090909</span>, section <span class="tok">--misc-363636</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">Block user? (R)</p><p class="src">r/common/block/ui/DialogBlock.kt</p>
-      <div class="dialog-stage">
-        <div class="dialog-shell" style="--dlg-bg:var(--sh-tabLevel1)">
-          <div class="t-dialogTitle" style="color:var(--l-grey0)">Block this creator?</div>
-          <div class="t-dialogBody">Their content will be hidden everywhere.</div>
-          <div class="dialog-actions"><button class="btn btn--text">Cancel</button><button class="btn" style="background:var(--r-colorRed);color:#fff">Block</button></div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Destructive <span class="tok">--r-colorRed #EA616F</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">Remove from favorites? (X)</p><p class="src">x/screens/favorites/FavoritesDeleteDialog.kt</p>
-      <div class="dialog-stage">
-        <div class="dialog-shell" style="--dlg-bg:var(--misc-2e2e2e)">
-          <div class="t-dialogTitle" style="color:var(--l-grey0)">Remove from favorites?</div>
-          <div class="t-dialogBody">This video will be removed from favorites.</div>
-          <div class="dialog-actions"><button class="btn btn--text">Cancel</button><button class="btn" style="background:var(--misc-ff6b6b);color:#1a1a1a">Remove</button></div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Sheet <span class="tok">--misc-2e2e2e</span>, danger <span class="tok">--misc-ff6b6b #FF6B6B</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">Send to… (P2P chooser)</p><p class="src">common/p2p/ui/P2pSendChooserDialog.kt</p>
-      <div class="dialog-stage">
-        <div class="dialog-shell" style="--dlg-bg:var(--sh-tabLevel1)">
-          <div class="t-dialogTitle" style="color:var(--l-grey0)">Send to…</div>
-          <div style="margin-top:10px">
-            <div class="row" style="padding:10px 0"><div class="av"></div><div class="tcol"><div class="t-rowTitle">Pixel 7</div></div><span style="color:var(--l-g0)">●</span></div>
-            <div class="row" style="padding:10px 0"><div class="av"></div><div class="tcol"><div class="t-rowTitle">Mi 8</div></div><span style="color:var(--r-colorYellow)">●</span></div>
-          </div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> List rows; status <span class="tok">--l-g0</span> / <span class="tok">--r-colorYellow</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">Settings confirm (DialogButton)</p><p class="src">common/settings/ui/DialogButton.kt</p>
-      <div class="dialog-stage">
-        <div class="dialog-shell" style="--dlg-bg:var(--misc-474747)">
-          <div class="t-dialogTitle" style="color:var(--misc-e4e4e4)">Clear cache?</div>
-          <div class="t-dialogBody" style="color:var(--misc-cccccc)">Frees 512 MB. Thumbnails re-download on demand.</div>
-          <div class="dialog-actions"><button class="btn btn--text">Cancel</button><button class="btn btn--secondary">Clear</button></div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Sheet <span class="tok">--misc-474747</span>, title <span class="tok">--misc-e4e4e4</span>, body <span class="tok">--misc-cccccc</span></li></ol>
-    </div>
-
-  </div>
-</section>
-
-<!-- ===== Expand-menus ===== -->
-<section class="section" id="menus">
-  <h2>Expand-menus (dropdown)</h2>
-  <p class="sub">L &amp; X menus are <b>light</b> (<span class="tok">--l-expandMenu-bg #FFFAF5</span> / <span class="tok">--x-expandMenuBackground #F2EDF7</span>, tint <span class="tok">--l-expandMenu-tint #1F1F1F</span>) — deliberate contrast vs the dark UI. R video menu uses <span class="tok">--misc-f1edf4</span>; R tags menu is dark <span class="tok">--misc-48454e</span>.</p>
-  <div class="matrix">
-
-    <div class="item">
-      <p class="cap">L · Album / saved item menu</p><p class="src">l/ui/element/expandMenu/AlbumItemExpandMenu.kt</p>
-      <div class="menu-stage">
-        <div class="menu">
-          <div class="menu-item"><span class="mi-ico"></span>Set as cover</div>
-          <div class="menu-item"><span class="mi-ico"></span>Save to gallery</div>
-          <div class="menu-item"><span class="mi-ico"></span>Add to collection</div>
-          <div class="menu-item"><span class="mi-ico"></span>Download</div>
-          <div class="menu-item"><span class="mi-ico"></span>Share</div>
-          <div class="menu-item"><span class="mi-ico"></span>Delete</div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Light bg <span class="tok">--l-expandMenu-bg</span>, items <span class="tok">menuItem</span> tint <span class="tok">--l-expandMenu-tint</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">X · Dashboard menu</p><p class="src">x/screens/ui/expandMenu/X_DashboardExpandMenu.kt</p>
-      <div class="menu-stage">
-        <div class="menu menu--x">
-          <div class="menu-item"><span class="mi-ico"></span>Open</div>
-          <div class="menu-item"><span class="mi-ico"></span>Add to favorites</div>
-          <div class="menu-item"><span class="mi-ico"></span>Save</div>
-          <div class="menu-item"><span class="mi-ico"></span>Share</div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Light bg <span class="tok">--x-expandMenuBackground #F2EDF7</span>; MenuDot accent <span class="tok">--misc-ff9000</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">R · Video menu</p><p class="src">r/common/expand_menu_video/ExpandMenuVideo.kt</p>
-      <div class="menu-stage">
-        <div class="menu menu--rlight">
-          <div class="menu-item"><span class="mi-ico"></span>Like</div>
-          <div class="menu-item"><span class="mi-ico"></span>Follow</div>
-          <div class="menu-item"><span class="mi-ico"></span>Add to collection</div>
-          <div class="menu-item"><span class="mi-ico"></span>Download</div>
-          <div class="menu-item"><span class="mi-ico"></span>Share</div>
-          <div class="menu-item"><span class="mi-ico"></span>Block</div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Menu bg <span class="tok">--misc-f1edf4 #F1EDF4</span>, tint <span class="tok">--l-expandMenu-tint</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">R · Tags menu (dark)</p><p class="src">r/common/expand_menu_video/ExpandMenuVideoTags.kt</p>
-      <div class="menu-stage">
-        <div class="menu menu--rdark">
-          <div class="menu-item"><span class="mi-ico"></span>amateur</div>
-          <div class="menu-item"><span class="mi-ico"></span>pov</div>
-          <div class="menu-item"><span class="mi-ico"></span>verified</div>
-        </div>
-      </div>
-      <ol class="annot"><li><span class="dot">1</span> Dark menu bg <span class="tok">--misc-48454e #48454E</span>, items <span class="tok">--l-grey0</span></li></ol>
-    </div>
-
-  </div>
-</section>
-
-<!-- ===== Selectors ===== -->
-<section class="section" id="selectors">
-  <h2>Filter / sort selectors</h2>
-  <p class="sub">Compact popups for sort order, thumbnail size, page and display filters.</p>
-  <div class="matrix">
-
-    <div class="item">
-      <p class="cap">Sort by (R)</p><p class="src">r/ui/ui/sortByOrder/SortByOrder.kt</p>
-      <div class="menu-stage"><div class="sel">
-        <div class="opt opt--on">Latest <span>✓</span></div><div class="opt">Top</div><div class="opt">Oldest</div>
-      </div></div>
-      <ol class="annot"><li><span class="dot">1</span> Light popup; selected row bold, tint <span class="tok">--l-expandMenu-tint</span></li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">Thumbnail size</p><p class="src">common/settings/ui/components/ThumbnailSizeSelector.kt</p>
-      <div class="menu-stage"><div class="sel">
-        <div class="opt">Small</div><div class="opt opt--on">Medium <span>✓</span></div><div class="opt">Large</div>
-      </div></div>
-      <ol class="annot"><li><span class="dot">1</span> Same light selector pattern</li></ol>
-    </div>
-
-    <div class="item">
-      <p class="cap">Album display / page (L)</p><p class="src">screenAlbumList/molecule/filter/atom/AlbumFilterDisplay.kt · atom/AlbumListPageSelector.kt</p>
-      <div class="menu-stage"><div class="sel" style="--menu-bg:var(--misc-2d2d2d)">
-        <div class="opt" style="color:var(--l-grey0)">Grid</div>
-        <div class="opt opt--on" style="color:var(--l-grey0)">List <span>✓</span></div>
-        <div class="opt" style="color:var(--l-grey2)">Page 1 / 12</div>
-      </div></div>
-      <ol class="annot"><li><span class="dot">1</span> Dark variant bg <span class="tok">--misc-2d2d2d</span>; page selector greys <span class="tok">--misc-3e3e3e/373737</span></li></ol>
-    </div>
-
-  </div>
-</section>
-
+<section id="famA"><h2>A — лавандовый Material3 (раздел L)</h2><p class="fdesc">Фон #EBE6EE, иконка 96dp по центру, акцент фиолетовый #6552A5. Внутри расхождение: filled-кнопка против только-текста.</p><div class="dlg-grid"></div></section>
+<section id="famA2"><h2>A2 — дефолтный Material3</h2><p class="fdesc">containerColor не задан → дефолтная светлая M3-поверхность.</p><div class="dlg-grid"></div></section>
+<section id="famB"><h2>B — тёмный Material3 (раздел X)</h2><p class="fdesc">Фон #2E2E2E, иконка = превью 16:9, акцент коралл #FF6B6B.</p><div class="dlg-grid"></div></section>
+<section id="famC"><h2>C — тёмный кастом «список коллекций»</h2><p class="fdesc">Фон #090909, рамка #3F3F3F 12dp, футер 56dp #232323. Один макет — жёлтый (R) против розового (L).</p><div class="dlg-grid"></div></section>
+<section id="famD"><h2>D — тёмный кастом «ввод»</h2><p class="fdesc">Тот же корпус с OutlinedTextField. Кнопка без явного цвета → дефолтный M3.</p><div class="dlg-grid"></div></section>
+<section id="famE"><h2>E — белый кастом (настройки/блок)</h2><p class="fdesc">Фон белый, рамка #E4E4E4 12dp, кнопка радиус 4dp. Синий против красного.</p><div class="dlg-grid"></div></section>
+<section id="menus"><h2>Меню (dropdown / контекст)</h2><p class="fdesc">Заполняется в Task 7. Расхождения: 4 разных фона меню и язык пунктов (L/R — English, X — русский).</p><div class="dlg-grid"></div></section>
+<section id="selectors"><h2>Селекторы (sort / size / page)</h2><p class="fdesc">Компактные попапы выбора. Заполняется в Task 7.</p><div class="dlg-grid"></div></section>
+<section id="sheets"><h2>Bottom sheets</h2><p class="fdesc">Заполняется в Task 8.</p><div class="dlg-grid"></div></section>
 </body>
 </html>
