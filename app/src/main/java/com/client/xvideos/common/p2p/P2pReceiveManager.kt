@@ -10,6 +10,7 @@ import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
 import com.client.xvideos.common.p2p.imports.BundleImporter
 import com.client.xvideos.common.p2p.imports.LCollectionBundleImporter
 import com.client.xvideos.common.p2p.imports.RLikesBundleImporter
+import com.client.xvideos.common.p2p.imports.RCollectionBundleImporter
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.r.common.saved.SavedRed
 import dagger.hilt.EntryPoint
@@ -63,6 +64,7 @@ object P2pReceiveManager {
                     P2pType.L -> File(AppPath.l_likes)
                     P2pType.L_ALBUM -> File(AppPath.l_albums)
                     P2pType.L_COLLECTION -> File(AppPath.l_collection)
+                    P2pType.R_COLLECTION -> File(AppPath.r_collection)
                 }
             },
             refreshFor = { type ->
@@ -89,10 +91,19 @@ object P2pReceiveManager {
             refresh = { entryPoint.savedL().collection.refreshCollectionList() },
         )
 
+        // R_COLLECTION: принятый zip распаковывается в зеркало inbox и мёржится в R-store.
+        val rCollectionImporter = RCollectionBundleImporter(
+            inboxRoot = File(AppPath.p2p_inbox),
+            mainRoot = File(AppPath.main),
+            collectionStoreRoot = File(AppPath.r_collection),
+            refresh = { entryPoint.savedRed().collections.refreshCollectionList() },
+        )
+
         val importer = BundleImporter { manifest, files ->
             when (manifest.type) {
                 P2pType.R -> rLikesImporter.import(manifest, files)
                 P2pType.L_COLLECTION -> lCollectionImporter.import(manifest, files)
+                P2pType.R_COLLECTION -> rCollectionImporter.import(manifest, files)
                 else -> storeImporter.import(manifest, files)
             }
         }

@@ -5,4 +5,4 @@ package com.client.xvideos.common.p2p
  * [L_ALBUM] — метаданные альбома L (`<id>.album`), контент получатель качает сам.
  * [L_COLLECTION] — коллекция L одним zip-архивом (реальные файлы).
  */
-enum class P2pType { X, R, L, L_ALBUM, L_COLLECTION }
+enum class P2pType { X, R, L, L_ALBUM, L_COLLECTION, R_COLLECTION }

@@ -84,3 +84,23 @@ object LCollectionExporter {
         }.getOrNull()
     }
 }
+
+/**
+ * Коллекция R — папка коллекции (мелкие `.collection` JSON-ссылки) одним zip-архивом.
+ * Зеркало [LCollectionExporter], отличается только типом [P2pType.R_COLLECTION].
+ */
+object RCollectionExporter {
+
+    fun export(collectionName: String, collectionRoot: File, outboxDir: File): P2pExportBundle? {
+        val source = File(collectionRoot, collectionName)
+        if (!source.isDirectory) return null
+        if (source.walkTopDown().none { it.isFile }) return null
+
+        return runCatching {
+            outboxDir.mkdirs()
+            val zipFile = File(outboxDir, "$collectionName.zip")
+            ZipUtils.zipDirectory(source, zipFile)
+            P2pExportBundle(P2pType.R_COLLECTION, outboxDir, listOf(zipFile), null)
+        }.getOrNull()
+    }
+}

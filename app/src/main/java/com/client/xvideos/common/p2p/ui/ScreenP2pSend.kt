@@ -32,6 +32,7 @@ import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.P2pShareController
 import com.client.xvideos.common.p2p.ShareState
 import com.client.xvideos.common.p2p.export.LCollectionExporter
+import com.client.xvideos.common.p2p.export.RCollectionExporter
 import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.common.p2p.mirrorRoot
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
@@ -92,6 +93,13 @@ private suspend fun prepareBundle(
         LCollectionExporter.export(
             collectionName = source.collectionName,
             collectionRoot = File(AppPath.l_collection),
+            outboxDir = File(AppPath.p2p_outbox),
+        ) ?: error("Не удалось подготовить коллекцию")
+    }
+    is P2pSendSource.ShareCollectionR -> withContext(Dispatchers.IO) {
+        RCollectionExporter.export(
+            collectionName = source.collectionName,
+            collectionRoot = File(AppPath.r_collection),
             outboxDir = File(AppPath.p2p_outbox),
         ) ?: error("Не удалось подготовить коллекцию")
     }

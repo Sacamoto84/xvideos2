@@ -30,4 +30,7 @@ sealed interface P2pSendSource : Serializable {
 
     /** Коллекция L: зипуется в outbox на экране отправки и шлётся одним архивом. */
     data class ShareCollection(val collectionName: String) : P2pSendSource
+
+    /** Коллекция R: зипуется в outbox на экране отправки и шлётся одним архивом. */
+    data class ShareCollectionR(val collectionName: String) : P2pSendSource
 }
