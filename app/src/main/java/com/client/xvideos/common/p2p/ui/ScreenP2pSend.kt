@@ -24,6 +24,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.P2pReceiveManager
@@ -273,28 +274,20 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
 
         // Диалог запроса разрешений
         if (showPermissionDialog) {
-            AlertDialog(
-                onDismissRequest = { navigator.pop() },
-                title = { Text("Нужны разрешения") },
-                text = { Text("Для поиска устройств рядом приложению нужны разрешения на Bluetooth и Wi-Fi.") },
-                confirmButton = {
-                    Button(onClick = {
-                        val perms = P2pPermissions.required()
-                        Log.d("P2P", "Запрашиваем разрешения: ${perms.joinToString()}")
-                        if (activity != null) {
-                            activity.requestPermissions(perms, 123)
-                        } else {
-                            Log.e("P2P", "Activity is NULL, не можем запросить разрешения!")
-                        }
-                    }) {
-                        Text("Предоставить")
+            LavenderDialog(
+                title = "Нужны разрешения",
+                onDismiss = { navigator.pop() },
+                body = androidx.compose.ui.text.AnnotatedString("Для поиска устройств рядом приложению нужны разрешения на Bluetooth и Wi-Fi."),
+                confirmText = "Предоставить",
+                onConfirm = {
+                    val perms = P2pPermissions.required()
+                    Log.d("P2P", "Запрашиваем разрешения: ${perms.joinToString()}")
+                    if (activity != null) {
+                        activity.requestPermissions(perms, 123)
+                    } else {
+                        Log.e("P2P", "Activity is NULL, не можем запросить разрешения!")
                     }
                 },
-                dismissButton = {
-                    TextButton(onClick = { navigator.pop() }) {
-                        Text("Отмена")
-                    }
-                }
             )
         }
     }

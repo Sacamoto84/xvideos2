@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
+import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -153,20 +154,14 @@ internal fun AppLockPasswordDialog(
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = SettingsCardColor,
-        title = {
-            Text(
-                when (mode) {
-                    AppLockDialogMode.SET -> "Задать код доступа"
-                    AppLockDialogMode.CHANGE -> "Изменить код доступа"
-                    AppLockDialogMode.DISABLE -> "Отключить код доступа"
-                },
-                color = SettingsRowTextPrimary
-            )
+    LavenderDialog(
+        title = when (mode) {
+            AppLockDialogMode.SET -> "Задать код доступа"
+            AppLockDialogMode.CHANGE -> "Изменить код доступа"
+            AppLockDialogMode.DISABLE -> "Отключить код доступа"
         },
-        text = {
+        onDismiss = onDismiss,
+        content = {
             DisableAppLockAutofill()
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (needsCurrentPassword) {
@@ -207,24 +202,13 @@ internal fun AppLockPasswordDialog(
                 }
             }
         },
-        confirmButton = {
-            TextButton(
-                enabled = canSubmit,
-                onClick = { submit() }
-            ) {
-                Text(
-                    when (mode) {
-                        AppLockDialogMode.DISABLE -> "Отключить"
-                        else -> "Сохранить"
-                    }
-                )
-            }
+        confirmText = when (mode) {
+            AppLockDialogMode.DISABLE -> "Отключить"
+            else -> "Сохранить"
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Отмена")
-            }
-        }
+        onConfirm = { submit() },
+        confirmEnabled = canSubmit,
+        destructive = mode == AppLockDialogMode.DISABLE,
     )
 }
 

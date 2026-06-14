@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
+import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -325,36 +326,22 @@ private fun DeleteCreatorDialog(
     onConfirm: (UserInfo) -> Unit
 ) {
     item?.let { pending ->
-        AlertDialog(
+        LavenderDialog(
+            title = "Удалить автора?",
+            onDismiss = onDismiss,
             icon = {
                 pending.profileImageUrl?.let {
-                    UrlImage(
-                        it, modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .size(96.dp)
-                    )
+                    UrlImage(it, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(96.dp))
                 }
             },
-            onDismissRequest = onDismiss,
-            title = { Text("Удалить автора?", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
-            text = {
-                Text(buildAnnotatedString {
-                    append("Удалить «")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                    append("» из сохранённых?")
-                }, fontSize = 16.sp)
+            body = buildAnnotatedString {
+                append("Удалить «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                append("» из сохранённых?")
             },
-            confirmButton = {
-                TextButton(onClick = { onConfirm(pending) }) {
-                    Text("Удалить", fontSize = 16.sp, color = Color(0xFF6552A5))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text("Отмена", fontSize = 16.sp, color = Color(0xFF6552A5))
-                }
-            },
-            containerColor = Color(0xFFEBE6EE)
+            confirmText = "Удалить",
+            onConfirm = { onConfirm(pending) },
+            destructive = true,
         )
     }
 }

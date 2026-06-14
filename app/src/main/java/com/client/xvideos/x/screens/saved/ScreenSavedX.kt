@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -197,8 +198,9 @@ fun ConfirmDeleteVideoDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
+    LavenderDialog(
+        title = title,
+        onDismiss = onDismiss,
         icon = {
             UrlImage(
                 url = imageUrl,
@@ -208,17 +210,8 @@ fun ConfirmDeleteVideoDialog(
                     .clip(RoundedCornerShape(8.dp))
             )
         },
-        title = { Text(title, color = Color.White) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Удалить", color = Color(0xFFFF6B6B))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Отмена", color = Color(0xFFCCCCCC))
-            }
-        },
-        containerColor = Color(0xFF2E2E2E),
+        confirmText = "Удалить",
+        onConfirm = onConfirm,
+        destructive = true,
     )
 }

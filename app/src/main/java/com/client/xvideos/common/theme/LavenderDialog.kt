@@ -40,6 +40,7 @@ fun LavenderDialog(
     content: (@Composable ColumnScope.() -> Unit)? = null,
     confirmText: String? = null,
     onConfirm: () -> Unit = {},
+    confirmEnabled: Boolean = true,
     destructive: Boolean = false,
     dismissText: String = "Отмена",
 ) {
@@ -90,6 +91,7 @@ fun LavenderDialog(
                         Spacer(Modifier.width(8.dp))
                         Button(
                             onClick = onConfirm,
+                            enabled = confirmEnabled,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (destructive) d.buttonBackgroundDestructive else d.buttonBackground,
                                 contentColor = d.buttonTextColor,
