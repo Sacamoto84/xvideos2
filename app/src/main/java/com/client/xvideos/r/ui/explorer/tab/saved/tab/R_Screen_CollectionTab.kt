@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.theme.LavenderDialog
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
@@ -71,46 +72,20 @@ object R_Screen_CollectionTab : Screen {
         var itemPendingDelete by remember { mutableStateOf<String?>(null) }
         /* ---------- Диалог подтверждения ---------- */
         itemPendingDelete?.let { pending ->
-            AlertDialog(
-
-                //icon = { UrlImage(pending.thumbnail, modifier = Modifier.size(96.dp)) },
-
-                onDismissRequest = { itemPendingDelete = null },
-
-                title = {
-                    Text(
-                        "Удалить коллекцию?",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color.White
-                    )
+            LavenderDialog(
+                title = "Удалить коллекцию?",
+                onDismiss = { itemPendingDelete = null },
+                body = buildAnnotatedString {
+                    append("Удалить «")
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
+                    append("» из коллекции")
                 },
-
-                text = {
-                    Text(buildAnnotatedString {
-                        append("Удалить «")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
-                        append("» из коллекции")
-                    }, fontSize = 16.sp, color = Color.White)
+                confirmText = "Удалить",
+                onConfirm = {
+                    savedRed.collections.deleteCollection(pending)
+                    itemPendingDelete = null
                 },
-
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            savedRed.collections.deleteCollection(pending)
-                            itemPendingDelete = null
-                        }
-                    ) { Text("Удалить", fontSize = 16.sp, color = Theme.R.colorRed) }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { itemPendingDelete = null }
-                    ) { Text("Отмена", fontSize = 16.sp, color = Theme.R.colorYellow) }
-                },
-
-                containerColor = Theme.tabLevel1,
-                titleContentColor = Color.White,
-                textContentColor = Color.White
+                destructive = true,
             )
         }
 
