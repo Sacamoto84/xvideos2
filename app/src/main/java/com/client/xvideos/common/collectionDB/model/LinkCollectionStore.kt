@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.collectionDB.CollectionDB
+import com.client.xvideos.common.snackbar.SnackBar
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
@@ -47,4 +48,21 @@ abstract class LinkCollectionStore<T>(
     abstract fun createCollection(collectionName: String)
 
     abstract fun refreshCollectionList()
+
+    open fun renameCollection(oldName: String, newName: String): Boolean =
+        collectionDb.renameCollection(oldName, newName).fold(
+            onSuccess = { ok ->
+                if (ok) {
+                    SnackBar.success("Коллекция переименована")
+                    refreshCollectionList()
+                } else {
+                    SnackBar.error("Коллекция не найдена")
+                }
+                ok
+            },
+            onFailure = { e ->
+                SnackBar.error("Ошибка переименования: ${e.message}")
+                false
+            }
+        )
 }

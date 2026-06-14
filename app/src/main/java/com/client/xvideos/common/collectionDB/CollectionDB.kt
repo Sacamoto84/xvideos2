@@ -51,6 +51,34 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
             Result.failure(e)
         }
 
+    fun renameCollection(oldName: String, newName: String): Result<Boolean> =
+        runCatching {
+            val trimmed = newName.trim()
+            if (trimmed.isBlank()) {
+                throw IOException("Имя коллекции не может быть пустым")
+            }
+            if (oldName == trimmed) {
+                return Result.success(true)
+            }
+            val oldDir = File(path, oldName)
+            val newDir = File(path, trimmed)
+            if (!oldDir.exists()) {
+                Timber.w("Коллекция \"$oldName\" не найдена: ${oldDir.absolutePath}")
+                return Result.success(false)
+            }
+            if (newDir.exists()) {
+                throw IOException("Коллекция \"$trimmed\" уже существует")
+            }
+            if (!oldDir.renameTo(newDir)) {
+                throw IOException("Не удалось переименовать коллекцию: ${oldDir.absolutePath}")
+            }
+            Timber.i("Переименована коллекция: $oldName -> $trimmed")
+            Result.success(true)
+        }.getOrElse { e ->
+            Timber.e(e, "Ошибка при переименовании коллекции $oldName -> $newName")
+            Result.failure(e)
+        }
+
     fun deleteItem(itemId: String, collectionName: String): Result<Boolean> {
         return try {
             Timber.i("!!! удалить лайк GIFS -> deleteItem() id:$itemId из коллекции:$collectionName")
