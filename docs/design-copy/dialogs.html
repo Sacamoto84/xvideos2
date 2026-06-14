@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Каталог диалогов (as-is)</title>
+<title>Каталог диалогов (унифицировано под лаванду)</title>
 <link rel="stylesheet" href="tokens.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
 body{font-family:'DM Sans',sans-serif;margin:0;padding:24px;background:#1b1b1f;color:#eee}
 h1{font-size:22px;font-weight:500;margin:0 0 4px}
-.lead{color:#aaa;font-size:14px;margin:0 0 24px;max-width:760px}
+.lead{color:#aaa;font-size:14px;margin:0 0 24px;max-width:820px}
 section{margin:0 0 32px}
 section>h2{font-size:18px;font-weight:500;margin:0 0 2px}
-section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
+section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:820px}
 .dlg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
 .dlg-cell{display:flex;flex-direction:column;gap:8px}
 .dlg-scrim{background:#000;display:flex;align-items:center;justify-content:center;padding:28px 18px;border-radius:8px}
@@ -23,155 +23,126 @@ section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
 .dlg-chip .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .dlg-warn{font-size:11px;color:#FFD08A;border:1px solid #6b5520;background:#2a2410;border-radius:4px;padding:3px 7px}
 .ph{display:flex;align-items:center;justify-content:center;background:#3a3a3a;color:#888;font-size:24px}
-.m3{width:280px;border-radius:28px;padding:24px;text-align:center}
+.m3{width:280px;border-radius:28px;padding:24px;background:var(--misc-ebe6ee);color:#000}
 .m3 .ttl{font-size:18px;font-weight:700;margin-bottom:8px}
-.m3 .body{font-size:14px;line-height:1.4}
+.m3 .body{font-size:14px;line-height:1.4;color:var(--misc-474747)}
 .m3 .acts{display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-top:22px}
-.btn-text{font-size:14px;font-weight:500;padding:8px 12px}
-.btn-fill{font-size:14px;font-weight:500;padding:10px 22px;border-radius:20px}
-.card-dark{width:280px;background:var(--misc-090909);border:1px solid var(--r-colorBorderGray);border-radius:12px;overflow:hidden}
-.card-white{width:280px;background:#fff;border:1px solid var(--misc-e4e4e4);border-radius:12px;overflow:hidden}
-.foot-dark{display:flex;justify-content:flex-end;align-items:center;gap:8px;height:50px;background:var(--misc-232323);padding:0 8px}
+.lv-cancel{color:var(--misc-6552a5);font-size:14px;font-weight:500;padding:8px 12px}
+.lv-fill{background:var(--misc-6552a5);color:#fff;font-size:14px;font-weight:500;padding:10px 18px;border-radius:16px}
+.lv-row{display:flex;align-items:center;gap:12px;padding:11px 4px;font-size:16px;color:#000}
+.lv-row .ico{width:18px;height:18px;border-radius:3px;background:var(--misc-6552a5);flex:none}
 .menu{width:240px;border-radius:8px;padding:6px 0;overflow:hidden}
 .menu .mi{display:flex;align-items:center;gap:12px;padding:11px 16px;font-size:16px}
 .menu .mi .ico{width:18px;height:18px;border-radius:3px;background:currentColor;opacity:.55;flex:none}
 </style>
 </head>
 <body>
-<h1>Каталог диалогов приложения (as-is)</h1>
-<p class="lead">Все всплывающие окна, точно как в приложении, сгруппированы по визуальным стилям. Цвета из tokens.css (1:1 с кодом). Расхождения и баги помечены ⚠.</p>
+<h1>Каталог диалогов приложения</h1>
+<p class="lead">Все модальные диалоги унифицированы под <b>лавандовый</b> стиль: единый composable <code>LavenderDialog</code> на токенах <code>Theme.L.DialogLavande</code> — фон #EBE6EE, опц. иконка 96dp по центру, заголовок 18/Bold, тело 14 #474747, кнопки <b>filled-главная #6552A5 + text-отмена #6552A5</b>. Деструктив (Удалить/Блокировать) сейчас тоже #6552A5 — токен <code>buttonBackgroundDestructive = dismissTextColor</code> (красный закомментирован). Меню (dropdown) и селекторы — отдельно, не унифицированы. Цвета из tokens.css.</p>
 
-<section id="famA"><h2>A — лавандовый Material3 (раздел L)</h2><p class="fdesc">Фон #EBE6EE, иконка 96dp по центру, акцент фиолетовый #6552A5. Внутри расхождение: filled-кнопка против только-текста.</p><div class="dlg-grid">
+<section id="lavender"><h2>Единый лавандовый диалог (LavenderDialog)</h2><p class="fdesc">Один корпус, разный контент через слоты icon / body / content. Все модалки приложения теперь рисуются через него.</p><div class="dlg-grid">
 
-<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
-  <div class="ph" style="width:72px;height:72px;border-radius:6px;margin:0 auto 16px">▦</div>
-  <div class="ttl">Заголовок</div>
-  <div class="body" style="color:var(--misc-474747)">Текст диалога</div>
-  <div class="acts"><span class="btn-text" style="color:var(--misc-6552a5)">Отмена</span>
-  <span class="btn-fill" style="background:var(--misc-6552a5);color:#fff">Удалить</span></div>
-</div></div>
-<div class="dlg-cap"><b>DialogTemplate</b><br>common/theme/DialogTemplate.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>filled --misc-6552a5</span></div></div>
-
-<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
-  <div class="ph" style="width:72px;height:72px;border-radius:6px;margin:0 auto 16px">▦</div>
-  <div class="ttl">Удалить Альбом?</div>
-  <div class="body" style="color:var(--misc-474747)">Удалить «<b>Summer Vacation</b>» из сохранённых?</div>
-  <div class="acts"><span class="btn-text" style="color:var(--misc-6552a5)">Отмена</span>
-  <span class="btn-fill" style="background:var(--misc-6552a5);color:#fff">Удалить</span></div>
-</div></div>
-<div class="dlg-cap"><b>AlbumDialogDeleteAlbum</b><br>l/.../screenAlbum/dialog/AlbumDialogDeleteAlbum.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>filled --misc-6552a5</span></div></div>
-
-<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
-  <div class="ph" style="width:72px;height:72px;border-radius:8px;margin:0 auto 16px;background:#444;color:#fff">☻</div>
-  <div class="ttl" style="font-size:20px">Удалить подписку?</div>
-  <div class="body" style="font-size:16px;color:#000">Удалить автора «<b>SampleUser</b>» из подписок?</div>
-  <div class="acts"><span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Отмена</span>
-  <span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Удалить</span></div>
-</div></div>
-<div class="dlg-cap"><b>DialogSubscriptionDelete</b><br>r/.../saved/tab/DialogSubscriptionDelete.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>text --misc-6552a5</span></div>
-<div class="dlg-warn">⚠ обе кнопки текстовые (в DialogTemplate/Album — filled): расхождение</div></div>
-
-<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-ebe6ee);color:#000">
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="text-align:center">
   <div class="ph" style="width:72px;height:72px;border-radius:8px;margin:0 auto 16px">▦</div>
-  <div class="ttl" style="font-size:20px">Удалить группу?</div>
-  <div class="body" style="font-size:16px;color:#000">Удалить «<b>Sample Niche</b>» из сохранённых?</div>
-  <div class="acts"><span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Отмена</span>
-  <span class="btn-text" style="font-size:16px;color:var(--misc-6552a5)">Удалить</span></div>
+  <div class="ttl">Удалить Альбом?</div>
+  <div class="body">Удалить «<b>Summer Vacation</b>» из сохранённых?</div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Удалить</span></div>
 </div></div>
-<div class="dlg-cap"><b>DialogNicheDelete</b><br>r/.../savedNiche/DialogNicheDelete.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>text --misc-6552a5</span></div></div>
+<div class="dlg-cap"><b>Подтверждение с иконкой</b><br>AlbumDialogDeleteAlbum · DialogSubscriptionDelete · DialogNicheDelete · DialogNiche/Creator delete</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-ebe6ee)"></span>bg --misc-ebe6ee</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>filled --misc-6552a5</span><span class="dlg-chip">иконка = обложка/аватар 96dp</span></div></div>
 
-</div></section>
-<section id="famA2"><h2>A2 — дефолтный Material3</h2><p class="fdesc">containerColor не задан → дефолтная светлая M3-поверхность.</p><div class="dlg-grid">
-
-<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:#FEF7FF;color:#1d1b20;text-align:left">
-  <div style="font-size:20px;font-weight:500;margin-bottom:14px">Поделиться</div>
-  <div style="display:flex;flex-direction:column;gap:4px">
-    <span style="color:#65558F;font-size:14px;font-weight:500;padding:10px 12px;text-align:center">Системное (через приложения)</span>
-    <span style="color:#65558F;font-size:14px;font-weight:500;padding:10px 12px;text-align:center">P2P рядом (Nearby)</span></div>
-  <div style="display:flex;justify-content:flex-end;margin-top:16px"><span style="color:#65558F;font-size:14px;font-weight:500;padding:8px 12px">Отмена</span></div>
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3">
+  <div class="ttl">Подтвердите блокировку</div>
+  <div class="body">Вы уверены, что хотите заблокировать этот GIFs?</div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Блокировать</span></div>
 </div></div>
-<div class="dlg-cap"><b>P2pSendChooserDialog</b><br>common/p2p/ui/P2pSendChooserDialog.kt</div>
-<div class="dlg-chips"><span class="dlg-chip">bg M3 default (#FEF7FF)</span><span class="dlg-chip">контент = текст-кнопки</span></div></div>
+<div class="dlg-cap"><b>Подтверждение без иконки</b><br>DialogBlock · DialogButton (настройки)</div>
+<div class="dlg-chips"><span class="dlg-chip">заголовок по left (нет иконки)</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>filled --misc-6552a5</span></div></div>
 
-</div></section>
-<section id="famB"><h2>B — тёмный Material3 (раздел X)</h2><p class="fdesc">Фон #2E2E2E, иконка = превью 16:9, акцент коралл #FF6B6B.</p><div class="dlg-grid">
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3">
+  <div class="ttl">Поделиться</div>
+  <div style="display:flex;flex-direction:column;gap:2px;margin-top:6px">
+    <span style="color:var(--misc-6552a5);font-size:14px;font-weight:500;padding:10px 4px;text-align:center">Системное (через приложения)</span>
+    <span style="color:var(--misc-6552a5);font-size:14px;font-weight:500;padding:10px 4px;text-align:center">P2P рядом (Nearby)</span></div>
+  <div class="acts"><span class="lv-cancel">Отмена</span></div>
+</div></div>
+<div class="dlg-cap"><b>Выбор (chooser)</b><br>P2pSendChooserDialog</div>
+<div class="dlg-chips"><span class="dlg-chip">контент = текст-кнопки</span><span class="dlg-chip">без filled-кнопки</span></div></div>
 
-<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="background:var(--misc-2e2e2e);color:#fff">
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3">
+  <div class="ttl">Создать коллекцию</div>
+  <div style="margin-top:12px;border:1px solid var(--misc-6552a5);border-radius:4px;padding:14px 12px;position:relative">
+    <span style="position:absolute;top:-8px;left:8px;background:var(--misc-ebe6ee);padding:0 4px;font-size:12px;color:var(--misc-6552a5)">Название коллекции</span></div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Создать</span></div>
+</div></div>
+<div class="dlg-cap"><b>Ввод (OutlinedTextField)</b><br>DaialogNewCollection · rename-диалог</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>текст/рамка #6552A5</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3">
+  <div class="ttl">Добавить в коллекцию</div>
+  <div style="margin-top:10px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0"><div class="ph" style="width:48px;height:48px;border-radius:12px">▦</div><span style="font-size:14px">Favorites</span></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0"><div style="width:48px;height:48px;border-radius:12px;background:#808080"></div><span style="font-size:14px">Funny</span></div></div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Создать</span></div>
+</div></div>
+<div class="dlg-cap"><b>Список (scroll)</b><br>DialogCollection (R) · L_DialogCollection</div>
+<div class="dlg-chips"><span class="dlg-chip">контент = LazyColumn</span><span class="dlg-chip">текст тёмный на лаванде</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="text-align:center">
   <div class="ph" style="width:170px;height:96px;border-radius:8px;margin:0 auto 16px">▶</div>
-  <div class="ttl" style="font-size:18px;font-weight:500;margin-bottom:4px">Удалить из избранного?</div>
-  <div class="acts"><span class="btn-text" style="color:var(--misc-cccccc)">Отмена</span>
-  <span class="btn-text" style="color:var(--misc-ff6b6b)">Удалить</span></div>
+  <div class="ttl">Удалить из избранного?</div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Удалить</span></div>
 </div></div>
-<div class="dlg-cap"><b>ConfirmDeleteFavoriteDialog</b><br>x/screens/favorites/FavoritesDeleteDialog.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-2e2e2e)"></span>bg --misc-2e2e2e</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-ff6b6b)"></span>text --misc-ff6b6b</span></div></div>
+<div class="dlg-cap"><b>Превью 16:9 как иконка</b><br>ConfirmDeleteFavoriteDialog · ConfirmDeleteVideoDialog (X)</div>
+<div class="dlg-chips"><span class="dlg-chip">было тёмное #2E2E2E → лаванда</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3">
+  <div class="ttl">Задать код доступа</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+    <div style="border:1px solid var(--misc-6552a5);border-radius:4px;padding:12px;font-size:14px;color:var(--misc-6552a5)">Новый код доступа</div>
+    <div style="border:1px solid var(--misc-6552a5);border-radius:4px;padding:12px;font-size:14px;color:var(--misc-6552a5)">Повтор кода доступа</div></div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Сохранить</span></div>
+</div></div>
+<div class="dlg-cap"><b>Форма (несколько полей)</b><br>AppLockPasswordDialog (настройки)</div>
+<div class="dlg-chips"><span class="dlg-chip">было тёмное (SettingsCardColor) → лаванда</span><span class="dlg-chip">confirmEnabled = canSubmit</span></div></div>
 
 </div></section>
-<section id="famC"><h2>C — тёмный кастом «список коллекций»</h2><p class="fdesc">Фон #090909, рамка #3F3F3F 12dp, футер 56dp #232323. Один макет — жёлтый (R) против розового (L).</p><div class="dlg-grid">
 
-<div class="dlg-cell"><div class="dlg-scrim"><div class="card-dark">
-  <div style="font-size:16px;font-weight:500;color:#0d0d0d;padding:10px 10px 6px">Добавить в коллекцию</div>
-  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px"><div class="ph" style="width:56px;height:56px;border-radius:14px">▦</div><span style="color:#fff;font-size:14px">Favorites</span></div>
-  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 10px"><div style="width:56px;height:56px;border-radius:14px;background:#808080"></div><span style="color:#fff;font-size:14px">Funny</span></div>
-  <div style="height:1px;background:var(--misc-363636)"></div>
-  <div class="foot-dark"><span style="color:#bbb;font-size:14px;font-weight:500">Отмена</span><span style="background:var(--r-colorYellow);color:#000;font-size:14px;font-weight:500;padding:8px 12px;border-radius:8px">Создать</span></div>
-</div></div>
-<div class="dlg-cap"><b>DialogCollection</b> (R)<br>common/collectionDB/ui/DialogCollection.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-090909);border:1px solid #555"></span>bg --misc-090909</span><span class="dlg-chip"><span class="sw" style="background:var(--r-colorYellow)"></span>filled --r-colorYellow</span></div>
-<div class="dlg-warn">⚠ цвет заголовка не задан → почти невидим на #090909</div></div>
+<section id="rcollection"><h2>R-коллекция: меню действий (новое)</h2><p class="fdesc">По долгому нажатию на R-коллекцию — лавандовое меню с обложкой 96dp (раньше было сразу удаление). Обложка добавлена и в L-меню действий.</p><div class="dlg-grid">
 
-<div class="dlg-cell"><div class="dlg-scrim"><div class="card-dark">
-  <div style="font-size:16px;font-weight:500;color:#fff;padding:10px 10px 6px">Добавить в коллекцию</div>
-  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px"><div class="ph" style="width:56px;height:56px;border-radius:14px">▦</div><span style="color:#fff;font-size:14px">Favorites</span></div>
-  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 10px"><div style="width:56px;height:56px;border-radius:14px;background:#808080"></div><span style="color:#fff;font-size:14px">Funny</span></div>
-  <div style="height:1px;background:var(--misc-363636)"></div>
-  <div class="foot-dark"><span style="color:#fff;font-size:14px;font-weight:500">Отмена</span><span style="background:var(--l-primaryColor);color:#000;font-size:14px;font-weight:500;padding:8px 12px;border-radius:8px">Создать</span></div>
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="text-align:center">
+  <div class="ph" style="width:72px;height:72px;border-radius:8px;margin:0 auto 16px">▦</div>
+  <div style="font-size:16px;color:var(--l-b0);margin-bottom:6px">My Collection</div>
+  <div style="text-align:left">
+    <div class="lv-row"><span class="ico"></span>Переименовать</div>
+    <div class="lv-row"><span class="ico"></span>Поделиться (P2P)</div>
+    <div class="lv-row"><span class="ico"></span>Удалить коллекцию</div></div>
+  <div class="acts"><span class="lv-cancel">Отмена</span></div>
 </div></div>
-<div class="dlg-cap"><b>L_DialogCollection</b><br>l/ui/screens/explorer/L_DialogCollection.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-090909);border:1px solid #555"></span>bg --misc-090909</span><span class="dlg-chip"><span class="sw" style="background:var(--l-primaryColor)"></span>filled --l-primaryColor</span></div>
-<div class="dlg-warn">⚠ тот же макет, что R, но акцент розовый вместо жёлтого</div></div>
+<div class="dlg-cap"><b>Меню действий R</b><br>R_Screen_CollectionTab (itemPendingAction)</div>
+<div class="dlg-chips"><span class="dlg-chip">обложка 96dp (iconSize)</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>иконки пунктов #6552A5</span><span class="dlg-chip">P2P активен → ShareCollectionR</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="text-align:center">
+  <div class="ph" style="width:72px;height:72px;border-radius:8px;margin:0 auto 16px">▦</div>
+  <div class="ttl">Переименовать коллекцию</div>
+  <div style="margin-top:8px;border:1px solid var(--misc-6552a5);border-radius:4px;padding:14px 12px;text-align:left;color:var(--misc-6552a5);font-size:14px">My Collection</div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Сохранить</span></div>
+</div></div>
+<div class="dlg-cap"><b>Переименование</b><br>renameCollection (общий в CollectionDB/LinkCollectionStore)</div>
+<div class="dlg-chips"><span class="dlg-chip">обложка 96dp</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-6552a5)"></span>поле #6552A5</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="m3" style="text-align:center">
+  <div class="ph" style="width:72px;height:72px;border-radius:8px;margin:0 auto 16px">▦</div>
+  <div class="ttl">Удалить коллекцию?</div>
+  <div class="body">Удалить «<b>My Collection</b>» из коллекции</div>
+  <div class="acts"><span class="lv-cancel">Отмена</span><span class="lv-fill">Удалить</span></div>
+</div></div>
+<div class="dlg-cap"><b>Удаление</b><br>R_Screen_CollectionTab (itemPendingDelete)</div>
+<div class="dlg-chips"><span class="dlg-chip">обложка 96dp</span><span class="dlg-chip">деструктив = #6552A5 (токен переопределён)</span></div></div>
 
 </div></section>
-<section id="famD"><h2>D — тёмный кастом «ввод»</h2><p class="fdesc">Тот же корпус с OutlinedTextField. Кнопка без явного цвета → дефолтный M3.</p><div class="dlg-grid">
 
-<div class="dlg-cell"><div class="dlg-scrim"><div class="card-dark">
-  <div style="font-size:18px;color:#fff;padding:8px 8px 4px">Создать коллекцию</div>
-  <div style="margin:8px;border:1px solid #79747E;border-radius:4px;padding:14px 12px;position:relative">
-    <span style="position:absolute;top:-8px;left:8px;background:var(--misc-090909);padding:0 4px;font-size:12px;color:#b0a8c0">Название коллекции</span></div>
-  <div style="height:1px;background:var(--misc-363636)"></div>
-  <div class="foot-dark"><span style="color:#bbb;font-size:14px;font-weight:500">Отмена</span><span style="background:#65558F;color:#000;font-size:14px;font-weight:500;padding:8px 12px;border-radius:8px">Создать</span></div>
-</div></div>
-<div class="dlg-cap"><b>DaialogNewCollection</b><br>common/collectionDB/ui/DaialogNewCollection.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-090909);border:1px solid #555"></span>bg --misc-090909</span><span class="dlg-chip">filled M3 default</span></div>
-<div class="dlg-warn">⚠ кнопка «Создать» без явного цвета → дефолтный M3-фиолетовый (а не --r-colorYellow)</div></div>
-
-</div></section>
-<section id="famE"><h2>E — белый кастом (настройки/блок)</h2><p class="fdesc">Фон белый, рамка #E4E4E4 12dp, кнопка радиус 4dp. Синий против красного.</p><div class="dlg-grid">
-
-<div class="dlg-cell"><div class="dlg-scrim"><div class="card-white">
-  <div style="padding:16px 24px 0"><div style="font-size:18px;font-weight:500;color:#000;margin-bottom:8px">Dialog Title</div>
-  <div style="font-size:14px;color:var(--misc-474747);line-height:1.4">This is the body of the dialog.</div></div>
-  <div style="height:16px"></div><div style="height:1px;background:var(--misc-cccccc)"></div>
-  <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:8px 12px"><span style="color:#6750A4;font-size:14px;font-weight:500;padding:8px 12px">Отмена</span><span style="background:var(--l-b0);color:#fff;font-size:14px;font-weight:500;padding:8px 12px;border-radius:4px">Confirm</span></div>
-</div></div>
-<div class="dlg-cap"><b>DialogButton</b><br>common/settings/ui/DialogButton.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:#fff;border:1px solid #555"></span>bg #fff</span><span class="dlg-chip"><span class="sw" style="background:var(--l-b0)"></span>filled --l-b0</span></div></div>
-
-<div class="dlg-cell"><div class="dlg-scrim"><div class="card-white">
-  <div style="padding:16px 24px 0"><div style="font-size:18px;font-weight:500;color:#000;margin-bottom:8px">Подтвердите блокировку</div>
-  <div style="font-size:14px;color:var(--misc-474747);line-height:1.4">Вы уверены, что хотите заблокировать этот GIFs?</div></div>
-  <div style="height:16px"></div><div style="height:1px;background:var(--misc-cccccc)"></div>
-  <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:8px 12px"><span style="color:#6750A4;font-size:14px;font-weight:500;padding:8px 12px">Отмена</span><span style="background:var(--l-r0);color:#fff;font-size:14px;font-weight:500;padding:8px 12px;border-radius:4px">Блокировать</span></div>
-</div></div>
-<div class="dlg-cap"><b>DialogBlock</b><br>r/common/block/ui/DialogBlock.kt</div>
-<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:#fff;border:1px solid #555"></span>bg #fff</span><span class="dlg-chip"><span class="sw" style="background:var(--l-r0)"></span>filled --l-r0</span></div>
-<div class="dlg-warn">⚠ тот же макет, что DialogButton, но акцент красный вместо синего</div></div>
-
-</div></section>
-<section id="menus"><h2>Меню (dropdown / контекст)</h2><p class="fdesc">Заполняется в Task 7. Расхождения: 4 разных фона меню и язык пунктов (L/R — English, X — русский).</p><div class="dlg-grid">
+<section id="menus"><h2>Меню (dropdown / контекст)</h2><p class="fdesc">Раскрывающиеся меню (не диалоги, не унифицированы под лаванду). Расхождения: 4 разных фона меню и язык пунктов (L/R — English, X — русский).</p><div class="dlg-grid">
 
 <div class="dlg-cell"><div class="dlg-scrim"><div class="menu" style="background:var(--l-expandMenu-bg);color:var(--l-expandMenu-tint)">
   <div class="mi"><span class="ico"></span>Скачать</div>
@@ -242,7 +213,7 @@ section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
 <div class="dlg-warn">⚠ legacy: соседний MenuDot полностью закомментирован</div></div>
 
 </div></section>
-<section id="selectors"><h2>Селекторы (sort / size / page)</h2><p class="fdesc">Компактные попапы выбора. Заполняется в Task 7.</p><div class="dlg-grid">
+<section id="selectors"><h2>Селекторы (sort / size / page)</h2><p class="fdesc">Компактные попапы выбора (не диалоги; не унифицированы).</p><div class="dlg-grid">
 
 <div class="dlg-cell"><div class="dlg-scrim"><div style="width:170px;background:var(--misc-090909);border:1px solid var(--r-colorBorderGray);border-radius:16px;padding:8px;color:#fff">
   <div style="padding:10px 12px;border-radius:8px;font-size:15px">Top</div>
