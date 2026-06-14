@@ -1,15 +1,13 @@
 package com.client.xvideos.common.p2p.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.LavenderDialog
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
@@ -21,21 +19,17 @@ fun P2pSendChooserDialog(
     onP2p: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Поделиться") },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = { onDismiss(); onSystem() }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Системное (через приложения)")
-                }
-                TextButton(onClick = { onDismiss(); onP2p() }, modifier = Modifier.fillMaxWidth()) {
-                    Text("P2P рядом (Nearby)")
-                }
+    LavenderDialog(
+        title = "Поделиться",
+        onDismiss = onDismiss,
+        content = {
+            TextButton(onClick = { onDismiss(); onSystem() }, modifier = Modifier.fillMaxWidth()) {
+                Text("Системное (через приложения)", color = Theme.L.DialogLavande.dismissTextColor)
+            }
+            TextButton(onClick = { onDismiss(); onP2p() }, modifier = Modifier.fillMaxWidth()) {
+                Text("P2P рядом (Nearby)", color = Theme.L.DialogLavande.dismissTextColor)
             }
         },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
     )
 }
 
