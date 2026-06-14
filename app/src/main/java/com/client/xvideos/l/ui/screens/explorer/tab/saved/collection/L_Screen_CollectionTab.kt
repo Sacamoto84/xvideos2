@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import com.client.xvideos.common.theme.LavenderDialog
+import com.client.xvideos.common.coil.UrlImage
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -135,6 +136,16 @@ object L_Screen_CollectionTab : Screen {
             LavenderDialog(
                 title = "Действие с коллекцией",
                 onDismiss = { itemPendingAction = null },
+                icon = {
+                    val cover = savedL.collection.collectionList
+                        .firstOrNull { it.collection == pending }?.previewUrl
+                    val iconSize = Theme.L.DialogLavande.iconSize
+                    if (cover != null) {
+                        UrlImage(url = cover, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize))
+                    } else {
+                        Box(Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize).background(Color.Gray))
+                    }
+                },
                 content = {
                     Text(pending, fontSize = 16.sp, color = Theme.L.b0)
 
