@@ -110,7 +110,31 @@ section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
 <div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-2e2e2e)"></span>bg --misc-2e2e2e</span><span class="dlg-chip"><span class="sw" style="background:var(--misc-ff6b6b)"></span>text --misc-ff6b6b</span></div></div>
 
 </div></section>
-<section id="famC"><h2>C — тёмный кастом «список коллекций»</h2><p class="fdesc">Фон #090909, рамка #3F3F3F 12dp, футер 56dp #232323. Один макет — жёлтый (R) против розового (L).</p><div class="dlg-grid"></div></section>
+<section id="famC"><h2>C — тёмный кастом «список коллекций»</h2><p class="fdesc">Фон #090909, рамка #3F3F3F 12dp, футер 56dp #232323. Один макет — жёлтый (R) против розового (L).</p><div class="dlg-grid">
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="card-dark">
+  <div style="font-size:16px;font-weight:500;color:#0d0d0d;padding:10px 10px 6px">Добавить в коллекцию</div>
+  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px"><div class="ph" style="width:56px;height:56px;border-radius:14px">▦</div><span style="color:#fff;font-size:14px">Favorites</span></div>
+  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 10px"><div style="width:56px;height:56px;border-radius:14px;background:#808080"></div><span style="color:#fff;font-size:14px">Funny</span></div>
+  <div style="height:1px;background:var(--misc-363636)"></div>
+  <div class="foot-dark"><span style="color:#bbb;font-size:14px;font-weight:500">Отмена</span><span style="background:var(--r-colorYellow);color:#000;font-size:14px;font-weight:500;padding:8px 12px;border-radius:8px">Создать</span></div>
+</div></div>
+<div class="dlg-cap"><b>DialogCollection</b> (R)<br>common/collectionDB/ui/DialogCollection.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-090909);border:1px solid #555"></span>bg --misc-090909</span><span class="dlg-chip"><span class="sw" style="background:var(--r-colorYellow)"></span>filled --r-colorYellow</span></div>
+<div class="dlg-warn">⚠ цвет заголовка не задан → почти невидим на #090909</div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div class="card-dark">
+  <div style="font-size:16px;font-weight:500;color:#fff;padding:10px 10px 6px">Добавить в коллекцию</div>
+  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px"><div class="ph" style="width:56px;height:56px;border-radius:14px">▦</div><span style="color:#fff;font-size:14px">Favorites</span></div>
+  <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 10px"><div style="width:56px;height:56px;border-radius:14px;background:#808080"></div><span style="color:#fff;font-size:14px">Funny</span></div>
+  <div style="height:1px;background:var(--misc-363636)"></div>
+  <div class="foot-dark"><span style="color:#fff;font-size:14px;font-weight:500">Отмена</span><span style="background:var(--l-primaryColor);color:#000;font-size:14px;font-weight:500;padding:8px 12px;border-radius:8px">Создать</span></div>
+</div></div>
+<div class="dlg-cap"><b>L_DialogCollection</b><br>l/ui/screens/explorer/L_DialogCollection.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-090909);border:1px solid #555"></span>bg --misc-090909</span><span class="dlg-chip"><span class="sw" style="background:var(--l-primaryColor)"></span>filled --l-primaryColor</span></div>
+<div class="dlg-warn">⚠ тот же макет, что R, но акцент розовый вместо жёлтого</div></div>
+
+</div></section>
 <section id="famD"><h2>D — тёмный кастом «ввод»</h2><p class="fdesc">Тот же корпус с OutlinedTextField. Кнопка без явного цвета → дефолтный M3.</p><div class="dlg-grid"></div></section>
 <section id="famE"><h2>E — белый кастом (настройки/блок)</h2><p class="fdesc">Фон белый, рамка #E4E4E4 12dp, кнопка радиус 4dp. Синий против красного.</p><div class="dlg-grid"></div></section>
 <section id="menus"><h2>Меню (dropdown / контекст)</h2><p class="fdesc">Заполняется в Task 7. Расхождения: 4 разных фона меню и язык пунктов (L/R — English, X — русский).</p><div class="dlg-grid"></div></section>
