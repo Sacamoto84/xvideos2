@@ -38,6 +38,7 @@ import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.Order
+import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
@@ -100,7 +101,7 @@ class ScreenCollectionName(
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){
                 LazyRow123(
                     host = vm.likedHost,
-                    onClickOpenProfile = {})
+                    onClickOpenProfile = { navigator.push(ScreenRedProfile(it)) })
             }
         }
 
