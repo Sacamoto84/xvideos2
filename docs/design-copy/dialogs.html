@@ -242,7 +242,43 @@ section>.fdesc{color:#aaa;font-size:13px;margin:0 0 14px;max-width:780px}
 <div class="dlg-warn">⚠ legacy: соседний MenuDot полностью закомментирован</div></div>
 
 </div></section>
-<section id="selectors"><h2>Селекторы (sort / size / page)</h2><p class="fdesc">Компактные попапы выбора. Заполняется в Task 7.</p><div class="dlg-grid"></div></section>
+<section id="selectors"><h2>Селекторы (sort / size / page)</h2><p class="fdesc">Компактные попапы выбора. Заполняется в Task 7.</p><div class="dlg-grid">
+
+<div class="dlg-cell"><div class="dlg-scrim"><div style="width:170px;background:var(--misc-090909);border:1px solid var(--r-colorBorderGray);border-radius:16px;padding:8px;color:#fff">
+  <div style="padding:10px 12px;border-radius:8px;font-size:15px">Top</div>
+  <div style="padding:10px 12px;border-radius:8px;font-size:15px;background:#222222">Latest</div>
+  <div style="padding:10px 12px;border-radius:8px;font-size:15px">Trending</div>
+  <div style="padding:10px 12px;border-radius:8px;font-size:15px">Oldest</div>
+  <div style="padding:10px 12px;border-radius:8px;font-size:15px">Best</div>
+</div></div>
+<div class="dlg-cap"><b>SortByOrder</b> (R)<br>r/ui/ui/sortByOrder/SortByOrder.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-090909);border:1px solid #555"></span>bg --misc-090909</span><span class="dlg-chip"><span class="sw" style="background:#222"></span>выбран #222222</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div style="width:220px;background:var(--misc-373737);border:2px solid var(--misc-3e3e3e);border-radius:16px;padding:12px;color:#fff">
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--misc-2d2d2d);border:1px solid var(--misc-282828);border-radius:8px">1</div>
+    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--l-red);border-radius:8px">2</div>
+    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--misc-2d2d2d);border:1px solid var(--misc-282828);border-radius:8px">3</div>
+    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--misc-2d2d2d);border:1px solid var(--misc-282828);border-radius:8px">…</div>
+    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--misc-2d2d2d);border:1px solid var(--misc-282828);border-radius:8px">12</div>
+  </div>
+</div></div>
+<div class="dlg-cap"><b>AlbumListPageSelector</b> (L)<br>l/.../screenAlbumList/atom/AlbumListPageSelector.kt</div>
+<div class="dlg-chips"><span class="dlg-chip"><span class="sw" style="background:var(--misc-373737)"></span>bg --misc-373737</span><span class="dlg-chip"><span class="sw" style="background:var(--l-red)"></span>выбран --l-red</span></div></div>
+
+<div class="dlg-cell"><div class="dlg-scrim"><div style="width:230px;background:#fff;border-radius:12px;padding:14px;color:#000">
+  <div style="font-size:13px;color:#555;margin-bottom:6px">Display</div>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <div style="flex:1;border:1px solid var(--misc-cccccc);border-radius:6px;padding:8px;font-size:14px;text-align:center">Grid</div>
+    <div style="flex:1;border:1px solid var(--misc-cccccc);border-radius:6px;padding:8px;font-size:14px;text-align:center">List</div>
+  </div>
+  <div style="background:var(--l-primaryColor);color:#000;text-align:center;font-size:14px;font-weight:500;padding:8px;border-radius:6px">Apply</div>
+</div></div>
+<div class="dlg-cap"><b>AlbumFilterDisplay</b> (L)<br>l/.../screenAlbumList/molecule/filter/atom/AlbumFilterDisplay.kt</div>
+<div class="dlg-chips"><span class="dlg-chip">палитра L (palette.surfaceHigh)</span><span class="dlg-chip"><span class="sw" style="background:var(--l-primaryColor)"></span>Apply акцент</span></div>
+<div class="dlg-warn">⚠ цвета из абстрактной palette (зависят от темы) — показан L-вариант</div></div>
+
+</div></section>
 <section id="sheets"><h2>Bottom sheets</h2><p class="fdesc">Заполняется в Task 8.</p><div class="dlg-grid"></div></section>
 </body>
 </html>
