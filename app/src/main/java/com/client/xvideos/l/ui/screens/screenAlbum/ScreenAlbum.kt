@@ -68,7 +68,7 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
-import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumDialogDeleteAlbum
+import com.client.xvideos.l.ui.screens.screenAlbum.dialog.AlbumDialogDeleteAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum

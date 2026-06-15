@@ -7,6 +7,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.theme.Theme.L.Type
+import com.client.xvideos.common.theme.Theme.L.fontFamilyApp
 import com.client.xvideos.R as Res
 
 /**
@@ -33,6 +35,44 @@ object Theme {
 
     val tabLevel6 = Color(0xFF777777)
 
+
+    object ExpandMenu {
+        val tintColor = Color(0xFF1F1F1F)  // Почти черный
+        val backgroundColor = Color(0xFFFFFAF5)  // Теплый белый с кремовым оттенком
+        val style = Type.menuItem.copy(color = L.ExpandMenu.tintColor)
+    }
+
+    /**
+     * Цвета и стили для диалогов.
+     */
+    object DialogLavande {
+
+        val content = Color(0xFFEBE6EE) //Цвет фона диалогового окна
+
+        val buttonBackground = Color(0xFF6552A5) //Цвет фона кнопки
+
+        val buttonTextColor = Color.White //Цвет текста кнопки
+
+
+        val buttonBorderRadius = 16.dp //Радиус границы кнопки
+
+        val button = TextStyle(
+            fontSize = 16.sp,
+            lineHeight = 20.sp,
+            color = buttonTextColor,
+            fontFamily = fontFamilyApp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 0.sp
+        )
+
+        val bodyColor = Color(0xFF474747)                   // Цвет текста тела
+        val dismissTextColor = Color(0xFF6552A5)            // Цвет текста кнопки отмены
+        val buttonBackgroundDestructive = dismissTextColor //Color(0xFFF44336) // Красный для деструктива
+        val cornerRadius = 28.dp                            // Скругление диалога
+
+        val iconSize = 96.dp                                // Размер иконки
+    }
+
     /** Уникальные токены R (выделения, бордеры, шрифты). */
     object R {
         /** Legacy фон компонентов R (кнопки/боксы/дивайдеры). */
@@ -41,7 +81,9 @@ object Theme {
         val colorBottomBarDivider = Color(0xFF323153)
 
         val colorYellow = Color(0xFFEBFA63)
+
         val colorBlue = Color(0xFF61B2EB)
+
         val colorRed = Color(0xFFEA616F)
         val colorTextGray = Color(0xFF8B8B8B)
 
@@ -94,41 +136,6 @@ object Theme {
 
         val fontFamilyKarla = fontFamilyApp
 
-
-        /**
-         * Цвета и стили для диалогов.
-         */
-        object DialogLavande {
-
-            val content = Color(0xFFEBE6EE) //Цвет фона диалогового окна
-            val buttonBackground = Color(0xFF6552A5) //Цвет фона кнопки
-            val buttonTextColor = Color.White //Цвет текста кнопки
-            val buttonBorderColor = Color(0xFF6552A5) //Цвет границы кнопки
-            val buttonBorderWidth = 1.dp //Толщина границы кнопки
-            val buttonBorderRadius = 16.dp //Радиус границы кнопки
-
-
-
-            val button = TextStyle(
-                fontSize = 16.sp,
-                lineHeight = 20.sp,
-                color = buttonTextColor,
-                fontFamily = fontFamilyApp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.sp
-            )
-
-            val bodyColor = Color(0xFF474747)                   // Цвет текста тела
-            val dismissTextColor = Color(0xFF6552A5)            // Цвет текста кнопки отмены
-            val buttonBackgroundDestructive = Color(0xFFF44336) // Красный для деструктива
-            val cornerRadius = 28.dp                            // Скругление диалога
-            val iconSize = 96.dp                                // Размер иконки
-        }
-
-
-
-
-
         object Type {
             val screenTitle = TextStyle(
                 fontSize = 24.sp,
@@ -145,15 +152,6 @@ object Theme {
                 color = textColor,
                 fontFamily = fontFamilyApp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.sp
-            )
-
-            val sectionTitle = TextStyle(
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-                color = grey2,
-                fontFamily = fontFamilyApp,
-                fontWeight = FontWeight.Medium,
                 letterSpacing = 0.sp
             )
 

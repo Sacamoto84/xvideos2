@@ -116,7 +116,7 @@ object R_Screen_CollectionTab : Screen {
                             itemPendingRename = pending
                             itemPendingAction = null
                         },
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
                     DropdownMenuItem(
                         text = { androidx.compose.material3.Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
@@ -124,7 +124,7 @@ object R_Screen_CollectionTab : Screen {
                             itemPendingAction = null
                             navigator.push(ScreenP2pSend(P2pSendSource.ShareCollectionR(pending)))
                         },
-                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
                     DropdownMenuItem(
                         text = { androidx.compose.material3.Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
@@ -132,7 +132,7 @@ object R_Screen_CollectionTab : Screen {
                             itemPendingDelete = pending
                             itemPendingAction = null
                         },
-                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
                 },
             )
@@ -152,13 +152,13 @@ object R_Screen_CollectionTab : Screen {
                         modifier = Modifier.fillMaxWidth(),
                         label = { androidx.compose.material3.Text("Название коллекции") },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Theme.L.DialogLavande.buttonBackground,
-                            unfocusedTextColor = Theme.L.DialogLavande.buttonBackground,
-                            cursorColor = Theme.L.DialogLavande.buttonBackground,
-                            focusedBorderColor = Theme.L.DialogLavande.buttonBackground,
-                            unfocusedBorderColor = Theme.L.DialogLavande.buttonBackground,
-                            focusedLabelColor = Theme.L.DialogLavande.buttonBackground,
-                            unfocusedLabelColor = Theme.L.DialogLavande.buttonBackground,
+                            focusedTextColor = Theme.DialogLavande.buttonBackground,
+                            unfocusedTextColor = Theme.DialogLavande.buttonBackground,
+                            cursorColor = Theme.DialogLavande.buttonBackground,
+                            focusedBorderColor = Theme.DialogLavande.buttonBackground,
+                            unfocusedBorderColor = Theme.DialogLavande.buttonBackground,
+                            focusedLabelColor = Theme.DialogLavande.buttonBackground,
+                            unfocusedLabelColor = Theme.DialogLavande.buttonBackground,
                         ),
                     )
                 },
@@ -245,7 +245,7 @@ fun R_SavedCollectionTabContent(
 
 @Composable
 private fun CollectionCoverIcon(coverUrl: String?) {
-    val size = Theme.L.DialogLavande.iconSize
+    val size = Theme.DialogLavande.iconSize
     if (coverUrl != null) {
         UrlImage(url = coverUrl, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(size))
     } else {

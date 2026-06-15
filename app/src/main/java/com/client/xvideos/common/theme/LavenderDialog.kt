@@ -44,7 +44,7 @@ fun LavenderDialog(
     destructive: Boolean = false,
     dismissText: String = "Отмена",
 ) {
-    val d = Theme.L.DialogLavande
+    val d = Theme.DialogLavande
     val centered = icon != null
 
     Dialog(onDismissRequest = onDismiss) {

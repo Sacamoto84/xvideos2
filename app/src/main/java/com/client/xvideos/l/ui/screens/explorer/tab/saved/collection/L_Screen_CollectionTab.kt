@@ -139,7 +139,7 @@ object L_Screen_CollectionTab : Screen {
                 icon = {
                     val cover = savedL.collection.collectionList
                         .firstOrNull { it.collection == pending }?.previewUrl
-                    val iconSize = Theme.L.DialogLavande.iconSize
+                    val iconSize = Theme.DialogLavande.iconSize
                     if (cover != null) {
                         UrlImage(url = cover, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize))
                     } else {
@@ -156,7 +156,7 @@ object L_Screen_CollectionTab : Screen {
                             itemPendingRename = pending
                             itemPendingAction = null
                         },
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
 
                     DropdownMenuItem(
@@ -165,7 +165,7 @@ object L_Screen_CollectionTab : Screen {
                             itemPendingAction = null
                             navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
                         },
-                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
 
                     DropdownMenuItem(
@@ -174,7 +174,7 @@ object L_Screen_CollectionTab : Screen {
                             itemPendingDelete = pending
                             itemPendingAction = null
                         },
-                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.L.DialogLavande.buttonBackground) }
+                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
                 },
             )

@@ -24,10 +24,10 @@ fun P2pSendChooserDialog(
         onDismiss = onDismiss,
         content = {
             TextButton(onClick = { onDismiss(); onSystem() }, modifier = Modifier.fillMaxWidth()) {
-                Text("Системное (через приложения)", color = Theme.L.DialogLavande.dismissTextColor)
+                Text("Системное (через приложения)", color = Theme.DialogLavande.dismissTextColor)
             }
             TextButton(onClick = { onDismiss(); onP2p() }, modifier = Modifier.fillMaxWidth()) {
-                Text("P2P рядом (Nearby)", color = Theme.L.DialogLavande.dismissTextColor)
+                Text("P2P рядом (Nearby)", color = Theme.DialogLavande.dismissTextColor)
             }
         },
     )
