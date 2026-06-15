@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ fun DropdownMenuItem_SetCover(item: PicsDetails? = null, savedL: SavedL? = null,
             }
             savedL.collection.setManualCover(item)
             onDismiss()
-        }
+        },
+        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
     )
 }
