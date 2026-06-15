@@ -2,9 +2,6 @@ package com.client.xvideos.l.ui.screens.screenAlbum
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -76,7 +73,6 @@ import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonShareAlbu
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoTags
-import com.client.xvideos.l.ui.screens.screenAlbum.atom.ScrollToTopButton
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 import com.client.xvideos.screenRoot.LocalRootScreenModel
 import kotlinx.coroutines.delay
@@ -168,12 +164,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         }
 
         Scaffold(
-            floatingActionButton = {
-                AnimatedVisibility(
-                    vm.host.state.firstVisibleItemIndex > 3 && vm.host.selectedImage == null,
-                    enter = fadeIn(), exit = fadeOut()
-                ) { ScrollToTopButton(vm.host.state) }
-            },
             bottomBar = {
                 if (album?.albumPicsDetails?.percentLoad != 1.0f) {
                     LinearProgressIndicator(
