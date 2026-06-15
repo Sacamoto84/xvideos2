@@ -11,8 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.common.theme.Theme.L.ExpandMenu.style
-import com.client.xvideos.common.theme.Theme.L.ExpandMenu.tintColor
+import com.client.xvideos.common.theme.Theme.ExpandMenu.style
+import com.client.xvideos.common.theme.Theme.ExpandMenu.tintColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

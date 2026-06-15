@@ -51,10 +51,10 @@ fun DropdownMenuItem_RemoveFromCollection(
             Icon(
                 Icons.Default.RemoveCircleOutline,
                 contentDescription = "",
-                tint = Theme.L.ExpandMenu.tintColor
+                tint = Theme.ExpandMenu.tintColor
             )
         },
-        text = { Text("Remove from Collection", style = Theme.L.ExpandMenu.style) },
+        text = { Text("Remove from Collection", style = Theme.ExpandMenu.style) },
         onClick = {
             if (item == null) return@DropdownMenuItem
             if (selectedCollection == null) {

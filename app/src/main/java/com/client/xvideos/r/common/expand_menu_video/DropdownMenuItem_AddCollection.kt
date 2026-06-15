@@ -34,8 +34,8 @@ private fun DropdownMenuItem_AddCollectionContent(
     onClick: () -> Unit
 ) {
     DropdownMenuItem(
-        leadingIcon = { Icon( Icons.Default.AddCircleOutline, contentDescription = "", tint = Theme.L.ExpandMenu.tintColor ) },
-        text = { Text("Add to Collection", style = Theme.L.ExpandMenu.style) },
+        leadingIcon = { Icon( Icons.Default.AddCircleOutline, contentDescription = "", tint = Theme.ExpandMenu.tintColor ) },
+        text = { Text("Add to Collection", style = Theme.ExpandMenu.style) },
         onClick = onClick,
         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
     )

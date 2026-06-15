@@ -61,8 +61,8 @@ private fun DropdownMenuItem_SubscriptionContent(
     val textFollowed = if (isSubscribted) "Unsubscribe" else "Subscribe"
     val textFollowedIcon = if (isSubscribted) Icons.Default.Unsubscribe else Icons.Default.Subscriptions
     DropdownMenuItem(
-        leadingIcon = {Icon(textFollowedIcon, contentDescription = "", tint = Theme.L.ExpandMenu.tintColor)},
-        text = { Text(textFollowed, style = Theme.L.ExpandMenu.style) },
+        leadingIcon = {Icon(textFollowedIcon, contentDescription = "", tint = Theme.ExpandMenu.tintColor)},
+        text = { Text(textFollowed, style = Theme.ExpandMenu.style) },
         onClick = onClick,
         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
     )

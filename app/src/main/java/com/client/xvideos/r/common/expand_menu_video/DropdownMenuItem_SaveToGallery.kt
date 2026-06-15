@@ -16,8 +16,8 @@ import com.client.xvideos.r.model.GifsInfo
 @Composable
 fun DropdownMenuItem_SaveToGallery(item: GifsInfo? = null, onClick: (GifsInfo) -> Unit, onDismiss: () -> Unit) {
     DropdownMenuItem(
-        leadingIcon = { Icon(Icons.Default.SaveAlt, contentDescription = "", tint = Theme.L.ExpandMenu.tintColor) },
-        text = { Text("В галерею", style = Theme.L.ExpandMenu.style) },
+        leadingIcon = { Icon(Icons.Default.SaveAlt, contentDescription = "", tint = Theme.ExpandMenu.tintColor) },
+        text = { Text("В галерею", style = Theme.ExpandMenu.style) },
         onClick = {
             if (item == null) return@DropdownMenuItem
             onClick.invoke(item)

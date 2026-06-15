@@ -281,17 +281,17 @@ private fun FavoriteActionsExpandMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = Theme.L.ExpandMenu.backgroundColor
+            containerColor = Theme.ExpandMenu.backgroundColor
         ) {
             DropdownMenuItem(
                 leadingIcon = {
                     Icon(
                         Icons.Filled.ArrowCircleDown,
                         contentDescription = null,
-                        tint = Theme.L.ExpandMenu.tintColor
+                        tint = Theme.ExpandMenu.tintColor
                     )
                 },
-                text = { Text("Скачать", style = Theme.L.ExpandMenu.style) },
+                text = { Text("Скачать", style = Theme.ExpandMenu.style) },
                 onClick = {
                     onDownload()
                     expanded = false
@@ -304,10 +304,10 @@ private fun FavoriteActionsExpandMenu(
                     Icon(
                         Icons.Filled.SaveAlt,
                         contentDescription = null,
-                        tint = Theme.L.ExpandMenu.tintColor
+                        tint = Theme.ExpandMenu.tintColor
                     )
                 },
-                text = { Text("В галерею", style = Theme.L.ExpandMenu.style) },
+                text = { Text("В галерею", style = Theme.ExpandMenu.style) },
                 onClick = {
                     onSaveToGallery()
                     expanded = false
@@ -320,10 +320,10 @@ private fun FavoriteActionsExpandMenu(
                     Icon(
                         Icons.Filled.Delete,
                         contentDescription = null,
-                        tint = Theme.L.ExpandMenu.tintColor
+                        tint = Theme.ExpandMenu.tintColor
                     )
                 },
-                text = { Text("Удалить", style = Theme.L.ExpandMenu.style) },
+                text = { Text("Удалить", style = Theme.ExpandMenu.style) },
                 onClick = {
                     onDelete()
                     expanded = false

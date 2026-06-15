@@ -12,8 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.common.theme.Theme.L.ExpandMenu.style
-import com.client.xvideos.common.theme.Theme.L.ExpandMenu.tintColor
+import com.client.xvideos.common.theme.Theme.ExpandMenu.style
+import com.client.xvideos.common.theme.Theme.ExpandMenu.tintColor
 
 @Preview(apiLevel = 29, showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable

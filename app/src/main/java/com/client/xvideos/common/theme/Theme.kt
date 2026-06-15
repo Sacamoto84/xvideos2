@@ -39,7 +39,7 @@ object Theme {
     object ExpandMenu {
         val tintColor = Color(0xFF1F1F1F)  // Почти черный
         val backgroundColor = Color(0xFFFFFAF5)  // Теплый белый с кремовым оттенком
-        val style = Type.menuItem.copy(color = L.ExpandMenu.tintColor)
+        val style = Type.menuItem.copy(color = tintColor)
     }
 
     /**
@@ -253,15 +253,6 @@ object Theme {
             )
         }
 
-        //--- Screen Config ---
-        val styleTextConfigL = Type.rowTitle
-
-        //--- Expand Menu ---
-        object ExpandMenu {
-            val tintColor = Color(0xFF1F1F1F)  // Почти черный
-            val backgroundColor = Color(0xFFFFFAF5)  // Теплый белый с кремовым оттенком
-            val style = Type.menuItem.copy(color = tintColor)
-        }
     }
 
     /** Уникальные токены X. */

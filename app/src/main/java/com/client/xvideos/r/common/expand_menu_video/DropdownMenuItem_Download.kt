@@ -18,8 +18,8 @@ import com.client.xvideos.ui.theme.XvideosTheme
 @Composable
 fun DropdownMenuItem_Download(item: GifsInfo? = null, onClick: (GifsInfo) -> Unit = {}, onDismiss: () -> Unit){
     DropdownMenuItem(
-        leadingIcon = {Icon(Icons.Filled.FileDownload, contentDescription = "", tint = Theme.L.ExpandMenu.tintColor)},
-        text = {Text("Скачать", style = Theme.L.ExpandMenu.style)},
+        leadingIcon = {Icon(Icons.Filled.FileDownload, contentDescription = "", tint = Theme.ExpandMenu.tintColor)},
+        text = {Text("Скачать", style = Theme.ExpandMenu.style)},
         onClick = {
             if (item == null) return@DropdownMenuItem
             onClick.invoke(item)

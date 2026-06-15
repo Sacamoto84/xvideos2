@@ -42,10 +42,10 @@ fun DropdownMenuItem_BlockContent(
             Icon(
                 Icons.Default.Block,
                 contentDescription = "",
-                tint = Theme.L.ExpandMenu.tintColor,
+                tint = Theme.ExpandMenu.tintColor,
             )
         },
-        text = { Text("Блокировать", style = Theme.L.ExpandMenu.style) },
+        text = { Text("Блокировать", style = Theme.ExpandMenu.style) },
         onClick = {
             if (item == null) return@DropdownMenuItem
             onBlockClick.invoke()

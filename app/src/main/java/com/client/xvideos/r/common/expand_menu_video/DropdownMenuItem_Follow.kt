@@ -55,8 +55,8 @@ private fun DropdownMenuItem_FollowContent(
     val textFollowed = if (isFollowed) "Unfollow" else "Follow"
     val textFollowedIcon = if (isFollowed) Icons.Default.Person else Icons.Default.PermIdentity
     DropdownMenuItem(
-        leadingIcon = {Icon(textFollowedIcon, contentDescription = "", tint = Theme.L.ExpandMenu.tintColor)},
-        text = { Text(textFollowed, style = Theme.L.ExpandMenu.style) },
+        leadingIcon = {Icon(textFollowedIcon, contentDescription = "", tint = Theme.ExpandMenu.tintColor)},
+        text = { Text(textFollowed, style = Theme.ExpandMenu.style) },
         onClick = onClick,
         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
     )

@@ -54,10 +54,10 @@ private fun DropdownMenuItem_LikeContent(
             Icon(
                 textLikedIcon,
                 contentDescription = "",
-                tint = Theme.L.ExpandMenu.tintColor
+                tint = Theme.ExpandMenu.tintColor
             )
         },
-        text = { Text(textLiked, style = Theme.L.ExpandMenu.style) },
+        text = { Text(textLiked, style = Theme.ExpandMenu.style) },
         onClick = onClick,
         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
     )
