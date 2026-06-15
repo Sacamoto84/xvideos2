@@ -37,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -206,7 +205,7 @@ private fun Screen.ScreenAlbumListContent(
                 ) { page ->
 
                     val pageItems = bigList[page]?.albumListImplInfoAndList?.items.orEmpty()
-                    val stateGrid = rememberSaveable(page, saver = LazyGridState.Saver) { LazyGridState() }
+                    val stateGrid = vm.stateGrid.getOrPut(page) { LazyGridState() }
 
                     LazyVerticalGridScrollbar(
                         state = stateGrid,
