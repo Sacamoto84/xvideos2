@@ -54,7 +54,7 @@ object Theme {
         val buttonTextColor = Color.White //Цвет текста кнопки
 
 
-        val buttonBorderRadius = 16.dp //Радиус границы кнопки
+        const val buttonBorderRadius = 50 // Радиус кнопки в процентах (50% = полукруг/pill)
 
         val button = TextStyle(
             fontSize = 16.sp,
