@@ -81,7 +81,7 @@ object L_ScreenSavedAlbumsTab : Screen {
                             val albumId = it.id.toLongOrNull()
                             AlbumListItem(
                                 title = it.title,
-                                coverUrl = it.cover.url,
+                                coverUrl = it.cover?.url.orEmpty(),
                                 numberOfAnimatedPictures = it.number_of_animated_pictures,
                                 numberOfPictures = it.number_of_pictures,
                                 modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)

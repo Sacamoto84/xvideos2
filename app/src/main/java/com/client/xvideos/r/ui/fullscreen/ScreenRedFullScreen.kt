@@ -88,7 +88,7 @@ import com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedControls_Container_Line
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.RFeedSessionStore
-import com.redgifs.common.downloader.ui.DownloadIndicator
+import com.client.xvideos.r.common.downloader.ui.DownloadIndicator
 import com.redgifs.common.video.PlayerControls
 import dagger.Binds
 import dagger.Module

@@ -57,7 +57,7 @@ fun X_DashboardExpandMenu(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            containerColor = Theme.X.expandMenuBackground,
+            containerColor = Theme.ExpandMenu.backgroundColor,
             shadowElevation = 2.dp, tonalElevation = 16.dp
         )
         {

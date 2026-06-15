@@ -241,7 +241,7 @@ private fun Screen.ScreenAlbumListContent(
                                 {
                                     AlbumListItem(
                                         title = item.title,
-                                        coverUrl = item.cover.url,
+                                        coverUrl = item.cover?.url.orEmpty(),
                                         numberOfAnimatedPictures = item.numberOfAnimatedPictures,
                                         numberOfPictures = item.numberOfPictures,
                                     ) {

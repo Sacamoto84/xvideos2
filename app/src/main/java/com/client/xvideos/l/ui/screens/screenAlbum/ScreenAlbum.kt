@@ -192,7 +192,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                             if (parsed != null) {
 
                                 Row {
-                                    UrlImage( parsed.cover.url, modifier = Modifier
+                                    UrlImage( parsed.cover?.url.orEmpty(), modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
                                         .size(72.dp) )
                                     Spacer(modifier = Modifier.width(4.dp))

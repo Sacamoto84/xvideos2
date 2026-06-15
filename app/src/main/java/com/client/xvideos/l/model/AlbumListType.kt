@@ -103,7 +103,7 @@ data class Album(
     @SerializedName("download_url") val downloadUrl: String,       // "/download/r/1392433/551361/"
     @SerializedName("labels")       val labels: List<String>,      // [ "hot" ]
     @SerializedName("permissions")  val permissions: List<String>, // [ "can_add" ]
-    @SerializedName("cover")        val cover: Cover,
+    @SerializedName("cover")        val cover: Cover?,
     @SerializedName("language")     val language: Language?,  // {"id":"1","title":"English","url":"/languages/english_1/"}
     @SerializedName("created_by")   val createdBy: User,    // { "id": "1392433", name": "Feloy_The_Furry", "display_name": "Feloy_The_Furry", "url": "/users/1392433/" }
     @SerializedName("tags")         val tags: List<Tag>,    // [ {"id": "1865756", "category": null, "text": "bitch suit", "url": "/tags/bitch_suit/?type=album",  "count": 6}, ...

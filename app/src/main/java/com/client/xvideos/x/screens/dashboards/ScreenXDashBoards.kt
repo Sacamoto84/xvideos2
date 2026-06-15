@@ -35,7 +35,7 @@ import com.client.xvideos.x.screens.dashboards.bottomBar.DashboardControlsRow
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.saved.X_SavedContent
-import com.redgifs.common.downloader.ui.DownloadIndicator
+import com.client.xvideos.r.common.downloader.ui.DownloadIndicator
 
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.

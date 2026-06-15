@@ -144,7 +144,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                                 AlbumListItem(
                                     modifier = Modifier.fillMaxWidth(),
                                     title = item.title,
-                                    coverUrl = item.cover.url,
+                                    coverUrl = item.cover?.url.orEmpty(),
                                     numberOfAnimatedPictures = item.numberOfAnimatedPictures,
                                     numberOfPictures = item.numberOfPictures,
                                     onClick = { navigator.push(ScreenLAlbum(item.id.toLong())) }
@@ -247,7 +247,7 @@ private fun ScreenLAlbumLandingTagPreview() {
                             AlbumListItem(
                                 modifier = Modifier.fillMaxWidth(),
                                 title = album.title,
-                                coverUrl = album.cover.url,
+                                coverUrl = album.cover?.url.orEmpty(),
                                 numberOfAnimatedPictures = album.numberOfAnimatedPictures,
                                 numberOfPictures = album.numberOfPictures,
                                 onClick = {}

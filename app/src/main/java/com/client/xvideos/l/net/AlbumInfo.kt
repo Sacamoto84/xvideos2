@@ -130,7 +130,7 @@ class AlbumInfo(
      * Вычисляется по требованию: `by lazy` зафиксировал бы пустое значение,
      * если бы свойство прочитали до завершения асинхронной загрузки.
      */
-    val thumbnail: String get() = albumInfo.value.cover.url
+    val thumbnail: String get() = albumInfo.value.cover?.url.orEmpty()
 
     val downloadUrl: String get() = Luscious.Companion.HOME + albumInfo.value.download_url
 

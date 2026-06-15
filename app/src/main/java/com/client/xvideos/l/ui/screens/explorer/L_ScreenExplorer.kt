@@ -38,7 +38,7 @@ import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddColumn
 import com.client.xvideos.r.ui.explorer.top.TabRow
 import com.client.xvideos.r.ui.ui.atom.TabBarPoints
 import com.client.xvideos.screenRoot.LocalRootScreenModel
-import com.redgifs.common.downloader.ui.DownloadIndicator
+import com.client.xvideos.r.common.downloader.ui.DownloadIndicator
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

@@ -255,9 +255,4 @@ object Theme {
 
     }
 
-    /** Уникальные токены X. */
-    object X {
-        /** Фон контейнера expand-menu на дашборде X. */
-        val expandMenuBackground = Color(0xFFF2EDF7)
-    }
 }

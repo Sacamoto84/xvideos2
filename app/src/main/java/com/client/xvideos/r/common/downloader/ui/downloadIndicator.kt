@@ -1,4 +1,4 @@
-package com.redgifs.common.downloader.ui
+package com.client.xvideos.r.common.downloader.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

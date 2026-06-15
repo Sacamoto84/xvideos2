@@ -57,65 +57,6 @@ private val colorBlackBackground = Color(0xff3b3b3b)
 @Composable
 fun MenuDot(modifier: Modifier = Modifier, value: Int, onChange: (Int) -> Unit, max: Int) {
 
-//    val state = rememberMenuState(expanded = false)
-//
-//    Box(
-//        Modifier
-//            .padding(horizontal = (0.5).dp)
-//            .then(modifier)
-//            .height(height)
-//    ) {
-//
-//        Menu(
-//            modifier = Modifier,
-//            state = state
-//        ) {
-//
-//            //Сама кнопка для вызова диалога
-//            MenuButton(
-//                Modifier
-//                    .fillMaxSize()
-//                    .background(colorBlackBackground)
-//            ) {
-//                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//                    BasicText(
-//                        "...",
-//                        style = TextStyle(
-//                            fontWeight = FontWeight.Medium,
-//                            color = colorTextWhite,
-//                            fontSize = 24.sp
-//                        )
-//                    )
-//                }
-//            }
-//
-//            MenuContent(
-//                modifier = Modifier
-//                    .padding(bottom = 0.dp)
-//                    .width(312.dp)
-//                    .clip(RoundedCornerShape(26.dp))
-//                    .background(Color(0xFF23242A)),
-//                // exit = fadeOut()
-//                //, enter = fadeIn()
-//            ) {
-//                Box(
-//                    modifier = Modifier
-//                        .padding(top = 8.dp)
-//                        .padding(horizontal = 8.dp), contentAlignment = Alignment.Center
-//                ) {
-//                    //Клавиатура возвращает число
-//                    KeyboardNumber(
-//                        value = value, max = max,
-//                        onClick = { onChange.invoke(it); state.expanded = false },
-//                    )
-//                }
-//
-//            }
-//
-//        }
-//
-//    }
-
 }
 
 

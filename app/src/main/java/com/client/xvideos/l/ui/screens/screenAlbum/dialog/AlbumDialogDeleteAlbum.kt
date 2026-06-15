@@ -28,7 +28,7 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
     LavenderDialog(
         title = "Удалить Альбом?",
         onDismiss = onDismiss,
-        icon = { UrlImage(pending.cover.url, modifier = Modifier.size(96.dp)) },
+        icon = { UrlImage(pending.cover?.url.orEmpty(), modifier = Modifier.size(96.dp)) },
         body = buildAnnotatedString {
             append("Удалить «")
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.title) }

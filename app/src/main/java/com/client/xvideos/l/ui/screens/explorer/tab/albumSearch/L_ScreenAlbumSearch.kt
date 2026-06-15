@@ -177,7 +177,7 @@ object L_ScreenAlbumSearch : Screen {
                                 AlbumListItem(
                                     modifier = Modifier.fillMaxWidth(),
                                     title = album.title,
-                                    coverUrl = album.cover.url,
+                                    coverUrl = album.cover?.url.orEmpty(),
                                     numberOfAnimatedPictures = album.numberOfAnimatedPictures,
                                     numberOfPictures = album.numberOfPictures,
                                     onClick = { navigator.push(ScreenLAlbum(album.id.toLong())) }

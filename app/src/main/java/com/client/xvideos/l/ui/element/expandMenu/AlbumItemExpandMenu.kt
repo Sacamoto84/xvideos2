@@ -67,15 +67,13 @@ fun AlbumItemExpandMenu(
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.width(IntrinsicSize.Min),
+            modifier = Modifier.width(IntrinsicSize.Max),
             containerColor = backgroundColor
         ) {
 
-            DropdownMenuItem_Download(item, onClick = {onDownload(it)}
-            ){ expanded = false }
+            DropdownMenuItem_Download(item, onClick = {onDownload(it)}){ expanded = false }
 
-            DropdownMenuItem_Share(item, onClick = {onShare(it)}
-            ){ expanded = false }
+            DropdownMenuItem_Share(item, onClick = {onShare(it)}){ expanded = false }
 
             DropdownMenuItem_SaveToGallery(item, onClick = { onSaveToGallery(it) }) { expanded = false }
 

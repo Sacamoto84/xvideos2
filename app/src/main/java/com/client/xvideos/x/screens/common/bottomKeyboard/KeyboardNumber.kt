@@ -195,9 +195,7 @@ fun KeyboardNumber(
                         val a = textFieldValue.text.toIntOrNull()
                         if (a != null) {
                             try {
-                                val i = a
-                                    .toInt()
-                                    .coerceIn(1, max)
+                                val i = a.coerceIn(1, max)
                                 onClick.invoke(i)
                             } catch (e: Exception) {
                                 Timber.e(e.localizedMessage)

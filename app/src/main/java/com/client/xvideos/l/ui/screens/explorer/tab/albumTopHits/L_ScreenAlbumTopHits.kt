@@ -132,7 +132,7 @@ object L_ScreenAlbumTopHits : Screen {
                                 AlbumListItem(
                                     modifier = Modifier.fillMaxWidth(),
                                     title = item.title,
-                                    coverUrl = item.cover.url,
+                                    coverUrl = item.cover?.url.orEmpty(),
                                     numberOfAnimatedPictures = item.numberOfAnimatedPictures,
                                     numberOfPictures = item.numberOfPictures,
                                     onClick = { navigator.push(ScreenLAlbum(item.id.toLong())) }

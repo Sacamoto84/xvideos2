@@ -129,7 +129,7 @@ fun ExpandMenuVideoContent(
             expanded = expanded,
             onDismissRequest = onDismissRequest,
             modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = Color(0xFFF1EDF4)//Theme.R.colorCommonBackground
+            containerColor = Theme.ExpandMenu.backgroundColor,
         ) {
             content()
         }

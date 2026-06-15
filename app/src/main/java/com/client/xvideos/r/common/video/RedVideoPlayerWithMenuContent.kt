@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
@@ -69,12 +70,12 @@ fun RedVideoPlayerWithMenu(
     }
 
     LaunchedEffect(url) {
-        delay(100)
+        delay(100.milliseconds)
         println("!!! Смена Url $url")
         playerHost.seekTo(0f)
     }
 
-    LaunchedEffect(enableAB) { if (enableAB) { playerHost.seekTo(timeA.toFloat()) } }
+    LaunchedEffect(enableAB) { if (enableAB) { playerHost.seekTo(timeA) } }
     LaunchedEffect(play) { if (play) playerHost.play() else playerHost.pause() }
     LaunchedEffect(isMute) { if (isMute) playerHost.mute() else playerHost.unmute() }
 
@@ -94,7 +95,7 @@ fun RedVideoPlayerWithMenu(
                     //Timber.i("!!! Current playback time: ${event.currentTime}s enableAB:$enableAB timeA:$timeA timeB:$timeB")
                     if (enableAB && currentTime >= timeB) {
                         println("!!! playerHost.seekTo(${timeA}) ")
-                        scope.launch { playerHost.seekTo(timeA.toFloat()) }
+                        scope.launch { playerHost.seekTo(timeA) }
                     }
                 }
                 is MediaPlayerEvent.TotalTimeChange -> { println("!!!Video duration updated: ${event.totalTime}s"); duration = event.totalTime.toInt() }
