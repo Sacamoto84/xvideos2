@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumListFilter
@@ -48,6 +49,22 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.Albu
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterSize
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterTags
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.StyleGenresTags
+
+private val cardShape = RoundedCornerShape(8.dp)
+
+/** Общий фон-«карточка» секции фильтра: отступ сверху, скругление, фон, опц. рамка и ограничение высоты. */
+private fun Modifier.filterCard(
+    border: Boolean = false,
+    maxHeight: Dp = Dp.Unspecified,
+): Modifier {
+    val palette = StyleGenresTags.Palette
+    return this
+        .padding(top = 8.dp)
+        .clip(cardShape)
+        .background(palette.surface)
+        .then(if (border) Modifier.border(1.dp, palette.border, cardShape) else Modifier)
+        .then(if (maxHeight != Dp.Unspecified) Modifier.sizeIn(maxHeight = maxHeight) else Modifier)
+}
 
 @Composable
 fun AlbumListFilter(
@@ -110,7 +127,7 @@ fun AlbumListFilter(
             }
         }
 
-        Box(modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).padding(4.dp)) {
+        Box(modifier = Modifier.filterCard().padding(4.dp)) {
             AlbumListFilterAlbumType(
                 when (filter.album_type) {
                     AlbumType.All -> 0
@@ -130,25 +147,25 @@ fun AlbumListFilter(
 
 
 
-        Box(modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).padding(4.dp)) {
+        Box(modifier = Modifier.filterCard().padding(4.dp)) {
             AlbumListFilterContentType(filter.content_id) { onFilterApply(filter.copy(content_id = it)) }
         }
 
         Box(
-            modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).border(1.dp, palette.border, RoundedCornerShape(8.dp)).sizeIn(maxHeight = maxHeight)
+            modifier = Modifier.filterCard(border = true, maxHeight = maxHeight)
         ) { AlbumListFilterAudiences(filter) { onFilterApply(it) } }
 
-        Box( modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).border(1.dp, palette.border, RoundedCornerShape(8.dp)).padding(vertical = 8.dp).padding(start = 8.dp, end = 8.dp)
+        Box( modifier = Modifier.filterCard(border = true).padding(8.dp)
         ) { AlbumListFilterSize(filter.picture_count_rank) { onFilterApply( filter.copy( picture_count_rank = it ) ) } }
 
-        Box( modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).border(1.dp, palette.border, RoundedCornerShape(8.dp)).sizeIn(maxHeight = maxHeight)
+        Box( modifier = Modifier.filterCard(border = true, maxHeight = maxHeight)
         ) { AlbumListFilterGenres(filter, filterGCount) { onFilterApply(it) } }
 
         Box(
-            modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).border(1.dp, palette.border, RoundedCornerShape(8.dp)).sizeIn(maxHeight = maxHeight)
+            modifier = Modifier.filterCard(border = true, maxHeight = maxHeight)
         ) { AlbumListFilterTags(filter, filterTagsCount) { onFilterApply(it) } }
 
-        Row( modifier = Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).border(1.dp, palette.border, RoundedCornerShape(8.dp)).sizeIn(maxHeight = maxHeight).padding(start = 8.dp),
+        Row( modifier = Modifier.fillMaxWidth().filterCard(border = true, maxHeight = maxHeight).padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Absolute.SpaceBetween)
         {
             Text("Animated", style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold))
