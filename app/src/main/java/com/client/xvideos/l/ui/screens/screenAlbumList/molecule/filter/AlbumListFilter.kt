@@ -1,13 +1,13 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,10 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
@@ -53,8 +57,6 @@ fun AlbumListFilter(
     onClose: () -> Unit, onFilterApply: (AlbumListFilter) -> Unit
 ) {
 
-
-
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight * 2 / 4
@@ -64,7 +66,7 @@ fun AlbumListFilter(
     Column( modifier = Modifier.fillMaxHeight().background(palette.screen).padding(horizontal = 8.dp).verticalScroll( rememberScrollState()) )
     {
 
-        Box( Modifier.fillMaxWidth().height(56.dp) )
+        Box( Modifier.displayCutoutPadding().fillMaxWidth().height(56.dp) )
         {
 
             Text("Filters",
@@ -73,29 +75,6 @@ fun AlbumListFilter(
                 modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp, top = 4.dp)
             )
 
-//            Row(
-//                modifier = Modifier.padding(end = 0.dp).fillMaxWidth().height(46.dp)
-//                    .align(Alignment.CenterEnd).clickable(onClick = { onClose() }),
-//                verticalAlignment = Alignment.CenterVertically,
-//                horizontalArrangement = Arrangement.Start
-//            )
-//            {
-//                Spacer( modifier = Modifier.fillMaxHeight().fillMaxWidth().weight(1f) )
-//                Spacer( modifier = Modifier.fillMaxHeight().width(4.dp) )
-//                Spacer( modifier = Modifier.fillMaxHeight().fillMaxWidth().weight(1f) )
-//                Spacer( modifier = Modifier.fillMaxHeight().width(4.dp) )
-//                Box(
-//                    modifier = Modifier.fillMaxHeight().fillMaxWidth().weight(1f)
-//                        .border(0.5.dp, Theme.L.grey2, RoundedCornerShape(4.dp)),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Text(
-//                        "Close", textAlign = TextAlign.Center,
-//                        color = Theme.L.textColor, fontFamily = Theme.L.fontFamilyKarla,
-//                        fontSize = 20.sp, modifier = Modifier
-//                    )
-//                }
-//            }
         }
 
         if (filter.searchQuery.isNotBlank()) {
@@ -149,6 +128,8 @@ fun AlbumListFilter(
             }
         }
 
+
+
         Box(modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).padding(4.dp)) {
             AlbumListFilterContentType(filter.content_id) { onFilterApply(filter.copy(content_id = it)) }
         }
@@ -167,15 +148,22 @@ fun AlbumListFilter(
             modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).border(1.dp, palette.border, RoundedCornerShape(8.dp)).sizeIn(maxHeight = maxHeight)
         ) { AlbumListFilterTags(filter, filterTagsCount) { onFilterApply(it) } }
 
+        Row( modifier = Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).background(palette.surface).border(1.dp, palette.border, RoundedCornerShape(8.dp)).sizeIn(maxHeight = maxHeight).padding(start = 8.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Absolute.SpaceBetween)
+        {
+            Text("Animated", style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold))
+            Checkbox(checked = filter.selection == "animated", onCheckedChange = { onFilterApply( filter.copy( selection = if (it) "animated" else "all" ) ) }, colors = CheckboxDefaults.colors(uncheckedBorderColor = Color.Gray))
+        }
 
     }
 }
+
+
 
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C, widthDp = 390, heightDp = 820)
 @Composable
 private fun AlbumListFilterPreview() {
     var filter by remember { mutableStateOf(albumListFilterPreviewFilter()) }
-
     AlbumListFilter(
         filter = filter,
         filterGCount = albumListFilterPreviewGenreCounts(),
@@ -186,7 +174,7 @@ private fun AlbumListFilterPreview() {
 }
 
 private fun albumListFilterPreviewFilter(): com.client.xvideos.l.model.AlbumListFilter {
-    return com.client.xvideos.l.model.AlbumListFilter(
+    return AlbumListFilter(
         display = "date_trending",
         album_type = AlbumType.Manga,
         content_id = ContentId.Hentai,

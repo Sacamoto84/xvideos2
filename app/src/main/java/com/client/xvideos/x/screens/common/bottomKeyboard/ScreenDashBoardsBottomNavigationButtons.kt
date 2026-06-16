@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.screens.common.bottomKeyboard.MenuDot
 
 @Preview
 @Composable
@@ -145,13 +144,6 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
             }
 
         }
-
-        MenuDot(
-            modifier = Modifier.size(48.dp),
-            (value + 1).coerceAtLeast(0),
-            onChange = { onChange.invoke((it - 1).coerceAtLeast(0)) },
-            max = max
-        )
 
         ///////////////////////////////
         Box(

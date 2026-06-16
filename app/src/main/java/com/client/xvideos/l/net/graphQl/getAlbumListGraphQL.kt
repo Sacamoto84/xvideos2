@@ -111,7 +111,6 @@ fun getAlbumListGraphQL1(
         str.append("""{ "name": "search_query", "value": "${jsonEscape(filter.searchQuery)}" },""")
     }
 
-
     if (filter.tagPlus.isNotEmpty() or filter.tagMinus.isNotEmpty()) {
         val tags = StringBuilder()
         filter.tagPlus.forEach {
@@ -123,11 +122,13 @@ fun getAlbumListGraphQL1(
         str.append("""{ "name": "tagged", "value": "${jsonEscape(tags.toString())}" },""")
     }
 
+    if (filter.selection.isNotEmpty()) {
+        str.append("""{ "name": "selection", "value": "${filter.selection}" },""")
+    }
+
     str.append("""{ "name": "audience_ids", "value": "${jsonEscape(filter.audienceIds)}" },""")
 
     str.append("""{ "name": "language_ids", "value": "${jsonEscape(filter.languageIds)}" }""")
-
-
 
     if (filter.genresPlus.isNotEmpty() or filter.genresMinus.isNotEmpty()) {
         val genres = StringBuilder()

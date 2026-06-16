@@ -55,7 +55,7 @@ runtimeSavedInstanceState = "1.0.0-alpha11"
 uiautomator = "2.3.0"
 benchmarkMacroJunit4 = "1.4.1"
 playServicesNearby = "19.3.0"
-kotlinxCoroutinesTest = "1.10.2"
+kotlinxCoroutinesTest = "1.11.0"
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }

@@ -90,6 +90,8 @@ import com.client.xvideos.common.p2p.ui.ScreenP2pReceive
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.KeepScreenOn
+import com.client.xvideos.common.util.getStatusBarInsetDp
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
 import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
 import com.client.xvideos.r.common.saved.SavedRed
@@ -101,6 +103,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -188,6 +191,14 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         }
 
         setContent {
+
+
+            //val topInset = getTopInsetDp()
+            //val topStatusBar = getStatusBarInsetDp()
+
+            //Timber.i("QQQ $topInset statusbar:$topStatusBar")
+
+
             var isAppLocked by rememberSaveable { mutableStateOf(shouldShowAppLock) }
 
             KeepScreenOn()

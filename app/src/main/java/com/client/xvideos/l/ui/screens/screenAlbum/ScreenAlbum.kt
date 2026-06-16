@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -53,7 +53,9 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Audience
@@ -61,20 +63,19 @@ import com.client.xvideos.l.model.Genre
 import com.client.xvideos.l.net.AlbumPicsDetails
 import com.client.xvideos.l.net.LAlbumPageLoadIssue
 import com.client.xvideos.l.repository.LRepositoryProtectionUiState
-import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
-import com.client.xvideos.l.ui.screens.screenAlbum.dialog.AlbumDialogDeleteAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
-import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonShareAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoTags
+import com.client.xvideos.l.ui.screens.screenAlbum.dialog.AlbumDialogDeleteAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 import com.client.xvideos.screenRoot.LocalRootScreenModel
+import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import timber.log.Timber
@@ -108,6 +109,8 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             navigator.pop()
         }
+
+        val topInset = getTopInsetDp()
 
         val album = vm.albumInfo.collectAsStateWithLifecycle().value
 
@@ -187,8 +190,17 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                     showInitialLoading = showInitialItemsLoading,
                     itemBefore = {
                         Column(modifier = Modifier
-                            .displayCutoutPadding()
-                            .padding(horizontal = 4.dp)) {
+
+                            //.displayCutoutPadding()
+                            .padding(horizontal = 4.dp))
+                        {
+
+                            val brush = Brush.verticalGradient(listOf(Theme.L.red, Color(0xFF202020), Color(0x80262626)))
+
+                            Box(modifier = Modifier.fillMaxWidth().height(topInset).background(brush)){
+
+                            }
+
                             if (parsed != null) {
 
                                 Row {

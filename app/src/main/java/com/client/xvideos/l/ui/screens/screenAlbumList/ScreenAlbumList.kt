@@ -1,7 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList
 
-import com.client.xvideos.common.theme.Theme
-
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -12,6 +10,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,6 +52,9 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.ui.element.AlbumListItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.bottomBar.AlbumListBottomBar
@@ -143,8 +145,12 @@ private fun Screen.ScreenAlbumListContent(
         val scope = rememberCoroutineScope()
         var totalPages by remember { mutableIntStateOf(1) }
 
+        val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
+
         // ✅ Состояние для диалога
         var showFilterDialog by remember { mutableStateOf(false) }
+
+        val topInset = getTopInsetDp()
 
         LaunchedEffect(info) { totalPages = info?.totalPages ?: 1 }
 
@@ -221,7 +227,16 @@ private fun Screen.ScreenAlbumListContent(
                         {
                             item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
                                 Box(
-                                    Modifier.height(32.dp).background(Theme.L.red).padding(start = 24.dp), contentAlignment = Alignment.CenterStart
+                                    Modifier
+                                        . then (
+                                            if (usePadding) Modifier.height(topInset)      //.displayCutoutPadding()
+                                            else Modifier
+                                        )
+                                        .then(
+                                            if (title != "") Modifier.height(32.dp) else Modifier.height(0.dp)
+                                        )
+                                        .background(Theme.L.red)
+                                        .padding(start = 24.dp), contentAlignment = Alignment.CenterStart
                                 ) {
                                     Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
                                 }
@@ -312,89 +327,3 @@ private fun Screen.ScreenAlbumListContent(
         }
 }
 
-
-// ----------------------------------------------------------------------------
-// PREVIEW
-//
-// Экран завязан на ScreenModel (getScreenModel), поэтому реальный
-// ScreenAlbumListContent в @Preview не построить. Ниже — stateless-копия
-// раскладки одной страницы (прогресс-бар + грид с плашкой-заголовком +
-// карточки + нижний бар) с фейковыми данными. Только для визуальной проверки.
-// ----------------------------------------------------------------------------
-
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-private fun AlbumListPreviewBody(
-    title: String,
-    isRequest: Boolean,
-    currentPage: Int,
-    totalPages: Int,
-    itemCount: Int,
-) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            if (isRequest) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(Color(0xff0c94ff))
-                )
-            }
-        },
-        bottomBar = {
-            AlbumListBottomBar(
-                onClickVisibleFilter = {},
-                currentPage = currentPage,
-                totalPages = totalPages,
-                onChange = {}
-            )
-        },
-        containerColor = Theme.background
-    ) { padding ->
-        LazyVerticalGrid(
-            modifier = Modifier
-                .padding(bottom = padding.calculateBottomPadding())
-                .fillMaxSize(),
-            columns = GridCells.Fixed(2)
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Box(
-                    Modifier
-                        .height(32.dp)
-                        .background(Theme.L.red)
-                        .padding(start = 24.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
-                }
-            }
-            items(itemCount) { index ->
-                Box(
-                    Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AlbumListItem(
-                        title = "Album #$index",
-                        coverUrl = "",
-                        numberOfAnimatedPictures = index,
-                        numberOfPictures = index * 7,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360, heightDp = 720)
-@Composable
-private fun ScreenAlbumListPreview() {
-    AlbumListPreviewBody(
-        title = "Genre: Example",
-        isRequest = true,
-        currentPage = 2,
-        totalPages = 8,
-        itemCount = 6,
-    )
-}
