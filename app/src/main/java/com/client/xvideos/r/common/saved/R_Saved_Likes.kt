@@ -6,7 +6,6 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
-import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
 import kotlin.onSuccess
 
@@ -35,17 +34,27 @@ class R_Saved_Likes {
     fun remove(item: GifsInfo) {
         Timber.i("R_Saved_Likes remove() id:${item.id} userName:${item.userName} url:${item.urls.hd}")
         likesDb.delete(item.id)
-            .onSuccess { SnackBar.info("Unlike") }
+            .onSuccess {
+                SnackBar.info("Unlike")
+                // Раньше здесь был полный refresh(): пересканирование каталога и
+                // Gson-разбор ВСЕХ лайков ради удаления одного элемента (O(n) чтений
+                // с диска на каждый unlike). add() при этом правит список точечно —
+                // делаем так же.
+                list.removeAll { it.id == item.id }
+            }
             .onFailure { e -> SnackBar.error("Ошибка удаления лайка ${e.message}") }
-        refresh()
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun refresh() {
         likesDb.refresh()
-        val sanitized = list.toList().sanitizeGifsInfoList()
-        list.clear()
-        list.addAll(sanitized)
+        val current = list.toList()
+        val sanitized = current.sanitizeGifsInfoList()
+        // Переписываем список только если санитизация реально что-то изменила,
+        // иначе получаем лишнюю пару clear()/addAll() и мигание списка.
+        if (sanitized != current) {
+            list.clear()
+            list.addAll(sanitized)
+        }
     }
 
 }

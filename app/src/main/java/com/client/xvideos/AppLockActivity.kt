@@ -2,12 +2,6 @@ package com.client.xvideos
 
 import com.client.xvideos.common.theme.Theme
 
-import android.content.Intent
-import android.os.Bundle
-import android.view.View
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -62,41 +56,9 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlin.math.ceil
 
-class AppLockActivity : ComponentActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        window.decorView.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
-
-        if (!AppLockRepository.shouldShowLock(this)) {
-            navigateToMain()
-            return
-        }
-
-        setContent {
-            XvideosTheme(darkTheme = true) {
-                BackHandler { moveTaskToBack(true) }
-                AppLockScreen(
-                    onUnlock = { password ->
-                        if (AppLockRepository.verifyPassword(this, password)) {
-                            AppLockSession.unlock()
-                            navigateToMain()
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                )
-            }
-        }
-    }
-
-    private fun navigateToMain() {
-        startActivity(Intent(this, MainActivity::class.java))
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
-        finish()
-    }
-}
+// Здесь была отдельная AppLockActivity: она значилась в манифесте, но её никто
+// никогда не запускал — замок рисуется прямо в MainActivity через [AppLockScreen].
+// Мёртвый Activity удалён вместе с записью в AndroidManifest.xml.
 
 @Composable
 internal fun AppLockScreen(

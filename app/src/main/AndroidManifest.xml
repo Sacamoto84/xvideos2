@@ -35,9 +35,19 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:targetApi="31" />
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" tools:targetApi="33" />
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!--
+        FOREGROUND_SERVICE, FOREGROUND_SERVICE_CONNECTED_DEVICE и POST_NOTIFICATIONS
+        удалены отсюда: в коде приложения нет ни одного Service и ни одной
+        нотификации. P2pReceiveManager работает, только пока приложение активно
+        (см. его KDoc), фоновым сервисом он не является.
+
+        FOREGROUND_SERVICE всё равно остаётся в merged manifest — его объявляет
+        play-services-cast-framework для своих собственных сервисов; два других
+        разрешения приходили только из этого файла и из APK ушли.
+
+        Вернуть вместе с реальным ForegroundService, когда фоновый приём P2P
+        будет реализован.
+    -->
 
 
 
@@ -69,11 +79,6 @@
 
         <activity
             android:name=".PermissionScreenActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.Xvideos" />
-
-        <activity
-            android:name=".AppLockActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Xvideos" />

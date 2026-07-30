@@ -1,8 +1,10 @@
 package com.client.xvideos.x.screens.tags
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,8 +36,12 @@ class ScreenTags(private val tag: String) : Screen {
                     Text(vm.screen.title1, color = Color(0xFF787878))
                 }
             }
-        }) { _ ->
-            TagsPaginatedListScreen(0)
+        }) { padding ->
+            // Раньше padding игнорировался (`{ _ -> }`) — список рисовался под
+            // topBar'ом, и его первые строки оказывались перекрыты заголовком.
+            Box(modifier = Modifier.padding(padding)) {
+                TagsPaginatedListScreen(0)
+            }
         }
     }
 

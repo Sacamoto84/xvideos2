@@ -4,7 +4,6 @@ import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.NichesInfo
-import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
 import kotlin.onSuccess
 
@@ -35,7 +34,6 @@ class R_Saved_Niches {
             .onFailure { e -> SnackBar.error("Ошибка удаления группы ${e.message}") }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun refresh() {
         nichesDb.refresh()
     }

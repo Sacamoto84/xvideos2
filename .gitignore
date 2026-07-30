@@ -14,3 +14,11 @@
 .cxx
 local.properties
 secrets.properties
+
+# Кэш сессий Kotlin-плагина — постоянный мусор в git status
+.kotlin
+
+# Пароли от release-keystore (см. app/build.gradle)
+keystore.properties
+*.jks
+*.keystore

@@ -129,10 +129,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     @Inject
     lateinit var appFileDatabase: javax.inject.Provider<AppFileDatabase>
 
-    companion object {
-        internal const val EXTRA_REQUIRE_APP_LOCK = "com.client.xvideos.EXTRA_REQUIRE_APP_LOCK"
-    }
-
     /**
      * Инициализирует окно, скрывает системные панели, проверяет разрешения
      * и поднимает корневой Compose UI.
@@ -173,7 +169,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         // SECURITY: показ замка определяется ИСКЛЮЧИТЕЛЬНО состоянием блокировки.
         // Нельзя завязываться на intent-extra от вызывающего: даже если Activity
         // запустят напрямую (напр. `adb am start`) без extra, замок обязан показаться.
-        // Extra из SplashActivity оставлен лишь как подсказка, но не как условие.
         val shouldShowAppLock = AppLockRepository.shouldShowLock(this)
         if (shouldShowAppLock) {
             window.decorView.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS

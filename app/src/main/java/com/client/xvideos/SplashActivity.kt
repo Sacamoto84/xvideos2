@@ -65,9 +65,10 @@ class SplashActivity : ComponentActivity() {
             if (AppLockRepository.isEnabled(this@SplashActivity)) {
                 AppLockSession.lock()
             }
-            val shouldShowLock = AppLockRepository.shouldShowLock(this@SplashActivity)
+            // Extra про необходимость замка сюда больше не кладём: MainActivity
+            // сознательно определяет это сама через AppLockRepository.shouldShowLock,
+            // чтобы прямой запуск Activity (напр. через adb) не обходил замок.
             val intent = Intent(this@SplashActivity, MainActivity::class.java)
-                .putExtra(MainActivity.EXTRA_REQUIRE_APP_LOCK, shouldShowLock)
             startActivity(intent)
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()

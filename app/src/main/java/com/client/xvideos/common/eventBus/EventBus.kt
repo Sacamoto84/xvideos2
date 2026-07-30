@@ -32,7 +32,15 @@ object EventBus {
     )
     val events = _events.asSharedFlow()
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    /**
+     * Однопоточный диспетчер: корутины на нём выполняются строго по очереди,
+     * поэтому подписчики видят события в том же порядке, в каком их отправили.
+     *
+     * Раньше здесь был обычный `Dispatchers.IO`, и каждый [postEvent] стартовал
+     * свою корутину на пуле потоков — два подряд отправленных события могли
+     * доехать в обратном порядке (например, прогресс приёма P2P прыгал назад).
+     */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 
     fun postEvent(event: Event) {
         Timber.i("!!! ~~~ EventBus.postEvent $event")

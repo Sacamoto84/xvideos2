@@ -155,11 +155,13 @@ private fun FavoritesContent(
             }
             HorizontalSeparator(color = Color(0xFF9E9E9E))
         }
-    }) { _ ->
+    }) { padding ->
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            modifier = Modifier//.padding(padding)
+            // padding от Scaffold — высота topBar. Без него первая строка сетки
+            // уезжала под заголовок «Избранное».
+            modifier = Modifier.padding(padding)
         ) {
             items(favorites) { item ->
                 FavoriteRow(

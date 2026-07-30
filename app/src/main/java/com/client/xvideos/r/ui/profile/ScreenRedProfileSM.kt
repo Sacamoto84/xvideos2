@@ -35,6 +35,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -93,6 +95,9 @@ class ScreenRedProfileSM @AssistedInject constructor(
 
     var maxCreatorGifs = 0
     var isLoading = MutableStateFlow(false)
+
+    /** Job текущей подгрузки страницы — нужен, чтобы [clear] мог её отменить, а не ждать. */
+    private var loadJob: Job? = null
 
     val selector: StateFlow<Int> = Settings.red_profile_selector.field
 
@@ -165,6 +170,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
         if (isLoading.value) return
 
         isLoading.value = true
+        loadJob = currentCoroutineContext()[Job]
         try {
             val r = loadGifs(
                 userName = userName,
@@ -182,14 +188,27 @@ class ScreenRedProfileSM @AssistedInject constructor(
         } catch (e: Exception) {
             Timber.e(e, "!!! loadNextPage failed: user=$userName page=$page")
         } finally {
+            loadJob = null
             isLoading.value = false
         }
     }
 
+    /**
+     * Сбрасывает выдачу профиля.
+     *
+     * Раньше здесь было `while (isLoading.value) { Thread.sleep(100) }` —
+     * блокирующее ожидание в потоке вызывающего. Вызывается [clear] из onClick
+     * (`GifTypes_Control`), то есть с main-потока, а [loadNextPage] снимает флаг
+     * `isLoading` в `finally` на `screenModelScope` (`Dispatchers.Main.immediate`).
+     * Заблокированный main этот `finally` выполнить не смог бы — получался не
+     * фриз, а вечный дедлок.
+     *
+     * Теперь загрузка не ожидается, а отменяется: страница, результат которой
+     * всё равно выбрасывается, не имеет смысла, а список чистится немедленно.
+     */
     fun clear() {
-        while (isLoading.value) {
-            Thread.sleep(100)
-        }
+        loadJob?.cancel()
+        loadJob = null
         _list.update { emptyList() }
         _tags.update { emptySet() }
     }

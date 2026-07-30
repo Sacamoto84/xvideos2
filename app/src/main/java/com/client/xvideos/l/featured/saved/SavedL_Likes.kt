@@ -59,22 +59,28 @@ class SavedL_Likes(
 
     fun remove(url: String) {
         Timber.i("SavedL_Likes removeLikes() url:$url")
-        val root = File(AppPath.l_likes)
-        val folder = lFindLikeFolder(root, url)
-        val file = File(url)
 
-        val removed = when {
-            folder != null -> folder.deleteRecursively()
-            lIsInside(root, file) && file.exists() -> file.delete()
-            else -> false
-        }
+        // Вызов приходит из onDelete в composable, то есть с main-потока, а
+        // deleteRecursively() по папке с медиа — это полноценный обход каталога.
+        // Уносим на IO, как это уже сделано в add() и refresh().
+        scope.launch(Dispatchers.IO) {
+            val root = File(AppPath.l_likes)
+            val folder = lFindLikeFolder(root, url)
+            val file = File(url)
 
-        if (removed) {
-            SnackBar.info("Unlike")
-        } else {
-            SnackBar.error("Файл не найден: $url")
+            val removed = when {
+                folder != null -> folder.deleteRecursively()
+                lIsInside(root, file) && file.exists() -> file.delete()
+                else -> false
+            }
+
+            if (removed) {
+                SnackBar.info("Unlike")
+            } else {
+                SnackBar.error("Файл не найден: $url")
+            }
+            refresh()
         }
-        refresh()
     }
 
     fun refresh() {

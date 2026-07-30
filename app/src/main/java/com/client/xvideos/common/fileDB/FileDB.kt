@@ -1,6 +1,7 @@
 package com.client.xvideos.common.fileDB
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.Snapshot
 import com.google.gson.GsonBuilder
 import timber.log.Timber
 import java.io.File
@@ -9,26 +10,37 @@ import java.io.IOException
 
 /**
  * val nichesDb = FileDB<NichesInfo>(AppPath.niches_red, "niches", object : TypeToken<NichesInfo>() {}.type)
+ *
+ * Все публичные методы синхронные и потокобезопасны: операции с каталогом
+ * сериализованы через [lock], а запись файлов атомарна (temp + rename), чтобы
+ * обрыв процесса посреди записи не оставлял обрезанный JSON.
  */
 class FileDB<T>(val dirPath: String, val extension: String, private val clazz: Class<T> ) {
 
-    var list = mutableStateListOf<T>()
+    val list = mutableStateListOf<T>()
 
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
+    /** Сериализует операции с каталогом: два параллельных refresh() не переплетаются. */
+    private val lock = Any()
+
+    /** Расширение временного файла, в который пишем перед атомарным переименованием. */
+    private val tempExtension = "$extension.tmp"
+
     fun insert(nameFile: String, value: T): Result<Boolean> {
         return try {
+            synchronized(lock) {
+                val dir = File(dirPath)
+                if (!dir.exists()) {
+                    if (!dir.mkdirs()) { throw IOException("Не удалось создать директорию: ${dir.absolutePath}") }
+                }
 
-            val dir = File(dirPath)
-            if (!dir.exists()) {
-                if (!dir.mkdirs()) { throw IOException("Не удалось создать директорию: ${dir.absolutePath}") }
-            }
+                val file = File(dirPath, "${nameFile}.${extension}")
 
-            val file = File(dirPath, "${nameFile}.${extension}")
-
-            gson.toJson(value).also { json ->
-                require(json != "null") { "Сериализация вернула null" }
-                file.writeText(json, Charsets.UTF_8)
+                gson.toJson(value).also { json ->
+                    require(json != "null") { "Сериализация вернула null" }
+                    writeAtomically(file, json)
+                }
             }
 
             Result.success(true)
@@ -40,14 +52,16 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
     fun update(nameFile: String, value: T): Result<Boolean> {
         return try {
-            val file = File(dirPath, "$nameFile.$extension")
-            if (!file.exists()) {
-                return Result.failure(FileNotFoundException("File not found: ${file.absolutePath}"))
-            }
+            synchronized(lock) {
+                val file = File(dirPath, "$nameFile.$extension")
+                if (!file.exists()) {
+                    return Result.failure(FileNotFoundException("File not found: ${file.absolutePath}"))
+                }
 
-            gson.toJson(value).also { json ->
-                require(json != "null") { "Serialization returned null" }
-                file.writeText(json, Charsets.UTF_8)
+                gson.toJson(value).also { json ->
+                    require(json != "null") { "Serialization returned null" }
+                    writeAtomically(file, json)
+                }
             }
 
             Result.success(true)
@@ -59,10 +73,12 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
     fun delete(name: String): Result<Boolean> {
         return try {
-            val file = File(dirPath, "$name.$extension")
-            if (file.exists()) {
-                if (!file.delete()) {
-                    return Result.failure(IOException("!!! Не удалось удалить файл: ${file.absolutePath}"))
+            synchronized(lock) {
+                val file = File(dirPath, "$name.$extension")
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        return Result.failure(IOException("!!! Не удалось удалить файл: ${file.absolutePath}"))
+                    }
                 }
             }
             Result.success(true)
@@ -73,7 +89,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
     }
 
 
-    fun read(nameFile: String, clazz: Class<T>): Result<T> {
+    fun read(nameFile: String): Result<T> {
         return try {
             val file = File(dirPath, "$nameFile.$extension")
             if (!file.exists()) {
@@ -91,30 +107,73 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
     fun refresh(): Result<Boolean> {
         return try {
-            val dir = File(dirPath)
-            if (!dir.exists() || !dir.isDirectory) {
-                return Result.failure(IOException("!!! Директория не существует: $dirPath"))
-            }
+            val loaded = synchronized(lock) {
+                val dir = File(dirPath)
+                if (!dir.exists() || !dir.isDirectory) {
+                    return Result.failure(IOException("!!! Директория не существует: $dirPath"))
+                }
 
-            val files = dir.listFiles { file -> file.extension == extension } ?: emptyArray()
+                cleanupTempFiles(dir)
 
-            val loaded = files.mapNotNull { file ->
-                try {
-                    val json = file.readText(Charsets.UTF_8)
-                    gson.fromJson(json, clazz)
-                } catch (e: Exception) {
-                    Timber.e(e, "!!! FileDB refresh Ошибка при чтении файла $dirPath ${file.name}")
-                    null
+                val files = dir.listFiles { file -> file.extension == extension } ?: emptyArray()
+
+                files.mapNotNull { file ->
+                    try {
+                        val json = file.readText(Charsets.UTF_8)
+                        gson.fromJson(json, clazz)
+                    } catch (e: Exception) {
+                        Timber.e(e, "!!! FileDB refresh Ошибка при чтении файла $dirPath ${file.name}")
+                        null
+                    }
                 }
             }
 
-            list.clear()
-            list.addAll(loaded)
+            // clear() + addAll() — две отдельные записи в snapshot-состояние, и между
+            // ними Compose успевал отрисовать пустой список (мигание). Внутри
+            // withMutableSnapshot обе записи публикуются подписчикам разом.
+            runCatching {
+                Snapshot.withMutableSnapshot {
+                    list.clear()
+                    list.addAll(loaded)
+                }
+            }.onFailure { e ->
+                // Вложенный mutable-снапшот недоступен (например, текущий snapshot
+                // read-only) — обновляем как раньше, без атомарности.
+                Timber.w(e, "!!! FileDB refresh: атомарное обновление недоступно, fallback")
+                list.clear()
+                list.addAll(loaded)
+            }
 
             Result.success(true)
         } catch (e: Exception) {
             Timber.e(e, "!!! Ошибка при обновлении списка из директории $dirPath")
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Пишет во временный файл и переименовывает его поверх целевого.
+     * Переименование в пределах одной ФС атомарно, поэтому читатель видит
+     * либо старое содержимое целиком, либо новое целиком — но не обрывок.
+     */
+    private fun writeAtomically(file: File, json: String) {
+        val temp = File(file.parentFile, "${file.name}.tmp")
+        temp.writeText(json, Charsets.UTF_8)
+        if (!temp.renameTo(file)) {
+            // На некоторых ФС renameTo не перезаписывает существующий файл.
+            file.delete()
+            if (!temp.renameTo(file)) {
+                temp.delete()
+                throw IOException("Не удалось записать файл: ${file.absolutePath}")
+            }
+        }
+    }
+
+    /** Подчищает временные файлы, оставшиеся от прерванной записи. */
+    private fun cleanupTempFiles(dir: File) {
+        runCatching {
+            dir.listFiles { file -> file.name.endsWith(".$tempExtension") }
+                ?.forEach { it.delete() }
         }
     }
 
