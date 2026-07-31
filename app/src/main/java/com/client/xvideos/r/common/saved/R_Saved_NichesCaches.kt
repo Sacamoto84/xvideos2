@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.network.api.RedApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -83,6 +84,8 @@ class R_Saved_NichesCaches(
                 }
                 isDownloading = false
                 isDownloaded = true
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "R niches cache refresh error")
                 if (showSnackBar) {

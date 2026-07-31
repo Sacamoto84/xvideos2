@@ -13,6 +13,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -97,6 +98,8 @@ class AndroidConnectivityObserver(
             _isConnected.value = isConnected
 
             Timber.w("!!! 999 Initial state - hasInternet: $hasInternet, isValidated: $isValidated, connected: $isConnected")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "!!! 999 Failed to get initial connection state")
             _isConnected.value = false

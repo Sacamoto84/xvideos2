@@ -129,6 +129,8 @@ class ScreenRedProfileSM @AssistedInject constructor(
                 val loadedCreator = redApi.readCreator(profileName).getOrNull()
                 creator = loadedCreator
                 loadedCreator?.let { savedRed.creators.updateIfSaved(it) }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 creator = null
                 Timber.e(e)

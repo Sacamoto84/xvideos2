@@ -4,6 +4,7 @@ import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.network.api.RedApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,6 +34,8 @@ class R_SearchNiches @Inject constructor(
                     val remoteResults = try {
                         redApi.searchNichesShort(query)
                             .map { SuggestionItem(text = it.name, count = it.gifs) }
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         emptyList() // Если API недоступно, работаем с пустым списком
                     }
@@ -50,6 +53,10 @@ class R_SearchNiches @Inject constructor(
 
                     searchTextSuggestions.value = combined
 
+                } catch (e: CancellationException) {
+                    // Поиск перезапускается на каждый ввод — предыдущая корутина
+                    // отменяется штатно и не должна показывать ошибку.
+                    throw e
                 } catch (e: Exception) {
                     SnackBar.error(e.localizedMessage ?: "Unknown error")
                 }

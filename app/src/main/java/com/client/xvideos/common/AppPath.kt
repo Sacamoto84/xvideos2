@@ -2,6 +2,7 @@ package com.client.xvideos.common
 
 import android.content.Context
 import android.os.Environment
+import timber.log.Timber
 import java.io.IOException
 import java.io.File
 
@@ -92,7 +93,7 @@ object AppPath {
             try {
                 nomedia.createNewFile()
             } catch (e: IOException) {
-                e.printStackTrace()
+                Timber.e(e, "AppPath: не удалось создать .nomedia в $main")
             }
         }
 
@@ -147,7 +148,7 @@ object AppPath {
 
             legacyDir.deleteRecursively()
         }.onFailure {
-            it.printStackTrace()
+            Timber.e(it, "AppPath: не удалось перенести данные из legacy-каталога")
         }
     }
 

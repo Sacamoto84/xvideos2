@@ -32,6 +32,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -127,6 +128,8 @@ class ScreenLAlbumSM @AssistedInject constructor(
                 withContext(Dispatchers.Main) {
                     useCaseShareFile(context, file)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "L share -> ошибка при работе с файлом")
                 SnackBar.error("Ошибка при попытке поделиться файлом")

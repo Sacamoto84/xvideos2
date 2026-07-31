@@ -28,6 +28,7 @@ import com.client.xvideos.l.featured.saved.readLSavedLikeMetadata
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -130,6 +131,8 @@ class ExpandMenuViewModel @Inject constructor(
                 withContext(Dispatchers.Main) {
                     useCaseShareFile(context, file)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "L share -> ошибка при работе с файлом")
                 SnackBar.error("Ошибка при попытке поделиться файлом")
@@ -162,6 +165,8 @@ class ExpandMenuViewModel @Inject constructor(
                     return@launch
                 }
                 GallerySaver.saveLocal(context, src, src.name)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "L saveToGallery -> ошибка")
                 SnackBar.error("Ошибка сохранения в галерею")

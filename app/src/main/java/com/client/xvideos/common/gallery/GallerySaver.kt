@@ -5,6 +5,7 @@ import android.media.MediaScannerConnection
 import android.os.Environment
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -39,6 +40,8 @@ object GallerySaver {
                 src.copyTo(dst)
                 scan(appContext, dst)
                 SnackBar.success("Сохранено в галерею")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "GallerySaver: ошибка копирования $fileName")
                 SnackBar.error("Ошибка сохранения: ${e.message}")

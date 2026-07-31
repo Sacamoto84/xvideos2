@@ -23,6 +23,7 @@ import io.ktor.client.request.url
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.Parameters
+import kotlinx.coroutines.CancellationException
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.serialization.gson.gson
@@ -133,6 +134,8 @@ class KtorRequestHandler(
 
         val response = try {
             post(LOGIN, formData)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.w(e, "L login request failed")
             loggedIn = false

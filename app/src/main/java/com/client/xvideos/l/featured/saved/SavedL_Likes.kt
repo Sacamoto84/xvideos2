@@ -5,6 +5,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -90,6 +91,8 @@ class SavedL_Likes(
             Timber.i("SavedL_Likes refresh()")
             val items = try {
                 lReadCollectionItems(File(AppPath.l_likes))
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "SavedL_Likes refresh() Ошибка получения списка likes")
                 SnackBar.error("Ошибка получения списка likes")

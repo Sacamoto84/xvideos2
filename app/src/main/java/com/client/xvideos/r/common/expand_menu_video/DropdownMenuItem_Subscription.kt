@@ -12,12 +12,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,10 +39,16 @@ fun DropdownMenuItem_Subscribtion(item: GifsInfo? = null, redApi:()-> RedApi , s
             savedRed.invoke().scope.launch {
                 delay(200)
                 if (!isSubscribed) {
-                    try {
-                        val a = redApi.invoke().readCreator(item.userName).getOrNull()
-                        savedRed.invoke().subscriptions.add(a!!)
-                    } catch (e: Exception) { e.printStackTrace() }
+                    // См. DropdownMenuItem_Follow: прежний `add(getOrNull()!!)`
+                    // внутри `catch { printStackTrace() }` молча проглатывал NPE
+                    // при любой сетевой ошибке — подписка не срабатывала без
+                    // единого следа в логе.
+                    redApi.invoke().readCreator(item.userName)
+                        .onSuccess { savedRed.invoke().subscriptions.add(it) }
+                        .onFailure { e ->
+                            Timber.e(e, "Subscribe: не удалось получить профиль ${item.userName}")
+                            SnackBar.error("Не удалось оформить подписку: ${e.message ?: "нет сети"}")
+                        }
                 }
                 else {
                     savedRed.invoke().subscriptions.remove(item.userName)

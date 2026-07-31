@@ -11,6 +11,7 @@ import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
 import com.client.xvideos.l.net.Luscious
 import com.google.gson.JsonParser
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -192,6 +193,9 @@ class Repository(
 
                         if (checkedContent.contains("{\"errors\":")) { SnackBar.error(checkedContent) }
                         return checkedResponse
+                    }
+                    catch (e: CancellationException){
+                        throw e
                     }
                     catch (e: Exception){
                         Timber.e(e, "!!! openURI() CACHE_RAM error")

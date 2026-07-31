@@ -9,6 +9,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.net.Luscious
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -61,6 +62,8 @@ class SavedL_Collection(
             Timber.i("SavedL_Collection refreshCollectionList()")
             val items = try {
                 lReadCollections(File(AppPath.l_collection), order)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "SavedL_Collection refreshCollectionList() Ошибка получения списка коллекций")
                 SnackBar.error("Ошибка получения списка коллекций")
@@ -155,6 +158,8 @@ class SavedL_Collection(
             Timber.i("SavedL_Collection refresh() collection:$collectionName")
             val items = try {
                 lReadCollectionItems(File(AppPath.l_collection, collectionName))
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "SavedL_Collection refresh() Ошибка получения списка коллекции")
                 SnackBar.error("Ошибка получения списка коллекции")

@@ -7,6 +7,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class AppDbHelper(context: Context?) : DbHelper {
 
@@ -74,7 +75,7 @@ class AppDbHelper(context: Context?) : DbHelper {
                 arrayOf((model.id).toString())
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "KDownloader DB: update(model id=${model.id}) failed")
         }
     }
 
@@ -91,7 +92,7 @@ class AppDbHelper(context: Context?) : DbHelper {
                     arrayOf("$id")
                 )
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e, "KDownloader DB: updateProgress(id=$id) failed")
             }
         }
     }
@@ -103,7 +104,7 @@ class AppDbHelper(context: Context?) : DbHelper {
                         DownloadModel.ID + " = " + id
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "KDownloader DB: remove(id=$id) failed")
         }
     }
 
@@ -138,7 +139,7 @@ class AppDbHelper(context: Context?) : DbHelper {
                 } while (cursor.moveToNext())
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "KDownloader DB: getUnwantedModels() failed")
         } finally {
             cursor?.close()
         }
@@ -147,9 +148,12 @@ class AppDbHelper(context: Context?) : DbHelper {
 
     override suspend fun empty() {
         try {
-            db.execSQL("DELETE * FROM " + TABLE_NAME)
+            // Было "DELETE * FROM downloads" — невалидный SQLite (звёздочка в DELETE
+            // не допускается). execSQL всегда кидал SQLiteException, а printStackTrace
+            // его гасил, поэтому cancelAll() никогда не очищал таблицу.
+            db.execSQL("DELETE FROM " + TABLE_NAME)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "KDownloader DB: empty() failed")
         }
     }
 

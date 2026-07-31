@@ -26,6 +26,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,6 +108,8 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                     filterTaggedStateCount.value = agrRes.filterTaggedStateCount
                     filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Error loading initial data")
             } finally {
@@ -151,6 +154,8 @@ class ScreenLAlbumListSM @AssistedInject constructor(
 
                 //albumList.value?.getAlbumList(1, filter.value)
                 //albumList.value?.getAlbumListAggregations(1)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Error loading initial data")
                 SnackBar.error(e.message ?: "Error loading initial data")
@@ -199,6 +204,11 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 info.value = res.info
                 bigList.put( page, AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED) )
 
+            } catch (e: CancellationException) {
+                // Уход с экрана посреди подгрузки страницы отменяет screenModelScope.
+                // Без этого catch отмена попадала в общий блок ниже и показывала
+                // снекбар с текстом отмены корутины уже на предыдущем экране.
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "!!! eee Error loading page $page")
                 SnackBar.error(e.message ?: "Error loading page $page")

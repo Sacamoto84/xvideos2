@@ -12,12 +12,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,10 +34,17 @@ fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi:()-> RedApi, savedRed
             savedRed.invoke().scope.launch {
                 delay(200)
                 if (!isFollowed) {
-                    try {
-                        val a = redApi.invoke().readCreator(item.userName).getOrNull()
-                        savedRed.invoke().creators.add(a!!)
-                    } catch (e: Exception) { e.printStackTrace() }
+                    // Раньше здесь было `creators.add(getOrNull()!!)` внутри
+                    // `catch { printStackTrace() }`: при любой сетевой ошибке
+                    // getOrNull() давал null, `!!` кидал NPE, catch его глотал,
+                    // а printStackTrace писал в stderr мимо Timber — подписка
+                    // молча не срабатывала и не оставляла следа в логе.
+                    redApi.invoke().readCreator(item.userName)
+                        .onSuccess { savedRed.invoke().creators.add(it) }
+                        .onFailure { e ->
+                            Timber.e(e, "Follow: не удалось получить профиль ${item.userName}")
+                            SnackBar.error("Не удалось подписаться: ${e.message ?: "нет сети"}")
+                        }
                 }
                 else {
                     savedRed.invoke().creators.remove(item.userName)

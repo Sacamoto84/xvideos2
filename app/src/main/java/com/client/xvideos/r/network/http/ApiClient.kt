@@ -21,6 +21,7 @@ import io.ktor.serialization.gson.gson
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -122,6 +123,10 @@ object ApiClient {
             bearerToken = tokenResponse.token
             Timber.i("!!! Red ApiClient login() SUCCESS - token received")
             Result.success(true)
+        } catch (e: CancellationException) {
+            // Отмена корутины — не ошибка сети. Без этого catch она превращалась
+            // в Result.failure и уезжала вызывающему как настоящий сбой логина.
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "!!! Red ApiClient login() FAILED: ${e.localizedMessage}")
             Result.failure(e)
@@ -140,6 +145,11 @@ object ApiClient {
         ensureToken().onFailure { return Result.failure(it) }
         return try {
             Result.success(perform(bearerToken))
+        } catch (e: CancellationException) {
+            // Экран закрыли посреди запроса — это не сбой сети. Раньше отмена
+            // превращалась в Result.failure, и вызывающий показывал снекбар с
+            // текстом отмены корутины уже на предыдущем экране.
+            throw e
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.Unauthorized) {
                 Timber.w("!!! Red ApiClient 401 Unauthorized, retrying login...")
@@ -147,6 +157,8 @@ object ApiClient {
                 if (refreshToken(previous).isSuccess) {
                     return try {
                         Result.success(perform(bearerToken))
+                    } catch (e2: CancellationException) {
+                        throw e2
                     } catch (e2: Exception) {
                         Timber.e(e2, "!!! Red ApiClient request FAILED after retry")
                         Result.failure(e2)

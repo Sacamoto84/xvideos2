@@ -16,6 +16,7 @@ import com.client.xvideos.common.kdownloader.utils.renameFileName
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import timber.log.Timber
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -322,25 +323,25 @@ class DownloadTask(
         try {
             httpClient.close()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "KDownloader: httpClient.close() failed")
         }
 
         try {
             inputStream!!.close()
         } catch (e: IOException) {
-            e.printStackTrace()
+            Timber.e(e, "KDownloader: inputStream.close() failed")
         }
 
         try {
             sync(outputStream)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "KDownloader: sync(outputStream) failed")
         } finally {
 
             try {
                 outputStream.close()
             } catch (e: IOException) {
-                e.printStackTrace()
+                Timber.e(e, "KDownloader: outputStream.close() failed")
             }
         }
     }
@@ -364,7 +365,7 @@ class DownloadTask(
             success = true
         } catch (e: IOException) {
             success = false
-            e.printStackTrace()
+            Timber.e(e, "KDownloader: flushAndSync() failed")
         }
         if (success && isResumeSupported) {
             dbHelper
