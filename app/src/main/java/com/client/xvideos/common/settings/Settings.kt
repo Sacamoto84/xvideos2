@@ -1,13 +1,17 @@
 package com.client.xvideos.common.settings
 
+import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.client.xvideos.App
 import com.client.xvideos.common.json.JsonTypes
 import com.client.xvideos.common.settings.element.SettingElementBoolean
 import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
+import com.client.xvideos.common.settings.element.SettingElementSecureString
 import com.client.xvideos.common.settings.element.SettingElementString
 import com.client.xvideos.l.model.ThumbnailsSize
+import timber.log.Timber
 
 //data class DC_galleryCount(var g0: Boolean, var g1: Boolean, var g2: Boolean, var g3: Boolean, var g4: Boolean )
 
@@ -30,7 +34,50 @@ object Settings {
 
     private lateinit var pref: SharedPreferences
 
-    fun init(prefs: SharedPreferences) { pref = prefs }
+    /**
+     * Зашифрованное хранилище для секретов. `null`, если Keystore недоступен
+     * (Compose Preview) или [init] вызвали без контекста.
+     */
+    private var securePref: SharedPreferences? = null
+
+    /**
+     * @param prefs общий файл настроек.
+     * @param context нужен, чтобы открыть зашифрованное хранилище для учётных
+     *   данных. Без него секреты не сохраняются на диск — см.
+     *   [SettingElementSecureString].
+     */
+    fun init(prefs: SharedPreferences, context: Context? = null) {
+        pref = prefs
+        securePref = context?.let { SecureCredentialStore.createOrNull(it) }
+        migrateLusciousCredentials()
+    }
+
+    /**
+     * Переносит логин и пароль Luscious из общего файла настроек в зашифрованный
+     * и вычищает открытые копии.
+     *
+     * Выполняется один раз: после переноса ключей `l_login`/`l_pass` в обычных
+     * настройках не остаётся, и следующий запуск сразу выходит на первой проверке.
+     */
+    private fun migrateLusciousCredentials() {
+        if (securePref == null) return
+
+        val legacyLogin = pref.getString(KEY_L_LOGIN, null)
+        val legacyPass = pref.getString(KEY_L_PASS, null)
+        if (legacyLogin == null && legacyPass == null) return
+
+        if (!legacyLogin.isNullOrEmpty()) l_login.setValue(legacyLogin)
+        if (!legacyPass.isNullOrEmpty()) l_pass.setValue(legacyPass)
+
+        pref.edit {
+            remove(KEY_L_LOGIN)
+            remove(KEY_L_PASS)
+        }
+        Timber.i("Settings: учётные данные Luscious перенесены в зашифрованное хранилище")
+    }
+
+    private const val KEY_L_LOGIN = "l_login"
+    private const val KEY_L_PASS = "l_pass"
 
     //-- app ---
 
@@ -94,9 +141,11 @@ object Settings {
 
     //-- luscious ---
 
-    //Логин
-    val l_login by lazy { SettingElementString( pref, "l_login", "") }
-    val l_pass by lazy { SettingElementString( pref, "l_pass", "") }
+    // Логин. Лежит в зашифрованном хранилище, а не в общем файле настроек:
+    // раньше пароль от стороннего сервиса хранился открытым текстом рядом с
+    // остальными настройками. Миграция старых значений — в [init].
+    val l_login by lazy { SettingElementSecureString(securePref, KEY_L_LOGIN, "") }
+    val l_pass by lazy { SettingElementSecureString(securePref, KEY_L_PASS, "") }
 
     /**
      * Размер миниатюры в галерее

@@ -298,4 +298,6 @@ dependencies {
     //implementation(libs.ksafe)
     //implementation(libs.ksafe.compose)
 
+    implementation(libs.androidx.security.crypto)
+
 }

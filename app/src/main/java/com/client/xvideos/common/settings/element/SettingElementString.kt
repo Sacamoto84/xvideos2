@@ -13,7 +13,6 @@ class SettingElementString(private val sharedPrefs: SharedPreferences, val name:
     fun setValue(value: String) {
         sharedPrefs.edit { putString(name, value) }
         _field.value = value
-        println("!!! setValue $value _field ${ _field.value} ")
     }
 
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->

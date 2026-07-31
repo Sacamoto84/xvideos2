@@ -140,7 +140,9 @@ class App : Application(), SingletonImageLoader.Factory {
         // глобальное отключение проверки TLS. Прежний trust-all код удалён.
 
         val prefs = defaultSharedPreferences()
-        Settings.init(prefs)
+        // Контекст нужен, чтобы Settings открыл зашифрованное хранилище для
+        // учётных данных Luscious и перенёс туда старые открытые значения.
+        Settings.init(prefs, this)
 
 //        val loggingInterceptor = Interceptor { chain ->
 //            val request = chain.request()

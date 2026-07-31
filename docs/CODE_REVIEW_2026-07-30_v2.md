@@ -4,7 +4,7 @@
 
 Отличия от [первого прохода](CODE_REVIEW_2026-07-30.md): применены правки первого ревью, обновлён version catalog (Kotlin `2.3.21` → `2.4.10`, AGP `9.2.1` → `9.3.1`, Hilt, Coil, Ktor, Compose BOM), `compose-stability-analyzer` поднят `0.8.0` → `0.12.0` — из-за этого чинилось падение компилятора (`ClassCastException` в `StabilityAnalyzerPluginRegistrar`: плагин 0.8.0 не знал про изменившийся в Kotlin 2.4 `FirExtensionRegistrarAdapter`).
 
-> **Статус:** п.1, п.2 и п.7 исправлены (18 файлов, +107/−21). Проверка после правок: `assembleDebug`, `assembleRelease`, `testDebugUnitTest`, `lintDebug`, `lintRelease` — все BUILD SUCCESSFUL, lint без изменений (0 error / 156 warning). Контрольные счётчики: живых `printStackTrace` 15 → **0**; `catch(Exception)` в корутинах, показывающих ошибку пользователю, без обработки отмены 17 → **0**. Попутно найден и починен невалидный SQL в `AppDbHelper.empty()` — см. п.7.
+> **Статус:** п.1, п.2, п.7 и п.3 исправлены. Проверка после правок: `assembleDebug`, `assembleRelease`, `testDebugUnitTest`, `lintDebug`, `lintRelease` — все BUILD SUCCESSFUL, lint без изменений (0 error / 156 warning). Контрольные счётчики: живых `printStackTrace` 15 → **0**; `catch(Exception)` в корутинах, показывающих ошибку пользователю, без обработки отмены 17 → **0**. Попутно найден и починен невалидный SQL в `AppDbHelper.empty()` — см. п.7.
 
 ## Проверка
 
@@ -71,9 +71,23 @@ screenModelScope.launch(Dispatchers.IO) {
 
 **Фикс:** везде добавить `catch (e: CancellationException) { throw e }` перед общим catch. Правильный образец в проекте уже есть — `ScreenRedProfileSM.loadNextPage`.
 
-### 3. Пароль Luscious по-прежнему в открытом виде
+### 3. Пароль Luscious по-прежнему в открытом виде — **исправлено**
 
-`common/settings/Settings.kt:98-99`, пишется в `l/ui/screens/L_ScreenLogin.kt:88-89`. Из первого прохода — не сделано. Требует `androidx.security:security-crypto` и миграции сохранённых значений.
+Было: `common/settings/Settings.kt:98-99` — `SettingElementString` поверх общего файла настроек, пишется в `l/ui/screens/L_ScreenLogin.kt:88-89`.
+
+Стало (после подключения `androidx.security:security-crypto 1.1.0`):
+
+- `common/settings/SecureCredentialStore.kt` — отдельный файл `secure_credentials`, зашифрованный `EncryptedSharedPreferences` с мастер-ключом из Android Keystore (AES256_SIV для ключей, AES256_GCM для значений).
+- `common/settings/element/SettingElementSecureString.kt` — элемент с тем же публичным API (`field: StateFlow<String>`, `setValue`), поэтому ни одно из 10 мест использования не менялось.
+- `Settings.init(prefs, context)` переносит существующие `l_login`/`l_pass` из общего файла в зашифрованный и удаляет открытые копии. Миграция одноразовая: после неё ключей в обычных настройках нет.
+
+Побочно: `SettingElementString.setValue` содержал `println("!!! setValue $value ...")` — то есть **пароль печатался в stdout при каждом сохранении**. Отладочный `println` удалён.
+
+Известные ограничения, зафиксированные сознательно:
+
+- `MasterKey` и `EncryptedSharedPreferences` помечены `@Deprecated` в security-crypto 1.1.0 (AndroidX свернула библиотеку, замены внутри неё нет). Работают; в файле стоит точечный `@Suppress("DEPRECATION")` с объяснением.
+- Если Keystore недоступен (Compose Preview, экзотическая прошивка) или keyset повреждён, хранилище пересоздаётся, а при полном отказе секрет живёт только в памяти процесса. Пользователь введёт пароль заново — это лучше, чем запись открытым текстом.
+- `SecureCredentialStore.createOrNull` вызывается из `App.onCreate` на main-потоке; первая генерация мастер-ключа в Keystore добавляет к холодному старту десятки миллисекунд. Ленивую инициализацию не делал: миграция должна отработать до первого чтения `l_pass`, а ленивый вариант даёт рекурсию между `securePref` и элементами.
 
 ### 4. R8 по-прежнему выключен
 
