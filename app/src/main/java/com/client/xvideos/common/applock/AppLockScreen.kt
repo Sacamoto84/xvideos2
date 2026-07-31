@@ -1,4 +1,4 @@
-package com.client.xvideos
+package com.client.xvideos.common.applock
 
 import com.client.xvideos.common.theme.Theme
 
@@ -48,10 +48,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.applock.AccessCodeVisualTransformation
-import com.client.xvideos.common.applock.AppLockRepository
-import com.client.xvideos.common.applock.AppLockSession
-import com.client.xvideos.common.applock.DisableAppLockAutofill
+import com.client.xvideos.R
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlin.math.ceil

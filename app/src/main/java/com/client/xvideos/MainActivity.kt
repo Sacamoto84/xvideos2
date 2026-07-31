@@ -80,6 +80,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.PermissionScreenActivity.PermissionStorage
 import com.client.xvideos.common.applock.AppLockRepository
+import com.client.xvideos.common.applock.AppLockScreen
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
