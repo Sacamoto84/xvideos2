@@ -1,0 +1,123 @@
+# Конфигурация detekt для проекта.
+#
+# Стартовый набор намеренно узкий: включены только правила, которые ловят
+# реальные дефекты и не спорят со сложившимся стилем кода. Всё, что найдено
+# на момент подключения, зафиксировано в baseline (config/detekt/baseline.xml) —
+# сборка на существующем коде не падает, но новые нарушения будут видны.
+#
+# Порог сложности/длины подняты под фактический код: тут много Compose-функций
+# с длинными списками параметров, и ругаться на каждую бессмысленно.
+
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+comments:
+  active: false
+
+complexity:
+  active: true
+  LongMethod:
+    active: true
+    threshold: 120
+  LongParameterList:
+    active: true
+    functionThreshold: 12
+    constructorThreshold: 12
+    ignoreDefaultParameters: true
+    ignoreAnnotatedParameter: ['Composable']
+  LargeClass:
+    active: true
+    threshold: 600
+  NestedBlockDepth:
+    active: true
+    threshold: 6
+  TooManyFunctions:
+    active: false
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 20
+
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+
+empty-blocks:
+  active: true
+  EmptyFunctionBlock:
+    active: false
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: true
+  PrintStackTrace:
+    active: true
+  ReturnFromFinally:
+    active: true
+
+naming:
+  active: true
+  # Имена вида DropdownMenuItem_Share и L_ScreenExplorer — сложившееся
+  # соглашение проекта, ругаться на него смысла нет.
+  FunctionNaming:
+    active: false
+  ClassNaming:
+    active: false
+  TopLevelPropertyNaming:
+    active: false
+  ObjectPropertyNaming:
+    active: false
+  EnumNaming:
+    active: true
+  PackageNaming:
+    active: false
+
+performance:
+  active: true
+  SpreadOperator:
+    active: false
+
+potential-bugs:
+  active: true
+  UnsafeCallOnNullableType:
+    active: true
+  UnsafeCast:
+    active: true
+  ImplicitDefaultLocale:
+    active: true
+  LateinitUsage:
+    active: false
+  IgnoredReturnValue:
+    active: true
+
+style:
+  active: true
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: false
+  WildcardImport:
+    active: true
+  UnusedImports:
+    active: true
+  UnusedPrivateMember:
+    active: true
+  ReturnCount:
+    active: false
+  ForbiddenComment:
+    active: false
+  ThrowsCount:
+    active: false
+  SerialVersionUIDInSerializableClass:
+    active: false
+  UseCheckOrError:
+    active: false
+  LoopWithTooManyJumpStatements:
+    active: false

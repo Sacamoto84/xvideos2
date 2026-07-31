@@ -13,6 +13,21 @@ plugins {
     //https://github.com/skydoves/compose-stability-analyzer
     alias(libs.plugins.stability.analyzer)
 
+    alias(libs.plugins.detekt)
+
+}
+
+// Статический анализ. Конфиг — config/detekt/detekt.yml, всё что было найдено
+// на существующем коде зафиксировано в baseline: сборка не падает, но новые
+// нарушения будут видны. Запуск: ./gradlew :app:detekt
+detekt {
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline.xml")
+    parallel = true
+    buildUponDefaultConfig = true
+    // Плагин сам вешает detekt на `check`, поэтому новые нарушения свалят
+    // и `check`, и CI — это и нужно. Существующие в baseline не мешают.
+    ignoreFailures = false
 }
 
 

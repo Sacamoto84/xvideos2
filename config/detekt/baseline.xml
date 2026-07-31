@@ -1,0 +1,488 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("download_url") val download_url: String</ID>
+    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("is_manga") val is_manga: Boolean</ID>
+    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("number_of_animated_pictures") val number_of_animated_pictures: Int</ID>
+    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("number_of_pictures") val number_of_pictures: Int</ID>
+    <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val album_type: AlbumType = AlbumType.Pictures</ID>
+    <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val content_id : ContentId = ContentId.All</ID>
+    <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val picture_count_rank : PictureCountRank = PictureCountRank.All</ID>
+    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("is_animated") val is_animated: Boolean</ID>
+    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_original") val url_to_original: String?</ID>
+    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_video") val url_to_video: String?</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val A: Map&lt;String, String&gt;? = null //Хуета</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val CPV: Boolean</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val F: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val L: Int</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val M: Int</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val N: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val P: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val RF: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val T: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Keyword$val N: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Keyword$val R: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val A: Map&lt;String, String&gt;? = null // Обрабатываем возможное отсутствие поля A</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val F: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val L: Int</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val M: Int</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val MV: Int</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val N: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val P: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val RF: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val T: String</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$SearchResult$val BLACKLISTED: Boolean? = null // Может отсутствовать</ID>
+    <ID>CyclomaticComplexMethod:AppLockSection.kt$@Composable internal fun AppLockPasswordDialog( mode: AppLockDialogMode, onDismiss: () -&gt; Unit, onComplete: () -&gt; Unit )</ID>
+    <ID>CyclomaticComplexMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, downloadRed: DownloadRed?, savedL: SavedL?, onDataChanged: () -&gt; Unit )</ID>
+    <ID>CyclomaticComplexMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
+    <ID>CyclomaticComplexMethod:LMediaPersist.kt$internal suspend fun lPersistPicsDetailsToFolder( item: PicsDetails, root: File, luscious: Luscious, progress: LDownloadProgress ): Result&lt;File&gt;</ID>
+    <ID>CyclomaticComplexMethod:Repository.kt$Repository$suspend fun openURI( data: String, type: RepositoryUriType = RepositoryUriType.POST, config: RepositoryUriConfig = RepositoryUriConfig.DIRECT ): Result&lt;String&gt;</ID>
+    <ID>CyclomaticComplexMethod:SortByOrder.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SortByOrder( list: List&lt;Order&gt;, selected: Order, onSelect: (Order) -&gt; Unit, containerColor: Color = Color.Transparent, circle : Boolean = false )</ID>
+    <ID>CyclomaticComplexMethod:UrlImage.kt$@Suppress("UiComposable") @OptIn(FlowPreview::class) @Composable fun UrlImage( url: String, urlGif : String?= null, //url для gif файла modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, loadIndicator: Boolean = true, albumName: String = "", isAnimated: Boolean = false, onSuccess: () -&gt; Unit = {}, onFailure: () -&gt; Unit = {}, autoPlay: Boolean = false, sizeButton: Dp = 32.dp, sizeButtonIcon: Dp = 20.dp, rotate: Boolean = false, //Поворот изображения isVisible: Boolean = true, //new isVisibleLoadingIndicator: Boolean = true, //Показ индикатора прогресса после индикатора загрузки sizeLoadingIndicator: Dp = 32.dp, //Показ индикатора прогресса после индикатора загрузки isVisibleProgressText: Boolean = false, //Показ текста скачанных данных isFullScreen: Boolean = false, //Режим полного экрана с поддержкой поворота backgroung : Color = Color.Transparent, )</ID>
+    <ID>EmptyClassBlock:ScreenKViewModel.kt$ScreenKScreenModel${ }</ID>
+    <ID>EmptyDefaultConstructor:ItemEmptyPagingSource.kt$ItemEmptyPagingSource$()</ID>
+    <ID>EmptyDefaultConstructor:ScreenFavorites.kt$ScreenFavorites$()</ID>
+    <ID>EmptyDefaultConstructor:ScreenRedManageBlock.kt$ScreenRedManageBlock$()</ID>
+    <ID>EmptyElseBlock:AlbumItemExpandMenu.kt$if (it) onClick.invoke()</ID>
+    <ID>EmptyElseBlock:ExpandMenuVideo.kt$if (it) onClick.invoke()</ID>
+    <ID>EmptyElseBlock:SavedLikesItemExpandMenu.kt$if (it) onClick.invoke()</ID>
+    <ID>EmptyIfBlock:ProfileInfo1.kt${ }</ID>
+    <ID>ExplicitItLambdaParameter:DaialogNewCollection.kt${ it -&gt; println(it) }</ID>
+    <ID>ExplicitItLambdaParameter:DashboardsPaginatedListScreen.kt${ index, it -&gt; "${it.id}_$index" }</ID>
+    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; // Refresh will be handled by the collection screen }</ID>
+    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; item.url_to_original?.let { url -&gt; saved.likes.remove(url) } haptic.performHapticFeedback(HapticFeedbackType.Confirm) }</ID>
+    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; onShareClicked(it) }</ID>
+    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; saveToGallery(it) }</ID>
+    <ID>ImplicitDefaultLocale:RedVideoPlayerWithMenuContent.kt$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>ImplicitDefaultLocale:X_PlayerBottomBar.kt$String.format("%d:%02d", m, sec)</ID>
+    <ID>ImplicitDefaultLocale:X_PlayerBottomBar.kt$String.format("%d:%02d:%02d", h, m, sec)</ID>
+    <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d:%02d", hours, minutes, seconds)</ID>
+    <ID>InvalidPackageDeclaration:ComposeTags.kt$package com.client.xvideos.screens.videoplayer.atom</ID>
+    <ID>InvalidPackageDeclaration:DialogBlock.kt$package com.redgifs.common.block.ui</ID>
+    <ID>InvalidPackageDeclaration:ItemEmptyPagingSource.kt$package com.redgifs.common.pagin</ID>
+    <ID>InvalidPackageDeclaration:KeyboardNumber.kt$package com.client.xvideos.screens.common.bottomKeyboard</ID>
+    <ID>InvalidPackageDeclaration:KeyboardNumberButton.kt$package com.client.xvideos.screens.common.bottomKeyboard</ID>
+    <ID>InvalidPackageDeclaration:PlayerControls.kt$package com.redgifs.common.video</ID>
+    <ID>InvalidPackageDeclaration:ScreenItemTagsModelPornostars.kt$package com.client.xvideos.screens.videoplayer.atom</ID>
+    <ID>InvalidPackageDeclaration:ScreenK.kt$package com.client.xvideos.screens.k</ID>
+    <ID>InvalidPackageDeclaration:ScreenKViewModel.kt$package com.client.xvideos.screens.k</ID>
+    <ID>InvalidPackageDeclaration:StaticPlayer.kt$package com.redgifs.common.video.player_with_menu.atom</ID>
+    <ID>InvalidPackageDeclaration:VideoPlayerWithMenuContent.kt$package com.redgifs.common.video.player_with_menu.atom</ID>
+    <ID>InvalidPackageDeclaration:blockGetAllBlockedGifsInfo.kt$package com.redgifs.common.block.useCase</ID>
+    <ID>InvalidPackageDeclaration:blockGetGifsByUserNameAsListString.kt$package com.redgifs.common.block.useCase</ID>
+    <ID>InvalidPackageDeclaration:blockGetGifsInfoByUserName.kt$package com.redgifs.common.block.useCase</ID>
+    <ID>InvalidPackageDeclaration:blockItem.kt$package com.redgifs.common.block.useCase</ID>
+    <ID>InvalidPackageDeclaration:getSearchResults.kt$package com.client.xvideos.x.screens.search</ID>
+    <ID>InvalidPackageDeclaration:moduleKDownloader.kt$package com.redgifs.common.downloader.di</ID>
+    <ID>InvalidPackageDeclaration:parseJson.kt$package com.client.xvideos.x.screens.search</ID>
+    <ID>InvalidPackageDeclaration:searchModel.kt$package com.client.xvideos.x.screens.search.model</ID>
+    <ID>LongMethod:AlbumFilterDisplay.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -&gt; Unit)</ID>
+    <ID>LongMethod:AlbumListFilterGenres.kt$@Composable fun AlbumListFilterGenres( filter: AlbumListFilter, filterGenreStateCount: List&lt;AlbumListFilterGenreCountResponse&gt;?, onChange: (AlbumListFilter) -&gt; Unit )</ID>
+    <ID>LongMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, downloadRed: DownloadRed?, savedL: SavedL?, onDataChanged: () -&gt; Unit )</ID>
+    <ID>LongMethod:CanvasTimeDurationLine.kt$@Composable fun CanvasTimeDurationLine1( currentTime: Float, duration: Int, modifier: Modifier = Modifier, timeA: Float = 0f, timeB: Float = 1f, timeABEnable: Boolean, visibleAB: Boolean = true, play: Boolean = false, isBuffering: Boolean = false, onSeek: (Float) -&gt; Unit, // 🔹 при перетаскивании onSeekFinished: (() -&gt; Unit)? = null, // 🔹 когда отпустили isVisibleTime: Boolean = true, isVisibleStep: Boolean = true )</ID>
+    <ID>LongMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
+    <ID>LongMethod:KeyboardNumber.kt$@Composable fun KeyboardNumber( value: Int, max: Int, theme: KeyboardNumberTheme = KeyboardNumberTheme(), onClick: (Int) -&gt; Unit, )</ID>
+    <ID>LongMethod:L_FullScreenImage.kt$L_FullScreenImage$@RequiresApi(Build.VERSION_CODES.S) @OptIn( ExperimentalFoundationApi::class, ExperimentalMaterialApi::class, DelicateCoroutinesApi::class ) @Composable override fun Content()</ID>
+    <ID>LongMethod:L_ScreenAlbumSearch.kt$L_ScreenAlbumSearch$@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") @Composable override fun Content()</ID>
+    <ID>LongMethod:L_ScreenLogin.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LLoginContent( initialLogin: String = "", initialPassword: String = "", onSaved: () -&gt; Unit, onBack: () -&gt; Unit, onSkip: () -&gt; Unit )</ID>
+    <ID>LongMethod:L_Screen_CollectionTab.kt$L_Screen_CollectionTab$@OptIn(DelicateCoroutinesApi::class) @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") @Composable override fun Content()</ID>
+    <ID>LongMethod:RedProfileUserImage.kt$@Composable fun RedProfileCreaterInfo( item: UserInfo, isFollow: Boolean, onFollowClick: () -&gt; Unit )</ID>
+    <ID>LongMethod:ScreenAlbum.kt$ScreenLAlbum$@OptIn(ExperimentalZoomableApi::class) @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") @Composable override fun Content()</ID>
+    <ID>LongMethod:ScreenAlbumList.kt$@OptIn(ExperimentalZoomableApi::class) @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") @Composable private fun Screen.ScreenAlbumListContent( initialFilter: LAlbumListFilter?, title: String = "" )</ID>
+    <ID>LongMethod:ScreenP2pSend.kt$ScreenP2pSend$@OptIn(ExperimentalMaterial3Api::class) @Composable override fun Content()</ID>
+    <ID>LongMethod:SortByOrder.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SortByOrder( list: List&lt;Order&gt;, selected: Order, onSelect: (Order) -&gt; Unit, containerColor: Color = Color.Transparent, circle : Boolean = false )</ID>
+    <ID>LongMethod:UrlImage.kt$@Suppress("UiComposable") @OptIn(FlowPreview::class) @Composable fun UrlImage( url: String, urlGif : String?= null, //url для gif файла modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, loadIndicator: Boolean = true, albumName: String = "", isAnimated: Boolean = false, onSuccess: () -&gt; Unit = {}, onFailure: () -&gt; Unit = {}, autoPlay: Boolean = false, sizeButton: Dp = 32.dp, sizeButtonIcon: Dp = 20.dp, rotate: Boolean = false, //Поворот изображения isVisible: Boolean = true, //new isVisibleLoadingIndicator: Boolean = true, //Показ индикатора прогресса после индикатора загрузки sizeLoadingIndicator: Dp = 32.dp, //Показ индикатора прогресса после индикатора загрузки isVisibleProgressText: Boolean = false, //Показ текста скачанных данных isFullScreen: Boolean = false, //Режим полного экрана с поддержкой поворота backgroung : Color = Color.Transparent, )</ID>
+    <ID>LongParameterList:AppSettingsScreen.kt$( onBack: () -&gt; Unit, imageCacheSizeBytes: Long, storageStats: List&lt;StorageStat&gt;, sizeRedTotal: Long, sizeRedDownload: Long, onClearImageCache: () -&gt; Unit, onClearDownload: () -&gt; Unit, savedRed: SavedRed?, downloadRed: DownloadRed?, savedL: SavedL?, context: Context, onBackupDataChanged: () -&gt; Unit, onRefreshFileStats: () -&gt; Unit )</ID>
+    <ID>LongParameterList:CMPlayer2.kt$( modifier: Modifier, url: String, isPause: Boolean, totalTime: (Int) -&gt; Unit, currentTime: (Float) -&gt; Unit, isSliding: Boolean, seekToTime: Float?, speed: PlayerSpeed, size: ScreenResize, bufferCallback: (Boolean) -&gt; Unit, didEndVideo: () -&gt; Unit, loop: Boolean, volume: Float, isLiveStream: Boolean, error: (MediaPlayerError) -&gt; Unit, headers: Map&lt;String, String&gt;?, drmConfig: DrmConfig?, selectedQuality: VideoQuality?, autoRotate: Boolean, // можно менять как нужно poster : (Boolean) -&gt; Unit )</ID>
+    <ID>LongParameterList:LazyRow123GridItem.kt$( item: GifsInfo, index: Int, isConnected: Boolean, isDownloaded: Boolean, isRunLike: Boolean, isCollection: Boolean, visibleProfileInfo: Boolean, columns: Int, block: () -&gt; BlockRed, redApi: () -&gt; RedApi, savedRed: () -&gt; SavedRed, downloadRed: () -&gt; DownloadRed, onItemClick: () -&gt; Unit, onRefresh: () -&gt; Unit, onClickOpenProfile: (String) -&gt; Unit, onTagClick: (String) -&gt; Unit )</ID>
+    <ID>LongParameterList:R_ScreenNichesTab.kt$( listState: LazyListState, niches: List&lt;Niche&gt;, sortType: Order, onSortTypeChange: (Order) -&gt; Unit, isSearchFocused: Boolean, onUpClick: () -&gt; Unit, onNicheClick: (String) -&gt; Unit, savedRed: () -&gt; SavedRed?, searchWidget: @Composable (Modifier) -&gt; Unit, onRefreshNichesCacheClick: () -&gt; Unit, nichesCacheProgress: Float, countNichesInCache : Int, cacheHour : Long )</ID>
+    <ID>MatchingDeclarationName:AlbumTopHits.kt$AlbumTopHitsImpl</ID>
+    <ID>MatchingDeclarationName:AlbumsResult.kt$AlbumResult : RepositoryResult</ID>
+    <ID>MatchingDeclarationName:AnimatedZoomStateImpl.kt$AnimatedZoomState : BaseEnhancedZoomState</ID>
+    <ID>MatchingDeclarationName:AppLockSection.kt$AppLockDialogMode</ID>
+    <ID>MatchingDeclarationName:Display.kt$DataAlbumFilterDisplay</ID>
+    <ID>MatchingDeclarationName:KeyboardNumber.kt$KeyboardNumberTheme</ID>
+    <ID>MatchingDeclarationName:LDownloadRecovery.kt$LDownloadRecoveryReport</ID>
+    <ID>MatchingDeclarationName:ScreenAlbum.kt$ScreenLAlbum : Screen</ID>
+    <ID>MatchingDeclarationName:ScreenK.kt$ScreenDashBoards : Screen</ID>
+    <ID>MatchingDeclarationName:ScreenNiche.kt$R_ScreenNiche : Screen</ID>
+    <ID>MatchingDeclarationName:ScreenSaved.kt$R_ScreenSavedTab : Screen</ID>
+    <ID>MatchingDeclarationName:SearchItemTagsResponce.kt$SearchItemTagsResponse</ID>
+    <ID>MatchingDeclarationName:SnackBarEvent.kt$SnackBar</ID>
+    <ID>MatchingDeclarationName:ZoomStateImpl.kt$ZoomState</ID>
+    <ID>MayBeConst:ApiClient.kt$ApiClient$val USER_AGENT: String = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"</ID>
+    <ID>MayBeConst:Display.kt$val byDate = "By Date"</ID>
+    <ID>MayBeConst:Display.kt$val byFirstLetter = "First Letter"</ID>
+    <ID>MayBeConst:Display.kt$val byTopRated = "By Top Rated"</ID>
+    <ID>MayBeConst:MediaCategoriesBootstrap.kt$private val mediaCategoriesBootstrap = """{"operationName":"MediaCategoriesBootstrap","query":"\n query MediaCategoriesBootstrap {\n media_categories {\n genres {\n id\n title\n slug\n description\n uploading_rules\n poster_url\n acts_as_warning\n acts_as_default\n represents_uncategorized\n url\n parent {\n id\n }\n only_allows_model\n only_content {\n id\n title\n url\n }\n }\n filter_settings {\n user_id\n has_custom_filters\n uses_default_warnings\n audience_ids\n genres_blocked_ids\n genres_subscribed_ids\n preferred_language_ids\n default_dashboard_content_id\n }\n languages {\n id\n title\n url\n }\n content_types {\n id\n title\n url\n }\n audiences {\n id\n title\n description\n poster_url\n url\n }\n }\n}\n ","variables":{}}"""</ID>
+    <ID>MayBeConst:country.kt$private val html = """ &lt;ul class="countries row"&gt;&lt;li class="country-au col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/au" class="btn"&gt;&lt;span class="flag-small flag-au"&gt;&lt;/span&gt; Австралия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-at col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/at" class="btn"&gt;&lt;span class="flag-small flag-at"&gt;&lt;/span&gt; Австрия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-az col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/az" class="btn"&gt;&lt;span class="flag-small flag-az"&gt;&lt;/span&gt; Азербайджан&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ar col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ar" class="btn"&gt;&lt;span class="flag-small flag-ar"&gt;&lt;/span&gt; Аргентина&lt;/a&gt; &lt;/li&gt;&lt;li class="country-af col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/af" class="btn"&gt;&lt;span class="flag-small flag-af"&gt;&lt;/span&gt; Афганистан&lt;/a&gt; &lt;/li&gt;&lt;li class="country-bd col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/bd" class="btn"&gt;&lt;span class="flag-small flag-bd"&gt;&lt;/span&gt; Бангладеш&lt;/a&gt; &lt;/li&gt;&lt;li class="country-be col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/be" class="btn"&gt;&lt;span class="flag-small flag-be"&gt;&lt;/span&gt; Бельгия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-bg col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/bg" class="btn"&gt;&lt;span class="flag-small flag-bg"&gt;&lt;/span&gt; Болгария&lt;/a&gt; &lt;/li&gt;&lt;li class="country-bo col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/bo" class="btn"&gt;&lt;span class="flag-small flag-bo"&gt;&lt;/span&gt; Боливия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-br col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/br" class="btn"&gt;&lt;span class="flag-small flag-br"&gt;&lt;/span&gt; Бразилия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-gb col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/gb" class="btn"&gt;&lt;span class="flag-small flag-gb"&gt;&lt;/span&gt; Великобритания&lt;/a&gt; &lt;/li&gt;&lt;li class="country-hu col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/hu" class="btn"&gt;&lt;span class="flag-small flag-hu"&gt;&lt;/span&gt; Венгрия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ve col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ve" class="btn"&gt;&lt;span class="flag-small flag-ve"&gt;&lt;/span&gt; Венесуэла&lt;/a&gt; &lt;/li&gt;&lt;li class="country-vn col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/vn" class="btn"&gt;&lt;span class="flag-small flag-vn"&gt;&lt;/span&gt; Вьетнам&lt;/a&gt; &lt;/li&gt;&lt;li class="country-gt col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/gt" class="btn"&gt;&lt;span class="flag-small flag-gt"&gt;&lt;/span&gt; Гватемала&lt;/a&gt; &lt;/li&gt;&lt;li class="country-de col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/de" class="btn"&gt;&lt;span class="flag-small flag-de"&gt;&lt;/span&gt; Германия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-hk col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/hk" class="btn"&gt;&lt;span class="flag-small flag-hk"&gt;&lt;/span&gt; Гонконг&lt;/a&gt; &lt;/li&gt;&lt;li class="country-gr col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/gr" class="btn"&gt;&lt;span class="flag-small flag-gr"&gt;&lt;/span&gt; Греция&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ge col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ge" class="btn"&gt;&lt;span class="flag-small flag-ge"&gt;&lt;/span&gt; Грузия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-dk col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/dk" class="btn"&gt;&lt;span class="flag-small flag-dk"&gt;&lt;/span&gt; Дания&lt;/a&gt; &lt;/li&gt;&lt;li class="country-do col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/do" class="btn"&gt;&lt;span class="flag-small flag-do"&gt;&lt;/span&gt; Доминиканская Республика&lt;/a&gt; &lt;/li&gt;&lt;li class="country-eg col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/eg" class="btn"&gt;&lt;span class="flag-small flag-eg"&gt;&lt;/span&gt; Египет&lt;/a&gt; &lt;/li&gt;&lt;li class="country-il col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/il" class="btn"&gt;&lt;span class="flag-small flag-il"&gt;&lt;/span&gt; Израиль&lt;/a&gt; &lt;/li&gt;&lt;li class="country-in col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/in" class="btn"&gt;&lt;span class="flag-small flag-in"&gt;&lt;/span&gt; Индия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-id col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/id" class="btn"&gt;&lt;span class="flag-small flag-id"&gt;&lt;/span&gt; Индонезия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-jo col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/jo" class="btn"&gt;&lt;span class="flag-small flag-jo"&gt;&lt;/span&gt; Иордания&lt;/a&gt; &lt;/li&gt;&lt;li class="country-iq col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/iq" class="btn"&gt;&lt;span class="flag-small flag-iq"&gt;&lt;/span&gt; Ирак&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ie col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ie" class="btn"&gt;&lt;span class="flag-small flag-ie"&gt;&lt;/span&gt; Ирландия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-is col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/is" class="btn"&gt;&lt;span class="flag-small flag-is"&gt;&lt;/span&gt; Исландия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-es col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/es" class="btn"&gt;&lt;span class="flag-small flag-es"&gt;&lt;/span&gt; Испания&lt;/a&gt; &lt;/li&gt;&lt;li class="country-it col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/it" class="btn"&gt;&lt;span class="flag-small flag-it"&gt;&lt;/span&gt; Италия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-kh col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/kh" class="btn"&gt;&lt;span class="flag-small flag-kh"&gt;&lt;/span&gt; Камбоджа&lt;/a&gt; &lt;/li&gt;&lt;li class="country-cm col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/cm" class="btn"&gt;&lt;span class="flag-small flag-cm"&gt;&lt;/span&gt; Камерун&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ca col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ca" class="btn"&gt;&lt;span class="flag-small flag-ca"&gt;&lt;/span&gt; Канада&lt;/a&gt; &lt;/li&gt;&lt;li class="country-qa col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/qa" class="btn"&gt;&lt;span class="flag-small flag-qa"&gt;&lt;/span&gt; Катар&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ke col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ke" class="btn"&gt;&lt;span class="flag-small flag-ke"&gt;&lt;/span&gt; Кения&lt;/a&gt; &lt;/li&gt;&lt;li class="country-cy col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/cy" class="btn"&gt;&lt;span class="flag-small flag-cy"&gt;&lt;/span&gt; Кипр&lt;/a&gt; &lt;/li&gt;&lt;li class="country-cn col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/cn" class="btn"&gt;&lt;span class="flag-small flag-cn"&gt;&lt;/span&gt; Китай&lt;/a&gt; &lt;/li&gt;&lt;li class="country-co col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/co" class="btn"&gt;&lt;span class="flag-small flag-co"&gt;&lt;/span&gt; Колумбия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-la col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/la" class="btn"&gt;&lt;span class="flag-small flag-la"&gt;&lt;/span&gt; Лаосская Народно-Демократическая Республика&lt;/a&gt; &lt;/li&gt;&lt;li class="country-lv col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/lv" class="btn"&gt;&lt;span class="flag-small flag-lv"&gt;&lt;/span&gt; Латвия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-lb col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/lb" class="btn"&gt;&lt;span class="flag-small flag-lb"&gt;&lt;/span&gt; Ливан&lt;/a&gt; &lt;/li&gt;&lt;li class="country-my col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/my" class="btn"&gt;&lt;span class="flag-small flag-my"&gt;&lt;/span&gt; Малайзия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-mt col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/mt" class="btn"&gt;&lt;span class="flag-small flag-mt"&gt;&lt;/span&gt; Мальта&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ma col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ma" class="btn"&gt;&lt;span class="flag-small flag-ma"&gt;&lt;/span&gt; Марокко&lt;/a&gt; &lt;/li&gt;&lt;li class="country-mx col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/mx" class="btn"&gt;&lt;span class="flag-small flag-mx"&gt;&lt;/span&gt; Мексика&lt;/a&gt; &lt;/li&gt;&lt;li class="country-md col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/md" class="btn"&gt;&lt;span class="flag-small flag-md"&gt;&lt;/span&gt; Молдова&lt;/a&gt; &lt;/li&gt;&lt;li class="country-mm col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/mm" class="btn"&gt;&lt;span class="flag-small flag-mm"&gt;&lt;/span&gt; Мьянма (бывшая Бирма)&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ng col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ng" class="btn"&gt;&lt;span class="flag-small flag-ng"&gt;&lt;/span&gt; Нигерия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-nl col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/nl" class="btn"&gt;&lt;span class="flag-small flag-nl"&gt;&lt;/span&gt; Нидерланды&lt;/a&gt; &lt;/li&gt;&lt;li class="country-nz col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/nz" class="btn"&gt;&lt;span class="flag-small flag-nz"&gt;&lt;/span&gt; Новая Зеландия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-no col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/no" class="btn"&gt;&lt;span class="flag-small flag-no"&gt;&lt;/span&gt; Норвегия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-tz col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/tz" class="btn"&gt;&lt;span class="flag-small flag-tz"&gt;&lt;/span&gt; Объединённая Республика Танзания&lt;/a&gt; &lt;/li&gt;&lt;li class="country-pk col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/pk" class="btn"&gt;&lt;span class="flag-small flag-pk"&gt;&lt;/span&gt; Пакистан&lt;/a&gt; &lt;/li&gt;&lt;li class="country-pe col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/pe" class="btn"&gt;&lt;span class="flag-small flag-pe"&gt;&lt;/span&gt; Перу&lt;/a&gt; &lt;/li&gt;&lt;li class="country-pl col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/pl" class="btn"&gt;&lt;span class="flag-small flag-pl"&gt;&lt;/span&gt; Польша&lt;/a&gt; &lt;/li&gt;&lt;li class="country-pt col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/pt" class="btn"&gt;&lt;span class="flag-small flag-pt"&gt;&lt;/span&gt; Португалия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-kr col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/kr" class="btn"&gt;&lt;span class="flag-small flag-kr"&gt;&lt;/span&gt; Республика Корея&lt;/a&gt; &lt;/li&gt;&lt;li class="country-sg col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/sg" class="btn"&gt;&lt;span class="flag-small flag-sg"&gt;&lt;/span&gt; Республика Сингапур&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ru col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ru" class="btn"&gt;&lt;span class="flag-small flag-ru"&gt;&lt;/span&gt; Россия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ro col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ro" class="btn"&gt;&lt;span class="flag-small flag-ro"&gt;&lt;/span&gt; Румыния&lt;/a&gt; &lt;/li&gt;&lt;li class="country-sn col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/sn" class="btn"&gt;&lt;span class="flag-small flag-sn"&gt;&lt;/span&gt; Сенегал&lt;/a&gt; &lt;/li&gt;&lt;li class="country-rs col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/rs" class="btn"&gt;&lt;span class="flag-small flag-rs"&gt;&lt;/span&gt; Сербия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-sk col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/sk" class="btn"&gt;&lt;span class="flag-small flag-sk"&gt;&lt;/span&gt; Словакия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-us col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/us" class="btn"&gt;&lt;span class="flag-small flag-us"&gt;&lt;/span&gt; США&lt;/a&gt; &lt;/li&gt;&lt;li class="country-th col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/th" class="btn"&gt;&lt;span class="flag-small flag-th"&gt;&lt;/span&gt; Таиланд&lt;/a&gt; &lt;/li&gt;&lt;li class="country-tw col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/tw" class="btn"&gt;&lt;span class="flag-small flag-tw"&gt;&lt;/span&gt; Тайвань&lt;/a&gt; &lt;/li&gt;&lt;li class="country-tn col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/tn" class="btn"&gt;&lt;span class="flag-small flag-tn"&gt;&lt;/span&gt; Тунис&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ua col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ua" class="btn"&gt;&lt;span class="flag-small flag-ua"&gt;&lt;/span&gt; Украина&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ph col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ph" class="btn"&gt;&lt;span class="flag-small flag-ph"&gt;&lt;/span&gt; Филиппины&lt;/a&gt; &lt;/li&gt;&lt;li class="country-fi col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/fi" class="btn"&gt;&lt;span class="flag-small flag-fi"&gt;&lt;/span&gt; Финляндия&lt;/a&gt; &lt;/li&gt;&lt;li class="country-fr col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/fr" class="btn"&gt;&lt;span class="flag-small flag-fr"&gt;&lt;/span&gt; Франция&lt;/a&gt; &lt;/li&gt;&lt;li class="country-cz col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/cz" class="btn"&gt;&lt;span class="flag-small flag-cz"&gt;&lt;/span&gt; Чешская Республика&lt;/a&gt; &lt;/li&gt;&lt;li class="country-cl col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/cl" class="btn"&gt;&lt;span class="flag-small flag-cl"&gt;&lt;/span&gt; Чили&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ch col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ch" class="btn"&gt;&lt;span class="flag-small flag-ch"&gt;&lt;/span&gt; Швейцария&lt;/a&gt; &lt;/li&gt;&lt;li class="country-se col-xs-12 col-sm-4 col-md-3 col-lg-2 current"&gt; &lt;a href="/change-country/se" class="btn"&gt;&lt;span class="flag-small flag-se"&gt;&lt;/span&gt; Швеция&lt;/a&gt; &lt;/li&gt;&lt;li class="country-lk col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/lk" class="btn"&gt;&lt;span class="flag-small flag-lk"&gt;&lt;/span&gt; Шри-Ланка&lt;/a&gt; &lt;/li&gt;&lt;li class="country-ec col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/ec" class="btn"&gt;&lt;span class="flag-small flag-ec"&gt;&lt;/span&gt; Эквадор&lt;/a&gt; &lt;/li&gt;&lt;li class="country-za col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/za" class="btn"&gt;&lt;span class="flag-small flag-za"&gt;&lt;/span&gt; Южная Африка&lt;/a&gt; &lt;/li&gt;&lt;li class="country-jp col-xs-12 col-sm-4 col-md-3 col-lg-2"&gt; &lt;a href="/change-country/jp" class="btn"&gt;&lt;span class="flag-small flag-jp"&gt;&lt;/span&gt; Япония&lt;/a&gt; &lt;/li&gt;&lt;/ul&gt; """</ID>
+    <ID>MemberNameEqualsClassName:AlbumInfo.kt$AlbumInfo$val albumInfo = MutableStateFlow( AlbumDetails( id = "", title = "", tags = listOf(), is_manga = false, content = Content("", "", ""), genres = listOf(), cover = Cover(0, 0, "", ""), description = "", audiences = listOf(), number_of_pictures = 0, number_of_animated_pictures = 0, url = "", download_url = "", created = 0.0, modified = 0.0 ) )</ID>
+    <ID>NewLineAtEndOfFile:AlbumListBottomBar.kt$com.client.xvideos.l.ui.screens.screenAlbumList.bottomBar.AlbumListBottomBar.kt</ID>
+    <ID>NewLineAtEndOfFile:AlbumListFilter.kt$com.client.xvideos.l.model.AlbumListFilter.kt</ID>
+    <ID>NewLineAtEndOfFile:AlbumType.kt$com.client.xvideos.l.model.enum.AlbumType.kt</ID>
+    <ID>NewLineAtEndOfFile:AlbumsResult.kt$com.client.xvideos.l.repository.AlbumsResult.kt</ID>
+    <ID>NewLineAtEndOfFile:AnimatedZoomStateImpl.kt$com.client.xvideos.x.feature.smarttoolfactory.zoom.AnimatedZoomStateImpl.kt</ID>
+    <ID>NewLineAtEndOfFile:AudiencesType.kt$com.client.xvideos.l.model.enum.AudiencesType.kt</ID>
+    <ID>NewLineAtEndOfFile:BottomrBar.kt$com.client.xvideos.r.ui.manager_block.bottomr_bar.BottomrBar.kt</ID>
+    <ID>NewLineAtEndOfFile:CoilProgressManager.kt$com.client.xvideos.common.coil.CoilProgressManager.kt</ID>
+    <ID>NewLineAtEndOfFile:CollectionDB.kt$com.client.xvideos.common.collectionDB.CollectionDB.kt</ID>
+    <ID>NewLineAtEndOfFile:CollectionEntity.kt$com.client.xvideos.common.collectionDB.model.CollectionEntity.kt</ID>
+    <ID>NewLineAtEndOfFile:CollectionGridItem.kt$com.client.xvideos.common.collectionDB.model.CollectionGridItem.kt</ID>
+    <ID>NewLineAtEndOfFile:CollectionsGridStyle.kt$com.client.xvideos.common.collectionDB.model.CollectionsGridStyle.kt</ID>
+    <ID>NewLineAtEndOfFile:ComposeTags.kt$com.client.xvideos.screens.videoplayer.atom.ComposeTags.kt</ID>
+    <ID>NewLineAtEndOfFile:ConfigTextAndCheckBox.kt$com.client.xvideos.common.settings.ui.ConfigTextAndCheckBox.kt</ID>
+    <ID>NewLineAtEndOfFile:Constants.kt$com.client.xvideos.common.kdownloader.Constants.kt</ID>
+    <ID>NewLineAtEndOfFile:ContentId.kt$com.client.xvideos.l.model.enum.ContentId.kt</ID>
+    <ID>NewLineAtEndOfFile:CoroutinesModule.kt$com.client.xvideos.common.di.CoroutinesModule.kt</ID>
+    <ID>NewLineAtEndOfFile:DbHelper.kt$com.client.xvideos.common.kdownloader.database.DbHelper.kt</ID>
+    <ID>NewLineAtEndOfFile:DefaultHttpClient.kt$com.client.xvideos.common.kdownloader.httpclient.DefaultHttpClient.kt</ID>
+    <ID>NewLineAtEndOfFile:DialogNicheDelete.kt$com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.DialogNicheDelete.kt</ID>
+    <ID>NewLineAtEndOfFile:DownloadDispatchers.kt$com.client.xvideos.common.kdownloader.internal.DownloadDispatchers.kt</ID>
+    <ID>NewLineAtEndOfFile:DownloadModel.kt$com.client.xvideos.common.kdownloader.database.DownloadModel.kt</ID>
+    <ID>NewLineAtEndOfFile:DownloadRequest.kt$com.client.xvideos.common.kdownloader.internal.DownloadRequest.kt</ID>
+    <ID>NewLineAtEndOfFile:DownloadRequestQueue.kt$com.client.xvideos.common.kdownloader.internal.DownloadRequestQueue.kt</ID>
+    <ID>NewLineAtEndOfFile:DownloadTask.kt$com.client.xvideos.common.kdownloader.internal.DownloadTask.kt</ID>
+    <ID>NewLineAtEndOfFile:DownloaderConfig.kt$com.client.xvideos.common.kdownloader.DownloaderConfig.kt</ID>
+    <ID>NewLineAtEndOfFile:ExoPlayerLifecycle.kt$com.client.xvideos.common.videoplayer.util.ExoPlayerLifecycle.kt</ID>
+    <ID>NewLineAtEndOfFile:FileDownloadOutputStream.kt$com.client.xvideos.common.kdownloader.internal.stream.FileDownloadOutputStream.kt</ID>
+    <ID>NewLineAtEndOfFile:FileDownloadRandomAccessFile.kt$com.client.xvideos.common.kdownloader.internal.stream.FileDownloadRandomAccessFile.kt</ID>
+    <ID>NewLineAtEndOfFile:GetGifResponse.kt$com.client.xvideos.r.model.GetGifResponse.kt</ID>
+    <ID>NewLineAtEndOfFile:HTML5PlayerConfig.kt$com.client.xvideos.x.model.HTML5PlayerConfig.kt</ID>
+    <ID>NewLineAtEndOfFile:HttpClient.kt$com.client.xvideos.common.kdownloader.httpclient.HttpClient.kt</ID>
+    <ID>NewLineAtEndOfFile:IconFavorite18.kt$com.client.xvideos.common.icons.IconFavorite18.kt</ID>
+    <ID>NewLineAtEndOfFile:ItemEmptyPagingSource.kt$com.redgifs.common.pagin.ItemEmptyPagingSource.kt</ID>
+    <ID>NewLineAtEndOfFile:KeyboardNumberButton.kt$com.client.xvideos.screens.common.bottomKeyboard.KeyboardNumberButton.kt</ID>
+    <ID>NewLineAtEndOfFile:LandingPageAlbumTag.kt$com.client.xvideos.l.net.graphQl.LandingPageAlbumTag.kt</ID>
+    <ID>NewLineAtEndOfFile:MediaPlayerEvent.kt$com.client.xvideos.common.videoplayer.host.MediaPlayerEvent.kt</ID>
+    <ID>NewLineAtEndOfFile:NetworkTrafficMonitor.kt$com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor.kt</ID>
+    <ID>NewLineAtEndOfFile:NicheTopCreator.kt$com.client.xvideos.r.ui.niche.atom.NicheTopCreator.kt</ID>
+    <ID>NewLineAtEndOfFile:NichesBottomBar.kt$com.client.xvideos.r.ui.explorer.tab.niches.NichesBottomBar.kt</ID>
+    <ID>NewLineAtEndOfFile:NoOpsDbHelper.kt$com.client.xvideos.common.kdownloader.database.NoOpsDbHelper.kt</ID>
+    <ID>NewLineAtEndOfFile:OffsetUtil.kt$com.client.xvideos.x.feature.smarttoolfactory.zoom.util.OffsetUtil.kt</ID>
+    <ID>NewLineAtEndOfFile:PicsDetails.kt$com.client.xvideos.l.model.PicsDetails.kt</ID>
+    <ID>NewLineAtEndOfFile:PictureCountRank.kt$com.client.xvideos.l.model.enum.PictureCountRank.kt</ID>
+    <ID>NewLineAtEndOfFile:PlayerControls.kt$com.redgifs.common.video.PlayerControls.kt</ID>
+    <ID>NewLineAtEndOfFile:PlayerSpeedButton.kt$com.client.xvideos.common.videoplayer.ui.component.PlayerSpeedButton.kt</ID>
+    <ID>NewLineAtEndOfFile:ProfileInfo1.kt$com.client.xvideos.r.ui.top_this_week.ProfileInfo1.kt</ID>
+    <ID>NewLineAtEndOfFile:ProgressInterceptor.kt$com.client.xvideos.common.coil.ProgressInterceptor.kt</ID>
+    <ID>NewLineAtEndOfFile:Qualifier.kt$com.client.xvideos.common.di.Qualifier.kt</ID>
+    <ID>NewLineAtEndOfFile:R_Saved_Niches.kt$com.client.xvideos.r.common.saved.R_Saved_Niches.kt</ID>
+    <ID>NewLineAtEndOfFile:R_Screen_Root.kt$com.client.xvideos.r.ui.root.R_Screen_Root.kt</ID>
+    <ID>NewLineAtEndOfFile:RectUtil.kt$com.client.xvideos.x.feature.smarttoolfactory.zoom.util.RectUtil.kt</ID>
+    <ID>NewLineAtEndOfFile:RedApi_Explorer.kt$com.client.xvideos.r.network.api.RedApi_Explorer.kt</ID>
+    <ID>NewLineAtEndOfFile:RedApi_Search.kt$com.client.xvideos.r.network.api.RedApi_Search.kt</ID>
+    <ID>NewLineAtEndOfFile:RedApi_Tags.kt$com.client.xvideos.r.network.api.RedApi_Tags.kt</ID>
+    <ID>NewLineAtEndOfFile:RepositoryResult.kt$com.client.xvideos.l.repository.RepositoryResult.kt</ID>
+    <ID>NewLineAtEndOfFile:Route.kt$com.client.xvideos.r.network.http.Route.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenDashBoardsBottomNavigationButtons.kt$com.client.xvideos.x.screens.common.bottomKeyboard.ScreenDashBoardsBottomNavigationButtons.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenFavoritesSM.kt$com.client.xvideos.x.screens.favorites.ScreenFavoritesSM.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenFavoritesSM.kt$com.client.xvideos.x.screens.profile.ScreenFavoritesSM.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenItemTagsModelPornostars.kt$com.client.xvideos.screens.videoplayer.atom.ScreenItemTagsModelPornostars.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenK.kt$com.client.xvideos.screens.k.ScreenK.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenKViewModel.kt$com.client.xvideos.screens.k.ScreenKViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenLRootBottomNavigator.kt$com.client.xvideos.l.ui.screens.albumLandingTag.atom.ScreenLRootBottomNavigator.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenNicheSM.kt$com.client.xvideos.r.ui.niche.ScreenNicheSM.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenProfile.kt$com.client.xvideos.x.screens.profile.ScreenProfile.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenRedManageBlock.kt$com.client.xvideos.r.ui.manager_block.ScreenRedManageBlock.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenTags.kt$com.client.xvideos.x.screens.tags.ScreenTags.kt</ID>
+    <ID>NewLineAtEndOfFile:ScreenXDashBoardsSM.kt$com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsSM.kt</ID>
+    <ID>NewLineAtEndOfFile:SearchCreatorsResponse.kt$com.client.xvideos.r.model.search.SearchCreatorsResponse.kt</ID>
+    <ID>NewLineAtEndOfFile:SearchItemNichesResponse.kt$com.client.xvideos.r.model.search.SearchItemNichesResponse.kt</ID>
+    <ID>NewLineAtEndOfFile:SearchItemTagsResponce.kt$com.client.xvideos.r.model.search.SearchItemTagsResponce.kt</ID>
+    <ID>NewLineAtEndOfFile:SelectIndex.kt$com.client.xvideos.l.model.enum.SelectIndex.kt</ID>
+    <ID>NewLineAtEndOfFile:SettingElementBoolean.kt$com.client.xvideos.common.settings.element.SettingElementBoolean.kt</ID>
+    <ID>NewLineAtEndOfFile:SettingElementInt.kt$com.client.xvideos.common.settings.element.SettingElementInt.kt</ID>
+    <ID>NewLineAtEndOfFile:SettingElementString.kt$com.client.xvideos.common.settings.element.SettingElementString.kt</ID>
+    <ID>NewLineAtEndOfFile:SlideTransition.kt$com.client.xvideos.common.transition.SlideTransition.kt</ID>
+    <ID>NewLineAtEndOfFile:SortByOrder.kt$com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder.kt</ID>
+    <ID>NewLineAtEndOfFile:Status.kt$com.client.xvideos.common.kdownloader.Status.kt</ID>
+    <ID>NewLineAtEndOfFile:TagSuggestion.kt$com.client.xvideos.r.model.tag.TagSuggestion.kt</ID>
+    <ID>NewLineAtEndOfFile:Theme.kt$com.client.xvideos.ui.theme.Theme.kt</ID>
+    <ID>NewLineAtEndOfFile:TopCreatorsResponse.kt$com.client.xvideos.r.model.TopCreatorsResponse.kt</ID>
+    <ID>NewLineAtEndOfFile:UserProfile.kt$com.client.xvideos.l.model.UserProfile.kt</ID>
+    <ID>NewLineAtEndOfFile:UsersRed.kt$com.client.xvideos.r.common.UsersRed.kt</ID>
+    <ID>NewLineAtEndOfFile:VerticalScrollbar.kt$com.client.xvideos.r.ui.profile.atom.VerticalScrollbar.kt</ID>
+    <ID>NewLineAtEndOfFile:VisibleType.kt$com.client.xvideos.r.ui.top_this_week.model.VisibleType.kt</ID>
+    <ID>NewLineAtEndOfFile:ZoomState.kt$com.client.xvideos.x.feature.smarttoolfactory.zoom.ZoomState.kt</ID>
+    <ID>NewLineAtEndOfFile:capitalizeEachWord.kt$com.client.xvideos.common.util.capitalizeEachWord.kt</ID>
+    <ID>NewLineAtEndOfFile:constant.kt$com.client.xvideos.common.videoplayer.model.constant.kt</ID>
+    <ID>NewLineAtEndOfFile:country.kt$com.client.xvideos.x.feature.country.country.kt</ID>
+    <ID>NewLineAtEndOfFile:downloadIndicator.kt$com.client.xvideos.r.common.downloader.ui.downloadIndicator.kt</ID>
+    <ID>NewLineAtEndOfFile:formatBytes.kt$com.client.xvideos.common.util.formatBytes.kt</ID>
+    <ID>NewLineAtEndOfFile:getAlbumListWithAggregations.kt$com.client.xvideos.l.net.graphQl.getAlbumListWithAggregations.kt</ID>
+    <ID>NewLineAtEndOfFile:getFolderSize.kt$com.client.xvideos.common.util.getFolderSize.kt</ID>
+    <ID>NewLineAtEndOfFile:getLandingPageAlbumTag.kt$com.client.xvideos.l.net.graphQl.getLandingPageAlbumTag.kt</ID>
+    <ID>NewLineAtEndOfFile:getPicturesJson.kt$com.client.xvideos.l.net.graphQl.getPicturesJson.kt</ID>
+    <ID>NewLineAtEndOfFile:getTopInsetDp.kt$com.client.xvideos.common.util.getTopInsetDp.kt</ID>
+    <ID>NewLineAtEndOfFile:language.kt$com.client.xvideos.l.model.language.kt</ID>
+    <ID>NewLineAtEndOfFile:moduleKDownloader.kt$com.redgifs.common.downloader.di.moduleKDownloader.kt</ID>
+    <ID>NewLineAtEndOfFile:noRippleClickable.kt$com.client.xvideos.common.noRippleClickable.kt</ID>
+    <ID>NewLineAtEndOfFile:rememberPlayerView.kt$com.client.xvideos.common.videoplayer.rememberPlayerView.kt</ID>
+    <ID>NewLineAtEndOfFile:searchModel.kt$com.client.xvideos.x.screens.search.model.searchModel.kt</ID>
+    <ID>NewLineAtEndOfFile:shimmerEffect.kt$com.client.xvideos.common.util.shimmerEffect.kt</ID>
+    <ID>NewLineAtEndOfFile:toMD5.kt$com.client.xvideos.common.util.toMD5.kt</ID>
+    <ID>NewLineAtEndOfFile:toMinSec.kt$com.client.xvideos.common.util.toMinSec.kt</ID>
+    <ID>NewLineAtEndOfFile:toPrettyCount.kt$com.client.xvideos.common.util.toPrettyCount.kt</ID>
+    <ID>NewLineAtEndOfFile:toTwoDecimalPlacesWithColon.kt$com.client.xvideos.common.util.toTwoDecimalPlacesWithColon.kt</ID>
+    <ID>NewLineAtEndOfFile:util.android.kt$com.client.xvideos.common.videoplayer.util.util.android.kt</ID>
+    <ID>SwallowedException:R_SearchNiches.kt$R_SearchNiches$e: Exception</ID>
+    <ID>SwallowedException:SettingElementList.kt$SettingElementList$e: Exception</ID>
+    <ID>SwallowedException:ZipUtilsTest.kt$ZipUtilsTest$e: IllegalArgumentException</ID>
+    <ID>TooGenericExceptionThrown:ExoplayerHelper.kt$throw RuntimeException("DRM state issue: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:ExoplayerHelper.kt$throw RuntimeException("Failed to create DRM session manager: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:ExoplayerHelper.kt$throw RuntimeException("Unsupported DRM scheme: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:Utils.kt$throw RuntimeException("NoSuchAlgorithmException", e)</ID>
+    <ID>TooGenericExceptionThrown:Utils.kt$throw RuntimeException("UnsupportedEncodingException", e)</ID>
+    <ID>UnusedImports:AlbumDialogDeleteAlbum.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:AlbumDialogDeleteAlbum.kt$import androidx.compose.material3.Button</ID>
+    <ID>UnusedImports:AlbumDialogDeleteAlbum.kt$import androidx.compose.material3.ButtonDefaults</ID>
+    <ID>UnusedImports:AlbumDialogDeleteAlbum.kt$import androidx.compose.material3.Text</ID>
+    <ID>UnusedImports:AlbumDialogDeleteAlbum.kt$import androidx.compose.material3.TextButton</ID>
+    <ID>UnusedImports:AlbumDialogDeleteAlbum.kt$import androidx.compose.ui.graphics.Color</ID>
+    <ID>UnusedImports:App.kt$import com.client.xvideos.common.eventBus.Event</ID>
+    <ID>UnusedImports:App.kt$import com.client.xvideos.common.eventBus.EventBus</ID>
+    <ID>UnusedImports:App.kt$import kotlinx.coroutines.launch</ID>
+    <ID>UnusedImports:AppLockSection.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:AppNetworkSpeedMonitorLite.kt$import androidx.compose.foundation.border</ID>
+    <ID>UnusedImports:AppNetworkSpeedMonitorLite.kt$import androidx.compose.material3.LocalTextStyle</ID>
+    <ID>UnusedImports:AppNetworkSpeedMonitorLite.kt$import androidx.compose.ui.text.style.TextAlign</ID>
+    <ID>UnusedImports:CollectionDB.kt$import com.client.xvideos.common.AppPath</ID>
+    <ID>UnusedImports:CollectionDB.kt$import java.lang.reflect.Type</ID>
+    <ID>UnusedImports:DialogNicheDelete.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:DialogNicheDelete.kt$import androidx.compose.material3.TextButton</ID>
+    <ID>UnusedImports:DialogNicheDelete.kt$import androidx.compose.ui.graphics.Color</ID>
+    <ID>UnusedImports:DialogNicheDelete.kt$import androidx.compose.ui.unit.sp</ID>
+    <ID>UnusedImports:DialogNicheDelete.kt$import com.composeunstyled.Text</ID>
+    <ID>UnusedImports:DialogSubscriptionDelete.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:DialogSubscriptionDelete.kt$import androidx.compose.material3.TextButton</ID>
+    <ID>UnusedImports:DialogSubscriptionDelete.kt$import androidx.compose.ui.unit.sp</ID>
+    <ID>UnusedImports:DialogSubscriptionDelete.kt$import com.composeunstyled.Text</ID>
+    <ID>UnusedImports:DownloadRecoveryText.kt$import com.client.xvideos.R</ID>
+    <ID>UnusedImports:IconFavorite18.kt$import androidx.compose.foundation.layout.Box</ID>
+    <ID>UnusedImports:IconSave18.kt$import androidx.compose.foundation.layout.Box</ID>
+    <ID>UnusedImports:IconSave18.kt$import androidx.compose.material.icons.filled.Person</ID>
+    <ID>UnusedImports:IconSave18.kt$import androidx.compose.ui.Alignment</ID>
+    <ID>UnusedImports:KeyboardNumber.kt$import androidx.compose.foundation.layout.wrapContentWidth</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import androidx.compose.animation.core.tween</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import androidx.compose.animation.slideInVertically</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import androidx.compose.animation.slideOutVertically</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import androidx.compose.foundation.layout.Spacer</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import androidx.compose.foundation.layout.displayCutoutPadding</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import androidx.compose.ui.tooling.preview.Preview</ID>
+    <ID>UnusedImports:L_FullScreenImage.kt$import com.client.xvideos.l.model.Thumbnails</ID>
+    <ID>UnusedImports:L_LazyRowPictureDetails.kt$import androidx.compose.ui.draw.clipToBounds</ID>
+    <ID>UnusedImports:L_ScreenAlbumTopHits.kt$import androidx.compose.runtime.mutableStateOf</ID>
+    <ID>UnusedImports:L_ScreenAlbumTopHits.kt$import androidx.compose.runtime.remember</ID>
+    <ID>UnusedImports:L_ScreenLogin.kt$import androidx.compose.material3.OutlinedButton</ID>
+    <ID>UnusedImports:L_ScreenLogin.kt$import cafe.adriel.voyager.core.screen.Screen</ID>
+    <ID>UnusedImports:L_ScreenLogin.kt$import cafe.adriel.voyager.core.screen.ScreenKey</ID>
+    <ID>UnusedImports:L_ScreenLogin.kt$import cafe.adriel.voyager.core.screen.uniqueScreenKey</ID>
+    <ID>UnusedImports:L_ScreenLogin.kt$import cafe.adriel.voyager.navigator.LocalNavigator</ID>
+    <ID>UnusedImports:L_ScreenLogin.kt$import cafe.adriel.voyager.navigator.currentOrThrow</ID>
+    <ID>UnusedImports:L_ScreenSavedAlbumsTab.kt$import androidx.compose.foundation.layout.fillMaxWidth</ID>
+    <ID>UnusedImports:L_ScreenSavedLikesTab.kt$import cafe.adriel.voyager.navigator.LocalNavigator</ID>
+    <ID>UnusedImports:L_ScreenSavedLikesTab.kt$import cafe.adriel.voyager.navigator.currentOrThrow</ID>
+    <ID>UnusedImports:L_Screen_CollectionTab.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:LandingPageAlbumTag.kt$import com.client.xvideos.l.net.Luscious</ID>
+    <ID>UnusedImports:LazyRow123.kt$import androidx.paging.PagingData</ID>
+    <ID>UnusedImports:LazyRow123.kt$import kotlinx.coroutines.flow.flowOf</ID>
+    <ID>UnusedImports:MainActivity.kt$import com.client.xvideos.common.util.getStatusBarInsetDp</ID>
+    <ID>UnusedImports:MainActivity.kt$import com.client.xvideos.common.util.getTopInsetDp</ID>
+    <ID>UnusedImports:MainActivity.kt$import timber.log.Timber</ID>
+    <ID>UnusedImports:MediaCategoriesBootstrap.kt$import com.client.xvideos.l.net.Luscious</ID>
+    <ID>UnusedImports:R_Screen_CollectionTab.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:R_Screen_CollectionTab.kt$import androidx.compose.material3.TextButton</ID>
+    <ID>UnusedImports:R_Screen_CreatorsTab.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:R_Screen_CreatorsTab.kt$import androidx.compose.material3.TextButton</ID>
+    <ID>UnusedImports:R_Screen_Saved_DownloadTab.kt$import com.client.xvideos.common.p2p.P2pExportBundle</ID>
+    <ID>UnusedImports:R_Screen_Saved_DownloadTab.kt$import com.client.xvideos.common.p2p.export.RExporter</ID>
+    <ID>UnusedImports:R_Screen_Saved_DownloadTab.kt$import com.client.xvideos.common.snackbar.SnackBar</ID>
+    <ID>UnusedImports:R_Screen_Saved_LikesTab.kt$import androidx.compose.ui.graphics.Color</ID>
+    <ID>UnusedImports:SavedLikesItemExpandMenu.kt$import androidx.compose.material3.HorizontalDivider</ID>
+    <ID>UnusedImports:SavedLikesItemExpandMenu.kt$import com.client.xvideos.common.theme.Theme</ID>
+    <ID>UnusedImports:ScreenAlbumList.kt$import androidx.compose.foundation.layout.displayCutoutPadding</ID>
+    <ID>UnusedImports:ScreenAlbumList.kt$import androidx.compose.ui.tooling.preview.Preview</ID>
+    <ID>UnusedImports:ScreenCollectionName.kt$import androidx.compose.foundation.layout.width</ID>
+    <ID>UnusedImports:ScreenCollectionName.kt$import androidx.compose.material.icons.filled.Close</ID>
+    <ID>UnusedImports:ScreenCollectionName.kt$import androidx.compose.material.icons.filled.Search</ID>
+    <ID>UnusedImports:ScreenCollectionName.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:ScreenFavorites.kt$import androidx.compose.foundation.border</ID>
+    <ID>UnusedImports:ScreenFavorites.kt$import androidx.compose.foundation.shape.RoundedCornerShape</ID>
+    <ID>UnusedImports:ScreenFavorites.kt$import androidx.compose.material3.DropdownMenuItem</ID>
+    <ID>UnusedImports:ScreenFavorites.kt$import androidx.compose.material3.ExposedDropdownMenuDefaults</ID>
+    <ID>UnusedImports:ScreenFavorites.kt$import androidx.compose.ui.draw.clip</ID>
+    <ID>UnusedImports:ScreenFavorites.kt$import androidx.compose.ui.platform.LocalInspectionMode</ID>
+    <ID>UnusedImports:ScreenRedProfile.kt$import androidx.compose.ui.graphics.Color</ID>
+    <ID>UnusedImports:ScreenRedTopThisWeek.kt$import com.client.xvideos.common.theme.Theme</ID>
+    <ID>UnusedImports:ScreenRoot.kt$import androidx.compose.foundation.layout.statusBarsPadding</ID>
+    <ID>UnusedImports:ScreenSavedX.kt$import androidx.compose.material3.AlertDialog</ID>
+    <ID>UnusedImports:ScreenSavedX.kt$import androidx.compose.material3.TextButton</ID>
+    <ID>UnusedImports:ScreenSavedX.kt$import com.client.xvideos.common.p2p.P2pExportBundle</ID>
+    <ID>UnusedImports:ScreenXDashBoardsSM.kt$import com.client.xvideos.common.settings.Settings</ID>
+    <ID>UnusedImports:Settings.kt$import com.client.xvideos.App</ID>
+    <ID>UnusedImports:SettingsListItems.kt$import androidx.compose.ui.graphics.Color</ID>
+    <ID>UnusedImports:Theme.kt$import android.app.Activity</ID>
+    <ID>UnusedImports:TikTokStyleVideoFeed.kt$import com.client.xvideos.common.theme.Theme</ID>
+    <ID>UnusedImports:X_DashboardExpandMenu.kt$import androidx.compose.foundation.layout.fillMaxSize</ID>
+    <ID>UnusedImports:X_DashboardExpandMenu.kt$import androidx.compose.foundation.layout.padding</ID>
+    <ID>UnusedImports:country.kt$import androidx.compose.foundation.layout.height</ID>
+    <ID>UnusedImports:country.kt$import androidx.compose.runtime.mutableIntStateOf</ID>
+    <ID>UnusedParameter:AlbumListFilter.kt$onClose: () -&gt; Unit</ID>
+    <ID>UnusedParameter:CanvasTimeDurationLine.kt$play: Boolean = false</ID>
+    <ID>UnusedParameter:CustomBasicTextFieldContent.kt$onUndoClick: () -&gt; Unit</ID>
+    <ID>UnusedParameter:EnhancedZoomableImage.kt$fling: Boolean</ID>
+    <ID>UnusedParameter:EnhancedZoomableImage.kt$moveToBounds: Boolean</ID>
+    <ID>UnusedParameter:LazyRow123Host.kt$searchNiches: R_SearchNiches</ID>
+    <ID>UnusedParameter:LazyRow123Host.kt$textNiches: String</ID>
+    <ID>UnusedParameter:NicheBottomBar.kt$niche: NichesInfo</ID>
+    <ID>UnusedParameter:R_Screen_Saved_SubscriptionsTab.kt$scrollPercent: Pair&lt;Float, Float&gt;</ID>
+    <ID>UnusedParameter:RedUrlVideoImageAndLongClick.kt$isVisibleDuration: Boolean = true</ID>
+    <ID>UnusedParameter:RedUrlVideoImageAndLongClick.kt$isVisibleView: Boolean = true</ID>
+    <ID>UnusedParameter:RedUrlVideoImageAndLongClickTikTok.kt$index: Int</ID>
+    <ID>UnusedParameter:RedUrlVideoImageAndLongClickTikTok.kt$isVisibleDuration: Boolean = true</ID>
+    <ID>UnusedParameter:RedUrlVideoImageAndLongClickTikTok.kt$isVisibleView: Boolean = true</ID>
+    <ID>UnusedParameter:SavedLikesItemExpandMenu.kt$onAddCollection: (PicsDetails) -&gt; Unit = {}</ID>
+    <ID>UnusedParameter:UrlImage.kt$isVisible: Boolean = true</ID>
+    <ID>UnusedParameter:UrlImage.kt$loadIndicator: Boolean = true</ID>
+    <ID>UnusedParameter:createPlayerListener.kt$sourceUrl: String? = null</ID>
+    <ID>UnusedPrivateMember:AlbumItemExpandMenu.kt$@Preview(showBackground = true, backgroundColor = 0xFF303030) @Composable private fun AlbumItemExpandMenuPreview()</ID>
+    <ID>UnusedPrivateMember:AlbumListFilter.kt$@Preview(showBackground = true, backgroundColor = 0xFF1C1C1C, widthDp = 390, heightDp = 820) @Composable private fun AlbumListFilterPreview()</ID>
+    <ID>UnusedPrivateMember:AppLockScreen.kt$@Preview(showBackground = true) @Composable private fun AppLockScreenErrorPreview()</ID>
+    <ID>UnusedPrivateMember:AppLockScreen.kt$@Preview(showBackground = true) @Composable private fun AppLockScreenLockedOutPreview()</ID>
+    <ID>UnusedPrivateMember:AppLockScreen.kt$@Preview(showBackground = true) @Composable private fun AppLockScreenPreview()</ID>
+    <ID>UnusedPrivateMember:AppLockSection.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun AppLockPasswordDialogPreview()</ID>
+    <ID>UnusedPrivateMember:AppLockSection.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun AppLockSettingsSectionPreview()</ID>
+    <ID>UnusedPrivateMember:AppLockSection.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun PasswordSettingFieldPreview()</ID>
+    <ID>UnusedPrivateMember:AppSettingsScreen.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535, device = "spec:width=1080px,height=23400px,dpi=440" ) @Composable private fun AppSettingsScreenPreview()</ID>
+    <ID>UnusedPrivateMember:AppSettingsScreen.kt$AppSettingsScreen$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:ButtonIcon.kt$@Preview @Composable private fun ButtonIconPreview()</ID>
+    <ID>UnusedPrivateMember:CMPAudioPlayer.android.kt$private fun PlayerSpeed.toFloat(): Float</ID>
+    <ID>UnusedPrivateMember:CollectionsGrid.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 380, heightDp = 360) @Composable private fun CollectionsGridPreview()</ID>
+    <ID>UnusedPrivateMember:DashboardControlsRow.kt$@Preview(showBackground = true, backgroundColor = 0xFF000000) @Composable private fun PreviewDashboardControlsRow()</ID>
+    <ID>UnusedPrivateMember:DashboardsPaginatedListScreen.kt$@Preview(showBackground = true) @Composable private fun DashboardsPaginatedListScreenPreview()</ID>
+    <ID>UnusedPrivateMember:DialogBlock.kt$@Preview(showBackground = true) @Composable private fun DialogBlockPreview()</ID>
+    <ID>UnusedPrivateMember:DialogCollection.kt$@Preview(showBackground = true, backgroundColor = 0xFFEBE6EE) @Composable private fun DialogCollectionPreview()</ID>
+    <ID>UnusedPrivateMember:DialogNicheDelete.kt$@Preview(showBackground = true) @Composable private fun DialogNicheDeletePreview()</ID>
+    <ID>UnusedPrivateMember:DialogSubscriptionDelete.kt$@Preview(showBackground = true) @Composable private fun DialogSubscriptionDeletePreview()</ID>
+    <ID>UnusedPrivateMember:DropdownMenuItem_AddCollection.kt$@Preview(showBackground = true) @Composable private fun DropdownMenuItem_AddCollectionPreview()</ID>
+    <ID>UnusedPrivateMember:DropdownMenuItem_Follow.kt$@Preview(showBackground = true) @Composable private fun DropdownMenuItem_FollowPreview()</ID>
+    <ID>UnusedPrivateMember:DropdownMenuItem_Like.kt$@Preview(showBackground = true) @Composable private fun DropdownMenuItem_LikePreview()</ID>
+    <ID>UnusedPrivateMember:DropdownMenuItem_RemoveFromCollection.kt$@Preview(showBackground = true) @Composable private fun DropdownMenuItem_RemoveFromCollectionPreview()</ID>
+    <ID>UnusedPrivateMember:DropdownMenuItem_Subscription.kt$@Preview(showBackground = true) @Composable private fun DropdownMenuItem_SubscriptionPreview()</ID>
+    <ID>UnusedPrivateMember:ExpandMenuVideo.kt$@Preview @Composable private fun ExpandMenuVideoPreview()</ID>
+    <ID>UnusedPrivateMember:FavoritesDeleteDialog.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun ConfirmDeleteFavoriteDialogPreview()</ID>
+    <ID>UnusedPrivateMember:FavoritesTab.kt$FavoritesTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:GifTypes_Control.kt$@Preview @Composable private fun TextAndLinePreviewSelected()</ID>
+    <ID>UnusedPrivateMember:GifTypes_Control.kt$@Preview @Composable private fun TextAndLinePreviewUnselected()</ID>
+    <ID>UnusedPrivateMember:HapticDemoScreen.kt$HapticDemoScreen$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:IconFavorite18.kt$@Preview @Composable private fun IconFavoritePreview()</ID>
+    <ID>UnusedPrivateMember:KeyboardNumber.kt$@Preview @Composable private fun Prev()</ID>
+    <ID>UnusedPrivateMember:L_LazyRowPictureDetails.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun AnimatedVideoPlaceholderPreview()</ID>
+    <ID>UnusedPrivateMember:L_LazyRowPictureDetails.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun InitialPictureItemsLoadingPreview()</ID>
+    <ID>UnusedPrivateMember:L_LazyRowPictureDetails.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun LInlineAnimationVideoPreview()</ID>
+    <ID>UnusedPrivateMember:L_ScreenAlbumSearch.kt$L_ScreenAlbumSearch$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:L_ScreenAlbumTopHits.kt$@Preview @Composable private fun ButtonSeeAllPreview()</ID>
+    <ID>UnusedPrivateMember:L_ScreenAlbumTopHits.kt$L_ScreenAlbumTopHits$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:L_ScreenSavedAlbumsTab.kt$L_ScreenSavedAlbumsTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:L_ScreenSavedLikesTab.kt$L_ScreenSavedLikesTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:L_Screen_CollectionTab.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun PreviewLCollectionsTopBarSelectionNull()</ID>
+    <ID>UnusedPrivateMember:L_Screen_CollectionTab.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun PreviewLCollectionsTopBarWithSelection()</ID>
+    <ID>UnusedPrivateMember:L_Screen_CollectionTab.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun PreviewL_SavedCollectionTabContent()</ID>
+    <ID>UnusedPrivateMember:L_Screen_CollectionTab.kt$L_Screen_CollectionTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:LavenderDialog.kt$@Preview @Composable private fun LavenderDialogPreview()</ID>
+    <ID>UnusedPrivateMember:LazyRow123.kt$@Preview(showBackground = true) @Composable private fun LazyRow123ContentPreview()</ID>
+    <ID>UnusedPrivateMember:LazyRow123GridItem.kt$@Preview @Composable private fun LazyRow123GridItemContentPreview()</ID>
+    <ID>UnusedPrivateMember:LazyRow123Icons.kt$@Preview(showBackground = true) @Composable private fun PreviewLazyRow123Icons()</ID>
+    <ID>UnusedPrivateMember:MenuScreen.kt$@Preview(device = "id:pixel_9_pro") @Composable private fun MenuPreview()</ID>
+    <ID>UnusedPrivateMember:MenuScreen.kt$MenuScreen$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:NicheProfile.kt$@Composable private fun ButtonFollow(savedRed: () -&gt; SavedRed, niche: NichesInfo)</ID>
+    <ID>UnusedPrivateMember:NicheTopCreator.kt$@Preview @Composable private fun NicheTopCreatorPreview()</ID>
+    <ID>UnusedPrivateMember:PermissionScreenActivity.kt$PermissionScreenActivity$@Preview(showBackground = true) @Composable private fun PermissionScreenPreview()</ID>
+    <ID>UnusedPrivateMember:R_ScreenGifsTab.kt$@Preview @Composable private fun GifsTabBottomBarPreview()</ID>
+    <ID>UnusedPrivateMember:R_ScreenGifsTab.kt$@Preview(showBackground = true) @Composable private fun R_ScreenGifsTabSkeletonPreview()</ID>
+    <ID>UnusedPrivateMember:R_ScreenGifsTab.kt$R_ScreenGifsTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:R_ScreenNichesTab.kt$R_ScreenNichesTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:R_Screen_CollectionTab.kt$@Preview(showBackground = true, backgroundColor = 0xFF000000) @Composable private fun R_SavedCollectionTabPreview()</ID>
+    <ID>UnusedPrivateMember:R_Screen_CollectionTab.kt$R_Screen_CollectionTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:R_Screen_CreatorsTab.kt$@Preview @Composable private fun CreatorListItemPreview()</ID>
+    <ID>UnusedPrivateMember:R_Screen_CreatorsTab.kt$@Preview @Composable private fun DeleteCreatorDialogPreview()</ID>
+    <ID>UnusedPrivateMember:R_Screen_CreatorsTab.kt$R_Screen_CreatorsTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:R_Screen_Saved_DownloadTab.kt$R_Screen_Saved_DownloadTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:R_Screen_Saved_LikesTab.kt$R_Screen_Saved_LikesTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:R_Screen_Saved_SubscriptionsTab.kt$R_Screen_Saved_SubscriptionsTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:RedVideoPlayerWithMenuContent.kt$private fun formatDuration(totalSeconds: Int): String</ID>
+    <ID>UnusedPrivateMember:SavedLikesItemExpandMenu.kt$@Preview(showBackground = true, backgroundColor = 0xFF303030) @Composable private fun SavedLikesItemExpandMenuPreview()</ID>
+    <ID>UnusedPrivateMember:SavedNichesTab.kt$SavedNichesTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:ScreenAlbum.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360) @Composable private fun LAlbumNetworkIssuePanelPreview()</ID>
+    <ID>UnusedPrivateMember:ScreenAlbum.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360, heightDp = 720) @Composable private fun ScreenLAlbumPreview()</ID>
+    <ID>UnusedPrivateMember:ScreenAlbumList.kt$L_ScreenAlbumList$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:ScreenFavorites.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun DurationOverlayPreview()</ID>
+    <ID>UnusedPrivateMember:ScreenFavorites.kt$@Preview(showBackground = true, backgroundColor = 0xFF262626) @Composable private fun ScreenFavoritesPreview()</ID>
+    <ID>UnusedPrivateMember:ScreenLAlbumLandingTag.kt$@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C, widthDp = 390, heightDp = 900) @Composable private fun ScreenLAlbumLandingTagPreview()</ID>
+    <ID>UnusedPrivateMember:ScreenNiche.kt$@Preview @Composable private fun NicheHeaderContentPreview()</ID>
+    <ID>UnusedPrivateMember:ScreenNiche.kt$@Preview @Composable private fun ScreenNicheContentPreview()</ID>
+    <ID>UnusedPrivateMember:ScreenP2pReceive.kt$@Preview(showBackground = true) @Composable private fun PreviewScreenP2pReceiveConnecting()</ID>
+    <ID>UnusedPrivateMember:ScreenP2pReceive.kt$@Preview(showBackground = true) @Composable private fun PreviewScreenP2pReceiveReceiving()</ID>
+    <ID>UnusedPrivateMember:ScreenRoot.kt$@Composable private fun HomeFloatingActionButton(mainNavigator: Navigator?)</ID>
+    <ID>UnusedPrivateMember:ScreenRoot.kt$ScreenRoot$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:ScreenSaved.kt$L_SavedTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:ScreenSaved.kt$R_ScreenSavedTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:SearchTab.kt$SearchTab$private fun readResolve(): Any</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun IntSliderSettingPreview()</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun SettingsButtonRowWithDialogPreview()</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun SettingsDividerPreview()</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun SettingsIconPreview()</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun SettingsListItemPreview()</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun SettingsSectionTitlePreview()</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun SettingsSwitchRowPreview()</ID>
+    <ID>UnusedPrivateMember:SettingsListItems.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun SettingsValueRowPreview()</ID>
+    <ID>UnusedPrivateMember:StorageStatistics.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun StorageProgressRowPreview()</ID>
+    <ID>UnusedPrivateMember:StorageStatistics.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun StorageStatisticsSectionPreview()</ID>
+    <ID>UnusedPrivateMember:ThumbnailSizeSelector.kt$@Preview(showBackground = true, backgroundColor = 0xFF353535) @Composable private fun ThumbnailSizeSelectorPreview()</ID>
+    <ID>UnusedPrivateProperty:AlbumInfo.kt$AlbumInfo$download: Boolean = false</ID>
+    <ID>UnusedPrivateProperty:AlbumList.kt$val activeFilters = get?.get("active_filters")?.asJsonArray</ID>
+    <ID>UnusedPrivateProperty:App.kt$App$private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)</ID>
+    <ID>UnusedPrivateProperty:CMPlayer2.kt$var currentRotate by remember { mutableFloatStateOf(0f) }</ID>
+    <ID>UnusedPrivateProperty:ExpandMenuVideoTags.kt$private val style = TextStyle(color = tintColor, fontFamily = Theme.R.fontFamilyPopinsRegular, fontSize = 20.sp)</ID>
+    <ID>UnusedPrivateProperty:L_FullScreenImage.kt$L_FullScreenImage$val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value</ID>
+    <ID>UnusedPrivateProperty:L_Screen_CollectionTab.kt$L_Screen_CollectionTab$val colorDialogConteiner = Theme.tabLevel4</ID>
+    <ID>UnusedPrivateProperty:Repository.kt$Repository$context: Context</ID>
+    <ID>UnusedPrivateProperty:SavedCollectionName.kt$ScreenCollectionName$var blockItem by rememberSaveable { mutableStateOf&lt;GifsInfo?&gt;(null) }</ID>
+    <ID>UnusedPrivateProperty:ScreenAlbum.kt$ScreenLAlbum$val newFilteredNoAnimatedPics = allPics.filter { !it.is_animated } //Список анимированных елементов</ID>
+    <ID>UnusedPrivateProperty:ScreenDashBoardsBottomNavigationButtons.kt$val navigator = LocalNavigator.currentOrThrow</ID>
+    <ID>UnusedPrivateProperty:ScreenK.kt$ScreenDashBoards$val navigator = LocalNavigator.currentOrThrow</ID>
+    <ID>UnusedPrivateProperty:ScreenK.kt$ScreenDashBoards$val vm: ScreenKScreenModel = getScreenModel()</ID>
+    <ID>UnusedPrivateProperty:ScreenLAlbumLandingTag.kt$ScreenLAlbumLandingTag$val haptic = LocalHapticFeedback.current</ID>
+    <ID>UnusedPrivateProperty:ScreenProfile.kt$ScreenProfile$val navigator = LocalNavigator.currentOrThrow</ID>
+    <ID>UnusedPrivateProperty:ScreenProfile.kt$ScreenProfile$val vm: ScreenProfileSM = getScreenModel()</ID>
+    <ID>UnusedPrivateProperty:ScreenRedManageBlock.kt$ScreenRedManageBlock$val navigator = LocalNavigator.currentOrThrow</ID>
+    <ID>UnusedPrivateProperty:ScreenRedProfile.kt$ScreenRedProfile$val navigator = LocalNavigator.currentOrThrow</ID>
+    <ID>UnusedPrivateProperty:ScreenTags.kt$ScreenTags$val navigator = LocalNavigator.currentOrThrow</ID>
+    <ID>UnusedPrivateProperty:SearchTab.kt$ScreenRedExplorerSearchSM$connectivityObserver: ConnectivityObserver</ID>
+    <ID>UnusedPrivateProperty:SwipeableBottomPanel.kt$val anchors = mapOf(0f to 0, hiddenOffset to 1)</ID>
+    <ID>UnusedPrivateProperty:TagsPaginatedListScreen.kt$val navigator = LocalNavigator.currentOrThrow</ID>
+    <ID>UnusedPrivateProperty:TikTokRow1.kt$val isCurrentPage = pagerState.currentPage == pageIndex</ID>
+    <ID>UnusedPrivateProperty:rememberVisibleRangePercentIgnoringFirstNForGrid.kt$val lastItemBottomEdge = lastItemTopEdge + lastItemHeight</ID>
+    <ID>VariableNaming:AppSettingsScreen.kt$val l_login = Settings.l_login.field.collectAsStateWithLifecycle().value</ID>
+    <ID>VariableNaming:L_ScreenExplorer.kt$L_ScreenExplorer$val columnR_ScreenGifsTab = Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle().value</ID>
+    <ID>VariableNaming:Route.kt$Route$val BASE = "https://api.redgifs.com"</ID>
+    <ID>VariableNaming:ScreenRedMnageBlockSM.kt$ScreenRedManageBlockSM$val _blockList = MutableStateFlow&lt;List&lt;GifsInfo&gt;&gt;(emptyList())</ID>
+    <ID>VariableNaming:ScreenRedProfileSM.kt$ScreenRedProfileSM$val _list = MutableStateFlow&lt;List&lt;GifsInfo&gt;&gt;(emptyList())</ID>
+    <ID>WildcardImport:AnimatedZoomModifier.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:DownloadDispatchers.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:DownloadTask.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:EnhancedZoomModifier.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:FileDownloadRandomAccessFile.kt$import java.io.*</ID>
+    <ID>WildcardImport:ImageWithConstraints.kt$import androidx.compose.ui.graphics.*</ID>
+    <ID>WildcardImport:NetworkTrafficMonitor.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:NetworkTrafficMonitor.kt$import kotlinx.coroutines.flow.*</ID>
+    <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ZoomModifier.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:shimmerEffect.kt$import androidx.compose.runtime.*</ID>
+  </CurrentIssues>
+</SmellBaseline>
