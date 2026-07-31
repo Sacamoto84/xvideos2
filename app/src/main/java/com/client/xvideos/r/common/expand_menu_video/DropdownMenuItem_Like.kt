@@ -1,25 +1,18 @@
 package com.client.xvideos.r.common.expand_menu_video
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownMenuItem_Like(item: GifsInfo? = null, onRunLike: () -> Unit, savedRed: ()-> SavedRed, onDismiss: () -> Unit){
     val isLiked = savedRed.invoke().likes.list.any { it.id == item?.id }
@@ -41,25 +34,15 @@ fun DropdownMenuItem_Like(item: GifsInfo? = null, onRunLike: () -> Unit, savedRe
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DropdownMenuItem_LikeContent(
     isLiked: Boolean,
     onClick: () -> Unit
 ) {
-    val textLiked = if (isLiked) "Unlike" else "Like"
-    val textLikedIcon = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
-    DropdownMenuItem(
-        leadingIcon = {
-            Icon(
-                textLikedIcon,
-                contentDescription = "",
-                tint = Theme.ExpandMenu.tintColor
-            )
-        },
-        text = { Text(textLiked, style = Theme.ExpandMenu.style) },
-        onClick = onClick,
-        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+    ExpandMenuActionItem(
+        icon = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+        text = if (isLiked) "Unlike" else "Like",
+        onClick = onClick
     )
 }
 

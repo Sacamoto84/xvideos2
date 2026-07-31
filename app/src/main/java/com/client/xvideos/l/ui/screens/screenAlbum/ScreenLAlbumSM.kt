@@ -18,7 +18,7 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.AlbumDetails
 import java.io.File
 import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
-import com.client.xvideos.l.featured.share.useCaseShareFile
+import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.AlbumInfo
 import com.client.xvideos.l.net.Luscious

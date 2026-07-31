@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.favorites
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -285,53 +286,20 @@ private fun FavoriteActionsExpandMenu(
             modifier = Modifier.width(IntrinsicSize.Min),
             containerColor = Theme.ExpandMenu.backgroundColor
         ) {
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(
-                        Icons.Filled.ArrowCircleDown,
-                        contentDescription = null,
-                        tint = Theme.ExpandMenu.tintColor
-                    )
-                },
-                text = { Text("Скачать", style = Theme.ExpandMenu.style) },
-                onClick = {
-                    onDownload()
-                    expanded = false
-                },
-                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-            )
+            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, "Скачать") {
+                onDownload()
+                expanded = false
+            }
 
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(
-                        Icons.Filled.SaveAlt,
-                        contentDescription = null,
-                        tint = Theme.ExpandMenu.tintColor
-                    )
-                },
-                text = { Text("В галерею", style = Theme.ExpandMenu.style) },
-                onClick = {
-                    onSaveToGallery()
-                    expanded = false
-                },
-                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-            )
+            ExpandMenuActionItem(Icons.Filled.SaveAlt, "В галерею") {
+                onSaveToGallery()
+                expanded = false
+            }
 
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(
-                        Icons.Filled.Delete,
-                        contentDescription = null,
-                        tint = Theme.ExpandMenu.tintColor
-                    )
-                },
-                text = { Text("Удалить", style = Theme.ExpandMenu.style) },
-                onClick = {
-                    onDelete()
-                    expanded = false
-                },
-                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-            )
+            ExpandMenuActionItem(Icons.Filled.Delete, "Удалить") {
+                onDelete()
+                expanded = false
+            }
         }
     }
 }

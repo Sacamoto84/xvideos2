@@ -10,7 +10,7 @@ import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
-import com.client.xvideos.l.featured.share.useCaseShareFile
+import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
 import androidx.compose.runtime.getValue

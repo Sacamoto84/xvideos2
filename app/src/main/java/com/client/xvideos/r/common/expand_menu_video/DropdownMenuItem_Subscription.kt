@@ -1,17 +1,11 @@
 package com.client.xvideos.r.common.expand_menu_video
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.filled.Unsubscribe
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
@@ -21,7 +15,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownMenuItem_Subscribtion(item: GifsInfo? = null, redApi:()-> RedApi , savedRed: ()->SavedRed, onDismiss: () -> Unit){
 
@@ -60,25 +53,21 @@ fun DropdownMenuItem_Subscribtion(item: GifsInfo? = null, redApi:()-> RedApi , s
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DropdownMenuItem_SubscriptionContent(
     isSubscribted: Boolean,
     onClick: () -> Unit
 ) {
-    val textFollowed = if (isSubscribted) "Unsubscribe" else "Subscribe"
-    val textFollowedIcon = if (isSubscribted) Icons.Default.Unsubscribe else Icons.Default.Subscriptions
-    DropdownMenuItem(
-        leadingIcon = {Icon(textFollowedIcon, contentDescription = "", tint = Theme.ExpandMenu.tintColor)},
-        text = { Text(textFollowed, style = Theme.ExpandMenu.style) },
-        onClick = onClick,
-        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+    ExpandMenuActionItem(
+        icon = if (isSubscribted) Icons.Default.Unsubscribe else Icons.Default.Subscriptions,
+        text = if (isSubscribted) "Unsubscribe" else "Subscribe",
+        onClick = onClick
     )
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun DropdownMenuItem_FollowPreview() {
+private fun DropdownMenuItem_SubscriptionPreview() {
     XvideosTheme {
         DropdownMenuItem_SubscriptionContent(
             isSubscribted = true,

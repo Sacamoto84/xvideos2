@@ -1,18 +1,12 @@
 package com.client.xvideos.r.common.expand_menu_video
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RemoveCircleOutline
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -37,7 +31,6 @@ fun DropdownMenuItem_RemoveFromCollection(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownMenuItem_RemoveFromCollection(
     item: GifsInfo?,
@@ -46,28 +39,17 @@ fun DropdownMenuItem_RemoveFromCollection(
     onRefresh: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    DropdownMenuItem(
-        leadingIcon = {
-            Icon(
-                Icons.Default.RemoveCircleOutline,
-                contentDescription = "",
-                tint = Theme.ExpandMenu.tintColor
-            )
-        },
-        text = { Text("Remove from Collection", style = Theme.ExpandMenu.style) },
-        onClick = {
-            if (item == null) return@DropdownMenuItem
-            if (selectedCollection == null) {
-                onDismiss.invoke()
-                return@DropdownMenuItem
-            }
-            onRemove(item.id, selectedCollection)
-            onRefresh.invoke()
-
+    ExpandMenuActionItem(Icons.Default.RemoveCircleOutline, "Remove from Collection") {
+        if (item == null) return@ExpandMenuActionItem
+        if (selectedCollection == null) {
             onDismiss.invoke()
-        },
-        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-    )
+            return@ExpandMenuActionItem
+        }
+        onRemove(item.id, selectedCollection)
+        onRefresh.invoke()
+
+        onDismiss.invoke()
+    }
 }
 
 @Preview(showBackground = true)
