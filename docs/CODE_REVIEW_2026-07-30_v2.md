@@ -95,6 +95,25 @@ screenModelScope.launch(Dispatchers.IO) {
 
 ---
 
+### 4a. Неуникальные ключи в LazyLayout — краш при скролле альбома — **исправлено**
+
+Найдено не ревью, а на устройстве: падение при прокрутке альбома 594392 (411 картинок).
+
+```
+java.lang.IllegalArgumentException: Key "https://ah-img.luscious.net/bugha/594392/
+9222178551_01KBSTP26AFFCAWT1BS6XZXF1T.1680x0.jpg" was already used.
+  at androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridMeasureKt.measure
+```
+
+У `PicsDetails` нет поля `id` — единственный идентификатор это `url_to_original`, причём `AlbumPicsDetails.normalizePictureUrls` подменяет его на `lBestThumbnailImageUrl()`. Одна и та же картинка, загруженная в альбом дважды, даёт две записи с идентичным URL, и `key = { index, item -> item.url_to_original ?: index }` возвращает один ключ для двух элементов. Фолбэк `?: index` закрывал только `null`, но не дубликаты.
+
+Исправлено в четырёх местах одного флоу — ключ стал `"$url#$index"`:
+`L_LazyRowPictureDetails.kt:137` (место падения), `L_FullScreenImage.kt` — `VerticalPager`, `HorizontalPager` и лента миниатюр (упали бы ровно так же при открытии этого альбома на весь экран). Индекс безопасен: страницы дописываются в хвост, порядок стабилен, идентичность уже показанных элементов сохраняется. Дедупликация не подходит — если картинка в альбоме действительно дважды, её и надо показать дважды.
+
+Заодно укреплён `CustomBasicTextFieldContent.kt:160` (`key = { it.text }`): `R_SearchNiches` дедуплицирует выдачу сам, а `R_SearchExplorer` отдаёт ответ API как есть.
+
+**Осталось непроверенным.** Тот же класс риска у списков, которые пагинируются с сервера и ключуются полем ответа: `R_ScreenNichesTab.kt:293` и `ScreenNiche.kt:263,285` (`key = { it.id }`). Если страницы когда-нибудь перекроются, падение будет идентичным. Не трогал — свидетельств дублей там нет.
+
 ## P1 — важно
 
 ### 5. Неатомарная замена Compose-списков — осталось 20 мест

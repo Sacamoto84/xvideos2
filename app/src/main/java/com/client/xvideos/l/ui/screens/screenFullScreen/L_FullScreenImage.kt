@@ -270,7 +270,9 @@ class L_FullScreenImage(
                     modifier = Modifier.fillMaxSize(),
                     pageSpacing = 0.dp,
                     beyondViewportPageCount = 1,
-                    key = { page -> filteredPic.getOrNull(page)?.url_to_original ?: page }
+                    // url_to_original не уникален (см. L_LazyRowPictureDetails): дубль
+                    // картинки в альбоме давал одинаковый ключ и падение пейджера.
+                    key = { page -> "${filteredPic.getOrNull(page)?.url_to_original}#$page" }
                 ) { page ->
                     LFullScreenPage(
                         pageItem = filteredPic[page],
@@ -290,7 +292,8 @@ class L_FullScreenImage(
                 pageSpacing = 0.dp,
                 beyondViewportPageCount = 1,
                 reverseLayout = false,
-                key = { page -> filteredPic.getOrNull(page)?.url_to_original ?: page }
+                // См. VerticalPager выше: url_to_original не уникален.
+                key = { page -> "${filteredPic.getOrNull(page)?.url_to_original}#$page" }
             ) { page ->
                 val pageItem = filteredPic[page]
                 val zoomState = rememberZoomState()
@@ -413,7 +416,8 @@ class L_FullScreenImage(
                         {
                             itemsIndexed(
                                 filteredPic,
-                                key = { index, item -> item.url_to_original ?: index }) { index, it1 ->
+                                // См. VerticalPager выше: url_to_original не уникален.
+                                key = { index, item -> "${item.url_to_original}#$index" }) { index, it1 ->
                                 Box(
                                     modifier = Modifier
                                         .padding(horizontal = 1.dp)

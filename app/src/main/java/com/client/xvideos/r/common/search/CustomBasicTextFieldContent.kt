@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -155,10 +155,14 @@ private fun SuggestionList(
         Spacer(modifier = Modifier.height(4.dp))
         LazyColumn( modifier = Modifier.weight(1f).fillMaxWidth() )
         {
-            items(
+            itemsIndexed(
                 items = suggestions(),
-                key = { it.text } // Ключ для оптимизации списка
-            ) { suggestion ->
+                // Ключ обязан быть уникальным, иначе LazyColumn падает с
+                // "Key ... was already used". R_SearchNiches дедуплицирует выдачу
+                // сам, а R_SearchExplorer отдаёт ответ API как есть — два
+                // одинаковых текста подсказки роняли бы список. Индекс страхует.
+                key = { index, item -> "${item.text}#$index" }
+            ) { _, suggestion ->
                 SuggestionItem(
                     suggestion = suggestion,
                     query = query,

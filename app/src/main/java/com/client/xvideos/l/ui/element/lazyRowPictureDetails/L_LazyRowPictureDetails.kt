@@ -134,7 +134,14 @@ fun L_LazyRowPictureDetails(
                 }
             }
 
-            itemsIndexed( host.filteredPic, key = { index, item -> item.url_to_original ?: index } )
+            // Ключ обязан быть уникальным, иначе LazyLayout падает с
+            // IllegalArgumentException "Key ... was already used". У PicsDetails нет id,
+            // а url_to_original не уникален: normalizePictureUrls подменяет его на
+            // lBestThumbnailImageUrl(), и одна и та же картинка, добавленная в альбом
+            // дважды, даёт две записи с одинаковым URL. Добавляем индекс — порядок
+            // списка стабильный (страницы дописываются в хвост), поэтому идентичность
+            // уже показанных элементов сохраняется.
+            itemsIndexed( host.filteredPic, key = { index, item -> "${item.url_to_original}#$index" } )
             { index, item ->
 
                 //if (item.url_to_original != null)
