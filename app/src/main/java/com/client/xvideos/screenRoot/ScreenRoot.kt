@@ -41,7 +41,6 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.Navigator
-import com.client.xvideos.MenuScreen
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.snackbar.show
