@@ -89,6 +89,7 @@ import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
 import com.client.xvideos.common.p2p.ui.ScreenP2pReceive
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.settings.ui.AppSettingsScreen
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.util.getStatusBarInsetDp
