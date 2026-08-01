@@ -148,31 +148,90 @@ Activity, и ничто их не разрывало. Добавлен `onReleas
 - `P2pShareController.kt:73` — `kotlinx.coroutines.CancellationException` по
   полному имени приведён к импорту, как в остальном файле.
 
-## Что осталось (не делал)
+## Добор: остаток списка, кроме R8 и модулей
 
-Списком, по убыванию важности. Все пункты подтверждены по коду на 01.08.2026.
+Второй заход по этому же ревью. Пункты 2, 3, 5 и 6 из «что осталось» закрыты.
+
+### 8. Аудит `!!` — цифра «204» была неверной
+
+Все три прошлых прохода писали про «215 / 204 `!!`». Это **артефакт подсчёта
+через grep**: в проекте принято префиксовать логи строкой `"!!! ..."`, и
+`grep -o '!!'` считал их наравне с оператором. Разбор с вырезанием строковых
+литералов и комментариев даёт:
+
+| | |
+|---|---|
+| всего вхождений `!!` | 204 |
+| из них внутри строк логов | 162 |
+| в закомментированном коде | 23 |
+| **настоящих not-null assertion** | **19**, из них 6 — в многострочных логах → **13** |
+
+Из 13 безопасны по построению и оставлены: `getSystemService<ConnectivityManager>()!!`
+(сервис есть всегда), `result.exceptionOrNull()!!` под `if (isFailure)`,
+`sharedPrefs.getString(name, default)!!` с non-null дефолтом (×2),
+`inputStream!!.read()` внутри цикла чтения, `activeController!!` под проверкой
+в том же выражении.
+
+Исправлены четыре, где падение реально:
+
+- **`DownloadTask.kt:330`** — `inputStream!!.close()` внутри `catch (e: IOException)`.
+  Если загрузка сорвалась до открытия потока, это NPE, а **NPE не IOException**:
+  он пролетал мимо собственного catch и валил `closeAllSafely` целиком, вместе с
+  недоделанной уборкой. Стало `inputStream?.close()`.
+- **`TikTokRow1.kt:87`** — `videoItem.urls.poster!!`, а `poster` у redgifs
+  опционален (`String? = null` в `URL1`). Первый же ролик без постера — краш
+  в пейджере. Стало `poster ?: thumbnail`, как уже сделано в
+  `RedUrlVideoImageAndLongClick` и `...TikTok`.
+- **`R_Screen_Root.kt:144`** — `collectionItemGifInfo!!` вообще без проверки:
+  диалог открыт, элемент успели сбросить — краш по тапу на коллекцию.
+- **`L_ScreenSavedLikesTab.kt:174`** — `item.url_to_original!!` при удалении,
+  а поле опционально (именно поэтому ключи LazyLayout строятся с фолбэком).
+
+Плюс три места, где `!!` стоял под корректной проверкой, но читал значение
+повторным вызовом (`if (savedRed() != null) ... savedRed()!!`): переписаны на
+одно чтение в локальную переменную — `R_ScreenNichesTab.kt:296`,
+`R_Screen_Root.kt:121`, `SearchTab.kt:107`.
+
+### 9. `R_Saved_NichesCaches.list` → snapshot-список
+
+`list` был обычным `mutableListOf`, а рекомпозиция держалась на ручном
+`version++`. Переведён на `mutableStateListOf` + `replaceWith`.
+
+`version` **оставлен намеренно**: подписку теперь даёт сам список, но `version`
+работает ключом `remember` для фильтрации и сортировки в `R_ScreenNichesTab.kt:131` —
+гонять её на каждое чтение дорого.
+
+Поле `size` (дублировавшее `list.size` ради Compose) удалено, читатель в
+`AppSettingsScreen.kt:291` переведён на `list.size`.
+
+### 10. `CMPlayer2` держал экран включённым всегда
+
+`keepScreenOn = true` выставлялся один раз в `LaunchedEffect` и не снимался
+никогда — устройство не засыпало ни на паузе, ни после ухода с экрана.
+Заменено на `DisposableEffect(playerView, isPause)` с `keepScreenOn = !isPause`
+и сбросом в `onDispose`.
+
+### 11. Мусор в корне удалён
+
+`CODE_REVIEW_REPORT.md`, `CODE_REVIEW_REPORT_NEW.md`, `DETAILED_CODE_REVIEW.md`,
+`PROJECT_CODE_ANALYSIS_REPORT.md`, `R8_Configuration_Analysis.md`,
+`project_flowchart.md`, `Описалово.graphml`, `query` — 1500+ строк.
+
+`project_flowchart.md` был не просто устаревшим, а неверным: описывал Permission
+Flow с экраном запроса разрешений, которых нет с коммита `ab1f0b6`.
+`R8_Configuration_Analysis.md` — выход скилла `skills/performance/r8-analyzer`,
+он его пересоздаёт при следующем запуске. История в git сохранена.
+
+## Что осталось
 
 1. **R8 выключен** (`app/build.gradle:83`, `minifyEnabled = false`). Тянется с
    первого прохода. Блокер прежний: keep-правила держат почти всё
    (`kotlin.**`, `kotlinx.**`, `io.ktor.**`), а Gson-модели не защищены вовсе —
    после включения обфускации они молча перестанут парситься. Нужна ревизия
-   `proguard-rules.pro` целиком, это отдельная задача с проверкой на устройстве.
-2. **`R_Saved_NichesCaches.list` — `mutableListOf` вместо `mutableStateListOf`.**
-   Рекомпозиция держится на ручном `version++`. Работает, но это ловушка: любой
-   новый composable, который прочитает `list` и не прочитает `version`, просто
-   не будет обновляться. Перевод на snapshot-список поведение только улучшит,
-   но затрагивает всех читателей — отдельной задачей.
-3. **204 `!!` по main.** Хот-споты: `ScreenRedProfile.kt` (19),
-   `Repository.kt` (14), `AlbumList.kt` (13), `AndroidConnectivityObserver.kt` (12),
-   `FileDB.kt` (11). Проверенного паттерна `getOrNull()` → `!!` больше не
-   осталось (проверил скриптом — 0 совпадений), но остальные не аудировал.
-4. **Один модуль** — 474 файла в `:app`. Любая правка перекомпилирует всё.
-5. **`CMPlayer2.kt:103`** — `playerView.keepScreenOn = true` выставляется и
-   никогда не снимается: экран не гаснет и на паузе. Не утечка, но UX-баг.
-6. **Мусор в корне репозитория** — `CODE_REVIEW_REPORT.md`,
-   `CODE_REVIEW_REPORT_NEW.md`, `DETAILED_CODE_REVIEW.md`,
-   `PROJECT_CODE_ANALYSIS_REPORT.md`, `R8_Configuration_Analysis.md`,
-   `project_flowchart.md`, `Описалово.graphml`, `query`. Все устарели и
-   перекрыты `docs/`. Кандидаты на удаление.
-7. Локализации нет, Material 2 и 3 в одних экранах, копипаста L↔R — без
+   `proguard-rules.pro` целиком, отдельной задачей с проверкой на устройстве:
+   успешная сборка здесь ничего не доказывает, ломается именно рантайм.
+2. **Один модуль** — 473 файла в `:app`. Любая правка перекомпилирует всё.
+   Распил на `common` / `l` / `r` / `x` — отдельная ветка: Hilt-графы,
+   циклические зависимости между разделами.
+3. Локализации нет, Material 2 и 3 в одних экранах, копипаста L↔R — без
    изменений со второго прохода.
