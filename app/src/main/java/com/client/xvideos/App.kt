@@ -16,6 +16,7 @@ import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -51,6 +52,22 @@ class App : Application(), SingletonImageLoader.Factory {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // @Volatile: присваивается на главном потоке в onCreate, читается из
+    // IO-корутины MainActivity.
+    @Volatile
+    private var storageCleanup: Job? = null
+
+    /**
+     * Ждёт разовую уборку staging-папок, запущенную в [onCreate].
+     *
+     * Обязателен перед первым обращением к `AppPath.p2p_inbox`, `p2p_outbox`
+     * и `l_cacheDownload`: уборка их рекурсивно удаляет и создаёт заново, и
+     * работа с ними параллельно с этим потеряет файлы.
+     */
+    suspend fun awaitStorageCleanup() {
+        storageCleanup?.join()
+    }
+
     /**
      * Основная точка старта процесса приложения.
      *
@@ -68,7 +85,11 @@ class App : Application(), SingletonImageLoader.Factory {
 
         instance = this
         // Строго первым делом: Hilt-синглтоны читают пути прямо в конструкторе.
+        // init() только назначает пути и создаёт папки — на главном потоке это
+        // дёшево. Рекурсивная чистка staging-папок уходит в фон, её результата
+        // ждут через awaitStorageCleanup().
         AppPath.init(this)
+        storageCleanup = scope.launch { AppPath.cleanupTransientDirs() }
 
         if (BuildConfig.DEBUG) Timber.plant(DebugTree())
 

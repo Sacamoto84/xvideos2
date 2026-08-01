@@ -114,6 +114,11 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
+            // Уборка staging-папок идёт в фоне с App.onCreate. Ждём её: ниже
+            // стартует приём P2P, который пишет в inbox, а уборка этот каталог
+            // пересоздаёт.
+            App.instance.awaitStorageCleanup()
+
             appFileDatabase.get().clearVolatileCachesOnProcessStart()
             VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
             savedRed.nichesCache.refreshIfStale()

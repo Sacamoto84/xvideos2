@@ -1,6 +1,8 @@
 package com.client.xvideos.common
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
@@ -95,6 +97,10 @@ object AppPath {
      * Обязан вызываться первым делом в `App.onCreate()`: Hilt-синглтоны
      * (например `AppFileDatabase`) читают пути прямо в конструкторе, а любое
      * обращение до инициализации бросает [IllegalStateException] с пояснением.
+     *
+     * Делает только то, что обязано быть готово синхронно: назначает пути и
+     * создаёт папки. Всё, что может занять заметное время, — в
+     * [cleanupTransientDirs].
      */
     fun init(context: Context) {
         root = File(context.filesDir, STORE_DIR)
@@ -129,8 +135,29 @@ object AppPath {
         val rNichesCacheDir = File(context.filesDir, "${Folder.RED.value}/NichesCache")
         r_nichesCache = rNichesCacheDir.absolutePath
         rNichesCacheDir.mkdirs()
-        migrateLegacyRNichesCache(rNichesCacheDir)
 
+        // Остаётся синхронной намеренно. В обычном случае это один exists() —
+        // legacy-каталога нет. Работа появляется только после восстановления
+        // старого архива, и она ограничена одним JSON. Зато `SavedRed` в своём
+        // init читает этот кеш, а Hilt внедряет его в MainActivity до того, как
+        // успел бы отработать любой await, — асинхронная миграция гонялась бы
+        // с чтением.
+        migrateLegacyRNichesCache(rNichesCacheDir)
+    }
+
+    /**
+     * Разовая уборка staging-папок при старте процесса.
+     *
+     * Вынесено из [init], потому что `deleteRecursively` по трём папкам — это
+     * обход дерева со всеми принятыми и отданными файлами, а [init] вызывается
+     * из `App.onCreate()` на главном потоке. При крупном inbox это заметная
+     * задержка перед первым кадром.
+     *
+     * Вызывающий обязан дождаться завершения, прежде чем что-либо начнёт
+     * писать в эти папки: `App.awaitStorageCleanup()`. Иначе приём P2P может
+     * стартовать в inbox, который в этот момент удаляется.
+     */
+    suspend fun cleanupTransientDirs() = withContext(Dispatchers.IO) {
         clearLShareCache()
         clearP2pInbox()
         clearP2pOutbox()
