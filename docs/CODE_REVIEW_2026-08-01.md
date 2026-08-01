@@ -280,6 +280,47 @@ Flow с экраном запроса разрешений, которых не�
 `l/model/UserProfile`) и `-keepattributes SourceFile,LineNumberTable` —
 без последнего стектрейсы из релиза нечитаемы.
 
+#### Первый прогон на устройстве: краш на старте (исправлено)
+
+Релиз падал ещё до первого экрана:
+
+```
+java.lang.RuntimeException: Unable to get provider androidx.startup.InitializationProvider:
+  Failed to create an instance of class androidx.work.impl.WorkDatabase
+    at androidx.work.WorkManagerInitializer.b(SourceFile:66)
+```
+
+**Корень.** Room ищет сгенерированную реализацию базы по имени и создаёт её
+рефлексией: `Class.forName("<База>_Impl").getDeclaredConstructor().newInstance()`.
+R8 этого вызова не видит. Он заключил, что `WorkDatabase_Impl` никогда не
+инстанцируется, и вырезал у него конструктор без аргументов, а следом — как
+ставшие недостижимыми — `createInvalidationTracker()` и `clearAllTables()`.
+Подтверждено по `usage.txt`: в списке удалённого стояло ровно
+`public void <init>()`.
+
+Почему не спасло consumer-правило: `androidx.room:room-runtime:2.5.0`
+(приходит транзитивно через `androidx.work`, самим приложением WorkManager не
+используется) везёт
+
+```
+-keep class * extends androidx.room.RoomDatabase
+```
+
+— без блока членов. В семантике R8 это сохраняет имя класса, но не его члены.
+В Room 2.6+ правило починили, дописав `{ <init>(); }`. Эта же версия
+добавлена в `proguard-rules.pro`.
+
+Проверено после пересборки: `<init>()` и `createInvalidationTracker()` ушли из
+списка удалённого, других Room-`_Impl` с потерянным конструктором нет.
+`rawWorkInfoDao()` и `clearAllTables()` остаются вырезанными, но **с обеих
+сторон** — и абстрактное объявление, и переопределение, — поэтому
+`AbstractMethodError` невозможен.
+
+Проверялась и вторая гипотеза — Tink под `androidx.security:security-crypto`,
+на котором лежат пароли Luscious. **Отклонена:** `tink-android:1.8.0` везёт
+правило для своего shaded-protobuf (`GeneratedMessageLite`), consumer-правила
+`security-crypto` на месте.
+
 #### Обязательно перед выпуском
 
 Зелёная сборка здесь **не доказывает работоспособность** — Gson и Ktor ломаются
