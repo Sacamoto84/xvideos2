@@ -99,9 +99,12 @@ fun CMPPlayer2(
         exoPlayer.setVideoEffects(listOf(rotateEffect))
     }
 
-    // Keep screen on while the player view is active
-    LaunchedEffect(playerView) {
-        playerView.keepScreenOn = true
+    // Экран не гасим только пока реально идёт воспроизведение. Раньше флаг
+    // выставлялся один раз и не снимался никогда: на паузе (и после ухода с
+    // экрана) устройство всё равно не засыпало.
+    DisposableEffect(playerView, isPause) {
+        playerView.keepScreenOn = !isPause
+        onDispose { playerView.keepScreenOn = false }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {

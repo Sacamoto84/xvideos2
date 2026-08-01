@@ -288,7 +288,7 @@ private fun AppSettingsScreenBody(
 
     val isNichesCacheDownloading = savedRed?.nichesCache?.isDownloading ?: false
     val nichesCacheProgress = savedRed?.nichesCache?.progress ?: 0f
-    val nichesCacheSize = savedRed?.nichesCache?.size ?: 0
+    val nichesCacheSize = savedRed?.nichesCache?.list?.size ?: 0
     val nichesCacheLastModifiedHour = savedRed?.nichesCache?.lastModifiedHour ?: 0L
 
     Column(

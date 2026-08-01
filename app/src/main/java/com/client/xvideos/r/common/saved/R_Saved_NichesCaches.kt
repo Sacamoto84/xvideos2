@@ -4,10 +4,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.replaceWith
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.client.xvideos.r.model.Niche
@@ -29,10 +31,18 @@ class R_Saved_NichesCaches(
         const val AUTO_REFRESH_MAX_AGE_HOURS = 24L
     }
 
-    val list = mutableListOf<Niche>()
+    /**
+     * Был обычный `mutableListOf`: чтение из composable ничего не подписывало,
+     * и рекомпозиция держалась только на ручном [version]. Любой новый читатель,
+     * забывший прочитать [version], молча не обновлялся бы.
+     */
+    val list = mutableStateListOf<Niche>()
 
-    var size by mutableIntStateOf(-1)
-
+    /**
+     * Счётчик обновлений кэша. Нужен не для подписки (её теперь даёт сам
+     * [list]), а как ключ пересчёта фильтрации и сортировки в
+     * `R_ScreenNichesTab`: гонять её на каждое чтение списка дорого.
+     */
     var version by mutableIntStateOf(0)
         private set
 
@@ -74,8 +84,7 @@ class R_Saved_NichesCaches(
                     niches.addAll(res2.niches)
                     progress += step
                 }
-                list.clear()
-                list.addAll(niches)
+                list.replaceWith(niches)
                 val gson = GsonBuilder().setPrettyPrinting().create()
                 val json = gson.toJson(niches)
                 val file = cacheFile()
@@ -83,7 +92,6 @@ class R_Saved_NichesCaches(
                     file.delete()
                 }
                 file.writeText(json)
-                size = list.size
                 version++
                 timeRefresh()
                 if (showSnackBar) {
@@ -112,7 +120,7 @@ class R_Saved_NichesCaches(
             return
         }
 
-        Timber.i("R niches cache auto refresh: exists=${file.exists()} size=$size ageHours=$lastModifiedHour")
+        Timber.i("R niches cache auto refresh: exists=${file.exists()} size=${list.size} ageHours=$lastModifiedHour")
         refresh(showSnackBar = false)
     }
 
@@ -125,16 +133,13 @@ class R_Saved_NichesCaches(
             val json = file.readText()
             val gson = GsonBuilder().setPrettyPrinting().create()
             val niches = gson.fromJson<List<Niche>>(json, object : TypeToken<List<Niche>>() {}.type)
-            list.clear()
-            list.addAll(niches)
-            size = list.size
+            list.replaceWith(niches)
             version++
             timeRefresh()
             isDownloaded = list.isNotEmpty()
         }.onFailure {
             Timber.e(it, "R niches cache read error")
             list.clear()
-            size = 0
             version++
             isDownloaded = false
         }
@@ -153,8 +158,6 @@ class R_Saved_NichesCaches(
         val diffMillis = now - lastModified
         lastModifiedMinute = diffMillis / (60 * 1000)
         lastModifiedHour = diffMillis / (60 * 60 * 1000)
-        lastModifiedMinute
-        lastModifiedMinute
     }
 
     private fun cacheFile(): File {
