@@ -9,6 +9,7 @@ import com.client.xvideos.r.model.MediaType
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.network.api.RedApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
@@ -90,6 +91,11 @@ class R_Saved_Subscriptions(
         selectedListCreator.filter { it.select }.forEach {
             try {
                 res.addAll(read50LastItem(it.name))
+            }
+            catch (e: CancellationException){
+                // Иначе отмена гасилась и цикл продолжал дёргать сеть по всем
+                // оставшимся авторам уже на отменённой корутине.
+                throw e
             }
             catch (e: Exception){
                 Timber.e(e)

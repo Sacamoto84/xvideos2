@@ -117,6 +117,9 @@ class Repository(
                 }
             }
         }
+        catch (e: CancellationException){
+            throw e
+        }
         catch (e: Exception){
             Timber.e(e, "!!! openURI() login error")
             return Result.failure(e)
@@ -157,6 +160,9 @@ class Repository(
 
                         //Timber.i("!!! openURI() CACHE_ROM net response:$response")
                         return checkedResponse
+                    }
+                    catch (e: CancellationException){
+                        throw e
                     }
                     catch (e: Exception){
                         Timber.e(e, "!!! openURI() CACHE_ROM error")
@@ -217,6 +223,8 @@ class Repository(
         for (attempt in 0 until HTML_CHALLENGE_RETRY_ATTEMPTS) {
             val response = try {
                 postJsonThrottled(data)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 return Result.failure(e)
             }

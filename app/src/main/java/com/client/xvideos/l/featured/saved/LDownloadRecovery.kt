@@ -1,6 +1,7 @@
 package com.client.xvideos.l.featured.saved
 
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.util.runCatchingCancellable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -44,7 +45,7 @@ internal suspend fun lRecoverIncompleteSavedMedia(
                     onEvent("L: нет URL для media ${media.target.name}")
                 } else {
                     onEvent("L: скачиваю media ${media.target.name}")
-                    runCatching { lRestoreSourceToFile(client, media.sourceUrl, media.target) }
+                    runCatchingCancellable { lRestoreSourceToFile(client, media.sourceUrl, media.target) }
                         .onSuccess {
                             report = report.copy(downloadedMedia = report.downloadedMedia + 1)
                             onEvent("L: media готово ${media.target.name}")
@@ -63,7 +64,7 @@ internal suspend fun lRecoverIncompleteSavedMedia(
                     onEvent("L: нет URL для preview ${preview.target.name}")
                 } else {
                     onEvent("L: скачиваю preview ${preview.target.name}")
-                    runCatching { lRestoreSourceToFile(client, preview.sourceUrl, preview.target) }
+                    runCatchingCancellable { lRestoreSourceToFile(client, preview.sourceUrl, preview.target) }
                         .onSuccess {
                             report = report.copy(downloadedPreview = report.downloadedPreview + 1)
                             onEvent("L: preview готово ${preview.target.name}")

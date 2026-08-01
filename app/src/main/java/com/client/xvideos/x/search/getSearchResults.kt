@@ -8,6 +8,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.net.URLEncoder
 
@@ -38,6 +39,9 @@ suspend fun getSearchResults(query: String): String? {
 
     return try {
         client.get(url).bodyAsText()
+    } catch (e: CancellationException) {
+        // Иначе отмена возвращалась как null и трактовалась как «ничего не найдено».
+        throw e
     } catch (e: Exception) {
         Timber.e("Ошибка " + e.message)
         null

@@ -3,6 +3,7 @@ package com.client.xvideos.common.p2p
 import com.client.xvideos.common.p2p.imports.BundleImporter
 import com.client.xvideos.common.p2p.nearby.NearbyClient
 import com.client.xvideos.common.p2p.nearby.P2pEvent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -111,6 +112,9 @@ class P2pReceiveController(
                 kotlinx.coroutines.delay(2000)
                 if (_state.value is ReceiveState.Done) nearby.stopAll()
             }
+        } catch (e: CancellationException) {
+            // Отмена scope — не ошибка импорта: показывать её на экране нельзя.
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "P2P Receiver: Import failed")
             _state.value = ReceiveState.Error(e.message ?: "Ошибка импорта")

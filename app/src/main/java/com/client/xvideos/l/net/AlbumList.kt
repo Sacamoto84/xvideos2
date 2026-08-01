@@ -10,6 +10,7 @@ import com.client.xvideos.l.repository.RepositoryUriConfig
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -171,6 +172,10 @@ data class getAlbumListAggregationsResult(
             }
 
             filterPictureCountStateCount
+        } catch (e: CancellationException) {
+            // Отмена корутины не должна превращаться в Result.failure: вызывающий
+            // показывает такой failure снекбаром уже на другом экране.
+            throw e
         } catch (e: Exception) {
             Timber.w("!!! getAlbumListAggregations Exception ${e.localizedMessage}")
             return Result.failure(e)
@@ -231,6 +236,8 @@ data class getAlbumListAggregationsResult(
                     page = page
                 )
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.w("!!! getAlbumList Exception ${e.localizedMessage}")
             return Result.failure(e)

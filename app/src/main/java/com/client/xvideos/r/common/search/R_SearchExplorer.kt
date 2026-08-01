@@ -2,6 +2,7 @@ package com.client.xvideos.r.common.search
 
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.r.network.api.RedApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -28,6 +29,10 @@ class R_SearchExplorer @Inject constructor(
                         .map { list -> list.map { s -> SuggestionItem(text = s.text, count = s.gifs) } }
                         .getOrDefault(emptyList())
 
+                } catch (e: CancellationException) {
+                    // Без этого отмена scope гасилась внутри collect: сборщик
+                    // оставался жив и продолжал крутиться на отменённой корутине.
+                    throw e
                 } catch (e: Exception) {
                     Timber.e("!!! SearchRed searchText.collect ${e.localizedMessage}")
                 }

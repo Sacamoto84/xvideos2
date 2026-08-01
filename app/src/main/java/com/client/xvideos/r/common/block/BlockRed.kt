@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.GifsInfo
 import com.redgifs.common.block.useCase.blockGetAllBlockedGifsInfo
 import com.redgifs.common.block.useCase.blockItem as writeBlockedGif
@@ -47,7 +48,7 @@ class BlockRed @Inject constructor(
 
     fun blockItem(item: GifsInfo) {
         scope.launch {
-            runCatching {
+            runCatchingCancellable {
                 withContext(Dispatchers.IO) {
                     writeBlockedGif(item).getOrThrow()
                 }

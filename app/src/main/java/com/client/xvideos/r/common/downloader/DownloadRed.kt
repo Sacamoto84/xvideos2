@@ -10,6 +10,7 @@ import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,6 +61,8 @@ class DownloadRed @Inject constructor(
                 Timber.i("Начало загрузки: ${item.id}")
                 downloader.downloadRedName(item, onComplete = { refreshDownloadList() })
                 Timber.i("Загрузка завершена: ${item.id}")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Ошибка при загрузке: ${item.id}")
             }
@@ -153,8 +156,8 @@ class DownloadRed @Inject constructor(
                     val obj = gson.fromJson(content, GifsInfo::class.java)
                     result.add(obj)
                 } catch (e: Exception) {
-                    // Можно логгировать имя файла или путь
-                    println("Ошибка при чтении файла ${file.absolutePath}: ${e.message}")
+                    // Битый .info пропускаем, но в лог приложения, а не в stdout.
+                    Timber.w(e, "Ошибка при чтении файла ${file.absolutePath}")
                 }
             }
 

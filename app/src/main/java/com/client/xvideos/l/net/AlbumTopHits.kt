@@ -1,11 +1,13 @@
 package com.client.xvideos.l.net
 
 import androidx.compose.runtime.mutableStateListOf
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.AlbumListTopHits
 import com.client.xvideos.l.net.graphQl.getAlbumListTopHitsQuery
 import com.client.xvideos.l.repository.Repository
 import com.google.gson.Gson
 import com.google.gson.JsonParser
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,14 +35,15 @@ class AlbumTopHitsImpl(
                 get?.mapNotNull { element ->
                     runCatching { gson.fromJson(element, AlbumListTopHits::class.java) }.getOrNull()
                 }.orEmpty()
+            } catch (t: CancellationException) {
+                throw t
             } catch (t: Throwable) {
                 Timber.w(t, "!!! getAlbumTopHits error")
                 return@launch
             }
 
             withContext(Dispatchers.Main) {
-                items.clear()
-                items.addAll(list)
+                items.replaceWith(list)
             }
         }
 

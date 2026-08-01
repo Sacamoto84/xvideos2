@@ -2,6 +2,7 @@ package com.client.xvideos.common.p2p
 
 import com.client.xvideos.common.p2p.nearby.NearbyClient
 import com.client.xvideos.common.p2p.nearby.P2pEvent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -70,7 +71,7 @@ class P2pShareController(
         prepareJob = scope.launch {
             val prepared = try {
                 bundle ?: bundleProvider().also { bundle = it }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "P2P Sender: prepare failed")
@@ -180,6 +181,9 @@ class P2pShareController(
                 Timber.d("P2P Sender: всё в очереди, ждём подтверждений доставки (${pendingPayloads.size})")
                 // Подтверждения могли прийти раньше, чем мы дошли сюда.
                 maybeDone()
+            } catch (e: CancellationException) {
+                // Отмена отправки — не ошибка передачи.
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "P2P Sender: Transfer failed")
                 _state.value = ShareState.Error(e.message ?: "Ошибка отправки")

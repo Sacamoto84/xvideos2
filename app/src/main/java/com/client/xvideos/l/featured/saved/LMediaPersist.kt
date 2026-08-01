@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.Thumbnails
@@ -332,7 +333,7 @@ internal suspend fun lPersistPicsDetailsToFolder(
                 lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress)
                 true
             } else {
-                runCatching { lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress) }
+                runCatchingCancellable { lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress) }
                     .onFailure { error ->
                         mediaFile.delete()
                         Timber.w(error, "L media original download failed, fallback to previews: $mediaUrl")
@@ -343,14 +344,14 @@ internal suspend fun lPersistPicsDetailsToFolder(
             if (item.is_animated) {
                 previewSources.minByOrNull { it.width * it.height }?.let { preview ->
                     val previewFile = File(folder, "preview.${preview.extension}")
-                    runCatching { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
+                    runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
                         .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
                         .onFailure { Timber.w(it, "L video preview download failed: ${preview.url}") }
                 }
             } else {
                 previewSources.forEach { preview ->
                     val previewFile = File(folder, "preview.${preview.sizeMarker}.${preview.extension}")
-                    runCatching { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
+                    runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
                         .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
                         .onFailure { Timber.w(it, "L preview download failed: ${preview.url}") }
                 }

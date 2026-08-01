@@ -57,14 +57,21 @@ class R_Saved_NichesCaches(
         scope.launch {
             try {
                 val niches = mutableListOf<Niche>()
-                val res = redApi.explorer.getExplorerNiches(page = 1, count = 100).getOrNull()
-                val pages = res!!.pages.coerceAtLeast(1)
+                // Раньше здесь стояло getOrNull()!!: при любой сетевой ошибке
+                // это был NPE, и пользователь видел снекбар с текстом
+                // "Ошибка обновления java.lang.NullPointerException".
+                val res = redApi.explorer.getExplorerNiches(page = 1, count = 100)
+                    .getOrElse { error("не удалось загрузить ниши: ${it.message ?: "нет сети"}") }
+                val pages = res.pages.coerceAtLeast(1)
                 val step = if (pages > 1) 1f / (pages - 1) else 1f
                 niches.addAll(res.niches)
                 for (i in 2..pages) {
                     delay(200)
-                    val res2 = redApi.explorer.getExplorerNiches(page = i, count = 100).getOrNull()
-                    niches.addAll(res2!!.niches)
+                    // Обрываем обновление целиком: записать на диск неполный
+                    // список как полный хуже, чем не обновиться вообще.
+                    val res2 = redApi.explorer.getExplorerNiches(page = i, count = 100)
+                        .getOrElse { error("страница $i из $pages не загрузилась: ${it.message ?: "нет сети"}") }
+                    niches.addAll(res2.niches)
                     progress += step
                 }
                 list.clear()
