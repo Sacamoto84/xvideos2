@@ -102,9 +102,10 @@ fun SearchTabContent(
 @Composable
 fun SearchCreatorItem(item: SearchItemCreatorsResponse) {
     Row(modifier = Modifier.border(1.dp, Color.White).padding(8.dp)) {
-        if (item.image != null) {
+        val image = item.image
+        if (image != null) {
             UrlImage(
-                item.image!!, modifier = Modifier
+                image, modifier = Modifier
                     .clip(CircleShape)
                     .size(64.dp)
             )

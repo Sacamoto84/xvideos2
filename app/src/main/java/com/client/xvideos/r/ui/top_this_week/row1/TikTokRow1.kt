@@ -84,7 +84,10 @@ fun TikTokPow1(
         val isCurrentPage = pagerState.currentPage == pageIndex
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (videoItem != null) {
-                UrlImage(videoItem.urls.poster!!, modifier = Modifier.aspectRatio(1080f / 1920), contentScale = ContentScale.Crop)
+                // poster у redgifs необязателен: было `poster!!`, то есть краш
+                // в пейджере на первом же ролике без постера. Фолбэк на
+                // thumbnail — как в RedUrlVideoImageAndLongClick.
+                UrlImage(videoItem.urls.poster ?: videoItem.urls.thumbnail, modifier = Modifier.aspectRatio(1080f / 1920), contentScale = ContentScale.Crop)
                 ProfileInfo1(
                     modifier = Modifier.align(Alignment.BottomStart),
                     onClick = { onClickOpenProfile(videoItem.userName) },

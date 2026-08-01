@@ -171,7 +171,11 @@ class ScreenSavedLLikesSM @Inject constructor(
     }
 
     fun delete(item: PicsDetails) {
-        savedL.likes.remove(item.url_to_original!!)
+        // url_to_original у Luscious опционален (именно поэтому ключи в
+        // LazyLayout строятся с фолбэком). Было `!!` — краш на удалении
+        // элемента без него; удалять там нечего, просто выходим.
+        val url = item.url_to_original ?: return
+        savedL.likes.remove(url)
     }
 
     fun selectGif() {

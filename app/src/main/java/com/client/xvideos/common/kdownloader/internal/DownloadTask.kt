@@ -327,7 +327,10 @@ class DownloadTask(
         }
 
         try {
-            inputStream!!.close()
+            // Было inputStream!!: если загрузка сорвалась до открытия потока,
+            // это NPE, а он не IOException — то есть пролетал мимо своего же
+            // catch и валил уборку целиком.
+            inputStream?.close()
         } catch (e: IOException) {
             Timber.e(e, "KDownloader: inputStream.close() failed")
         }

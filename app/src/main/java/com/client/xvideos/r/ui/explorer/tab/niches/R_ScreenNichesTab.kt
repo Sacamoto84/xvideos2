@@ -292,8 +292,11 @@ fun NichesTabContent(
                     } else {
                         items(items = niches, key = { it.id }, contentType = { "niche" }) { item ->
                             Box(modifier = Modifier.padding(vertical = 2.dp)) {
-                                if (savedRed() != null) {
-                                    NichePreview2( niches = { item }, onClick = { onNicheClick(item.id) }, savedRed = { savedRed()!! } )
+                                // Одно чтение вместо проверки одного вызова и
+                                // `!!` на результате второго.
+                                val red = savedRed()
+                                if (red != null) {
+                                    NichePreview2( niches = { item }, onClick = { onNicheClick(item.id) }, savedRed = { red } )
                                 } else {
                                     // Placeholder for Preview
                                     Box(

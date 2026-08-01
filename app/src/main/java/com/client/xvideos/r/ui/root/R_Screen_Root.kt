@@ -117,8 +117,8 @@ private fun R_DialogBlock(block:  () -> BlockRed){
         visible = block().blockVisibleDialog,
         onDismiss = { block().blockVisibleDialog = false },
         onBlockConfirmed = {
-            if (block().blockItem != null) {
-                block().blockItem(block().blockItem!!)
+            block().blockItem?.let { item ->
+                block().blockItem(item)
                 block().blockItem = null
             }
         }
@@ -140,10 +140,11 @@ private fun R_DialogCollection(savedRed: () -> SavedRed){
             savedRed().collections.visibleDialogCreateNew = true
         },
         onSelectCollection = { collection ->
-            savedRed().collections.addCollection(
-                savedRed().collections.collectionItemGifInfo!!,
-                collection
-            )
+            // Было `!!` без проверки: если диалог открыт, а выбранный элемент
+            // успели сбросить, это краш прямо по нажатию на коллекцию.
+            savedRed().collections.collectionItemGifInfo?.let { item ->
+                savedRed().collections.addCollection(item, collection)
+            }
             savedRed().collections.visibleDialog = false
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         },
