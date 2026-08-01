@@ -136,7 +136,10 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
                     setFullscreenButtonClickListener { exit() }
                 }
             },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            // PlayerView создаётся здесь и держит ссылку на exo (а плеер — на view).
+            // Без отвязки view переживает уход с экрана вместе с контекстом Activity.
+            onRelease = { it.player = null }
         )
     }
 }
