@@ -175,19 +175,15 @@ class ScreenSavedLLikesSM @Inject constructor(
     }
 
     fun selectGif() {
-        if (host.filteredPic.isNotEmpty()) host.filteredPic.clear()
-        host.filteredPic.addAll(original.filter { it.is_animated }.toList())
-        host.filteredPic
+        host.replaceFilteredPictures(original.filter { it.is_animated })
     }
 
     fun selectImage() {
-        if (host.filteredPic.isNotEmpty()) host.filteredPic.clear()
-        host.filteredPic.addAll(original.filter { !it.is_animated })
+        host.replaceFilteredPictures(original.filter { !it.is_animated })
     }
 
     fun selectAll() {
-        if (host.filteredPic.isNotEmpty()) host.filteredPic.clear()
-        host.filteredPic.addAll(original)
+        host.replaceFilteredPictures(original)
     }
 
 }

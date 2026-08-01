@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lBestThumbnailImageUrl
 import com.client.xvideos.l.net.graphQl.GraphQlRequest
@@ -238,10 +239,9 @@ class AlbumPicsDetails(
                 pics.addAll(corrected)
             } else {
                 // Заполнение пропуска / ретрай страницы — пересобираем по порядку.
-                pics.clear()
-                for (loadedPage in 1..pages) {
-                    pics.addAll(loadedPages[loadedPage].orEmpty())
-                }
+                // Сначала собираем результат целиком, потом публикуем одной
+                // атомарной заменой: иначе лента успевает мигнуть пустой.
+                pics.replaceWith((1..pages).flatMap { loadedPages[it].orEmpty() })
             }
         }
     }

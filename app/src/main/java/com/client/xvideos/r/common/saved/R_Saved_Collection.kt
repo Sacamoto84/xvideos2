@@ -3,6 +3,7 @@ package com.client.xvideos.r.common.saved
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.model.LinkCollectionStore
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
@@ -60,8 +61,7 @@ class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
     override fun refreshCollectionList() {
         val a = collectionDb.readAllCollections()
         if (a.isSuccess) {
-            collectionList.clear()
-            collectionList.addAll(
+            collectionList.replaceWith(
                 a.getOrThrow().map { collection ->
                     collection.copy(items = collection.items.sanitizeGifsInfoList())
                 }

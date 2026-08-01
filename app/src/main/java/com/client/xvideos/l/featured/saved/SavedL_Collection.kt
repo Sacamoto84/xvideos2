@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.net.Luscious
@@ -70,8 +71,7 @@ class SavedL_Collection(
                 return@launch
             }
             withContext(Dispatchers.Main) {
-                collectionList.clear()
-                collectionList.addAll(items)
+                collectionList.replaceWith(items)
                 Timber.i("SavedL_Collection refreshCollectionList() collections:${items.size}")
             }
         }
@@ -166,8 +166,7 @@ class SavedL_Collection(
                 return@launch
             }
             withContext(Dispatchers.Main) {
-                listUrl.clear()
-                listUrl.addAll(items)
+                listUrl.replaceWith(items)
                 Timber.i("SavedL_Collection refresh() files:${items.size}")
             }
         }
@@ -179,8 +178,7 @@ class SavedL_Collection(
         scope.launch(Dispatchers.IO) {
             val groups = lReadCollectionDuplicateGroups(File(AppPath.l_collection, name))
             withContext(Dispatchers.Main) {
-                duplicateGroups.clear()
-                duplicateGroups.addAll(groups)
+                duplicateGroups.replaceWith(groups)
             }
         }
     }
@@ -195,8 +193,7 @@ class SavedL_Collection(
     }
 
     fun beginAddManyToCollection(items: List<PicsDetails>) {
-        collectionItemsPendingAdd.clear()
-        collectionItemsPendingAdd.addAll(items.distinctBy { lPicsDetailsIdentityKey(it) })
+        collectionItemsPendingAdd.replaceWith(items.distinctBy { lPicsDetailsIdentityKey(it) })
         collectionItemGifInfo = collectionItemsPendingAdd.firstOrNull()
         visibleDialog = collectionItemsPendingAdd.isNotEmpty()
     }
@@ -330,8 +327,7 @@ class SavedL_Collection(
         scope.launch(Dispatchers.IO) {
             val candidates = lReadSmartCollectionCandidates()
             withContext(Dispatchers.Main) {
-                smartCollectionCandidates.clear()
-                smartCollectionCandidates.addAll(candidates)
+                smartCollectionCandidates.replaceWith(candidates)
             }
         }
     }

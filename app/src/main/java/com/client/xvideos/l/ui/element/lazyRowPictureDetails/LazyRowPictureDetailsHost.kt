@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -41,8 +42,7 @@ class LazyRowPictureDetailsHost(
     fun replaceFilteredPictures(items: List<PicsDetails>) {
         if (filteredPic.hasSameItems(items)) return
 
-        filteredPic.clear()
-        filteredPic.addAll(items)
+        filteredPic.replaceWith(items)
     }
 
 }

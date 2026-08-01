@@ -1,7 +1,7 @@
 package com.client.xvideos.common.fileDB
 
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.Snapshot
+import com.client.xvideos.common.util.replaceWith
 import com.google.gson.GsonBuilder
 import timber.log.Timber
 import java.io.File
@@ -128,21 +128,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
                 }
             }
 
-            // clear() + addAll() — две отдельные записи в snapshot-состояние, и между
-            // ними Compose успевал отрисовать пустой список (мигание). Внутри
-            // withMutableSnapshot обе записи публикуются подписчикам разом.
-            runCatching {
-                Snapshot.withMutableSnapshot {
-                    list.clear()
-                    list.addAll(loaded)
-                }
-            }.onFailure { e ->
-                // Вложенный mutable-снапшот недоступен (например, текущий snapshot
-                // read-only) — обновляем как раньше, без атомарности.
-                Timber.w(e, "!!! FileDB refresh: атомарное обновление недоступно, fallback")
-                list.clear()
-                list.addAll(loaded)
-            }
+            list.replaceWith(loaded)
 
             Result.success(true)
         } catch (e: Exception) {

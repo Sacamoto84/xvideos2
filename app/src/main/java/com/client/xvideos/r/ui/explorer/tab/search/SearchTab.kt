@@ -36,6 +36,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
 import com.client.xvideos.r.model.search.SearchItemNichesResponse
@@ -178,8 +179,7 @@ class ScreenRedExplorerSearchSM @Inject constructor(
 
                 val creator = redApi.search.searchCreatorsShort(text).getOrThrow()
 
-                creatorsList.clear()
-                creatorsList.addAll(creator.items)
+                creatorsList.replaceWith(creator.items)
 
             }
 //            val niches = RedGifs.searchNiches("Ana")

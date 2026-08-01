@@ -3,6 +3,7 @@ package com.client.xvideos.r.common.saved
 import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
@@ -50,10 +51,9 @@ class R_Saved_Likes {
         val current = list.toList()
         val sanitized = current.sanitizeGifsInfoList()
         // Переписываем список только если санитизация реально что-то изменила,
-        // иначе получаем лишнюю пару clear()/addAll() и мигание списка.
+        // иначе получаем лишнюю перезапись и мигание списка.
         if (sanitized != current) {
-            list.clear()
-            list.addAll(sanitized)
+            list.replaceWith(sanitized)
         }
     }
 

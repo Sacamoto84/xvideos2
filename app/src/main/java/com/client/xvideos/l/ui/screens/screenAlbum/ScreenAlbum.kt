@@ -132,16 +132,11 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
             val allPics = album?.albumPicsDetails?.pics?.toList() ?: emptyList()
 
             val newFilteredAnimatedPics = allPics.filter { it.is_animated } //Список анимированных елементов
-            val newFilteredNoAnimatedPics = allPics.filter { !it.is_animated } //Список анимированных елементов
 
             if (vm.showOnlyAnimated) {
-                //val a = vm.host.filteredPic.toMutableList()
-                //a.removeAll(newFilteredNoAnimatedPics)
-                vm.host.filteredPic.clear()
-                vm.host.filteredPic.addAll(newFilteredAnimatedPics)
+                vm.host.replaceFilteredPictures(newFilteredAnimatedPics)
             } else {
-                vm.host.filteredPic.clear()
-                vm.host.filteredPic.addAll(allPics)
+                vm.host.replaceFilteredPictures(allPics)
             }
 
         }

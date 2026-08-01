@@ -3,6 +3,7 @@ package com.client.xvideos.l.featured.saved
 import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
 import kotlinx.coroutines.CancellationException
@@ -99,8 +100,7 @@ class SavedL_Likes(
                 return@launch
             }
             withContext(Dispatchers.Main) {
-                listUrl.clear()
-                listUrl.addAll(items)
+                listUrl.replaceWith(items)
                 Timber.i("SavedL_Likes refresh() files:${items.size}")
             }
         }
