@@ -1,8 +1,6 @@
 package com.client.xvideos
 
 import com.client.xvideos.common.p2p.ui.P2pBackgroundOverlay
-import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -35,7 +33,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
-import com.client.xvideos.PermissionScreenActivity.PermissionStorage
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockScreen
 import com.client.xvideos.common.applock.AppLockSession
@@ -66,7 +63,7 @@ const val urlStart = "https://www.xv-ru.com"
  *
  * Отвечает за:
  * - настройку edge-to-edge режима и системных панелей;
- * - проверку необходимых разрешений перед запуском основного UI;
+ * - показ замка приложения, если он включён;
  * - инициализацию кеша видеоплеера;
  * - отображение корневого Compose-интерфейса приложения.
  */
@@ -80,8 +77,8 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     lateinit var appFileDatabase: javax.inject.Provider<AppFileDatabase>
 
     /**
-     * Инициализирует окно, скрывает системные панели, проверяет разрешения
-     * и поднимает корневой Compose UI.
+     * Инициализирует окно, скрывает системные панели и поднимает корневой
+     * Compose UI.
      */
     @OptIn(ExperimentalVoyagerApi::class, ExperimentalLayoutApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,14 +103,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
-        }
-
-        if (!PermissionStorage.hasPermissions(this)) {
-            val intent = Intent(this, PermissionScreenActivity::class.java)
-            intent.setFlags(FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            startActivity(intent)
-            finish()
-            return
         }
 
         // SECURITY: показ замка определяется ИСКЛЮЧИТЕЛЬНО состоянием блокировки.

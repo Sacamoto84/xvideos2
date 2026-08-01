@@ -52,7 +52,9 @@ android {
 
     defaultConfig {
         applicationId = "com.client.xvideos"
-        minSdk = 26
+        // 29 (Android 10): нижняя граница MediaStore с RELATIVE_PATH/IS_PENDING.
+        // На нём «В галерею» работает без единого разрешения на хранилище.
+        minSdk = 29
         targetSdk = 37
         // versionCode кодирует versionName: 159.19 -> 15919. Раньше он был
         // намертво равен 1, поэтому обновление поверх установленной версии
@@ -296,7 +298,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.image.loader)
 
-    implementation(libs.warden)
 
     implementation(libs.accompanist.systemuicontroller)
 

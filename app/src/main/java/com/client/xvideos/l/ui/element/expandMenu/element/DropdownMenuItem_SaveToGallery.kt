@@ -13,7 +13,7 @@ private fun Preview() {
     DropdownMenuItem_SaveToGallery(null, onClick = {}, onDismiss = {})
 }
 
-/** «В галерею»: сохранить большой файл (оригинал/видео) в /sdcard/xvideos_download. */
+/** «В галерею»: сохранить большой файл (оригинал/видео) в общую галерею. */
 @Composable
 fun DropdownMenuItem_SaveToGallery(item: PicsDetails? = null, onClick: (PicsDetails) -> Unit = {}, onDismiss: () -> Unit) {
     ExpandMenuActionItem(Icons.Default.SaveAlt, "В галерею") {

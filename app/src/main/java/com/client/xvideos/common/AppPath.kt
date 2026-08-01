@@ -1,9 +1,7 @@
 package com.client.xvideos.common
 
 import android.content.Context
-import android.os.Environment
 import timber.log.Timber
-import java.io.IOException
 import java.io.File
 
 private enum class Folder(val value: String) {
@@ -16,91 +14,99 @@ private enum class Folder(val value: String) {
 /**
  * Центральное место для путей файлового хранилища приложения.
  *
- * Объект строит структуру каталогов внутри `xvideos` на внешнем хранилище:
- * отдельно для X, RedGifs и L-раздела. Временный L-cache для шаринга хранится
- * во внутреннем cache dir приложения. При первой инициализации создаёт
- * недостающие папки и `.nomedia`, чтобы системная галерея не индексировала
- * служебные медиафайлы приложения.
+ * Всё дерево лежит во внутренней памяти приложения — `filesDir/store`. Это
+ * каталог, недоступный другим приложениям и файловым менеджерам, поэтому пароль
+ * на приложении закрывает не только UI, но и сами файлы. Обратная сторона:
+ * данные стираются вместе с приложением, и единственный способ их сохранить —
+ * ZIP-бэкап (`XlrBackupManager`).
+ *
+ * Корень — подпапка `store`, а не сам `filesDir`, потому что рядом в `filesDir`
+ * лежит `R/NichesCache`. Будь корнем `filesDir`, этот кеш попадал бы внутрь
+ * backup-секции `R` и уезжал в каждый архив.
+ *
+ * Все пути вычисляются от [main], поэтому смена корня переносит всё приложение.
+ * Абсолютные пути нигде не сохраняются на диск — файлы адресуются как
+ * «корень из AppPath + имя», так что переезд не требует переписывать данные.
  */
 object AppPath {
 
-    private const val appMain = "xvideos"
+    private const val STORE_DIR = "store"
     private const val R_NICHES_CACHE_FILE_NAME = "niches.json"
 
-    /**
-     * Путь до внешнего хранилища
-     */
-    val sdcard: String = Environment.getExternalStorageDirectory().toString()
+    private var root: File? = null
 
-    val main : String = "$sdcard/$appMain"
+    private val requireRoot: File
+        get() = root ?: error(
+            "AppPath не инициализирован. AppPath.init(context) должен вызываться " +
+                "в начале App.onCreate(), до обращения к путям."
+        )
 
-    val file_db: String = "${main}/DB"
+    /** Корень хранилища приложения: `filesDir/store`. */
+    val main: String get() = requireRoot.path
+
+    val file_db: String get() = "$main/DB"
 
     //--- X ---
-    val x_favorites : String = "${main}/${Folder.X.value}/Favorites"
-    val x_cache_download : String = "${main}/${Folder.X.value}/Download"
+    val x_favorites: String get() = "$main/${Folder.X.value}/Favorites"
+    val x_cache_download: String get() = "$main/${Folder.X.value}/Download"
 
     //--- R ---
     /**
-     * Пусть к папке с кешем загруженных файлов для предросмотра
+     * Путь к папке с кешем загруженных файлов для предпросмотра
      */
-    val r_cache_download : String = "${main}/${Folder.RED.value}/${Folder.CACHE_DOWNLOAD_RED.value}"
+    val r_cache_download: String get() = "$main/${Folder.RED.value}/${Folder.CACHE_DOWNLOAD_RED.value}"
 
-    val r_block : String = "${main}/${Folder.RED.value}/Block"
+    val r_block: String get() = "$main/${Folder.RED.value}/Block"
 
-    val r_likes : String = "${main}/${Folder.RED.value}/Likes"
-    val r_collection : String = "${main}/${Folder.RED.value}/Collection"
-    val r_niches : String = "${main}/${Folder.RED.value}/Niches"
-    lateinit var r_nichesCache : String
+    val r_likes: String get() = "$main/${Folder.RED.value}/Likes"
+    val r_collection: String get() = "$main/${Folder.RED.value}/Collection"
+    val r_niches: String get() = "$main/${Folder.RED.value}/Niches"
+
+    /** Кеш niches — в `filesDir`, вне [main], чтобы не попадать в бэкапы. */
+    lateinit var r_nichesCache: String
         private set
-    val r_creators : String = "${main}/${Folder.RED.value}/Creators"
 
-    val r_subscriptions: String = "${main}/${Folder.RED.value}/Subscriptions"
+    val r_creators: String get() = "$main/${Folder.RED.value}/Creators"
+
+    val r_subscriptions: String get() = "$main/${Folder.RED.value}/Subscriptions"
 
     //--- L ---
-    val l_likes: String = "${main}/${Folder.L.value}/Likes"
+    val l_likes: String get() = "$main/${Folder.L.value}/Likes"
+
+    /** Временный cache для шаринга — в `cacheDir`, вне [main]. */
     lateinit var l_cacheDownload: String
         private set
-    val l_albums: String = "${main}/${Folder.L.value}/Album"
-    val l_collection: String = "${main}/${Folder.L.value}/Collection"
+
+    val l_albums: String get() = "$main/${Folder.L.value}/Album"
+    val l_collection: String get() = "$main/${Folder.L.value}/Collection"
 
     //--- P2P staging ---
     /**
-     * Временные папки P2P. Содержимое зеркалирует структуру `/xvideos`
+     * Временные папки P2P. Содержимое зеркалирует структуру [main]
      * (`inbox/L/Likes/...`), что позволяет переносить принятое в корень
      * одним merge. Очищаются при старте приложения и после успешной передачи.
      */
-    val p2p_inbox: String = "$main/inbox"
-    val p2p_outbox: String = "$main/outbox"
+    val p2p_inbox: String get() = "$main/inbox"
+    val p2p_outbox: String get() = "$main/outbox"
 
     /**
-     * Создаёт базовую структуру директорий при первом обращении к `AppPath`.
+     * Задаёт корень хранилища и создаёт структуру каталогов.
      *
-     * Kotlin `object` инициализируется лениво, поэтому папки создаются не при
-     * запуске процесса, а когда код впервые обращается к одному из путей.
+     * Обязан вызываться первым делом в `App.onCreate()`: Hilt-синглтоны
+     * (например `AppFileDatabase`) читают пути прямо в конструкторе, а любое
+     * обращение до инициализации бросает [IllegalStateException] с пояснением.
      */
-    init {
-
-        println("---AppPath---")
-        println("sdcard: $sdcard")
+    fun init(context: Context) {
+        root = File(context.filesDir, STORE_DIR)
 
         File(main).mkdirs()
         File(file_db).mkdirs()
 
-        // Создание .nomedia
-        val nomedia = File(main, ".nomedia")
-        if (!nomedia.exists()) {
-            try {
-                nomedia.createNewFile()
-            } catch (e: IOException) {
-                Timber.e(e, "AppPath: не удалось создать .nomedia в $main")
-            }
-        }
+        // `.nomedia` больше не нужен: MediaScanner не ходит во внутреннюю
+        // память приложения, индексировать эти файлы некому.
 
         File(r_cache_download).mkdirs()
-
         File(r_block).mkdirs()
-
         File(r_likes).mkdirs()
         File(r_collection).mkdirs()
         File(r_niches).mkdirs()
@@ -108,7 +114,6 @@ object AppPath {
         File(r_subscriptions).mkdirs()
 
         File(l_likes).mkdirs()
-
         File(l_albums).mkdirs()
         File(l_collection).mkdirs()
 
@@ -118,10 +123,7 @@ object AppPath {
         File(p2p_inbox).mkdirs()
         File(p2p_outbox).mkdirs()
 
-    }
-
-    fun initInternalStorage(context: Context) {
-        val shareCacheDir = File(context.cacheDir, "L/Share")
+        val shareCacheDir = File(context.cacheDir, "${Folder.L.value}/Share")
         l_cacheDownload = shareCacheDir.absolutePath
 
         val rNichesCacheDir = File(context.filesDir, "${Folder.RED.value}/NichesCache")
@@ -134,6 +136,12 @@ object AppPath {
         clearP2pOutbox()
     }
 
+    /**
+     * Вытаскивает `niches.json` из старого места внутри [main].
+     *
+     * Кеш когда-то лежал в `R/NichesCache` рядом с данными. Восстановление
+     * старого архива может занести его туда снова, поэтому проверка осталась.
+     */
     private fun migrateLegacyRNichesCache(targetDir: File) {
         val legacyDir = File(main, "${Folder.RED.value}/NichesCache")
         if (!legacyDir.exists()) return

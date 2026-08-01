@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.client.xvideos.PermissionScreenActivity.PermissionStorage
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
@@ -78,31 +77,29 @@ class SplashActivity : ComponentActivity() {
     /**
      * Подготавливает данные, которые нужны сразу после старта.
      *
-     * Работа выполняется только при наличии файловых разрешений. Все операции
+     * Проверки файловых разрешений больше нет: данные лежат во внутренней
+     * памяти приложения, доступ к ней не выдаётся отдельно. Все операции
      * запускаются параллельно через `async`, после чего `awaitAll()` гарантирует,
      * что главный экран откроется уже с обновлёнными saved/block/cache данными.
      */
     suspend fun initApp() = coroutineScope {
-        if (PermissionStorage.hasPermissions(this@SplashActivity)) {
+        val savedRedInstance = savedRed.get()
+        val blockRedInstance = blockRed.get()
+        val dbInstance = db.get()
 
-            val savedRedInstance = savedRed.get()
-            val blockRedInstance = blockRed.get()
-            val dbInstance = db.get()
+        dbInstance.clearVolatileCachesOnProcessStart()
 
-            dbInstance.clearVolatileCachesOnProcessStart()
+        val jobs = listOf(
+            async { savedRedInstance.refreshTagList() },
+            async { blockRedInstance.refresh() },
+            async { savedRedInstance.likes.refresh() },
+            async { savedRedInstance.niches.refresh() },
+            async { savedRedInstance.creators.refresh() },
+            async { savedRedInstance.collections.refreshCollectionList() }
+        )
 
-            val jobs = listOf(
-                async { savedRedInstance.refreshTagList() },
-                async { blockRedInstance.refresh() },
-                async { savedRedInstance.likes.refresh() },
-                async { savedRedInstance.niches.refresh() },
-                async { savedRedInstance.creators.refresh() },
-                async { savedRedInstance.collections.refreshCollectionList() }
-            )
-
-            // ждём все задачи
-            jobs.awaitAll()
-        }
+        // ждём все задачи
+        jobs.awaitAll()
     }
 
 }

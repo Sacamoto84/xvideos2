@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.r.model.GifsInfo
 
-/** «В галерею»: сохранить видеофайл в /sdcard/xvideos_download. */
+/** «В галерею»: сохранить видеофайл в общую галерею. */
 @Composable
 fun DropdownMenuItem_SaveToGallery(item: GifsInfo? = null, onClick: (GifsInfo) -> Unit, onDismiss: () -> Unit) {
     ExpandMenuActionItem(Icons.Default.SaveAlt, "В галерею") {

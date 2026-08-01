@@ -67,7 +67,8 @@ class App : Application(), SingletonImageLoader.Factory {
         super.onCreate()
 
         instance = this
-        AppPath.initInternalStorage(this)
+        // Строго первым делом: Hilt-синглтоны читают пути прямо в конструкторе.
+        AppPath.init(this)
 
         if (BuildConfig.DEBUG) Timber.plant(DebugTree())
 
@@ -182,31 +183,6 @@ class App : Application(), SingletonImageLoader.Factory {
 
         // Enable only for debug flavor to avoid perf regressions in release
         //Composer.setDiagnosticStackTraceEnabled(BuildConfig.DEBUG)
-
-
-        if (PermissionScreenActivity.PermissionStorage.hasPermissions(this)) {
-
-            // val masterkey = Masterkey.generate()
-
-
-//
-////            val savedRed = savedRed.get()
-//
-////            savedRed.refreshTagList()
-////
-////            blockRed.get().refresh()
-//
-////            savedRed.likes.refresh()
-////            savedRed.niches.refresh()
-////            savedRed.creators.refresh()
-////            savedRed.collections.refreshCollectionList()
-//
-//            GlobalScope.launch {
-////                clearOldCache(redGifsDb.get().cacheMediaResponseDao())
-//                dbL.get().postJsonRamDao().deleteAll()
-//            }
-//
-        }
 
 
         // Подписка-заглушка отключена (#14): тело обработки Event.Log полностью

@@ -139,7 +139,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     }.getOrNull()
 
     /**
-     * «В галерею»: видео уже в кеше — копия в [GallerySaver.root],
+     * «В галерею»: видео уже в кеше — копия в общую галерею,
      * иначе резолвим прямой mp4 и качаем туда целиком.
      */
     fun saveToGallery(item: ItemsX) {

@@ -37,7 +37,7 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
     /** Скачать (сохранить) видео в раздел «Сохранённое». */
     fun download(item: ItemsX) = saved.downloads.download(item)
 
-    /** Сохранить видео целиком в галерею (/sdcard/xvideos_download). */
+    /** Сохранить видео целиком в общую галерею (Movies/xvideos_download). */
     fun saveToGallery(item: ItemsX) = saved.downloads.saveToGallery(item)
 
     fun addFavorite(item: ItemsX) = screenModelScope.launch { saved.favorites.add(item) }

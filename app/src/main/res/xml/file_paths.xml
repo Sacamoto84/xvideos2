@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Только каталог приложения во внешнем хранилище (xvideos/...), а не весь SD-card -->
-    <external-path name="external_storage" path="xvideos" />
+    <!-- Данные приложения лежат во внутренней памяти (filesDir/store) -->
+    <files-path name="internal_files" path="." />
     <cache-path name="internal_cache" path="." />
 </paths>
