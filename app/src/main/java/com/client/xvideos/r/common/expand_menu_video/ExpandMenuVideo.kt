@@ -83,21 +83,14 @@ fun ExpandMenuVideo(
         onDismissRequest = { expanded = false },
         modifier = modifier
     ) {
-        DropdownMenuItem_Download(
-            item,
-            onClick = { downloadRed.invoke().downloadItem(it) }) { expanded = false }
-        DropdownMenuItem_Share(
-            item,
-            onClick = { chooserItem = it }) { expanded = false }
-        DropdownMenuItem_SaveToGallery(
-            item,
-            onClick = { downloadRed.invoke().saveToGallery(it) }) { expanded = false }
-        DropdownMenuItem_Block(item = item, block = block) { expanded = false }
         DropdownMenuItem_Like(item, onRunLike, savedRed) { expanded = false }
+        DropdownMenuItem_Download(item, onClick = { downloadRed.invoke().downloadItem(it) }) { expanded = false }
+        DropdownMenuItem_Share(item, onClick = { chooserItem = it }) { expanded = false }
+        DropdownMenuItem_SaveToGallery(item, onClick = { downloadRed.invoke().saveToGallery(it) }) { expanded = false }
+        DropdownMenuItem_Block(item = item, block = block) { expanded = false }
         DropdownMenuItem_Follow(item, redApi, savedRed) { expanded = false }
         DropdownMenuItem_AddCollection(item, savedRed) { expanded = false }
         if(isCollection) DropdownMenuItem_RemoveFromCollection(item, onRefresh, savedRed) { expanded = false }
-
         DropdownMenuItem_Subscribtion(item, redApi ,savedRed) {expanded = false }
     }
 }
