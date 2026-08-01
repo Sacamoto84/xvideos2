@@ -3,7 +3,6 @@ package com.client.xvideos.common.gallery
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import com.client.xvideos.common.kdownloader.KDownloader
@@ -12,9 +11,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
+import java.io.OutputStream
 
 /**
  * Сохранение медиа в общую галерею, в папку `xvideos_download`.
@@ -30,8 +31,6 @@ import java.io.File
  * индексирует запись сам.
  */
 object GallerySaver {
-
-    private const val GALLERY_DIR = "xvideos_download"
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -69,7 +68,7 @@ object GallerySaver {
         kDownloader: KDownloader,
         url: String,
         fileName: String,
-        progress: kotlinx.coroutines.flow.MutableStateFlow<Float>? = null,
+        progress: MutableStateFlow<Float>? = null,
     ) {
         val appContext = context.applicationContext
 
@@ -124,23 +123,16 @@ object GallerySaver {
      * покажет недокачанный файл. При ошибке запись удаляется, чтобы не
      * оставлять «висящих» пустышек.
      */
-    private fun publish(context: Context, fileName: String, write: (java.io.OutputStream) -> Unit) {
-        val video = isVideo(fileName)
-        val collection = if (video) {
-            MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        } else {
-            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        }
-
+    private fun publish(context: Context, fileName: String, write: (OutputStream) -> Unit) {
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
             mimeType(fileName)?.let { put(MediaStore.MediaColumns.MIME_TYPE, it) }
-            put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath(video))
+            put(MediaStore.MediaColumns.RELATIVE_PATH, GalleryTarget.relativePath(fileName))
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
 
         val resolver = context.contentResolver
-        val uri: Uri = resolver.insert(collection, values)
+        val uri: Uri = resolver.insert(collectionFor(fileName), values)
             ?: error("MediaStore отказался создать запись для $fileName")
 
         try {
@@ -154,37 +146,26 @@ object GallerySaver {
         resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
     }
 
-    /** Есть ли уже такой файл в папке галереи — проверяется в обеих коллекциях. */
-    private fun exists(context: Context, fileName: String): Boolean {
-        val video = isVideo(fileName)
-        val collection = if (video) {
+    /** Есть ли уже такой файл в папке галереи. */
+    private fun exists(context: Context, fileName: String): Boolean =
+        context.contentResolver.query(
+            collectionFor(fileName),
+            arrayOf(MediaStore.MediaColumns._ID),
+            "${MediaStore.MediaColumns.RELATIVE_PATH}=? AND ${MediaStore.MediaColumns.DISPLAY_NAME}=?",
+            arrayOf(GalleryTarget.relativePath(fileName), fileName),
+            null
+        )?.use { it.count > 0 } ?: false
+
+    private fun collectionFor(fileName: String): Uri =
+        if (GalleryTarget.isVideo(fileName)) {
             MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         } else {
             MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         }
 
-        return context.contentResolver.query(
-            collection,
-            arrayOf(MediaStore.MediaColumns._ID),
-            "${MediaStore.MediaColumns.RELATIVE_PATH}=? AND ${MediaStore.MediaColumns.DISPLAY_NAME}=?",
-            arrayOf(relativePath(video), fileName),
-            null
-        )?.use { it.count > 0 } ?: false
-    }
-
-    /** MediaStore хранит `RELATIVE_PATH` с завершающим слэшем — иначе запрос не сматчится. */
-    private fun relativePath(video: Boolean): String {
-        val base = if (video) Environment.DIRECTORY_MOVIES else Environment.DIRECTORY_PICTURES
-        return "$base/$GALLERY_DIR/"
-    }
-
-    private fun isVideo(fileName: String): Boolean =
-        mimeType(fileName)?.startsWith("video/") ?: fileName.substringAfterLast('.', "")
-            .lowercase()
-            .let { it == "mp4" || it == "webm" || it == "avi" || it == "mkv" }
-
+    /** Только для колонки MIME_TYPE — на выбор папки не влияет, см. [GalleryTarget]. */
     private fun mimeType(fileName: String): String? {
-        val extension = fileName.substringAfterLast('.', "").lowercase()
+        val extension = GalleryTarget.extensionOf(fileName)
         if (extension.isEmpty()) return null
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
     }
