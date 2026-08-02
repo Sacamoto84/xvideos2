@@ -24,10 +24,9 @@ suspend fun lDownloadMediaToShareCache(item: PicsDetails): File? {
     val file = File(AppPath.l_cacheDownload, fileName)
 
     val client = lCreateMediaClient()
-    try {
+
+    client.use { client ->
         lDownloadToFile(client, url, file)
-    } finally {
-        client.close()
     }
 
     return file.takeIf { it.exists() && it.length() > 0L }
