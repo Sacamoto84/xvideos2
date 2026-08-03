@@ -17,6 +17,18 @@ plugins {
 
 }
 
+// Отчёты compose-компилятора о стабильности классов и пропускаемости
+// composable-функций. По умолчанию выключены — замедляют сборку и пишут файлы.
+// Включить на один прогон:
+//   ./gradlew :app:compileDebugKotlin -PcomposeReports --rerun-tasks
+// Результат — app/build/compose_compiler/app-classes.txt и app-composables.txt.
+if (project.hasProperty("composeReports")) {
+    composeCompiler {
+        reportsDestination = layout.buildDirectory.dir("compose_compiler")
+        metricsDestination = layout.buildDirectory.dir("compose_compiler")
+    }
+}
+
 // Статический анализ. Конфиг — config/detekt/detekt.yml, всё что было найдено
 // на существующем коде зафиксировано в baseline: сборка не падает, но новые
 // нарушения будут видны. Запуск: ./gradlew :app:detekt

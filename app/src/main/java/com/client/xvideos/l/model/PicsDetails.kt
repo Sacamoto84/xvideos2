@@ -1,6 +1,7 @@
 package com.client.xvideos.l.model
 
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import kotlinx.parcelize.Parcelize
 import com.google.gson.annotations.SerializedName
 
@@ -53,6 +54,19 @@ import com.google.gson.annotations.SerializedName
 }
 ```
 */
+/**
+ * @Immutable — обещание Compose, что объект после создания не меняется.
+ *
+ * Без него отчёт компилятора помечает класс как `Uncertain(List)`: поле
+ * [thumbnails] имеет тип `List`, а это интерфейс, за которым мог бы прятаться
+ * изменяемый список. Из-за одного этого поля весь класс переставал быть
+ * статически стабильным, и каждое сравнение элемента сетки уходило в проверку
+ * стабильности на рантайме.
+ *
+ * Обещание правдиво: все поля `val`, список приходит из Gson и нигде не
+ * мутируется. Если кто-то соберётся его менять — сначала снять аннотацию.
+ */
+@Immutable
 @Parcelize
 data class PicsDetails(
     @SerializedName("height") val height: Int, //"846"
