@@ -57,8 +57,10 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
 
-        //Расчет процентов для скролл
-        val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForGrid(
+        // Расчет процентов для скролл.
+        // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
+        // перекомпоновывало бы весь экран на каждом кадре прокрутки.
+        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
             gridState = vm.likedHost.state, itemsToIgnore = 3, numberOfColumns = 2
         )
 
@@ -71,7 +73,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
             tags = tags.toList(),
             tagsSelect = tagsSelect.toList(),
             isLoading = isLoading,
-            scrollPercent = scrollPercent,
+            scrollPercent = { scrollPercent.value },
             likedHost = vm.likedHost,
             onTagClick = { vm.toggleSelectTag(it) },
             onAppendLoaded = { pager ->
@@ -98,7 +100,7 @@ fun RedProfileScreenContent(
     tags: List<String>,
     tagsSelect: List<String>,
     isLoading: Boolean,
-    scrollPercent: Pair<Float, Float>,
+    scrollPercent: () -> Pair<Float, Float>,
     likedHost: com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host,
     onTagClick: (String) -> Unit,
     onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit,
@@ -197,13 +199,3 @@ fun ScreenRedProfilePreview() {
     }
 }
 
-//---- Скролл ----
-@Composable
-fun VerticalScrollbar1(scrollPercent: Pair<Float, Float>) {
-    Box(
-        modifier = Modifier
-            .fillMaxHeight()
-            //.align(Alignment.CenterEnd)
-            .width(2.dp)
-    ) { VerticalScrollbar(scrollPercent) }
-}

@@ -69,7 +69,9 @@ object SavedNichesTab : Screen {
         val vm: ScreenSavedNichesSM = getScreenModel()
         val state = rememberLazyListState()
 
-        val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
+        // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
+        // перекомпоновывало бы весь экран на каждом кадре.
+        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
             gridState = state, itemsToIgnore = 0
         )
 
@@ -163,7 +165,7 @@ object SavedNichesTab : Screen {
                         .align(Alignment.CenterEnd)
                         .width(2.dp)
                 ) {
-                    VerticalScrollbar(scrollPercent)
+                    VerticalScrollbar { scrollPercent.value }
                 }
             }
         }

@@ -83,7 +83,9 @@ fun LazyRow123(
     var isRefreshing by remember { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
 
-    val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForGrid(
+    // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
+    // перекомпоновывало бы весь экран на каждом кадре.
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
         gridState = host.state,
         itemsToIgnore = 0,
         numberOfColumns = host.columns
@@ -129,7 +131,7 @@ fun LazyRow123(
                 .fillMaxHeight()
                 .align(Alignment.CenterEnd)
                 .width(2.dp)
-        ) { VerticalScrollbar(scrollPercent) }
+        ) { VerticalScrollbar { scrollPercent.value } }
     }
 
 }

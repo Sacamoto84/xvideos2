@@ -108,7 +108,10 @@ fun L_LazyRowPictureDetails(
     val rootVm = LocalRootScreenModel.current
     val haptic = LocalHapticFeedback.current
 
-    val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid( host.state, 0 )
+    // Без `by`: позиция скролла меняется каждый кадр, и разворачивать её здесь
+    // нельзя — чтение на этом уровне перекомпоновывало бы весь экран на каждом
+    // кадре прокрутки. State отдаётся скроллбару лямбдой, см. VerticalScrollbar.
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid( host.state, 0 )
 
     val thumbnailsSize = Settings.thumbalistSize.field.collectAsStateWithLifecycle().value
 
@@ -257,7 +260,7 @@ fun L_LazyRowPictureDetails(
         expandMenuViewModel.P2pShareHost()
 
         /** Вертикальный индикатор прокрутки */
-        Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar(scrollPercent) }
+        Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
 
         /** FloatingButton "Вверх" */
         AnimatedVisibility( visible = showScrollToTop, modifier = Modifier.align(Alignment.BottomEnd), enter = fadeIn() + scaleIn(),  exit = fadeOut() + scaleOut() )

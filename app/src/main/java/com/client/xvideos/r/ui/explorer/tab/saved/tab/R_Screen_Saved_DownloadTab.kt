@@ -95,7 +95,9 @@ object R_Screen_Saved_DownloadTab : Screen {
         val downloadRed by vm.downloadRed.downloadList.collectAsState()
         val state = rememberLazyListState()
 
-        val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
+        // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
+        // перекомпоновывало бы весь экран на каждом кадре.
+        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
             gridState = state, itemsToIgnore = 0
         )
 
@@ -163,7 +165,7 @@ object R_Screen_Saved_DownloadTab : Screen {
                         .align(Alignment.CenterEnd)
                         .width(2.dp)
                 ) {
-                    VerticalScrollbar(scrollPercent)
+                    VerticalScrollbar { scrollPercent.value }
                 }
             }
         }

@@ -235,7 +235,9 @@ fun NichesTabContent(
     cacheHour : Long
 ) {
 
-    val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForLazyColumn(gridState = listState)
+    // Без `by`: позиция скролла меняется каждый кадр, чтение здесь
+    // перекомпоновывало бы весь экран. См. VerticalScrollbar.
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(gridState = listState)
 
     if (countNichesInCache == 0) {
         Refresh(
@@ -324,7 +326,7 @@ fun NichesTabContent(
                         .align(Alignment.CenterEnd)
                         .width(2.dp)
                 ) {
-                    VerticalScrollbar(scrollPercent)
+                    VerticalScrollbar { scrollPercent.value }
                 }
             }
         }

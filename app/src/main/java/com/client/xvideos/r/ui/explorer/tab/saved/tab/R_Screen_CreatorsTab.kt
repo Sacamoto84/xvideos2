@@ -168,7 +168,7 @@ object R_Screen_CreatorsTab : Screen {
 
 @Composable
 private fun BoxScope.CreatorsScrollbar(state: LazyListState) {
-    val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
         gridState = state, itemsToIgnore = 0
     )
     Box(
@@ -177,7 +177,7 @@ private fun BoxScope.CreatorsScrollbar(state: LazyListState) {
             .align(Alignment.CenterEnd)
             .width(2.dp)
     ) {
-        VerticalScrollbar(scrollPercent)
+        VerticalScrollbar { scrollPercent.value }
     }
 }
 

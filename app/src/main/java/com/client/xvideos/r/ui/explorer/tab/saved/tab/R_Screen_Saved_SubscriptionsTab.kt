@@ -55,7 +55,6 @@ import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
-import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
@@ -76,12 +75,6 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenSavedSubscriptionsSM = getScreenModel()
-
-        val scrollPercent by rememberVisibleRangePercentIgnoringFirstNForGrid(
-            gridState = vm.likedHost.state,
-            itemsToIgnore = 0,
-            numberOfColumns = 3
-        )
 
         val pager = vm.likedHost.pager.collectAsLazyPagingItems()
 
@@ -108,7 +101,6 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
 
         SubscriptionsTabContent(
             host = vm.likedHost,
-            scrollPercent = scrollPercent,
             listCreatorSelectedCreator = selectedListCreator,
             onOpenProfile = { navigator.push(ScreenRedProfile(it)) },
             onSelectCreator = { selectCreatorName = it },
@@ -133,7 +125,6 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
 @Composable
 fun SubscriptionsTabContent(
     host: LazyRow123Host?,
-    scrollPercent: Pair<Float, Float>,
     listCreatorSelectedCreator: List<SelectedCreator>,
     onOpenProfile: (String) -> Unit,
     onSelectCreator: (String) -> Unit,
@@ -259,7 +250,6 @@ fun CreatorChip(
 fun SubscriptionsTabPreview() {
     SubscriptionsTabContent(
         host = null,
-        scrollPercent = 0f to 0.2f,
         listCreatorSelectedCreator = listOf(
             SelectedCreator("Creator 1", true, null),
             SelectedCreator("Another One", false, null),
