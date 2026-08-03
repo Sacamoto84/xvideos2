@@ -1,31 +1,10 @@
 package com.client.xvideos.l.ui.element.expandMenu
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.expandmenu.LazyExpandMenuAnchor
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.common.theme.Theme.ExpandMenu.backgroundColor
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_AddCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Delete
@@ -35,7 +14,10 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SetCo
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
 import com.client.xvideos.ui.theme.XvideosTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Меню элемента в сохранённых лайках. Само меню поднимается только после
+ * первого нажатия — см. [LazyExpandMenuAnchor].
+ */
 @Composable
 fun SavedLikesItemExpandMenu(
     item: PicsDetails? = null,
@@ -46,54 +28,31 @@ fun SavedLikesItemExpandMenu(
     onShare: (PicsDetails) -> Unit = {},
     onSaveToGallery: (PicsDetails) -> Unit = {},
     isCollection: Boolean = false,
-    savedL: SavedL? = null,
-    haptic : ()->Unit = {}
+    savedL: SavedL? = null
 ) {
+    LazyExpandMenuAnchor(
+        menuWidth = IntrinsicSize.Min,
+        onOpen = onClick
+    ) { dismiss ->
 
-    var expanded by remember { mutableStateOf(false) }
+        DropdownMenuItem_Share(item, onClick = { onShare(it) }) { dismiss() }
 
-    LaunchedEffect(expanded) { haptic.invoke() }
+        DropdownMenuItem_SaveToGallery(item, onClick = { onSaveToGallery(it) }) { dismiss() }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { if (it) onClick.invoke(); expanded = it },
-    )
-    {
-        IconButton(
-            modifier = Modifier.size(48.dp).menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
-            onClick = {}) {
-            Icon( Icons.Default.MoreVert, contentDescription = "", tint = Color.Black, modifier = Modifier.size(24.dp).offset(0.5.dp, 0.5.dp))
-            Icon( Icons.Default.MoreVert, contentDescription = "", tint = Color.White, modifier = Modifier.size(24.dp))
+        // Show Delete only when NOT in collection view
+        if (!isCollection) {
+            DropdownMenuItem_Delete(item, onClick = { onDelete(it) }) { dismiss() }
         }
 
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = backgroundColor
-        ) {
+        DropdownMenuItem_AddCollection(item, savedL) { dismiss() }
 
-            DropdownMenuItem_Share(item, onClick = { onShare(it) }) { expanded = false }
-
-            DropdownMenuItem_SaveToGallery(item, onClick = { onSaveToGallery(it) }) { expanded = false }
-
-            // Show Delete only when NOT in collection view
-            if (!isCollection) { DropdownMenuItem_Delete(item, onClick = {onDelete(it)} ){ expanded = false } }
-
-            DropdownMenuItem_AddCollection(item, savedL) { expanded = false }
-
-            // Show RemoveFromCollection always (when in collection view or when item is in any collection)
-            if (isCollection) {
-                DropdownMenuItem_RemoveFromCollection(item, onRemoveFromCollection, savedL) { expanded = false }
-                DropdownMenuItem_SetCover(item, savedL) { expanded = false }
-            }
-
+        // Show RemoveFromCollection always (when in collection view or when item is in any collection)
+        if (isCollection) {
+            DropdownMenuItem_RemoveFromCollection(item, onRemoveFromCollection, savedL) { dismiss() }
+            DropdownMenuItem_SetCover(item, savedL) { dismiss() }
         }
-
     }
 }
-
-
 
 @Preview(showBackground = true, backgroundColor = 0xFF303030)
 @Composable
