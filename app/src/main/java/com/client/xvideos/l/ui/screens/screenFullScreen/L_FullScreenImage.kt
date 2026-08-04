@@ -253,6 +253,8 @@ class L_FullScreenImage(
                         rotate = rotate,
                         albumName = albumName,
                         autoPlay = autoPlay,
+                        // Пейджер листается вертикально — горизонтальная перемотка не мешает.
+                        seekDragEnabled = true,
                         onToggleFullScreen = { isFullScreen = isFullScreen.not() }
                     )
                 }
@@ -274,6 +276,9 @@ class L_FullScreenImage(
                     rotate = rotate,
                     albumName = albumName,
                     autoPlay = autoPlay,
+                    // Зона перемотки в нижней трети плеера перехватывала
+                    // горизонтальный свайп и страницы не листались.
+                    seekDragEnabled = false,
                     onToggleFullScreen = { isFullScreen = isFullScreen.not() }
                 )
             }
@@ -372,6 +377,7 @@ private fun LFullScreenPage(
     rotate: Boolean,
     albumName: String,
     autoPlay: Boolean,
+    seekDragEnabled: Boolean,
     onToggleFullScreen: () -> Unit
 ) {
     val zoomState = rememberZoomState()
@@ -412,6 +418,7 @@ private fun LFullScreenPage(
                     autoPlay = autoPlay,
                     isCurrentPage = isCurrentPage,
                     isPlayerActive = isSettledPage,
+                    seekDragEnabled = seekDragEnabled,
                     rotate = rotate,
                     modifier = Modifier.fillMaxSize(),
                     onTap = onToggleFullScreen
@@ -479,6 +486,7 @@ private fun LFullScreenVideo(
     autoPlay: Boolean,
     isCurrentPage: Boolean,
     isPlayerActive: Boolean,
+    seekDragEnabled: Boolean,
     rotate: Boolean,
     modifier: Modifier = Modifier,
     onTap: () -> Unit
@@ -528,7 +536,8 @@ private fun LFullScreenVideo(
             modifier = Modifier.fillMaxSize(),
             playerHost = playerHost,
             onClick = onTap,
-            autoRotate = rotate
+            autoRotate = rotate,
+            seekDragEnabled = seekDragEnabled
         )
 
         AnimatedVisibility(

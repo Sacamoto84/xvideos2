@@ -38,7 +38,14 @@ fun VideoPlayerWithMenuContent(
     modifier: Modifier,
     playerHost: MediaPlayerHost,
     onClick: () -> Unit = {},
-    autoRotate: Boolean
+    autoRotate: Boolean,
+    /**
+     * Перемотка горизонтальным свайпом по нижней трети плеера.
+     * Выключать, если плеер лежит внутри контейнера, который сам листается
+     * по горизонтали: зона перемотки — дочерний элемент, она получает жест
+     * первой и полностью блокирует листание.
+     */
+    seekDragEnabled: Boolean = true
 ) {
 
     if (BuildConfig.DEBUG) { SideEffect { Timber.i("@@@ VideoPlayerWithMenuContent()") } }
@@ -69,7 +76,9 @@ fun VideoPlayerWithMenuContent(
         }
 
         //Нижняя сенсорная часть
-        Box(modifier = Modifier.fillMaxHeight(1 / 3f).fillMaxWidth().align(Alignment.BottomCenter).then(volumeDragModifier).alpha(0.5f).background(Color.Transparent))
+        if (seekDragEnabled) {
+            Box(modifier = Modifier.fillMaxHeight(1 / 3f).fillMaxWidth().align(Alignment.BottomCenter).then(volumeDragModifier).alpha(0.5f).background(Color.Transparent))
+        }
 
         if (playerHost.isBuffering) {
             Box( modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center ) {
