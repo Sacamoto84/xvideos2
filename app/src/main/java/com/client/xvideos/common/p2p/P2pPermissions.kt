@@ -14,12 +14,15 @@ object P2pPermissions {
             val list = mutableListOf(
                 Manifest.permission.BLUETOOTH_ADVERTISE,
                 Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.BLUETOOTH_SCAN
             )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // Android 13+: обнаружение идёт через NEARBY_WIFI_DEVICES,
+                // геолокация Nearby не нужна и в манифесте обрезана по API 32.
                 list.add(Manifest.permission.NEARBY_WIFI_DEVICES)
+            } else {
+                list.add(Manifest.permission.ACCESS_FINE_LOCATION)
+                list.add(Manifest.permission.ACCESS_COARSE_LOCATION)
             }
             list.toTypedArray()
         }

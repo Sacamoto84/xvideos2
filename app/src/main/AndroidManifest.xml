@@ -24,15 +24,36 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
 
-    <!-- Required for Nearby Connections -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!--
+        Required for Nearby Connections.
+
+        maxSdkVersion="32": начиная с Android 13 обнаружение устройств работает
+        через NEARBY_WIFI_DEVICES, и геолокация Nearby больше не нужна. Раньше
+        приложение просило точное местоположение на всех версиях — пользователь
+        видел самый пугающий системный запрос там, где он не требуется.
+        Набор runtime-разрешений задаётся в P2pPermissions и обязан совпадать
+        с этим списком: разрешение, обрезанное здесь, на новых версиях уже не
+        выдаётся, и запрашивать его бессмысленно.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="32" />
 
     <!-- Required for Nearby Connections on Android 12 and higher -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:targetApi="31" />
-    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" tools:targetApi="33" />
+    <!--
+        neverForLocation: сканирование используется только для поиска соседнего
+        устройства, местоположение из результатов не выводится. Без флага система
+        считает скан источником геоданных и тянет за собой запрос локации.
+    -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="31" />
+    <uses-permission
+        android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="33" />
 
     <!--
         FOREGROUND_SERVICE, FOREGROUND_SERVICE_CONNECTED_DEVICE и POST_NOTIFICATIONS

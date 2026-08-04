@@ -44,9 +44,6 @@ class App : Application(), SingletonImageLoader.Factory {
         return CoilImageLoaderFactory.getImageLoader(this)
     }
 
-    // Сохраняем оригинальный обработчик
-    private var originalHandler: Thread.UncaughtExceptionHandler? = null
-
     lateinit var networkTrafficMonitor: NetworkTrafficMonitor
         private set
 
@@ -97,65 +94,9 @@ class App : Application(), SingletonImageLoader.Factory {
         networkTrafficMonitor = NetworkTrafficMonitor()
         networkTrafficMonitor.startMonitoring()
 
-        // Сохраняем оригинальный обработчик ПЕРЕД установкой нашего
-        originalHandler = Thread.getDefaultUncaughtExceptionHandler()
-
-        // Устанавливаем наш обработчик исключений
-//        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-//            try {
-//                Timber.e(throwable, "🚨 UNCAUGHT EXCEPTION in thread: ${thread.name}")
-//
-//                // Логируем код нашего приложения
-//                val ourCodeElements = throwable.stackTrace
-//                    .filter { it.className.contains("com.client.xvideos") }
-//
-//                if (ourCodeElements.isNotEmpty()) {
-//                    Timber.e("📍 Your code locations:")
-//                    ourCodeElements.forEach { element ->
-//                        Timber.e("   ${element.className}.${element.methodName}:${element.lineNumber}")
-//                    }
-//                } else {
-//                    Timber.e("📍 No code from our app found in stack trace")
-//                }
-//
-//                // Логируем suppressed exceptions
-//                throwable.suppressedExceptions.forEach { suppressed ->
-//                    Timber.e(suppressed, "🔗 Suppressed exception:")
-//                }
-//
-//                // Логируем цепочку причин
-//                var cause = throwable.cause
-//                var level = 1
-//                while (cause != null) {
-//                    Timber.e(cause, "🔗 Caused by (level $level):")
-//
-//                    // Ищем наш код в причине
-//                    cause.stackTrace
-//                        .filter { it.className.contains("com.client.xvideos") }
-//                        .forEach { element ->
-//                            Timber.e("   📍 In cause: ${element.className}.${element.methodName}:${element.lineNumber}")
-//                        }
-//
-//                    cause = cause.cause
-//                    level++
-//
-//                    // Защита от бесконечных циклов
-//                    if (level > 10) break
-//                }
-//
-//            } catch (loggingException: Exception) {
-//                // Если логирование падает, выводим в System.err
-//                System.err.println("Failed to log exception: $loggingException")
-//                loggingException.printStackTrace()
-//            } finally {
-//                // Всегда вызываем оригинальный обработчик
-//                originalHandler?.uncaughtException(thread, throwable)
-//            }
-//        }
-
-        // Настроить SLF4J для использования Timber
-        // Настроить SLF4J для использования Timber
-        //System.setProperty("slf4j.provider", "com.arcao.slf4j.timber.TimberLoggerProvider")
+        // Свой Thread.setDefaultUncaughtExceptionHandler здесь был отключён и
+        // удалён вместе с полем originalHandler: поле только сохранялось и никем
+        // не читалось. Если понадобится снова — история в git.
 
         // Совместимость со старыми корневыми сертификатами обеспечивается через
         // res/xml/network_security_config.xml (доверие к ISRG Root X1), а НЕ через

@@ -157,10 +157,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                         .semantics { testTagsAsResourceId = true }
                 )
                 {
-
-//                    Navigator(MenuScreen, key = "root_navigator") { navigator ->
-//                        CurrentScreen()
-//                    }
                     Box(modifier = Modifier.fillMaxSize()) {
                         ScreenRoot.Content()
                         P2pBackgroundOverlay()

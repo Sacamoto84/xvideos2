@@ -122,9 +122,6 @@ class L_ScreenExplorer : Screen {
             }
         }, containerColor = Theme.background) { paddingValues ->
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-
-
-                //Navigator(
                 when (vm.screenType) {
                     0 -> L_ScreenAlbumList.Content()
                     1 -> L_SavedTab.Content()
@@ -132,8 +129,6 @@ class L_ScreenExplorer : Screen {
                     3 -> L_ScreenAlbumSearch.Content()
                     else -> L_SavedTab.Content()
                 }
-                //)
-
             }
         }
 

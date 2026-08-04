@@ -149,6 +149,12 @@ db.execSQL("DELETE * FROM " + TABLE_NAME)
 
 ### 8. WebView не уничтожается, `WebScreen` — мёртвый
 
+> **Частично устарело (проверено 2026-08-04).** `WebScreen.kt` из проекта удалён,
+> `WebView` не используется нигде — вся эта часть неактуальна вместе с
+> предупреждением `SetJavaScriptEnabled`. Актуальным остаётся только замечание
+> про `onRelease`: вызовов `AndroidView(...)` теперь два (`CMPlayer2.kt`,
+> `ScreenX_VideoPlayerFullScreen.kt`), `onRelease` по-прежнему нет ни одного.
+
 `WebScreen.kt` целиком не используется (ссылки только на самого себя), но именно он даёт lint-предупреждение `SetJavaScriptEnabled`: JS + DOM storage + сторонние cookies включены.
 
 Шире: в проекте 3 вызова `AndroidView(...)` (`WebScreen.kt:21`, `CMPlayer2.kt:109`, `ScreenX_VideoPlayerFullScreen.kt:127`) и **ни одного `onRelease`**. Для `WebView` это утечка (WebView держит контекст и свой рендер-процесс); для `PlayerView` менее критично, но освобождение всё равно стоит делать явно.
