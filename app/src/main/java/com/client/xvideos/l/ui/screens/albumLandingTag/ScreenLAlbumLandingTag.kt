@@ -26,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -91,7 +90,6 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
-        val haptic = LocalHapticFeedback.current
 
         Scaffold(
             containerColor = Theme.background,

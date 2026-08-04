@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -74,7 +73,6 @@ fun CMPPlayer2(
         bufferForPlaybackAfterRebufferM = 100,
     )
 
-    var currentRotate by remember { mutableFloatStateOf(0f) }
 
     val playerView = rememberPlayerView(exoPlayer, context)
 

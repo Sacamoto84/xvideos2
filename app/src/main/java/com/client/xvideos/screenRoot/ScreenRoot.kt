@@ -5,35 +5,21 @@ import com.client.xvideos.common.theme.Theme
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Badge
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -119,9 +105,6 @@ object ScreenRoot : Screen {
                 modifier = Modifier
                 ,
                 floatingActionButtonPosition = FabPosition.Start,
-                floatingActionButton = {
-                    //HomeFloatingActionButton(mainNavigator)
-                },
                 containerColor = Theme.backgroundAppRoot,
                 snackbarHost = {
                     RootSnackbarHost(snackBarHostState)
@@ -146,57 +129,6 @@ object ScreenRoot : Screen {
     }
 }
 
-/**
- * Плавающая кнопка возврата к L-разделу.
- *
- * Следит за размером основного navigation stack через `snapshotFlow` и показывает
- * badge с глубиной, если пользователь ушёл дальше первого экрана.
- */
-@Composable
-private fun HomeFloatingActionButton(mainNavigator: Navigator?) {
-    var navigationDepth by remember { mutableIntStateOf(0) }
-    val rootVm = LocalRootScreenModel.current
-
-    LaunchedEffect(mainNavigator) {
-        mainNavigator?.let { nav ->
-            snapshotFlow { nav.items.size }
-                .collect { stackSize ->
-                    navigationDepth = if (stackSize > 1) stackSize - 1 else 0
-                }
-        }
-    }
-
-    if (navigationDepth > 0 || rootVm.depthState.depth > 0) {
-        Box {
-            SmallFloatingActionButton(
-                onClick = {
-                    mainNavigator?.let { nav ->
-                        if (nav.lastItem !is MenuScreen) {
-                            nav.replaceAll(MenuScreen)
-                        }
-                    }
-                },
-                content = { Icon(imageVector = Icons.Default.Home, contentDescription = "Home") }
-            )
-
-            if (navigationDepth > 0) {
-                Badge(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = 4.dp, y = (-4).dp),
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ) {
-                    Text(
-                        text = navigationDepth.toString(),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
 
 /**
  * ScreenModel корневого экрана.

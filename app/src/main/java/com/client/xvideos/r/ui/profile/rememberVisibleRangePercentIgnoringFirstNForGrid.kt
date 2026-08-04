@@ -102,7 +102,6 @@ fun rememberVisibleRangePercentIgnoringFirstNForGrid(
                 val viewportEndOffset = layoutInfo.viewportEndOffset.toFloat()
                 val lastItemTopEdge = lastRelevantVisibleItem.offset.y.toFloat()
                 val lastItemHeight = lastRelevantVisibleItem.size.height.toFloat()
-                val lastItemBottomEdge = lastItemTopEdge + lastItemHeight
 
                 // Какая часть высоты последнего элемента видна в viewport
                 val visibleHeightOfLastItem = if (lastItemHeight > 0) {
@@ -214,7 +213,6 @@ fun rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
                 val viewportEndOffset = layoutInfo.viewportEndOffset.toFloat()
                 val lastItemTopEdge = lastRelevantVisibleItem.offset.toFloat()
                 val lastItemHeight = lastRelevantVisibleItem.size.toFloat()
-                val lastItemBottomEdge = lastItemTopEdge + lastItemHeight
 
                 // Какая часть высоты последнего элемента видна в viewport
                 val visibleHeightOfLastItem = if (lastItemHeight > 0) {

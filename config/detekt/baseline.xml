@@ -40,7 +40,6 @@
     <ID>CyclomaticComplexMethod:Repository.kt$Repository$suspend fun openURI( data: String, config: RepositoryUriConfig = RepositoryUriConfig.DIRECT ): Result&lt;String&gt;</ID>
     <ID>CyclomaticComplexMethod:SortByOrder.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SortByOrder( list: List&lt;Order&gt;, selected: Order, onSelect: (Order) -&gt; Unit, containerColor: Color = Color.Transparent, circle : Boolean = false )</ID>
     <ID>CyclomaticComplexMethod:UrlImage.kt$@Suppress("UiComposable") @Composable fun UrlImage( url: String, urlGif : String?= null, //url для gif файла modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, loadIndicator: Boolean = true, albumName: String = "", isAnimated: Boolean = false, onSuccess: () -&gt; Unit = {}, onFailure: () -&gt; Unit = {}, autoPlay: Boolean = false, sizeButton: Dp = 32.dp, sizeButtonIcon: Dp = 20.dp, rotate: Boolean = false, //Поворот изображения isVisible: Boolean = true, //new isVisibleLoadingIndicator: Boolean = true, //Показ индикатора прогресса после индикатора загрузки sizeLoadingIndicator: Dp = 32.dp, //Показ индикатора прогресса после индикатора загрузки isVisibleProgressText: Boolean = false, //Показ текста скачанных данных isFullScreen: Boolean = false, //Режим полного экрана с поддержкой поворота backgroung : Color = Color.Transparent, )</ID>
-    <ID>EmptyClassBlock:ScreenKViewModel.kt$ScreenKScreenModel${ }</ID>
     <ID>EmptyDefaultConstructor:ItemEmptyPagingSource.kt$ItemEmptyPagingSource$()</ID>
     <ID>EmptyDefaultConstructor:ScreenFavorites.kt$ScreenFavorites$()</ID>
     <ID>EmptyDefaultConstructor:ScreenRedManageBlock.kt$ScreenRedManageBlock$()</ID>
@@ -52,7 +51,6 @@
     <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; item.url_to_original?.let { url -&gt; saved.likes.remove(url) } haptic.performHapticFeedback(HapticFeedbackType.Confirm) }</ID>
     <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; onShareClicked(it) }</ID>
     <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; saveToGallery(it) }</ID>
-    <ID>ImplicitDefaultLocale:RedVideoPlayerWithMenuContent.kt$String.format("%02d:%02d", minutes, seconds)</ID>
     <ID>ImplicitDefaultLocale:X_PlayerBottomBar.kt$String.format("%d:%02d", m, sec)</ID>
     <ID>ImplicitDefaultLocale:X_PlayerBottomBar.kt$String.format("%d:%02d:%02d", h, m, sec)</ID>
     <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d", minutes, seconds)</ID>
@@ -64,8 +62,6 @@
     <ID>InvalidPackageDeclaration:KeyboardNumberButton.kt$package com.client.xvideos.screens.common.bottomKeyboard</ID>
     <ID>InvalidPackageDeclaration:PlayerControls.kt$package com.redgifs.common.video</ID>
     <ID>InvalidPackageDeclaration:ScreenItemTagsModelPornostars.kt$package com.client.xvideos.screens.videoplayer.atom</ID>
-    <ID>InvalidPackageDeclaration:ScreenK.kt$package com.client.xvideos.screens.k</ID>
-    <ID>InvalidPackageDeclaration:ScreenKViewModel.kt$package com.client.xvideos.screens.k</ID>
     <ID>InvalidPackageDeclaration:StaticPlayer.kt$package com.redgifs.common.video.player_with_menu.atom</ID>
     <ID>InvalidPackageDeclaration:VideoPlayerWithMenuContent.kt$package com.redgifs.common.video.player_with_menu.atom</ID>
     <ID>InvalidPackageDeclaration:blockGetAllBlockedGifsInfo.kt$package com.redgifs.common.block.useCase</ID>
@@ -104,7 +100,6 @@
     <ID>MatchingDeclarationName:KeyboardNumber.kt$KeyboardNumberTheme</ID>
     <ID>MatchingDeclarationName:LDownloadRecovery.kt$LDownloadRecoveryReport</ID>
     <ID>MatchingDeclarationName:ScreenAlbum.kt$ScreenLAlbum : Screen</ID>
-    <ID>MatchingDeclarationName:ScreenK.kt$ScreenDashBoards : Screen</ID>
     <ID>MatchingDeclarationName:ScreenNiche.kt$R_ScreenNiche : Screen</ID>
     <ID>MatchingDeclarationName:ScreenSaved.kt$R_ScreenSavedTab : Screen</ID>
     <ID>MatchingDeclarationName:SearchItemTagsResponce.kt$SearchItemTagsResponse</ID>
@@ -128,53 +123,11 @@
     <ID>UnusedParameter:LazyRow123Host.kt$searchNiches: R_SearchNiches</ID>
     <ID>UnusedParameter:LazyRow123Host.kt$textNiches: String</ID>
     <ID>UnusedParameter:createPlayerListener.kt$sourceUrl: String? = null</ID>
-    <ID>UnusedPrivateMember:AppSettingsScreen.kt$AppSettingsScreen$private fun readResolve(): Any</ID>
     <ID>UnusedPrivateMember:CMPAudioPlayer.android.kt$private fun PlayerSpeed.toFloat(): Float</ID>
-    <ID>UnusedPrivateMember:FavoritesTab.kt$FavoritesTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:HapticDemoScreen.kt$HapticDemoScreen$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:L_ScreenAlbumSearch.kt$L_ScreenAlbumSearch$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:L_ScreenAlbumTopHits.kt$L_ScreenAlbumTopHits$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:L_ScreenSavedAlbumsTab.kt$L_ScreenSavedAlbumsTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:L_ScreenSavedLikesTab.kt$L_ScreenSavedLikesTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:L_Screen_CollectionTab.kt$L_Screen_CollectionTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:MenuScreen.kt$MenuScreen$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:NicheProfile.kt$@Composable private fun ButtonFollow(savedRed: () -&gt; SavedRed, niche: NichesInfo)</ID>
-    <ID>UnusedPrivateMember:R_ScreenGifsTab.kt$R_ScreenGifsTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:R_ScreenNichesTab.kt$R_ScreenNichesTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:R_Screen_CollectionTab.kt$R_Screen_CollectionTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:R_Screen_CreatorsTab.kt$R_Screen_CreatorsTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:R_Screen_Saved_DownloadTab.kt$R_Screen_Saved_DownloadTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:R_Screen_Saved_LikesTab.kt$R_Screen_Saved_LikesTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:R_Screen_Saved_SubscriptionsTab.kt$R_Screen_Saved_SubscriptionsTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:RedVideoPlayerWithMenuContent.kt$private fun formatDuration(totalSeconds: Int): String</ID>
-    <ID>UnusedPrivateMember:SavedNichesTab.kt$SavedNichesTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:ScreenAlbumList.kt$L_ScreenAlbumList$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:ScreenRoot.kt$@Composable private fun HomeFloatingActionButton(mainNavigator: Navigator?)</ID>
-    <ID>UnusedPrivateMember:ScreenRoot.kt$ScreenRoot$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:ScreenSaved.kt$L_SavedTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:ScreenSaved.kt$R_ScreenSavedTab$private fun readResolve(): Any</ID>
-    <ID>UnusedPrivateMember:SearchTab.kt$SearchTab$private fun readResolve(): Any</ID>
     <ID>UnusedPrivateProperty:AlbumInfo.kt$AlbumInfo$download: Boolean = false</ID>
-    <ID>UnusedPrivateProperty:AlbumList.kt$val activeFilters = get?.get("active_filters")?.asJsonArray</ID>
-    <ID>UnusedPrivateProperty:CMPlayer2.kt$var currentRotate by remember { mutableFloatStateOf(0f) }</ID>
-    <ID>UnusedPrivateProperty:ExpandMenuVideoTags.kt$private val style = TextStyle(color = tintColor, fontFamily = Theme.R.fontFamilyPopinsRegular, fontSize = 20.sp)</ID>
-    <ID>UnusedPrivateProperty:L_Screen_CollectionTab.kt$L_Screen_CollectionTab$val colorDialogConteiner = Theme.tabLevel4</ID>
+    <ID>UnusedPrivateProperty:ExpandMenuVideoTags.kt$private val tintColor = Color(0xFF48454E)</ID>
     <ID>UnusedPrivateProperty:Repository.kt$Repository$context: Context</ID>
-    <ID>UnusedPrivateProperty:SavedCollectionName.kt$ScreenCollectionName$var blockItem by rememberSaveable { mutableStateOf&lt;GifsInfo?&gt;(null) }</ID>
-    <ID>UnusedPrivateProperty:ScreenDashBoardsBottomNavigationButtons.kt$val navigator = LocalNavigator.currentOrThrow</ID>
-    <ID>UnusedPrivateProperty:ScreenK.kt$ScreenDashBoards$val navigator = LocalNavigator.currentOrThrow</ID>
-    <ID>UnusedPrivateProperty:ScreenK.kt$ScreenDashBoards$val vm: ScreenKScreenModel = getScreenModel()</ID>
-    <ID>UnusedPrivateProperty:ScreenLAlbumLandingTag.kt$ScreenLAlbumLandingTag$val haptic = LocalHapticFeedback.current</ID>
-    <ID>UnusedPrivateProperty:ScreenProfile.kt$ScreenProfile$val navigator = LocalNavigator.currentOrThrow</ID>
-    <ID>UnusedPrivateProperty:ScreenProfile.kt$ScreenProfile$val vm: ScreenProfileSM = getScreenModel()</ID>
-    <ID>UnusedPrivateProperty:ScreenRedManageBlock.kt$ScreenRedManageBlock$val navigator = LocalNavigator.currentOrThrow</ID>
-    <ID>UnusedPrivateProperty:ScreenRedProfile.kt$ScreenRedProfile$val navigator = LocalNavigator.currentOrThrow</ID>
-    <ID>UnusedPrivateProperty:ScreenTags.kt$ScreenTags$val navigator = LocalNavigator.currentOrThrow</ID>
     <ID>UnusedPrivateProperty:SearchTab.kt$ScreenRedExplorerSearchSM$connectivityObserver: ConnectivityObserver</ID>
-    <ID>UnusedPrivateProperty:SwipeableBottomPanel.kt$val anchors = mapOf(0f to 0, hiddenOffset to 1)</ID>
-    <ID>UnusedPrivateProperty:TagsPaginatedListScreen.kt$val navigator = LocalNavigator.currentOrThrow</ID>
-    <ID>UnusedPrivateProperty:TikTokRow1.kt$val isCurrentPage = pagerState.currentPage == pageIndex</ID>
-    <ID>UnusedPrivateProperty:rememberVisibleRangePercentIgnoringFirstNForGrid.kt$val lastItemBottomEdge = lastItemTopEdge + lastItemHeight</ID>
     <ID>VariableNaming:AppSettingsScreen.kt$val l_login = Settings.l_login.field.collectAsStateWithLifecycle().value</ID>
     <ID>VariableNaming:L_ScreenExplorer.kt$L_ScreenExplorer$val columnR_ScreenGifsTab = Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle().value</ID>
     <ID>VariableNaming:Route.kt$Route$val BASE = "https://api.redgifs.com"</ID>

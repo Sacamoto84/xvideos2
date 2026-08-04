@@ -113,6 +113,10 @@ style:
   UnusedPrivateMember:
     active: true
     ignoreAnnotated: ['Preview']
+    # readResolve() у object-экранов Voyager вызывает механизм десериализации,
+    # а не наш код: без неё восстановление состояния создаст второй экземпляр
+    # синглтона. Из исходника её видно как «никем не вызываемую» — таких 22.
+    allowedNames: '(_|ignored|expected|serialVersionUID|readResolve)'
   UnusedPrivateProperty:
     active: true
     ignoreAnnotated: ['Preview']

@@ -28,8 +28,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.atom.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
@@ -44,7 +42,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnusedBoxWithConstraintsScope")
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
 
         val vm = getScreenModel<ScreenRedProfileSM, ScreenRedProfileSM.Factory> { factory ->
             factory.create(profileName)

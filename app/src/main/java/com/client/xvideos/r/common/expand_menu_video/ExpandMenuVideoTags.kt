@@ -28,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,7 +36,6 @@ import com.client.xvideos.ui.theme.XvideosTheme
 
 
 private val tintColor = Color(0xFF48454E)
-private val style = TextStyle(color = tintColor, fontFamily = Theme.R.fontFamilyPopinsRegular, fontSize = 20.sp)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

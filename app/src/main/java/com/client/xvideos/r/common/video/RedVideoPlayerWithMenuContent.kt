@@ -150,8 +150,3 @@ fun CurrentTimeText(
 
 
 // Вспомогательная функция для форматирования времени из секунд в MM:SS
-private fun formatDuration(totalSeconds: Int): String {
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return String.format("%02d:%02d", minutes, seconds)
-}

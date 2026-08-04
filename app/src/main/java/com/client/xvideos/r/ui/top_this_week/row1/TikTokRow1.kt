@@ -81,7 +81,6 @@ fun TikTokPow1(
         //key = { index -> listGifs[index].id } // Ключ для стабильности элементов
     ) { pageIndex ->
         val videoItem = lazyPagingItems[pageIndex]
-        val isCurrentPage = pagerState.currentPage == pageIndex
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (videoItem != null) {
                 // poster у redgifs необязателен: было `poster!!`, то есть краш

@@ -35,7 +35,6 @@ fun SwipeableBottomPanel(
     val swipeableState = rememberSwipeableState(initialValue = 0)
 
     val hiddenOffset = contentHeightPx - indicatorHeightPx - with(LocalDensity.current) { 4.dp.toPx() }
-    val anchors = mapOf(0f to 0, hiddenOffset to 1)
 
     Box(modifier = modifier.fillMaxSize()) {
         // Сенсорная зона для свайпа

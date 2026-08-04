@@ -98,7 +98,6 @@ data class getAlbumListAggregationsResult(
             val json = JsonParser.parseString(res).asJsonObject
             val get =
                 json["data"]?.asJsonObject?.get("album")?.asJsonObject?.get("list_with_aggregations")?.asJsonObject
-            val activeFilters = get?.get("active_filters")?.asJsonArray
             val aggregations = get?.get("aggregations")?.asJsonArray
 
 

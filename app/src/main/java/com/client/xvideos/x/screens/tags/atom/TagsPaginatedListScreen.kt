@@ -20,8 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 
@@ -37,7 +35,6 @@ fun TagsPaginatedListScreen(pageIndex: Int) {
 //        }
     }
 
-    val navigator = LocalNavigator.currentOrThrow
 
     val itemsPerRow = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
 

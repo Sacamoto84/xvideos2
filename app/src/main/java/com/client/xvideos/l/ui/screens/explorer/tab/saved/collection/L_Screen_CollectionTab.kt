@@ -127,7 +127,6 @@ object L_Screen_CollectionTab : Screen {
             )
         }
 
-        val colorDialogConteiner = Theme.tabLevel4
 
 
         itemPendingAction?.let { pending ->

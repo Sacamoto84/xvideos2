@@ -31,8 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 
 @Preview
 @Composable
@@ -79,7 +77,6 @@ private val height = 48.dp
 @Composable
 fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, max: Int) {
 
-    val navigator = LocalNavigator.currentOrThrow
 
     val list = remember { List(max) { it + 1 } }
 

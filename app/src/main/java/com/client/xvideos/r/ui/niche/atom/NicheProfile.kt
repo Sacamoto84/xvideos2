@@ -152,29 +152,6 @@ fun NicheProfileContent(
 }
 
 @Composable
-private fun ButtonFollow(savedRed: () -> SavedRed, niche: NichesInfo) {
-    val isFollowed = savedRed().niches.list.any { it.id == niche.id }
-
-    ButtonFollowContent(
-        isFollowed = isFollowed,
-        onClick = {
-            val nichesInfo = NichesInfo(
-                id = niche.id,
-                name = niche.name,
-                subscribers = niche.subscribers,
-                gifs = niche.gifs,
-                thumbnail = niche.thumbnail,
-            )
-
-            if (isFollowed)
-                savedRed().niches.remove(nichesInfo)
-            else
-                savedRed().niches.add(nichesInfo)
-        }
-    )
-}
-
-@Composable
 private fun ButtonFollowContent(
     isFollowed: Boolean,
     onClick: () -> Unit
