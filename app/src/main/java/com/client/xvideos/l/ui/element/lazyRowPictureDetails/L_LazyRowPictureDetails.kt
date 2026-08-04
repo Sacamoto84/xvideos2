@@ -167,7 +167,6 @@ fun L_LazyRowPictureDetails(
                                         if (position != -1) {
                                             rootVm.screenModelScope.launch {
                                                 host.state.scrollToItem(position)
-                                                delay(100)
                                             }
                                         }
                                     },

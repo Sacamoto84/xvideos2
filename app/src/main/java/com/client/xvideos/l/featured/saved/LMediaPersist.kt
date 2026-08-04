@@ -35,6 +35,14 @@ import java.io.IOException
 import java.security.MessageDigest
 
 internal const val L_METADATA_FILE_NAME = "metadata.json"
+
+/**
+ * Расширение недокачанного файла. Такой файл остаётся, если процесс убили
+ * посреди загрузки, и его нельзя показывать как содержимое.
+ */
+internal const val L_PART_FILE_SUFFIX = ".part"
+
+internal fun File.isPartialDownload(): Boolean = name.endsWith(L_PART_FILE_SUFFIX)
 private const val DEFAULT_BUFFER_SIZE = 8 * 1024
 
 /**
@@ -155,7 +163,7 @@ internal suspend fun lDownloadToFile(
     if (file.exists() && file.length() > 0L) return
     file.parentFile?.mkdirs()
 
-    val tempFile = File(file.parentFile, "${file.name}.part")
+    val tempFile = File(file.parentFile, "${file.name}$L_PART_FILE_SUFFIX")
     try {
         val response: HttpResponse = client.get(url)
         if (!response.status.isSuccess()) {
@@ -379,6 +387,16 @@ internal suspend fun lPersistPicsDetailsToFolder(
                 picture = item
             )
             writeLSavedLikeMetadata(File(folder, L_METADATA_FILE_NAME), metadata)
+
+            // Подчищаем недокачанные хвосты: элемент собран, все загрузки в эту
+            // папку завершены, значит любой оставшийся .part — мусор от прошлой
+            // попытки, а не чужая активная загрузка.
+            folder.listFiles()
+                ?.filter { it.isFile && it.isPartialDownload() }
+                ?.forEach { stale ->
+                    Timber.i("L cleanup stale part file: ${stale.name}")
+                    stale.delete()
+                }
         } catch (e: Exception) {
             if (folder.listFiles().isNullOrEmpty() || !File(folder, L_METADATA_FILE_NAME).exists()) {
                 folder.deleteRecursively()

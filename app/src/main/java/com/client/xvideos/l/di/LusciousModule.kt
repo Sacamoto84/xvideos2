@@ -13,9 +13,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import java.util.concurrent.Executors
 import javax.inject.Singleton
 
 @Module
@@ -39,8 +38,10 @@ object LusciousModule {
     fun provideLuscious(
         repository: Repository
     ): Luscious {
-        val downloadDispatcher = Executors.newFixedThreadPool(8).asCoroutineDispatcher()
-        val scope = CoroutineScope(SupervisorJob() + downloadDispatcher)
+        // Dispatchers.IO вместо своего пула на 8 потоков: пул жил весь процесс и
+        // никогда не закрывался, а сетевой слой всё равно сериализован мьютексом
+        // в Repository.
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         return Luscious(scope, repository)
     }
 

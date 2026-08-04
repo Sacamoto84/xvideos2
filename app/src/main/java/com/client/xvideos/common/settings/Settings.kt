@@ -154,6 +154,9 @@ object Settings {
 
     val l_fullscreen_vertical_pager by lazy { SettingElementBoolean(pref, "l_fullscreen_vertical_pager", false) }
 
+    /** Звук видео в полноэкранном просмотре L. По умолчанию выключен. */
+    val l_fullscreen_video_muted by lazy { SettingElementBoolean(pref, "l_fullscreen_video_muted", true) }
+
 
     /**
      * Количество столбиков в L Gifs Tab T 1 2 3 4

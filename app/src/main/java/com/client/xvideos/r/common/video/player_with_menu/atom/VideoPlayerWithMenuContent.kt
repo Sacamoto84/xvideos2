@@ -53,18 +53,18 @@ fun VideoPlayerWithMenuContent(
     val zoomState = rememberZoomState(maxScale = 3f)
     LaunchedEffect(playerHost.videoFitMode) { zoomState.reset() }
 
-    var volumeDragAmount by remember { mutableFloatStateOf(0f) }
-    val volumeDragModifier = Modifier.pointerInput(Unit) {
+    var seekDragAmount by remember { mutableFloatStateOf(0f) }
+    val seekDragModifier = Modifier.pointerInput(Unit) {
         detectHorizontalDragGestures(
-            onDragStart = { volumeDragAmount = 0f },
+            onDragStart = { seekDragAmount = 0f },
             onDragEnd = {
-                val dx = if (volumeDragAmount.absoluteValue > 400) 1f else 1 / 30f
+                val dx = if (seekDragAmount.absoluteValue > 400) 1f else 1 / 30f
                 playerHost.isSliding = true
-                playerHost.seekTo((playerHost.currentTime + (if (volumeDragAmount > 0) dx else -dx)).coerceIn(0f, playerHost.totalTime.toFloat()))
+                playerHost.seekTo((playerHost.currentTime + (if (seekDragAmount > 0) dx else -dx)).coerceIn(0f, playerHost.totalTime.toFloat()))
                 playerHost.isSliding = false
             },
             onDragCancel = { },
-            onHorizontalDrag = { _, dragAmount -> volumeDragAmount += dragAmount }
+            onHorizontalDrag = { _, dragAmount -> seekDragAmount += dragAmount }
         )
     }
 
@@ -77,7 +77,7 @@ fun VideoPlayerWithMenuContent(
 
         //Нижняя сенсорная часть
         if (seekDragEnabled) {
-            Box(modifier = Modifier.fillMaxHeight(1 / 3f).fillMaxWidth().align(Alignment.BottomCenter).then(volumeDragModifier).alpha(0.5f).background(Color.Transparent))
+            Box(modifier = Modifier.fillMaxHeight(1 / 3f).fillMaxWidth().align(Alignment.BottomCenter).then(seekDragModifier).alpha(0.5f).background(Color.Transparent))
         }
 
         if (playerHost.isBuffering) {

@@ -20,6 +20,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.util.LinkedHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 data class LRepositoryProtectionUiState(
     val active: Boolean = false,
@@ -60,8 +61,9 @@ class Repository(
     @Volatile
     private var lastNetworkRequestAtMs = 0L
 
-    @Volatile
-    private var htmlChallengeCooldownUntilMs = 0L
+    // AtomicLong, а не @Volatile: cooldown продлевают параллельные запросы,
+    // и "сравнил-записал" на volatile терял большее значение.
+    private val htmlChallengeCooldownUntilMs = AtomicLong(0L)
 
     var protectionUiState by mutableStateOf(LRepositoryProtectionUiState())
         private set
@@ -83,18 +85,25 @@ class Repository(
         )
     }
 
-    fun logout() {
-        Settings.l_login.setValue("")
-        Settings.l_pass.setValue("")
-        val oldHandler = handler
-        handler = createHandler()
-        oldHandler.close()
+    /**
+     * Под обоими мьютексами: без них close() старого клиента приходился
+     * на середину выполняющегося запроса.
+     */
+    suspend fun logout() {
+        authMutex.withLock {
+            requestMutex.withLock {
+                Settings.l_login.setValue("")
+                Settings.l_pass.setValue("")
+                val oldHandler = handler
+                handler = createHandler()
+                oldHandler.close()
+            }
+        }
         clearHtmlChallengeUiState()
     }
 
     suspend fun openURI(
         data: String,
-        type: RepositoryUriType = RepositoryUriType.POST,
         config: RepositoryUriConfig = RepositoryUriConfig.DIRECT
     ): Result<String> {
         Timber.i("!!! openURI()")
@@ -125,95 +134,77 @@ class Repository(
             return Result.failure(e)
         }
 
-        if (type == RepositoryUriType.POST) {
+        // Проверки на "{\"errors\":" здесь больше нет: validateJsonResponse уже
+        // отбраковывает ответ с полем errors, до кэша такой ответ не доходит.
+        when (config) {
 
-            when (config) {
+            //Запрос без кеширования
+            RepositoryUriConfig.DIRECT -> {
+                return postJsonValidated(data)
+            }
 
-                //Запрос без кеширования
-                RepositoryUriConfig.DIRECT -> {
-                    return postJsonValidated(data)
+            // Read from persistent file cache, or request and store it.
+            RepositoryUriConfig.CACHE_ROM -> {
+                try {
+                    val cacheKey = data.toMD5()
+                    val res = cacheUrlStringRomDao.get(cacheKey)
+                    if (res != null) {
+                        val ageMs = System.currentTimeMillis() - res.timeCreate
+                        val cached = if (ageMs in 0L..ROM_CACHE_MAX_AGE_MS) {
+                            validateJsonResponse(res.content)
+                        } else {
+                            Timber.i("!!! openURI() CACHE_ROM stale entry, ageMs:$ageMs")
+                            Result.failure(IllegalStateException("stale"))
+                        }
+                        if (cached.isSuccess) {
+                            return cached
+                        }
+                        cacheUrlStringRomDao.delete(cacheKey)
+                    }
+                    val checkedResponse = postJsonValidated(data)
+                    if (checkedResponse.isFailure) return checkedResponse
+
+                    cacheUrlStringRomDao.put(cacheKey, checkedResponse.getOrThrow())
+                    return checkedResponse
                 }
-
-                // Read from persistent file cache, or request and store it.
-                RepositoryUriConfig.CACHE_ROM -> {
-                    try {
-                        val cacheKey = data.toMD5()
-                        val res = cacheUrlStringRomDao.get(cacheKey)
-                        if (res != null) {
-                            val cached = validateJsonResponse(res.content)
-                            if (cached.isSuccess) {
-                                //Timber.i("!!! openURI() CACHE_ROM res != null response:${res.content}")
-                                return cached
-                            }
-                            Timber.w("!!! openURI() CACHE_ROM malformed cache: ${cached.exceptionOrNull()?.message}")
-                            cacheUrlStringRomDao.delete(cacheKey)
-                        }
-                        val checkedResponse = postJsonValidated(data)
-                        if (checkedResponse.isFailure) return checkedResponse
-
-                        if (checkedResponse.getOrThrow().contains("{\"errors\":")){
-                            SnackBar.error(checkedResponse.getOrThrow())
-                            return Result.failure(Exception(checkedResponse.getOrThrow()))
-                        }
-
-                        cacheUrlStringRomDao.put(cacheKey, checkedResponse.getOrThrow())
-
-                        //Timber.i("!!! openURI() CACHE_ROM net response:$response")
-                        return checkedResponse
-                    }
-                    catch (e: CancellationException){
-                        throw e
-                    }
-                    catch (e: Exception){
-                        Timber.e(e, "!!! openURI() CACHE_ROM error")
-                        return Result.failure(e)
-                    }
+                catch (e: CancellationException){
+                    throw e
                 }
-
-                // Read from temporary in-memory LRU cache, or request and store it in RAM only.
-                RepositoryUriConfig.CACHE_RAM -> {
-                    try {
-                        val cacheKey = data.toMD5()
-                        val res = getRamCache(cacheKey)
-                        if (res != null) {
-                            val cached = validateJsonResponse(res)
-                            if (cached.isSuccess) {
-                                //Timber.i("!!! openURI() CACHE_RAM res != null response:${res.content}")
-                                return cached
-                            }
-                            Timber.w("!!! openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
-                            deleteRamCache(cacheKey)
-                        }
-                        val checkedResponse = postJsonValidated(data)
-                        if (checkedResponse.isFailure) return checkedResponse
-
-                        val checkedContent = checkedResponse.getOrThrow()
-                        if (checkedContent.contains("{\"errors\":")){
-                            SnackBar.error(checkedContent)
-                            return Result.failure(Exception(checkedContent))
-                        }
-
-                        putRamCache(cacheKey, checkedContent)
-
-                        //Timber.i("!!! openURI() CACHE_RAM net response:$response")
-
-                        if (checkedContent.contains("{\"errors\":")) { SnackBar.error(checkedContent) }
-                        return checkedResponse
-                    }
-                    catch (e: CancellationException){
-                        throw e
-                    }
-                    catch (e: Exception){
-                        Timber.e(e, "!!! openURI() CACHE_RAM error")
-                        SnackBar.error(e.message?: "openURI() CACHE_RAM error")
-                        return Result.failure(e)
-                    }
+                catch (e: Exception){
+                    Timber.e(e, "!!! openURI() CACHE_ROM error")
+                    return Result.failure(e)
                 }
             }
 
-        }
+            // Read from temporary in-memory LRU cache, or request and store it in RAM only.
+            RepositoryUriConfig.CACHE_RAM -> {
+                try {
+                    val cacheKey = data.toMD5()
+                    val res = getRamCache(cacheKey)
+                    if (res != null) {
+                        val cached = validateJsonResponse(res)
+                        if (cached.isSuccess) {
+                            return cached
+                        }
+                        Timber.w("!!! openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
+                        deleteRamCache(cacheKey)
+                    }
+                    val checkedResponse = postJsonValidated(data)
+                    if (checkedResponse.isFailure) return checkedResponse
 
-        return Result.failure(Exception("Некорректный тип запроса"))
+                    putRamCache(cacheKey, checkedResponse.getOrThrow())
+                    return checkedResponse
+                }
+                catch (e: CancellationException){
+                    throw e
+                }
+                catch (e: Exception){
+                    Timber.e(e, "!!! openURI() CACHE_RAM error")
+                    SnackBar.error("Ошибка запроса к Luscious")
+                    return Result.failure(e)
+                }
+            }
+        }
     }
 
     private suspend fun postJsonValidated(data: String): Result<String> {
@@ -257,7 +248,7 @@ class Repository(
         return requestMutex.withLock {
             val now = System.currentTimeMillis()
             val intervalWaitMs = MIN_NETWORK_REQUEST_INTERVAL_MS - (now - lastNetworkRequestAtMs)
-            val challengeWaitMs = htmlChallengeCooldownUntilMs - now
+            val challengeWaitMs = htmlChallengeCooldownUntilMs.get() - now
             val waitMs = maxOf(intervalWaitMs, challengeWaitMs, 0L)
             if (waitMs > 0) delay(waitMs)
 
@@ -275,13 +266,13 @@ class Repository(
         message: String
     ) {
         val cooldownUntil = System.currentTimeMillis() + delayMs
-        if (cooldownUntil > htmlChallengeCooldownUntilMs) {
-            htmlChallengeCooldownUntilMs = cooldownUntil
+        val effectiveCooldown = htmlChallengeCooldownUntilMs.updateAndGet { current ->
+            maxOf(current, cooldownUntil)
         }
         protectionUiState = LRepositoryProtectionUiState(
             active = true,
             message = message,
-            retryAtMs = htmlChallengeCooldownUntilMs,
+            retryAtMs = effectiveCooldown,
             retryDelayMs = delayMs,
             requestHash = requestHash,
             updatedAtMs = System.currentTimeMillis()
@@ -388,15 +379,12 @@ class Repository(
         const val MIN_NETWORK_REQUEST_INTERVAL_MS = 300L
         const val HTML_CHALLENGE_RETRY_ATTEMPTS = 3
         const val RAM_CACHE_MAX_ENTRIES = 256
+        // CACHE_ROM держит только справочник категорий (MediaCategoriesBootstrap),
+        // он меняется редко, но не никогда — раньше запись жила вечно.
+        const val ROM_CACHE_MAX_AGE_MS = 7L * 24 * 60 * 60 * 1000
         val HTML_CHALLENGE_RETRY_DELAYS_MS = longArrayOf(5_000L, 10_000L, 15_000L)
     }
 
-}
-
-
-enum class RepositoryUriType {
-    GET,
-    POST,
 }
 
 enum class RepositoryUriConfig {

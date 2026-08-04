@@ -148,8 +148,15 @@ private fun lResolveCollectionPreviewUrl(collectionFolder: File): String? {
             lResolveItemPreviewUrl(folder, metadata)?.let { return it }
         }
 
+        // .part не фильтровать нельзя: недокачанный файл от убитого процесса
+        // иначе становится обложкой коллекции.
         val fallback = folder.listFiles()
-            ?.firstOrNull { it.isFile && it.name != L_METADATA_FILE_NAME && !it.absolutePath.isLVideoFileUrl() }
+            ?.firstOrNull {
+                it.isFile &&
+                    it.name != L_METADATA_FILE_NAME &&
+                    !it.isPartialDownload() &&
+                    !it.absolutePath.isLVideoFileUrl()
+            }
         if (fallback != null) {
             return fallback.absolutePath
         }

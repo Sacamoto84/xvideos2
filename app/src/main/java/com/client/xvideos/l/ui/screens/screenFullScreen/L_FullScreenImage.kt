@@ -48,6 +48,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -182,6 +184,7 @@ class L_FullScreenImage(
         var rotate by remember { mutableStateOf(false) }
         var showInfoDialog by remember { mutableStateOf(false) }
         val verticalPager = Settings.l_fullscreen_vertical_pager.field.collectAsStateWithLifecycle().value
+        val videoMuted = Settings.l_fullscreen_video_muted.field.collectAsStateWithLifecycle().value
 
         val initialIndex = remember { filteredPic.indexOf(item).coerceIn(0, filteredPic.lastIndex) }
 
@@ -230,7 +233,15 @@ class L_FullScreenImage(
                     onDismiss = { showInfoDialog = false },
                     onAlbumClick = { albumId ->
                         showInfoDialog = false
-                        navigator.push(ScreenLAlbum(albumId))
+                        // Штатный путь альбом -> фуллскрин -> инфо -> тот же альбом
+                        // клал второй экземпляр экрана поверх первого. Если альбом
+                        // уже в стеке — возвращаемся к нему.
+                        val inStack = navigator.items.any { it is ScreenLAlbum && it.idAlbum == albumId }
+                        if (inStack) {
+                            navigator.popUntil { it is ScreenLAlbum && it.idAlbum == albumId }
+                        } else {
+                            navigator.push(ScreenLAlbum(albumId))
+                        }
                     }
                 )
             }
@@ -253,6 +264,7 @@ class L_FullScreenImage(
                         rotate = rotate,
                         albumName = albumName,
                         autoPlay = autoPlay,
+                        videoMuted = videoMuted,
                         // Пейджер листается вертикально — горизонтальная перемотка не мешает.
                         seekDragEnabled = true,
                         onToggleFullScreen = { isFullScreen = isFullScreen.not() }
@@ -276,6 +288,7 @@ class L_FullScreenImage(
                     rotate = rotate,
                     albumName = albumName,
                     autoPlay = autoPlay,
+                    videoMuted = videoMuted,
                     // Зона перемотки в нижней трети плеера перехватывала
                     // горизонтальный свайп и страницы не листались.
                     seekDragEnabled = false,
@@ -294,6 +307,8 @@ class L_FullScreenImage(
                     Row {
                         IconButton(onClick = { rotate = rotate.not() }) { Icon(Icons.Default.ScreenRotation, contentDescription = null, tint = Color.White) }
                         IconButton(onClick = { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) }) { Icon( if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz, contentDescription = null, tint = Color.White) }
+                        // Звук был зашит в mute без единой кнопки включить.
+                        IconButton(onClick = { Settings.l_fullscreen_video_muted.setValue(!videoMuted) }) { Icon( if (videoMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = Color.White) }
                     }
 
                     Row {
@@ -383,6 +398,7 @@ private fun LFullScreenPage(
     rotate: Boolean,
     albumName: String,
     autoPlay: Boolean,
+    videoMuted: Boolean,
     seekDragEnabled: Boolean,
     onToggleFullScreen: () -> Unit
 ) {
@@ -432,6 +448,7 @@ private fun LFullScreenPage(
                     autoPlay = autoPlay,
                     isCurrentPage = isCurrentPage,
                     isPlayerActive = isSettledPage,
+                    isMuted = videoMuted,
                     seekDragEnabled = seekDragEnabled,
                     rotate = rotate,
                     modifier = Modifier.fillMaxSize(),
@@ -500,6 +517,7 @@ private fun LFullScreenVideo(
     autoPlay: Boolean,
     isCurrentPage: Boolean,
     isPlayerActive: Boolean,
+    isMuted: Boolean,
     seekDragEnabled: Boolean,
     rotate: Boolean,
     modifier: Modifier = Modifier,
@@ -523,9 +541,14 @@ private fun LFullScreenVideo(
         MediaPlayerHost(
             mediaUrl = url,
             isPaused = !autoPlay || !isCurrentPage,
-            isMuted = true,
+            isMuted = isMuted,
             headers = lMediaRequestHeaders()
         )
+    }
+
+    // playerHost помнится по url, поэтому переключение звука доводим отдельно.
+    LaunchedEffect(playerHost, isMuted) {
+        if (isMuted) playerHost.mute() else playerHost.unmute()
     }
     var playbackError by remember(url) { mutableStateOf(false) }
 

@@ -396,7 +396,7 @@ class SavedL_Collection(
             }
 
             if (removed) {
-                SnackBar.info("Removed from collection")
+                SnackBar.info("Удалено из коллекции")
                 refreshCollectionList()
             } else {
                 SnackBar.error("Файл не найден")

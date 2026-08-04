@@ -48,7 +48,7 @@ class SavedL_Likes(
             withContext(Dispatchers.Main) {
                 result
                     .onSuccess {
-                        SnackBar.success("Like")
+                        SnackBar.success("Добавлено в лайки")
                         refresh()
                     }
                     .onFailure {
@@ -77,7 +77,7 @@ class SavedL_Likes(
             }
 
             if (removed) {
-                SnackBar.info("Unlike")
+                SnackBar.info("Удалено из лайков")
             } else {
                 SnackBar.error("Файл не найден: $url")
             }
