@@ -29,6 +29,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +55,8 @@ import com.client.xvideos.common.AppPath
 import com.composeunstyled.Text
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.conflate
 import timber.log.Timber
 import java.io.File
 import kotlin.math.roundToInt
@@ -137,15 +140,26 @@ fun UrlImage(
         }
     }
 
-//    // Debounce: обновляем UI не чаще 100–200 мс
-    val progress by produceState(rawProgress) {
-        while (!rawProgress.done) {
+    // Прогресс нужен только тексту загрузки и индикатору анимации.
+    // Было: бесконечный while + delay(200) на КАЖДУЮ картинку. Для url без записи
+    // в progressMap done навсегда остаётся false, поэтому цикл не завершался и
+    // будил корутину 5 раз в секунду на каждую картинку и каждую миниатюру.
+    // Стало: подписка на snapshot-состояние с тем же троттлингом 200 мс —
+    // когда прогресс не меняется, корутина просто спит.
+    val needProgress = isVisibleProgressText || isAnimated
+    val progress by produceState(rawProgress, url, needProgress) {
+        if (!needProgress) {
             value = rawProgress
-            delay(200)
+            return@produceState
         }
-        value = rawProgress
+        snapshotFlow { rawProgress }
+            .conflate()
+            .collect {
+                value = it
+                delay(200)
+            }
     }
-//
+
     val bytes = progress.bytes
     val total = progress.total
 
