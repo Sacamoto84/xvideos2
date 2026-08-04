@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lBestThumbnailImageUrl
@@ -16,8 +17,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -65,6 +67,18 @@ class AlbumPicsDetails(
 
     private val loadedPages = mutableMapOf<Int, List<PicsDetails>>()
 
+    /**
+     * Раньше роль этого мьютекса играл `withContext(Dispatchers.Main)`: он и
+     * упорядочивал доступ к [loadedPages] между загрузкой и ретраем, и делал
+     * изменения списка видимыми одним куском. Побочно вся пересборка списка
+     * (O(n) на альбом в сотни картинок) выполнялась на UI-потоке.
+     *
+     * Теперь взаимное исключение обеспечивает мьютекс, атомарность публикации —
+     * [Snapshot.withMutableSnapshot], а сама работа идёт на фоновом потоке.
+     * Snapshot-состояние Compose допускает запись из любого потока.
+     */
+    private val stateMutex = Mutex()
+
     private data class PageLoadResult(
         val page: Int,
         val totalPages: Int,
@@ -75,16 +89,14 @@ class AlbumPicsDetails(
         page: Int,
         config: RepositoryUriConfig = RepositoryUriConfig.CACHE_RAM
     ): Result<PageLoadResult> {
-        withContext(Dispatchers.Main) {
-            isPageRequestInFlight = true
-        }
+        isPageRequestInFlight = true
 
         return try {
             openPage(page, config)
         } finally {
-            withContext(NonCancellable + Dispatchers.Main) {
-                isPageRequestInFlight = false
-            }
+            // Присваивание не приостанавливается, поэтому отмена его не пропустит
+            // и обёртка NonCancellable больше не нужна.
+            isPageRequestInFlight = false
         }
     }
 
@@ -157,22 +169,22 @@ class AlbumPicsDetails(
     suspend fun contentUrls(
         pageCacheConfig: RepositoryUriConfig = RepositoryUriConfig.CACHE_RAM
     ) = withContext(Dispatchers.Default) {
-        withContext(Dispatchers.Main) {
-            pics.clear()
-            failedPages.clear()
-            loadedPages.clear()
-            totalPages = null
-            percentLoad = 0f
-            isPageRequestInFlight = false
-            isRetryingFailedPages = false
+        stateMutex.withLock {
+            Snapshot.withMutableSnapshot {
+                pics.clear()
+                failedPages.clear()
+                loadedPages.clear()
+                totalPages = null
+                percentLoad = 0f
+                isPageRequestInFlight = false
+                isRetryingFailedPages = false
+            }
         }
 
         val firstPage = loadPage(1, pageCacheConfig).getOrElse {
             Timber.w(it, "!!! AlbumPicsDetails $id page 1 error")
             recordPageIssue(1, it)
-            withContext(Dispatchers.Main) {
-                percentLoad = 1f
-            }
+            percentLoad = 1f
             return@withContext
         }
 
@@ -189,9 +201,7 @@ class AlbumPicsDetails(
             delay(PAGE_REQUEST_DELAY_MS)
         }
 
-        withContext(Dispatchers.Main) {
-            percentLoad = 1f
-        }
+        percentLoad = 1f
     }
 
     suspend fun restoreFromBundleCache(
@@ -199,23 +209,25 @@ class AlbumPicsDetails(
         cachedTotalPages: Int?
     ) = withContext(Dispatchers.Default) {
         val corrected = normalizePictureUrls(items)
-        withContext(Dispatchers.Main) {
-            pics.clear()
-            failedPages.clear()
-            loadedPages.clear()
-            val pages = cachedTotalPages?.coerceAtLeast(1) ?: 1
-            totalPages = pages
-            percentLoad = 1f
-            isPageRequestInFlight = false
-            isRetryingFailedPages = false
-            loadedPages[1] = corrected
-            pics.addAll(corrected)
+        stateMutex.withLock {
+            Snapshot.withMutableSnapshot {
+                pics.clear()
+                failedPages.clear()
+                loadedPages.clear()
+                val pages = cachedTotalPages?.coerceAtLeast(1) ?: 1
+                totalPages = pages
+                percentLoad = 1f
+                isPageRequestInFlight = false
+                isRetryingFailedPages = false
+                loadedPages[1] = corrected
+                pics.addAll(corrected)
+            }
         }
     }
 
-    suspend fun bundleSnapshotOrNull(): LAlbumPicsBundleSnapshot? = withContext(Dispatchers.Main) {
+    suspend fun bundleSnapshotOrNull(): LAlbumPicsBundleSnapshot? = stateMutex.withLock {
         if (failedPages.isNotEmpty() || percentLoad < 1f || pics.isEmpty()) {
-            return@withContext null
+            return@withLock null
         }
         LAlbumPicsBundleSnapshot(
             pics = pics.toList(),
@@ -225,9 +237,7 @@ class AlbumPicsDetails(
 
     private suspend fun appendPage(page: PageLoadResult, pages: Int) {
         val corrected = normalizePictureUrls(page.items)
-        withContext(Dispatchers.Main) {
-            totalPages = pages
-            percentLoad = page.page.toFloat() / pages
+        stateMutex.withLock {
             // Быстрый путь для последовательной загрузки (стр. 1,2,3,...): дописываем
             // только новую страницу в хвост вместо полной пересборки всего списка
             // (иначе это O(n²) и полная рекомпозиция на каждой странице).
@@ -235,26 +245,32 @@ class AlbumPicsDetails(
                     page.page == loadedPages.size + 1 &&
                     (1..loadedPages.size).all { loadedPages.containsKey(it) }
             loadedPages[page.page] = corrected
-            if (isContiguousTail) {
-                pics.addAll(corrected)
-            } else {
-                // Заполнение пропуска / ретрай страницы — пересобираем по порядку.
-                // Сначала собираем результат целиком, потом публикуем одной
-                // атомарной заменой: иначе лента успевает мигнуть пустой.
-                pics.replaceWith((1..pages).flatMap { loadedPages[it].orEmpty() })
+
+            // Заполнение пропуска / ретрай страницы — пересобираем по порядку.
+            // Собираем результат до входа в снапшот, чтобы под ним осталась
+            // только публикация.
+            val merged = if (isContiguousTail) null else (1..pages).flatMap { loadedPages[it].orEmpty() }
+
+            Snapshot.withMutableSnapshot {
+                totalPages = pages
+                percentLoad = page.page.toFloat() / pages
+                if (merged == null) {
+                    pics.addAll(corrected)
+                } else {
+                    // Одной атомарной заменой: иначе лента успевает мигнуть пустой.
+                    pics.replaceWith(merged)
+                }
             }
         }
     }
 
     suspend fun retryFailedPages() = withContext(Dispatchers.Default) {
-        val pagesToRetry = withContext(Dispatchers.Main) {
+        val pagesToRetry = stateMutex.withLock {
             failedPages.map { it.page }.distinct().sorted()
         }
         if (pagesToRetry.isEmpty()) return@withContext
 
-        withContext(Dispatchers.Main) {
-            isRetryingFailedPages = true
-        }
+        isRetryingFailedPages = true
 
         try {
             val knownTotalPages = totalPages ?: pagesToRetry.maxOrNull() ?: 1
@@ -269,10 +285,8 @@ class AlbumPicsDetails(
                 delay(PAGE_REQUEST_DELAY_MS)
             }
         } finally {
-            withContext(NonCancellable + Dispatchers.Main) {
-                percentLoad = 1f
-                isRetryingFailedPages = false
-            }
+            percentLoad = 1f
+            isRetryingFailedPages = false
         }
     }
 
@@ -283,15 +297,17 @@ class AlbumPicsDetails(
             message = message,
             htmlChallenge = error.isHtmlChallengeResponse()
         )
-        withContext(Dispatchers.Main) {
-            failedPages.removeAll { it.page == page }
-            failedPages.add(issue)
-            failedPages.sortBy { it.page }
+        stateMutex.withLock {
+            Snapshot.withMutableSnapshot {
+                failedPages.removeAll { it.page == page }
+                failedPages.add(issue)
+                failedPages.sortBy { it.page }
+            }
         }
     }
 
     private suspend fun clearPageIssue(page: Int) {
-        withContext(Dispatchers.Main) {
+        stateMutex.withLock {
             failedPages.removeAll { it.page == page }
         }
     }

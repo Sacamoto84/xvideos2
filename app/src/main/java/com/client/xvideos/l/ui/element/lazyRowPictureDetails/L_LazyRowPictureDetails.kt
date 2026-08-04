@@ -68,7 +68,7 @@ import com.client.xvideos.l.model.lPreviewImageUrl
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenFullScreen.L_FullScreenImage
-import com.client.xvideos.l.ui.screens.screenFullScreen.fullScreenImageFilteredPicArray
+import com.client.xvideos.l.ui.screens.screenFullScreen.LFullScreenPayload
 import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
 import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
 import com.redgifs.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
@@ -158,10 +158,13 @@ fun L_LazyRowPictureDetails(
                         var playInline by remember(item.url_to_original, item.url_to_video) { mutableStateOf(false) }
 
                         fun openFullScreen() {
-                            fullScreenImageFilteredPicArray = host.filteredPic.toList()
+                            // Ключ на каждое открытие: одна общая переменная давала
+                            // гонку при двух быстрых тапах подряд.
+                            val payloadKey = LFullScreenPayload.put(host.filteredPic.toList())
                             (mainNavigator ?: navigator).push(
                                 L_FullScreenImage(
                                     item = item,
+                                    payloadKey = payloadKey,
                                     onClose = { position ->
                                         Timber.i("scrollToItem $position")
                                         if (position != -1) {

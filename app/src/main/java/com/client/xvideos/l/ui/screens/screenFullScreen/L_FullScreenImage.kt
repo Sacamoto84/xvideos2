@@ -114,8 +114,6 @@ import kotlinx.parcelize.Parcelize
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 
-var fullScreenImageFilteredPicArray: List<PicsDetails> = emptyList()
-
 private const val TAG_URL = "url"
 
 // Хелперы offsetForPage/startOffsetForPage/endOffsetForPage удалены: они читали
@@ -130,7 +128,8 @@ class L_FullScreenImage(
     val albumName: String,
     /** Числовой id альбома для меню элемента. Пусто для лайков и коллекций. */
     val idAlbum: String = "",
-    //val filteredPicArray: List<PicsDetails>,
+    /** Ключ списка картинок в [LFullScreenPayload]. Сам список в Bundle не влезает. */
+    val payloadKey: String = "",
     val autoPlay: Boolean = false,
     val isAnimated: Boolean = false,
     val expandMenu: ExpandMenuType,
@@ -161,15 +160,14 @@ class L_FullScreenImage(
          */
         var isFullScreen by remember { mutableStateOf(false) }
 
-        //val filteredPic = filteredPicArray.toList() 🔴 📚 🗂️ 💾 𝑹𝒖𝒍𝒆𝒔 ⚡️⭐⭐⭐⭐⭐
         // Снимок берём один раз: toList() + indexOf (equals по всем полям PicsDetails)
         // на каждой рекомпозиции давали заметный провал кадров при смене страницы.
         //
-        // ifEmpty: список приходит через глобальную переменную, а сам экран Parcelable
-        // и восстанавливается Voyager'ом после смерти процесса — тогда глобал пуст.
-        // Без запасного варианта indexOf вернёт -1 и coerceIn(0, -1) уронит экран.
+        // ifEmpty: хранилище списков не переживает смерть процесса, а сам экран
+        // Parcelable и восстанавливается Voyager'ом. Без запасного варианта
+        // indexOf вернёт -1 и coerceIn(0, -1) уронит экран.
         val filteredPic = remember {
-            fullScreenImageFilteredPicArray.toList().ifEmpty { listOf(item) }
+            LFullScreenPayload.get(payloadKey).ifEmpty { listOf(item) }
         }
 
         val expandMenuViewModel: ExpandMenuViewModel = hiltViewModel()
