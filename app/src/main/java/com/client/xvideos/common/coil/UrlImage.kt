@@ -53,7 +53,6 @@ import coil3.size.Precision
 import coil3.size.Scale
 import com.client.xvideos.common.AppPath
 import com.composeunstyled.Text
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.conflate
@@ -63,7 +62,6 @@ import kotlin.math.roundToInt
 
 
 @Suppress("UiComposable")
-@OptIn(FlowPreview::class)
 @Composable
 fun UrlImage(
 

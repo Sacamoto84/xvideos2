@@ -17,14 +17,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,7 +69,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
@@ -110,7 +107,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import net.engawapg.lib.zoomable.ZoomState
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 
@@ -192,9 +188,6 @@ class L_FullScreenImage(
         }
 
         BackHandler { isClosing = true }
-
-
-        val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
 
 
         // Текущий индекс из pagerState
@@ -388,7 +381,9 @@ private fun LFullScreenPage(
     // Страница ушла из фокуса — снимаем зум. Пейджер держит соседние страницы
     // живыми, а увеличенная картинка рисуется graphicsLayer'ом без clip и
     // налезала на текущую страницу.
-    LaunchedEffect(isCurrentPage) { if (!isCurrentPage) zoomState.reset() }
+    // Ключ именно settled, а не current: currentPage флипается на середине свайпа,
+    // и reset() (это snapTo, не анимация) схлопывал картинку прямо на глазах.
+    LaunchedEffect(isSettledPage) { if (!isSettledPage) zoomState.reset() }
 
     // clipToBounds по границам страницы: зум и поворот (rotationZ + scale в
     // UrlImage) рисуют за пределами layout-границ, из-за чего соседние страницы
@@ -741,16 +736,6 @@ private fun lPictureInfoText(
         appendLine(thumbnail.url ?: "-")
     }
 }
-
-fun Modifier.blockPagerWhenZoomed(zoomState: ZoomState): Modifier = this.then(
-    if (zoomState.scale > 1.1f) {
-        Modifier.pointerInput(Unit) {
-            detectTapGestures { /* Блокируем все жесты */ }
-        }
-    } else {
-        Modifier
-    }
-)
 
 // Вариант 2: Создание кастомного Modifier
 fun Modifier.checkerboardBackground(
