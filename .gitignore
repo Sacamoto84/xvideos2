@@ -22,3 +22,7 @@ secrets.properties
 keystore.properties
 *.jks
 *.keystore
+
+# Вывод graphify: граф, отчёт и AST-кэш. Пересобирается из исходников,
+# в репозитории не нужен (graph.json ~3 МБ, кэш ещё больше).
+graphify-out/
