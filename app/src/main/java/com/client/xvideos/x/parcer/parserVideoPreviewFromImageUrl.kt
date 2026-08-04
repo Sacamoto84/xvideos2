@@ -3,9 +3,15 @@ package com.client.xvideos.x.parcer
 //https://cdn77-pic.xvideos-cdn.com/videos/thumbs169ll/6a/4f/6b/6a4f6bafe3abb03b5ea6108ab18ff1ad/6a4f6bafe3abb03b5ea6108ab18ff1ad.30.jpg
 //https://cdn77-pic.xvideos-cdn.com/videos/videopreview/6a/4f/6b/6a4f6bafe3abb03b5ea6108ab18ff1ad_169.mp4
 
-fun parserVideoPreviewFromImageUrl(s: String): String {
+/**
+ * Параметр нullable намеренно: сюда приходят поля моделей, разобранных Gson, а он
+ * умеет положить `null` в поле с типом `String` (см. [com.client.xvideos.x.model.ItemsX]).
+ * Раньше сигнатура была non-null, и такой `null` ронял приложение прямо в
+ * композиции — рантайм-проверкой Kotlin на входе в функцию.
+ */
+fun parserVideoPreviewFromImageUrl(s: String?): String {
 
-    val source = s.trim()
+    val source = s?.trim().orEmpty()
     if (source.isBlank() || source.equals("null", ignoreCase = true)) {
         return "null"
     }
