@@ -109,11 +109,11 @@ object L_ScreenAlbumSearch : Screen {
                         trailingIcon = {
                             if (searchText.isNotEmpty()) {
                                 IconButton(onClick = { vm.searchText.value = "" }) {
-                                    Icon(Icons.Default.Close, contentDescription = null, tint = Theme.L.textColor)
+                                    Icon(Icons.Default.Close, contentDescription = "Очистить поле поиска", tint = Theme.L.textColor)
                                 }
                             } else {
                                 IconButton(onClick = { vm.search(); keyboard?.hide() }) {
-                                    Icon(Icons.Default.Search, contentDescription = null, tint = Theme.L.textColor)
+                                    Icon(Icons.Default.Search, contentDescription = "Искать", tint = Theme.L.textColor)
                                 }
                             }
                         },

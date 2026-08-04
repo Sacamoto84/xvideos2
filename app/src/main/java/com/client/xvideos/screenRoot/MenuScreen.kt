@@ -65,7 +65,7 @@ object MenuScreen : Screen {
                     IconButton(onClick = { navigator.push(AppSettingsScreen) }, modifier = Modifier.displayCutoutPadding().size(48.dp)) {
                         Icon(
                             Icons.Default.MoreVert,
-                            contentDescription = null,
+                            contentDescription = "Настройки",
                             tint = Color.White,
                             modifier = Modifier.size(32.dp))
                     }

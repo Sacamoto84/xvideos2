@@ -146,7 +146,7 @@ private fun FavoritesContent(
                 IconButton(onClick = onProfile) {
                     Icon(
                         imageVector = Icons.Filled.AccountCircle,
-                        contentDescription = null,
+                        contentDescription = "Профиль",
                         tint = Color.LightGray,
                         modifier = Modifier
                             .padding(end = 16.dp)

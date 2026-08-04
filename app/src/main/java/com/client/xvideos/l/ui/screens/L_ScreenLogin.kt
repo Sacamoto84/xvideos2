@@ -174,7 +174,7 @@ fun LLoginContent(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = null,
+                        contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
                         tint = Color(0xFFB8B7B7)
                     )
                 }

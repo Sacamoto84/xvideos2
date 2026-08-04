@@ -205,7 +205,7 @@ private fun LCollectionDetailTopBar(
 
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null, tint = Theme.L.textColor)
+                    Icon(Icons.Default.MoreVert, contentDescription = "Меню коллекции", tint = Theme.L.textColor)
                 }
                 DropdownMenu(
                     expanded = menuExpanded,

@@ -227,7 +227,7 @@ private fun AppSettingsScreenContent(
                 IconButton(onClick = closeCurrentPage) {
                     Icon(
                         painterResource(R.drawable.exo_ic_chevron_left),
-                        contentDescription = null,
+                        contentDescription = "Назад",
                         tint = SettingsAccentColor
                     )
                 }

@@ -87,7 +87,7 @@ fun ExpandMenuHistoryContentStateless(
         ) {
             Icon(
                 imageVector = Icons.Default.History,
-                contentDescription = null,
+                contentDescription = "История поиска",
                 tint = if (expanded) Color.White else Color(0xFF757575),
                 modifier = Modifier.size(30.dp)
             )
@@ -140,7 +140,7 @@ private fun HistoryMenuItem(
         IconButton(onClick = onDeleteClick) {
             Icon(
                 imageVector = Icons.Default.Clear,
-                contentDescription = null,
+                contentDescription = "Удалить из истории",
                 tint = Color.LightGray
             )
         }

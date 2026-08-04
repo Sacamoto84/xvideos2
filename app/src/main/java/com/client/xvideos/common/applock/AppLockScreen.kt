@@ -187,7 +187,7 @@ private fun AppLockScreenContent(
                     IconButton(onClick = onShowPasswordToggle) {
                         Icon(
                             imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = null,
+                            contentDescription = if (showPassword) "Скрыть код доступа" else "Показать код доступа",
                             tint = Color(0xFFFFE800)
                         )
                     }

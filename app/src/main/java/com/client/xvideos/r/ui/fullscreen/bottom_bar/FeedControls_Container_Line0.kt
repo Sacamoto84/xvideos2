@@ -111,7 +111,7 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
 
         IconButton( onClick = { vm.enableAB = vm.enableAB.not() }, modifier = Modifier.size(46.dp) ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(painter = painterResource(R.drawable.rg_button), contentDescription = null, tint = if (vm.enableAB) Color.Green else Color.LightGray)
+                Icon(painter = painterResource(R.drawable.rg_button), contentDescription = if (vm.enableAB) "Выключить повтор отрезка A-B" else "Включить повтор отрезка A-B", tint = if (vm.enableAB) Color.Green else Color.LightGray)
                 Text("AB", color = if (vm.enableAB) Color.Green else Color.LightGray, fontSize = 8.sp, fontFamily = Theme.R.fontFamilyPopinsRegular)
             }
         }
@@ -134,9 +134,9 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
         }
 
         Divider()
-        IconButton(onClick = { vm.currentPlayerControls?.rewind(1f)}) { Icon(painter = painterResource(R.drawable.exo_icon_rewind), contentDescription = null, tint = Color.White) }
+        IconButton(onClick = { vm.currentPlayerControls?.rewind(1f)}) { Icon(painter = painterResource(R.drawable.exo_icon_rewind), contentDescription = "Перемотать назад", tint = Color.White) }
         Divider()
-        IconButton(onClick = { vm.currentPlayerControls?.forward(1f) }) { Icon(painter = painterResource(R.drawable.exo_icon_fastforward), contentDescription = null, tint = Color.White) }
+        IconButton(onClick = { vm.currentPlayerControls?.forward(1f) }) { Icon(painter = painterResource(R.drawable.exo_icon_fastforward), contentDescription = "Перемотать вперёд", tint = Color.White) }
         Divider()
 
         Box(

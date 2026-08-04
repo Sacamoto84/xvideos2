@@ -235,7 +235,7 @@ private fun SearchInputRow(
             keyboardActions = KeyboardActions(onDone = { onDone(value.text) })
         )
 
-        if (value.text.isNotEmpty()) { SearchIconButton(icon = Icons.Default.Clear, onClick = onClearClick) }
+        if (value.text.isNotEmpty()) { SearchIconButton(icon = Icons.Default.Clear, onClick = onClearClick, contentDescription = "Очистить поле поиска") }
 
         //SearchIconButton(icon = Icons.Default.Undo, onClick = onUndoClick)
 
@@ -248,9 +248,11 @@ private fun SearchInputRow(
 @Composable
 private fun SearchIconButton(
     icon: ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    /** Название действия для TalkBack: иконка кликабельная, без него это «просто картинка». */
+    contentDescription: String
 ) {
-    Icon( imageVector = icon, contentDescription = null, tint = Color(0xFF757575), modifier = Modifier.size(38.dp).padding(6.dp).clickable(onClick = onClick) )
+    Icon( imageVector = icon, contentDescription = contentDescription, tint = Color(0xFF757575), modifier = Modifier.size(38.dp).padding(6.dp).clickable(onClick = onClick) )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF121212)
@@ -348,7 +350,8 @@ fun PreviewSearchIconButton() {
     XvideosTheme {
         SearchIconButton(
             icon = Icons.Default.Clear,
-            onClick = {}
+            onClick = {},
+            contentDescription = "Очистить поле поиска"
         )
     }
 }

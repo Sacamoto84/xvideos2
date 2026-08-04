@@ -344,7 +344,7 @@ private fun LCollectionsTopBar(
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(
                             Icons.Default.FilterList,
-                            contentDescription = null,
+                            contentDescription = "Сортировка коллекций",
                             tint = Theme.L.textColor
                         )
                     }

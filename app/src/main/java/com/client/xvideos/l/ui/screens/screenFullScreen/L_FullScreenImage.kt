@@ -303,14 +303,14 @@ class L_FullScreenImage(
                 Row(modifier = Modifier.fillMaxWidth().align(Alignment.TopStart).offset(y = 4.dp), horizontalArrangement = Arrangement.SpaceBetween)
                 {
                     Row {
-                        IconButton(onClick = { rotate = rotate.not() }) { Icon(Icons.Default.ScreenRotation, contentDescription = null, tint = Color.White) }
-                        IconButton(onClick = { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) }) { Icon( if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz, contentDescription = null, tint = Color.White) }
+                        IconButton(onClick = { rotate = rotate.not() }) { Icon(Icons.Default.ScreenRotation, contentDescription = "Повернуть изображение", tint = Color.White) }
+                        IconButton(onClick = { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) }) { Icon( if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz, contentDescription = if (verticalPager) "Листать по горизонтали" else "Листать по вертикали", tint = Color.White) }
                         // Звук был зашит в mute без единой кнопки включить.
-                        IconButton(onClick = { Settings.l_fullscreen_video_muted.setValue(!videoMuted) }) { Icon( if (videoMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = Color.White) }
+                        IconButton(onClick = { Settings.l_fullscreen_video_muted.setValue(!videoMuted) }) { Icon( if (videoMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = if (videoMuted) "Включить звук" else "Выключить звук", tint = Color.White) }
                     }
 
                     Row {
-                        IconButton(onClick = { showInfoDialog = true }) { Icon( Icons.Default.Info, contentDescription = null, tint = Color.White ) }
+                        IconButton(onClick = { showInfoDialog = true }) { Icon( Icons.Default.Info, contentDescription = "Информация о картинке", tint = Color.White ) }
                         expandMenuViewModel.ExpandMenu( expandMenu, filteredPic.getOrNull(pagerState.currentPage) ?: item, idAlbum, isCollection )
                     }
                 }

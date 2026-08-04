@@ -253,7 +253,7 @@ private fun DownloadListItem(
                     IconButton(onClick = onFullScreenClick) {
                         Icon(
                             Icons.Outlined.Fullscreen,
-                            contentDescription = null,
+                            contentDescription = "Открыть во весь экран",
                             tint = Color.White,
                             modifier = Modifier.size(28.dp)
                         )
@@ -261,14 +261,14 @@ private fun DownloadListItem(
                     IconButton(onClick = onShareClick) {
                         Icon(
                             Icons.Outlined.Share,
-                            contentDescription = null,
+                            contentDescription = "Поделиться",
                             tint = Color.White
                         )
                     }
                     IconButton(onClick = onDeleteClick) {
                         Icon(
                             Icons.Outlined.Delete,
-                            contentDescription = null,
+                            contentDescription = "Удалить загрузку",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
