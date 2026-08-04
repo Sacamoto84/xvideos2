@@ -30,7 +30,9 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.l.ui.screens.TabRow
+import com.client.xvideos.common.ui.TabRow
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import com.client.xvideos.x.screens.dashboards.bottomBar.DashboardControlsRow
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
@@ -145,13 +147,15 @@ class ScreenXDashBoards : Screen {
         private const val SAVED_DOWNLOADS = 1
 
         /** Иконки главного таб-ряда: дашборды + сохранённое. */
-        private val mainTabs: List<ImageVector> = listOf(
+        // persistentListOf, а не listOf: обычный List для Compose нестабилен,
+        // и TabRow перекомпоновывался чаще, чем нужно.
+        private val mainTabs: ImmutableList<ImageVector> = persistentListOf(
             Icons.Outlined.Dashboard,
             Icons.Outlined.BookmarkBorder,
         )
 
         /** Под-табы раздела Savable: «Избранное» + «Сохранённое». */
-        private val savedTabs: List<ImageVector> = listOf(
+        private val savedTabs: ImmutableList<ImageVector> = persistentListOf(
             Icons.Outlined.FavoriteBorder,
             Icons.Outlined.Save,
         )

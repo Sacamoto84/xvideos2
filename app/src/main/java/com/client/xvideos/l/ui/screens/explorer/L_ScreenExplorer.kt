@@ -35,7 +35,7 @@ import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.L_ScreenAlbumTo
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.L_SavedTab
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddColumn
-import com.client.xvideos.r.ui.explorer.top.TabRow
+import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.r.ui.ui.atom.TabBarPoints
 import com.client.xvideos.screenRoot.LocalRootScreenModel
 import com.client.xvideos.r.common.downloader.ui.DownloadIndicator

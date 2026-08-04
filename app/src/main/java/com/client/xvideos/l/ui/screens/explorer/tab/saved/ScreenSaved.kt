@@ -24,7 +24,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.ui.screens.explorer.LNavigationState
-import com.client.xvideos.l.ui.screens.TabRow
+import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.L_ScreenSavedAlbumsTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.L_Screen_CollectionTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab

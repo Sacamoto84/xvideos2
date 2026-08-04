@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens
+package com.client.xvideos.common.ui
 
 import com.client.xvideos.common.theme.Theme
 
@@ -27,12 +27,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
+/**
+ * Нижний ряд вкладок с иконками. Общий для разделов L, R и X.
+ *
+ * Раньше существовал в двух экземплярах: `l/ui/screens/TabRow.kt` и
+ * `r/ui/explorer/top/TabRow.kt`. Отличались они двумя вещами — R-версия
+ * принимала [ImmutableList] вместо `List` и умела вешать `testTag`. При этом
+ * принадлежность файлов разделам была фиктивной: L-версию вызывали экраны R и
+ * X, а R-версию — экран L. Здесь оставлена R-версия как надмножество, и файл
+ * лежит там, где ему место.
+ *
+ * [ImmutableList] в сигнатуре не косметика: обычный `List` для Compose
+ * нестабилен, и вызов перекомпоновывался чаще, чем нужно.
+ *
+ * @param tags тестовые теги вкладок. Пустой список — теги не навешиваются,
+ *   поведение ровно как у прежней L-версии.
+ */
 @Composable
 fun TabRow(
-    titlesIcon: List<ImageVector>, onChangeState: (Int) -> Unit,
+    titlesIcon: ImmutableList<ImageVector>,
+    onChangeState: (Int) -> Unit,
     value: Int,
     containerColor: Color = Theme.background,
     overlay0: @Composable () -> Unit = {},
@@ -41,11 +62,12 @@ fun TabRow(
     overlay3: @Composable () -> Unit = {},
     overlay4: @Composable () -> Unit = {},
     overlay5: @Composable () -> Unit = {},
+    tags: ImmutableList<String> = persistentListOf()
 ) {
 
     val haptic = LocalHapticFeedback.current
 
-    var state by remember(value){ mutableIntStateOf(value) }
+    var state by remember(value) { mutableIntStateOf(value) }
 
     SecondaryTabRow(
         modifier = Modifier.height(48.dp),
@@ -61,8 +83,14 @@ fun TabRow(
         }
     ) {
         titlesIcon.forEachIndexed { index, item ->
-            Box(modifier = Modifier.background(if (index == state) Color.Transparent else Color.Transparent)) {
+            Box(modifier = Modifier.background(Color.Transparent)) {
                 Tab(
+                    modifier = Modifier.then(
+                        if (tags.isNotEmpty()) {
+                            Modifier.testTag(tags[index])
+                        } else
+                            Modifier
+                    ),
                     selected = index == state,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -104,6 +132,5 @@ fun TabRowPreview() {
         Icons.Outlined.Group,
         Icons.Outlined.BookmarkBorder
     )
-    TabRow(l, onChangeState = {}, 2)
+    TabRow(l.toPersistentList(), onChangeState = {}, 2)
 }
-

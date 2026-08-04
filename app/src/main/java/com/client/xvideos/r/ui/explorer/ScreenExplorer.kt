@@ -22,7 +22,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.l.ui.screens.TabRow
+import com.client.xvideos.common.ui.TabRow
+import kotlinx.collections.immutable.persistentListOf
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddRColumn
 import com.client.xvideos.r.ui.explorer.tab.gifs.R_ScreenGifsTab
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
@@ -32,7 +33,9 @@ import com.client.xvideos.r.ui.explorer.tab.search.SearchTab
 
 import com.client.xvideos.r.ui.ui.atom.TabBarPoints
 
-private val l = listOf(
+// persistentListOf, а не listOf: обычный List для Compose нестабилен, и TabRow
+// перекомпоновывался чаще, чем нужно.
+private val l = persistentListOf(
     Icons.Outlined.Movie,
     Icons.Outlined.Group,
     Icons.Outlined.BookmarkBorder,

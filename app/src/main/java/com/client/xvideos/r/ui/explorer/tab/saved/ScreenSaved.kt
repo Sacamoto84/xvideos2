@@ -26,7 +26,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.l.ui.screens.TabRow
+import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.r.ui.explorer.tab.FavoritesTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_CollectionTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_CreatorsTab
