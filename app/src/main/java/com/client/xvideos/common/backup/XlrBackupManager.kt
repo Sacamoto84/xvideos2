@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
+import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -48,6 +49,14 @@ object XlrBackupManager {
     private const val L_METADATA_FILE_NAME = "metadata.json"
     private const val L_COLLECTION_CONFIG_FILE_NAME = "collection.json"
     private const val R_DOWNLOAD_PATH = "R/Download"
+
+    /**
+     * Префикс временной копии прежних данных на время восстановления.
+     * Точка в начале — чтобы копия не выглядела как обычная папка данных,
+     * если процесс убьют посреди переноса.
+     */
+    private const val RESTORE_ASIDE_PREFIX = ".xlr_old_"
+
     private val sections = listOf("X", "L", "R")
 
     fun defaultFileName(now: Long = System.currentTimeMillis()): String {
@@ -185,25 +194,71 @@ object XlrBackupManager {
             }
             try {
                 val report = extractBackup(context, uri, tempRoot, safePaths)
-                safePaths.forEach { path ->
-                    val restored = File(tempRoot, path)
-                    val target = File(AppPath.main, path)
-                    ensureInside(File(AppPath.main).canonicalFile, target.canonicalFile)
-                    target.deleteRecursively()
-                    target.parentFile?.mkdirs()
-                    if (restored.exists()) {
-                        if (!restored.renameTo(target)) {
-                            restored.copyRecursively(target, overwrite = true)
-                        }
-                    } else {
-                        target.mkdirs()
-                    }
-                }
+                applyRestoredPaths(File(AppPath.main), tempRoot, safePaths)
                 report
             } finally {
                 tempRoot.deleteRecursively()
             }
         }
+    }
+
+    /**
+     * Переносит распакованные папки поверх текущих данных.
+     *
+     * Раньше каждая целевая папка удалялась до переноса. Между удалением и
+     * переносом данных не существовало нигде, кроме временной папки, и любой
+     * сбой посреди цикла (или убийство процесса) оставлял пользователя без
+     * части данных и без возможности откатиться.
+     *
+     * Теперь текущая папка не удаляется, а отодвигается в сторону под скрытым
+     * именем. Ошибка на любом шаге возвращает всё, что успели тронуть, в
+     * исходное состояние; отодвинутые копии удаляются только после того, как
+     * перенесены все пути.
+     */
+    internal fun applyRestoredPaths(mainRoot: File, tempRoot: File, paths: List<String>) {
+        val root = mainRoot.canonicalFile
+        // target -> отодвинутая копия прежнего содержимого
+        val movedAside = mutableListOf<Pair<File, File>>()
+        val written = mutableListOf<File>()
+
+        try {
+            paths.forEach { path ->
+                val target = File(mainRoot, path)
+                ensureInside(root, target.canonicalFile)
+
+                if (target.exists()) {
+                    val aside = File(target.parentFile, "$RESTORE_ASIDE_PREFIX${target.name}")
+                    aside.deleteRecursively()
+                    if (!target.renameTo(aside)) {
+                        error("Cannot move aside before restore: ${target.absolutePath}")
+                    }
+                    movedAside += target to aside
+                }
+
+                target.parentFile?.mkdirs()
+                val restored = File(tempRoot, path)
+                if (restored.exists()) {
+                    if (!restored.renameTo(target)) {
+                        restored.copyRecursively(target, overwrite = true)
+                    }
+                } else {
+                    target.mkdirs()
+                }
+                written += target
+            }
+        } catch (e: Throwable) {
+            Timber.e(e, "XlrBackupManager restore failed, rolling back")
+            written.forEach { it.deleteRecursively() }
+            movedAside.forEach { (target, aside) ->
+                target.deleteRecursively()
+                if (!aside.renameTo(target)) {
+                    Timber.e("Rollback incomplete, previous data left at ${aside.absolutePath}")
+                }
+            }
+            throw e
+        }
+
+        movedAside.forEach { (_, aside) -> aside.deleteRecursively() }
     }
 
     private fun writeManifest(zip: ZipOutputStream, selectedPaths: List<String>, options: XlrBackupOptions) {
