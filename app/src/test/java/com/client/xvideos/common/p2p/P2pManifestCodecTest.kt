@@ -1,6 +1,7 @@
 package com.client.xvideos.common.p2p
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class P2pManifestCodecTest {
@@ -46,5 +47,47 @@ class P2pManifestCodecTest {
             files = listOf(P2pManifestFile("MyCol.zip", "MyCol.zip", 1L, 100L)),
         )
         assertEquals(m, P2pManifestCodec.fromBytes(P2pManifestCodec.toBytes(m)))
+    }
+
+    /*
+     * Ниже — разбор манифеста, пришедшего с чужого устройства. Gson не смотрит на
+     * нуллабельность Kotlin: неизвестный type или отсутствующий files дают null в
+     * non-null поле, и падение случается позже, вдали от разбора. Битый манифест
+     * обязан отвергаться здесь, чтобы runCatching в P2pReceiveController его поймал.
+     */
+
+    @Test
+    fun `неизвестный тип отвергается`() {
+        // Так выглядит бандл из более новой версии приложения.
+        val json = """{"type":"L_SOMETHING_NEW","metadataFileName":null,"files":[]}"""
+
+        assertThrows(IllegalArgumentException::class.java) {
+            P2pManifestCodec.fromJson(json)
+        }
+    }
+
+    @Test
+    fun `манифест без списка файлов отвергается`() {
+        val json = """{"type":"L","metadataFileName":"metadata.json"}"""
+
+        assertThrows(IllegalArgumentException::class.java) {
+            P2pManifestCodec.fromJson(json)
+        }
+    }
+
+    @Test
+    fun `файл без пути отвергается`() {
+        val json = """{"type":"L","metadataFileName":null,"files":[{"name":"a.jpg","payloadId":1,"size":2}]}"""
+
+        assertThrows(IllegalArgumentException::class.java) {
+            P2pManifestCodec.fromJson(json)
+        }
+    }
+
+    @Test
+    fun `пустой json отвергается`() {
+        assertThrows(IllegalStateException::class.java) {
+            P2pManifestCodec.fromJson("null")
+        }
     }
 }

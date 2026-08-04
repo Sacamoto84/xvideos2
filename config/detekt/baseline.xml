@@ -9,9 +9,9 @@
     <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val album_type: AlbumType = AlbumType.Pictures</ID>
     <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val content_id : ContentId = ContentId.All</ID>
     <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val picture_count_rank : PictureCountRank = PictureCountRank.All</ID>
-    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("is_animated") val is_animated: Boolean</ID>
-    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_original") val url_to_original: String?</ID>
-    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_video") val url_to_video: String?</ID>
+    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("is_animated") val is_animated: Boolean = false</ID>
+    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_original") val url_to_original: String? = null</ID>
+    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_video") val url_to_video: String? = null</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val A: Map&lt;String, String&gt;? = null //Хуета</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val CPV: Boolean</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val F: String</ID>

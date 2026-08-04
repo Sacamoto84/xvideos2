@@ -35,7 +35,41 @@ object P2pManifestCodec {
     private val gson = Gson()
 
     fun toJson(manifest: P2pManifest): String = gson.toJson(manifest)
-    fun fromJson(json: String): P2pManifest = gson.fromJson(json, P2pManifest::class.java)
+
+    /**
+     * Разбирает манифест, пришедший **с чужого устройства**, и проверяет его.
+     *
+     * Gson не вызывает конструктор Kotlin и не смотрит на нуллабельность: у
+     * класса без значений по умолчанию у всех полей объект создаётся через
+     * `Unsafe`, а поля заполняются рефлексией. Неизвестное значение `type`
+     * (например, из более новой версии приложения) или отсутствующий `files`
+     * дают `null` в non-null поле — и падение случается позже, вдали от разбора.
+     *
+     * Значения по умолчанию здесь были бы хуже проверки: `type` решает, в какое
+     * хранилище лягут файлы, и подстановка умолчания молча уложила бы чужой
+     * бандл не туда. Поэтому битый манифест — ошибка; вызывающая сторона
+     * (`P2pReceiveController`) уже оборачивает разбор в `runCatching`.
+     */
+    fun fromJson(json: String): P2pManifest {
+        val parsed = gson.fromJson(json, P2pManifest::class.java)
+            ?: error("P2P-манифест: пустой JSON")
+
+        @Suppress("SENSELESS_COMPARISON")
+        require(parsed.type != null) { "P2P-манифест: неизвестный или отсутствующий type" }
+
+        @Suppress("SENSELESS_COMPARISON")
+        require(parsed.files != null) { "P2P-манифест: отсутствует список files" }
+
+        parsed.files.forEach { file ->
+            @Suppress("SENSELESS_COMPARISON")
+            require(file.name != null && file.relativePath != null) {
+                "P2P-манифест: у файла нет имени или пути"
+            }
+        }
+
+        return parsed
+    }
+
     fun toBytes(manifest: P2pManifest): ByteArray = toJson(manifest).toByteArray(Charsets.UTF_8)
     fun fromBytes(bytes: ByteArray): P2pManifest = fromJson(String(bytes, Charsets.UTF_8))
 }

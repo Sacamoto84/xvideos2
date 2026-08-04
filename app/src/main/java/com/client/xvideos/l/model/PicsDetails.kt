@@ -69,21 +69,21 @@ import com.google.gson.annotations.SerializedName
 @Immutable
 @Parcelize
 data class PicsDetails(
-    @SerializedName("height") val height: Int, //"846"
-    @SerializedName("width")  val width: Int, //"1280"
-    @SerializedName("is_animated") val is_animated: Boolean,
-    @SerializedName("url_to_original") val url_to_original: String?,
-    @SerializedName("url_to_video") val url_to_video: String?,
+    @SerializedName("height") val height: Int = 0, //"846"
+    @SerializedName("width")  val width: Int = 0, //"1280"
+    @SerializedName("is_animated") val is_animated: Boolean = false,
+    @SerializedName("url_to_original") val url_to_original: String? = null,
+    @SerializedName("url_to_video") val url_to_video: String? = null,
     @SerializedName("album") val album: String? = "null",
     @SerializedName("thumbnails") val thumbnails: List<Thumbnails>? = emptyList()
 ) : Parcelable
 
 @Parcelize
 data class Thumbnails(
-    @SerializedName("width") val width: Int,    //640,
-    @SerializedName("height") val height: Int,  //3779,
-    @SerializedName("size") val size: String?,   //"small", "xMax"
-    @SerializedName("url") val url: String?      //"https://..."
+    @SerializedName("width") val width: Int = 0,    //640,
+    @SerializedName("height") val height: Int = 0,  //3779,
+    @SerializedName("size") val size: String? = null,   //"small", "xMax"
+    @SerializedName("url") val url: String? = null      //"https://..."
 ) : Parcelable
 
 /**

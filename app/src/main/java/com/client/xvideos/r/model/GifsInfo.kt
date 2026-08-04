@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 
 @Stable
 data class GifsInfo(
-    @SerializedName("id") val id: String,
+    @SerializedName("id") val id: String = "",
     @SerializedName("createDate") val createDate: Long = 0,
     @SerializedName("contentType") val contentType: String = "Solo Female",
     @SerializedName("likes") val likes: Int = 0,
