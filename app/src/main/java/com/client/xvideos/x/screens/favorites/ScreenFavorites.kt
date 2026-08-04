@@ -25,7 +25,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowCircleDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.SaveAlt
@@ -56,7 +55,6 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.screens.profile.ScreenProfile
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import com.composables.core.HorizontalSeparator
 
@@ -82,7 +80,6 @@ class ScreenFavorites() : Screen {
                 if (item.id in downloadedIds) (vm.saved.downloads.localPosterPath(item.id) ?: item.previewImage)
                 else item.previewImage
             },
-            onProfile = { navigator.push(ScreenProfile()) },
             onDelete = { vm.removeFavorite(it) },
             onDownload = { vm.download(it) },
             onSaveToGallery = { vm.saveToGallery(it) },
@@ -102,7 +99,6 @@ private fun FavoritesContent(
     favorites: List<ItemsX>,
     localUrlOf: (ItemsX) -> String?,
     posterUrlOf: (ItemsX) -> String,
-    onProfile: () -> Unit,
     onDelete: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     onPlayLocal: (String) -> Unit,
@@ -137,16 +133,6 @@ private fun FavoritesContent(
                     modifier = Modifier.padding(start = 16.dp)
                 )
 
-                IconButton(onClick = onProfile) {
-                    Icon(
-                        imageVector = Icons.Filled.AccountCircle,
-                        contentDescription = "Профиль",
-                        tint = Color.LightGray,
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(32.dp)
-                    )
-                }
             }
             HorizontalSeparator(color = Color(0xFF9E9E9E))
         }
@@ -365,7 +351,6 @@ private fun ScreenFavoritesPreview() {
         ),
         localUrlOf = { null },
         posterUrlOf = { it.previewImage },
-        onProfile = {},
         onDelete = {},
         onDownload = {},
         onPlayLocal = {},
