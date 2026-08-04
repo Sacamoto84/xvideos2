@@ -34,6 +34,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,6 +56,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -122,7 +124,10 @@ private const val TAG_URL = "url"
 @Parcelize
 class L_FullScreenImage(
     val item: PicsDetails,
+    /** Имя источника: id альбома, "l_likes" или имя коллекции. Идёт в загрузку файлов. */
     val albumName: String,
+    /** Числовой id альбома для меню элемента. Пусто для лайков и коллекций. */
+    val idAlbum: String = "",
     //val filteredPicArray: List<PicsDetails>,
     val autoPlay: Boolean = false,
     val isAnimated: Boolean = false,
@@ -157,7 +162,13 @@ class L_FullScreenImage(
         //val filteredPic = filteredPicArray.toList() 🔴 📚 🗂️ 💾 𝑹𝒖𝒍𝒆𝒔 ⚡️⭐⭐⭐⭐⭐
         // Снимок берём один раз: toList() + indexOf (equals по всем полям PicsDetails)
         // на каждой рекомпозиции давали заметный провал кадров при смене страницы.
-        val filteredPic = remember { fullScreenImageFilteredPicArray.toList() }
+        //
+        // ifEmpty: список приходит через глобальную переменную, а сам экран Parcelable
+        // и восстанавливается Voyager'ом после смерти процесса — тогда глобал пуст.
+        // Без запасного варианта indexOf вернёт -1 и coerceIn(0, -1) уронит экран.
+        val filteredPic = remember {
+            fullScreenImageFilteredPicArray.toList().ifEmpty { listOf(item) }
+        }
 
         val expandMenuViewModel: ExpandMenuViewModel = hiltViewModel()
 
@@ -192,10 +203,6 @@ class L_FullScreenImage(
 
         // Текущий индекс из pagerState
         val currentIndex = pagerState.currentPage
-
-        // settledPage меняется только после остановки прокрутки. По нему создаём
-        // тяжёлые ресурсы (видеоплеер), чтобы не аллоцировать их в середине свайпа.
-        val settledIndex = pagerState.settledPage
 
         LaunchedEffect(currentIndex) { if (currentIndex != initialIndex) { corruptCancel = true } }
 
@@ -242,7 +249,7 @@ class L_FullScreenImage(
                         pageItem = filteredPic[page],
                         page = page,
                         currentIndex = currentIndex,
-                        settledIndex = settledIndex,
+                        pagerState = pagerState,
                         rotate = rotate,
                         albumName = albumName,
                         autoPlay = autoPlay,
@@ -265,7 +272,7 @@ class L_FullScreenImage(
                     pageItem = filteredPic[page],
                     page = page,
                     currentIndex = currentIndex,
-                    settledIndex = settledIndex,
+                    pagerState = pagerState,
                     rotate = rotate,
                     albumName = albumName,
                     autoPlay = autoPlay,
@@ -291,7 +298,7 @@ class L_FullScreenImage(
 
                     Row {
                         IconButton(onClick = { showInfoDialog = true }) { Icon( Icons.Default.Info, contentDescription = null, tint = Color.White ) }
-                        expandMenuViewModel.ExpandMenu( expandMenu, filteredPic[pagerState.currentPage], albumName, isCollection )
+                        expandMenuViewModel.ExpandMenu( expandMenu, filteredPic.getOrNull(pagerState.currentPage) ?: item, idAlbum, isCollection )
                     }
                 }
             }
@@ -366,7 +373,13 @@ private fun LFullScreenPage(
     pageItem: PicsDetails,
     page: Int,
     currentIndex: Int,
-    settledIndex: Int,
+    /**
+     * Только для settledPage — он меняется раз в свайп.
+     * Ничего, что обновляется каждый кадр (currentPageOffsetFraction,
+     * currentPage вместе с ним), здесь читать нельзя: страница уйдёт
+     * в рекомпозицию на каждом кадре прокрутки.
+     */
+    pagerState: PagerState,
     rotate: Boolean,
     albumName: String,
     autoPlay: Boolean,
@@ -376,7 +389,13 @@ private fun LFullScreenPage(
     val zoomState = rememberZoomState()
     val coroutineScope = rememberCoroutineScope()
     val isCurrentPage = currentIndex == page
-    val isSettledPage = settledIndex == page
+
+    // derivedStateOf, а не settledIndex параметром: чтение settledPage в scope
+    // Content рекомпозило весь экран на каждый settle. Здесь рекомпозятся только
+    // те страницы, у которых флаг реально поменялся.
+    val isSettledPage by remember(page, pagerState) {
+        derivedStateOf { pagerState.settledPage == page }
+    }
 
     // Страница ушла из фокуса — снимаем зум. Пейджер держит соседние страницы
     // живыми, а увеличенная картинка рисуется graphicsLayer'ом без clip и

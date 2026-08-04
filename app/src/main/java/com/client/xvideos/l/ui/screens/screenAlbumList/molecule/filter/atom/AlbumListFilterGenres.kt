@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,14 +48,20 @@ fun AlbumListFilterGenres(
 
     val mediaCategories = mediaCategoriesFlow.collectAsStateWithLifecycle().value
 
-    val filterTerms = filterGenreStateCount?.map { it.term }?.toSet()
+    val filterTerms = remember(filterGenreStateCount) {
+        filterGenreStateCount?.map { it.term }?.toSet()
+    }
 
     val genresPlus = filter.genresPlus
     val genresMinus = filter.genresMinus
 
     val allGenres = mediaCategories?.genres ?: emptyList()
 
-    val genresPlusCorrect = allGenres.minus(genresPlus).minus(genresMinus).filter { filterTerms?.contains(it.title) == true }
+    // remember: два minus плюс filter по всему списку жанров на каждой рекомпозиции.
+    val genresPlusCorrect = remember(allGenres, genresPlus, genresMinus, filterTerms) {
+        allGenres.minus(genresPlus).minus(genresMinus)
+            .filter { filterTerms?.contains(it.title) == true }
+    }
     val palette = StyleGenresTags.Palette
 
     Column(modifier = Modifier.fillMaxWidth().background(palette.surface))

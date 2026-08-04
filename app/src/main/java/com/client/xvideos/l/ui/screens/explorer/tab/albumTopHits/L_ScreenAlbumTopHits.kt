@@ -19,7 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -80,7 +80,7 @@ object L_ScreenAlbumTopHits : Screen {
 
         val vm: ScreenLAlbumTopHitsSM = getScreenModel()
 
-        val items = vm.albumTopHits.collectAsState().value?.items
+        val items = vm.albumTopHits.collectAsStateWithLifecycle().value?.items
 
         //val haptic = LocalHapticFeedback.current
 

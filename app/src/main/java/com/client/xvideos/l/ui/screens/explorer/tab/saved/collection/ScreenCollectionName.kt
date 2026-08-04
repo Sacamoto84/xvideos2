@@ -101,19 +101,6 @@ class ScreenCollectionName(
     }
 }
 
-@Composable
-fun L_CollectionNameContent(
-    collectionName: String,
-    savedL: SavedL
-) {
-    val host = remember(collectionName) { LazyRowPictureDetailsHost(collectionName) }
-    L_CollectionNameContent(
-        collectionName = collectionName,
-        savedL = savedL,
-        host = host
-    )
-}
-
 @OptIn(DelicateCoroutinesApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable

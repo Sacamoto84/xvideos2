@@ -96,16 +96,21 @@ class SavedL_Collection(
 
     fun deleteCollection(collectionName: String) {
         Timber.i("SavedL_Collection deleteCollection() collectionName:$collectionName")
-        val collectionRoot = File(AppPath.l_collection, collectionName)
-        if (collectionRoot.deleteRecursively()) {
-            if (currentCollectionName == collectionName) {
-                currentCollectionName = null
-                listUrl.clear()
+        // deleteRecursively по всей коллекции — это тысячи файлов, только на IO.
+        scope.launch(Dispatchers.IO) {
+            val deleted = File(AppPath.l_collection, collectionName).deleteRecursively()
+            withContext(Dispatchers.Main) {
+                if (deleted) {
+                    if (currentCollectionName == collectionName) {
+                        currentCollectionName = null
+                        listUrl.clear()
+                    }
+                    SnackBar.success("Коллекция $collectionName удалена")
+                    refreshCollectionList()
+                } else {
+                    SnackBar.error("Ошибка удаления коллекции $collectionName")
+                }
             }
-            SnackBar.success("Коллекция $collectionName удалена")
-            refreshCollectionList()
-        } else {
-            SnackBar.error("Ошибка удаления коллекции $collectionName")
         }
     }
 
@@ -269,57 +274,84 @@ class SavedL_Collection(
     }
 
     fun removeAll(items: List<PicsDetails>, collectionName: String) {
-        val collectionRoot = File(AppPath.l_collection, collectionName)
-        val removedCount = items
-            .distinctBy { lPicsDetailsIdentityKey(it) }
-            .count { item ->
+        val uniqueItems = items.distinctBy { lPicsDetailsIdentityKey(it) }
+        // Обход папок коллекции на каждый элемент плюс рекурсивное удаление — на IO.
+        scope.launch(Dispatchers.IO) {
+            val collectionRoot = File(AppPath.l_collection, collectionName)
+            val removedCount = uniqueItems.count { item ->
                 val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
                 folder?.deleteRecursively() == true
             }
 
-        if (removedCount > 0) {
-            SnackBar.info("Удалено из коллекции: $removedCount")
-            refreshCollectionList()
-            if (currentCollectionName == collectionName) {
-                refresh()
+            if (removedCount > 0) {
+                SnackBar.info("Удалено из коллекции: $removedCount")
+                refreshCollectionList()
+                if (currentCollectionName == collectionName) {
+                    refresh()
+                }
+            } else {
+                SnackBar.error("Файлы не найдены")
             }
-        } else {
-            SnackBar.error("Файлы не найдены")
         }
     }
 
     fun setManualCover(item: PicsDetails, collectionName: String? = currentCollectionName) {
         val name = collectionName ?: return
-        val collectionRoot = File(AppPath.l_collection, name)
-        val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
-        if (folder == null) {
-            SnackBar.error("Не удалось найти файл для обложки")
-            return
-        }
+        // Поиск папки элемента + чтение и запись config-файла — файловые операции.
+        // Вызов идёт из onClick меню, с UI-потока это фриз (см. refreshCollectionList).
+        scope.launch(Dispatchers.IO) {
+            val collectionRoot = File(AppPath.l_collection, name)
+            try {
+                val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
+                if (folder == null) {
+                    SnackBar.error("Не удалось найти файл для обложки")
+                    return@launch
+                }
 
-        val config = lReadCollectionConfig(collectionRoot).copy(coverFolderName = folder.name)
-        lWriteCollectionConfig(collectionRoot, config)
-        SnackBar.success("Обложка коллекции обновлена")
-        refreshCollectionList()
+                val config = lReadCollectionConfig(collectionRoot).copy(coverFolderName = folder.name)
+                lWriteCollectionConfig(collectionRoot, config)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "SavedL_Collection setManualCover() Ошибка установки обложки")
+                SnackBar.error("Ошибка установки обложки")
+                return@launch
+            }
+            SnackBar.success("Обложка коллекции обновлена")
+            refreshCollectionList()
+        }
     }
 
     fun removeDuplicateItems(collectionName: String? = currentCollectionName) {
         val name = collectionName ?: return
-        val collectionRoot = File(AppPath.l_collection, name)
-        val duplicateGroups = lFindCollectionDuplicateFolders(collectionRoot)
-        val foldersToDelete = duplicateGroups.flatMap { group -> group.drop(1).map { it.second } }
+        // Обход всех папок коллекции с чтением metadata.json каждого элемента плюс
+        // рекурсивное удаление дублей — только на IO, иначе ANR на большой коллекции.
+        scope.launch(Dispatchers.IO) {
+            val collectionRoot = File(AppPath.l_collection, name)
+            val removedCount = try {
+                val groups = lFindCollectionDuplicateFolders(collectionRoot)
+                val foldersToDelete = groups.flatMap { group -> group.drop(1).map { it.second } }
 
-        if (foldersToDelete.isEmpty()) {
-            SnackBar.info("Дубли не найдены")
-            refreshDuplicates(name)
-            return
-        }
+                if (foldersToDelete.isEmpty()) {
+                    SnackBar.info("Дубли не найдены")
+                    refreshDuplicates(name)
+                    return@launch
+                }
 
-        val removedCount = foldersToDelete.count { it.deleteRecursively() }
-        SnackBar.info("Удалено дублей: $removedCount")
-        refreshCollectionList()
-        if (currentCollectionName == name) {
-            refresh()
+                foldersToDelete.count { it.deleteRecursively() }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "SavedL_Collection removeDuplicateItems() Ошибка удаления дублей")
+                SnackBar.error("Ошибка удаления дублей")
+                return@launch
+            }
+
+            SnackBar.info("Удалено дублей: $removedCount")
+            refreshCollectionList()
+            if (currentCollectionName == name) {
+                refresh()
+            }
         }
     }
 
@@ -351,24 +383,27 @@ class SavedL_Collection(
 
     private fun remove(identifiers: List<String>, collectionName: String) {
         Timber.i("SavedL_Collection remove() identifiers:$identifiers collection:$collectionName")
-        val collectionRoot = File(AppPath.l_collection, collectionName)
-        val folder = lFindCollectionItemFolder(collectionRoot, identifiers)
-        val file = identifiers.firstOrNull()?.lToFilePath()?.let { File(it) }
+        // Поиск папки элемента обходит коллекцию, удаление рекурсивное — на IO.
+        scope.launch(Dispatchers.IO) {
+            val collectionRoot = File(AppPath.l_collection, collectionName)
+            val folder = lFindCollectionItemFolder(collectionRoot, identifiers)
+            val file = identifiers.firstOrNull()?.lToFilePath()?.let { File(it) }
 
-        val removed = when {
-            folder != null -> folder.deleteRecursively()
-            file != null && lIsInside(collectionRoot, file) && file.exists() -> file.delete()
-            else -> false
-        }
+            val removed = when {
+                folder != null -> folder.deleteRecursively()
+                file != null && lIsInside(collectionRoot, file) && file.exists() -> file.delete()
+                else -> false
+            }
 
-        if (removed) {
-            SnackBar.info("Removed from collection")
-            refreshCollectionList()
-        } else {
-            SnackBar.error("Файл не найден")
-        }
-        if (currentCollectionName == collectionName) {
-            refresh()
+            if (removed) {
+                SnackBar.info("Removed from collection")
+                refreshCollectionList()
+            } else {
+                SnackBar.error("Файл не найден")
+            }
+            if (currentCollectionName == collectionName) {
+                refresh()
+            }
         }
     }
 }

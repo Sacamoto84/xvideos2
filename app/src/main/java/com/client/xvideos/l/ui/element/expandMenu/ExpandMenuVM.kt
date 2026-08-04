@@ -71,10 +71,10 @@ class ExpandMenuViewModel @Inject constructor(
     @Composable
     fun ExpandMenuAlbum(item: PicsDetails, idAlbum: String, isCollection: Boolean = false) {
 
-        val album = when(idAlbum){
-            "likes" -> 0
-            else -> idAlbum.toLong()
-        }
+        // Сюда прилетает и albumName (L_FullScreenImage), а он бывает нечисловым:
+        // "l_likes" у лайков, имя папки у коллекций. toLong() на таком падал бы
+        // прямо в композиции. Нечисловой источник = псевдоальбом, id 0.
+        val album = idAlbum.toLongOrNull() ?: 0L
 
         AlbumItemExpandMenu(
             item = item, onDownload = { it1 -> downloadLike(it1, album) },

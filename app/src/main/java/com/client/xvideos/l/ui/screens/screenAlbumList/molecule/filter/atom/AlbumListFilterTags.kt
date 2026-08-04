@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,12 +44,24 @@ fun AlbumListFilterTags(
 ) {
 
     val tagCountItems = filterTagStateCount.orEmpty()
-    val filterTerms = tagCountItems.map { it.term }.toSet()
 
     val tagsPlus = filter.tagPlus
     val tagsMinus = filter.tagMinus
 
-    val tagsCorrect = filterTerms.minus(tagsPlus.map{it}).minus(tagsMinus.map{it}).toList()
+    // remember: без него весь список тегов (map + toSet + два minus + toList)
+    // пересобирался на каждой рекомпозиции диалога фильтра.
+    val tagsCorrect = remember(tagCountItems, tagsPlus, tagsMinus) {
+        tagCountItems.map { it.term }.toSet()
+            .minus(tagsPlus.toSet())
+            .minus(tagsMinus.toSet())
+            .toList()
+    }
+
+    // Счётчик берётся для каждой видимой строки: линейный find по списку тегов
+    // превращал отрисовку списка в O(n²). Индекс строим один раз.
+    val tagCountByTerm = remember(tagCountItems) {
+        tagCountItems.associate { it.term to it.count }
+    }
     val palette = StyleGenresTags.Palette
 
     Column(modifier = Modifier.fillMaxWidth().background(palette.surface))
@@ -165,7 +178,7 @@ fun AlbumListFilterTags(
 
                                 }
 
-                                val count = tagCountItems.find { it1 -> it1.term == item }?.count ?: -1
+                                val count = tagCountByTerm[item] ?: -1
                                 Text(count.toString(), color = palette.textSecondary, style = Theme.L.Type.rowTitle.copy(color = palette.textSecondary, fontWeight = FontWeight.Bold))
 
                             }

@@ -244,7 +244,10 @@ private fun Screen.ScreenAlbumListContent(
 
                             items(
                                 count = pageItems.size,
-                                key = { pageItems[it].id }
+                                // Индекс в ключе обязателен: выдача может повторить
+                                // один альбом на странице, а дублирующийся ключ роняет
+                                // LazyLayout ("Key ... was already used").
+                                key = { "${pageItems[it].id}#$it" }
                             ) { index ->
 
                                 val item = pageItems[index]

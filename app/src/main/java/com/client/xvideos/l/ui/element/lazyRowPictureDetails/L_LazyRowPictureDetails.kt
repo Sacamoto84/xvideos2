@@ -172,6 +172,10 @@ fun L_LazyRowPictureDetails(
                                         }
                                     },
                                     albumName = host.albumName,
+                                    // Меню элемента ждёт числовой id, а не имя источника:
+                                    // раньше сюда уходил albumName и это работало только
+                                    // потому, что у экрана альбома оба поля совпадают.
+                                    idAlbum = host.idAlbum,
                                     expandMenu = expandMenu,
                                     isCollection = isCollection,
                                     autoPlay = true,

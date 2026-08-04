@@ -22,7 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -86,8 +86,11 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory ->  factory.create(tag) }
-        val items = vm.albumTopHits.collectAsState().value?.sections
-        val title = vm.albumTopHits.collectAsState().value?.title
+        // Одна подписка на оба поля: два collectAsState по одному и тому же Flow
+        // заводили два независимых коллектора.
+        val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
+        val items = albumTopHits?.sections
+        val title = albumTopHits?.title
         val haptic = LocalHapticFeedback.current
 
         Scaffold(
