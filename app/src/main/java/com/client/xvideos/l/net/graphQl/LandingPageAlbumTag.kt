@@ -1,7 +1,6 @@
 package com.client.xvideos.l.net.graphQl
 
 import com.client.xvideos.l.model.Landing_page_albumType
-import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.repository.Repository
 import com.google.gson.Gson
 import com.google.gson.JsonParser

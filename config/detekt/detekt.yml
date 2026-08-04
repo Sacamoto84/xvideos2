@@ -107,8 +107,18 @@ style:
     active: true
   UnusedImports:
     active: true
+  # @Preview-функции никто не вызывает из кода — их запускает IDE. Без этого
+  # исключения 67 из 93 срабатываний правила были превью, то есть шумом,
+  # который прятал настоящий мёртвый код.
   UnusedPrivateMember:
     active: true
+    ignoreAnnotated: ['Preview']
+  UnusedPrivateProperty:
+    active: true
+    ignoreAnnotated: ['Preview']
+  UnusedParameter:
+    active: true
+    ignoreAnnotated: ['Preview', 'Composable']
   ReturnCount:
     active: false
   ForbiddenComment:

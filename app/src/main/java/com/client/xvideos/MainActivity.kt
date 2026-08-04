@@ -41,8 +41,6 @@ import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.util.KeepScreenOn
-import com.client.xvideos.common.util.getStatusBarInsetDp
-import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.screenRoot.ScreenRoot
@@ -50,7 +48,6 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 /**

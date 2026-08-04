@@ -1,6 +1,5 @@
 package com.client.xvideos.l.net.graphQl
 
-import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
 import com.google.gson.Gson

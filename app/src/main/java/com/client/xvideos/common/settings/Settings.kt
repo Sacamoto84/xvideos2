@@ -3,7 +3,6 @@ package com.client.xvideos.common.settings
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.client.xvideos.App
 import com.client.xvideos.common.json.JsonTypes
 import com.client.xvideos.common.settings.element.SettingElementBoolean
 import com.client.xvideos.common.settings.element.SettingElementInt

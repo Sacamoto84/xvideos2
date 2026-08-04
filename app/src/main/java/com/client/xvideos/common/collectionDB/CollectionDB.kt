@@ -1,12 +1,10 @@
 package com.client.xvideos.common.collectionDB
 
-import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
 import com.google.gson.Gson
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
-import java.lang.reflect.Type
 
 /**
  *

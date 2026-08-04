@@ -43,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -73,7 +72,6 @@ import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
 import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
 import com.redgifs.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 

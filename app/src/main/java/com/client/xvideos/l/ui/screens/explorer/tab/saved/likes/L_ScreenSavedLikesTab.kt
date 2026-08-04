@@ -28,8 +28,6 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.PicsDetails

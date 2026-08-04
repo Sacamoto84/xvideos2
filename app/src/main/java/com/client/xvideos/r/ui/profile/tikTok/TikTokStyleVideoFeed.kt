@@ -1,6 +1,5 @@
 package com.client.xvideos.r.ui.profile.tikTok
 
-import com.client.xvideos.common.theme.Theme
 
 //@OptIn(ExperimentalFoundationApi::class)
 //@Composable

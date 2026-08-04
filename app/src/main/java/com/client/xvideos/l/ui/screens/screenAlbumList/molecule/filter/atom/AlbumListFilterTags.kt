@@ -48,20 +48,8 @@ fun AlbumListFilterTags(
     val tagsPlus = filter.tagPlus
     val tagsMinus = filter.tagMinus
 
-    // remember: без него весь список тегов (map + toSet + два minus + toList)
-    // пересобирался на каждой рекомпозиции диалога фильтра.
-    val tagsCorrect = remember(tagCountItems, tagsPlus, tagsMinus) {
-        tagCountItems.map { it.term }.toSet()
-            .minus(tagsPlus.toSet())
-            .minus(tagsMinus.toSet())
-            .toList()
-    }
-
-    // Счётчик берётся для каждой видимой строки: линейный find по списку тегов
-    // превращал отрисовку списка в O(n²). Индекс строим один раз.
-    val tagCountByTerm = remember(tagCountItems) {
-        tagCountItems.associate { it.term to it.count }
-    }
+    val tagsCorrect = rememberSelectableTags(tagCountItems, tagsPlus, tagsMinus)
+    val tagCountByTerm = rememberTagCountIndex(tagCountItems)
     val palette = StyleGenresTags.Palette
 
     Column(modifier = Modifier.fillMaxWidth().background(palette.surface))
@@ -191,3 +179,32 @@ fun AlbumListFilterTags(
 
     }
 }
+
+/**
+ * Теги, доступные для выбора: всё, что есть в выдаче, минус уже добавленные в
+ * плюс и минус. Без [remember] этот набор (map + toSet + два minus + toList)
+ * пересобирался на каждой рекомпозиции диалога фильтра.
+ */
+@Composable
+private fun rememberSelectableTags(
+    tagCountItems: List<AlbumListFilterGenreCountResponse>,
+    tagsPlus: List<String>,
+    tagsMinus: List<String>
+): List<String> = remember(tagCountItems, tagsPlus, tagsMinus) {
+    tagCountItems.map { it.term }.toSet()
+        .minus(tagsPlus.toSet())
+        .minus(tagsMinus.toSet())
+        .toList()
+}
+
+/**
+ * Счётчик по тегу. Берётся для каждой видимой строки списка, поэтому линейный
+ * поиск превращал отрисовку в O(n²) — строим индекс один раз.
+ */
+@Composable
+private fun rememberTagCountIndex(
+    tagCountItems: List<AlbumListFilterGenreCountResponse>
+): Map<String, Int> = remember(tagCountItems) {
+    tagCountItems.associate { it.term to it.count }
+}
+

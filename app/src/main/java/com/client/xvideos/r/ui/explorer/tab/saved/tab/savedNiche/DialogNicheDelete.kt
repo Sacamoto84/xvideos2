@@ -2,24 +2,19 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
-import com.composeunstyled.Text
 
 @Composable
 fun DialogNicheDelete(

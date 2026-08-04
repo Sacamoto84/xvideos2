@@ -1,6 +1,5 @@
 package com.client.xvideos.common.settings.ui
 
-import com.client.xvideos.R
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue

@@ -1,6 +1,5 @@
 package com.client.xvideos.common.icons
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons

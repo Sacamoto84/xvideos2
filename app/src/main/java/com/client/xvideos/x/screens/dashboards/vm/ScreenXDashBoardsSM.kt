@@ -8,7 +8,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.navigator.Navigator
-import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer

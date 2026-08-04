@@ -18,13 +18,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
 import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +44,6 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import androidx.compose.material.icons.filled.Share
 import com.client.xvideos.common.AppPath
-import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.export.XExporter
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend

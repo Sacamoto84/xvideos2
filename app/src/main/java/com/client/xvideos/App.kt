@@ -8,8 +8,6 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
-import com.client.xvideos.common.eventBus.Event
-import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor
 import dagger.hilt.android.HiltAndroidApp

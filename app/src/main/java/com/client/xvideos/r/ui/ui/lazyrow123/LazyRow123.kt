@@ -48,7 +48,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
-import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -60,7 +59,6 @@ import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
 import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
