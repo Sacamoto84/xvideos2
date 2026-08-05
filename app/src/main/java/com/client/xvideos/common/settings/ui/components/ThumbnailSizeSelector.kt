@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.model.ThumbnailsSize
+import com.client.xvideos.common.settings.ThumbnailsSize
 
 @Composable
 fun ThumbnailSizeSelector(

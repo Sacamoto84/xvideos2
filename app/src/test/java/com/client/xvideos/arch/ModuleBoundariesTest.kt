@@ -110,11 +110,6 @@ class ModuleBoundariesTest {
          * строку вычёркивают вместе с переносом кода.
          */
         val BASELINE = setOf(
-            // Шаг 2. ThumbnailsSize переезжает из l/model в common.
-            "common/settings/Settings.kt -> l",
-            "common/settings/ui/components/ThumbnailSizeSelector.kt -> l",
-            "common/settings/ui/section/LSettingsSection.kt -> l",
-
             // Шаг 3. StaticPlayer и VideoPlayerWithMenuContent — в common/videoplayer.
             "common/videoplayer/ui/ComposeVideoPlayer.kt -> r",
             "common/urlVideoImage/UrlVideoLite.kt -> r",

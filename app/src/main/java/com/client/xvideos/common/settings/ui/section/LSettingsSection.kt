@@ -13,9 +13,9 @@ import com.client.xvideos.common.settings.ui.components.SettingsButtonRowWithDia
 import com.client.xvideos.common.settings.ui.components.SettingsDivider
 import com.client.xvideos.common.settings.ui.components.SettingsGroup
 import com.client.xvideos.common.settings.ui.components.SettingsValueRow
+import com.client.xvideos.common.settings.ThumbnailsSize
 import com.client.xvideos.common.settings.ui.components.ThumbnailSizeSelector
 import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.l.model.ThumbnailsSize
 
 @Composable
 internal fun LSettingsSection(lLogin: String) {

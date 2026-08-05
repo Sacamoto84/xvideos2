@@ -9,7 +9,6 @@ import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
 import com.client.xvideos.common.settings.element.SettingElementSecureString
 import com.client.xvideos.common.settings.element.SettingElementString
-import com.client.xvideos.l.model.ThumbnailsSize
 import timber.log.Timber
 
 //data class DC_galleryCount(var g0: Boolean, var g1: Boolean, var g2: Boolean, var g3: Boolean, var g4: Boolean )

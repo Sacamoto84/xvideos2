@@ -1,5 +1,7 @@
 package com.client.xvideos.l.model
 
+import com.client.xvideos.common.settings.ThumbnailsSize
+
 fun PicsDetails.lAnimationVideoUrl(): String? {
     if (!is_animated) return null
     return url_to_video?.takeIf { it.isNotBlank() }

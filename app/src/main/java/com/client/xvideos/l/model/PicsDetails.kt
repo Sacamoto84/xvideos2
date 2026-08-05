@@ -86,35 +86,6 @@ data class Thumbnails(
     @SerializedName("url") val url: String? = null      //"https://..."
 ) : Parcelable
 
-/**
- * Thumbnail size configuration enum with display value mapping
- */
-enum class ThumbnailsSize(
-    val value: String,
-    val displayName: String
-) {
-    XMAX("xMax", "Large"),
-    SMALL("small", "Medium"),
-    LARGE_THUMBALIST("large_thumbnail", "Small");
-
-    companion object {
-        /**
-         * Find ThumbnailsSize by its value
-         */
-        fun fromValue(value: String): ThumbnailsSize? = entries.find { it.value == value }
-
-        /**
-         * Find ThumbnailsSize by its display name
-         */
-        fun fromDisplayName(displayName: String): ThumbnailsSize? = entries.find { it.displayName == displayName }
-
-        /**
-         * Get all available display names
-         */
-        val displayNames: List<String> = entries.map { it.displayName }
-    }
-}
-
 //https://cdni.luscious.net/venividivici2k13/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.640x0.jpg?md5=sn0bj1zYPF7ziGsGKnGRQA&expires=1773900756
 //[
 //{
