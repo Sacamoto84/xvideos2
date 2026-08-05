@@ -7,6 +7,7 @@ import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.log.CrashLog
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor
@@ -86,15 +87,20 @@ class App : Application(), SingletonImageLoader.Factory {
         AppPath.init(this)
         storageCleanup = scope.launch { AppPath.cleanupTransientDirs() }
 
-        if (BuildConfig.DEBUG) Timber.plant(DebugTree())
+        // В релизе дерево тоже сажается — иначе Timber.e становится пустышкой и
+        // об ошибке у пользователя узнать неоткуда. Релизное пишет ERROR в файл
+        // во внутренней памяти, без сети. Ставится после AppPath.init(): ему
+        // нужен путь.
+        if (BuildConfig.DEBUG) Timber.plant(DebugTree()) else Timber.plant(CrashLog.releaseTree())
+        CrashLog.install()
 
         // Инициализируем монитор трафика
         networkTrafficMonitor = NetworkTrafficMonitor()
         networkTrafficMonitor.startMonitoring()
 
-        // Свой Thread.setDefaultUncaughtExceptionHandler здесь был отключён и
-        // удалён вместе с полем originalHandler: поле только сохранялось и никем
-        // не читалось. Если понадобится снова — история в git.
+        // Обработчик необработанных исключений ставит CrashLog.install() выше:
+        // он дописывает стектрейс в журнал и передаёт управление прежнему
+        // обработчику, чтобы система отработала падение как обычно.
 
         // Совместимость со старыми корневыми сертификатами обеспечивается через
         // res/xml/network_security_config.xml (доверие к ISRG Root X1), а НЕ через

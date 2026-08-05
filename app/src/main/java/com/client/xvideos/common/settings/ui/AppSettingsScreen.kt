@@ -2,6 +2,7 @@ package com.client.xvideos.common.settings.ui
 
 import com.client.xvideos.R
 import com.client.xvideos.common.settings.ui.section.CacheSettingsSection
+import com.client.xvideos.common.settings.ui.section.DiagnosticsSettingsSection
 import com.client.xvideos.common.settings.ui.section.DisplaySettingsSection
 import com.client.xvideos.common.settings.ui.section.LSettingsSection
 import com.client.xvideos.common.settings.ui.section.P2PSettingsSection
@@ -354,6 +355,7 @@ private fun AppSettingsScreenBody(
                     onDataChanged = onBackupDataChanged
                 )
                 SettingsPage.P2P -> P2PSettingsSection()
+                SettingsPage.Diagnostics -> DiagnosticsSettingsSection()
             }
         }
     }
@@ -413,10 +415,15 @@ private enum class SettingsPage(
         title = "P2P",
         icon = R.drawable.icon_red, // Replace with appropriate icon if available
         subtitle = "Передача файлов рядом"
+    ),
+    Diagnostics(
+        title = "Диагностика",
+        icon = R.drawable.data,
+        subtitle = "Журнал ошибок"
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Cache, Storage, Backup, P2P)
+        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Cache, Storage, Backup, P2P, Diagnostics)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
