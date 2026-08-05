@@ -418,7 +418,9 @@ private enum class SettingsPage(
     ),
     Diagnostics(
         title = "Диагностика",
-        icon = R.drawable.data,
+        // Было R.drawable.data — <animated-vector>. painterResource такие не
+        // грузит, и экран настроек падал сразу при открытии.
+        icon = R.drawable.diagnostics_24,
         subtitle = "Журнал ошибок"
     );
 
