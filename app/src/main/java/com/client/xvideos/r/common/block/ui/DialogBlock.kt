@@ -1,4 +1,4 @@
-package com.redgifs.common.block.ui
+package com.client.xvideos.r.common.block.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString

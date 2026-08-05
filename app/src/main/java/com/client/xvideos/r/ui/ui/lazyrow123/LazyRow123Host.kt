@@ -24,7 +24,7 @@ import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.common.pagin.ItemCollectionPagingSource
-import com.redgifs.common.pagin.ItemEmptyPagingSource
+import com.client.xvideos.r.common.pagin.ItemEmptyPagingSource
 import com.client.xvideos.r.common.pagin.ItemNailsPagingSource
 import com.client.xvideos.r.common.pagin.ItemProfilePagingSource
 import com.client.xvideos.r.common.pagin.ItemSavedLikesPagingSource

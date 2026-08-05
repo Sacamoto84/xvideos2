@@ -7,8 +7,8 @@ import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.GifsInfo
-import com.redgifs.common.block.useCase.blockGetAllBlockedGifsInfo
-import com.redgifs.common.block.useCase.blockItem as writeBlockedGif
+import com.client.xvideos.r.common.block.useCase.blockGetAllBlockedGifsInfo
+import com.client.xvideos.r.common.block.useCase.blockItem as writeBlockedGif
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,4 +1,4 @@
-package com.redgifs.common.video.player_with_menu.atom
+package com.client.xvideos.r.common.video.player_with_menu.atom
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background

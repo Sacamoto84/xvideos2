@@ -37,8 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.client.xvideos.screens.common.bottomKeyboard.KeyboardNumber
-import com.client.xvideos.screens.common.bottomKeyboard.KeyboardNumberTheme
+import com.client.xvideos.x.screens.common.bottomKeyboard.KeyboardNumber
+import com.client.xvideos.x.screens.common.bottomKeyboard.KeyboardNumberTheme
 
 @Preview
 @Composable

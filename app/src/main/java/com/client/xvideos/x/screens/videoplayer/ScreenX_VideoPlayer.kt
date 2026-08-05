@@ -20,7 +20,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
-import com.client.xvideos.screens.videoplayer.atom.ComposeTags
+import com.client.xvideos.x.screens.videoplayer.atom.ComposeTags
 import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 
 class ScreenX_VideoPlayer(val url: String) : Screen {

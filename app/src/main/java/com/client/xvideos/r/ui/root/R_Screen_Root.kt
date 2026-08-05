@@ -32,7 +32,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
 import com.client.xvideos.screenRoot.LocalRootScreenModel
 import com.client.xvideos.screenRoot.ScreenRootSM
-import com.redgifs.common.block.ui.DialogBlock
+import com.client.xvideos.r.common.block.ui.DialogBlock
 import com.client.xvideos.r.common.downloader.ui.DownloadIndicator
 import dagger.Binds
 import dagger.Module

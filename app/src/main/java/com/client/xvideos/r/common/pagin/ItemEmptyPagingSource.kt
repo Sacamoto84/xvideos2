@@ -1,4 +1,4 @@
-package com.redgifs.common.pagin
+package com.client.xvideos.r.common.pagin
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState

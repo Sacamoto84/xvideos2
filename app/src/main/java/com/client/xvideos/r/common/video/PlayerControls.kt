@@ -1,4 +1,4 @@
-package com.redgifs.common.video
+package com.client.xvideos.r.common.video
 
 // Интерфейс для внешних действий (можно вынести в отдельный файл)
 interface PlayerControls {

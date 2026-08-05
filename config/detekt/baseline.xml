@@ -55,23 +55,6 @@
     <ID>ImplicitDefaultLocale:X_PlayerBottomBar.kt$String.format("%d:%02d:%02d", h, m, sec)</ID>
     <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d", minutes, seconds)</ID>
     <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d:%02d", hours, minutes, seconds)</ID>
-    <ID>InvalidPackageDeclaration:ComposeTags.kt$package com.client.xvideos.screens.videoplayer.atom</ID>
-    <ID>InvalidPackageDeclaration:DialogBlock.kt$package com.redgifs.common.block.ui</ID>
-    <ID>InvalidPackageDeclaration:ItemEmptyPagingSource.kt$package com.redgifs.common.pagin</ID>
-    <ID>InvalidPackageDeclaration:KeyboardNumber.kt$package com.client.xvideos.screens.common.bottomKeyboard</ID>
-    <ID>InvalidPackageDeclaration:KeyboardNumberButton.kt$package com.client.xvideos.screens.common.bottomKeyboard</ID>
-    <ID>InvalidPackageDeclaration:PlayerControls.kt$package com.redgifs.common.video</ID>
-    <ID>InvalidPackageDeclaration:ScreenItemTagsModelPornostars.kt$package com.client.xvideos.screens.videoplayer.atom</ID>
-    <ID>InvalidPackageDeclaration:StaticPlayer.kt$package com.redgifs.common.video.player_with_menu.atom</ID>
-    <ID>InvalidPackageDeclaration:VideoPlayerWithMenuContent.kt$package com.redgifs.common.video.player_with_menu.atom</ID>
-    <ID>InvalidPackageDeclaration:blockGetAllBlockedGifsInfo.kt$package com.redgifs.common.block.useCase</ID>
-    <ID>InvalidPackageDeclaration:blockGetGifsByUserNameAsListString.kt$package com.redgifs.common.block.useCase</ID>
-    <ID>InvalidPackageDeclaration:blockGetGifsInfoByUserName.kt$package com.redgifs.common.block.useCase</ID>
-    <ID>InvalidPackageDeclaration:blockItem.kt$package com.redgifs.common.block.useCase</ID>
-    <ID>InvalidPackageDeclaration:getSearchResults.kt$package com.client.xvideos.x.screens.search</ID>
-    <ID>InvalidPackageDeclaration:moduleKDownloader.kt$package com.redgifs.common.downloader.di</ID>
-    <ID>InvalidPackageDeclaration:parseJson.kt$package com.client.xvideos.x.screens.search</ID>
-    <ID>InvalidPackageDeclaration:searchModel.kt$package com.client.xvideos.x.screens.search.model</ID>
     <ID>LongMethod:AlbumFilterDisplay.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -&gt; Unit)</ID>
     <ID>LongMethod:AlbumListFilterGenres.kt$@Composable fun AlbumListFilterGenres( filter: AlbumListFilter, filterGenreStateCount: List&lt;AlbumListFilterGenreCountResponse&gt;?, onChange: (AlbumListFilter) -&gt; Unit )</ID>
     <ID>LongMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, downloadRed: DownloadRed?, savedL: SavedL?, onDataChanged: () -&gt; Unit )</ID>

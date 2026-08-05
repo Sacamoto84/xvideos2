@@ -25,8 +25,7 @@ import com.client.xvideos.BuildConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerEvent
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
-import com.redgifs.common.video.PlayerControls
-import com.redgifs.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
+import com.client.xvideos.r.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest

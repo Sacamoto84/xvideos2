@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.search.model
+package com.client.xvideos.x.search.model
 
 import kotlinx.serialization.Serializable
 

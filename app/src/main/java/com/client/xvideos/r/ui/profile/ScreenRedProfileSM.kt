@@ -25,7 +25,7 @@ import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.common.network.loadGifs
 import com.client.xvideos.r.common.share.useCaseShareGifs
-import com.redgifs.common.video.PlayerControls
+import com.client.xvideos.r.common.video.PlayerControls
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted

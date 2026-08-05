@@ -1,4 +1,4 @@
-package com.redgifs.common.block.useCase
+package com.client.xvideos.r.common.block.useCase
 
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.r.model.GifsInfo

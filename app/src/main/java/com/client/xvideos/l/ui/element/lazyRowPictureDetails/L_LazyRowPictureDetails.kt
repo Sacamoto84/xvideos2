@@ -70,7 +70,7 @@ import com.client.xvideos.l.ui.screens.screenFullScreen.L_FullScreenImage
 import com.client.xvideos.l.ui.screens.screenFullScreen.LFullScreenPayload
 import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
 import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
-import com.redgifs.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
+import com.client.xvideos.r.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import timber.log.Timber

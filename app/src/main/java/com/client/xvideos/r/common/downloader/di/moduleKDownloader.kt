@@ -1,4 +1,4 @@
-package com.redgifs.common.downloader.di
+package com.client.xvideos.r.common.downloader.di
 
 //@Module
 //@InstallIn(SingletonComponent::class)

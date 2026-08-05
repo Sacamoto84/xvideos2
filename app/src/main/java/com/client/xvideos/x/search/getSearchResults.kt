@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.search
+package com.client.xvideos.x.search
 
 import com.client.xvideos.urlStart
 import io.ktor.client.HttpClient

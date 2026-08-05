@@ -25,7 +25,7 @@ import com.client.xvideos.common.videoplayer.host.MediaPlayerEvent
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.r.common.video.CanvasTimeDurationLine1
-import com.redgifs.common.video.player_with_menu.atom.StaticPlayer
+import com.client.xvideos.r.common.video.player_with_menu.atom.StaticPlayer
 
 
 /**

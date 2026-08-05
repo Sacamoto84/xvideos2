@@ -1,6 +1,6 @@
-package com.client.xvideos.x.screens.search
+package com.client.xvideos.x.search
 
-import com.client.xvideos.x.screens.search.model.SearchResult
+import com.client.xvideos.x.search.model.SearchResult
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 
