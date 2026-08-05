@@ -51,6 +51,28 @@ class SplashActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
+        // Возврат в уже запущенное приложение по иконке лаунчера.
+        //
+        // Эта Activity — корень задачи, но она себя finish()-ает, отдав
+        // управление MainActivity. Из-за этого система на MAIN/LAUNCHER
+        // поднимает её заново и кладёт поверх живой MainActivity вторую — со
+        // своей навигацией с нуля. Снаружи это выглядит как «свернул и вернулся
+        // — выкинуло на главный экран».
+        //
+        // Если задача уже существует, эта Activity оказывается не её корнем.
+        // Тогда уходим сразу: снизу поднимется прежняя MainActivity со всем
+        // своим стеком экранов.
+        if (!isTaskRoot &&
+            intent.action == Intent.ACTION_MAIN &&
+            intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+        ) {
+            // Замок ведёт себя как раньше: возврат по иконке снова его взводит,
+            // а MainActivity подхватывает это в onResume.
+            if (AppLockRepository.isEnabled(this)) AppLockSession.lock()
+            finish()
+            return
+        }
+
         // держим сплэш пока инициализация не завершена
         splashScreen.setKeepOnScreenCondition { !isReady }
 

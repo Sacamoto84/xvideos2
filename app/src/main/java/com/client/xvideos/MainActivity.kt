@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +32,10 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockScreen
@@ -133,6 +137,18 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             //Timber.i("QQQ $topInset statusbar:$topStatusBar")
 
             var isAppLocked by rememberSaveable { mutableStateOf(shouldShowAppLock) }
+
+            // SECURITY: замок взводится не только при создании Activity.
+            // Возврат по иконке лаунчера больше не пересоздаёт MainActivity
+            // (см. ранний выход в SplashActivity), поэтому состояние замка
+            // перечитывается на каждом выходе на передний план. Снимать замок
+            // здесь нельзя — только ставить.
+            val lifecycleOwner = LocalLifecycleOwner.current
+            LaunchedEffect(lifecycleOwner) {
+                lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                    if (AppLockRepository.shouldShowLock(this@MainActivity)) isAppLocked = true
+                }
+            }
 
             KeepScreenOn()
             XvideosTheme(darkTheme = true) {
