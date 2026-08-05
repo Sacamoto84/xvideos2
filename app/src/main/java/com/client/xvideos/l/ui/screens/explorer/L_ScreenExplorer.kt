@@ -37,7 +37,7 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.common.ui.atom.TabBarPoints
-import com.client.xvideos.screenRoot.LocalRootScreenModel
+import com.client.xvideos.common.navigation.rememberNavigationDepth
 import com.client.xvideos.common.ui.atom.DownloadIndicator
 import dagger.Binds
 import dagger.Module
@@ -60,9 +60,9 @@ class L_ScreenExplorer : Screen {
         val vm = getScreenModel<L_ScreenExplorerSM>()
 
         val savedL = vm.savedL
-        val rootVm = LocalRootScreenModel.current
+        val navigationDepth = rememberNavigationDepth()
 
-        LaunchedEffect(Unit) { rootVm.depthState.depth = 0 }
+        LaunchedEffect(Unit) { navigationDepth.depth = 0 }
 
         val savedLogin = Settings.l_login.field.collectAsStateWithLifecycle().value
         val savedPassword = Settings.l_pass.field.collectAsStateWithLifecycle().value

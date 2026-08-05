@@ -41,7 +41,7 @@ import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.screenRoot.NavigationDepthState
+import com.client.xvideos.common.navigation.NavigationDepthState
 import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Cover

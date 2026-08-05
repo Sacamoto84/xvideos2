@@ -135,18 +135,12 @@ class ModuleBoundariesTest {
         )
 
         /**
-         * Связи разделов с `screenRoot`: навигация между разделами идёт через
-         * общий root-навигатор. План отдельно предупреждает, что после распила
-         * так делать будет нельзя — развязать это часть шага 6.
+         * Пусто — и должно таким остаться.
          *
-         * Записей `common -> раздел` здесь больше нет: шаги 1–5 завершены.
+         * Правила проверяются на всех модулях сразу, поэтому сторож продолжает
+         * работать и для разделов, которые ещё не вынесены: он падает раньше,
+         * чем Gradle, и говорит понятнее.
          */
-        val BASELINE = setOf(
-            "l/ui/element/lazyRowPictureDetails/L_LazyRowPictureDetails.kt -> screenRoot",
-            "l/ui/screens/albumLandingTag/ScreenLAlbumLandingTag.kt -> screenRoot",
-            "l/ui/screens/explorer/L_ScreenExplorer.kt -> screenRoot",
-            "l/ui/screens/screenAlbum/ScreenAlbum.kt -> screenRoot",
-            "r/ui/root/R_Screen_Root.kt -> screenRoot",
-        )
+        val BASELINE = emptySet<String>()
     }
 }

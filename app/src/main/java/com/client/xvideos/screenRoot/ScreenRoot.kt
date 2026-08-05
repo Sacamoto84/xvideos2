@@ -28,6 +28,8 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
+import com.client.xvideos.common.navigation.LocalMainNavigator
+import com.client.xvideos.common.navigation.NavigationDepthState
 import com.client.xvideos.common.snackbar.show
 import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.l.featured.saved.SavedL
@@ -48,14 +50,6 @@ import javax.inject.Inject
  * `ScreenRootSM` через длинную цепочку параметров.
  */
 val LocalRootScreenModel = staticCompositionLocalOf<ScreenRootSM> { error("No ScreenRootSM provided") }
-
-/**
- * CompositionLocal с главным Voyager-навигатором.
- *
- * Нужен дочерним экранам, которым требуется управлять корневым стеком навигации:
- * заменить текущий раздел, вернуться домой или проверить текущий экран.
- */
-val LocalMainNavigator = staticCompositionLocalOf<Navigator?> { null }
 
 /**
  * Корневой экран приложения.

@@ -51,11 +51,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.screenRoot.LocalMainNavigator
-import com.client.xvideos.screenRoot.LocalRootScreenModel
+import com.client.xvideos.common.di.rememberApplicationScope
+import com.client.xvideos.common.navigation.LocalMainNavigator
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
@@ -72,7 +71,9 @@ import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
 import com.client.xvideos.common.videoplayer.ui.VideoPlayerWithMenuContent
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -103,7 +104,11 @@ fun L_LazyRowPictureDetails(
     // вложенного навигатора (открытая коллекция) экран впишется в область таба,
     // оставив нижние навбары. Fallback на локальный, если корневой недоступен.
     val mainNavigator = LocalMainNavigator.current
-    val rootVm = LocalRootScreenModel.current
+    // Не rememberCoroutineScope(): доскролл запускается из колбэка закрытия
+    // полноэкранного просмотра, когда эта лента лежит в бэкстеке и уже не
+    // скомпонована — такой scope к тому моменту отменён. Раньше здесь брали
+    // screenModelScope корневого экрана, что то же самое по времени жизни.
+    val appScope = rememberApplicationScope()
     val haptic = LocalHapticFeedback.current
 
     // Без `by`: позиция скролла меняется каждый кадр, и разворачивать её здесь
@@ -166,8 +171,10 @@ fun L_LazyRowPictureDetails(
                                     onClose = { position ->
                                         Timber.i("scrollToItem $position")
                                         if (position != -1) {
-                                            rootVm.screenModelScope.launch {
-                                                host.state.scrollToItem(position)
+                                            appScope.launch {
+                                                withContext(Dispatchers.Main) {
+                                                    host.state.scrollToItem(position)
+                                                }
                                             }
                                         }
                                     },

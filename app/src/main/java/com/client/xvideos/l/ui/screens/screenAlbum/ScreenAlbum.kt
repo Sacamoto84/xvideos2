@@ -74,7 +74,7 @@ import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoTags
 import com.client.xvideos.l.ui.screens.screenAlbum.dialog.AlbumDialogDeleteAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
-import com.client.xvideos.screenRoot.LocalRootScreenModel
+import com.client.xvideos.common.navigation.rememberNavigationDepth
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
@@ -94,7 +94,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
     @Composable
     override fun Content() {
 
-        LocalRootScreenModel.current.depthState.depth = 100
+        rememberNavigationDepth().depth = 100
 
         val navigator = LocalNavigator.currentOrThrow
 

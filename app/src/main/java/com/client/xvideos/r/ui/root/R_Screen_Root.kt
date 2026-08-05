@@ -9,7 +9,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -29,8 +28,6 @@ import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
-import com.client.xvideos.screenRoot.LocalRootScreenModel
-import com.client.xvideos.screenRoot.ScreenRootSM
 import com.client.xvideos.r.common.block.ui.DialogBlock
 import com.client.xvideos.common.ui.atom.DownloadIndicator
 import dagger.Binds
@@ -83,27 +80,29 @@ class R_Screen_Root : Screen {
 
 
 
-        CompositionLocalProvider(LocalRootScreenModel provides getScreenModel<ScreenRootSM>()) {
-            Scaffold(
-                modifier = Modifier.imePadding(),
-                bottomBar = { DownloadIndicator(percentDownload) }) {
-                Navigator(ScreenRedExplorer()) { navigator ->
-                    //SlideTransition(navigator)
+        // Раньше здесь заново публиковался LocalRootScreenModel — корневая
+        // ScreenModel приложения. Внутри R её никто не читал, а раздел из-за
+        // неё знал про точку сборки. ScreenRoot публикует её сам, выше по
+        // дереву; глубину навигации разделы берут из Hilt-графа.
+        Scaffold(
+            modifier = Modifier.imePadding(),
+            bottomBar = { DownloadIndicator(percentDownload) }) {
+            Navigator(ScreenRedExplorer()) { navigator ->
+                //SlideTransition(navigator)
 
 
-                    ScreenTransition(
-                        navigator = navigator,
-                        transition = {
-                            val (initialOffset, targetOffset) = when (navigator.lastEvent) {
-                                StackEvent.Pop -> ({ size: Int -> -size }) to ({ size: Int -> size })
-                                else -> ({ size: Int -> size }) to ({ size: Int -> -size })
-                            }
-                            slideInHorizontally(tween(200), initialOffset) togetherWith  slideOutHorizontally(tween(200), targetOffset)
+                ScreenTransition(
+                    navigator = navigator,
+                    transition = {
+                        val (initialOffset, targetOffset) = when (navigator.lastEvent) {
+                            StackEvent.Pop -> ({ size: Int -> -size }) to ({ size: Int -> size })
+                            else -> ({ size: Int -> size }) to ({ size: Int -> -size })
                         }
-                    )
+                        slideInHorizontally(tween(200), initialOffset) togetherWith  slideOutHorizontally(tween(200), targetOffset)
+                    }
+                )
 
 
-                }
             }
         }
     }
