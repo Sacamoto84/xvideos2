@@ -1,4 +1,4 @@
-package com.client.xvideos.r.common.video.player_with_menu.atom
+package com.client.xvideos.common.videoplayer.ui
 
 
 import androidx.compose.foundation.layout.fillMaxSize

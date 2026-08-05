@@ -13,7 +13,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
-import com.client.xvideos.r.common.video.player_with_menu.atom.StaticPlayer
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 

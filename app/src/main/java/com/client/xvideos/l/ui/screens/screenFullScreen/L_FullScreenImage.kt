@@ -99,7 +99,7 @@ import com.client.xvideos.l.model.lPreviewImageUrl
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
-import com.client.xvideos.r.common.video.player_with_menu.atom.VideoPlayerWithMenuContent
+import com.client.xvideos.common.videoplayer.ui.VideoPlayerWithMenuContent
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.IgnoredOnParcel

@@ -1,4 +1,4 @@
-package com.client.xvideos.r.common.video.player_with_menu.atom
+package com.client.xvideos.common.videoplayer.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background

@@ -110,12 +110,6 @@ class ModuleBoundariesTest {
          * строку вычёркивают вместе с переносом кода.
          */
         val BASELINE = setOf(
-            // Шаг 3. StaticPlayer и VideoPlayerWithMenuContent — в common/videoplayer.
-            "common/videoplayer/ui/ComposeVideoPlayer.kt -> r",
-            "common/urlVideoImage/UrlVideoLite.kt -> r",
-            "l/ui/element/lazyRowPictureDetails/L_LazyRowPictureDetails.kt -> r",
-            "l/ui/screens/screenFullScreen/L_FullScreenImage.kt -> r",
-
             // Шаг 4. UrlVideoImageAndLongClickX переезжает из common в x.
             "common/urlVideoImage/UrlVideoImageAndLongClickX.kt -> x",
 
