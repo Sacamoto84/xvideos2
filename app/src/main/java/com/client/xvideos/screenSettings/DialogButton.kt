@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui
+package com.client.xvideos.screenSettings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString

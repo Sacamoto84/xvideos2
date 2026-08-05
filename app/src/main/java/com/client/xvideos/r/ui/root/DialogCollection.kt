@@ -1,4 +1,4 @@
-package com.client.xvideos.common.collectionDB.ui
+package com.client.xvideos.r.ui.root
 
 import com.client.xvideos.common.theme.Theme
 

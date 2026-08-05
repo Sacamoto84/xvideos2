@@ -27,7 +27,6 @@ import cafe.adriel.voyager.transitions.ScreenTransition
 import com.client.xvideos.common.collectionDB.ui.DaialogNewCollection
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
-import com.client.xvideos.common.collectionDB.ui.DialogCollection
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
 import com.client.xvideos.screenRoot.LocalRootScreenModel

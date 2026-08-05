@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui.section
+package com.client.xvideos.screenSettings.section
 
 import com.client.xvideos.R
 
@@ -10,12 +10,12 @@ import androidx.compose.runtime.setValue
 
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.common.settings.ui.components.IntSliderSetting
-import com.client.xvideos.common.settings.ui.components.SettingsButtonRowWithDialog
-import com.client.xvideos.common.settings.ui.components.SettingsDivider
-import com.client.xvideos.common.settings.ui.components.SettingsGroup
-import com.client.xvideos.common.settings.ui.components.SettingsSwitchRow
-import com.client.xvideos.common.settings.ui.components.SettingsValueRow
+import com.client.xvideos.screenSettings.components.IntSliderSetting
+import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
+import com.client.xvideos.screenSettings.components.SettingsDivider
+import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsSwitchRow
+import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
 

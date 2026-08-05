@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui.backup
+package com.client.xvideos.screenSettings.backup
 
 import com.client.xvideos.R
 import com.client.xvideos.common.theme.Theme
@@ -41,15 +41,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
-import com.client.xvideos.common.settings.ui.components.SettingsAccentColor
-import com.client.xvideos.common.settings.ui.components.SettingsCardColor
-import com.client.xvideos.common.settings.ui.components.SettingsDivider
-import com.client.xvideos.common.settings.ui.components.SettingsDividerColor
-import com.client.xvideos.common.settings.ui.components.SettingsListItem
-import com.client.xvideos.common.settings.ui.components.SettingsRowTextPrimary
-import com.client.xvideos.common.settings.ui.components.SettingsScreenBackground
-import com.client.xvideos.common.settings.ui.components.SettingsTopBarColor
-import com.client.xvideos.common.settings.ui.components.SettingsValueRow
+import com.client.xvideos.screenSettings.components.SettingsAccentColor
+import com.client.xvideos.screenSettings.components.SettingsCardColor
+import com.client.xvideos.screenSettings.components.SettingsDivider
+import com.client.xvideos.screenSettings.components.SettingsDividerColor
+import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsRowTextPrimary
+import com.client.xvideos.screenSettings.components.SettingsScreenBackground
+import com.client.xvideos.screenSettings.components.SettingsTopBarColor
+import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.util.formatBytes
 
 @Composable

@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui.backup
+package com.client.xvideos.screenSettings.backup
 
 import com.client.xvideos.R
 

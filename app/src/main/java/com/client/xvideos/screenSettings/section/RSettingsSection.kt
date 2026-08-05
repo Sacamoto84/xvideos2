@@ -1,7 +1,7 @@
-package com.client.xvideos.common.settings.ui.section
+package com.client.xvideos.screenSettings.section
 
 import com.client.xvideos.R
-import com.client.xvideos.common.settings.ui.redDownloadRecoveryText
+import com.client.xvideos.screenSettings.redDownloadRecoveryText
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,13 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.settings.ui.components.SettingsButtonRowWithDialog
-import com.client.xvideos.common.settings.ui.components.SettingsDivider
-import com.client.xvideos.common.settings.ui.components.SettingsDividerColor
-import com.client.xvideos.common.settings.ui.components.SettingsGroup
-import com.client.xvideos.common.settings.ui.components.SettingsListItem
-import com.client.xvideos.common.settings.ui.components.SettingsValueRow
-import com.client.xvideos.common.settings.ui.components.WhatsAppGreen
+import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
+import com.client.xvideos.screenSettings.components.SettingsDivider
+import com.client.xvideos.screenSettings.components.SettingsDividerColor
+import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsValueRow
+import com.client.xvideos.screenSettings.components.WhatsAppGreen
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toPrettyCount3
 import com.client.xvideos.r.common.downloader.DownloadRed

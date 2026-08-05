@@ -110,21 +110,16 @@ class ModuleBoundariesTest {
          * строку вычёркивают вместе с переносом кода.
          */
         val BASELINE = setOf(
-            // Шаг 5. Агрегирующие экраны и части P2P уезжают наверх, в :app.
-            "common/collectionDB/ui/DialogCollection.kt -> r",
+            // Шаг 5, остаток: P2P. Простым переносом наверх не решается —
+            // ScreenP2pSend, P2pSendSource и экспортёры вызываются из l, r и x,
+            // так что в :app им нельзя: получится зависимость фичи от точки
+            // сборки, а это на шаге 6 не соберётся вовсе.
             "common/p2p/P2pReceiveManager.kt -> l",
             "common/p2p/P2pReceiveManager.kt -> r",
             "common/p2p/P2pSendSource.kt -> l",
             "common/p2p/export/Exporters.kt -> l",
             "common/p2p/imports/RLikesBundleImporter.kt -> r",
             "common/p2p/ui/ScreenP2pSend.kt -> l",
-            "common/settings/ui/AppSettingsScreen.kt -> l",
-            "common/settings/ui/AppSettingsScreen.kt -> r",
-            "common/settings/ui/DownloadRecoveryText.kt -> l",
-            "common/settings/ui/DownloadRecoveryText.kt -> r",
-            "common/settings/ui/backup/BackupSettingsSection.kt -> l",
-            "common/settings/ui/backup/BackupSettingsSection.kt -> r",
-            "common/settings/ui/section/RSettingsSection.kt -> r",
         )
     }
 }

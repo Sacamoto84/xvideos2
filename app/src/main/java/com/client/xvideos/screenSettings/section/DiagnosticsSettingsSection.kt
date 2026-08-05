@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui.section
+package com.client.xvideos.screenSettings.section
 
 import com.client.xvideos.R
 
@@ -9,9 +9,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.client.xvideos.common.log.CrashLog
-import com.client.xvideos.common.settings.ui.components.SettingsGroup
-import com.client.xvideos.common.settings.ui.components.SettingsListItem
-import com.client.xvideos.common.settings.ui.components.SettingsValueRow
+import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.coil.formatBytes1
 import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.common.snackbar.SnackBar

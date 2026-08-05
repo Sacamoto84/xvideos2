@@ -1,10 +1,10 @@
-package com.client.xvideos.common.settings.ui.backup
+package com.client.xvideos.screenSettings.backup
 
 import com.client.xvideos.R
-import com.client.xvideos.common.settings.ui.lDownloadRecoveryConsoleText
-import com.client.xvideos.common.settings.ui.redDownloadRecoveryConsoleText
-import com.client.xvideos.common.settings.ui.shouldAutoRecoverL
-import com.client.xvideos.common.settings.ui.shouldAutoRecoverRedDownload
+import com.client.xvideos.screenSettings.lDownloadRecoveryConsoleText
+import com.client.xvideos.screenSettings.redDownloadRecoveryConsoleText
+import com.client.xvideos.screenSettings.shouldAutoRecoverL
+import com.client.xvideos.screenSettings.shouldAutoRecoverRedDownload
 
 import android.content.Context
 import android.net.Uri
@@ -28,13 +28,13 @@ import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
 import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
-import com.client.xvideos.common.settings.ui.components.SettingsAccentColor
-import com.client.xvideos.common.settings.ui.components.SettingsButtonRowWithDialog
-import com.client.xvideos.common.settings.ui.components.SettingsDivider
-import com.client.xvideos.common.settings.ui.components.SettingsGroup
-import com.client.xvideos.common.settings.ui.components.SettingsListItem
-import com.client.xvideos.common.settings.ui.components.SettingsScreenBackground
-import com.client.xvideos.common.settings.ui.components.SettingsValueRow
+import com.client.xvideos.screenSettings.components.SettingsAccentColor
+import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
+import com.client.xvideos.screenSettings.components.SettingsDivider
+import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsScreenBackground
+import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.l.featured.saved.SavedL

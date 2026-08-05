@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui.components
+package com.client.xvideos.screenSettings.components
 
 import com.client.xvideos.common.theme.Theme
 
@@ -38,7 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.R
-import com.client.xvideos.common.settings.ui.DialogButton
+import com.client.xvideos.screenSettings.DialogButton
 import kotlin.math.roundToInt
 
 internal val SettingsScreenBackground = Theme.L.grey6

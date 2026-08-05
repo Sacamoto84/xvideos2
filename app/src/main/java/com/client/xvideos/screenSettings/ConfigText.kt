@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui
+package com.client.xvideos.screenSettings
 
 import com.client.xvideos.common.theme.Theme
 

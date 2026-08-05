@@ -40,7 +40,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.p2p.ui.ScreenP2pReceive
-import com.client.xvideos.common.settings.ui.AppSettingsScreen
+import com.client.xvideos.screenSettings.AppSettingsScreen
 import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
 import com.client.xvideos.r.ui.root.R_Screen_Root
 import com.client.xvideos.x.screens.dashboards.ScreenXDashBoards

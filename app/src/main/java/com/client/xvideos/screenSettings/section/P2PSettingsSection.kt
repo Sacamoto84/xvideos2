@@ -1,4 +1,4 @@
-package com.client.xvideos.common.settings.ui.section
+package com.client.xvideos.screenSettings.section
 
 import com.client.xvideos.R
 
@@ -14,8 +14,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.common.settings.ui.components.SettingsGroup
-import com.client.xvideos.common.settings.ui.components.SettingsSwitchRow
+import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.common.snackbar.SnackBar
 import kotlinx.coroutines.launch
 
