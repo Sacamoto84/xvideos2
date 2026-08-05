@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
+import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 
 @Composable
 fun TagsPaginatedListScreen(pageIndex: Int) {

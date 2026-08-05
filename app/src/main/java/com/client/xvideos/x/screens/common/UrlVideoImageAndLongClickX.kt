@@ -1,4 +1,4 @@
-package com.client.xvideos.common.urlVideoImage
+package com.client.xvideos.x.screens.common
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -15,6 +15,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.urlVideoImage.UrlVideoLite
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parserVideoPreviewFromImageUrl

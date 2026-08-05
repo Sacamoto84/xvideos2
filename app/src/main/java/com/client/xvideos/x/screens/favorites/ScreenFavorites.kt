@@ -53,8 +53,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.icons.IconSave18
-import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import com.composables.core.HorizontalSeparator
 

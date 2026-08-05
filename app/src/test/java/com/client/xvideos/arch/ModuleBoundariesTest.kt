@@ -110,9 +110,6 @@ class ModuleBoundariesTest {
          * строку вычёркивают вместе с переносом кода.
          */
         val BASELINE = setOf(
-            // Шаг 4. UrlVideoImageAndLongClickX переезжает из common в x.
-            "common/urlVideoImage/UrlVideoImageAndLongClickX.kt -> x",
-
             // Шаг 5. Агрегирующие экраны и части P2P уезжают наверх, в :app.
             "common/collectionDB/ui/DialogCollection.kt -> r",
             "common/p2p/P2pReceiveManager.kt -> l",

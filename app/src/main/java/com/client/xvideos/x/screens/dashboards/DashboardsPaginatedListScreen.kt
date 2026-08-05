@@ -29,8 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.icons.IconFavorite18
-import com.client.xvideos.common.urlVideoImage.UrlVideoImageAndLongClickX
 import com.client.xvideos.common.util.replaceWith
+import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.urlStart
 import com.client.xvideos.x.feature.country.CountryState
