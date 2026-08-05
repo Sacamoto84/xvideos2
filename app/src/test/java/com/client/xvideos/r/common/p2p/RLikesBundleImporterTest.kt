@@ -1,4 +1,4 @@
-package com.client.xvideos.common.p2p.imports
+package com.client.xvideos.r.common.p2p
 
 import com.client.xvideos.common.p2p.P2pManifest
 import com.client.xvideos.common.p2p.P2pManifestFile

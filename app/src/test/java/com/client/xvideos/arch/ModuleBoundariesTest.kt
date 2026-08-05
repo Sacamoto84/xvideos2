@@ -9,18 +9,22 @@ import java.io.File
  *
  * Правила целевого графа:
  *   - `common` (будущий `:core`) не знает про разделы `l`, `r`, `x`;
- *   - разделы `l`, `r`, `x` не знают друг о друге.
+ *   - разделы `l`, `r`, `x` не знают друг о друге;
+ *   - ни один раздел не знает про пакеты уровня приложения ([APP_LEVEL]) —
+ *     точка сборки зависит от разделов, а не наоборот.
  *
- * Всё, что должно знать про все разделы сразу (`screenRoot`, `MainActivity`,
- * агрегирующие экраны), лежит выше и под правила не попадает.
+ * Третье правило появилось на шаге 5. Оно ловит соблазн «поднять наверх» то,
+ * что зовут из разделов: после распила `:feature-*` не сможет зависеть от
+ * `:app` физически, и такая связь просто не соберётся.
+ *
+ * Тема (`ui`), `R` и `BuildConfig` под правила не попадают: на шаге 6 они
+ * уезжают в `:core` либо генерируются на модуль.
  *
  * Тест сравнивает найденные нарушения с зафиксированным списком [BASELINE].
  * Он падает в двух случаях:
  *   - появилось нарушение вне списка — новую связь между слоями завели зря;
- *   - запись из списка больше не нарушается — шаг плана сделан, строку надо
+ *   - запись из списка больше не нарушается — работа сделана, строку надо
  *     вычеркнуть.
- *
- * Пустой [BASELINE] означает, что шаги 1–5 плана завершены.
  */
 class ModuleBoundariesTest {
 
@@ -51,27 +55,25 @@ class ModuleBoundariesTest {
         return root.walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
             .flatMap { file ->
-                val from = sectionOf(file.relativeTo(root).invariantPath()) ?: return@flatMap emptySequence()
                 val path = file.relativeTo(root).invariantPath()
-                importedSections(file)
-                    .filter { it != from && it in FORBIDDEN.getValue(from) }
+                val forbidden = FORBIDDEN[sectionOf(path)] ?: return@flatMap emptySequence()
+                importedTopLevelPackages(file)
+                    .filter { it in forbidden }
                     .map { to -> "$path -> $to" }
             }
             .toSet()
     }
 
     /** Раздел, которому принадлежит файл: первый сегмент пути внутри `com/client/xvideos`. */
-    private fun sectionOf(relativePath: String): String? =
-        relativePath.substringBefore('/').takeIf { it in SECTIONS }
+    private fun sectionOf(relativePath: String): String = relativePath.substringBefore('/')
 
-    /** Разделы, на которые ссылаются `import com.client.xvideos.<раздел>...` этого файла. */
-    private fun importedSections(file: File): Sequence<String> =
+    /** Первые сегменты `import com.client.xvideos.<сегмент>...` этого файла. */
+    private fun importedTopLevelPackages(file: File): Sequence<String> =
         file.readLines()
             .asSequence()
             .mapNotNull { IMPORT.find(it)?.groupValues?.get(1) }
             .filter { it.startsWith(PACKAGE_PREFIX) }
             .map { it.removePrefix(PACKAGE_PREFIX).substringBefore('.') }
-            .filter { it in SECTIONS }
             .distinct()
 
     private fun File.invariantPath(): String = path.replace(File.separatorChar, '/')
@@ -95,31 +97,30 @@ class ModuleBoundariesTest {
 
         val IMPORT = Regex("""^\s*import\s+([\w.]+)""")
 
-        val SECTIONS = setOf("common", "l", "r", "x")
+        /** Пакеты уровня приложения: будущий `:app`, знать про них разделам нельзя. */
+        val APP_LEVEL = setOf("screenRoot", "screenSettings", "p2p")
 
         /** Кто кого не имеет права импортировать. */
         val FORBIDDEN = mapOf(
-            "common" to setOf("l", "r", "x"),
-            "l" to setOf("r", "x"),
-            "r" to setOf("l", "x"),
-            "x" to setOf("l", "r"),
+            "common" to setOf("l", "r", "x") + APP_LEVEL,
+            "l" to setOf("r", "x") + APP_LEVEL,
+            "r" to setOf("l", "x") + APP_LEVEL,
+            "x" to setOf("l", "r") + APP_LEVEL,
         )
 
         /**
-         * Текущие нарушения на срезе 8dbcce9. Это чек-лист шагов 1–5 плана:
-         * строку вычёркивают вместе с переносом кода.
+         * Связи разделов с `screenRoot`: навигация между разделами идёт через
+         * общий root-навигатор. План отдельно предупреждает, что после распила
+         * так делать будет нельзя — развязать это часть шага 6.
+         *
+         * Записей `common -> раздел` здесь больше нет: шаги 1–5 завершены.
          */
         val BASELINE = setOf(
-            // Шаг 5, остаток: P2P. Простым переносом наверх не решается —
-            // ScreenP2pSend, P2pSendSource и экспортёры вызываются из l, r и x,
-            // так что в :app им нельзя: получится зависимость фичи от точки
-            // сборки, а это на шаге 6 не соберётся вовсе.
-            "common/p2p/P2pReceiveManager.kt -> l",
-            "common/p2p/P2pReceiveManager.kt -> r",
-            "common/p2p/P2pSendSource.kt -> l",
-            "common/p2p/export/Exporters.kt -> l",
-            "common/p2p/imports/RLikesBundleImporter.kt -> r",
-            "common/p2p/ui/ScreenP2pSend.kt -> l",
+            "l/ui/element/lazyRowPictureDetails/L_LazyRowPictureDetails.kt -> screenRoot",
+            "l/ui/screens/albumLandingTag/ScreenLAlbumLandingTag.kt -> screenRoot",
+            "l/ui/screens/explorer/L_ScreenExplorer.kt -> screenRoot",
+            "l/ui/screens/screenAlbum/ScreenAlbum.kt -> screenRoot",
+            "r/ui/root/R_Screen_Root.kt -> screenRoot",
         )
     }
 }

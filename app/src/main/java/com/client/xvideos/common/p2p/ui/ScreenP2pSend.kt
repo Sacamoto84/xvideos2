@@ -28,6 +28,8 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.P2pReceiveManager
+import com.client.xvideos.common.p2p.P2pSendPreparer
+import com.client.xvideos.common.p2p.P2pSendPreparers
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.P2pShareController
 import com.client.xvideos.common.p2p.ShareState
@@ -36,16 +38,10 @@ import com.client.xvideos.common.p2p.export.RCollectionExporter
 import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.common.p2p.mirrorRoot
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
-import com.client.xvideos.l.featured.saved.LDownloadProgress
-import com.client.xvideos.l.featured.saved.lPersistPicsDetailsToFolder
-import com.client.xvideos.l.net.Luscious
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -58,35 +54,24 @@ private fun Context.findActivity(): ComponentActivity? {
     return null
 }
 
-/** Доступ к Hilt-синглтонам из Voyager-экрана — объекта вне DI-графа. */
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface P2pSendEntryPoint {
-    fun luscious(): Luscious
-}
-
 /**
  * Ready — бандл уже в store. DownloadL — качаем item в outbox-зеркало
- * `outbox/L/Likes` (структура повторяет /xvideos, поэтому relativePath
- * манифеста совпадает с боевым) и экспортируем оттуда.
+ * `outbox/L/Likes` и экспортируем оттуда; само скачивание умеет только
+ * раздел, поэтому его делает [P2pSendPreparer].
  */
 private suspend fun prepareBundle(
-    context: Context,
     source: P2pSendSource,
-    progress: LDownloadProgress,
+    preparer: P2pSendPreparer?,
 ): P2pExportBundle = when (source) {
     is P2pSendSource.Ready -> source.bundle
     is P2pSendSource.DownloadL -> withContext(Dispatchers.IO) {
-        val item = source.item() ?: error("Битые данные item")
-        val luscious = EntryPointAccessors
-            .fromApplication(context.applicationContext, P2pSendEntryPoint::class.java)
-            .luscious()
+        val l = preparer ?: error("Подготовка L не установлена")
         val outboxLikes = mirrorRoot(
             base = File(AppPath.p2p_outbox),
             mainRoot = File(AppPath.main),
             storeRoot = File(AppPath.l_likes),
         )
-        val folder = lPersistPicsDetailsToFolder(item, outboxLikes, luscious, progress).getOrThrow()
+        val folder = l.downloadItem(source.itemJson, outboxLikes)
         LExporter.export(folder) ?: error("Не удалось подготовить файлы")
     }
     is P2pSendSource.ShareCollection -> withContext(Dispatchers.IO) {
@@ -122,13 +107,16 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
         var showPermissionDialog by remember { mutableStateOf(!hasPermissions) }
 
         val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
-        val downloadProgress = remember { LDownloadProgress(scope) }
+        val preparer = remember(context) { P2pSendPreparers.l?.create(context, scope) }
+        val prepareProgress = remember(preparer) {
+            preparer?.progress ?: MutableStateFlow(P2pSendPreparer.PROGRESS_HIDDEN)
+        }
         val controller = remember {
             P2pShareController(
                 nearby = NearbyClientImpl(context),
                 scope = scope,
                 myName = Build.MODEL ?: "Android",
-                bundleProvider = { prepareBundle(context.applicationContext, source, downloadProgress) },
+                bundleProvider = { prepareBundle(source, preparer) },
             )
         }
 
@@ -179,7 +167,7 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
             ) {
                 when (val s = state) {
                     is ShareState.Preparing -> {
-                        val pct by downloadProgress.percentDownload.collectAsState()
+                        val pct by prepareProgress.collectAsState()
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             horizontalAlignment = Alignment.CenterHorizontally,

@@ -24,6 +24,7 @@ import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.featured.saved.L_METADATA_FILE_NAME
 import com.client.xvideos.l.featured.saved.lFindLikeFolder
+import com.client.xvideos.l.featured.saved.lP2pSendSource
 import com.client.xvideos.l.featured.saved.readLSavedLikeMetadata
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -191,7 +192,7 @@ class ExpandMenuViewModel @Inject constructor(
         val bundle = folder?.let { LExporter.export(it) }
         // Нет в Likes (или бандл битый) — экран отправки скачает item в outbox,
         // не помечая его сохранённым.
-        p2pSource = if (bundle != null) P2pSendSource.Ready(bundle) else P2pSendSource.DownloadL.of(item)
+        p2pSource = if (bundle != null) P2pSendSource.Ready(bundle) else lP2pSendSource(item)
     }
 
     /**

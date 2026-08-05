@@ -11,9 +11,9 @@ import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.p2p.P2pSendSource
-import com.client.xvideos.common.p2p.export.LAlbumExporter
 import com.client.xvideos.common.p2p.mirrorRoot
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.l.featured.saved.LAlbumExporter
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.AlbumDetails
 import java.io.File

@@ -1,6 +1,7 @@
-package com.client.xvideos.common.p2p.imports
+package com.client.xvideos.r.common.p2p
 
 import com.client.xvideos.common.p2p.P2pManifest
+import com.client.xvideos.common.p2p.imports.BundleImporter
 import com.client.xvideos.r.model.GifsInfo
 import com.google.gson.GsonBuilder
 import timber.log.Timber

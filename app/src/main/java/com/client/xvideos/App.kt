@@ -9,8 +9,12 @@ import coil3.SingletonImageLoader
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.log.CrashLog
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
+import com.client.xvideos.common.p2p.P2pReceiveManager
+import com.client.xvideos.common.p2p.P2pSendPreparers
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor
+import com.client.xvideos.l.featured.saved.LSendPreparer
+import com.client.xvideos.p2p.sectionBundleImporter
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -110,6 +114,11 @@ class App : Application(), SingletonImageLoader.Factory {
         // Контекст нужен, чтобы Settings открыл зашифрованное хранилище для
         // учётных данных Luscious и перенёс туда старые открытые значения.
         Settings.init(prefs, this)
+
+        // P2P знает про разделы только отсюда: базовый слой умеет передавать
+        // байты, но не знает, куда их класть и как скачать несохранённый item.
+        P2pReceiveManager.importerFactory = ::sectionBundleImporter
+        P2pSendPreparers.l = LSendPreparer
 
 //        val loggingInterceptor = Interceptor { chain ->
 //            val request = chain.request()

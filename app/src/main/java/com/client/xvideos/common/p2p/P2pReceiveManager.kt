@@ -2,21 +2,10 @@ package com.client.xvideos.common.p2p
 
 import android.content.Context
 import android.os.Build
-import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
-import com.client.xvideos.common.p2p.imports.StoreBundleImporter
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
 import com.client.xvideos.common.p2p.imports.BundleImporter
-import com.client.xvideos.common.p2p.imports.LCollectionBundleImporter
-import com.client.xvideos.common.p2p.imports.RLikesBundleImporter
-import com.client.xvideos.common.p2p.imports.RCollectionBundleImporter
-import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.r.common.saved.SavedRed
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -27,13 +16,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 
 /**
  * Менеджер для управления P2P приемом через GlobalScope.
  * Работает только пока приложение активно (не в фоне).
  */
 object P2pReceiveManager {
+
+    /**
+     * Собирает импортёр, который знает, куда класть принятое в каждом разделе.
+     * Ставится в точке сборки (см. `App`): базовый слой не знает ни про `SavedL`,
+     * ни про `SavedRed`, поэтому сам такой импортёр собрать не может.
+     */
+    @Volatile
+    var importerFactory: ((Context) -> BundleImporter)? = null
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val _controller = MutableStateFlow<P2pReceiveController?>(null)
@@ -49,64 +45,14 @@ object P2pReceiveManager {
             return
         }
 
+        val importer = importerFactory?.invoke(context.applicationContext)
+        if (importer == null) {
+            Timber.e("P2P Manager: importerFactory не установлен, приём не запускаем")
+            return
+        }
+
         Timber.d("P2P Manager: Starting")
         val nearby = NearbyClientImpl(context.applicationContext)
-
-        val entryPoint = EntryPointAccessors
-            .fromApplication(context.applicationContext, P2pRefreshEntryPoint::class.java)
-
-        val storeImporter = StoreBundleImporter(
-            storeRootFor = { type ->
-                when (type) {
-                    P2pType.X -> File(AppPath.x_cache_download)
-                    // R сюда не попадает — идёт через RLikesBundleImporter.
-                    P2pType.R -> File(AppPath.r_cache_download)
-                    P2pType.L -> File(AppPath.l_likes)
-                    P2pType.L_ALBUM -> File(AppPath.l_albums)
-                    P2pType.L_COLLECTION -> File(AppPath.l_collection)
-                    P2pType.R_COLLECTION -> File(AppPath.r_collection)
-                }
-            },
-            refreshFor = { type ->
-                // X: экран Saved перечитывает список при открытии.
-                when (type) {
-                    P2pType.L -> entryPoint.savedL().likes.refresh()
-                    P2pType.L_ALBUM -> entryPoint.savedL().albums.refresh()
-                    else -> Unit
-                }
-            },
-            inboxRoot = File(AppPath.p2p_inbox),
-            mainRoot = File(AppPath.main),
-        )
-
-        // R: «лайк» — запись метаданных в FileDB, файлы не раскладываем
-        // (LikesTab рендерит по URL); list.add сам обновляет Compose-state.
-        val rLikesImporter = RLikesBundleImporter(addLike = { entryPoint.savedRed().likes.add(it) })
-
-        // L_COLLECTION: принятый zip распаковывается в зеркало inbox и мёржится в store.
-        val lCollectionImporter = LCollectionBundleImporter(
-            inboxRoot = File(AppPath.p2p_inbox),
-            mainRoot = File(AppPath.main),
-            collectionStoreRoot = File(AppPath.l_collection),
-            refresh = { entryPoint.savedL().collection.refreshCollectionList() },
-        )
-
-        // R_COLLECTION: принятый zip распаковывается в зеркало inbox и мёржится в R-store.
-        val rCollectionImporter = RCollectionBundleImporter(
-            inboxRoot = File(AppPath.p2p_inbox),
-            mainRoot = File(AppPath.main),
-            collectionStoreRoot = File(AppPath.r_collection),
-            refresh = { entryPoint.savedRed().collections.refreshCollectionList() },
-        )
-
-        val importer = BundleImporter { manifest, files ->
-            when (manifest.type) {
-                P2pType.R -> rLikesImporter.import(manifest, files)
-                P2pType.L_COLLECTION -> lCollectionImporter.import(manifest, files)
-                P2pType.R_COLLECTION -> rCollectionImporter.import(manifest, files)
-                else -> storeImporter.import(manifest, files)
-            }
-        }
 
         val newController = P2pReceiveController(
             nearby = nearby,
@@ -171,14 +117,6 @@ object P2pReceiveManager {
             else -> {}
         }
     }
-}
-
-/** Доступ к Hilt-синглтонам из [P2pReceiveManager] — обычного object вне DI-графа. */
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface P2pRefreshEntryPoint {
-    fun savedL(): SavedL
-    fun savedRed(): SavedRed
 }
 
 fun toggleP2pService(context: Context, enabled: Boolean) {
