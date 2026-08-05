@@ -1,0 +1,167 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.detekt)
+}
+
+// Конфиг и baseline общие с :app — правила одни на весь проект, а записи
+// baseline привязаны к именам файлов, а не к путям, и переезд их не ломает.
+detekt {
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline.xml")
+    parallel = true
+    buildUponDefaultConfig = true
+    ignoreFailures = false
+}
+
+android {
+    // Пакеты внутри остались прежними (com.client.xvideos.common, .ui) —
+    // namespace задаёт только, где сгенерируются R и BuildConfig модуля.
+    namespace = 'com.client.xvideos.core'
+    compileSdk = 37
+
+    defaultConfig {
+        minSdk = 29
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        // benchmark есть в :app; без него зависимость этого варианта не
+        // разрешится, и сборка упадёт ещё на конфигурации.
+        benchmark {
+            initWith release
+            matchingFallbacks = ['release']
+        }
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        compose = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add('-XXLanguage:+PropertyParamAnnotationDefaultTargetMode')
+    }
+}
+
+// api, а не implementation: разделы и точка сборки пользуются теми же
+// Compose, Coil, media3 и Voyager, что и базовый слой. Дублировать список
+// в каждом модуле смысла нет — :core отдаёт его наружу.
+dependencies {
+
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    api platform(libs.androidx.compose.bom)
+    api libs.androidx.compose.runtime
+    api(libs.androidx.compose.ui.android)
+    api(libs.androidx.runtime)
+    api libs.androidx.compose.runtime.saved.instance.state
+    api libs.androidx.ui
+    api libs.androidx.ui.graphics
+    api libs.androidx.ui.tooling.preview
+    api libs.androidx.foundation.layout
+    api libs.androidx.animation.core
+    api libs.ui
+    debugApi libs.androidx.ui.tooling
+
+    api libs.material
+    api libs.androidx.material
+    api libs.androidx.material3
+    api(libs.material3)
+    api libs.compose.theme.adapter
+    api libs.androidx.material.icons.core
+    api libs.androidx.material.icons.extended
+    api libs.androidx.adaptive
+
+    api libs.androidx.core.ktx
+    api libs.androidx.activity.ktx
+    api libs.androidx.activity.compose
+    api libs.androidx.lifecycle.runtime.ktx
+    api libs.androidx.lifecycle.viewmodel.compose
+    api(libs.androidx.lifecycle.process)
+    api libs.androidx.hilt.navigation.compose
+    api(libs.androidx.core.splashscreen)
+    api libs.androidx.storage
+    api(libs.androidx.security.crypto)
+    api(libs.androidx.paging.runtime)
+    api(libs.androidx.paging.compose)
+
+    api(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    api(libs.voyager.navigator)
+    api(libs.voyager.screenmodel)
+    api(libs.voyager.bottom.sheet.navigator)
+    api(libs.voyager.tab.navigator)
+    api(libs.voyager.transitions)
+    api(libs.voyager.hilt)
+    api(libs.voyager.livedata)
+
+    api libs.androidx.media3.ui
+    api libs.androidx.media3.exoplayer
+    api libs.androidx.media3.exoplayer.dash
+    api libs.androidx.media3.exoplayer.smoothstreaming
+    api libs.androidx.media3.exoplayer.hls
+    api libs.androidx.media3.exoplayer.workmanager
+    api libs.androidx.media3.common
+    api libs.androidx.media3.ui.leanback
+    api libs.androidx.media3.session
+    api libs.androidx.media3.extractor
+    api libs.androidx.media3.cast
+    api libs.androidx.media3.transformer
+    api libs.androidx.media3.decoder
+    api libs.androidx.media3.datasource
+    api libs.androidx.media3.exoplayer.rtsp
+    api(libs.androidx.media3.ui.compose)
+    api libs.androidx.media3.effect
+
+    api(libs.coil.compose)
+    api(libs.coil.network.okhttp)
+    api(libs.coil.gif)
+    api(libs.coil.network.cache.control)
+    api(libs.image.loader)
+
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.cio)
+    api(libs.ktor.client.okhttp)
+    api(libs.ktor.client.logging)
+    api(libs.ktor.client.android)
+    api(libs.ktor.network)
+    api(libs.ktor.client.content.negotiation)
+    api(libs.ktor.serialization.kotlinx.json)
+    api libs.kotlinx.serialization.json
+
+    api libs.gson
+    api libs.jsoup
+    api libs.timber
+    api libs.slf4j.android
+    api libs.disk.lru.cache
+    api libs.volley
+    api libs.kotlinx.collections.immutable
+    api libs.components.resources
+    api(libs.core)
+
+    api libs.lottie
+    api libs.lottie.compose
+    api libs.lazycolumnscrollbar
+    api(libs.compose.zoom)
+    api libs.compose.extended.gestures
+    api libs.zoomable
+    api(libs.accompanist.systemuicontroller)
+
+    // P2P Nearby Connections
+    api libs.play.services.nearby
+
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+}

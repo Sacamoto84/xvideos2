@@ -30,3 +30,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "xvideos"
 include ':app'
+include ':core'

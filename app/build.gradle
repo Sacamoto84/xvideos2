@@ -137,8 +137,10 @@ kotlin {
 
 dependencies {
 
-    // Видеоплеер вынесен в отдельный Gradle-модуль (Этап 2 рефакторинга плеера)
-    //implementation project(':core-player')
+    // Базовый слой: тема, общие виджеты, хранилище, сеть, видеоплеер, движок
+    // P2P. Он отдаёт свои зависимости через api, поэтому список ниже во многом
+    // дублирующий — он останется, пока разделы живут здесь же.
+    implementation project(':core')
 
     implementation(libs.androidx.compose.ui.android)
 

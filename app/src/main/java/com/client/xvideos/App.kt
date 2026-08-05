@@ -6,6 +6,7 @@ import com.client.xvideos.common.util.defaultSharedPreferences
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
+import com.client.xvideos.common.AppBuildInfo
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.log.CrashLog
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
@@ -84,6 +85,11 @@ class App : Application(), SingletonImageLoader.Factory {
         super.onCreate()
 
         instance = this
+        // BuildConfig генерируется на модуль, у :core он свой — поля приложения
+        // базовый слой получает отсюда. Ставится до CrashLog: заголовок падения
+        // печатает versionName.
+        AppBuildInfo.init(debug = BuildConfig.DEBUG, versionName = BuildConfig.VERSION_NAME)
+
         // Строго первым делом: Hilt-синглтоны читают пути прямо в конструкторе.
         // init() только назначает пути и создаёт папки — на главном потоке это
         // дёшево. Рекурсивная чистка staging-папок уходит в фон, её результата
@@ -100,6 +106,7 @@ class App : Application(), SingletonImageLoader.Factory {
 
         // Инициализируем монитор трафика
         networkTrafficMonitor = NetworkTrafficMonitor()
+        NetworkTrafficMonitor.current = networkTrafficMonitor
         networkTrafficMonitor.startMonitoring()
 
         // Обработчик необработанных исключений ставит CrashLog.install() выше:

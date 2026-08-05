@@ -76,9 +76,10 @@ fun CollectionsGrid(
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (collection.previewUrl != null) {
+                    val previewUrl = collection.previewUrl
+                    if (previewUrl != null) {
                         UrlImage(
-                            url = collection.previewUrl,
+                            url = previewUrl,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .size(72.dp)

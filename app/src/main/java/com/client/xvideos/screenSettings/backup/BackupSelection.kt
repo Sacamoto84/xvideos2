@@ -27,7 +27,11 @@ internal fun toggleBackupPath(
     val selected = selectedPaths.toMutableSet()
     val checked = isBackupPathChecked(items, selectedPaths, item)
 
-    if (item.parentPath == null) {
+    // Читаем свойство один раз в локальную переменную: после выноса модели в
+    // :core умного приведения к String по проверке `item.parentPath == null`
+    // компилятор уже не делает — свойство из другого модуля.
+    val parentPath = item.parentPath
+    if (parentPath == null) {
         val children = items.filter { it.parentPath == item.path }.map { it.path }
         selected.remove(item.path)
         selected.removeAll(children)
@@ -35,7 +39,6 @@ internal fun toggleBackupPath(
         return selected
     }
 
-    val parentPath = item.parentPath
     val siblings = items.filter { it.parentPath == parentPath }.map { it.path }
     if (parentPath in selected) {
         selected.remove(parentPath)

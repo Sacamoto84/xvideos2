@@ -50,19 +50,36 @@ class ModuleBoundariesTest {
         assertTrue(problems, problems.isEmpty())
     }
 
-    private fun findViolations(): Set<String> {
-        val root = sourceRoot()
-        return root.walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
-            .flatMap { file ->
-                val path = file.relativeTo(root).invariantPath()
-                val forbidden = FORBIDDEN[sectionOf(path)] ?: return@flatMap emptySequence()
-                importedTopLevelPackages(file)
-                    .filter { it in forbidden }
-                    .map { to -> "$path -> $to" }
-            }
+    /**
+     * Страховка от тихой деградации: после каждого выноса модуля исходники
+     * оказываются в новом месте, и сторож, который их не нашёл, зеленеет просто
+     * потому, что ничего не прочитал.
+     */
+    @Test
+    fun `сторож видит исходники всех модулей`() {
+        val scanned = sourceRoots()
+            .flatMap { (it.listFiles() ?: emptyArray()).asSequence() }
+            .filter { it.isDirectory }
+            .map { it.name }
             .toSet()
+
+        val expected = setOf("common", "l", "r", "x", "screenRoot", "screenSettings", "p2p", "ui")
+        val missing = expected - scanned
+        assertTrue("Не просканированы пакеты $missing; найдено: $scanned", missing.isEmpty())
     }
+
+    private fun findViolations(): Set<String> =
+        sourceRoots().flatMap { root ->
+            root.walkTopDown()
+                .filter { it.isFile && it.extension == "kt" }
+                .flatMap { file ->
+                    val path = file.relativeTo(root).invariantPath()
+                    val forbidden = FORBIDDEN[sectionOf(path)] ?: return@flatMap emptySequence()
+                    importedTopLevelPackages(file)
+                        .filter { it in forbidden }
+                        .map { to -> "$path -> $to" }
+                }
+        }.toSet()
 
     /** Раздел, которому принадлежит файл: первый сегмент пути внутри `com/client/xvideos`. */
     private fun sectionOf(relativePath: String): String = relativePath.substringBefore('/')
@@ -78,17 +95,26 @@ class ModuleBoundariesTest {
 
     private fun File.invariantPath(): String = path.replace(File.separatorChar, '/')
 
-    /** Каталог `com/client/xvideos` в main-исходниках, найденный от рабочей директории вверх. */
-    private fun sourceRoot(): File {
+    /**
+     * Каталоги `com/client/xvideos` во всех модулях проекта.
+     *
+     * Пути внутри них не пересекаются (`common/`, `l/`, `screenRoot/`…), поэтому
+     * результаты модулей просто складываются: правила формулируются в терминах
+     * пакетов, а не модулей, и переживают каждый следующий вынос.
+     */
+    private fun sourceRoots(): Sequence<File> {
         var dir: File? = File("").absoluteFile
         while (dir != null) {
-            for (prefix in listOf("src/main/java", "app/src/main/java")) {
-                val candidate = File(dir, "$prefix/com/client/xvideos")
-                if (candidate.isDirectory) return candidate
+            if (File(dir, "settings.gradle").isFile || File(dir, "settings.gradle.kts").isFile) {
+                val roots = (dir.listFiles() ?: emptyArray())
+                    .map { File(it, "src/main/java/com/client/xvideos") }
+                    .filter { it.isDirectory }
+                if (roots.isEmpty()) error("В ${dir.absolutePath} не нашлось ни одного модуля с исходниками")
+                return roots.asSequence()
             }
             dir = dir.parentFile
         }
-        error("Не найден каталог исходников com/client/xvideos от ${File("").absolutePath}")
+        error("Не найден корень проекта (settings.gradle) от ${File("").absolutePath}")
     }
 
     private companion object {

@@ -68,7 +68,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.transitions.ScreenTransition
-import com.client.xvideos.R
+import com.client.xvideos.core.R
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver

@@ -1,6 +1,9 @@
 package com.client.xvideos.screenSettings.section
 
 import com.client.xvideos.R
+// Иконка «enter» уехала в :core вместе с клавиатурой, которая её тоже рисует;
+// остальные иконки этого экрана — свои, поэтому здесь два R.
+import com.client.xvideos.core.R as CoreR
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,7 +42,7 @@ internal fun DiagnosticsSettingsSection() {
         )
 
         SettingsListItem(
-            icon = R.drawable.enter,
+            icon = CoreR.drawable.enter,
             text = "Поделиться журналом",
             subtitle = if (isEmpty) {
                 "Пока нечем поделиться"
