@@ -141,6 +141,9 @@ dependencies {
     // P2P. Он отдаёт свои зависимости через api, поэтому список ниже во многом
     // дублирующий — он останется, пока разделы живут здесь же.
     implementation project(':core')
+    implementation project(':feature-l')
+    implementation project(':feature-x')
+    implementation project(':feature-r')
 
     implementation(libs.androidx.compose.ui.android)
 

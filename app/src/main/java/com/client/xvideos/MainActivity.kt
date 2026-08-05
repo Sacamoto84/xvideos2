@@ -53,7 +53,6 @@ import javax.inject.Inject
 /**
  * Базовый URL для стартовой точки работы с основным сайтом.
  */
-const val urlStart = "https://www.xv-ru.com"
 
 /**
  * Главная activity приложения.

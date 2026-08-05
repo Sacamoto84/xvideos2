@@ -7,6 +7,7 @@ import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import com.client.xvideos.common.AppBuildInfo
+import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.log.CrashLog
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
@@ -89,6 +90,9 @@ class App : Application(), SingletonImageLoader.Factory {
         // базовый слой получает отсюда. Ставится до CrashLog: заголовок падения
         // печатает versionName.
         AppBuildInfo.init(debug = BuildConfig.DEBUG, versionName = BuildConfig.VERSION_NAME)
+        // Контекст для кода в модулях, до которого не дотягивается ни DI, ни
+        // Compose: класс приложения им не виден.
+        AppContextHolder.init(this)
 
         // Строго первым делом: Hilt-синглтоны читают пути прямо в конструкторе.
         // init() только назначает пути и создаёт папки — на главном потоке это

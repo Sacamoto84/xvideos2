@@ -1,0 +1,70 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.parcelize)
+    // Модели поиска X помечены @Serializable — нужен плагин, а не только
+    // рантайм-библиотека из :core.
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline.xml")
+    parallel = true
+    buildUponDefaultConfig = true
+    ignoreFailures = false
+}
+
+android {
+    namespace = 'com.client.xvideos.feature.x'
+    compileSdk = 37
+
+    defaultConfig {
+        minSdk = 29
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        // Вариант из :app: без него зависимость benchmark не разрешается.
+        benchmark {
+            initWith release
+            matchingFallbacks = ['release']
+        }
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        compose = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add('-XXLanguage:+PropertyParamAnnotationDefaultTargetMode')
+    }
+}
+
+// Список короткий: всё общее приходит транзитивно из :core, который отдаёт
+// свои зависимости через api.
+dependencies {
+
+    api project(':core')
+
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    // Плагин hilt требует зависимость объявленной явно в самом модуле —
+    // транзитивной через :core ему недостаточно.
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+}

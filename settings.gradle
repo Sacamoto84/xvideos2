@@ -31,3 +31,6 @@ dependencyResolutionManagement {
 rootProject.name = "xvideos"
 include ':app'
 include ':core'
+include ':feature-l'
+include ':feature-x'
+include ':feature-r'
