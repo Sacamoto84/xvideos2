@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.common.bottomKeyboard
+package com.client.xvideos.common.ui.keyboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

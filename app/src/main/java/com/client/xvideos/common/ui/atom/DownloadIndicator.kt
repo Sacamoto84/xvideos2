@@ -1,4 +1,4 @@
-package com.client.xvideos.r.common.downloader.ui
+package com.client.xvideos.common.ui.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

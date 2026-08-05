@@ -110,16 +110,6 @@ class ModuleBoundariesTest {
          * строку вычёркивают вместе с переносом кода.
          */
         val BASELINE = setOf(
-            // Шаг 1. Общие виджеты уезжают в common/ui.
-            "l/ui/screens/explorer/L_ScreenExplorer.kt -> r",
-            "l/ui/screens/explorer/tab/saved/ScreenSaved.kt -> r",
-            "l/ui/screens/explorer/tab/saved/likes/L_ScreenSavedLikesTab.kt -> r",
-            "l/ui/screens/screenAlbumList/atom/AlbumListPageSelector.kt -> x",
-            "x/screens/dashboards/ScreenXDashBoards.kt -> r",
-
-            // Шаг 1 + шаг 3: виджеты профиля и атомы плеера.
-            "l/ui/element/lazyRowPictureDetails/L_LazyRowPictureDetails.kt -> r",
-
             // Шаг 2. ThumbnailsSize переезжает из l/model в common.
             "common/settings/Settings.kt -> l",
             "common/settings/ui/components/ThumbnailSizeSelector.kt -> l",
@@ -128,6 +118,7 @@ class ModuleBoundariesTest {
             // Шаг 3. StaticPlayer и VideoPlayerWithMenuContent — в common/videoplayer.
             "common/videoplayer/ui/ComposeVideoPlayer.kt -> r",
             "common/urlVideoImage/UrlVideoLite.kt -> r",
+            "l/ui/element/lazyRowPictureDetails/L_LazyRowPictureDetails.kt -> r",
             "l/ui/screens/screenFullScreen/L_FullScreenImage.kt -> r",
 
             // Шаг 4. UrlVideoImageAndLongClickX переезжает из common в x.

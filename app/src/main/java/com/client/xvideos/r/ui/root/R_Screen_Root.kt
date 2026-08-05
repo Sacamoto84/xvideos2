@@ -33,7 +33,7 @@ import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
 import com.client.xvideos.screenRoot.LocalRootScreenModel
 import com.client.xvideos.screenRoot.ScreenRootSM
 import com.client.xvideos.r.common.block.ui.DialogBlock
-import com.client.xvideos.r.common.downloader.ui.DownloadIndicator
+import com.client.xvideos.common.ui.atom.DownloadIndicator
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

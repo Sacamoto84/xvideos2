@@ -46,8 +46,8 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
-import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
-import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
+import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.composeunstyled.Text
 import dagger.Binds
 import dagger.Module

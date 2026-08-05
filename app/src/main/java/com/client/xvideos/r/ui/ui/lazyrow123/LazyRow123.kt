@@ -55,8 +55,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
-import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
-import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForGrid
+import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

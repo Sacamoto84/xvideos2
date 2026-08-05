@@ -1,4 +1,4 @@
-package com.client.xvideos.r.ui.profile.atom
+package com.client.xvideos.common.ui.atom
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize

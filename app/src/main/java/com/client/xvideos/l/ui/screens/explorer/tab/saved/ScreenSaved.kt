@@ -29,8 +29,8 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.L_ScreenSavedAl
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.L_Screen_CollectionTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab_AddColumn
-import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddColumn
-import com.client.xvideos.r.ui.ui.atom.TabBarPoints
+import com.client.xvideos.common.settings.ColumnSelect_AddColumn
+import com.client.xvideos.common.ui.atom.TabBarPoints
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

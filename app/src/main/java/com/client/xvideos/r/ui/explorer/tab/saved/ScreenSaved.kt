@@ -35,7 +35,7 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_LikesTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.SavedNichesTab
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddRColumn
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_SubscriptionsTab
-import com.client.xvideos.r.ui.ui.atom.TabBarPoints
+import com.client.xvideos.common.ui.atom.TabBarPoints
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
 import kotlinx.collections.immutable.persistentListOf
 

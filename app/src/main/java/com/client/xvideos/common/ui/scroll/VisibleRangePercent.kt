@@ -1,4 +1,4 @@
-package com.client.xvideos.r.ui.profile
+package com.client.xvideos.common.ui.scroll
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState

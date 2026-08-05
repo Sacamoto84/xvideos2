@@ -65,8 +65,8 @@ import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
-import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
-import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
+import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

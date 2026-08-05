@@ -70,8 +70,8 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.explorer.RNavigationState
 
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
-import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
-import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
+import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.Binds
 import dagger.Module

@@ -73,8 +73,8 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
-import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
-import com.client.xvideos.r.ui.profile.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
+import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import com.client.xvideos.ui.theme.XvideosTheme

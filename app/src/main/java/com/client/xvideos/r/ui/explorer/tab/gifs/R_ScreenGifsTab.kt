@@ -47,7 +47,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.settings.element.SettingElementInt
-import com.client.xvideos.common.settings.element.SettingElementList
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -68,17 +67,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
-
-fun ColumnSelect_AddColumn(pref: SettingElementInt, list: SettingElementList<Boolean>) {
-    val flags = list.field.value
-    val enabledIndices = flags.mapIndexedNotNull { index, enabled -> if (enabled && index in 1..4) index else null }
-    if (enabledIndices.isEmpty()) return
-    val currentIndex = pref.field.value
-    val currentPos = enabledIndices.indexOf(currentIndex)
-    val nextPos = if (currentPos == -1) 0 else (currentPos + 1) % enabledIndices.size
-
-    pref.setValue(enabledIndices[nextPos])
-}
 
 private val rColumnOptions = listOf(2, 3, 4)
 

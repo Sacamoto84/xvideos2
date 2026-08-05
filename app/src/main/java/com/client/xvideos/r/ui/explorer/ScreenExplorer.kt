@@ -31,7 +31,7 @@ import com.client.xvideos.r.ui.explorer.tab.niches.R_ScreenNichesTab
 import com.client.xvideos.r.ui.explorer.tab.saved.R_ScreenSavedTab
 import com.client.xvideos.r.ui.explorer.tab.search.SearchTab
 
-import com.client.xvideos.r.ui.ui.atom.TabBarPoints
+import com.client.xvideos.common.ui.atom.TabBarPoints
 
 // persistentListOf, а не listOf: обычный List для Compose нестабилен, и TabRow
 // перекомпоновывался чаще, чем нужно.

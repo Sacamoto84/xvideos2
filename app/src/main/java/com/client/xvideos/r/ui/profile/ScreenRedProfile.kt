@@ -29,8 +29,9 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.r.model.UserInfo
+import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.r.ui.profile.atom.RedProfileCreaterInfo
-import com.client.xvideos.r.ui.profile.atom.VerticalScrollbar
 import com.client.xvideos.r.ui.profile.tags.TagsBlock
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import timber.log.Timber
