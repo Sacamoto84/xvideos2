@@ -40,7 +40,7 @@ import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
-import com.client.xvideos.l.net.graphQl.Genre
+import com.client.xvideos.l.model.FilterGenre
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterDisplay
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterAlbumType
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterAudiences
@@ -225,8 +225,8 @@ private fun albumListFilterPreviewTagCounts(): List<AlbumListFilterGenreCountRes
 private fun albumListFilterPreviewGenre(
     id: String,
     title: String
-): Genre {
-    return Genre(
+): FilterGenre {
+    return FilterGenre(
         id = id,
         title = title,
         slug = title.lowercase().replace(" ", "-"),

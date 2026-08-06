@@ -158,9 +158,6 @@ class LayerBoundariesTest {
          * которые оказались выше сети. Раздел `x` чист: шаг 1 сделан.
          */
         val BASELINE = setOf(
-            // Шаг 2. l: Genre вон из модели.
-            "l/model/AlbumListFilter.kt -> net",
-
             // Шаг 3. l: развязать net и repository.
             "l/net/AlbumInfo.kt -> repository",
             "l/net/AlbumList.kt -> repository",

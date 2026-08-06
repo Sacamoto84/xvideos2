@@ -83,7 +83,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
-import com.client.xvideos.l.net.graphQl.Genre as FilterGenre
+import com.client.xvideos.l.model.FilterGenre
 
 class ScreenLAlbum(val idAlbum: Long) : Screen {
 

@@ -120,6 +120,16 @@ model  <-  data (net/network/parcer/search)  <-  domain (featured/feature/common
 
 `model/AlbumListFilter.kt` тянет `net.Genre`. Одно ребро, один тип.
 
+*Сделано, и оказалось не про одно ребро.* `Genre` в разделе было **два**:
+короткая ссылка на жанр внутри ответа со списком альбомов
+(`model/AlbumListType.kt`) и полная карточка жанра из
+`MediaCategoriesBootstrap`. Одинаковое имя в разных пакетах — поэтому
+`ScreenAlbum` и импортировал второй как `Genre as FilterGenre`.
+
+Простой перенос в `model` дал бы коллизию имён, поэтому карточка каталога
+переехала под честным именем `FilterGenre` (плюс `OnlyContent`, на который она
+ссылается) — `model/FilterGenre.kt`. Алиас в `ScreenAlbum` стал не нужен.
+
 ### Шаг 3. `l`: развязать `net` и `repository`
 
 Самое содержательное. `Repository.kt` — 394 строки, держит состояние и при

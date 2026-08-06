@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
-import com.client.xvideos.l.net.graphQl.Genre
+import com.client.xvideos.l.model.FilterGenre
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 import com.composeunstyled.Icon
 import com.composeunstyled.Text
@@ -79,7 +79,7 @@ fun AlbumListFilterGenres(
                     color = StyleGenresTags.colorSelectTextItem,
                     modifier = Modifier.then(StyleGenresTags.modifierSelectTextItem)
                         .clickable(onClick = {
-                            val plus = mutableListOf<Genre>()
+                            val plus = mutableListOf<FilterGenre>()
                             plus.addAll(genresPlus)
                             plus.remove(it)
                             val filter1 = filter.copy(genresPlus = plus)
@@ -101,7 +101,7 @@ fun AlbumListFilterGenres(
                     color = StyleGenresTags.colorExcludedTextItem,
                     modifier = Modifier.then(StyleGenresTags.modifierExcludedTextItem)
                         .clickable(onClick = {
-                            val minus = mutableListOf<Genre>()
+                            val minus = mutableListOf<FilterGenre>()
                             minus.addAll(genresMinus)
                             minus.remove(it)
                             val filter1 = filter.copy(genresMinus = minus)
@@ -154,7 +154,7 @@ fun AlbumListFilterGenres(
                                             .size(40.dp)
                                             .border(1.dp, palette.selectedBorder, RoundedCornerShape(4.dp))
                                             .clickable(onClick = {
-                                                val plus = mutableListOf<Genre>()
+                                                val plus = mutableListOf<FilterGenre>()
                                                 plus.addAll(genresPlus)
                                                 plus.add(item)
                                                 val filter1 = filter.copy(genresPlus = plus)
@@ -178,7 +178,7 @@ fun AlbumListFilterGenres(
                                             .size(40.dp)
                                             .border(1.dp, palette.excludedBorder, RoundedCornerShape(4.dp))
                                             .clickable(onClick = {
-                                                val minus = mutableListOf<Genre>()
+                                                val minus = mutableListOf<FilterGenre>()
                                                 minus.addAll(genresMinus)
                                                 minus.add(item)
                                                 val filter1 = filter.copy(genresMinus = minus)

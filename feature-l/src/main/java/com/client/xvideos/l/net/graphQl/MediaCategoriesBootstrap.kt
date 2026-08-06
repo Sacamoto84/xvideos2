@@ -1,5 +1,6 @@
 package com.client.xvideos.l.net.graphQl
 
+import com.client.xvideos.l.model.FilterGenre
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
 import com.google.gson.Gson
@@ -52,7 +53,7 @@ data class ApiData(
 // Класс для медиа категорий
 data class MediaCategories(
     @SerializedName("genres")
-    val genres: List<Genre>,
+    val genres: List<FilterGenre>,
 
     @SerializedName("filter_settings")
     val filterSettings: FilterSettings,
@@ -67,59 +68,8 @@ data class MediaCategories(
     val audiences: List<Audience>
 )
 
-// Класс для жанров
-data class Genre(
-    @SerializedName("id")
-    val id: String,
-
-    @SerializedName("title")
-    val title: String,
-
-    @SerializedName("slug")
-    val slug: String,
-
-    @SerializedName("description")
-    val description: String,
-
-    @SerializedName("uploading_rules")
-    val uploadingRules: String,
-
-    @SerializedName("poster_url")
-    val posterUrl: String?,
-
-    @SerializedName("acts_as_warning")
-    val actsAsWarning: Boolean,
-
-    @SerializedName("acts_as_default")
-    val actsAsDefault: Boolean,
-
-    @SerializedName("represents_uncategorized")
-    val representsUncategorized: Boolean,
-
-    @SerializedName("url")
-    val url: String,
-
-    @SerializedName("parent")
-    val parent: String?,
-
-    @SerializedName("only_allows_model")
-    val onlyAllowsModel: List<String>?,
-
-    @SerializedName("only_content")
-    val onlyContent: OnlyContent?
-)
-
-// Класс для ограничения контента
-data class OnlyContent(
-    @SerializedName("id")
-    val id: String,
-
-    @SerializedName("title")
-    val title: String,
-
-    @SerializedName("url")
-    val url: String
-)
+// Жанр и его ограничение по контенту переехали в model.FilterGenre: на них
+// ссылается AlbumListFilter, то есть слой ниже сети.
 
 // Класс для настроек фильтров
 data class FilterSettings(

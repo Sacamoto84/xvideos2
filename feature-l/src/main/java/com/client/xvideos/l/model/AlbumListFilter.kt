@@ -3,7 +3,6 @@ package com.client.xvideos.l.model
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
-import com.client.xvideos.l.net.graphQl.Genre
 
 data class AlbumListFilter(
     val display: String = "date_newest",
@@ -13,8 +12,8 @@ data class AlbumListFilter(
     val itemsPerPage: Int = 30,
     val picture_count_rank : PictureCountRank = PictureCountRank.All,
     val content_id : ContentId = ContentId.All,
-    val genresPlus : List<Genre> = emptyList(),
-    val genresMinus: List<Genre> = emptyList(),
+    val genresPlus : List<FilterGenre> = emptyList(),
+    val genresMinus: List<FilterGenre> = emptyList(),
     val tagPlus : List<String> = emptyList(),
     val tagMinus : List<String> = emptyList(),
     val searchQuery : String = "",
