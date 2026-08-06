@@ -22,6 +22,16 @@ android {
 // api, а не implementation: разделы и точка сборки пользуются теми же
 // Compose, Coil, media3 и Voyager, что и базовый слой. Дублировать список
 // в каждом модуле смысла нет — :core отдаёт его наружу.
+//
+// Решение это про перечисленные библиотеки. Остальные попадали под api заодно,
+// хотя за пределы :core не выходят — замер по импортам в app/ и feature-*
+// показал ноль. Такие переведены в implementation: они больше не висят на
+// класспате компиляции четырёх модулей, а правило про Compose и Coil осталось
+// как было.
+//
+// Осторожность: библиотеки с ресурсами и темами (material, splashscreen)
+// оставлены в api независимо от импортов — их стили используются из XML, а для
+// этого зависимость должна быть видна потребителю на этапе компиляции ресурсов.
 dependencies {
 
     coreLibraryDesugaring libs.desugar.jdk.libs
@@ -57,7 +67,8 @@ dependencies {
     api libs.androidx.hilt.navigation.compose
     api(libs.androidx.core.splashscreen)
     api libs.androidx.storage
-    api(libs.androidx.security.crypto)
+    // Только внутри :core — зашифрованные настройки (учётные данные Luscious).
+    implementation(libs.androidx.security.crypto)
     api(libs.androidx.paging.runtime)
     api(libs.androidx.paging.compose)
 
@@ -109,9 +120,10 @@ dependencies {
     api libs.gson
     api libs.jsoup
     api libs.timber
-    api libs.slf4j.android
-    api libs.disk.lru.cache
-    api libs.volley
+    // Бэкенд логирования и кеши: компиляции потребителей не касаются.
+    implementation libs.slf4j.android
+    implementation libs.disk.lru.cache
+    implementation libs.volley
     api libs.kotlinx.collections.immutable
     api libs.components.resources
     api(libs.core)
@@ -124,8 +136,9 @@ dependencies {
     api libs.zoomable
     api(libs.accompanist.systemuicontroller)
 
-    // P2P Nearby Connections
-    api libs.play.services.nearby
+    // P2P Nearby Connections. Весь обмен живёт в common/p2p, наружу уходят
+    // только собственные типы :core — разделы про Nearby не знают.
+    implementation libs.play.services.nearby
 
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test
