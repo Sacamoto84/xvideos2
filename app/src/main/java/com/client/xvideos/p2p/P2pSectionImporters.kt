@@ -24,23 +24,7 @@ fun sectionBundleImporter(context: Context): BundleImporter {
     val entryPoint = EntryPointAccessors
         .fromApplication(context.applicationContext, P2pRefreshEntryPoint::class.java)
 
-    // Все корни, из которых складывается назначение принятого. Печатаем один
-    // раз при сборке импортёра: разбирать «легло не туда» без этого списка —
-    // гадание на двух устройствах сразу.
-    Timber.i(
-        """
-        P2P приём, корни хранилища:
-          main            = ${AppPath.main}
-          inbox           = ${AppPath.p2p_inbox}
-          r_likes         = ${AppPath.r_likes}
-          r_cache_download= ${AppPath.r_cache_download}
-          r_collection    = ${AppPath.r_collection}
-          l_likes         = ${AppPath.l_likes}
-          l_albums        = ${AppPath.l_albums}
-          l_collection    = ${AppPath.l_collection}
-          x_cache_download= ${AppPath.x_cache_download}
-        """.trimIndent()
-    )
+    Timber.i("P2P приём: корень хранилища ${AppPath.main}")
 
     val storeImporter = StoreBundleImporter(
         storeRootFor = { type ->

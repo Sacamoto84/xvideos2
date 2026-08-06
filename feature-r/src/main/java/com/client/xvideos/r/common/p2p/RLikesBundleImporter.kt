@@ -25,13 +25,8 @@ class RLikesBundleImporter(
         val item = GsonBuilder().create().fromJson(file.readText(), GifsInfo::class.java)
             ?: error("Пустые метаданные")
         // Полученные файлы никуда не кладутся намеренно: «лайк» в R — это
-        // запись метаданных, а превью и видео LikesTab тянет по URL. Логируем,
-        // что именно пришло, чтобы это было видно, а не подразумевалось.
-        Timber.i(
-            "P2P R: импорт лайка id=${item.id} user=${item.userName} url=${item.urls.hd}; " +
-                "принято файлов=${receivedFiles.size} ${receivedFiles.values.map { it.name }}, " +
-                "на диск из них не раскладывается ничего"
-        )
+        // запись метаданных, а превью и видео LikesTab тянет по URL.
+        Timber.i("P2P R: импорт лайка id=${item.id} user=${item.userName}")
         addLike(item)
     }
 }

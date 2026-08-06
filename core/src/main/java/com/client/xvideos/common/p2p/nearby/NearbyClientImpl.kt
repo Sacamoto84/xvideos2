@@ -2,6 +2,7 @@ package com.client.xvideos.common.p2p.nearby
 
 import android.content.Context
 import android.os.ParcelFileDescriptor
+import com.client.xvideos.common.AppPath
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
@@ -82,9 +83,9 @@ class NearbyClientImpl(context: Context) : NearbyClient {
         Timber.e(it, "P2P: не удалось забрать payload $payloadId из Nearby")
     }.getOrNull()
 
-    /** Куда складываем принятое из Nearby: внутренний кеш, чистится при старте. */
+    /** Куда складываем принятое из Nearby. Чистится вместе с остальным staging. */
     private val nearbyCacheDir: File by lazy {
-        File(appContext.cacheDir, "p2p-nearby").apply { mkdirs() }
+        File(AppPath.p2p_nearbyCache).apply { mkdirs() }
     }
 
     override fun startAdvertising(name: String) {

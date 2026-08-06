@@ -92,6 +92,16 @@ object AppPath {
     val p2p_outbox: String get() = "$main/outbox"
 
     /**
+     * Куда забираются принятые Nearby payload'ы.
+     *
+     * Nearby пишет входящий файл во внешнюю память, поэтому его сразу
+     * копируют сюда, во внутренний кеш, — дальше по тракту идёт уже свой файл.
+     * В `cacheDir`, вне [main]: содержимое временное и в бэкапы не нужно.
+     */
+    lateinit var p2p_nearbyCache: String
+        private set
+
+    /**
      * Задаёт корень хранилища и создаёт структуру каталогов.
      *
      * Обязан вызываться первым делом в `App.onCreate()`: Hilt-синглтоны
@@ -132,6 +142,10 @@ object AppPath {
         val shareCacheDir = File(context.cacheDir, "${Folder.L.value}/Share")
         l_cacheDownload = shareCacheDir.absolutePath
 
+        val nearbyCacheDir = File(context.cacheDir, "p2p-nearby")
+        p2p_nearbyCache = nearbyCacheDir.absolutePath
+        nearbyCacheDir.mkdirs()
+
         val rNichesCacheDir = File(context.filesDir, "${Folder.RED.value}/NichesCache")
         r_nichesCache = rNichesCacheDir.absolutePath
         rNichesCacheDir.mkdirs()
@@ -161,6 +175,7 @@ object AppPath {
         clearLShareCache()
         clearP2pInbox()
         clearP2pOutbox()
+        clearP2pNearbyCache()
     }
 
     /**
@@ -196,6 +211,11 @@ object AppPath {
     fun clearP2pInbox() = clearStagingDir(File(p2p_inbox))
 
     fun clearP2pOutbox() = clearStagingDir(File(p2p_outbox))
+
+    fun clearP2pNearbyCache() {
+        if (!::p2p_nearbyCache.isInitialized) return
+        clearStagingDir(File(p2p_nearbyCache))
+    }
 
     private fun clearStagingDir(dir: File) {
         dir.deleteRecursively()
