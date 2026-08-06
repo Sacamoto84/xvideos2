@@ -9,6 +9,7 @@ import com.client.xvideos.common.p2p.imports.RCollectionBundleImporter
 import com.client.xvideos.common.p2p.imports.StoreBundleImporter
 import com.client.xvideos.r.common.p2p.RLikesBundleImporter
 import dagger.hilt.android.EntryPointAccessors
+import timber.log.Timber
 import java.io.File
 
 /**
@@ -22,6 +23,24 @@ import java.io.File
 fun sectionBundleImporter(context: Context): BundleImporter {
     val entryPoint = EntryPointAccessors
         .fromApplication(context.applicationContext, P2pRefreshEntryPoint::class.java)
+
+    // Все корни, из которых складывается назначение принятого. Печатаем один
+    // раз при сборке импортёра: разбирать «легло не туда» без этого списка —
+    // гадание на двух устройствах сразу.
+    Timber.i(
+        """
+        P2P приём, корни хранилища:
+          main            = ${AppPath.main}
+          inbox           = ${AppPath.p2p_inbox}
+          r_likes         = ${AppPath.r_likes}
+          r_cache_download= ${AppPath.r_cache_download}
+          r_collection    = ${AppPath.r_collection}
+          l_likes         = ${AppPath.l_likes}
+          l_albums        = ${AppPath.l_albums}
+          l_collection    = ${AppPath.l_collection}
+          x_cache_download= ${AppPath.x_cache_download}
+        """.trimIndent()
+    )
 
     val storeImporter = StoreBundleImporter(
         storeRootFor = { type ->
@@ -68,6 +87,17 @@ fun sectionBundleImporter(context: Context): BundleImporter {
     )
 
     return BundleImporter { manifest, files ->
+        val branch = when (manifest.type) {
+            P2pType.R -> "RLikesBundleImporter (файлы не раскладываются)"
+            P2pType.L_COLLECTION -> "LCollectionBundleImporter"
+            P2pType.R_COLLECTION -> "RCollectionBundleImporter"
+            else -> "StoreBundleImporter"
+        }
+        Timber.i(
+            "P2P приём: тип=${manifest.type} -> $branch; " +
+                "файлы манифеста=${manifest.files.map { it.relativePath }}"
+        )
+
         when (manifest.type) {
             P2pType.R -> rLikesImporter.import(manifest, files)
             P2pType.L_COLLECTION -> lCollectionImporter.import(manifest, files)

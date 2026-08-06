@@ -21,7 +21,10 @@ class R_Saved_Likes {
             SnackBar.error("Like add error: empty id")
             return
         }
-        Timber.i("R_Saved_Likes add() id:${safeItem.id} userName:${safeItem.userName} url:${safeItem.urls.hd}")
+        Timber.i(
+            "R_Saved_Likes add() id:${safeItem.id} userName:${safeItem.userName} " +
+                "url:${safeItem.urls.hd} -> ${likesDb.dirPath}/${safeItem.id}.likes"
+        )
         likesDb.insert(safeItem.id, safeItem)
             .onSuccess {
                 SnackBar.success("Like")
