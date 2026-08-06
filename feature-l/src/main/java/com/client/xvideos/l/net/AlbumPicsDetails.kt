@@ -18,6 +18,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -62,7 +63,7 @@ class AlbumPicsDetails(
 
     val failedPages = mutableStateListOf<LAlbumPageLoadIssue>()
 
-    val protectionUiState: LRepositoryProtectionUiState
+    val protectionUiState: StateFlow<LRepositoryProtectionUiState>
         get() = repository.protectionUiState
 
     private val loadedPages = mutableMapOf<Int, List<PicsDetails>>()

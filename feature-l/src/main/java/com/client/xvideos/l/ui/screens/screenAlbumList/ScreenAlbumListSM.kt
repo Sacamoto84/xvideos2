@@ -79,7 +79,11 @@ class ScreenLAlbumListSM @AssistedInject constructor(
 
     var savedPagerPage by mutableIntStateOf(0)
 
-    val statePager = DefaultPagerState1(0, 0f) { 10 }
+    // Одна страница до первого ответа сети, а не десять: реальное число ставит
+    // экран через pageCountState, когда придёт totalPages. Заглушка «10»
+    // означала, что пейджер до загрузки считает, будто страниц ровно десять, и
+    // разрешает листать в пустоту.
+    val statePager = DefaultPagerState1(0, 0f) { 1 }
 
     //var albumList = MutableStateFlow<AlbumListImpl?>(null)
 

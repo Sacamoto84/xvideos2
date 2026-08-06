@@ -1,9 +1,6 @@
 package com.client.xvideos.l.repository
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
@@ -14,6 +11,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -64,8 +64,17 @@ class Repository(
     // и "сравнил-записал" на volatile терял большее значение.
     private val htmlChallengeCooldownUntilMs = AtomicLong(0L)
 
-    var protectionUiState by mutableStateOf(LRepositoryProtectionUiState())
-        private set
+    /**
+     * Состояние антибот-защиты для экрана альбома.
+     *
+     * `StateFlow`, а не `mutableStateOf`: слой данных не должен зависеть от
+     * рантайма Compose. Сторож слоёв это не ловил — он сравнивает только
+     * импорты своего раздела и про `androidx.compose` ничего не знает. Писалось
+     * оно к тому же из фоновых корутин, то есть snapshot-состояние менялось вне
+     * главного потока.
+     */
+    private val _protectionUiState = MutableStateFlow(LRepositoryProtectionUiState())
+    val protectionUiState: StateFlow<LRepositoryProtectionUiState> = _protectionUiState.asStateFlow()
 
     private val cacheUrlStringRomDao = fileDb.cacheUrlStringRom
     private val legacyCacheUrlStringRamDao = fileDb.cacheUrlStringRam
@@ -268,7 +277,7 @@ class Repository(
         val effectiveCooldown = htmlChallengeCooldownUntilMs.updateAndGet { current ->
             maxOf(current, cooldownUntil)
         }
-        protectionUiState = LRepositoryProtectionUiState(
+        _protectionUiState.value = LRepositoryProtectionUiState(
             active = true,
             message = message,
             retryAtMs = effectiveCooldown,
@@ -279,8 +288,8 @@ class Repository(
     }
 
     private fun clearHtmlChallengeUiState() {
-        if (!protectionUiState.active) return
-        protectionUiState = LRepositoryProtectionUiState(
+        if (!_protectionUiState.value.active) return
+        _protectionUiState.value = LRepositoryProtectionUiState(
             active = false,
             updatedAtMs = System.currentTimeMillis()
         )

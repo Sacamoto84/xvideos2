@@ -319,9 +319,10 @@ private fun LAlbumNetworkIssuePanel(
     onRetryFailedPages: () -> Unit
 ) {
     if (albumPicsDetails == null) return
+    val protectionState by albumPicsDetails.protectionUiState.collectAsStateWithLifecycle()
     LAlbumNetworkIssuePanel(
         failedPages = albumPicsDetails.failedPages.toList(),
-        protectionState = albumPicsDetails.protectionUiState,
+        protectionState = protectionState,
         isRetryingFailedPages = albumPicsDetails.isRetryingFailedPages,
         onRetryFailedPages = onRetryFailedPages
     )

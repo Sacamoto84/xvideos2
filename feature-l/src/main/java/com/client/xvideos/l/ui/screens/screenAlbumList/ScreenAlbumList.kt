@@ -33,8 +33,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +62,15 @@ import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import com.client.xvideos.l.model.AlbumListFilter as LAlbumListFilter
 
 
+/**
+ * Пейджер, у которого число страниц приходит извне и меняется по ходу загрузки.
+ *
+ * `Saver` здесь был, но не использовался ни разу: состояние живёт в
+ * `ScreenAlbumListSM` и переживает пересоздание экрана вместе с ним. Хуже, что
+ * при восстановлении он подставлял `updatedPageCount = { it[2] as Int }` —
+ * лямбду-константу, — и число страниц замирало на сохранённом. Удалён, чтобы
+ * его не подключили однажды по имени.
+ */
 class DefaultPagerState1(
     currentPage: Int,
     currentPageOffsetFraction: Float,
@@ -73,27 +80,6 @@ class DefaultPagerState1(
     var pageCountState = mutableStateOf(updatedPageCount)
     override val pageCount: Int
         get() = pageCountState.value.invoke()
-
-    companion object {
-        /** To keep current page and current page offset saved */
-        val Saver: Saver<DefaultPagerState1, *> =
-            listSaver(
-                save = {
-                    listOf(
-                        it.currentPage,
-                        (it.currentPageOffsetFraction).coerceIn(-0.5f, 0.5f),
-                        it.pageCount,
-                    )
-                },
-                restore = {
-                    DefaultPagerState1(
-                        currentPage = it[0] as Int,
-                        currentPageOffsetFraction = it[1] as Float,
-                        updatedPageCount = { it[2] as Int },
-                    )
-                },
-            )
-    }
 }
 
 
