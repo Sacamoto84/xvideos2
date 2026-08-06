@@ -24,18 +24,31 @@ class ItemTopPagingSource(
         return try {
             Timber.i("!!! ItemTopPagingSource::load() page = $page sortTop:$sort searchText:$searchText")
 
+            // getOrThrow один на все ветки: отказ сети обязан дойти сюда и стать
+            // LoadResult.Error. Раньше кешируемые ленты возвращали голый
+            // MediaResponse и на ошибке отдавали пустой объект — Paging видел
+            // успешную пустую страницу, и вместо ошибки с кнопкой «повторить»
+            // экран показывал пустоту. Через Result шла только LATEST, поэтому
+            // одно и то же приложение вело себя по-разному в зависимости от
+            // выбранной сортировки.
             val response = if (searchText.isNotEmpty()) {
                 Timber.i("!!! ItemTopPagingSource::load()  RedGifs.searchGifs($searchText)")
-                redApi.search.searchGifs(searchText, sort, 100, page).getOrThrow()
+                redApi.search.searchGifs(searchText, sort, 100, page)
             } else {
                 when (sort) {
                     Order.TOP_WEEK -> redApi.getTopThisWeek(100, page)
                     Order.TOP_MONTH -> redApi.getTopThisMonth(100, page)
                     Order.TRENDING -> redApi.getTopTrending(100, page)
-                    Order.LATEST -> redApi.getTopLatest(100, page).getOrThrow()
-                    else -> redApi.getTopThisWeek(100, page)
+                    Order.LATEST -> redApi.getTopLatest(100, page)
+                    // Сортировки без своей ленты (сегодня это TOP_ALLTIME):
+                    // отдаём неделю, но громко — молчаливый откат прятал
+                    // рассинхрон меню и запроса.
+                    else -> {
+                        Timber.w("!!! ItemTopPagingSource: у $sort нет своей ленты, отдаём неделю")
+                        redApi.getTopThisWeek(100, page)
+                    }
                 }
-            }
+            }.getOrThrow()
 
             val nextKey = if (page < response.pages) page + 1 else null
 

@@ -38,7 +38,7 @@ class RedApi @Inject constructor(
     val tags = RedApi_Tags(api)
 
     //--------------------------- GIF methods ---------------------------
-    suspend fun getGif(id: String): MediaResponse {
+    suspend fun getGif(id: String): Result<MediaResponse> {
         val route = Route("GET", "/v2/gifs/{id}", "id" to id)
         return cacheMediaResponse(route, this, mediaCache)
     }
@@ -52,7 +52,7 @@ class RedApi @Inject constructor(
         count: Int,                      // количество элементов на страницу.
         page: Int,                       // номер страницы (1-based).
         type: MediaType = MediaType.GIF, // тип медиа (GIF, image и т.д.).
-    ): MediaResponse {
+    ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
             path = "/v2/gifs/search?order=top7&count={count}&page={page}&type={type}",
@@ -68,7 +68,7 @@ class RedApi @Inject constructor(
         count: Int,                      // количество элементов на страницу.
         page: Int,                       // номер страницы (1-based).
         type: MediaType = MediaType.GIF, // тип медиа (GIF, image и т.д.).
-    ): MediaResponse {
+    ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
             path = "/v2/gifs/search?order=top28&count={count}&page={page}&type={type}",
@@ -84,7 +84,7 @@ class RedApi @Inject constructor(
         count: Int,                      // количество элементов на страницу.
         page: Int,                       // номер страницы (1-based).
         type: MediaType = MediaType.GIF, // тип медиа (GIF, image и т.д.).
-    ): MediaResponse {
+    ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
             path = "/v2/gifs/search?order=trending&count={count}&page={page}&type={type}",
@@ -212,7 +212,7 @@ class RedApi @Inject constructor(
      * ## Получить список «в тренде» (Trending GIFs). Возвращает 10 Gifs
      */
 
-    suspend fun getTrendingGifs(): MediaResponse {
+    suspend fun getTrendingGifs(): Result<MediaResponse> {
         val route = Route(method = "GET", path = "/v2/explore/trending-gifs")
         return cacheMediaResponse(route, this, mediaCache)
     }
@@ -220,7 +220,7 @@ class RedApi @Inject constructor(
 
     //--------------------------- Pic methods ---------------------------
 
-    suspend fun searchImage( searchText: String, order: Order = Order.LATEST, count: Int = 100, page: Int = 1 ): MediaResponse {
+    suspend fun searchImage( searchText: String, order: Order = Order.LATEST, count: Int = 100, page: Int = 1 ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
             // query, а не search_text: последний API молча игнорирует и отдаёт
@@ -239,7 +239,7 @@ class RedApi @Inject constructor(
      * ## ⭐ Работает ⭐
      */
 
-    suspend fun getTrendingImages(): MediaResponse {
+    suspend fun getTrendingImages(): Result<MediaResponse> {
         val route = Route(method = "GET", path = "/v2/explore/trending-images")
         return cacheMediaResponse(route, this, mediaCache)
     }
@@ -260,7 +260,7 @@ class RedApi @Inject constructor(
         page: Int = 1,
         count: Int = 100,
         order: Order = Order.LATEST
-    ): MediaResponse {
+    ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
             path = "/v2/niches/{niches}/gifs?page={page}&count={count}&order={order}",
@@ -405,43 +405,49 @@ class RedApi @Inject constructor(
 
 }
 
+/** Один Gson на весь модуль: сборка билдера на каждый запрос ничего не давала. */
+private val mediaResponseGson: Gson = GsonBuilder().create()
+
+/**
+ * Ответ из кеша, а если там пусто — из сети, с укладкой в кеш.
+ *
+ * Возвращает [Result], а не голый [MediaResponse]. Раньше при отказе сети
+ * отсюда уходил `MediaResponse(0, 0, 0, …)` — пустой объект вместо ошибки.
+ * Дальше по цепочке `pages = 0` превращались в `nextKey = null`, и Paging
+ * получал **успешную пустую страницу**: `LoadState.Error` не наступал, кнопки
+ * «повторить» не было, экран просто показывал пустоту. При этом соседний
+ * `getTopLatest` шёл через `Result` и ошибку показывал честно — одно и то же
+ * приложение вело себя по-разному в зависимости от выбранной сортировки.
+ */
 private suspend fun cacheMediaResponse(
     route: Route,
     redApi: RedApi,
     cache: FileStringCacheTable
-): MediaResponse {
+): Result<MediaResponse> {
 
-    val cachedEntity = cache.get(route.url)
-
-    val gson = GsonBuilder()
-        //.registerTypeAdapter(Trace::class.java, TraceInstanceCreator())
-//        .registerTypeAdapter(UInt::class.java, UIntAdapter())
-//        .registerTypeAdapter(ULong::class.java, ULongAdapter())
-//        .registerTypeAdapter(Long::class.java, LongAdapter())
-//        .excludeFieldsWithModifiers(Modifier.ABSTRACT)
-        .create()
-
-    if (cachedEntity != null) {
-        // Десериализуем JSON из кеша
-        Timber.i("!!! Берем данные из кеша ${route.url}")
-        return gson.fromJson(cachedEntity.content, MediaResponse::class.java)
-    } else {
-        Timber.i("!!! Берем данные из Сети ${route.url}")
-        // Запрос из сети
-        val res = redApi.api.request<MediaResponse>(route)
-        
-        val result = res.getOrNull()
-        if (result != null) {
-            // Сохраняем в кеш (с текущим временем)
-            val jsonContent = gson.toJson(result)
-            cache.put(route.url, jsonContent)
-            return result
-        } else {
-            // Если ошибка сети и нет в кеше — бросаем исключение или возвращаем пустой объект
-            Timber.e(res.exceptionOrNull(), "!!! Ошибка сети при запросе ${route.url}")
-            return MediaResponse(0, 0, 0, emptyList(), emptyList(), emptyList(), emptyList())
-        }
+    // Битая запись — не повод показывать ошибку: выкидываем её и идём дальше,
+    // как будто кеша не было. Разбор общего Gson может вернуть и null, если в
+    // файле оказался пустой JSON, — это тот же случай.
+    val cached = cache.get(route.url)?.let { entry ->
+        runCatching { mediaResponseGson.fromJson(entry.content, MediaResponse::class.java) }
+            .getOrElse { e ->
+                Timber.e(e, "!!! Битая запись кеша ${route.url}")
+                null
+            }
+            ?: run {
+                cache.delete(route.url)
+                null
+            }
     }
 
+    if (cached != null) {
+        Timber.i("!!! Берем данные из кеша ${route.url}")
+        return Result.success(cached)
+    }
+
+    Timber.i("!!! Берем данные из Сети ${route.url}")
+    return redApi.api.request<MediaResponse>(route)
+        .onSuccess { cache.put(route.url, mediaResponseGson.toJson(it)) }
+        .onFailure { Timber.e(it, "!!! Ошибка сети при запросе ${route.url}") }
 }
 

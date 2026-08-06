@@ -20,15 +20,21 @@ class ItemNailsPagingSource (val order : Order, val nichesName : String, val blo
         return try {
             Timber.d("!!! ItemNailsPagingSource::load() page = $page sortTop:$order nichesName:$nichesName")
 
+            // return, а не просто выражение: без него объект создавался и
+            // выбрасывался, а выполнение шло дальше и уходило в сеть с пустым
+            // order. То есть «Refresh» делал обычный запрос неизвестно с какой
+            // сортировкой.
             if (order == Order.FORCE_TEMP) {
-                LoadResult.Page(
+                return LoadResult.Page(
                     data = emptyList(),
                     prevKey = null,
                     nextKey = page
                 )
             }
 
-            val response = redApi.getNiches(niches = nichesName, page = page, order = order)
+            // getOrThrow: см. ItemTopPagingSource — отказ сети должен стать
+            // LoadResult.Error, а не пустой лентой без права на повтор.
+            val response = redApi.getNiches(niches = nichesName, page = page, order = order).getOrThrow()
 
             val gifs : List<GifsInfo> = response.gifs.sanitizeGifsInfoList()
 
