@@ -22,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.r.model.Order
+import com.client.xvideos.r.model.nearestIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,7 +48,19 @@ fun SortByOrder(
     containerColor: Color = Color.Transparent,
     circle : Boolean = false
 ) {
-    if (!list.any { it == selected }) { onSelect(Order.LATEST) }
+    // Набор сортировок меняется под экраном (у ленты гифок он разный без поиска
+    // и с поиском), и выбранное значение может из него выпасть.
+    //
+    // Здесь стоял голый `if (…) { onSelect(Order.LATEST) }` — вызов прямо в
+    // composition, то есть побочный эффект в отрисовке, и вдобавок сброс на
+    // самое далёкое значение. Симптом: выбрать «All time», написать слово,
+    // убрать фокус — и поиск уходил с «Latest», без единого сообщения. Меняется
+    // не только подпись: sortType входит в combine, собирающий Pager, поэтому
+    // лента перезапрашивалась и уезжала в начало.
+    LaunchedEffect(list, selected) {
+        val nearest = selected.nearestIn(list)
+        if (nearest != selected) onSelect(nearest)
+    }
 
     var expanded by remember { mutableStateOf(false) }
 

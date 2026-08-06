@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,7 +105,10 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
     val columnSelect = normalizeRColumnCount(columnSelectRaw)
 
     val search = vm.search
-    val searchR by search.searchText.collectAsStateWithLifecycle()
+    // Именно searchTextDone, а не searchText: набор сортировок должен
+    // соответствовать запросу, который реально выполняется. По отображаемому
+    // тексту список дёргался с первого же символа, до подтверждения ввода.
+    val searchQuery by search.searchTextDone.collectAsStateWithLifecycle()
     val isFocused by search.focused.collectAsStateWithLifecycle()
     val sortType by vm.lazyHost.sortType.collectAsStateWithLifecycle()
 
@@ -117,7 +119,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
         bottomBar = {
             StatelessGifsTabBottomBar(
                 searchField = { modifier -> RSearchTextField(search, modifier = modifier) },
-                searchR = searchR,
+                searchQuery = searchQuery,
                 isFocused = isFocused,
                 sortType = sortType,
                 onSortSelect = { vm.lazyHost.changeSortType(it) },
@@ -149,7 +151,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
 @Composable
 private fun StatelessGifsTabBottomBar(
     searchField: @Composable (Modifier) -> Unit,
-    searchR: TextFieldValue,
+    searchQuery: String,
     isFocused: Boolean,
     sortType: Order,
     onSortSelect: (Order) -> Unit,
@@ -167,8 +169,8 @@ private fun StatelessGifsTabBottomBar(
                 enter = expandHorizontally(animationSpec = tween(250)) + fadeIn(tween(250)),
                 exit = shrinkHorizontally(animationSpec = tween(250)) + fadeOut(tween(250)),
             ) {
-                val orders = remember(searchR.text) {
-                    if (searchR.text.isEmpty()) {
+                val orders = remember(searchQuery.isEmpty()) {
+                    if (searchQuery.isEmpty()) {
                         listOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP_ALLTIME, Order.TRENDING, Order.LATEST)
                     } else {
                         // У поиска свой набор: Relevant есть только здесь, а
@@ -257,7 +259,7 @@ private fun GifsTabBottomBarPreview() {
                     Text(" Search...", color = Color.Gray, modifier = Modifier.padding(start = 8.dp))
                 }
             },
-            searchR = TextFieldValue(""),
+            searchQuery = "",
             isFocused = false,
             sortType = Order.TRENDING,
             onSortSelect = {},
@@ -276,7 +278,7 @@ private fun R_ScreenGifsTabSkeletonPreview() {
                     searchField = { Box(it
                         .height(40.dp)
                         .background(Color.DarkGray)) },
-                    searchR = TextFieldValue(""),
+                    searchQuery = "",
                     isFocused = false,
                     sortType = Order.TRENDING,
                     onSortSelect = {},
