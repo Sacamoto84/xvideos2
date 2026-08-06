@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,15 +52,22 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.core.R
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
 // Здесь была отдельная AppLockActivity: она значилась в манифесте, но её никто
 // никогда не запускал — замок рисуется прямо в MainActivity через [AppLockScreen].
 // Мёртвый Activity удалён вместе с записью в AndroidManifest.xml.
 
+/**
+ * @param onUnlock проверка кода. `suspend`, потому что проверка — это 120 000
+ *   итераций PBKDF2: раньше она считалась синхронно в колбэке и подвешивала
+ *   интерфейс на сотни миллисекунд при каждой попытке. Экран показывается при
+ *   каждом запуске приложения, так что это была самая заметная заморозка в нём.
+ */
 @Composable
 fun AppLockScreen(
-    onUnlock: (String) -> Boolean
+    onUnlock: suspend (String) -> Boolean
 ) {
     DisableAppLockAutofill()
 
@@ -70,7 +78,10 @@ fun AppLockScreen(
     var lockoutRemainingMs by remember {
         mutableLongStateOf(AppLockRepository.lockoutRemainingMillis(context))
     }
+    // Пока считается хеш, повторные нажатия не должны запускать вторую проверку.
+    var isChecking by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
 
     // Пока действует блокировка — обновляем обратный отсчёт раз в полсекунды.
     LaunchedEffect(lockoutRemainingMs > 0L) {
@@ -82,24 +93,32 @@ fun AppLockScreen(
     }
 
     fun submit() {
+        if (isChecking) return
         val remainingBefore = AppLockRepository.lockoutRemainingMillis(context)
         if (remainingBefore > 0L) {
             lockoutRemainingMs = remainingBefore
             return
         }
         focusManager.clearFocus()
-        val success = onUnlock(password)
-        if (success) {
-            AppLockRepository.resetFailedAttempts(context)
-        } else {
-            password = ""
-            val until = AppLockRepository.registerFailedAttempt(context)
-            val remaining = (until - System.currentTimeMillis()).coerceAtLeast(0L)
-            lockoutRemainingMs = remaining
-            errorText = if (remaining > 0L) {
-                "Слишком много попыток. Подождите ${ceil(remaining / 1000.0).toInt()} с"
+        scope.launch {
+            isChecking = true
+            val success = try {
+                onUnlock(password)
+            } finally {
+                isChecking = false
+            }
+            if (success) {
+                AppLockRepository.resetFailedAttempts(context)
             } else {
-                "Неверный код доступа"
+                password = ""
+                val until = AppLockRepository.registerFailedAttempt(context)
+                val remaining = (until - System.currentTimeMillis()).coerceAtLeast(0L)
+                lockoutRemainingMs = remaining
+                errorText = if (remaining > 0L) {
+                    "Слишком много попыток. Подождите ${ceil(remaining / 1000.0).toInt()} с"
+                } else {
+                    "Неверный код доступа"
+                }
             }
         }
     }

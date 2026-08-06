@@ -180,6 +180,8 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                             BackHandler { moveTaskToBack(true) }
                             AppLockScreen(
                                 onUnlock = { password ->
+                                    // suspend-лямбда: проверка кода считает
+                                    // PBKDF2 на Dispatchers.Default, а не здесь.
                                     if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
                                         AppLockSession.unlock()
                                         isAppLocked = false

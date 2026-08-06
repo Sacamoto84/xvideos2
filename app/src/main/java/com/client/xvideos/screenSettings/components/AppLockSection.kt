@@ -15,7 +15,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -106,6 +108,9 @@ internal fun AppLockPasswordDialog(
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorText by remember { mutableStateOf<String?>(null) }
+    // Пока считается хеш, повторное нажатие не должно запускать вторую проверку.
+    var isSubmitting by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val needsCurrentPassword = mode == AppLockDialogMode.CHANGE || mode == AppLockDialogMode.DISABLE
     val needsNewPassword = mode == AppLockDialogMode.SET || mode == AppLockDialogMode.CHANGE
@@ -115,40 +120,52 @@ internal fun AppLockPasswordDialog(
         AppLockDialogMode.DISABLE -> currentPassword.isNotBlank()
     }
 
+    // Проверка и установка кода — это 120 000 итераций PBKDF2 каждая. Раньше
+    // они считались прямо в колбэке диалога, то есть на главном потоке.
     fun submit() {
+        if (isSubmitting) return
         errorText = null
 
-        if (needsCurrentPassword && !AppLockRepository.verifyPassword(context, currentPassword)) {
-            errorText = "Текущий код доступа не подходит"
-            return
-        }
-
-        if (needsNewPassword && newPassword != confirmPassword) {
-            errorText = "Коды доступа не совпадают"
-            return
-        }
-
-        when (mode) {
-            AppLockDialogMode.SET -> {
-                AppLockRepository.setPassword(context, newPassword).onSuccess {
-                    SnackBar.success("Код доступа включён")
-                    onComplete()
-                }.onFailure {
-                    errorText = it.message ?: "Не удалось сохранить код доступа"
+        scope.launch {
+            isSubmitting = true
+            try {
+                if (needsCurrentPassword &&
+                    !AppLockRepository.verifyPassword(context, currentPassword)
+                ) {
+                    errorText = "Текущий код доступа не подходит"
+                    return@launch
                 }
-            }
-            AppLockDialogMode.CHANGE -> {
-                AppLockRepository.setPassword(context, newPassword).onSuccess {
-                    SnackBar.success("Код доступа изменён")
-                    onComplete()
-                }.onFailure {
-                    errorText = it.message ?: "Не удалось изменить код доступа"
+
+                if (needsNewPassword && newPassword != confirmPassword) {
+                    errorText = "Коды доступа не совпадают"
+                    return@launch
                 }
-            }
-            AppLockDialogMode.DISABLE -> {
-                AppLockRepository.clearPassword(context)
-                SnackBar.success("Код доступа отключён")
-                onComplete()
+
+                when (mode) {
+                    AppLockDialogMode.SET -> {
+                        AppLockRepository.setPassword(context, newPassword).onSuccess {
+                            SnackBar.success("Код доступа включён")
+                            onComplete()
+                        }.onFailure {
+                            errorText = it.message ?: "Не удалось сохранить код доступа"
+                        }
+                    }
+                    AppLockDialogMode.CHANGE -> {
+                        AppLockRepository.setPassword(context, newPassword).onSuccess {
+                            SnackBar.success("Код доступа изменён")
+                            onComplete()
+                        }.onFailure {
+                            errorText = it.message ?: "Не удалось изменить код доступа"
+                        }
+                    }
+                    AppLockDialogMode.DISABLE -> {
+                        AppLockRepository.clearPassword(context)
+                        SnackBar.success("Код доступа отключён")
+                        onComplete()
+                    }
+                }
+            } finally {
+                isSubmitting = false
             }
         }
     }

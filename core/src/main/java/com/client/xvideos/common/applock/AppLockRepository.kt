@@ -5,6 +5,8 @@ import com.client.xvideos.common.util.defaultSharedPreferences
 import android.util.Base64
 import androidx.core.content.edit
 import com.client.xvideos.common.settings.Settings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
@@ -46,13 +48,19 @@ object AppLockRepository {
         return isEnabled(context) && !AppLockSession.isUnlocked()
     }
 
-    fun setPassword(context: Context, password: String): Result<Unit> = runCatching {
+    /**
+     * Подбор хеша стоит [ITERATIONS] итераций PBKDF2 — это сотни миллисекунд, и
+     * держать их на главном потоке нельзя: экран замка показывается при каждом
+     * запуске, и каждая попытка ввода замораживала интерфейс. Отсюда `suspend` и
+     * [Dispatchers.Default] — считаем на процессоре, а не в UI.
+     */
+    suspend fun setPassword(context: Context, password: String): Result<Unit> = runCatching {
         require(password.length >= MIN_PASSWORD_LENGTH) {
             "Код доступа должен быть не короче $MIN_PASSWORD_LENGTH символов"
         }
 
         val salt = ByteArray(SALT_BYTES).also { SecureRandom().nextBytes(it) }
-        val hash = hashPassword(password, salt)
+        val hash = withContext(Dispatchers.Default) { hashPassword(password, salt) }
         val prefs = context.applicationContext.defaultSharedPreferences()
 
         prefs.edit {
@@ -64,11 +72,12 @@ object AppLockRepository {
         resetFailedAttempts(context)
     }
 
-    fun verifyPassword(context: Context, password: String): Boolean {
+    /** См. [setPassword]: считает столько же, поэтому тоже не на главном потоке. */
+    suspend fun verifyPassword(context: Context, password: String): Boolean {
         val prefs = context.applicationContext.defaultSharedPreferences()
         val salt = prefs.getString(KEY_PASSWORD_SALT, null)?.fromBase64() ?: return false
         val expectedHash = prefs.getString(KEY_PASSWORD_HASH, null)?.fromBase64() ?: return false
-        val actualHash = hashPassword(password, salt)
+        val actualHash = withContext(Dispatchers.Default) { hashPassword(password, salt) }
         return MessageDigest.isEqual(expectedHash, actualHash)
     }
 
@@ -127,7 +136,14 @@ object AppLockRepository {
 
     private fun hashPassword(password: String, salt: ByteArray): ByteArray {
         val spec = PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_BITS)
-        return SecretKeyFactory.getInstance(PBKDF2_ALGORITHM).generateSecret(spec).encoded
+        return try {
+            SecretKeyFactory.getInstance(PBKDF2_ALGORITHM).generateSecret(spec).encoded
+        } finally {
+            // Затирает копию пароля внутри spec. Сам по себе не панацея — строка
+            // с паролем всё равно живёт в пуле, — но копию, которой мы владеем,
+            // держать в куче дольше нужного незачем.
+            spec.clearPassword()
+        }
     }
 
     private fun ByteArray.toBase64(): String {
