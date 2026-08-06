@@ -3,7 +3,7 @@ package com.client.xvideos.common.p2p.ui
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
-import android.util.Log
+import timber.log.Timber
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -41,6 +42,7 @@ import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -139,12 +141,20 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
         DisposableEffect(Unit) {
             onDispose {
                 controller.stop()
+                // controller.stop() гасит только свой prepareJob и рекламу. Всё,
+                // что запущено на этом же scope мимо контроллера — прежде всего
+                // упаковка бандла в P2pSendPreparer, — переживало уход с экрана
+                // и докручивалось до конца: остановить её было нечем до конца
+                // процесса. Контракт записан в документации P2pSendPreparer
+                // («scope — область жизни экрана отправки»), выполнять его
+                // должен тот, кто scope создал.
+                scope.cancel()
                 // stopAll() гасит рекламу всего процесса — оживляем фоновый приём, если он был запущен.
                 P2pReceiveManager.ensureAdvertising()
             }
         }
 
-        val state by controller.state.collectAsState()
+        val state by controller.state.collectAsStateWithLifecycle()
 
         Scaffold(
             topBar = {
@@ -167,7 +177,7 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
             ) {
                 when (val s = state) {
                     is ShareState.Preparing -> {
-                        val pct by prepareProgress.collectAsState()
+                        val pct by prepareProgress.collectAsStateWithLifecycle()
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -277,11 +287,14 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
                 confirmText = "Предоставить",
                 onConfirm = {
                     val perms = P2pPermissions.required()
-                    Log.d("P2P", "Запрашиваем разрешения: ${perms.joinToString()}")
+                    // Timber, а не Log: в релизе посажено дерево, пишущее ERROR
+                    // в локальный журнал. Через android.util.Log эта ошибка мимо
+                    // журнала и проходила — узнать о ней было неоткуда.
+                    Timber.d("P2P: запрашиваем разрешения: ${perms.joinToString()}")
                     if (activity != null) {
                         activity.requestPermissions(perms, 123)
                     } else {
-                        Log.e("P2P", "Activity is NULL, не можем запросить разрешения!")
+                        Timber.e("P2P: Activity is NULL, не можем запросить разрешения!")
                     }
                 },
             )

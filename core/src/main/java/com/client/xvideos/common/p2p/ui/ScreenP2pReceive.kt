@@ -14,10 +14,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +40,7 @@ class ScreenP2pReceive : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         
-        val activeController by P2pReceiveManager.controller.collectAsState()
+        val activeController by P2pReceiveManager.controller.collectAsStateWithLifecycle()
 
         val permissionLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -53,11 +53,17 @@ class ScreenP2pReceive : Screen {
             else permissionLauncher.launch(P2pPermissions.required())
         }
 
-        val state by if (activeController != null) {
-            activeController!!.state.collectAsState()
-        } else {
-            remember { mutableStateOf(ReceiveState.Idle) }
-        }
+        // Один безусловный сбор вместо ветвления с `!!`. Прежняя запись
+        //
+        //     val state by if (activeController != null) {
+        //         activeController!!.state.collectAsState()
+        //     } else { remember { mutableStateOf(ReceiveState.Idle) } }
+        //
+        // работала — Compose корректно пересобирает группу при смене ветки, — но
+        // держалась на неочевидном инварианте: между проверкой и `!!` не должно
+        // случиться рекомпозиции. Подменять источник проще, чем ветку.
+        val idleState = remember { MutableStateFlow<ReceiveState>(ReceiveState.Idle) }
+        val state by (activeController?.state ?: idleState).collectAsStateWithLifecycle()
 
         ScreenP2pReceiveContent(
             state = state,
