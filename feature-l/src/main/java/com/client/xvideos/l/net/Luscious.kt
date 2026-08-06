@@ -16,11 +16,8 @@ class Luscious(
     val repository: Repository
 ) {
 
-    companion object {
-        const val API = "https://members.luscious.net/graphql/nobatch/"
-        const val HOME = "https://members.luscious.net"
-        const val LOGIN = "https://members.luscious.net/accounts/login/"
-    }
+    // Адреса переехали в repository.LusciousEndpoints: оттуда их читает и
+    // Repository, из-за чего два пакета одного слоя ссылались друг на друга.
 
     init {
         scope.launch(Dispatchers.IO) {

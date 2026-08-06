@@ -1,7 +1,7 @@
 package com.client.xvideos.l
 
 import com.client.xvideos.common.AppBuildInfo
-import com.client.xvideos.l.net.Luscious.Companion.LOGIN
+import com.client.xvideos.l.repository.LusciousEndpoints.LOGIN
 import com.client.xvideos.common.net.UserAgentProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

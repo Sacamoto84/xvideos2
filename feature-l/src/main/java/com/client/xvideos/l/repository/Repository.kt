@@ -9,7 +9,6 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
-import com.client.xvideos.l.net.Luscious
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -44,7 +43,7 @@ class Repository(
 ) {
 
     //Точка входа для GraphQL
-    val apiUrl = Luscious.Companion.API
+    val apiUrl = LusciousEndpoints.API
 
     @Volatile
     private var handler = createHandler()

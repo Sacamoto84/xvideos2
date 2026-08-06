@@ -124,7 +124,11 @@ class LayerBoundariesTest {
             "l" to mapOf(
                 "model" to "model",
                 "net" to "data",
-                "repository" to "domain",
+                // Не домен, хотя имя обещает обратное: `Repository` — это
+                // HTTP-клиент Luscious с RAM/ROM-кешем, авторизацией и
+                // антибот-кулдауном. Правил про альбомы в нём нет, только
+                // openURI/deleteCache/логин. Тот же слой, что и `net`.
+                "repository" to "data",
                 "featured" to "domain",
                 "ui" to "ui",
             ),
@@ -151,22 +155,13 @@ class LayerBoundariesTest {
         )
 
         /**
-         * Текущие связи снизу вверх. Это чек-лист шагов 1–4 плана: строку
-         * вычёркивают вместе с переносом кода.
+         * Пусто: шаги 1–3 плана сделаны, `l` и `x` выпрямлены.
          *
-         * Восемь файлов `l/net` тянут `repository` — состояние и конфигурацию,
-         * которые оказались выше сети. Раздел `x` чист: шаг 1 сделан.
+         * Восемь записей `l/net -> repository` отсюда ушли не переносом кода, а
+         * исправлением самого правила: `repository` был ошибочно записан в
+         * `domain`, хотя это слой данных. Обращение сети к нему нарушением
+         * никогда не было.
          */
-        val BASELINE = setOf(
-            // Шаг 3. l: развязать net и repository.
-            "l/net/AlbumInfo.kt -> repository",
-            "l/net/AlbumList.kt -> repository",
-            "l/net/AlbumPicsDetails.kt -> repository",
-            "l/net/AlbumTopHits.kt -> repository",
-            "l/net/Luscious.kt -> repository",
-            "l/net/graphQl/LandingPageAlbumSearch.kt -> repository",
-            "l/net/graphQl/LandingPageAlbumTag.kt -> repository",
-            "l/net/graphQl/MediaCategoriesBootstrap.kt -> repository",
-        )
+        val BASELINE = emptySet<String>()
     }
 }

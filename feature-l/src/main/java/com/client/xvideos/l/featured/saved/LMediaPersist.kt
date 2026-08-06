@@ -11,6 +11,7 @@ import com.client.xvideos.l.model.lUrlExtension
 import com.client.xvideos.l.model.lUrlFileName
 import com.client.xvideos.l.net.LAlbumBundleCache
 import com.client.xvideos.l.net.Luscious
+import com.client.xvideos.l.repository.LusciousEndpoints
 import com.client.xvideos.l.net.L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS
 import com.client.xvideos.l.net.L_ALBUM_BUNDLE_CACHE_SCHEMA_VERSION
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
@@ -381,8 +382,8 @@ internal suspend fun lPersistPicsDetailsToFolder(
                 albumId = albumId,
                 albumTitle = albumDetails?.title,
                 albumDescription = albumDetails?.description,
-                albumUrl = albumDetails?.url?.let { Luscious.HOME + it },
-                albumDownloadUrl = albumDetails?.download_url?.let { Luscious.HOME + it },
+                albumUrl = albumDetails?.url?.let { LusciousEndpoints.HOME + it },
+                albumDownloadUrl = albumDetails?.download_url?.let { LusciousEndpoints.HOME + it },
                 albumDetails = albumDetails,
                 picture = item
             )

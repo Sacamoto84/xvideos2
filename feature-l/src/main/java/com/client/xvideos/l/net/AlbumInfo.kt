@@ -5,6 +5,7 @@ import com.client.xvideos.l.model.Content
 import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
 import com.client.xvideos.l.repository.Repository
+import com.client.xvideos.l.repository.LusciousEndpoints
 import com.client.xvideos.l.repository.RepositoryUriConfig
 import com.google.gson.Gson
 import com.google.gson.JsonParser
@@ -66,7 +67,7 @@ class AlbumInfo(
 
             val albumDetails = parsed.getOrThrow()
             albumInfo.value = albumDetails
-            //url = Luscious.HOME + albumInfo.value.url
+            //url = LusciousEndpoints.HOME + albumInfo.value.url
             albumPicsDetails.contentUrls(pageCacheConfig = RepositoryUriConfig.DIRECT)
             cacheBundleIfComplete(repository, albumDetails)
         }
@@ -132,7 +133,7 @@ class AlbumInfo(
      */
     val thumbnail: String get() = albumInfo.value.cover?.url.orEmpty()
 
-    val downloadUrl: String get() = Luscious.Companion.HOME + albumInfo.value.download_url
+    val downloadUrl: String get() = LusciousEndpoints.HOME + albumInfo.value.download_url
 
 //    val artists: List<String> by lazy {
 //        tags.filter { it.category == "Artist" }.map { it.name }
