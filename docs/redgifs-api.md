@@ -132,32 +132,45 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 | ленты и поиск гифок | `/v2/gifs/search?…` | `{gifs,users,niches,tags,…}` |
 | плеер | `/v2/gifs/{id}/hd.m3u8` | `200 text/plain` |
 
-**Отвечают 404** — все три в коде, который никто не вызывает:
+**Отвечают 404:**
 
-| метод | адрес |
+| адрес | что было |
 |---|---|
-| `getTrendingTags` | `/v2/search/trending` |
-| `getTrendingGifs` | `/v2/explore/trending-gifs` |
-| `getTrendingImages` | `/v2/explore/trending-images` |
+| `/v2/search/trending` | `getTrendingTags` |
+| `/v2/explore/trending-gifs` | `getTrendingGifs` |
+| `/v2/explore/trending-images` | `getTrendingImages` |
 
-Пользователя это не задевает: вызывающих у них нет. Но если тренд-теги или
-экран трендов когда-нибудь понадобятся, начинать придётся с поиска нового
-адреса, а не с подключения существующего метода.
+Если тренд-теги или экран трендов когда-нибудь понадобятся, начинать придётся с
+поиска нового адреса: этих больше нет.
 
-**`getGif` разбирает ответ не той моделью.** `/v2/gifs/{id}` отвечает
-`{gif, user, niches}` — одна гифка, — а метод просит `MediaResponse`, у которого
+### Что удалено после проверки
+
+Семь методов сетевого слоя не имели ни одного вызова и удалены (`RedApi.kt`
+похудел с 478 строк до 386). Не просто «неиспользуемые» — у каждого второго
+внутри лежал дефект, незамеченный ровно потому, что метод не вызывался:
+
+| метод | почему удалён |
+|---|---|
+| `getTrendingGifs`, `getTrendingImages` | адреса отвечают `404` |
+| `getTrendingTags` | адрес отвечает `404` |
+| `getGif` | разбирал ответ не той моделью (ниже) |
+| `searchCreators` (обе перегрузки) | во второй `count={count}` в пути без параметра `count` — плейсхолдер уехал бы в запрос буквально |
+| `searchTagsShort` | при отказе сети NPE: `Gson().fromJson(null, …)` возвращает `null`, присваивание в non-null `List` роняет проверку |
+| `searchImage` | поиск по картинкам, экрана под него нет |
+
+Вместе с ними удалены осиротевшие модели `CreatorsResponse` и `GetGifResponse`.
+
+**Про `getGif` — на случай, если понадобится снова.** `/v2/gifs/{id}` отвечает
+`{gif, user, niches}` — **одна** гифка. Метод просил `MediaResponse`, у которого
 поля `gifs`, `users`, `tags` во множественном числе и **без значений по
 умолчанию**. Gson в таком случае идёт через `Unsafe.allocateInstance`, поля
 остаются `null` вопреки non-null типам, и первое же обращение к ним — NPE. Это
 ровно тот дефект, что разбирался в проходе 4 (`6da42db`) и описан в KDoc у
-`ItemsX`.
+`ItemsX`. Заводить метод заново — только с моделью формы `{gif, user}` и
+значениями по умолчанию у всех полей.
 
-Метод мёртв, поэтому сегодня не падает. Правильная модель — `GetGifResponse` —
-в проекте **уже есть и тоже не используется**, лежит рядом.
-
-**Мёртвые методы сетевого слоя** (ни одного вызова): `getGif`,
-`getTrendingGifs`, `getTrendingImages`, `getTrendingTags`, `searchImage`,
-`searchTagsShort`, `searchCreators` (обе перегрузки).
+Живой поиск авторов делает `searchCreatorsShort` в `RedApi_Search`, живые
+подсказки тегов — `getTagSuggestions`.
 
 Значения `order`, которые принимает поиск:
 

@@ -3,7 +3,6 @@ package com.client.xvideos.r.network.api
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.fileDB.folder.FileStringCacheTable
 import com.client.xvideos.r.model.CreatorResponse
-import com.client.xvideos.r.model.CreatorsResponse
 import com.client.xvideos.r.model.MediaResponse
 import com.client.xvideos.r.model.MediaType
 import com.client.xvideos.r.model.NicheResponse
@@ -12,7 +11,6 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.TopCreatorsResponse
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.model.search.SearchItemNichesResponse
-import com.client.xvideos.r.model.search.SearchItemTagsResponse
 import com.client.xvideos.r.model.search.SearchNichesShortResponse
 import com.client.xvideos.r.model.tag.TagSuggestion
 import com.client.xvideos.r.network.http.ApiClient
@@ -38,11 +36,14 @@ class RedApi @Inject constructor(
     val tags = RedApi_Tags(api)
 
     //--------------------------- GIF methods ---------------------------
-    suspend fun getGif(id: String): Result<MediaResponse> {
-        val route = Route("GET", "/v2/gifs/{id}", "id" to id)
-        return cacheMediaResponse(route, this, mediaCache)
-    }
 
+    // Здесь был getGif(id) — вызовов не имел, и разбирал ответ не той моделью:
+    // /v2/gifs/{id} отдаёт {gif, user, niches}, одну гифку, а метод просил
+    // MediaResponse с полями во множественном числе и без значений по
+    // умолчанию. Gson в таком случае идёт через Unsafe.allocateInstance, поля
+    // остаются null вопреки non-null типам, и первое обращение даёт NPE — тот
+    // же дефект, что чинили в 6da42db. Форма ответа записана в
+    // docs/redgifs-api.md, если метод понадобится снова.
 
     /**
      * ## Получить топ GIF-ов за неделю.
@@ -233,41 +234,12 @@ class RedApi @Inject constructor(
     }
 
 
-    /**
-     * ## Получить список «в тренде» (Trending GIFs). Возвращает 10 Gifs
-     */
-
-    suspend fun getTrendingGifs(): Result<MediaResponse> {
-        val route = Route(method = "GET", path = "/v2/explore/trending-gifs")
-        return cacheMediaResponse(route, this, mediaCache)
-    }
-
-
-    //--------------------------- Pic methods ---------------------------
-
-    suspend fun searchImage( searchText: String, order: Order = Order.LATEST, count: Int = 100, page: Int = 1 ): Result<MediaResponse> {
-        val route = Route(
-            method = "GET",
-            // query, а не search_text: последний API молча игнорирует и отдаёт
-            // ленту без фильтрации — см. RedApi_Search.searchGifs.
-            path = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type=i",
-            "search_text" to searchText,
-            "order" to order.value,
-            "count" to count,
-            "page" to page
-        )
-        return cacheMediaResponse(route, this, mediaCache)
-    }
-
-    /**
-     * ## Получить список 10 картинок «в тренде»
-     * ## ⭐ Работает ⭐
-     */
-
-    suspend fun getTrendingImages(): Result<MediaResponse> {
-        val route = Route(method = "GET", path = "/v2/explore/trending-images")
-        return cacheMediaResponse(route, this, mediaCache)
-    }
+    // Здесь были getTrendingGifs() и getTrendingImages() на /v2/explore/…, а
+    // также searchImage() — поиск по картинкам через type=i. Вызовов ни у
+    // одного не было. Первые два вдобавок ведут на адреса, которых больше нет:
+    // /v2/explore/trending-gifs и /v2/explore/trending-images отвечают 404
+    // (проверено 06.08.2026). Комментарий «⭐ Работает ⭐» над одним из них
+    // устарел вместе с адресом.
 
     //--------------------------- Tag methods ---------------------------
 
@@ -329,74 +301,14 @@ class RedApi @Inject constructor(
     //////////////////////////////////// Поиск ////////////////////////////////////
 
 
-    //https://api.redgifs.com/v1/creators/search?order=trending&page=1 //По умолчанию без поиска
-    //Работает
-    suspend fun searchCreators(
-        page: Int = 1,
-        order: Order = Order.TOP,
-        verified: Boolean = true,
-        tags: List<String>? = null// = listOf("Teen", "Ass"),
-    ): Result<CreatorsResponse> {
-
-        var url = "/v1/creators/search?page={page}&order={order}"
-
-        if (verified) {
-            url += "&verified=yes"
-        }
-
-        if (tags != null && tags.isNotEmpty()) {
-            url += "&tags={tags}"
-        }
-
-        val routeParams = mutableMapOf<String, Any>(
-            "page" to page, "order" to order.value
-        )
-
-        if (tags != null && tags.isNotEmpty()) {
-            routeParams["tags"] = tags.joinToString(",")
-        }
-
-        val route = Route(method = "GET", path = url, *routeParams.toList().toTypedArray())
-        val res = api.request<CreatorsResponse>(route)
-        return res
-
-    }
-
-    //https://api.redgifs.com/v2/search/creators?query=ana&page=1&count=40&order=trending
-    suspend fun searchCreators(
-        text: String = "",
-        page: Int = 1,
-        order: Order = Order.TRENDING,
-        verified: Boolean = true,
-    ): Result<CreatorResponse> {
-
-        var url = "/v2/search/creators?query={text}&page={page}&count={count}&order={order}"
-
-        if (verified) {
-            url += "&verified=yes"
-        }
-
-        val routeParams = mutableMapOf<String, Any>(
-            "text" to text,
-            "page" to page,
-            "order" to order.value
-
-        )
-
-        val route = Route(method = "GET", path = url, *routeParams.toList().toTypedArray())
-        val res = api.request<CreatorResponse>(route)
-        return res
-
-    }
-
-
-//    //https://api.redgifs.com/v2/search/creators?query=Ana&page=1&count=40&ord
-//    @Throws(ApiException::class)
-//    suspend fun searchCreatorsLong(text: String, page : Int, count : Int): SearchCreatorsResponse {
-//        val route = Route(method = "GET", path = "/v2/search/creators?query={text}&page={page}&count={count}&ord", "text" to text, "page" to page, "count" to count)
-//        return api.request<SearchCreatorsResponse>(route)
-//    }
-
+    // Здесь были две перегрузки searchCreators — на /v1/creators/search и на
+    // /v2/search/creators — и закомментированная searchCreatorsLong. Вызовов ни
+    // у одной не было. Адреса живы, но во второй перегрузке в пути стоял
+    // `count={count}`, а параметра `count` в routeParams не было: плейсхолдер
+    // уехал бы в запрос буквально. Тот же класс дефекта, что чинили в 9a646e1 и
+    // 705c6c4, и снова незамеченный ровно потому, что метод не вызывается.
+    //
+    // Живой поиск авторов делает searchCreatorsShort в RedApi_Search.
 
     //https://api.redgifs.com/v2/niches/search?query=Ana
     suspend fun searchNichesShort(text: String): List<SearchItemNichesResponse> {
@@ -408,15 +320,11 @@ class RedApi @Inject constructor(
         return niches
     }
 
-    //SearchItemTagsResponse
-    //https://api.redgifs.com/v2/search/suggest?query=Ana
-    suspend fun searchTagsShort(text: String): List<SearchItemTagsResponse> {
-        val route = Route(method = "GET", path = "/v2/search/suggest?query={text}", "text" to text)
-        val res = api.requestText(route)
-        val listType = object : TypeToken<List<SearchItemTagsResponse>>() {}.type
-        val tags: List<SearchItemTagsResponse> = Gson().fromJson(res.getOrNull(), listType)
-        return tags
-    }
+    // Здесь был searchTagsShort на том же /v2/search/suggest, что и живой
+    // getTagSuggestions ниже. Вызовов не имел, а при отказе сети падал бы NPE:
+    // Gson().fromJson(res.getOrNull(), …) с null на входе возвращает null, и
+    // присваивание в non-null List роняет проверку Kotlin. Подсказки тегов
+    // берёт getTagSuggestions — он возвращает Result и разбирается ktor'ом.
 
 
     /**

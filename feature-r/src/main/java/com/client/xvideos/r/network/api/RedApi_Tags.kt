@@ -13,12 +13,7 @@ class RedApi_Tags(val api: ApiClient) {
         return api.request(Route("GET", "/v1/tags"))
     }
 
-    /**
-     * #### Получить список 20 популярных тегов (Trending Tags).
-     */
-    suspend fun getTrendingTags(): Result<TagsResponse> {
-        val route = Route(method = "GET", path = "/v2/search/trending")
-        return api.request(route)
-    }
-
+    // Здесь был getTrendingTags() на /v2/search/trending. Вызовов не имел, а
+    // сам адрес отвечает 404 — проверено 06.08.2026, см. docs/redgifs-api.md.
+    // Если популярные теги понадобятся, начинать надо с поиска нового адреса.
 }
