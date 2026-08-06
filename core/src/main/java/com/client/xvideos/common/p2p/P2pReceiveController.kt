@@ -94,6 +94,12 @@ class P2pReceiveController(
                     _state.value = ReceiveState.Error("Соединение разорвано")
                 }
             is P2pEvent.Failed -> _state.value = ReceiveState.Error(event.message)
+            // Недоставленный payload раньше проваливался в `else` и терялся:
+            // приём просто ничего не импортировал, молча и без следа на экране.
+            is P2pEvent.PayloadTransferFailed -> {
+                Timber.w("P2P Receiver: payload ${event.payloadId} не доставлен")
+                _state.value = ReceiveState.Error("Файл не получен целиком")
+            }
             else -> Unit
         }
     }

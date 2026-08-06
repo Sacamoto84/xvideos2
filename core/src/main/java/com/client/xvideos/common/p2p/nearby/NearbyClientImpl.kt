@@ -1,6 +1,7 @@
 package com.client.xvideos.common.p2p.nearby
 
 import android.content.Context
+import android.os.ParcelFileDescriptor
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
@@ -19,6 +20,7 @@ import com.google.android.gms.nearby.connection.Strategy
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
+import java.io.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -40,6 +42,50 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     private val incomingFiles = HashMap<Long, Payload>()
 
     private fun emit(event: P2pEvent) { events.tryEmit(event) }
+
+    /**
+     * Кладёт принятый FILE-payload во внутренний кеш и отдаёт обычный [File].
+     *
+     * Nearby сам решает, куда писать входящий файл, и это внешняя память
+     * (`Android/data/<пакет>/files/Nearby`). Для приложения, которое всё держит
+     * во `filesDir`, это чужая территория: на устройстве с недоступной или
+     * сбойной SD-картой запись падает, а `asJavaFile()` начиная с Android 11
+     * штатно возвращает null — прежний код в этом случае молча ронял payload,
+     * поэтому приём заканчивался ничем и без ошибки на экране.
+     *
+     * Читаем через дескриптор — он работает независимо от того, куда Nearby
+     * положил файл, — и копируем к себе. Дальше по тракту идёт уже наш файл.
+     */
+    private fun receiveToCache(payloadId: Long, file: Payload.File): File? = runCatching {
+        val target = File(nearbyCacheDir, payloadId.toString())
+        val descriptor = file.asParcelFileDescriptor()
+        if (descriptor != null) {
+            ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
+            }
+            Timber.i("P2P: payload $payloadId принят -> $target (${target.length()} байт)")
+            return@runCatching target
+        }
+
+        // Fallback для старых Android, где дескриптора нет, а java.io.File есть.
+        val javaFile = file.asJavaFile()
+        if (javaFile != null) {
+            javaFile.copyTo(target, overwrite = true)
+            javaFile.delete()
+            Timber.i("P2P: payload $payloadId принят через javaFile -> $target")
+            return@runCatching target
+        }
+
+        Timber.e("P2P: payload $payloadId — ни дескриптора, ни файла")
+        null
+    }.onFailure {
+        Timber.e(it, "P2P: не удалось забрать payload $payloadId из Nearby")
+    }.getOrNull()
+
+    /** Куда складываем принятое из Nearby: внутренний кеш, чистится при старте. */
+    private val nearbyCacheDir: File by lazy {
+        File(appContext.cacheDir, "p2p-nearby").apply { mkdirs() }
+    }
 
     override fun startAdvertising(name: String) {
         Timber.d("P2P: startAdvertising(name=$name, serviceId=$serviceId)")
@@ -178,11 +224,12 @@ class NearbyClientImpl(context: Context) : NearbyClient {
                     // Отправителю — подтверждение доставки (Done только после всех).
                     emit(P2pEvent.PayloadTransferred(update.payloadId))
                     val payload = incomingFiles.remove(update.payloadId) ?: return
-                    val javaFile = payload.asFile()?.asJavaFile()
-                    if (javaFile != null) {
-                        emit(P2pEvent.FilePayloadReceived(update.payloadId, javaFile))
+                    val received = payload.asFile()?.let { receiveToCache(update.payloadId, it) }
+                    if (received != null) {
+                        emit(P2pEvent.FilePayloadReceived(update.payloadId, received))
                     } else {
-                        Timber.w("P2P: FILE payload ${update.payloadId} без javaFile")
+                        Timber.e("P2P: FILE payload ${update.payloadId} прочитать не удалось")
+                        emit(P2pEvent.PayloadTransferFailed(update.payloadId))
                     }
                 }
                 PayloadTransferUpdate.Status.FAILURE,
