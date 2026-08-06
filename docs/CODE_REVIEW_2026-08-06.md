@@ -375,19 +375,34 @@ lint для этого есть один флаг.
    Закомментированный `debounce` уже лежит рядом, в `LazyRow123Host`.
 6. **`Provider` без отсрочки** — `R_SearchExplorer` вызывает `redApiIn.get()` в
    инициализаторе поля, чем убирает единственный смысл `Provider`.
-7. **`searchNichesShort` / `searchTagsShort`** бросают NPE вместо пустого списка
-   при отказе сети: `Gson().fromJson(res.getOrNull(), …)` с присваиванием в
-   non-null тип. Живой вызов обёрнут в `catch (e: Exception)`, поэтому сегодня не
-   падает, но ловится NPE, а не ошибка сети.
+7. **`searchNichesShort`** бросает NPE вместо пустого списка при отказе сети:
+   `Gson().fromJson(res, listType)`, где `res` — это `requestText(...).getOrNull()`,
+   то есть `String?`. На `null` Gson возвращает `null`, присваивание в non-null
+   `SearchNichesShortResponse` роняет проверку Kotlin. Вызывается из
+   `R_SearchNiches` и обёрнут там в `catch (e: Exception)`, поэтому сегодня не
+   падает — но ловится NPE, а не ошибка сети.
+
+   (`searchTagsShort`, стоявший в этом пункте рядом, удалён 06.08.2026 вместе с
+   остальным мёртвым кодом — см. п. 3.)
 8. **87 `api` в `:core`** — решение задокументировано и разумно для проекта на
    одного, но правка списка зависимостей `:core` инвалидирует компиляцию всех
    четырёх разделов и `:app`, и ни один раздел не может ограничить свою
    видимость.
 9. **`benchmark` buildType** продублирован в пяти файлах сборки слово в слово —
    кандидат в convention-плагин.
-10. **Крупнейшие файлы** — `L_FullScreenImage.kt` 800 строк, `ScreenAlbum.kt` 522,
-    `L_Screen_CollectionTab.kt` 519. Именно там проход 4 нашёл наложение страниц
-    и конфликт жестов.
+10. **Крупнейшие файлы.** В отчёте сперва были названы три файла из `l/` — это
+    потому, что мерилось только `feature-l`. Замер по всему проекту:
+
+    | строк | файл |
+    |---|---|
+    | 800 | `l/ui/screens/screenFullScreen/L_FullScreenImage.kt` |
+    | 553 | `common/backup/XlrBackupManager.kt` |
+    | 526 | `r/ui/explorer/tab/niches/R_ScreenNichesTab.kt` |
+    | 523 | `l/ui/screens/screenAlbum/ScreenAlbum.kt` |
+    | 519 | `l/ui/screens/explorer/tab/saved/collection/L_Screen_CollectionTab.kt` |
+    | 501 | `r/ui/fullscreen/ScreenRedFullScreen.kt` |
+
+    В `L_FullScreenImage.kt` проход 4 нашёл наложение страниц и конфликт жестов.
 
 ## Проверка на устройстве
 
