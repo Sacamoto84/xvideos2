@@ -1,5 +1,6 @@
 package com.client.xvideos.common
 
+import android.annotation.SuppressLint
 import android.content.Context
 
 /**
@@ -13,6 +14,10 @@ import android.content.Context
  * надо просить инъекцией (`@ApplicationContext`), а в composable брать
  * `LocalContext`.
  */
+// lint видит статическое поле типа Context и объявляет утечку. Здесь её нет:
+// init() кладёт applicationContext, который живёт ровно столько же, сколько
+// процесс. Утечкой было бы держать Activity — за этим и надо следить в init().
+@SuppressLint("StaticFieldLeak")
 object AppContextHolder {
 
     @Volatile

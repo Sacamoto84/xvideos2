@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Области, из которых FileProvider вообще может отдать файл.
+
+  Было `<files-path path="." />` и `<cache-path path="." />` — весь внутренний
+  каталог приложения и весь кеш целиком. Права выдаются по конкретному URI, и
+  единственный вызывающий (useCaseShareFile) передаёт конкретный файл, так что
+  дыры это не давало. Но область была шире всего, чем приложение делится, а
+  такие запасы держать незачем: их однажды используют по ошибке.
+
+  Ниже — ровно то, откуда файлы уходят в «Поделиться» на сегодня.
+-->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Данные приложения лежат во внутренней памяти (filesDir/store) -->
-    <files-path name="internal_files" path="." />
-    <cache-path name="internal_cache" path="." />
+
+    <!--
+      Журнал ошибок: filesDir/store/crash.log.
+      FileProvider умеет объявлять только каталоги, поэтому корень store здесь
+      целиком. Сузить дальше можно, лишь переселив журнал в свою подпапку.
+    -->
+    <files-path name="app_store" path="store/" />
+
+    <!-- Файлы, скачанные для отправки из L: cacheDir/L/Share -->
+    <cache-path name="l_share_cache" path="L/Share/" />
+
 </paths>

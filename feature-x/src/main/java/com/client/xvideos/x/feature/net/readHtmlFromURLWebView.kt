@@ -1,5 +1,6 @@
 package com.client.xvideos.x.feature.net
 
+import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import android.webkit.CookieManager
@@ -71,11 +72,24 @@ private suspend fun loadHtmlInWebView(url: String): String =
         cookieManager.setAcceptCookie(true)
         cookieManager.setAcceptThirdPartyCookies(webView, true)
 
+        // JavaScript включён намеренно и отключить его нельзя: смысл этого
+        // WebView — получить HTML *после* выполнения скриптов страницы, обычным
+        // GET такую разметку не добыть. Моста в приложение при этом нет: ни
+        // одного @JavascriptInterface здесь не регистрируется, так что скриптам
+        // страницы некуда выйти за пределы самого WebView.
+        @SuppressLint("SetJavaScriptEnabled")
         with(webView.settings) {
             javaScriptEnabled = true
             domStorageEnabled = true
             databaseEnabled = true
             allowFileAccess = false
+            // Закрывает странице доступ к content://-провайдерам. По умолчанию
+            // это разрешено, а у приложения есть FileProvider — пусть даже
+            // неэкспортированный, запас лишним не будет.
+            allowContentAccess = false
+            // На targetSdk 21+ это и так значение по умолчанию; ставим явно,
+            // чтобы смена умолчания в новой версии не прошла незамеченной.
+            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             cacheMode = WebSettings.LOAD_DEFAULT
         }
 
