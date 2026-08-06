@@ -1,5 +1,6 @@
 package com.client.xvideos.arch
 
+import com.client.xvideos.arch.ProjectSources.invariantPath
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -75,7 +76,7 @@ class ModuleBoundariesTest {
                 .flatMap { file ->
                     val path = file.relativeTo(root).invariantPath()
                     val forbidden = FORBIDDEN[sectionOf(path)] ?: return@flatMap emptySequence()
-                    importedTopLevelPackages(file)
+                    ProjectSources.importedTopLevelPackages(file)
                         .filter { it in forbidden }
                         .map { to -> "$path -> $to" }
                 }
@@ -84,44 +85,9 @@ class ModuleBoundariesTest {
     /** Раздел, которому принадлежит файл: первый сегмент пути внутри `com/client/xvideos`. */
     private fun sectionOf(relativePath: String): String = relativePath.substringBefore('/')
 
-    /** Первые сегменты `import com.client.xvideos.<сегмент>...` этого файла. */
-    private fun importedTopLevelPackages(file: File): Sequence<String> =
-        file.readLines()
-            .asSequence()
-            .mapNotNull { IMPORT.find(it)?.groupValues?.get(1) }
-            .filter { it.startsWith(PACKAGE_PREFIX) }
-            .map { it.removePrefix(PACKAGE_PREFIX).substringBefore('.') }
-            .distinct()
-
-    private fun File.invariantPath(): String = path.replace(File.separatorChar, '/')
-
-    /**
-     * Каталоги `com/client/xvideos` во всех модулях проекта.
-     *
-     * Пути внутри них не пересекаются (`common/`, `l/`, `screenRoot/`…), поэтому
-     * результаты модулей просто складываются: правила формулируются в терминах
-     * пакетов, а не модулей, и переживают каждый следующий вынос.
-     */
-    private fun sourceRoots(): Sequence<File> {
-        var dir: File? = File("").absoluteFile
-        while (dir != null) {
-            if (File(dir, "settings.gradle").isFile || File(dir, "settings.gradle.kts").isFile) {
-                val roots = (dir.listFiles() ?: emptyArray())
-                    .map { File(it, "src/main/java/com/client/xvideos") }
-                    .filter { it.isDirectory }
-                if (roots.isEmpty()) error("В ${dir.absolutePath} не нашлось ни одного модуля с исходниками")
-                return roots.asSequence()
-            }
-            dir = dir.parentFile
-        }
-        error("Не найден корень проекта (settings.gradle) от ${File("").absolutePath}")
-    }
+    private fun sourceRoots(): Sequence<File> = ProjectSources.roots()
 
     private companion object {
-
-        const val PACKAGE_PREFIX = "com.client.xvideos."
-
-        val IMPORT = Regex("""^\s*import\s+([\w.]+)""")
 
         /** Пакеты уровня приложения: будущий `:app`, знать про них разделам нельзя. */
         val APP_LEVEL = setOf("screenRoot", "screenSettings", "p2p")

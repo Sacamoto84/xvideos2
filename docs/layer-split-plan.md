@@ -30,25 +30,29 @@
 `:feature-r` уже слоистый: `ui → common → network → model`, обратных рёбер
 нет. `:feature-l` и `:feature-x` — с циклами.
 
-| модуль | ребро | импортов |
-|---|---|---|
-| `l` | **`net` → `repository`** | 14 |
-| `l` | **`repository` → `net`** | 1 |
-| `l` | **`model` → `net`** | 1 |
-| `x` | **`parcer` → `screens`** | 3 |
-| `x` | **`parcer` → `feature`** | 1 |
-| `x` | `feature` → `parcer` | 3 |
+| модуль | ребро | импортов | против слоёв |
+|---|---|---|---|
+| `l` | `net` → `repository` | 14 | **да** |
+| `l` | `repository` → `net` | 1 | нет: `repository` выше `net` |
+| `l` | `model` → `net` | 1 | **да** |
+| `x` | `parcer` → `screens` | 3 | **да** |
+| `x` | `parcer` → `feature` | 1 | **да** |
+| `x` | `feature` → `parcer` | 3 | нет: `feature` выше `parcer` |
 
-Жирным — то, что идёт против слоёв. Всего семь файлов:
+Против слоёв идут **12 файлов** — столько и зафиксировал сторож из шага 0:
 
 | файл | тянет | почему это ошибка |
 |---|---|---|
-| `l/net/**` (7 файлов) | `repository.Repository`, `RepositoryUriConfig`, `LRepositoryProtectionUiState` | сеть знает про слой выше |
-| `l/repository/Repository.kt` | `net.Luscious` | и обратно — цикл |
+| `l/net/**` (8 файлов) | `repository.Repository`, `RepositoryUriConfig`, `LRepositoryProtectionUiState` | сеть знает про слой выше |
 | `l/model/AlbumListFilter.kt` | `net.Genre` | модель знает про сеть |
 | `x/parcer/parserItemVideoTags.kt` | `screens.TagsModel`, `TagsMainUploaderPornstar` | парсер знает про UI |
 | `x/parcer/parserScreenTags.kt` | `screens.ModelScreenTag` | то же |
 | `x/parcer/parserListVideo.kt` | `feature.getFlagEmoji` | парсер знает про слой выше |
+
+`repository` → `net` в этот список не входит: `Repository` — состояние раздела,
+он выше сети, и обращаться к ней ему можно. Цикл между пакетами при этом
+остаётся, и разбирать его всё равно придётся (шаг 3), просто нарушение слоёв
+в нём одностороннее.
 
 Важно: в трёх случаях из `x` это **не UI-типы**, а модели данных, которые
 просто лежат в UI-пакете. Их надо не развязывать, а переложить.
@@ -87,8 +91,14 @@
 model  <-  data (net/network/parcer/search)  <-  domain (featured/feature/common)  <-  ui (ui/screens)
 ```
 
-Сначала тест красный — зафиксировать текущие семь нарушений списком и
+Сначала тест красный — зафиксировать текущие 12 нарушений списком и
 вычёркивать по мере работы, как это уже сработало на распиле модулей.
+
+*Сделано.* `LayerBoundariesTest` рядом с `ModuleBoundariesTest`; поиск
+исходников вынесен в общий `ProjectSources`, чтобы две копии не разъехались.
+Второй тест сторожа требует, чтобы каждый пакет верхнего уровня в разделе имел
+слой или был явно объявлен нейтральным (`l/di` — единственный такой): иначе
+новый пакет тихо выпал бы из проверки.
 
 ### Шаг 1. `x`: модели из `screens` в `model`
 
