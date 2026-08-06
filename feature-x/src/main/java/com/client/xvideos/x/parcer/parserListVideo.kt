@@ -1,6 +1,6 @@
 package com.client.xvideos.x.parcer
 
-import com.client.xvideos.x.feature.country.getFlagEmoji
+import com.client.xvideos.x.model.getFlagEmoji
 import com.client.xvideos.x.model.ItemsX
 import org.jsoup.nodes.Document
 import org.jsoup.Jsoup

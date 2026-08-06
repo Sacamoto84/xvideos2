@@ -155,15 +155,9 @@ class LayerBoundariesTest {
          * вычёркивают вместе с переносом кода.
          *
          * Восемь файлов `l/net` тянут `repository` — состояние и конфигурацию,
-         * которые оказались выше сети. Три файла `x/parcer` тянут экраны и
-         * `feature`, хотя нужны им оттуда модели данных, а не UI.
+         * которые оказались выше сети. Раздел `x` чист: шаг 1 сделан.
          */
         val BASELINE = setOf(
-            // Шаг 1. x: модели данных лежат в UI-пакете.
-            "x/parcer/parserItemVideoTags.kt -> screens",
-            "x/parcer/parserScreenTags.kt -> screens",
-            "x/parcer/parserListVideo.kt -> feature",
-
             // Шаг 2. l: Genre вон из модели.
             "l/model/AlbumListFilter.kt -> net",
 

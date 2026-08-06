@@ -109,6 +109,13 @@ model  <-  data (net/network/parcer/search)  <-  domain (featured/feature/common
 После шага оба цикла в `x` исчезают. Самый дешёвый шаг, на нём проверяется
 сторож.
 
+*Сделано.* `TagsModel`, `TagsMainUploaderPornstar` и `ModelScreenTag` уехали в
+`x/model`; `getFlagEmoji` — туда же, отдельным файлом `CountryFlag.kt`: у неё
+нет зависимостей, а пользуются ею и парсер, и экран выбора страны.
+
+Раздел стал ацикличным: `screens → parcer/feature/model`, `parcer → model`,
+`feature → parcer/model`. Вверх не смотрит ничего.
+
 ### Шаг 2. `l`: `Genre` вон из модели
 
 `model/AlbumListFilter.kt` тянет `net.Genre`. Одно ребро, один тип.

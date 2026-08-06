@@ -33,6 +33,7 @@ import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.feature.x.R
 import com.client.xvideos.ui.theme.PornHubOrange
 import com.client.xvideos.ui.theme.grayColor
+import com.client.xvideos.x.model.getFlagEmoji
 import com.client.xvideos.x.urlStart
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.parcer.parseSiteCountryFlag
@@ -163,15 +164,6 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
 
 }
 
-
-// Функция для преобразования flag-be в Unicode
-fun getFlagEmoji(countryCode: String): String {
-    val code = countryCode.replace("flag-", "").uppercase()
-    if (code.length != 2) return "❓" // Обработка некорректного кода
-    val firstChar = code[0].code - 'A'.code + 0x1F1E6
-    val secondChar = code[1].code - 'A'.code + 0x1F1E6
-    return String(Character.toChars(firstChar)) + String(Character.toChars(secondChar))
-}
 
 /**
  * Страна: Австралия, Ссылка: /change-country/au, Класс флага: flag-au

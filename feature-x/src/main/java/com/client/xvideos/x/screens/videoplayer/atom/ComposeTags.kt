@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.x.screens.videoplayer.model.TagsModel
+import com.client.xvideos.x.model.TagsModel
 
 /**
  * Отобразить список каналов, порноактрис, тегов

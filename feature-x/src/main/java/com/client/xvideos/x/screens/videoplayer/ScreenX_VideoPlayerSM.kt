@@ -17,7 +17,7 @@ import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
 import com.client.xvideos.x.parcer.parserItemVideoTags
-import com.client.xvideos.x.screens.videoplayer.model.TagsModel
+import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.tags.ScreenTags
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.screens.videoplayerFullScreen.ScreenX_VideoPlayerFullScreen
