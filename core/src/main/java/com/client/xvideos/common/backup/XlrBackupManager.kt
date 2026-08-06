@@ -17,30 +17,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-data class XlrBackupReport(
-    val files: Int,
-    val bytes: Long
-)
-
-data class XlrBackupItem(
-    val path: String,
-    val title: String,
-    val section: String,
-    val parentPath: String?,
-    val files: Int,
-    val bytes: Long
-)
-
-enum class XlrBackupContentMode {
-    FULL,
-    MINI
-}
-
-data class XlrBackupOptions(
-    val lMode: XlrBackupContentMode = XlrBackupContentMode.MINI,
-    val rMode: XlrBackupContentMode = XlrBackupContentMode.MINI
-)
-
 object XlrBackupManager {
     private const val SCHEMA_VERSION = 1
     private const val MANIFEST_ENTRY = "backup.json"
