@@ -50,6 +50,7 @@ import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
+import com.client.xvideos.r.ui.search.RSearchTextField
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
@@ -115,7 +116,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
     Scaffold(
         bottomBar = {
             StatelessGifsTabBottomBar(
-                searchField = { modifier -> search.CustomBasicTextField( modifier = modifier ) },
+                searchField = { modifier -> RSearchTextField(search, modifier = modifier) },
                 searchR = searchR,
                 isFocused = isFocused,
                 sortType = sortType,

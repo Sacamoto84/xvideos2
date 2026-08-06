@@ -64,6 +64,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.r.common.saved.SavedRed
+import com.client.xvideos.r.ui.search.RSearchTextField
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.Order
@@ -204,7 +205,7 @@ object R_ScreenNichesTab : Screen {
             onNicheClick = onNicheClick,
             savedRed = { vm.savedRed },
             searchWidget = { modifier ->
-                vm.search.CustomBasicTextField( modifier = modifier )
+                RSearchTextField(vm.search, modifier = modifier)
             },
             onRefreshNichesCacheClick = {
                 vm.savedRed.nichesCache.refresh()

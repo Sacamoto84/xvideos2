@@ -1,4 +1,6 @@
-package com.client.xvideos.r.common.search
+package com.client.xvideos.r.ui.search
+
+import com.client.xvideos.r.common.search.SuggestionItem
 
 import com.client.xvideos.common.theme.Theme
 
