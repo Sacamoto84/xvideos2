@@ -2,8 +2,19 @@ package com.client.xvideos.r.network.http
 
 import io.ktor.http.encodeURLParameter
 
-/** `{имя}` в шаблоне пути. */
-private val PLACEHOLDER = Regex("""\{(\w+)}""")
+/**
+ * `{имя}` в шаблоне пути.
+ *
+ * Закрывающая скобка экранирована, и это не косметика. JVM на десктопе принимает
+ * `\{(\w+)}`, а движок регулярных выражений Android (ICU) отвергает его с
+ * `PatternSyntaxException: Syntax error in regexp pattern near index 8`. Так как
+ * выражение лежит в инициализаторе файла, падал не запрос, а весь класс —
+ * `ExceptionInInitializerError` на старте приложения, при первом же обращении к
+ * API из `SavedRed.refreshTagList`.
+ *
+ * Юнит-тесты этого не ловят: они идут на десктопной JVM с другим движком.
+ */
+private val PLACEHOLDER = Regex("""\{(\w+)\}""")
 
 /**
  * Адрес запроса: шаблон пути плюс значения подстановок.
