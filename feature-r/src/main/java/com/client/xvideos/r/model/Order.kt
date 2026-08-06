@@ -5,8 +5,11 @@ enum class Order(val value: String) {
     TOP("top"),
     LATEST("latest"),
     OLDEST("oldest"),
-    RECENT("recent"),
-    BEST("best"),
+    // Были RECENT("recent") и BEST("best"). Ни один адрес RedGifs их не
+    // принимает: /v2/gifs/search отвечает 400 BadOrder, профильный адрес молча
+    // игнорирует и отдаёт выдачу в своём порядке. Ни в одном наборе сортировок
+    // они не стояли — только подписи в SortByOrder. Проверено 06.08.2026,
+    // таблица в docs/redgifs-api.md.
     TOP28("top28"),
 
     /** Релевантность запросу. Есть только у поиска, у лент смысла не имеет. */
