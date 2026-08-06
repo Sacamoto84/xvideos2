@@ -5,6 +5,7 @@ import com.client.xvideos.common.p2p.P2pInboxMerger
 import com.client.xvideos.common.p2p.P2pManifest
 import com.client.xvideos.common.p2p.P2pType
 import com.client.xvideos.common.p2p.mirrorRoot
+import timber.log.Timber
 import java.io.File
 
 /** Контракт импорта принятого бандла. */
@@ -30,7 +31,22 @@ class StoreBundleImporter(
 ) : BundleImporter {
 
     override suspend fun import(manifest: P2pManifest, receivedFiles: Map<Long, File>) {
-        val staging = mirrorRoot(inboxRoot, mainRoot, storeRootFor(manifest.type))
+        val storeRoot = storeRootFor(manifest.type)
+        val staging = mirrorRoot(inboxRoot, mainRoot, storeRoot)
+
+        // Куда именно легло принятое — вопрос, который без лога выясняется
+        // только раскопками в ФС на двух устройствах сразу.
+        Timber.i(
+            """
+            P2P import: тип=${manifest.type}
+              mainRoot   = $mainRoot
+              storeRoot  = $storeRoot
+              inboxRoot  = $inboxRoot
+              staging    = $staging
+              файлы      = ${manifest.files.map { it.relativePath }}
+            """.trimIndent()
+        )
+
         P2pBundleInstaller.install(staging, manifest, receivedFiles)
         P2pInboxMerger.merge(inboxRoot, mainRoot)
         refreshFor(manifest.type)

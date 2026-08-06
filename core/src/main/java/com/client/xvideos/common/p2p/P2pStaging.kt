@@ -1,5 +1,6 @@
 package com.client.xvideos.common.p2p
 
+import timber.log.Timber
 import java.io.File
 
 /**
@@ -21,6 +22,7 @@ object P2pInboxMerger {
         if (!inboxRoot.exists()) return
         inboxRoot.walkTopDown().filter { it.isFile }.forEach { file ->
             val target = File(mainRoot, file.relativeTo(inboxRoot).path)
+            Timber.i("P2P merge: $file -> $target")
             target.parentFile?.mkdirs()
             if (target.exists()) target.delete()
             if (!file.renameTo(target)) {
