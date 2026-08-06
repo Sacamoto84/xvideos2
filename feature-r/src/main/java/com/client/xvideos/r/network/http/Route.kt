@@ -1,52 +1,50 @@
 package com.client.xvideos.r.network.http
 
+import io.ktor.http.encodeURLParameter
+
+/** `{имя}` в шаблоне пути. */
+private val PLACEHOLDER = Regex("""\{(\w+)}""")
+
+/**
+ * Адрес запроса: шаблон пути плюс значения подстановок.
+ *
+ * ```
+ * Route("GET", "/v2/gifs/search?query={q}&page={page}", "q" to "cat", "page" to 1)
+ * ```
+ *
+ * Кодирование отдано ktor'у ([encodeURLParameter]). Раньше здесь лежал
+ * самодельный `encodeURIComponent` из двадцати одного `replace`, и он не
+ * закрывал три случая:
+ *
+ * - **`%`** не экранировался вовсе. Запрос «50%» уходил как есть, и сервер
+ *   читал `%` как начало escape-последовательности;
+ * - **не-ASCII** — кириллица и всё прочее — не трогался никак;
+ * - **`{` и `}`** не экранировались, а подстановка шла последовательными
+ *   `replace` по всей строке. Значение первого параметра подставлялось раньше
+ *   остальных, поэтому текст поиска `{order}` попадал в результат и заменялся
+ *   следующей итерацией — подстановка в собственный шаблон.
+ *
+ * Третий случай закрыт заодно с первыми двумя: [PLACEHOLDER] проходит строку
+ * один раз, и подставленное значение повторно не осматривается.
+ */
 class Route(val method: String, val path: String, vararg parameters: Pair<String, Any>) {
 
-    val BASE = "https://api.redgifs.com"
+    val url: String = BASE + path.fillPlaceholders(parameters.toMap())
 
-    val url: String
-
-    init {
-        var tempUrl = BASE + path
-        if (parameters.isNotEmpty()) {
-            val formattedParams = parameters.associate { (k, v) ->
-                k to if (v is String) encodeURIComponent(v) else v.toString()
+    private fun String.fillPlaceholders(params: Map<String, Any>): String =
+        PLACEHOLDER.replace(this) { match ->
+            // Нет такого параметра — оставляем шаблон нетронутым: так вели себя
+            // и прежние replace. Молча подставлять пустоту хуже — неверный
+            // адрес виден в логе, пустой параметр незаметен.
+            val value = params[match.groupValues[1]] ?: return@replace match.value
+            when (value) {
+                // Числа и флаги кодировать не в чем; строки — всегда.
+                is String -> value.encodeURLParameter()
+                else -> value.toString()
             }
-            tempUrl = tempUrl.formatWithMap(formattedParams)
         }
-        this.url = tempUrl
-    }
 
-    // Helper function to mimic Python's url formatting with map
-    private fun String.formatWithMap(params: Map<String, Any>): String {
-        var result = this
-        params.forEach { (key, value) ->
-            result = result.replace("{$key}", value.toString())
-        }
-        return result
-    }
-
-    // Helper function to encode URL components
-    private fun encodeURIComponent(s: String): String {
-        return s.replace(" ", "%20")
-            .replace("!", "%21")
-            .replace("\"", "%22")
-            .replace("#", "%23")
-            .replace("$", "%24")
-            .replace("&", "%26")
-            .replace("'", "%27")
-            .replace("(", "%28")
-            .replace(")", "%29")
-            .replace("*", "%2A")
-            .replace("+", "%2B")
-            .replace(",", "%2C")
-            .replace("/", "%2F")
-            .replace(":", "%3A")
-            .replace(";", "%3B")
-            .replace("=", "%3D")
-            .replace("?", "%3F")
-            .replace("@", "%40")
-            .replace("[", "%5B")
-            .replace("]", "%5D")
+    private companion object {
+        const val BASE = "https://api.redgifs.com"
     }
 }
