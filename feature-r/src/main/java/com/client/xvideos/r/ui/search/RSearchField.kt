@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.ISearchTemplate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -78,26 +77,3 @@ fun RSearchTextField(
     )
 }
 
-/**
- * Подсказка с тегами: тап по тегу подставляет его в поле поиска.
- *
- * Вызовов сейчас нет — метод был таким же мёртвым и внутри `ISearchTemplate`.
- * Оставлен, потому что шаг про слои, а не про удаление кода; если он не нужен,
- * удалять его надо вместе с `ExpandMenuHelperContent`.
- */
-@Composable
-fun RSearchTagsHelper(
-    search: ISearchTemplate,
-    savedRed: SavedRed,
-    modifier: Modifier = Modifier,
-) {
-    ExpandMenuHelperContent(
-        tags = savedRed.tagsList,
-        onTagClick = { tag ->
-            search.searchText.value =
-                TextFieldValue(text = tag.name, selection = TextRange(tag.name.length))
-            search.searchTextDone.value = tag.name
-        },
-        modifier = modifier
-    )
-}
