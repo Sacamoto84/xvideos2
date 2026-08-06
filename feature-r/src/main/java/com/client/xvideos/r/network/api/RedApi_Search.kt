@@ -20,20 +20,21 @@ class RedApi_Search(val api: ApiClient) {
 
     /**
      * ## Поиск GIF-ов по тексту.
-     * https://api.redgifs.com/v2/gifs/search?search_text=anal&page=2&count=40&order=top
+     * https://api.redgifs.com/v2/gifs/search?query=anal&page=2&count=40&order=top
      *
      * top, trending, latest
      *
-     * Адрес именно `/v2/gifs/search` с параметром `search_text`.
+     * Адрес `/v2/gifs/search`, строка поиска — в параметре **`query`**.
      *
-     * Раньше здесь стоял `/v2/search/gifs?query=...`, и он работал — примерно
-     * до июля 2026. Потом RedGifs его убрал: тот же запрос стал отвечать
-     * 404 `HttpNotFoundException`, и поиск по тексту перестал давать
-     * результаты. Форма ниже — та, что осталась живой; по ней же ходят ленты
-     * (`getTopLatest` и прочие) и поиск картинок (`searchImage`).
+     * Раньше здесь стоял `/v2/search/gifs?query=...`, и он работал примерно до
+     * июля 2026. Потом RedGifs перенёс поиск на общий адрес лент, а старую
+     * ветку убрал — тот же запрос стал отвечать 404.
      *
-     * Если поиск снова начнёт возвращать 404 — сверяться надо в первую очередь
-     * с этими соседями: раз ленты работают, значит адрес живой именно у них.
+     * Ловушка: если написать `search_text` вместо `query`, ответ будет 200, но
+     * это будет **лента без всякой фильтрации** — те же 99 элементов и 100
+     * страниц, что и без поиска. Проверять поиск надо заведомо бессмысленным
+     * словом: правильный запрос отдаёт 0 элементов, игнорируемый — полную
+     * ленту.
      */
     suspend fun searchGifs(
         searchText: String,             // строка поиска.
@@ -46,7 +47,7 @@ class RedApi_Search(val api: ApiClient) {
         val route = if (!verified) {
             Route(
                 method = "GET",
-                path = "/v2/gifs/search?search_text={search_text}&order={order}&count={count}&page={page}&type={type}",
+                path = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}",
                 "search_text" to searchText,
                 "order" to order.value,
                 "count" to count,
@@ -56,7 +57,7 @@ class RedApi_Search(val api: ApiClient) {
         } else {
             Route(
                 method = "GET",
-                path = "/v2/gifs/search?search_text={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes",
+                path = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes",
                 "search_text" to searchText,
                 "order" to order.value,
                 "count" to count,

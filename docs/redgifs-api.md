@@ -52,11 +52,27 @@ TOKEN=$(curl -s https://api.redgifs.com/v2/auth/temporary -H 'Referer: https://w
 Проверить любой адрес — например текстовый поиск:
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' "https://api.redgifs.com/v2/gifs/search?search_text=cat&order=latest&count=5&page=1&type=g" -H "Authorization: Bearer $TOKEN" -H 'Referer: https://www.redgifs.com/'
+curl -s -o /dev/null -w '%{http_code}\n' "https://api.redgifs.com/v2/gifs/search?query=cat&order=latest&count=5&page=1&type=g" -H "Authorization: Bearer $TOKEN" -H 'Referer: https://www.redgifs.com/'
 ```
 
 Код `200` — адрес живой, `404` — его больше нет. Чтобы посмотреть на форму
 ответа, убрать `-o /dev/null -w` и добавить `| head -c 2000`.
+
+### Отдельно: 200 ещё не значит, что параметр учли
+
+У поиска это выяснилось дорогой ценой. Если имя параметра неверное, API не
+ругается — он возвращает **обычную ленту без фильтрации**: те же 99 элементов
+и 100 страниц, что и без всякого поиска. Со стороны выглядит как рабочий
+поиск, который «почему-то показывает не то».
+
+Проверять надо заведомо бессмысленным словом:
+
+```bash
+curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type=g" -H "Authorization: Bearer $TOKEN" -H 'Referer: https://www.redgifs.com/' | head -c 200
+```
+
+Правильный запрос отдаёт `"pages":0` и пустой список. Если вместо этого
+пришла полная лента — параметр проигнорирован.
 
 ## Что приложение сейчас вызывает
 
@@ -68,8 +84,8 @@ curl -s -o /dev/null -w '%{http_code}\n' "https://api.redgifs.com/v2/gifs/search
 | `getTopThisMonth` | `/v2/gifs/search?order=top28&count=&page=&type=` |
 | `getTopTrending` | `/v2/gifs/search?order=trending&count=&page=&type=` |
 | `getTopLatest` | `/v2/gifs/search?order=latest&count=&page=&type=` |
-| `searchGifs` | `/v2/gifs/search?search_text=&order=&count=&page=&type=g` |
-| `searchImage` | `/v2/gifs/search?search_text=&order=&count=&page=&type=i` |
+| `searchGifs` | `/v2/gifs/search?query=&order=&count=&page=&type=g` |
+| `searchImage` | `/v2/gifs/search?query=&order=&count=&page=&type=i` |
 
 Остальное:
 
@@ -92,11 +108,16 @@ curl -s -o /dev/null -w '%{http_code}\n' "https://api.redgifs.com/v2/gifs/search
 
 ## Что известно про поломку
 
-`/v2/search/gifs?query=…&order=…&count=…&page=…` работал примерно до июля 2026
-и отвечал теми же данными, что сейчас отдаёт `/v2/gifs/search?search_text=…`.
-Потом стал возвращать 404 `HttpNotFoundException`. Судя по тому, что живой
-адрес совпадает с адресом лент, поиск по тексту у RedGifs слили с общим
-поиском, а отдельную ветку `/v2/search/gifs` убрали.
+`/v2/search/gifs?query=…&order=…&count=…&page=…` работал примерно до июля 2026.
+Потом стал возвращать 404 `HttpNotFoundException`: RedGifs перенёс поиск на
+общий адрес лент `/v2/gifs/search`, а отдельную ветку убрал. **Имя параметра
+осталось прежним — `query`.**
+
+Промежуточная неверная догадка стоила отдельной итерации: адрес был исправлен
+на живой, но параметр взят `search_text` — по образцу соседнего `searchImage`.
+Запросы стали отвечать 200, и это выглядело как успех, хотя фильтрации не
+было. `searchImage` был сломан ровно так же и молча, потому что его никто не
+вызывает.
 
 Заметить это повторно проще всего по логу: строки `RedApi_*` с 404 при том,
 что ленты грузятся.

@@ -223,7 +223,9 @@ class RedApi @Inject constructor(
     suspend fun searchImage( searchText: String, order: Order = Order.LATEST, count: Int = 100, page: Int = 1 ): MediaResponse {
         val route = Route(
             method = "GET",
-            path = "/v2/gifs/search?search_text={search_text}&order={order}&count={count}&page={page}&type=i",
+            // query, а не search_text: последний API молча игнорирует и отдаёт
+            // ленту без фильтрации — см. RedApi_Search.searchGifs.
+            path = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type=i",
             "search_text" to searchText,
             "order" to order.value,
             "count" to count,
