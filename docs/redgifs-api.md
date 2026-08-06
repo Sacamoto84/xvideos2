@@ -96,14 +96,68 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 | поиск у автора | `/v2/users/{username}/search?...` |
 | ниша и её содержимое | `/v2/niches/{niches}`, `/v2/niches/{niches}/gifs?...` |
 | связанное с нишей | `/v2/niches/{niches}/related`, `/top-creators`, `/top-tags` |
-| список ниш | `/v2/niches?order=&previews=yes&sort=&page=&count=` |
+| список ниш | `/v2/niches?order=subscribers&previews=yes&sort=desc&page=&count=` |
 | поиск ниш | `/v2/niches/search?query=` |
 | подсказки тегов | `/v2/search/suggest?query=` |
-| тренд-теги | `/v2/search/trending` |
+| все теги | `/v1/tags` |
 | подсказки авторов | `/v2/creators/suggest?query=` |
-| тренды | `/v2/explore/trending-gifs`, `/v2/explore/trending-images` |
+| HLS для плеера | `/v2/gifs/{id}/hd.m3u8` |
 
 `type`: `g` — гифки, `i` — картинки, `all` — всё (`model/Order.kt`, `MediaType`).
+`type=all` `/v2/gifs/search` **не принимает** (400); `searchCreator` при
+`MediaType.ALL` параметр не шлёт вовсе — потому и работает.
+
+### Все адреса проверены на живом API 06.08.2026
+
+Раньше здесь стояло «остальные адреса проверены, работают» (`c113373`). Это
+верно **не для всех**: три отвечают `404`.
+
+**Живые и рабочие** — вызываются из кода, отвечают `200`, форма ответа совпадает
+с моделью:
+
+| метод | адрес | ответ |
+|---|---|---|
+| `getTags` | `/v1/tags` | `{tags}` |
+| `getTagSuggestions` | `/v2/search/suggest?query=` | массив из 40 |
+| `searchCreatorsShort` | `/v2/creators/suggest?query=` | `{page,pages,total,items}` |
+| `searchNichesShort` | `/v2/niches/search?query=` | `{page,pages,total,niches}` |
+| `readCreator` | `/v1/users/{username}` | `{creationtime,description,followers,…}` |
+| `searchCreator` | `/v2/users/{username}/search?…` | `{gifs,users,niches,…}` |
+| `getNiche` | `/v2/niches/{niches}` | `{niche}` |
+| `getNiches` | `/v2/niches/{niches}/gifs?…` | `{gifs,users,…}` |
+| `getNichesRelated` | `/v2/niches/{niches}/related` | `{page,pages,total,niches}` |
+| `getNichesTopCreators` | `/v2/niches/{niches}/top-creators` | `{creators}` |
+| `getNichesTopTags` | `/v2/niches/{niches}/top-tags` | `{tags}` |
+| `getExplorerNiches` | `/v2/niches?…` | `{page,pages,total,niches}` |
+| ленты и поиск гифок | `/v2/gifs/search?…` | `{gifs,users,niches,tags,…}` |
+| плеер | `/v2/gifs/{id}/hd.m3u8` | `200 text/plain` |
+
+**Отвечают 404** — все три в коде, который никто не вызывает:
+
+| метод | адрес |
+|---|---|
+| `getTrendingTags` | `/v2/search/trending` |
+| `getTrendingGifs` | `/v2/explore/trending-gifs` |
+| `getTrendingImages` | `/v2/explore/trending-images` |
+
+Пользователя это не задевает: вызывающих у них нет. Но если тренд-теги или
+экран трендов когда-нибудь понадобятся, начинать придётся с поиска нового
+адреса, а не с подключения существующего метода.
+
+**`getGif` разбирает ответ не той моделью.** `/v2/gifs/{id}` отвечает
+`{gif, user, niches}` — одна гифка, — а метод просит `MediaResponse`, у которого
+поля `gifs`, `users`, `tags` во множественном числе и **без значений по
+умолчанию**. Gson в таком случае идёт через `Unsafe.allocateInstance`, поля
+остаются `null` вопреки non-null типам, и первое же обращение к ним — NPE. Это
+ровно тот дефект, что разбирался в проходе 4 (`6da42db`) и описан в KDoc у
+`ItemsX`.
+
+Метод мёртв, поэтому сегодня не падает. Правильная модель — `GetGifResponse` —
+в проекте **уже есть и тоже не используется**, лежит рядом.
+
+**Мёртвые методы сетевого слоя** (ни одного вызова): `getGif`,
+`getTrendingGifs`, `getTrendingImages`, `getTrendingTags`, `searchImage`,
+`searchTagsShort`, `searchCreators` (обе перегрузки).
 
 Значения `order`, которые принимает поиск:
 
