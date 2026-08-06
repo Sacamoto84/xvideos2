@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.ksp)
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.detekt)
+    // Вариант benchmark, обязательный для разрешения зависимости из :app.
+    // Блок был одинаков в четырёх модулях — уехал в build-logic.
+    id 'xvideos.android-benchmark'
 }
 
 // Конфиг и baseline общие с :app — правила одни на весь проект, а записи
@@ -28,14 +31,6 @@ android {
         consumerProguardFiles "consumer-rules.pro"
     }
 
-    buildTypes {
-        // benchmark есть в :app; без него зависимость этого варианта не
-        // разрешится, и сборка упадёт ещё на конфигурации.
-        benchmark {
-            initWith release
-            matchingFallbacks = ['release']
-        }
-    }
 
     compileOptions {
         coreLibraryDesugaringEnabled = true

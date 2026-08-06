@@ -1,0 +1,12 @@
+// Отдельная сборка для convention-плагинов. Её репозитории свои: правило
+// FAIL_ON_PROJECT_REPOS из корневого settings.gradle на включённые сборки не
+// распространяется.
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'build-logic'

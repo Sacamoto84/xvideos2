@@ -102,6 +102,13 @@ android {
             // debug-ключ общеизвестен.
             signingConfig = hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
         }
+        // Остаётся здесь, а не в convention-плагине xvideos.android-benchmark,
+        // которым пользуются четыре библиотеки. `initWith` копирует состояние
+        // release на момент вызова, а release у :app настоящий — minifyEnabled,
+        // proguardFiles, signingConfig, и все они настраиваются строками выше.
+        // Плагин из блока plugins {} отработал бы раньше и скопировал бы пустой
+        // release: benchmark молча остался бы без R8 и подписи. У библиотек
+        // release не настраивается вообще, поэтому порядок им безразличен.
         benchmark {
             initWith release
             matchingFallbacks = ['release']

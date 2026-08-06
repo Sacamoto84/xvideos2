@@ -9,6 +9,10 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+# Каталоги сборки модулей. Правило `/build` выше — только корневое, а у
+# включённой сборки build-logic каталог свой, и его артефакты (.class, .jar)
+# один раз уже уехали в индекс.
+build/
 /captures
 .externalNativeBuild
 .cxx

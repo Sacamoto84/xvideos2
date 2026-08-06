@@ -1,4 +1,9 @@
 pluginManagement {
+    // Convention-плагины проекта. Отдельная сборка, а не buildSrc: buildSrc
+    // пересобирается и инвалидирует кеш на любое изменение, включённая сборка —
+    // только на изменение самих плагинов.
+    includeBuild('build-logic')
+
     repositories {
         google()
         mavenCentral()

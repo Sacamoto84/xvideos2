@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.detekt)
+    id 'xvideos.android-benchmark'
 }
 
 detekt {
@@ -27,13 +28,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        // Вариант из :app: без него зависимость benchmark не разрешается.
-        benchmark {
-            initWith release
-            matchingFallbacks = ['release']
-        }
-    }
 
     compileOptions {
         coreLibraryDesugaringEnabled = true

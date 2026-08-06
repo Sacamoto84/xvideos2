@@ -7,6 +7,7 @@ plugins {
     // @TraceRecomposition в меню видео — аннотация приходит с этим плагином.
     alias(libs.plugins.stability.analyzer)
     alias(libs.plugins.detekt)
+    id 'xvideos.android-benchmark'
 }
 
 detekt {
@@ -26,13 +27,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        // Вариант из :app: без него зависимость benchmark не разрешается.
-        benchmark {
-            initWith release
-            matchingFallbacks = ['release']
-        }
-    }
 
     compileOptions {
         coreLibraryDesugaringEnabled = true
