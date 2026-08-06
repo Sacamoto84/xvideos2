@@ -1,0 +1,85 @@
+// Общая настройка библиотечного модуля: :core, :feature-l, :feature-r, :feature-x.
+//
+// Всё, что ниже, лежало слово в слово в четырёх файлах сборки. Расходились они
+// только тремя вещами, и те остались на местах: namespace, consumerProguardFiles
+// у :core и списки зависимостей.
+//
+// Каждый блок вешается через plugins.withId, а не пишется напрямую: тогда
+// порядок строк в plugins {} у модуля не важен, и этот плагин можно ставить
+// первым или последним.
+
+// --- Android ---
+plugins.withId('com.android.library') {
+    android {
+        compileSdk = 37
+
+        defaultConfig {
+            minSdk = 29
+            testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+        }
+
+        compileOptions {
+            coreLibraryDesugaringEnabled = true
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+
+        buildFeatures {
+            compose = true
+        }
+
+        // Вариант benchmark существует не сам по себе: он объявлен в :app, и без
+        // такого же варианта в каждой библиотеке зависимость не разрешается —
+        // сборка падает ещё на конфигурации.
+        //
+        // В :app этот плагин НЕ применяется, и это не забывчивость. Там
+        // benchmark объявлен после release, потому что `initWith` копирует
+        // состояние release на момент вызова, а release у :app настоящий:
+        // minifyEnabled, proguardFiles, signingConfig. Плагин из блока
+        // plugins {} отработал бы раньше этих строк и скопировал бы пустой
+        // release — benchmark молча лишился бы R8 и подписи. У библиотек release
+        // не настраивается вообще, поэтому порядок им безразличен.
+        buildTypes {
+            benchmark {
+                initWith release
+                matchingFallbacks = ['release']
+            }
+        }
+    }
+}
+
+// --- Kotlin ---
+//
+// Не через plugins.withId: плагина `org.jetbrains.kotlin.android` в блоке
+// plugins {} у модулей нет, Kotlin приходит транзитивно, и подписка на этот id
+// не срабатывает никогда. Первая редакция этого файла так и делала — сборка
+// оставалась зелёной, а аргумент компилятора молча терялся; поймано проверкой
+// freeCompilerArgs, а не глазами.
+//
+// Поэтому ждём само расширение, а если его нет — падаем громко. Тихо
+// пропустить настройку хуже, чем не собраться.
+afterEvaluate {
+    def kotlinExt = extensions.findByName('kotlin')
+    if (kotlinExt == null) {
+        throw new GradleException(
+            "xvideos.android-library: у ${path} нет расширения 'kotlin' — " +
+                "аргумент компилятора применить некуда"
+        )
+    }
+    kotlinExt.compilerOptions.freeCompilerArgs.add(
+        '-XXLanguage:+PropertyParamAnnotationDefaultTargetMode'
+    )
+}
+
+// --- detekt ---
+// Конфиг и baseline общие с :app — правила одни на весь проект, а записи
+// baseline привязаны к именам файлов, а не к путям, и переезд их не ломает.
+plugins.withId('io.gitlab.arturbosch.detekt') {
+    detekt {
+        config.setFrom(rootProject.file('config/detekt/detekt.yml'))
+        baseline = rootProject.file('config/detekt/baseline.xml')
+        parallel = true
+        buildUponDefaultConfig = true
+        ignoreFailures = false
+    }
+}

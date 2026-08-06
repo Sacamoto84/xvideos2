@@ -4,48 +4,18 @@ plugins {
     alias(libs.plugins.ksp)
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.detekt)
-    // Вариант benchmark, обязательный для разрешения зависимости из :app.
-    // Блок был одинаков в четырёх модулях — уехал в build-logic.
-    id 'xvideos.android-benchmark'
-}
-
-// Конфиг и baseline общие с :app — правила одни на весь проект, а записи
-// baseline привязаны к именам файлов, а не к путям, и переезд их не ломает.
-detekt {
-    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    baseline = rootProject.file("config/detekt/baseline.xml")
-    parallel = true
-    buildUponDefaultConfig = true
-    ignoreFailures = false
+    // compileSdk, minSdk, Java 17, compose, вариант benchmark и настройка
+    // detekt — общие для четырёх библиотек, лежат в build-logic.
+    id 'xvideos.android-library'
 }
 
 android {
     // Пакеты внутри остались прежними (com.client.xvideos.common, .ui) —
     // namespace задаёт только, где сгенерируются R и BuildConfig модуля.
     namespace = 'com.client.xvideos.core'
-    compileSdk = 37
 
     defaultConfig {
-        minSdk = 29
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-    }
-
-
-    compileOptions {
-        coreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    buildFeatures {
-        compose = true
-    }
-}
-
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.add('-XXLanguage:+PropertyParamAnnotationDefaultTargetMode')
     }
 }
 

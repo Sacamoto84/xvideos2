@@ -7,42 +7,11 @@ plugins {
     // @TraceRecomposition в меню видео — аннотация приходит с этим плагином.
     alias(libs.plugins.stability.analyzer)
     alias(libs.plugins.detekt)
-    id 'xvideos.android-benchmark'
-}
-
-detekt {
-    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    baseline = rootProject.file("config/detekt/baseline.xml")
-    parallel = true
-    buildUponDefaultConfig = true
-    ignoreFailures = false
+    id 'xvideos.android-library'
 }
 
 android {
     namespace = 'com.client.xvideos.feature.r'
-    compileSdk = 37
-
-    defaultConfig {
-        minSdk = 29
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-
-    compileOptions {
-        coreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    buildFeatures {
-        compose = true
-    }
-}
-
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.add('-XXLanguage:+PropertyParamAnnotationDefaultTargetMode')
-    }
 }
 
 // Список короткий: всё общее приходит транзитивно из :core, который отдаёт
