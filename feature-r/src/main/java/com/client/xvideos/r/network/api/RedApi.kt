@@ -18,7 +18,6 @@ import com.client.xvideos.r.network.http.Route
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -310,14 +309,19 @@ class RedApi @Inject constructor(
     //
     // Живой поиск авторов делает searchCreatorsShort в RedApi_Search.
 
-    //https://api.redgifs.com/v2/niches/search?query=Ana
-    suspend fun searchNichesShort(text: String): List<SearchItemNichesResponse> {
+    /**
+     * ## Поиск ниш по тексту.
+     * https://api.redgifs.com/v2/niches/search?query=Ana
+     *
+     * Разбор отдан ktor'у. Раньше тело забиралось через `requestText`, а
+     * `String?` из `getOrNull()` уходил в `Gson().fromJson(res, listType)` — на
+     * `null` Gson возвращает `null`, и присваивание в non-null
+     * `SearchNichesShortResponse` роняло проверку Kotlin. То есть при отказе
+     * сети отсюда прилетал NPE вместо ошибки сети.
+     */
+    suspend fun searchNichesShort(text: String): Result<List<SearchItemNichesResponse>> {
         val route = Route(method = "GET", path = "/v2/niches/search?query={text}", "text" to text)
-        val res = api.requestText(route).getOrNull()
-        val listType = object : TypeToken<SearchNichesShortResponse>() {}.type
-        val a : SearchNichesShortResponse= Gson().fromJson(res, listType)
-        val niches: List<SearchItemNichesResponse> = a.niches
-        return niches
+        return api.request<SearchNichesShortResponse>(route).map { it.niches }
     }
 
     // Здесь был searchTagsShort на том же /v2/search/suggest, что и живой

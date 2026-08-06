@@ -9,6 +9,15 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
+/**
+ * Пауза ввода, после которой запрашиваются подсказки.
+ *
+ * Раньше запрос уходил на каждое изменение текста: сборщик висел прямо на
+ * `searchText`, без `debounce` и без отмены предыдущего запроса. Набранное слово
+ * из пяти букв — до пяти обращений к сети подряд, и каждое ждали до конца.
+ */
+internal const val SUGGESTIONS_DEBOUNCE_MS = 300L
+
 data class SuggestionItem(
     @SerializedName("text") val text: String,  //
     @SerializedName("count") val count: Long,  //
