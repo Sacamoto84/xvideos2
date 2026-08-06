@@ -28,7 +28,7 @@ import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
-import com.client.xvideos.r.common.block.ui.DialogBlock
+import com.client.xvideos.r.ui.block.DialogBlock
 import com.client.xvideos.common.ui.atom.DownloadIndicator
 import dagger.Binds
 import dagger.Module

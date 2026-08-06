@@ -1,4 +1,4 @@
-package com.client.xvideos.r.common.video
+package com.client.xvideos.r.ui.video
 
 import com.client.xvideos.common.theme.Theme
 

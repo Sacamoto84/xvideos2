@@ -35,10 +35,10 @@ import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.r.common.UsersRed
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
-import com.client.xvideos.r.common.expand_menu_video.ExpandMenuVideo
-import com.client.xvideos.r.common.expand_menu_video.ExpandMenuVideoTags
+import com.client.xvideos.r.ui.expand_menu_video.ExpandMenuVideo
+import com.client.xvideos.r.ui.expand_menu_video.ExpandMenuVideoTags
 import com.client.xvideos.r.common.saved.SavedRed
-import com.client.xvideos.r.common.video.player_row_mini.RedUrlVideoImageAndLongClick
+import com.client.xvideos.r.ui.video.player_row_mini.RedUrlVideoImageAndLongClick
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import com.client.xvideos.r.network.api.RedApi

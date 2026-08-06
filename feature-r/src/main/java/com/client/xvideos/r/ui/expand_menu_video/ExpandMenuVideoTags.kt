@@ -1,4 +1,4 @@
-package com.client.xvideos.r.common.expand_menu_video
+package com.client.xvideos.r.ui.expand_menu_video
 
 import com.client.xvideos.common.theme.Theme
 

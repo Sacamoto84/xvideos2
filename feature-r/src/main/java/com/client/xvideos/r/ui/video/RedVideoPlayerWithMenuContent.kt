@@ -1,6 +1,9 @@
-package com.client.xvideos.r.common.video
+package com.client.xvideos.r.ui.video
 
 import com.client.xvideos.common.theme.Theme
+// Контракт управления плеером остался в common/video: это не UI, а интерфейс,
+// который реализует и читает не только этот экран.
+import com.client.xvideos.r.common.video.PlayerControls
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

@@ -1,4 +1,4 @@
-package com.client.xvideos.r.common.video.player_row_mini.atom
+package com.client.xvideos.r.ui.video.player_row_mini.atom
 
 import com.client.xvideos.common.theme.Theme
 

@@ -1,4 +1,4 @@
-package com.client.xvideos.r.common.video.player_row_mini
+package com.client.xvideos.r.ui.video.player_row_mini
 
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
@@ -28,7 +28,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
 import com.client.xvideos.r.common.downloader.DownloadRed
-import com.client.xvideos.r.common.video.player_row_mini.atom.Red_Video_Lite_Row2
+import com.client.xvideos.r.ui.video.player_row_mini.atom.Red_Video_Lite_Row2
 import com.client.xvideos.r.model.GifsInfo
 import java.io.File
 
