@@ -4,7 +4,18 @@ import com.client.xvideos.x.model.HTML5PlayerConfig
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
-fun parseHTML5Player(script: String): HTML5PlayerConfig {
+/**
+ * Разбирает скрипт html5-плеера. `null` — играть нечего.
+ *
+ * Раньше при полном промахе отсюда уходил `HTML5PlayerConfig` со всеми полями
+ * `""`: отказ выглядел как успех с пустыми данными, плеер получал пустые адреса
+ * и молчал. Тот же класс дефекта, что чинили в кеше лент R.
+ *
+ * Признак «нечего играть» — ни одного источника: ни низкого качества, ни
+ * высокого, ни HLS. Всё остальное (название, превью, имя автора) может
+ * отсутствовать на законных основаниях и разбор не отменяет.
+ */
+fun parseHTML5Player(script: String): HTML5PlayerConfig? {
     val videoTitle = extractValue(script, "html5player.setVideoTitle\\('(.*?)'\\)")
     val encodedIdVideo = extractValue(script, "html5player.setEncodedIdVideo\\('(.*?)'\\)")
     val videoUrlLow = extractValue(script, "html5player.setVideoUrlLow\\('(.*?)'\\)")
@@ -22,6 +33,10 @@ fun parseHTML5Player(script: String): HTML5PlayerConfig {
     val videoURL = extractValue(script, "html5player.setVideoURL\\('(.*?)'\\)")
     val staticPath = extractValue(script, "html5player.setStaticPath\\('(.*?)'\\)")
     val viewData = extractValue(script, "html5player.setViewData\\('(.*?)'\\)")
+
+    val hasAnySource = listOf(videoUrlLow, videoUrlHigh, videoHLS)
+        .any { !it.isNullOrBlank() }
+    if (!hasAnySource) return null
 
     return HTML5PlayerConfig(
         videoTitle = videoTitle ?: "",

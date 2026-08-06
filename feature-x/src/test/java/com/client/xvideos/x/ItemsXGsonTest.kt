@@ -5,6 +5,7 @@ import com.client.xvideos.x.parcer.parserVideoPreviewFromImageUrl
 import com.google.gson.GsonBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
@@ -45,16 +46,20 @@ class ItemsXGsonTest {
         val item = gson.fromJson(json, ItemsX::class.java)
 
         // Явный null Gson кладёт в поле в обход типа — на этот случай парсер
-        // принимает nullable и отвечает строкой "null", а не падает.
-        assertEquals("null", parserVideoPreviewFromImageUrl(item.previewImage))
+        // принимает nullable и отвечает null, а не падает.
+        //
+        // Раньше ответом была строка "null". Её проверял один вызывающий из
+        // трёх, поэтому она ложилась в ItemsX.previewVideo и возвращалась сюда
+        // же на следующем экране. Подробности — в XParsersTest.
+        assertNull(parserVideoPreviewFromImageUrl(item.previewImage))
     }
 
     @Test
     fun `парсер превью переживает null и пустую строку`() {
-        assertEquals("null", parserVideoPreviewFromImageUrl(null))
-        assertEquals("null", parserVideoPreviewFromImageUrl(""))
-        assertEquals("null", parserVideoPreviewFromImageUrl("   "))
-        assertEquals("null", parserVideoPreviewFromImageUrl("null"))
+        assertNull(parserVideoPreviewFromImageUrl(null))
+        assertNull(parserVideoPreviewFromImageUrl(""))
+        assertNull(parserVideoPreviewFromImageUrl("   "))
+        assertNull(parserVideoPreviewFromImageUrl("null"))
     }
 
     /**

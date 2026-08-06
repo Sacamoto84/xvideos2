@@ -4,16 +4,27 @@ package com.client.xvideos.x.parcer
 //https://cdn77-pic.xvideos-cdn.com/videos/videopreview/6a/4f/6b/6a4f6bafe3abb03b5ea6108ab18ff1ad_169.mp4
 
 /**
+ * Собирает адрес видео-превью из адреса картинки-превью. `null` — не получилось.
+ *
+ * Признаком неудачи раньше служила **строка** `"null"`. Проверял её один
+ * вызывающий из трёх, поэтому она успевала лечь в `ItemsX.previewVideo` и
+ * вернуться сюда же на следующем экране: разбор снова давал `"null"`, откат
+ * `?: item.previewVideo` доставал из модели ту же строку, и в плеер уходил
+ * адрес из четырёх букв. Настоящий `null` такого круга не даёт — его нельзя
+ * забыть проверить.
+ *
  * Параметр нullable намеренно: сюда приходят поля моделей, разобранных Gson, а он
  * умеет положить `null` в поле с типом `String` (см. [com.client.xvideos.x.model.ItemsX]).
  * Раньше сигнатура была non-null, и такой `null` ронял приложение прямо в
  * композиции — рантайм-проверкой Kotlin на входе в функцию.
  */
-fun parserVideoPreviewFromImageUrl(s: String?): String {
+fun parserVideoPreviewFromImageUrl(s: String?): String? {
 
     val source = s?.trim().orEmpty()
+    // Строку "null" продолжаем узнавать на входе: она уже записана в файлы
+    // избранного прошлыми версиями и приходит оттуда через Gson.
     if (source.isBlank() || source.equals("null", ignoreCase = true)) {
-        return "null"
+        return null
     }
 
     val url = source.substringBefore('?').substringBefore('#')
@@ -29,17 +40,17 @@ fun parserVideoPreviewFromImageUrl(s: String?): String {
         .substringBefore('.')
         .replace(Regex("-\\d+$"), "")
         .takeIf { it.isNotBlank() }
-        ?: return "null"
+        ?: return null
 
     val folders = if (videosIndex >= 0 && parts.size > videosIndex + 4) {
         parts.subList(videosIndex + 2, videosIndex + 5)
     } else if (hash.length >= 6) {
         listOf(hash.substring(0, 2), hash.substring(2, 4), hash.substring(4, 6))
     } else {
-        return "null"
+        return null
     }
 
-    if (videosIndex < 0) return "null"
+    if (videosIndex < 0) return null
 
     val previewParts = buildList {
         addAll(parts.take(videosIndex + 1))

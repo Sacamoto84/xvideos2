@@ -41,9 +41,10 @@ fun parserListVideo(html: String): List<ItemsX> {
             val href = block.selectFirst("p.title a")?.attr("href") ?: "No link"
             val videoDuration = block.selectFirst("span.duration")?.text() ?: "No duration"
 
-            // Получаем значение data-src
-            val dataSrc: String = block.selectFirst("img[data-src]")?.attr("data-src") ?: "null"
-            val videoPreviewUrl = parserVideoPreviewFromImageUrl(dataSrc)
+            // Пусто, а не "null": ItemsX.previewImage — non-null String со значением
+            // по умолчанию "", и строка-заглушка отсюда уезжала в модель и на экран.
+            val dataSrc: String = block.selectFirst("img[data-src]")?.attr("data-src").orEmpty()
+            val videoPreviewUrl = parserVideoPreviewFromImageUrl(dataSrc).orEmpty()
 
             val channelName = block.selectFirst("p.metadata .name")?.text() ?: "No channel"
             val views = extractViews(block.selectFirst("p.metadata")?.text())

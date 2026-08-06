@@ -32,7 +32,9 @@ fun parserScreenTags(html: String): ModelScreenTag {
         // Раньше всем карточкам присваивался id = 0 и литералы "TODO()", из-за чего
         // ключи списка и идентификация «избранного» схлопывались в один элемент.
         val id = video.attr("data-id").toLongOrNull() ?: href.hashCode().toLong()
-        val dataSrc = video.selectFirst("img[data-src]")?.attr("data-src") ?: "null"
+        // Пусто, а не "null": ItemsX.previewImage — non-null String со значением
+        // по умолчанию "", и строка-заглушка отсюда уезжала в модель и на экран.
+        val dataSrc = video.selectFirst("img[data-src]")?.attr("data-src").orEmpty()
 
         listItems.add(
             ItemsX(
@@ -43,7 +45,7 @@ fun parserScreenTags(html: String): ModelScreenTag {
                 views = views,
                 channel = channelName,
                 previewImage = dataSrc,
-                previewVideo = parserVideoPreviewFromImageUrl(dataSrc),
+                previewVideo = parserVideoPreviewFromImageUrl(dataSrc).orEmpty(),
                 nameProfile = channelName,
                 linkProfile = profileLink
             )

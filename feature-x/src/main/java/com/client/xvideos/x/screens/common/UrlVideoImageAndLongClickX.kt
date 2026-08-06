@@ -33,10 +33,12 @@ fun UrlVideoImageAndLongClickX(
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     var isVideo by remember { mutableStateOf(false) }
+    // Разбор отдаёт null, если превью собрать не удалось. Откат — то, что уже
+    // лежит в модели; "null" оттуда больше не приходит, но записи, сделанные
+    // прошлыми версиями, ещё могут его содержать — отсюда takeIf.
     val previewVideoUrl = remember(item.previewImage, item.previewVideo) {
         parserVideoPreviewFromImageUrl(item.previewImage)
-            .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
-            ?: item.previewVideo
+            ?: item.previewVideo.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
     }
 
     Box(
@@ -79,7 +81,7 @@ fun UrlVideoImageAndLongClickX(
         if (isVideo) {
             //Показ видео
             UrlVideoLite(
-                url = previewVideoUrl,
+                url = previewVideoUrl.orEmpty(),
                 posterUrl = item.previewImage,
                 modifier = Modifier.fillMaxSize(),
                 fallbackUrls = listOf(item.previewVideo),
