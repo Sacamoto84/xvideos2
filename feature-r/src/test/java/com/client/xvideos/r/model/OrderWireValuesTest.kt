@@ -28,6 +28,27 @@ class OrderWireValuesTest {
         assertEquals("latest", Order.LATEST.value)
     }
 
+    /**
+     * Набор, который `/v2/gifs/search` перечисляет сам в теле ошибки
+     * `400 BadOrder`. Снят с живого API 06.08.2026, таблица — в
+     * `docs/redgifs-api.md`.
+     *
+     * Сортировки, уходящие на этот адрес, обязаны лежать внутри набора. Так
+     * ушло `TOP_ALLTIME("alltime")`: значения с таким именем у RedGifs нет и не
+     * было, «топ за всё время» — это `top`.
+     */
+    @Test
+    fun `сортировки лент и поиска входят в набор, принимаемый сервером`() {
+        val accepted = setOf("top", "top7", "top28", "latest", "score", "trending")
+        val used = listOf(
+            Order.RELEVANT, Order.TOP, Order.TOP_WEEK,
+            Order.TOP_MONTH, Order.TRENDING, Order.LATEST
+        )
+        for (order in used) {
+            assertEquals("$order", true, order.value in accepted)
+        }
+    }
+
     @Test
     fun `значения сортировок профиля не менялись`() {
         assertEquals("oldest", Order.OLDEST.value)

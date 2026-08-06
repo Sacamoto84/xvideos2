@@ -38,11 +38,13 @@ class ItemTopPagingSource(
                 when (sort) {
                     Order.TOP_WEEK -> redApi.getTopThisWeek(100, page)
                     Order.TOP_MONTH -> redApi.getTopThisMonth(100, page)
+                    Order.TOP -> redApi.getTopAllTime(100, page)
                     Order.TRENDING -> redApi.getTopTrending(100, page)
                     Order.LATEST -> redApi.getTopLatest(100, page)
-                    // Сортировки без своей ленты (сегодня это TOP_ALLTIME):
-                    // отдаём неделю, но громко — молчаливый откат прятал
-                    // рассинхрон меню и запроса.
+                    // Сортировки без своей ленты. После сведения TOP_ALLTIME к
+                    // TOP сюда попасть нечему из меню ленты, но откат оставлен:
+                    // сортировка приходит параметром и набор может измениться.
+                    // Громко — молчаливый откат прятал рассинхрон меню и запроса.
                     else -> {
                         Timber.w("!!! ItemTopPagingSource: у $sort нет своей ленты, отдаём неделю")
                         redApi.getTopThisWeek(100, page)

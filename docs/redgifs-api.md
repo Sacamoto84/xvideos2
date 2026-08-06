@@ -82,6 +82,7 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 |---|---|
 | `getTopThisWeek` | `/v2/gifs/search?order=top7&count=&page=&type=` |
 | `getTopThisMonth` | `/v2/gifs/search?order=top28&count=&page=&type=` |
+| `getTopAllTime` | `/v2/gifs/search?order=top&count=&page=&type=` |
 | `getTopTrending` | `/v2/gifs/search?order=trending&count=&page=&type=` |
 | `getTopLatest` | `/v2/gifs/search?order=latest&count=&page=&type=` |
 | `searchGifs` | `/v2/gifs/search?query=&order=&count=&page=&type=g` |
@@ -140,7 +141,7 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 | `trending` | ✅ | ✅ | `TRENDING` |
 | `score` | ✅ | **400** | `RELEVANT` — только поиск |
 | `oldest` | **400** | ✅ | `OLDEST` — только профиль |
-| `alltime` | **400** | — | `TOP_ALLTIME` — **значения не существует** |
+| `alltime` | **400** | — | было `TOP_ALLTIME`, **удалено** — значения не существует |
 | `recent`, `best`, `new` | **400** | 200, но в список не входит | `RECENT`, `BEST` — нигде не используются |
 | `""` | **400** | — | `FORCE_TEMP` — служебный признак, на провод не уходит |
 
@@ -152,23 +153,25 @@ top7, top28`, `score` он отвергает, а неперечисленные
 Соответствие «константа — строка на проводе» прибито тестом
 `OrderWireValuesTest` в `:feature-r`.
 
-### «All time» — такой сортировки у RedGifs нет
+### «All time» — такой сортировки у RedGifs нет, сведена к `top`
 
-`Order.TOP_ALLTIME("alltime")` есть в меню ленты гифок. Значение проверено:
+Был `Order.TOP_ALLTIME("alltime")` в меню ленты гифок. Значение проверено:
 `400 BadOrder`, в допустимый набор не входит и никогда не входило.
 
-На провод оно при этом не уходит и `400` пользователь не видит:
-`ItemTopPagingSource` уводит `TOP_ALLTIME` в `else` и отдаёт `getTopThisWeek`, у
-которого `order=top7` зашит в путь. То есть «All time» показывает неделю —
+На провод оно при этом не уходило и `400` пользователь не видел:
+`ItemTopPagingSource` уводил `TOP_ALLTIME` в `else` и отдавал `getTopThisWeek`, у
+которого `order=top7` зашит в путь. То есть «All time» показывал неделю —
 молча, и так было всегда.
 
 Настоящий «топ за всё время» у RedGifs называется `top`: `top7` — неделя,
-`top28` — месяц, `top` — без ограничения по времени. Правка — свести
-`TOP_ALLTIME` к `Order.TOP` и завести под него метод; отдельного значения
-заводить не нужно и нельзя.
+`top28` — месяц, `top` — без ограничения по времени. Поэтому `TOP_ALLTIME`
+удалён, в наборе ленты его место занял `Order.TOP`, а под него заведён
+`getTopAllTime` с `order=top`. Подпись в меню сменилась с «All time» на «Top» —
+она же и в наборе поиска, где `Order.TOP` был с самого начала.
 
-Пока не сведено: откат в `else` пишет предупреждение в лог, а `Order.nearestIn`
-никогда не приводит в `TOP_ALLTIME` сама. Выбрать его вручную по-прежнему можно.
+Следствие: наборы ленты и поиска теперь различаются ровно одним элементом —
+`Relevant`, которого у лент быть не может. Это прибито тестом
+`OrderNearestInTest`.
 
 ### Пустая первая страница у `trending` — не дефект
 

@@ -171,7 +171,11 @@ private fun StatelessGifsTabBottomBar(
             ) {
                 val orders = remember(searchQuery.isEmpty()) {
                     if (searchQuery.isEmpty()) {
-                        listOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP_ALLTIME, Order.TRENDING, Order.LATEST)
+                        // Order.TOP вместо прежнего TOP_ALLTIME: «топ за всё
+                        // время» у RedGifs так и называется, отдельного
+                        // значения нет. Теперь набор ленты отличается от набора
+                        // поиска ровно на Relevant.
+                        listOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP, Order.TRENDING, Order.LATEST)
                     } else {
                         // У поиска свой набор: Relevant есть только здесь, а
                         // Week и Month сервер понимает как top7 и top28.

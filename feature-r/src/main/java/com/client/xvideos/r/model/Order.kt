@@ -23,8 +23,15 @@ enum class Order(val value: String) {
     // отдавал не то.
     TOP_WEEK("top7"),
     TOP_MONTH("top28"),
-    //TOP ALL TIME
-    TOP_ALLTIME("alltime"),
+
+    // «Топ за всё время» — это [TOP]. Здесь стоял отдельный TOP_ALLTIME("alltime"),
+    // но такого значения у RedGifs нет: /v2/gifs/search отвечает
+    // 400 BadOrder и перечисляет набор — top, top7, top28, latest, score,
+    // trending. Проверено 06.08.2026, подробности в docs/redgifs-api.md.
+    //
+    // Ошибки пользователь не видел: ItemTopPagingSource уводил TOP_ALLTIME в
+    // else и отдавал getTopThisWeek, где order=top7 зашит в путь. То есть
+    // «All time» показывал неделю.
 
 
     //NICHES
@@ -55,16 +62,18 @@ enum class MediaType(val value: String) {
  * есть выбор пользователя молча заменялся на самый далёкий от него: выбрал
  * «All time», начал искать — искалось по «Latest».
  *
- * Замены подобраны так, чтобы попадать только в значения, проверенные на
- * устройстве (см. docs/redgifs-api.md). В частности, [TOP_ALLTIME] здесь
- * никогда не выдаётся: своей ленты у него нет, и запрос всё равно уходит за
- * неделю.
+ * Замены подобраны так, чтобы попадать только в значения, принимаемые сервером
+ * (таблица в docs/redgifs-api.md).
+ *
+ * После сведения `TOP_ALLTIME` к [TOP] наборы ленты и поиска различаются одним
+ * элементом — [RELEVANT], которого у лент нет и быть не может. Остальные ветки
+ * оставлены на случай новых наборов: функция общая, её зовёт `SortByOrder` для
+ * всех меню сортировки, включая профиль и ниши.
  */
 fun Order.nearestIn(list: List<Order>): Order {
     if (this in list) return this
     val preferred = when (this) {
-        Order.TOP_ALLTIME -> listOf(Order.TOP, Order.TOP_MONTH)
-        Order.RELEVANT -> listOf(Order.TRENDING, Order.TOP_WEEK)
+        Order.RELEVANT -> listOf(Order.TOP, Order.TRENDING)
         Order.TOP -> listOf(Order.TOP_WEEK, Order.TRENDING)
         else -> emptyList()
     }

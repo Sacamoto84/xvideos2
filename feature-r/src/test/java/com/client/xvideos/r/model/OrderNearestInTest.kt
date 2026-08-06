@@ -18,7 +18,7 @@ import org.junit.Test
 class OrderNearestInTest {
 
     private val feedOrders = listOf(
-        Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP_ALLTIME, Order.TRENDING, Order.LATEST
+        Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP, Order.TRENDING, Order.LATEST
     )
 
     private val searchOrders = listOf(
@@ -31,33 +31,35 @@ class OrderNearestInTest {
         for (order in searchOrders) assertEquals(order, order.nearestIn(searchOrders))
     }
 
+    /**
+     * Relevance у лент аналога не имеет, поэтому её и заменяют. Top — ближайшее
+     * по смыслу: это «топ за всё время», а не за окно.
+     */
     @Test
-    fun `All time при переходе к поиску становится Top, а не Latest`() {
-        assertEquals(Order.TOP, Order.TOP_ALLTIME.nearestIn(searchOrders))
+    fun `Relevant при возврате к ленте становится Top, а не Latest`() {
+        assertEquals(Order.TOP, Order.RELEVANT.nearestIn(feedOrders))
     }
 
+    /** Единственное расхождение наборов — Relevant; всё прочее общее. */
     @Test
-    fun `Relevant при возврате к ленте становится Trending, а не Latest`() {
-        assertEquals(Order.TRENDING, Order.RELEVANT.nearestIn(feedOrders))
-    }
-
-    @Test
-    fun `Top при возврате к ленте становится Week`() {
-        assertEquals(Order.TOP_WEEK, Order.TOP.nearestIn(feedOrders))
+    fun `наборы ленты и поиска различаются одним элементом`() {
+        assertEquals(setOf(Order.RELEVANT), searchOrders.toSet() - feedOrders.toSet())
+        assertEquals(emptySet<Order>(), feedOrders.toSet() - searchOrders.toSet())
     }
 
     /**
-     * Своей ленты у `TOP_ALLTIME` нет: `ItemTopPagingSource` уводит его в
-     * `getTopThisWeek`. Пока это так, замена не имеет права никого туда
-     * приводить — выбрать вручную пользователь может, привести его насильно мы
-     * не должны.
+     * Замена обязана попадать только в значения, которые сервер принимает.
+     * `alltime` он отвергает с 400 BadOrder — потому `TOP_ALLTIME` и сведён к
+     * [Order.TOP]. Сторож на случай, если в набор снова добавят несуществующее.
      */
     @Test
-    fun `замена никогда не приводит в TOP_ALLTIME`() {
+    fun `замена попадает только в принимаемые сервером значения`() {
+        val acceptedByFeed = setOf("top", "top7", "top28", "latest", "score", "trending")
         for (order in Order.entries) {
+            val nearest = order.nearestIn(feedOrders)
             assertTrue(
-                "$order -> ${order.nearestIn(feedOrders)}",
-                order.nearestIn(feedOrders) != Order.TOP_ALLTIME || order == Order.TOP_ALLTIME
+                "$order -> $nearest (${nearest.value})",
+                nearest.value in acceptedByFeed
             )
         }
     }
@@ -74,6 +76,6 @@ class OrderNearestInTest {
     /** Пустой набор менять не на что — возвращаем исходное, без исключения. */
     @Test
     fun `пустой набор оставляет сортировку прежней`() {
-        assertEquals(Order.TOP_ALLTIME, Order.TOP_ALLTIME.nearestIn(emptyList()))
+        assertEquals(Order.RELEVANT, Order.RELEVANT.nearestIn(emptyList()))
     }
 }

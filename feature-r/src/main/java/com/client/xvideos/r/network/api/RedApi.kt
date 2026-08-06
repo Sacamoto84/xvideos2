@@ -80,6 +80,31 @@ class RedApi @Inject constructor(
     }
 
 
+    /**
+     * ## Топ за всё время.
+     *
+     * `order=top` — именно он и означает «без ограничения по времени»: рядом
+     * `top7` это неделя, `top28` месяц. Значения `alltime` у RedGifs нет,
+     * `/v2/gifs/search` отвечает на него 400 BadOrder (проверено 06.08.2026,
+     * docs/redgifs-api.md). До появления этого метода выбор «All time» в меню
+     * уходил в `else` и молча отдавал неделю.
+     */
+    suspend fun getTopAllTime(
+        count: Int,                      // количество элементов на страницу.
+        page: Int,                       // номер страницы (1-based).
+        type: MediaType = MediaType.GIF, // тип медиа (GIF, image и т.д.).
+    ): Result<MediaResponse> {
+        val route = Route(
+            method = "GET",
+            path = "/v2/gifs/search?order=top&count={count}&page={page}&type={type}",
+            "count" to count,
+            "page" to page,
+            "type" to type.value
+        )
+        return cacheMediaResponse(route, this, mediaCache)
+    }
+
+
     suspend fun getTopTrending(
         count: Int,                      // количество элементов на страницу.
         page: Int,                       // номер страницы (1-based).
