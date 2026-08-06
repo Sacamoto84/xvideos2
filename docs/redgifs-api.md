@@ -103,8 +103,21 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 | тренды | `/v2/explore/trending-gifs`, `/v2/explore/trending-images` |
 
 `type`: `g` — гифки, `i` — картинки, `all` — всё (`model/Order.kt`, `MediaType`).
-`order` для лент: `top7`, `top28`, `trending`, `latest`; полный список значений
-там же, в `enum Order`.
+
+Значения `order`, которые принимает поиск:
+
+| в меню | на проводе | примечание |
+|---|---|---|
+| Relevant | `score` | только у поиска, у лент смысла не имеет |
+| Top | `top` | |
+| Week | `top7` | у лент это же значение зашито в путь `getTopThisWeek` |
+| Month | `top28` | то же, `getTopThisMonth` |
+| Trending | `trending` | |
+| Latest | `latest` | |
+
+Неверное значение `order` **не даёт ошибки**: приходит выдача, просто
+отсортированная не так, как выбрано. Поэтому соответствие прибито тестом
+`OrderWireValuesTest` в `:feature-r`.
 
 ## Что известно про поломку
 

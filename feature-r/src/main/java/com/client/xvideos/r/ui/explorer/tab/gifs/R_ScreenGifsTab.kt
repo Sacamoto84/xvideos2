@@ -171,7 +171,12 @@ private fun StatelessGifsTabBottomBar(
                     if (searchR.text.isEmpty()) {
                         listOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP_ALLTIME, Order.TRENDING, Order.LATEST)
                     } else {
-                        listOf(Order.TOP, Order.TRENDING, Order.LATEST)
+                        // У поиска свой набор: Relevant есть только здесь, а
+                        // Week и Month сервер понимает как top7 и top28.
+                        listOf(
+                            Order.RELEVANT, Order.TOP, Order.TOP_WEEK,
+                            Order.TOP_MONTH, Order.TRENDING, Order.LATEST
+                        )
                     }
                 }
                 SortByOrder(
