@@ -120,6 +120,9 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             App.instance.awaitStorageCleanup()
 
             appFileDatabase.get().clearVolatileCachesOnProcessStart()
+            // Обход каталога кеша лент R: здесь он никого не задерживает, в
+            // отличие от initApp(), которую ждут перед первым экраном.
+            appFileDatabase.get().deleteExpiredCaches()
             VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
             savedRed.nichesCache.refreshIfStale()
             

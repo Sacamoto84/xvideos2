@@ -10,8 +10,18 @@ data class FileStringCacheEntry(
     val timeCreateText: String = currentFileDbTimeText()
 )
 
+/**
+ * @param ttlMs срок годности записи. `null` — бессрочно, как было у всех таблиц
+ *   до появления параметра. Со сроком запись после его истечения перестаёт
+ *   отдаваться из [get] и удаляется: без этого `timeCreate` писался, но никогда
+ *   не читался, и лента «Топ за неделю», однажды попавшая в кеш, показывалась
+ *   бы месяц спустя — обновиться ей было неоткуда.
+ * @param now источник текущего времени, отдельным параметром ради тестов.
+ */
 class FileStringCacheTable(
-    private val table: FolderTable
+    private val table: FolderTable,
+    private val ttlMs: Long? = null,
+    private val now: () -> Long = System::currentTimeMillis
 ) {
     suspend fun insert(entry: FileStringCacheEntry) {
         table.upsert(
@@ -25,16 +35,27 @@ class FileStringCacheTable(
     }
 
     suspend fun put(key: String, content: String) {
-        insert(FileStringCacheEntry(key = key, content = content))
+        // Время берётся из [now], а не из умолчания FileStringCacheEntry: иначе
+        // запись и проверка срока смотрели бы на разные часы.
+        insert(FileStringCacheEntry(key = key, content = content, timeCreate = now()))
     }
 
     suspend fun get(key: String): FileStringCacheEntry? {
         val record = table.get(key) ?: return null
         val content = record.fields[FolderTable.FIELD_CONTENT] ?: return null
+        // Записи без разборчивого времени создания достаётся 0: со сроком
+        // годности это «бесконечно старая», то есть просроченная. Проверить её
+        // всё равно нечем, а отдавать непроверяемое из кеша с TTL — обходить
+        // сам TTL.
+        val timeCreate = record.fields[FolderTable.FIELD_TIME_CREATE]?.toLongOrNull() ?: 0L
+        if (isExpired(timeCreate)) {
+            delete(key)
+            return null
+        }
         return FileStringCacheEntry(
             key = record.key,
             content = content,
-            timeCreate = record.fields[FolderTable.FIELD_TIME_CREATE]?.toLongOrNull() ?: 0L,
+            timeCreate = timeCreate,
             timeCreateText = record.fields[FolderTable.FIELD_TIME_CREATE_TEXT].orEmpty()
         )
     }
@@ -43,8 +64,27 @@ class FileStringCacheTable(
         table.delete(key)
     }
 
-    suspend fun deleteOld(timeMs: Long) {
-        table.deleteOlderThan(timeMs)
+    /**
+     * Удаляет просроченные записи. Без [ttlMs] не делает ничего.
+     *
+     * [get] чистит по одной и только те, за которыми пришли, — то есть мусор от
+     * лент, куда больше не заходят, так и лежал бы. Каталог обходится целиком,
+     * поэтому вызывать это на старте в фоне, а не на пути к первому экрану.
+     */
+    suspend fun deleteExpired() {
+        val cutoff = expiryCutoff() ?: return
+        table.deleteOlderThan(cutoff)
+    }
+
+    /** Время, раньше которого запись считается просроченной. `null` — срока нет. */
+    private fun expiryCutoff(): Long? = ttlMs?.let { now() - it }
+
+    private fun isExpired(timeCreate: Long): Boolean {
+        val cutoff = expiryCutoff() ?: return false
+        // Строгое сравнение — такое же, как в FolderTable.deleteOlderThan:
+        // ровно на границе запись ещё живая. Иначе чтение и уборка расходились
+        // бы ровно на один миллисекундный случай.
+        return timeCreate < cutoff
     }
 
     suspend fun deleteAll() {
