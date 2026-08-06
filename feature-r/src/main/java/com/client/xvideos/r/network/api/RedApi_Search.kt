@@ -1,6 +1,7 @@
 package com.client.xvideos.r.network.api
 
 import com.client.xvideos.r.model.MediaResponse
+import com.client.xvideos.r.model.MediaType
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.search.SearchCreatorsResponse
 import com.client.xvideos.r.network.http.ApiClient
@@ -19,9 +20,15 @@ class RedApi_Search(val api: ApiClient) {
 
     /**
      * ## Поиск GIF-ов по тексту.
-     * https://api.redgifs.com/v2/search/gifs?query=anal&page=2&count=40&order=top
+     * https://api.redgifs.com/v2/gifs/search?search_text=anal&page=2&count=40&order=top
      *
      * top, trending, latest
+     *
+     * Адрес именно `/v2/gifs/search` с параметром `search_text`. Раньше здесь
+     * стоял `/v2/search/gifs?query=...` — сегменты наоборот и другое имя
+     * параметра, — и сервер отвечал 404, то есть текстовый поиск не работал
+     * вовсе. Рабочую форму видно по соседям: так же устроены и ленты
+     * (`getTopLatest` и прочие), и поиск картинок (`searchImage`).
      */
     suspend fun searchGifs(
         searchText: String,             // строка поиска.
@@ -34,20 +41,22 @@ class RedApi_Search(val api: ApiClient) {
         val route = if (!verified) {
             Route(
                 method = "GET",
-                path = "/v2/search/gifs?query={search_text}&order={order}&count={count}&page={page}",
+                path = "/v2/gifs/search?search_text={search_text}&order={order}&count={count}&page={page}&type={type}",
                 "search_text" to searchText,
                 "order" to order.value,
                 "count" to count,
                 "page" to page,
+                "type" to MediaType.GIF.value,
             )
         } else {
             Route(
                 method = "GET",
-                path = "/v2/search/gifs?query={search_text}&order={order}&count={count}&page={page}&verified=yes",
+                path = "/v2/gifs/search?search_text={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes",
                 "search_text" to searchText,
                 "order" to order.value,
                 "count" to count,
                 "page" to page,
+                "type" to MediaType.GIF.value,
             )
         }
         //return cacheMediaResponse(route)
