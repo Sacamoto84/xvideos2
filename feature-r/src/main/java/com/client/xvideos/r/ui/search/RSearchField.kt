@@ -1,7 +1,6 @@
 package com.client.xvideos.r.ui.search
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextRange
@@ -25,7 +24,7 @@ fun RSearchTextField(
     modifier: Modifier = Modifier,
 ) {
     val searchTagSuggestions by search.searchTextSuggestions.collectAsStateWithLifecycle()
-    val historyItems by search.history.collectAsState()
+    val historyItems by search.history.collectAsStateWithLifecycle()
     val text by search.searchText.collectAsStateWithLifecycle()
 
     CustomBasicTextFieldContent(

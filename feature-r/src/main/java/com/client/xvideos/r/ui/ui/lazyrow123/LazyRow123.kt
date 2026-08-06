@@ -28,7 +28,6 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -152,7 +151,7 @@ fun LazyRow123Content(
     val state = host.state
 
     val navigator = LocalNavigator.current
-    val downloadList by host.downloadRed.downloadList.collectAsState()
+    val downloadList by host.downloadRed.downloadList.collectAsStateWithLifecycle()
     val loadState = listGifs.loadState
     var wasAppendLoading by remember { mutableStateOf(false) }
 

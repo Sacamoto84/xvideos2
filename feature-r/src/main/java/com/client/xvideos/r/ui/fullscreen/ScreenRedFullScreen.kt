@@ -34,7 +34,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -334,7 +333,7 @@ private fun RedFullScreenPage(
 
         if (showOverlay) {
             val haptic = LocalHapticFeedback.current
-            val downloadList by vm.downloadRed.downloadList.collectAsState()
+            val downloadList by vm.downloadRed.downloadList.collectAsStateWithLifecycle()
             RedFullScreenOverlay(
                 item = item,
                 vm = vm,

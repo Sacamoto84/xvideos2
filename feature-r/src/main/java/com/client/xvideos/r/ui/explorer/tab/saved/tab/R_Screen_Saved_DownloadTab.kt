@@ -33,7 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -89,7 +89,7 @@ object R_Screen_Saved_DownloadTab : Screen {
         val vm = getScreenModel<ScreenSavedDownloadSM>()
         val context = LocalContext.current
 
-        val downloadRed by vm.downloadRed.downloadList.collectAsState()
+        val downloadRed by vm.downloadRed.downloadList.collectAsStateWithLifecycle()
         val state = rememberLazyListState()
 
         // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
