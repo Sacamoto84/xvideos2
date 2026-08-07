@@ -37,6 +37,8 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
+import com.client.xvideos.common.util.runCatchingCancellable
+import timber.log.Timber
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
 import com.client.xvideos.r.model.search.SearchItemNichesResponse
@@ -178,9 +180,13 @@ class ScreenRedExplorerSearchSM @Inject constructor(
                     return@collect
                 }
 
-                val creator = redApi.search.searchCreatorsShort(text).getOrThrow()
-
-                creatorsList.replaceWith(creator.items)
+                // Ловим на каждый запрос, а не на весь collect: отказ сети на
+                // одной строке не должен завершать подписку — иначе поиск
+                // умирал бы до ухода с экрана. Раньше getOrThrow закрывал
+                // приложение целиком.
+                runCatchingCancellable { redApi.search.searchCreatorsShort(text).getOrThrow() }
+                    .onSuccess { creatorsList.replaceWith(it.items) }
+                    .onFailure { Timber.w(it, "!!! Поиск авторов не удался: %s", text) }
 
             }
 //            val niches = RedGifs.searchNiches("Ana")

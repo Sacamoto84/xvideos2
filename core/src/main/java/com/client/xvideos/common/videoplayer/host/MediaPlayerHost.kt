@@ -11,11 +11,11 @@ import com.client.xvideos.common.videoplayer.util.AudioTrack
 import com.client.xvideos.common.videoplayer.util.M3U8Helper
 import com.client.xvideos.common.videoplayer.util.SubtitleTrack
 import com.client.xvideos.common.videoplayer.util.VideoQuality
+import com.client.xvideos.common.util.launchCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MediaPlayerHost(
@@ -65,7 +65,10 @@ class MediaPlayerHost(
     var onError: ((MediaPlayerError) -> Unit)? = null
 
     init {
-        scope.launch(Dispatchers.IO) {
+        // Список качеств — украшение: без него плеер играет дорожку по умолчанию.
+        // Отказ сети здесь ронял приложение целиком (UnknownHostException на
+        // хосте HLS уходил из launch без обработчика в обработчик потока).
+        scope.launchCatching(Dispatchers.IO, "Не удалось разобрать HLS: $url") {
             fetchAndUpdateMediaInfo(url)
         }
     }
@@ -76,7 +79,7 @@ class MediaPlayerHost(
         this.drmConfig = drmConfig
         if (url != mediaUrl) {
             url = mediaUrl
-            scope.launch(Dispatchers.IO) {
+            scope.launchCatching(Dispatchers.IO, "Не удалось разобрать HLS: $mediaUrl") {
                 fetchAndUpdateMediaInfo(mediaUrl)
             }
         }

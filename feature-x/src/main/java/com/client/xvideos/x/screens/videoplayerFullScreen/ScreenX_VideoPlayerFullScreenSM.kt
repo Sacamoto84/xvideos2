@@ -9,6 +9,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.util.launchCatching
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.parcer.parseHTML5Player
@@ -21,7 +22,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -53,7 +53,9 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
     val a: MutableState<HTML5PlayerConfig?> = mutableStateOf(HTML5PlayerConfig())
 
     init {
-        screenModelScope.launch {
+        // При отказе passedString остаётся пустым — экран показывает индикатор
+        // вместо того, чтобы закрыть приложение.
+        screenModelScope.launchCatching(message = "Страница видео не загрузилась: $url") {
             Timber.e("!!! ScreenX_VideoPlayerFullScreenSM init()")
 
             // RAM-кэш (чистится при старте процесса), чтобы истекающий HLS-токен обновлялся.

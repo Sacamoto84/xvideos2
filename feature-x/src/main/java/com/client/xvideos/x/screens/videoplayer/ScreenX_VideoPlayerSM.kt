@@ -13,6 +13,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.util.launchCatching
 import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
@@ -70,7 +71,19 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     var positionFromFullscreen by mutableLongStateOf(-1L)
 
     init {
+        // Возврат позиции из полноэкранного экрана. Подписка стояла внутри
+        // блока загрузки, ниже по коду: при отказе сети до неё не доходило.
+        // От сети она не зависит — держим отдельно.
         screenModelScope.launch {
+            EventBus.events
+                .filterIsInstance<Event.X_FullScreenExitPosition>()
+                .collect { event ->
+                    Timber.i("!!! ~~~ collect Event.X_FullScreenExitPosition ${event.position}")
+                    positionFromFullscreen = event.position
+                }
+        }
+
+        screenModelScope.launchCatching(message = "Страница видео не загрузилась: $url") {
 
             Timber.e("!!! ScreenVideoPlayerSM init()")
 
@@ -93,16 +106,6 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
             tags = parserItemVideoTags(s)
 
             passedHLS = a.value?.videoHLS.toString()
-
-            // Возврат позиции из полноэкранного экрана
-            screenModelScope.launch {
-                EventBus.events
-                    .filterIsInstance<Event.X_FullScreenExitPosition>()
-                    .collect { event ->
-                        Timber.i("!!! ~~~ collect Event.X_FullScreenExitPosition ${event.position}")
-                        positionFromFullscreen = event.position
-                    }
-            }
         }
     }
 

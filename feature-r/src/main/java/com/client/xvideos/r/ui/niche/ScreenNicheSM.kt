@@ -8,6 +8,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
+import com.client.xvideos.common.util.launchCatching
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.NichesResponse
 import com.client.xvideos.r.model.TopCreatorsResponse
@@ -27,7 +28,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class ScreenNicheSM @AssistedInject constructor(
@@ -68,7 +68,9 @@ class ScreenNicheSM @AssistedInject constructor(
 
         lazyHost.columns = 2
 
-        screenModelScope.launch {
+        // getOrThrow бросает при любом отказе сети, и раньше это закрывало
+        // приложение. Экран остаётся пустым, но остаётся.
+        screenModelScope.launchCatching(message = "Ниша $nicheName не загрузилась") {
             niche = redApi.getNiche(nicheName).getOrThrow() .niche            // Нужно кешировать
             related = redApi.getNichesRelated(nicheName).getOrThrow()      // Нужно кешировать
             topCreator = redApi.getNichesTopCreators(nicheName).getOrThrow()  // Нужно кешировать
