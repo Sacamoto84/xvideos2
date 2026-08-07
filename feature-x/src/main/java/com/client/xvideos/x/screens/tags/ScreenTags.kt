@@ -14,7 +14,11 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.screens.tags.atom.TagsPaginatedListScreen
+import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import com.client.xvideos.x.urlStart
 
 class ScreenTags(private val tag: String) : Screen {
 
@@ -24,6 +28,7 @@ class ScreenTags(private val tag: String) : Screen {
     override fun Content() {
 
         val vm = getScreenModel<ScreenTagsViewModel, ScreenTagsViewModel.Factory> { factory -> factory.create(tag) }
+        val navigator = LocalNavigator.currentOrThrow
 
         Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
             Column {
@@ -37,7 +42,10 @@ class ScreenTags(private val tag: String) : Screen {
             // Раньше padding игнорировался (`{ _ -> }`) — список рисовался под
             // topBar'ом, и его первые строки оказывались перекрыты заголовком.
             Box(modifier = Modifier.padding(padding)) {
-                TagsPaginatedListScreen(0)
+                TagsPaginatedListScreen(
+                    items = vm.screen.items,
+                    onOpenVideo = { navigator.push(ScreenX_VideoPlayer(urlStart + it.href)) },
+                )
             }
         }
     }

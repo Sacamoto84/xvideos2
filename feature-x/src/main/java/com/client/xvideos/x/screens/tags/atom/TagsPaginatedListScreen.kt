@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,18 +20,24 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 
+/**
+ * Список видео по тегу.
+ *
+ * Раньше экран был заглушкой: список создавался пустым (`mutableStateListOf()`),
+ * заполнявший его `LaunchedEffect` стоял закомментированным, а разобранные
+ * `ScreenTagsViewModel`-ом элементы сюда не передавались вовсе. Заголовок и
+ * счётчик результатов рисовались, список оставался пуст всегда — с первого
+ * коммита.
+ *
+ * Постраничности здесь нет: `parserScreenTags` разбирает одну страницу выдачи,
+ * и экран показывает ровно её. Прежний параметр `pageIndex` ни на что не влиял
+ * (вызывался с жёстким `0`) и убран, чтобы не обещать несуществующего.
+ */
 @Composable
-fun TagsPaginatedListScreen(pageIndex: Int) {
-
-    val l = remember { mutableStateListOf<ItemsX>() }
-
-    LaunchedEffect(pageIndex) {
-//        withContext(Dispatchers.IO) {
-//            l.clear()
-//            l.addAll(openNew(pageIndex).filter { !it.link.contains("THUMBNUM") })
-//        }
-    }
-
+fun TagsPaginatedListScreen(
+    items: List<ItemsX>,
+    onOpenVideo: (ItemsX) -> Unit,
+) {
 
     val itemsPerRow = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
 
@@ -42,7 +45,7 @@ fun TagsPaginatedListScreen(pageIndex: Int) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(l.chunked(itemsPerRow))
+        items(items.chunked(itemsPerRow))
         { row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEachIndexed { index, cell ->
@@ -54,9 +57,13 @@ fun TagsPaginatedListScreen(pageIndex: Int) {
                             .background(Color.DarkGray)
                     ) {
 
-                        UrlVideoImageAndLongClickX(cell, onLongClick = {
-                            //vm.openItem(urlStart + cell.link, navigator)
-                        }, onDoubleClick = {})
+                        // Жесты как в ленте раздела: тап — превью, долгий тап и
+                        // двойной — открыть плеер.
+                        UrlVideoImageAndLongClickX(
+                            cell,
+                            onLongClick = { onOpenVideo(cell) },
+                            onDoubleClick = { onOpenVideo(cell) },
+                        )
 
                     }
                 }
