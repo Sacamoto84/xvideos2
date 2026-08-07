@@ -56,6 +56,8 @@ import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
+import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import com.client.xvideos.x.urlStart
 import com.composables.core.HorizontalSeparator
 
 class ScreenFavorites() : Screen {
@@ -84,6 +86,7 @@ class ScreenFavorites() : Screen {
             onDownload = { vm.download(it) },
             onSaveToGallery = { vm.saveToGallery(it) },
             onPlayLocal = { url -> navigator.push(ScreenX_LocalVideoPlayer(url)) },
+            onOpenVideo = { navigator.push(ScreenX_VideoPlayer(urlStart + it.href)) },
         )
     }
 }
@@ -93,6 +96,7 @@ class ScreenFavorites() : Screen {
  *
  * @param localUrlOf для скачанного видео возвращает `file://`-URL локального файла, иначе null.
  * @param onPlayLocal открыть локальное воспроизведение по `file://`-URL.
+ * @param onOpenVideo открыть сетевой плеер для нескачанного видео.
  */
 @Composable
 private fun FavoritesContent(
@@ -102,6 +106,7 @@ private fun FavoritesContent(
     onDelete: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     onPlayLocal: (String) -> Unit,
+    onOpenVideo: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
     // Подтверждение удаления из избранного (диалог).
@@ -153,6 +158,7 @@ private fun FavoritesContent(
                     onDownload = { onDownload(item) },
                     onSaveToGallery = { onSaveToGallery(item) },
                     onPlayLocal = onPlayLocal,
+                    onOpenVideo = { onOpenVideo(item) },
                 )
             }
         }
@@ -167,6 +173,7 @@ private fun FavoriteRow(
     onDelete: () -> Unit,
     onDownload: () -> Unit,
     onPlayLocal: (String) -> Unit,
+    onOpenVideo: () -> Unit,
     onSaveToGallery: () -> Unit = {},
 ) {
     Box(
@@ -206,7 +213,15 @@ private fun FavoriteRow(
                 // В preview видео-компонент не поднимаем (нет контекста/сети) — только оверлей.
                 //LocalInspectionMode.current -> DurationOverlay(item.duration)
                 // Не скачано: обычный сетевой превью-компонент.
-                else -> UrlVideoImageAndLongClickX(item, onLongClick = {}, onDoubleClick = {})
+                // Раньше оба обработчика были пустыми, и открыть видео из
+                // избранного было нельзя вовсе: тап переключал превью, а долгий
+                // и двойной не делали ничего. Жесты те же, что в ленте раздела
+                // и на экране тега.
+                else -> UrlVideoImageAndLongClickX(
+                    item,
+                    onLongClick = onOpenVideo,
+                    onDoubleClick = onOpenVideo,
+                )
             }
 
 
@@ -354,5 +369,6 @@ private fun ScreenFavoritesPreview() {
         onDelete = {},
         onDownload = {},
         onPlayLocal = {},
+        onOpenVideo = {},
     )
 }
