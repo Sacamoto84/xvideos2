@@ -84,12 +84,22 @@ fun AppLockScreen(
     val scope = rememberCoroutineScope()
 
     // Пока действует блокировка — обновляем обратный отсчёт раз в полсекунды.
-    LaunchedEffect(lockoutRemainingMs > 0L) {
+    val isLockedOut = lockoutRemainingMs > 0L
+    LaunchedEffect(isLockedOut) {
+        // Ключ false — блокировки нет, считать нечего. Ранний выход важен:
+        // иначе эффект срабатывал бы и после обычной ошибки и стирал бы
+        // «Неверный код доступа» сразу, не дав его прочитать.
+        if (!isLockedOut) return@LaunchedEffect
+
         while (AppLockRepository.lockoutRemainingMillis(context) > 0L) {
             lockoutRemainingMs = AppLockRepository.lockoutRemainingMillis(context)
             delay(500)
         }
         lockoutRemainingMs = 0L
+        // Блокировка кончилась — поле снова чистое. Держать «Неверный код
+        // доступа» после отсидки незачем: ошибка была минуту назад, а ввод уже
+        // разрешён.
+        errorText = null
     }
 
     fun submit() {

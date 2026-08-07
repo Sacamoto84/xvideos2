@@ -40,6 +40,19 @@ import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.screenSettings.SettingsDataHolders
 import kotlinx.coroutines.launch
 
+/**
+ * Потолок консоли восстановления.
+ *
+ * Было 200 строк, и при восстановлении L-мини их съедало за несколько секунд:
+ * на каждый файл приходится по две-три записи, а файлов сотни. Начало работы —
+ * с которого и понятно, что пошло не так, — вытеснялось раньше, чем его успевали
+ * прочитать.
+ *
+ * Две тысячи коротких строк — это порядка сотни килобайт, и рисуются они
+ * `LazyColumn`, то есть только видимые.
+ */
+private const val BACKUP_CONSOLE_MAX_LINES = 2000
+
 @Composable
 internal fun BackupSettingsSection(
     context: Context,
@@ -64,7 +77,7 @@ internal fun BackupSettingsSection(
     }
 
     fun appendBackupLog(message: String) {
-        if (backupConsole.size >= 200) {
+        if (backupConsole.size >= BACKUP_CONSOLE_MAX_LINES) {
             backupConsole.removeAt(0)
         }
         backupConsole.add(message)

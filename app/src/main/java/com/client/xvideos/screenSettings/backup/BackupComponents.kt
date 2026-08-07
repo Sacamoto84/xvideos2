@@ -7,7 +7,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,8 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -29,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TriStateCheckbox
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -144,6 +145,19 @@ internal fun BackupConsole(
         .ifEmpty { listOf("Пока пусто") }
         .flatMap { entry -> entry.lineSequence().toList() }
 
+    // LazyColumn, а не Column в verticalScroll: буфер поднят до
+    // BACKUP_CONSOLE_MAX_LINES, и рисовать столько строк разом незачем —
+    // компонуются только видимые.
+    val listState = rememberLazyListState()
+
+    // Прокрутка к последней строке по мере поступления. Без этого разросшийся
+    // буфер бесполезен: смотришь на начало, а работа идёт в конце.
+    LaunchedEffect(visibleLines.size) {
+        if (visibleLines.isNotEmpty()) {
+            listState.scrollToItem(visibleLines.lastIndex)
+        }
+    }
+
     SettingsListItem(
         icon = R.drawable.hard_drive_2_24,
         text = "Консоль backup",
@@ -157,19 +171,17 @@ internal fun BackupConsole(
             }
         }
     )
-    Box(
+    LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(260.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(SettingsTopBarColor, RoundedCornerShape(8.dp))
-            .verticalScroll(rememberScrollState())
             .padding(10.dp)
     ) {
-        Column {
-            visibleLines.forEach { line ->
-                BackupConsoleLine(line)
-            }
+        items(visibleLines.size) { index ->
+            BackupConsoleLine(visibleLines[index])
         }
     }
 }
