@@ -34,7 +34,6 @@ class SavedL_Collection(
     val listUrl = mutableStateListOf<PicsDetails>()
     val collectionList = mutableStateListOf<LCollectionEntity>()
     val duplicateGroups = mutableStateListOf<LCollectionDuplicateGroup>()
-    val smartCollectionCandidates = mutableStateListOf<LSmartCollectionCandidate>()
 
     private val progress = LDownloadProgress(scope)
     val percentDownload: StateFlow<Float> = progress.percentDownload
@@ -355,31 +354,6 @@ class SavedL_Collection(
         }
     }
 
-    fun refreshSmartCollectionCandidates() {
-        scope.launch(Dispatchers.IO) {
-            val candidates = lReadSmartCollectionCandidates()
-            withContext(Dispatchers.Main) {
-                smartCollectionCandidates.replaceWith(candidates)
-            }
-        }
-    }
-
-    fun createSmartCollection(candidate: LSmartCollectionCandidate) {
-        scope.launch(Dispatchers.IO) {
-            val result = lCreateSmartCollection(candidate)
-            withContext(Dispatchers.Main) {
-                result
-                    .onSuccess { count ->
-                        SnackBar.success("Создана коллекция ${candidate.collectionName}: $count")
-                        refreshCollectionList()
-                    }
-                    .onFailure {
-                        Timber.e(it, "SavedL_Collection createSmartCollection() error")
-                        SnackBar.error("Ошибка создания smart-коллекции")
-                    }
-            }
-        }
-    }
 
     private fun remove(identifiers: List<String>, collectionName: String) {
         Timber.i("SavedL_Collection remove() identifiers:$identifiers collection:$collectionName")

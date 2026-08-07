@@ -1,6 +1,6 @@
 // groovy-gradle-plugin компилирует каждый файл src/main/groovy/*.gradle в
-// плагин, который подключается по имени файла: xvideos.android-benchmark.gradle
-// -> id 'xvideos.android-benchmark'.
+// плагин, который подключается по имени файла: xvideos.android-library.gradle
+// -> id 'xvideos.android-library'.
 //
 // Зависимости от AGP здесь нет намеренно. Плагин обращается к блоку `android`
 // динамически, как это делает любой скрипт сборки на Groovy, и компилируется

@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.detekt)
-    // compileSdk, minSdk, Java 17, compose, вариант benchmark и настройка
+    // compileSdk, minSdk, Java 17, compose и настройка
     // detekt — общие для четырёх библиотек, лежат в build-logic.
     id 'xvideos.android-library'
 }

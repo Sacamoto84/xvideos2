@@ -1,6 +1,5 @@
 package com.client.xvideos.l.featured.saved
 
-import com.client.xvideos.common.AppPath
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.isLVideoFileUrl
 import com.google.gson.GsonBuilder
@@ -15,39 +14,15 @@ enum class LCollectionSortOrder(val title: String) {
     DUPLICATES("Сначала дубли")
 }
 
-enum class LSmartCollectionKind(val title: String, val prefix: String) {
-    TAG("Тег", "Tag"),
-    AUTHOR("Автор", "Author"),
-    ALBUM("Альбом", "Album")
-}
-
 data class LCollectionDuplicateGroup(
     val key: String,
     val items: List<PicsDetails>
 )
 
-data class LSmartCollectionCandidate(
-    val kind: LSmartCollectionKind,
-    val key: String,
-    val title: String,
-    val subtitle: String,
-    val count: Int
-) {
-    val collectionName: String
-        get() = "${kind.prefix} - $title".sanitizeCollectionName()
-}
-
 internal data class LCollectionConfig(
     val schemaVersion: Int = 1,
     val coverFolderName: String? = null
 )
-
-internal data class LStoredCollectionItem(
-    val folder: File,
-    val metadata: LSavedLikeMetadata
-) {
-    fun toPicsDetails(): PicsDetails? = metadata.toPicsDetails(folder)
-}
 
 /**
  * Список коллекций L: имя, превью (если найдено) и количество элементов.
@@ -268,116 +243,6 @@ internal fun lFindCollectionDuplicateFolders(collectionFolder: File): List<List<
         .values
         .filter { it.size > 1 }
         .map { it.sortedByDescending { (metadata, _) -> metadata.savedAt } }
-}
-
-internal fun lReadSmartCollectionCandidates(): List<LSmartCollectionCandidate> {
-    val items = lReadAllSavedLCollectionSources()
-
-    val albumCandidates = items
-        .filter { it.metadata.albumId?.isNotBlank() == true }
-        .groupBy { it.metadata.albumId.orEmpty() }
-        .toSmartCandidates(LSmartCollectionKind.ALBUM) { key, group ->
-            val metadata = group.first().metadata
-            metadata.albumTitle?.takeIf { it.isNotBlank() } ?: "Album $key"
-        }
-
-    val tagCandidates = items
-        .flatMap { item ->
-            item.metadata.albumDetails?.tags
-                ?.map { tag -> tag.text to item }
-                ?: emptyList()
-        }
-        .groupBy({ it.first }, { it.second })
-        .toSmartCandidates(LSmartCollectionKind.TAG) { key, _ -> key }
-
-    val authorCandidates = items
-        .mapNotNull { item ->
-            val author = item.metadata.albumDetails?.createdBy ?: return@mapNotNull null
-            val name = author.displayName.takeIf { it.isNotBlank() }
-                ?: author.name.takeIf { it.isNotBlank() }
-                ?: author.id
-            name to item
-        }
-        .groupBy({ it.first }, { it.second })
-        .toSmartCandidates(LSmartCollectionKind.AUTHOR) { key, _ -> key }
-
-    return (albumCandidates + tagCandidates + authorCandidates)
-        .filter { it.count > 1 }
-        .sortedWith(
-            compareByDescending<LSmartCollectionCandidate> { it.count }
-                .thenBy { it.kind.ordinal }
-                .thenBy { it.title.lowercase() }
-        )
-}
-
-private fun Map<String, List<LStoredCollectionItem>>.toSmartCandidates(
-    kind: LSmartCollectionKind,
-    titleResolver: (String, List<LStoredCollectionItem>) -> String
-): List<LSmartCollectionCandidate> {
-    return map { (key, group) ->
-        LSmartCollectionCandidate(
-            kind = kind,
-            key = key,
-            title = titleResolver(key, group),
-            subtitle = kind.title,
-            count = group.distinctBy { lMetadataIdentityKey(it.metadata) }.size
-        )
-    }
-}
-
-internal fun lCreateSmartCollection(candidate: LSmartCollectionCandidate): Result<Int> = runCatching {
-    val targetRoot = File(AppPath.l_collection, candidate.collectionName)
-    targetRoot.mkdirs()
-
-    val selectedSources = lReadAllSavedLCollectionSources()
-        .filter { it.matches(candidate) }
-        .distinctBy { lMetadataIdentityKey(it.metadata) }
-
-    selectedSources.forEach { source ->
-        val target = File(targetRoot, source.folder.name)
-        if (source.folder.canonicalFile != target.canonicalFile) {
-            source.folder.copyRecursively(target, overwrite = true)
-        }
-    }
-
-    selectedSources.size
-}
-
-private fun LStoredCollectionItem.matches(candidate: LSmartCollectionCandidate): Boolean {
-    return when (candidate.kind) {
-        LSmartCollectionKind.ALBUM -> metadata.albumId == candidate.key
-        LSmartCollectionKind.TAG -> metadata.albumDetails?.tags?.any { it.text == candidate.key } == true
-        LSmartCollectionKind.AUTHOR -> {
-            val author = metadata.albumDetails?.createdBy ?: return false
-            candidate.key == author.displayName ||
-                    candidate.key == author.name ||
-                    candidate.key == author.id
-        }
-    }
-}
-
-private fun lReadAllSavedLCollectionSources(): List<LStoredCollectionItem> {
-    val likes = lReadStoredCollectionItems(File(AppPath.l_likes))
-        .map { (metadata, folder) -> LStoredCollectionItem(folder, metadata) }
-
-    val collections = File(AppPath.l_collection)
-        .listFiles()
-        ?.filter { it.isDirectory }
-        ?.flatMap { collectionFolder ->
-            lReadStoredCollectionItems(collectionFolder)
-                .map { (metadata, folder) -> LStoredCollectionItem(folder, metadata) }
-        }
-        ?: emptyList()
-
-    return (likes + collections).distinctBy { lMetadataIdentityKey(it.metadata) }
-}
-
-private fun String.sanitizeCollectionName(): String {
-    return replace(Regex("[\\\\/:*?\"<>|]"), "_")
-        .replace(Regex("\\s+"), " ")
-        .trim()
-        .take(80)
-        .ifBlank { "Smart collection" }
 }
 
 /**

@@ -17,7 +17,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,27 +75,6 @@ object L_Screen_CollectionTab : Screen {
         var itemPendingRename by remember { mutableStateOf<String?>(null) }
         var itemPendingDelete by remember { mutableStateOf<String?>(null) }
         var renameValue by remember { mutableStateOf("") }
-
-        var smartCollectionsVisible by remember { mutableStateOf(false) }
-
-        LaunchedEffect(smartCollectionsVisible) {
-            if (smartCollectionsVisible) {
-                savedL.collection.refreshSmartCollectionCandidates()
-            }
-        }
-
-        if (smartCollectionsVisible) {
-            LSmartCollectionsDialog(
-                candidates = savedL.collection.smartCollectionCandidates,
-                onDismiss = { smartCollectionsVisible = false },
-                onCreate = { candidate ->
-                    savedL.collection.createSmartCollection(candidate)
-                    smartCollectionsVisible = false
-                }
-            )
-        }
-
-
 
         itemPendingAction?.let { pending ->
 
@@ -195,7 +173,6 @@ object L_Screen_CollectionTab : Screen {
                 sortOrder = savedL.collection.sortOrder,
                 gridState = vm.gridState,
                 onSortOrderClick = { savedL.collection.applySortOrder(it) },
-                onSmartCollectionsClick = { smartCollectionsVisible = true },
                 onCollectionClick = { savedL.collection.setCollection(it) },
                 onCollectionLongClick = { itemPendingAction = it },
                 onCreateNewCollectionClick = { savedL.collection.visibleDialogCreateNew = true }
@@ -214,7 +191,6 @@ fun L_SavedCollectionTabContent(
     sortOrder: LCollectionSortOrder,
     gridState: LazyGridState,
     onSortOrderClick: (LCollectionSortOrder) -> Unit,
-    onSmartCollectionsClick: () -> Unit,
     onCollectionClick: (String) -> Unit,
     onCollectionLongClick: (String) -> Unit,
     onCreateNewCollectionClick: () -> Unit
@@ -245,7 +221,6 @@ fun L_SavedCollectionTabContent(
                 selectedCollection = null,
                 sortOrder = sortOrder,
                 onSortOrderClick = onSortOrderClick,
-                onSmartCollectionsClick = onSmartCollectionsClick
             )
         }
     )
@@ -264,7 +239,6 @@ private fun PreviewL_SavedCollectionTabContent() {
             sortOrder = LCollectionSortOrder.RECENT,
             gridState = rememberLazyGridState(),
             onSortOrderClick = {},
-            onSmartCollectionsClick = {},
             onCollectionClick = {},
             onCollectionLongClick = {},
             onCreateNewCollectionClick = {}

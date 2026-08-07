@@ -13,7 +13,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +36,6 @@ internal fun LCollectionsTopBar(
     selectedCollection: String?,
     sortOrder: LCollectionSortOrder,
     onSortOrderClick: (LCollectionSortOrder) -> Unit,
-    onSmartCollectionsClick: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -83,10 +81,6 @@ internal fun LCollectionsTopBar(
             }
 
             if (selectedCollection == null) {
-
-                TextButton(onClick = onSmartCollectionsClick) {
-                    Text("Smart", color = Theme.L.primaryColor, style = Theme.L.Type.button)
-                }
 
                 Box {
                     IconButton(onClick = { menuExpanded = true }) {
@@ -137,7 +131,6 @@ private fun PreviewLCollectionsTopBarSelectionNull() {
             selectedCollection = null,
             sortOrder = LCollectionSortOrder.RECENT,
             onSortOrderClick = {},
-            onSmartCollectionsClick = {}
         )
     }
 }
@@ -150,7 +143,6 @@ private fun PreviewLCollectionsTopBarWithSelection() {
             selectedCollection = "My Private Collection",
             sortOrder = LCollectionSortOrder.NAME,
             onSortOrderClick = {},
-            onSmartCollectionsClick = {}
         )
     }
 }

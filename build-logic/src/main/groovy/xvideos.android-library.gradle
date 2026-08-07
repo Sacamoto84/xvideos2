@@ -27,24 +27,6 @@ plugins.withId('com.android.library') {
         buildFeatures {
             compose = true
         }
-
-        // Вариант benchmark существует не сам по себе: он объявлен в :app, и без
-        // такого же варианта в каждой библиотеке зависимость не разрешается —
-        // сборка падает ещё на конфигурации.
-        //
-        // В :app этот плагин НЕ применяется, и это не забывчивость. Там
-        // benchmark объявлен после release, потому что `initWith` копирует
-        // состояние release на момент вызова, а release у :app настоящий:
-        // minifyEnabled, proguardFiles, signingConfig. Плагин из блока
-        // plugins {} отработал бы раньше этих строк и скопировал бы пустой
-        // release — benchmark молча лишился бы R8 и подписи. У библиотек release
-        // не настраивается вообще, поэтому порядок им безразличен.
-        buildTypes {
-            benchmark {
-                initWith release
-                matchingFallbacks = ['release']
-            }
-        }
     }
 }
 
