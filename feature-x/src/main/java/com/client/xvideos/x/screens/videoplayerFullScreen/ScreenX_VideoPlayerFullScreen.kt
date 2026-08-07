@@ -80,6 +80,14 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
         // Без звука + старт с переданной позиции, когда медиа готово.
         DisposableEffect(exo) {
             exo.volume = 0f
+            // playWhenReady у ExoPlayer по умолчанию false, и включить его здесь
+            // некому: rememberExoPlayerWithLifecycle только готовит медиа, а
+            // возвращает воспроизведение лишь при ON_RESUME после ухода в фон.
+            // Обычные экраны спасает CMPlayer2 — он выставляет флаг в update
+            // своего AndroidView, но здесь PlayerView собран напрямую.
+            // Без этой строки полный экран открывался, перематывался на
+            // переданную позицию и стоял на паузе.
+            exo.playWhenReady = true
             val listener = object : Player.Listener {
                 private var seeked = false
                 override fun onPlaybackStateChanged(state: Int) {
