@@ -6,8 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import com.client.xvideos.common.theme.LavenderDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,7 +22,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.VisualTransformation
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -214,7 +222,10 @@ internal fun AppLockPasswordDialog(
                 }
 
                 errorText?.let {
-                    Text(it, color = Color(0xFFFF7A7A), style = Theme.L.Type.dialogBody.copy(color = Color(0xFFFF7A7A)))
+                    // Тёмно-красный, а не светлый: диалог стоит на светлом фоне,
+                    // прежний #FF7A7A на нём почти не читался.
+                    val errorColor = Color(0xFFB3261E)
+                    Text(it, color = errorColor, style = Theme.L.Type.dialogBody.copy(color = errorColor))
                 }
             }
         },
@@ -238,6 +249,19 @@ private fun AppLockPasswordDialogPreview() = SettingsPreview {
     )
 }
 
+/**
+ * Поле ввода кода доступа в диалогах настроек.
+ *
+ * Две правки после проверки на устройстве.
+ *
+ * Цвета. Текст был задан белым, а диалог [LavenderDialog] стоит на светлом фоне
+ * — читать написанное было почти нечем. Теперь всё берётся из палитры самого
+ * диалога: тёмный текст, сиреневый акцент на фокусе, серая рамка без него.
+ *
+ * Показ кода. Звёзды стояли всегда и переключателя не было, хотя на экране
+ * замка он есть. Здесь кода не видит никто, кроме владельца телефона, а
+ * вводить вслепую новый код и его повтор — лишний способ ошибиться.
+ */
 @Composable
 fun PasswordSettingField(
     value: String,
@@ -247,19 +271,43 @@ fun PasswordSettingField(
 ) {
     DisableAppLockAutofill()
 
+    var showPassword by rememberSaveable { mutableStateOf(false) }
+    val d = Theme.DialogLavande
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
         label = { Text(label) },
         singleLine = true,
-        visualTransformation = AccessCodeVisualTransformation,
+        visualTransformation =
+            if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Done
         ),
         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() }),
-        textStyle = Theme.L.Type.body.copy(color = Color.White)
+        textStyle = Theme.L.Type.body.copy(color = d.bodyColor),
+        trailingIcon = {
+            IconButton(onClick = { showPassword = !showPassword }) {
+                Icon(
+                    imageVector =
+                        if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription =
+                        if (showPassword) "Скрыть код доступа" else "Показать код доступа",
+                    tint = d.dismissTextColor
+                )
+            }
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = d.bodyColor,
+            unfocusedTextColor = d.bodyColor,
+            cursorColor = d.dismissTextColor,
+            focusedBorderColor = d.dismissTextColor,
+            unfocusedBorderColor = Color(0xFF9A9A9A),
+            focusedLabelColor = d.dismissTextColor,
+            unfocusedLabelColor = Color(0xFF6E6E6E)
+        )
     )
 }
 

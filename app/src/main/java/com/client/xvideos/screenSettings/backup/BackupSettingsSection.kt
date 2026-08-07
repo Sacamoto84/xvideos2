@@ -37,17 +37,17 @@ import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
-import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.r.common.downloader.DownloadRed
+import com.client.xvideos.screenSettings.SettingsDataHolders
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun BackupSettingsSection(
     context: Context,
-    downloadRed: DownloadRed?,
-    savedL: SavedL?,
+    data: SettingsDataHolders,
     onDataChanged: () -> Unit
 ) {
+    val downloadRed = data.downloadRed
+    val savedL = data.savedL
     val scope = rememberCoroutineScope()
     var screen by rememberSaveable { mutableStateOf(BackupFlowScreen.CREATE) }
     var isWorking by rememberSaveable { mutableStateOf(false) }
@@ -285,7 +285,14 @@ internal fun BackupSettingsSection(
                                         .onSuccess { report ->
                                             refreshBackupItems()
                                             onDataChanged()
-                                            SnackBar.success("Backup восстановлен: ${report.files} файлов. Перезапустите приложение.")
+                                            // Восстановление меняет файлы мимо приложения, а
+                                            // SavedRed и BlockRed — синглтоны со списками в
+                                            // памяти: их читают один раз на старте. Без этого
+                                            // раздел R оставался пустым до перезапуска, тогда
+                                            // как X и L перечитывают свои экраны при входе.
+                                            data.savedRed?.refreshAll()
+                                            data.blockRed?.refresh()
+                                            SnackBar.success("Backup восстановлен: ${report.files} файлов")
                                             appendBackupLog("Backup восстановлен: ${report.files} файлов, ${formatBytes(report.bytes)}")
                                             if (autoRecoverL) {
                                                 val lSaved = savedL

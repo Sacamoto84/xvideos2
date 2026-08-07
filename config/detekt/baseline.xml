@@ -34,7 +34,7 @@
     <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val T: String</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$SearchResult$val BLACKLISTED: Boolean? = null // Может отсутствовать</ID>
     <ID>CyclomaticComplexMethod:AppLockSection.kt$@Composable internal fun AppLockPasswordDialog( mode: AppLockDialogMode, onDismiss: () -&gt; Unit, onComplete: () -&gt; Unit )</ID>
-    <ID>CyclomaticComplexMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, downloadRed: DownloadRed?, savedL: SavedL?, onDataChanged: () -&gt; Unit )</ID>
+    <ID>CyclomaticComplexMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, data: SettingsDataHolders, onDataChanged: () -&gt; Unit )</ID>
     <ID>CyclomaticComplexMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
     <ID>CyclomaticComplexMethod:LMediaPersist.kt$internal suspend fun lPersistPicsDetailsToFolder( item: PicsDetails, root: File, luscious: Luscious, progress: LDownloadProgress ): Result&lt;File&gt;</ID>
     <ID>CyclomaticComplexMethod:Repository.kt$Repository$suspend fun openURI( data: String, config: RepositoryUriConfig = RepositoryUriConfig.DIRECT ): Result&lt;String&gt;</ID>
@@ -57,7 +57,7 @@
     <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d:%02d", hours, minutes, seconds)</ID>
     <ID>LongMethod:AlbumFilterDisplay.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -&gt; Unit)</ID>
     <ID>LongMethod:AlbumListFilterGenres.kt$@Composable fun AlbumListFilterGenres( filter: AlbumListFilter, filterGenreStateCount: List&lt;AlbumListFilterGenreCountResponse&gt;?, onChange: (AlbumListFilter) -&gt; Unit )</ID>
-    <ID>LongMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, downloadRed: DownloadRed?, savedL: SavedL?, onDataChanged: () -&gt; Unit )</ID>
+    <ID>LongMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, data: SettingsDataHolders, onDataChanged: () -&gt; Unit )</ID>
     <ID>LongMethod:CanvasTimeDurationLine.kt$@Composable fun CanvasTimeDurationLine1( currentTime: Float, duration: Int, modifier: Modifier = Modifier, timeA: Float = 0f, timeB: Float = 1f, timeABEnable: Boolean, visibleAB: Boolean = true, play: Boolean = false, isBuffering: Boolean = false, onSeek: (Float) -&gt; Unit, // 🔹 при перетаскивании onSeekFinished: (() -&gt; Unit)? = null, // 🔹 когда отпустили isVisibleTime: Boolean = true, isVisibleStep: Boolean = true )</ID>
     <ID>LongMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
     <ID>LongMethod:KeyboardNumber.kt$@Composable fun KeyboardNumber( value: Int, max: Int, theme: KeyboardNumberTheme = KeyboardNumberTheme(), onClick: (Int) -&gt; Unit, )</ID>

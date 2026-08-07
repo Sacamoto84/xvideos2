@@ -112,13 +112,17 @@ fun AppLockScreen(
             } else {
                 password = ""
                 val until = AppLockRepository.registerFailedAttempt(context)
-                val remaining = (until - System.currentTimeMillis()).coerceAtLeast(0L)
-                lockoutRemainingMs = remaining
-                errorText = if (remaining > 0L) {
-                    "Слишком много попыток. Подождите ${ceil(remaining / 1000.0).toInt()} с"
-                } else {
-                    "Неверный код доступа"
-                }
+                lockoutRemainingMs = (until - System.currentTimeMillis()).coerceAtLeast(0L)
+                // Только причина отказа. Про блокировку и оставшиеся секунды
+                // экран рассказывает сам, из lockoutRemainingMs, и обновляет
+                // счётчик каждые полсекунды.
+                //
+                // Раньше сюда клали второй текст: «Слишком много попыток,
+                // подождите N с» — с числом, замороженным на момент ошибки. Пока
+                // блокировка шла, его перекрывал живой счётчик, а как только она
+                // кончалась, замороженный текст всплывал и висел под уже
+                // разблокированным полем.
+                errorText = "Неверный код доступа"
             }
         }
     }

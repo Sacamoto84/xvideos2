@@ -75,6 +75,7 @@ import com.client.xvideos.screenSettings.components.loadStorageStats
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.getFolderSize
 import com.client.xvideos.l.featured.saved.SavedL
+import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -91,6 +92,7 @@ import javax.inject.Inject
 
 class AppSettingsSM @Inject constructor(
     val savedRed: SavedRed,
+    val blockRed: BlockRed,
     val downloadRed: DownloadRed,
     val savedL: SavedL
 ) : ScreenModel
@@ -170,9 +172,12 @@ object AppSettingsScreen : Screen {
                     SnackBar.success("Папка Download очищена")
                 }
             },
-            savedRed = vm.savedRed,
-            downloadRed = vm.downloadRed,
-            savedL = vm.savedL,
+            data = SettingsDataHolders(
+                savedRed = vm.savedRed,
+                blockRed = vm.blockRed,
+                downloadRed = vm.downloadRed,
+                savedL = vm.savedL
+            ),
             context = context,
             onBackupDataChanged = refreshFileStats,
             onRefreshFileStats = refreshFileStats
@@ -189,9 +194,7 @@ private fun AppSettingsScreenContent(
     sizeRedDownload: Long,
     onClearImageCache: () -> Unit,
     onClearDownload: () -> Unit,
-    savedRed: SavedRed?,
-    downloadRed: DownloadRed?,
-    savedL: SavedL?,
+    data: SettingsDataHolders,
     context: Context,
     onBackupDataChanged: () -> Unit,
     onRefreshFileStats: () -> Unit
@@ -256,9 +259,7 @@ private fun AppSettingsScreenContent(
             sizeRedDownload = sizeRedDownload,
             onClearImageCache = onClearImageCache,
             onClearDownload = onClearDownload,
-            savedRed = savedRed,
-            downloadRed = downloadRed,
-            savedL = savedL,
+            data = data,
             context = context,
             onBackupDataChanged = onBackupDataChanged
         )
@@ -276,9 +277,7 @@ private fun AppSettingsScreenBody(
     sizeRedDownload: Long,
     onClearImageCache: () -> Unit,
     onClearDownload: () -> Unit,
-    savedRed: SavedRed?,
-    downloadRed: DownloadRed?,
-    savedL: SavedL?,
+    data: SettingsDataHolders,
     context: Context,
     onBackupDataChanged: () -> Unit
 ) {
@@ -287,10 +286,10 @@ private fun AppSettingsScreenBody(
     val diskCacheSizeMb = Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle().value
     val l_login = Settings.l_login.field.collectAsStateWithLifecycle().value
 
-    val isNichesCacheDownloading = savedRed?.nichesCache?.isDownloading ?: false
-    val nichesCacheProgress = savedRed?.nichesCache?.progress ?: 0f
-    val nichesCacheSize = savedRed?.nichesCache?.list?.size ?: 0
-    val nichesCacheLastModifiedHour = savedRed?.nichesCache?.lastModifiedHour ?: 0L
+    val isNichesCacheDownloading = data.savedRed?.nichesCache?.isDownloading ?: false
+    val nichesCacheProgress = data.savedRed?.nichesCache?.progress ?: 0f
+    val nichesCacheSize = data.savedRed?.nichesCache?.list?.size ?: 0
+    val nichesCacheLastModifiedHour = data.savedRed?.nichesCache?.lastModifiedHour ?: 0L
 
     Column(
         modifier = modifier
@@ -339,8 +338,8 @@ private fun AppSettingsScreenBody(
                     sizeRedTotal = sizeRedTotal,
                     sizeRedDownload = sizeRedDownload,
                     onClearDownload = onClearDownload,
-                    savedRed = savedRed,
-                    downloadRed = downloadRed,
+                    savedRed = data.savedRed,
+                    downloadRed = data.downloadRed,
                     isNichesCacheDownloading = isNichesCacheDownloading,
                     nichesCacheProgress = nichesCacheProgress,
                     nichesCacheSize = nichesCacheSize,
@@ -350,8 +349,7 @@ private fun AppSettingsScreenBody(
                 SettingsPage.Storage -> StorageStatisticsSection(storageStats)
                 SettingsPage.Backup -> BackupSettingsSection(
                     context = context,
-                    downloadRed = downloadRed,
-                    savedL = savedL,
+                    data = data,
                     onDataChanged = onBackupDataChanged
                 )
                 SettingsPage.P2P -> P2PSettingsSection()
@@ -487,9 +485,7 @@ private fun AppSettingsScreenPreview() {
                 sizeRedDownload = 64_000_000L,
                 onClearImageCache = {},
                 onClearDownload = {},
-                savedRed = null,
-                downloadRed = null,
-                savedL = null,
+                data = SettingsDataHolders(),
                 context = context.applicationContext,
                 onBackupDataChanged = {}
             )

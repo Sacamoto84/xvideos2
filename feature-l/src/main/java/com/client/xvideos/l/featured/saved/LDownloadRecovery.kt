@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.io.IOException
 
 data class LDownloadRecoveryReport(
     val totalMetadataFiles: Int = 0,
@@ -150,11 +151,33 @@ private fun LSavedLikeMetadata.previewRecoveryFiles(folder: File): List<LRecover
     return previews.distinctBy { it.target.absolutePath }
 }
 
+/**
+ * Возвращает файл на место: копирует с диска, если источник локальный, и качает,
+ * если это адрес.
+ *
+ * Разделение по схеме, а не по «нашлось локально» — и это чинит дефект. Раньше
+ * локальный путь, файла по которому уже нет (обычное дело после восстановления
+ * бэкапа на другом устройстве), проваливался в сетевую ветку. Ktor получал
+ * строку без схемы и хоста, достраивал её до `http://localhost/...`, и наружу
+ * приходило
+ *
+ *     CLEARTEXT communication to localhost not permitted by network security policy
+ *
+ * — сообщение, которое уводит в сторону: запрет открытого HTTP тут ни при чём и
+ * снимать его не надо. Теперь такой случай честно говорит, что исходного файла
+ * нет, и в сеть не лезет.
+ */
 private suspend fun lRestoreSourceToFile(client: io.ktor.client.HttpClient, source: String, target: File) {
-    source.lToLocalFileOrNull()?.let { localFile ->
+    val isRemote = source.startsWith("http://", ignoreCase = true) ||
+            source.startsWith("https://", ignoreCase = true)
+
+    if (!isRemote) {
+        val localFile = source.lToLocalFileOrNull()
+            ?: throw IOException("исходный файл не найден: $source")
         target.parentFile?.mkdirs()
         localFile.copyTo(target, overwrite = true)
         return
     }
+
     lDownloadToFile(client, source, target)
 }
