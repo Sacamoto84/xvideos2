@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Animation
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
@@ -120,6 +121,26 @@ fun UrlImage(
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(sizeButtonIcon)
+            )
+        }
+        return
+    }
+
+    // Пустая строка — не адрес. Coil трактует её как локальный файл и падает с
+    // `filePath == null`, а сообщение уезжало пользователю в текст ошибки.
+    // Так выглядят записи, потерявшие поля: избранное X, сохранённое старой
+    // сборкой с обфускацией, читается в объект со значениями по умолчанию —
+    // Gson сопоставляет поля по именам, а в файле лежат `a`, `b`, `c`.
+    if (url.isBlank()) {
+        Box(
+            modifier = modifier.background(backgroung),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.BrokenImage,
                 contentDescription = null,
                 tint = Color.Gray,
                 modifier = Modifier.size(sizeButtonIcon)
@@ -323,7 +344,19 @@ fun UrlImage(
             is AsyncImagePainter.State.Success -> { }
 
             is AsyncImagePainter.State.Error -> {
-                Box( modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center ) { Text("Ошибка загрузки:\n${(state as AsyncImagePainter.State.Error).result.throwable.message}", color = Color.Gray) }
+                // Текст исключения был виден пользователю прямо в карточке
+                // («Ошибка загрузки: filePath == null»). Подробность нужна в
+                // журнале, на экране достаточно значка.
+                val error = (state as AsyncImagePainter.State.Error).result.throwable
+                LaunchedEffect(url, error) { Timber.w(error, "!!! UrlImage load failed url:%s", url) }
+                Box( modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center ) {
+                    Icon(
+                        imageVector = Icons.Default.BrokenImage,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(sizeButtonIcon)
+                    )
+                }
             }
         }
 
