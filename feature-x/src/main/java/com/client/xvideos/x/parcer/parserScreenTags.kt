@@ -15,6 +15,15 @@ fun parserScreenTags(html: String): ModelScreenTag {
     val title0 = pageTitle?.ownText() ?: "?"                       // Текст внутри h2 без дочерних элементов
     val title1 = pageTitle?.selectFirst("span.sub")?.text() ?: "?" // Текст внутри span.sub
 
+    // Число страниц выдачи. Последняя помечена классом:
+    //     <li><a href="/tags/public/148" class="last-page">149</a></li>
+    // Когда страниц мало, весь список умещается целиком и last-page не ставится —
+    // тогда берём наибольшую числовую метку. Нет блока вовсе — одна страница.
+    val pagination = document.selectFirst("div.pagination")
+    val lastPage = pagination?.selectFirst("a.last-page")?.text()?.trim()?.toIntOrNull()
+        ?: pagination?.select("a")?.mapNotNull { it.text().trim().toIntOrNull() }?.maxOrNull()
+        ?: 1
+
     val container = document.selectFirst("#content > div.mozaique.cust-nb-cols")
     val videos = container?.select("div.frame-block.thumb-block")
 
@@ -52,5 +61,5 @@ fun parserScreenTags(html: String): ModelScreenTag {
         )
     }
 
-    return ModelScreenTag(title0 = title0, title1 = title1, items = listItems)
+    return ModelScreenTag(title0 = title0, title1 = title1, items = listItems, lastPage = lastPage)
 }

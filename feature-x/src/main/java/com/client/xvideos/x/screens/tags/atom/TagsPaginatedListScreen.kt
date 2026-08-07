@@ -9,9 +9,17 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,25 +27,55 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
+import kotlinx.coroutines.CancellationException
+import timber.log.Timber
 
 /**
- * Список видео по тегу.
+ * Одна страница выдачи по тегу.
  *
- * Раньше экран был заглушкой: список создавался пустым (`mutableStateListOf()`),
- * заполнявший его `LaunchedEffect` стоял закомментированным, а разобранные
- * `ScreenTagsViewModel`-ом элементы сюда не передавались вовсе. Заголовок и
- * счётчик результатов рисовались, список оставался пуст всегда — с первого
- * коммита.
+ * Страницу грузит сама — так же, как `DashboardsPaginatedListScreen` в ленте
+ * раздела: пейджер отдаёт только номер, а соседние страницы готовятся заранее
+ * через `beyondViewportPageCount`.
  *
- * Постраничности здесь нет: `parserScreenTags` разбирает одну страницу выдачи,
- * и экран показывает ровно её. Прежний параметр `pageIndex` ни на что не влиял
- * (вызывался с жёстким `0`) и убран, чтобы не обещать несуществующего.
+ * Раньше экран был заглушкой: список создавался пустым, заполнявший его
+ * `LaunchedEffect` стоял закомментированным, а разобранные элементы сюда не
+ * передавались вовсе.
  */
 @Composable
 fun TagsPaginatedListScreen(
-    items: List<ItemsX>,
+    pageIndex: Int,
+    loadPage: suspend (Int) -> List<ItemsX>,
     onOpenVideo: (ItemsX) -> Unit,
 ) {
+
+    var items by remember(pageIndex) { mutableStateOf<List<ItemsX>?>(null) }
+    var failed by remember(pageIndex) { mutableStateOf(false) }
+
+    LaunchedEffect(pageIndex) {
+        // Отказ сети обязан оставаться на этом экране. Непойманное исключение в
+        // корутине роняет приложение целиком, а страниц здесь грузится сразу
+        // несколько: соседние готовятся заранее через beyondViewportPageCount.
+        try {
+            items = loadPage(pageIndex)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "!!! Страница тега %d не загрузилась", pageIndex)
+            failed = true
+        }
+    }
+
+    val loaded = items
+    if (loaded == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (failed) {
+                Text("Страница не загрузилась", color = Color.Gray)
+            } else {
+                CircularProgressIndicator(modifier = Modifier.size(40.dp))
+            }
+        }
+        return
+    }
 
     val itemsPerRow = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
 
@@ -45,7 +83,7 @@ fun TagsPaginatedListScreen(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(items.chunked(itemsPerRow))
+        items(loaded.chunked(itemsPerRow))
         { row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEachIndexed { index, cell ->

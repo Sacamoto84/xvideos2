@@ -162,4 +162,91 @@ class XParsersTest {
             parserVideoPreviewFromImageUrl(image)
         )
     }
+
+    // --- parserScreenTags: число страниц -------------------------------------
+
+    /**
+     * Разметка сокращена с живой страницы `/tags/public`: та же вложенность и
+     * те же классы, выброшены только промежуточные номера.
+     */
+    private fun paginationHtml(body: String) = """
+        <html><body>
+          <h2 class="page-title">public<span class="sub">Видео с тегом « public » (17 417 результаты)</span></h2>
+          <div class="pagination "><ul>$body</ul></div>
+          <div id="content">
+            <div class="mozaique cust-nb-cols"></div>
+          </div>
+        </body></html>
+    """.trimIndent()
+
+    /** Последняя страница помечена классом — берём её метку, а не число ссылок. */
+    @Test
+    fun `число страниц читается из last-page`() {
+        val html = paginationHtml(
+            """
+            <li><a class="active" href="">1</a></li>
+            <li><a href="/tags/public/1">2</a></li>
+            <li class="no-page"><a href="#" class="ellipsis last-ellipsis">...</a>
+            <li><a href="/tags/public/148" class="last-page">149</a></li>
+            <li><a href="/tags/public/1" class="no-page next-page"><span>Следующий</span></a></li>
+            """.trimIndent()
+        )
+
+        assertEquals(149, parserScreenTags(html).lastPage)
+    }
+
+    /** Страниц мало — список умещается целиком, last-page сайт не ставит. */
+    @Test
+    fun `без last-page берётся наибольшая метка`() {
+        val html = paginationHtml(
+            """
+            <li><a class="active" href="">1</a></li>
+            <li><a href="/tags/rare/1">2</a></li>
+            <li><a href="/tags/rare/2">3</a></li>
+            <li><a href="/tags/rare/1" class="no-page next-page"><span>Следующий</span></a></li>
+            """.trimIndent()
+        )
+
+        assertEquals(3, parserScreenTags(html).lastPage)
+    }
+
+    /** Блока постраничности нет вовсе — страница одна, а не ноль. */
+    @Test
+    fun `без блока постраничности страница одна`() {
+        val html = """
+            <html><body>
+              <h2 class="page-title">rare<span class="sub">Видео с тегом « rare »</span></h2>
+              <div id="content"><div class="mozaique cust-nb-cols"></div></div>
+            </body></html>
+        """.trimIndent()
+
+        assertEquals(1, parserScreenTags(html).lastPage)
+    }
+
+    /** Заголовок и карточки разбираются по-прежнему. */
+    @Test
+    fun `заголовок и карточки страницы тега разбираются`() {
+        val html = paginationHtml(
+            """<li><a href="/tags/public/148" class="last-page">149</a></li>"""
+        ).replace(
+            """<div class="mozaique cust-nb-cols"></div>""",
+            """
+            <div class="mozaique cust-nb-cols">
+              <div data-id="70057387" class="frame-block thumb-block  ">
+                <p class="title"><a href="/video.uicfdab07bd/_" title="Название">Название</a>
+                  <span class="duration">10 мин.</span></p>
+                <p class="metadata"><a href="/channels/some" class="name">Some</a></p>
+                <img data-src="https://thumbs-gcore.xvideos-cdn.com/abc/0/xv_18_t.jpg">
+              </div>
+            </div>
+            """.trimIndent()
+        )
+
+        val screen = parserScreenTags(html)
+
+        assertEquals("public", screen.title0)
+        assertEquals(1, screen.items.size)
+        assertEquals(70057387L, screen.items[0].id)
+        assertEquals("/video.uicfdab07bd/_", screen.items[0].href)
+    }
 }

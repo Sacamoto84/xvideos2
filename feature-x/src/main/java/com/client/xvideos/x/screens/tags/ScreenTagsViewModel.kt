@@ -19,9 +19,11 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class ScreenTagsViewModel @AssistedInject constructor(
     @Assisted val tag: String,
@@ -41,10 +43,30 @@ class ScreenTagsViewModel @AssistedInject constructor(
         // блокировал поток создания ScreenModel (UI-поток) → ANR на медленной сети.
         // Теперь грузим в screenModelScope, а тяжёлый парсинг уводим на Dispatchers.Default.
         screenModelScope.launch {
-            val url = "$urlStart/tags/$tag"
-            val html = readHtmlFromURLDirect(url)
-            screen = withContext(Dispatchers.Default) { parserScreenTags(html) }
+            // Непойманное исключение здесь роняет приложение целиком: это launch
+            // без обработчика. Заголовок и число страниц не настолько важны,
+            // чтобы платить за них падением — сами страницы грузит пейджер.
+            try {
+                screen = loadPage(0)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "!!! Заголовок тега %s не загрузился", tag)
+            }
         }
+    }
+
+    /**
+     * Разбор страницы выдачи с номером [index] (считается с нуля).
+     *
+     * Нулевая страница грузится дважды: здесь, в [init], ради заголовка и числа
+     * страниц, и ещё раз первой страницей пейджера. Принято сознательно —
+     * убирать кэшем в сетевом слое, если понадобится.
+     */
+    suspend fun loadPage(index: Int): ModelScreenTag {
+        // Страницы адресуются /tags/<тег>/N; /tags/<тег> и /tags/<тег>/0 — одно и то же.
+        val html = readHtmlFromURLDirect("$urlStart/tags/$tag/$index")
+        return withContext(Dispatchers.Default) { parserScreenTags(html) }
     }
 }
 

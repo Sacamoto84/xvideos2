@@ -78,7 +78,11 @@ private val height = 48.dp
 fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, max: Int) {
 
 
-    val list = remember { List(max) { it + 1 } }
+    // remember с ключом: на экране тега число страниц становится известно только
+    // после разбора первой, то есть max меняется с 1 на настоящее значение. Без
+    // ключа ряд навсегда оставался бы с одной кнопкой. В ленте раздела max —
+    // константа, там поведение прежнее.
+    val list = remember(max) { List(max) { it + 1 } }
 
     val state = rememberLazyListState()
     LaunchedEffect(value) {
