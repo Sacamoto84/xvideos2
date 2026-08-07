@@ -69,11 +69,16 @@ java.net.UnknownHostException: Unable to resolve host "hls-cdn77.xvideos-cdn.com
 Suppressed: DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}, Dispatchers.IO]
 ```
 
-Хост видео-CDN, то есть прилетело из плеера, открытого в тот момент. Причина
-общая: сетевой вызов в `launch(Dispatchers.IO)` без обработчика — любое
-исключение убивает процесс. На экране тега это закрыто (`9be26ba`), в
-остальных местах нет. Пройти по всем `launch` с сетью внутри — отдельная
-задача; отказ сети обязан оставаться на своём экране.
+Источник — `M3U8Helper.fetchM3U8Data`: `client.get(url).bodyAsText()` стоял в
+`try/finally` без `catch`, вызывался из `MediaPlayerHost` через
+`scope.launch(Dispatchers.IO)`. Разбор списка качеств HLS ронял всё
+приложение.
+
+Закрыто в `e3ceabd`: заведён `launchCatching`, переведены места, где сетевое
+исключение выходило наружу (`MediaPlayerHost`, оба плеера X, `ScreenNicheSM`,
+смена страны), `SearchTab` обёрнут на каждый запрос — обёртка вокруг всего
+`launch` завершила бы подписку поиска. Остальные `launch` с сетью работают
+через `Result` и падения не давали.
 
 **Снимок экрана — не доказательство.** Полный экран сначала был засчитан по
 одному снимку: экран открылся, контролы на месте — принято. На деле картинка
