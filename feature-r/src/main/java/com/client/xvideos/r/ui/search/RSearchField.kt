@@ -30,7 +30,19 @@ fun RSearchTextField(
     CustomBasicTextFieldContent(
         modifier = modifier,
         value = text,
-        onValueChange = { search.searchText.value = it },
+        onValueChange = { newValue ->
+            search.searchText.value = newValue
+            // Пустая строка — единственное значение, которое применяется без
+            // подтверждения. Подтверждать нечего: «ничего не искать» — это не
+            // запрос, а его отсутствие.
+            //
+            // Иначе выйти из фильтрации было нельзя: стёр текст руками, а лента
+            // и список ниш остались отфильтрованы прежним запросом — они читают
+            // searchTextDone, а он менялся только по onDone.
+            if (newValue.text.isBlank()) {
+                search.searchTextDone.value = ""
+            }
+        },
         suggestions = { searchTagSuggestions },
         onSuggestionClick = { suggestion ->
             search.searchText.value =
@@ -46,6 +58,10 @@ fun RSearchTextField(
         },
         onClearClick = {
             search.searchText.value = TextFieldValue(text = "", selection = TextRange(0))
+            // Кнопка «стереть» снимает и фильтр. Раньше она чистила только
+            // отображаемый текст, и запрос продолжал действовать: поле пустое,
+            // а выдача отфильтрована — вернуться к полному списку было нечем.
+            search.searchTextDone.value = ""
         },
         onUndoClick = {
             if (search.stack.isNotEmpty()) {
