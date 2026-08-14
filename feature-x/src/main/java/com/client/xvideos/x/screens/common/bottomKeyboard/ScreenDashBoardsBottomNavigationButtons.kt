@@ -125,7 +125,7 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
                 .weight(1f), state = state
         ) {
 
-            items(list) {
+            items(list, key = { it }) {
                 Box(
                     modifier = Modifier
                         .padding(horizontal = (0.5).dp)

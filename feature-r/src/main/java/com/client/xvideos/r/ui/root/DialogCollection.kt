@@ -70,7 +70,7 @@ private fun ColumnScope.CollectionListContent(
         state = rememberLazyListState(),
         modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp, max = 420.dp)
     ) {
-        items(collectionList) { item ->
+        items(collectionList, key = { it.collection }) { item ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

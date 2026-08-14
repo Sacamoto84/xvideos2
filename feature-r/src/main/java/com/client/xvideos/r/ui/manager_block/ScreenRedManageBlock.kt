@@ -54,7 +54,7 @@ class ScreenRedManageBlock() : Screen {
                     .fillMaxSize()
             ) {
 
-                items(blockList) { item ->
+                items(blockList, key = { it.id }) { item ->
                     Row(
                         modifier = Modifier.padding(vertical = 4.dp).fillMaxWidth().height(128.dp).background(Color.Transparent)
                             .border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))

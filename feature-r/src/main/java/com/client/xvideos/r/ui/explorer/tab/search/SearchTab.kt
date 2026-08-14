@@ -94,7 +94,7 @@ fun SearchTabContent(
         }
     ) { paddingValues ->
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            items(creatorsList) { item ->
+            items(creatorsList, key = { it.text }) { item ->
                 SearchCreatorItem(item)
             }
         }

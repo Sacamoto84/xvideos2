@@ -58,7 +58,7 @@ fun AlbumListFilterTags(
         //HorizontalDivider()
 
         LazyColumn {
-            items(tagsPlus) {
+            items(tagsPlus, key = { it }) {
                 Text(
                     it,
                     color = StyleGenresTags.colorSelectTextItem,
@@ -75,7 +75,7 @@ fun AlbumListFilterTags(
                 )
             }
 
-            items(tagsMinus) {
+            items(tagsMinus, key = { it }) {
 
                 val s = buildAnnotatedString {
                     withStyle(SpanStyle( color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) { append("NOT") }
@@ -109,7 +109,7 @@ fun AlbumListFilterTags(
                     .background(palette.panelBlack)
                 ) {
                     item{ Spacer(Modifier.height(0.dp)) }
-                    items(tagsCorrect.size) {
+                    items(count = tagsCorrect.size, key = { tagsCorrect[it] }) {
                         val item = tagsCorrect[it]
 
                             Row(

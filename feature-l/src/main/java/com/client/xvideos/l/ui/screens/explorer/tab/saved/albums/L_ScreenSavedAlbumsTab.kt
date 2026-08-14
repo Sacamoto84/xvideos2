@@ -76,7 +76,7 @@ object L_ScreenSavedAlbumsTab : Screen {
                             Box( modifier = Modifier.displayCutoutPadding() )
                         }
 
-                        items(vm.albums) {
+                        items(vm.albums, key = { it.id }) {
                             val albumId = it.id.toLongOrNull()
                             AlbumListItem(
                                 title = it.title,

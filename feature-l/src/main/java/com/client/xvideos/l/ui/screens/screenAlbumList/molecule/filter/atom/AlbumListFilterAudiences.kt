@@ -75,7 +75,7 @@ fun AlbumListFilterAudiences(
                     )
                 }
 
-                items(audiences) { item ->
+                items(audiences, key = { it.id }) { item ->
                     val selected = !isAllSelected && item.id in selectedIds
                     AudienceOptionRow(
                         title = item.title,

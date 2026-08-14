@@ -91,7 +91,7 @@ fun CollectionsGrid(
                 state = gridState,
                 columns = GridCells.Fixed(2)
             ) {
-                items(collections) { collection ->
+                items(collections, key = { it.name }) { collection ->
                     Row(
                         modifier = Modifier.fillMaxWidth()
                             .padding(horizontal = 8.dp)

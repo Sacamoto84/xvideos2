@@ -149,7 +149,7 @@ private fun FavoritesContent(
             // уезжала под заголовок «Избранное».
             modifier = Modifier.padding(padding)
         ) {
-            items(favorites) { item ->
+            items(favorites, key = { it.id }) { item ->
                 FavoriteRow(
                     item = item,
                     localUrl = localUrlOf(item),

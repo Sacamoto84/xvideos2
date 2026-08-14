@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,8 +84,11 @@ fun TagsPaginatedListScreen(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(loaded.chunked(itemsPerRow))
-        { row ->
+        // Ключ с индексом, а не голый id: страницы тегов парсятся из HTML и один
+        // и тот же ролик может встретиться на нескольких страницах — дублирующийся
+        // ключ уронил бы список.
+        itemsIndexed(loaded.chunked(itemsPerRow), key = { index, row -> "${index}_${row.first().id}" })
+        { _, row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEachIndexed { index, cell ->
                     Box(

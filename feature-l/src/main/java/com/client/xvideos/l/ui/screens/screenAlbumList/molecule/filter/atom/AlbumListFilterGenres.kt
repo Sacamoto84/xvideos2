@@ -73,7 +73,7 @@ fun AlbumListFilterGenres(
             modifier = Modifier.padding(top = 1.dp)
             //contentPadding= PaddingValues(4.dp)
         ) {
-            items(genresPlus) {
+            items(genresPlus, key = { it.title }) {
                 Text(
                     it.title,
                     color = StyleGenresTags.colorSelectTextItem,
@@ -89,7 +89,7 @@ fun AlbumListFilterGenres(
                 )
             }
 
-            items(genresMinus) {
+            items(genresMinus, key = { it.title }) {
 
                 val s = buildAnnotatedString {
                     withStyle(SpanStyle( color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) { append("NOT") }
@@ -128,7 +128,7 @@ fun AlbumListFilterGenres(
 
                     item{ Spacer(Modifier.height(0.dp)) }
 
-                    items(genresPlusCorrect.size) {
+                    items(count = genresPlusCorrect.size, key = { genresPlusCorrect[it].title }) {
                         val item = genresPlusCorrect[it]
 
                             Row(

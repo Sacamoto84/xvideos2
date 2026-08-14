@@ -72,7 +72,10 @@ fun L_DialogCollection(savedL: SavedL) {
                 state = rememberLazyListState(),
                 modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp, max = 420.dp)
             ) {
-                items(savedL.collection.collectionList.size) { index ->
+                items(
+                    count = savedL.collection.collectionList.size,
+                    key = { index -> savedL.collection.collectionList[index].collection },
+                ) { index ->
                     val collectionItem = savedL.collection.collectionList[index]
                     Row(
                         modifier = Modifier

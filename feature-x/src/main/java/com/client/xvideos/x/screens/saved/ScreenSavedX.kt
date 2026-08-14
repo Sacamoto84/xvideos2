@@ -100,7 +100,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
             }
         } else {
             LazyColumn {
-                items(list) { item ->
+                items(list, key = { it.id }) { item ->
                     val posterUrl = remember(item.id) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
                     }
