@@ -13,17 +13,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.platform.LocalView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.ScaleAndRotateTransformation
-import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.compose.ContentFrame
 import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerError
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
-import com.client.xvideos.common.videoplayer.rememberPlayerView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
@@ -51,7 +51,7 @@ fun CMPPlayer2(
     drmConfig: DrmConfig?,
     selectedQuality: VideoQuality?,
     autoRotate: Boolean, // можно менять как нужно
-    poster : (Boolean) -> Unit
+    poster: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val minBufferMs = 12_000
@@ -73,9 +73,6 @@ fun CMPPlayer2(
         bufferForPlaybackAfterRebufferM = 100,
     )
 
-
-    val playerView = rememberPlayerView(exoPlayer, context)
-
     var isBuffering by remember { mutableStateOf(false) }
 
     LaunchedEffect(isBuffering) {
@@ -89,37 +86,40 @@ fun CMPPlayer2(
                 delay(50)
             }
         }.collectLatest { currentTime(it) }
-
     }
 
     LaunchedEffect(autoRotate) {
-        val rotateEffect = ScaleAndRotateTransformation.Builder().setRotationDegrees(if (autoRotate) -90f else 0f).build()
+        val rotateEffect = ScaleAndRotateTransformation.Builder()
+            .setRotationDegrees(if (autoRotate) -90f else 0f).build()
         exoPlayer.setVideoEffects(listOf(rotateEffect))
     }
 
-    // Экран не гасим только пока реально идёт воспроизведение. Раньше флаг
-    // выставлялся один раз и не снимался никогда: на паузе (и после ухода с
-    // экрана) устройство всё равно не засыпало.
-    DisposableEffect(playerView, isPause) {
-        playerView.keepScreenOn = !isPause
-        onDispose { playerView.keepScreenOn = false }
+    // Раньше эти четыре строки жили в `update` у AndroidView. Теперь это обычные
+    // эффекты: применяются при изменении своего входа, а не на каждый layout.
+    LaunchedEffect(exoPlayer, isPause) { exoPlayer.playWhenReady = !isPause }
+    LaunchedEffect(exoPlayer, volume) { exoPlayer.volume = volume }
+    LaunchedEffect(exoPlayer, speed) { exoPlayer.setPlaybackSpeed(speed.toFloat()) }
+    LaunchedEffect(exoPlayer, seekToTime) {
+        seekToTime?.let { exoPlayer.seekTo((it * 1000).toLong()) }
+    }
+
+    // Экран не гасим только пока реально идёт воспроизведение.
+    val view = LocalView.current
+    DisposableEffect(view, isPause) {
+        view.keepScreenOn = !isPause
+        onDispose { view.keepScreenOn = false }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
-        AndroidView(
-            factory = { playerView },
+        ContentFrame(
+            player = exoPlayer,
             modifier = modifier,
-            update = {
-                exoPlayer.playWhenReady = !isPause
-                exoPlayer.volume = volume
-                seekToTime?.let { exoPlayer.seekTo((it * 1000).toLong()) }
-                exoPlayer.setPlaybackSpeed(speed.toFloat())
-                playerView.resizeMode = when (size) {
-                    ScreenResize.FIT -> AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    ScreenResize.FILL -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                }
-            }
+            contentScale = when (size) {
+                ScreenResize.FIT -> ContentScale.Fit
+                ScreenResize.FILL -> ContentScale.Crop
+            },
+            keepContentOnReset = true,
         )
 
         // Manage player listener and lifecycle
@@ -138,14 +138,13 @@ fun CMPPlayer2(
             exoPlayer.addListener(listener)
 
             onDispose {
-                // P3: release() выполняет создатель плеера (rememberExoPlayerWithLifecycle).
+                // release() выполняет создатель плеера (rememberExoPlayerWithLifecycle).
                 // Здесь только снимаем слушатель и останавливаем воспроизведение.
                 exoPlayer.stop()
                 exoPlayer.clearMediaItems()
                 exoPlayer.removeListener(listener)
             }
         }
-
     }
 }
 
