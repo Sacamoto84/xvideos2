@@ -3,6 +3,9 @@ package com.client.xvideos.common.videoplayer.feed
 import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.OptIn
+import androidx.collection.MutableIntList
+import androidx.collection.MutableIntObjectMap
+import androidx.collection.MutableIntSet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -100,8 +103,12 @@ class FeedPlayerState(
      * к тому времени, когда индекс покидает окно, пейджинг уже мог выбросить
      * этот элемент из списка — url не найдётся, `remove` не вызовется, и
      * источник останется в preload-менеджере навсегда. Поэтому помним сами.
+     *
+     * `MutableIntObjectMap` вместо `Map<Int, _>`: ключ — примитивный индекс, и
+     * на каждом свайпе окно прогрева правится целыми диапазонами. Обычная мапа
+     * боксила бы каждый индекс в `Integer`.
      */
-    private val preloadedItems = mutableMapOf<Int, MediaItem>()
+    private val preloadedItems = MutableIntObjectMap<MediaItem>()
 
     /**
      * Ключ элемента для preload-менеджера. `mediaId` — позиция в ленте (по нему
@@ -149,7 +156,7 @@ class FeedPlayerState(
      * окно, ради которого фича делалась, остаётся холодным. Помним такие
      * индексы и догреваем их из [retryPending], когда данные приедут.
      */
-    private val pendingIndices = mutableSetOf<Int>()
+    private val pendingIndices = MutableIntSet()
 
     /** Элементы вошли в окно вокруг текущей страницы. `urlAt` возвращает null, если элемент ещё не подгружен пейджингом. */
     fun addRange(indices: IntRange, urlAt: (Int) -> String?) {
@@ -169,18 +176,19 @@ class FeedPlayerState(
     /** Догреть индексы, у которых url не было в момент входа в окно. */
     fun retryPending(urlAt: (Int) -> String?) {
         if (pendingIndices.isEmpty()) return
-        var added = false
-        val iterator = pendingIndices.iterator()
-        while (iterator.hasNext()) {
-            val index = iterator.next()
-            val url = urlAt(index) ?: continue
+        // Снимаем добавленное отдельным проходом: править множество во время
+        // обхода нельзя, а у `MutableIntSet` нет итератора с remove().
+        val resolved = MutableIntList()
+        pendingIndices.forEach { index ->
+            val url = urlAt(index) ?: return@forEach
             val mediaItem = mediaItemFor(index, url)
             preloadManager.add(mediaItem, index)
             preloadedItems[index] = mediaItem
-            iterator.remove()
-            added = true
+            resolved += index
         }
-        if (added) preloadManager.invalidate()
+        if (resolved.isEmpty()) return
+        resolved.forEach { index -> pendingIndices -= index }
+        preloadManager.invalidate()
     }
 
     /** Элементы вышли из окна — снимаем с прогрева по собственному учёту. */

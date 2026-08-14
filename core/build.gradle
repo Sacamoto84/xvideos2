@@ -123,6 +123,9 @@ dependencies {
     implementation libs.disk.lru.cache
     implementation libs.volley
     api libs.kotlinx.collections.immutable
+    // Примитивные коллекции без боксинга (IntSet/IntObjectMap) — для горячих
+    // путей вроде окна предзагрузки ленты. Наружу не выходят, потому implementation.
+    implementation libs.androidx.collection
     api libs.components.resources
     api(libs.core)
 
