@@ -1,5 +1,6 @@
 package com.client.xvideos.common.videoplayer.util
 
+import android.view.View
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -103,11 +104,19 @@ fun CMPPlayer2(
         seekToTime?.let { exoPlayer.seekTo((it * 1000).toLong()) }
     }
 
-    // Экран не гасим только пока реально идёт воспроизведение.
+    // Экран не гасим только пока реально идёт воспроизведение. Флаг живёт на
+    // host-view всей Compose-иерархии, а плееров на экране может быть несколько
+    // (списки с UrlVideoLite), поэтому считаем играющих: снимать флаг можно лишь
+    // когда замолчал последний. Раньше он висел на своём PlayerView и такой
+    // проблемы не было.
     val view = LocalView.current
     DisposableEffect(view, isPause) {
-        view.keepScreenOn = !isPause
-        onDispose { view.keepScreenOn = false }
+        if (isPause) {
+            onDispose { }
+        } else {
+            KeepScreenOnCounter.acquire(view)
+            onDispose { KeepScreenOnCounter.release(view) }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
@@ -144,6 +153,32 @@ fun CMPPlayer2(
                 exoPlayer.clearMediaItems()
                 exoPlayer.removeListener(listener)
             }
+        }
+    }
+}
+
+/**
+ * Счётчик играющих плееров на одном host-view: `keepScreenOn` — свойство view,
+ * а не плеера, поэтому владельцев у флага может быть несколько.
+ * Только главный поток — Compose-эффекты выполняются на нём.
+ */
+private object KeepScreenOnCounter {
+
+    private val counts = mutableMapOf<View, Int>()
+
+    fun acquire(view: View) {
+        val next = (counts[view] ?: 0) + 1
+        counts[view] = next
+        view.keepScreenOn = true
+    }
+
+    fun release(view: View) {
+        val next = (counts[view] ?: 1) - 1
+        if (next <= 0) {
+            counts.remove(view)
+            view.keepScreenOn = false
+        } else {
+            counts[view] = next
         }
     }
 }
