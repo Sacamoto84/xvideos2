@@ -107,12 +107,18 @@ class FeedPlayerState(
      * Ключ элемента для preload-менеджера. `mediaId` — позиция в ленте (по нему
      * менеджер удаляет элементы), `customCacheKey` — сам url, чтобы дисковый кеш
      * переживал перетасовку списка.
+     *
+     * Для HLS `customCacheKey` не ставим: адаптивным потокам его запрещает
+     * `DownloadRequest` (`customCacheKey must be null for type: 2`), а до него
+     * доходит `PreCacheHelper` на уровне прогрева `specifiedRangeCached` —
+     * с ключом приложение падало на первом же дальнем элементе ленты. Плейлист
+     * и сегменты HLS кешируются по своим адресам, отдельный ключ им не нужен.
      */
     fun mediaItemFor(index: Int, url: String): MediaItem =
         MediaItem.Builder()
             .setUri(url)
             .setMediaId(index.toString())
-            .setCustomCacheKey(url)
+            .apply { if (!url.endsWith(".m3u8", ignoreCase = true)) setCustomCacheKey(url) }
             .build()
 
     /** Источник для страницы: уже прогретый, либо добавленный сейчас. */
