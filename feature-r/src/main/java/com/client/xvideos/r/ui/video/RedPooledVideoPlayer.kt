@@ -105,14 +105,30 @@ fun RedPooledVideoPlayer(
         }
     }
 
+    // Включили A-B — сразу встаём на точку A, как делал прежний плеер
+    // (`LaunchedEffect(enableAB) { playerHost.seekTo(timeA) }`). Без этого первый
+    // проход шёл бы от текущей позиции, а не от начала петли.
+    LaunchedEffect(player, enableAB) {
+        if (enableAB) player?.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
+    }
+
     // Время/длительность и петля A-B. Шаг 50 мс — как в прежнем CMPPlayer2,
     // чтобы поведение полосы времени и A-B не изменилось.
     LaunchedEffect(player, isCurrentPage, enableAB, timeA, timeB) {
         val exo = player ?: return@LaunchedEffect
+        // Аналог прежнего `distinctUntilChanged()`: на паузе значение не меняется,
+        // и апстрим не дёргается 20 раз в секунду впустую.
+        var lastReported: Pair<Float, Int>? = null
         while (isActive) {
             val position = (exo.currentPosition / 1000f).coerceAtLeast(0f)
             val durationMs = exo.duration.takeIf { it != C.TIME_UNSET } ?: 0L
-            if (isCurrentPage) onChangeTime(position to (durationMs / 1000).toInt())
+            if (isCurrentPage) {
+                val tick = position to (durationMs / 1000).toInt()
+                if (tick != lastReported) {
+                    lastReported = tick
+                    onChangeTime(tick)
+                }
+            }
             if (enableAB && position >= timeB) exo.seekTo((timeA * 1000).toLong())
             delay(50)
         }
@@ -121,17 +137,28 @@ fun RedPooledVideoPlayer(
     LaunchedEffect(player, isCurrentPage) {
         val exo = player ?: return@LaunchedEffect
         if (!isCurrentPage) return@LaunchedEffect
+
+        // Прежний плеер клампил перемотку длительностью (`coerceAtMost(duration)`).
+        // Без верхней границы при repeatMode = REPEAT_MODE_ONE перелёт за конец
+        // мгновенно перезапускает ролик вместо остановки на последнем кадре.
+        // До подготовки длительность неизвестна (C.TIME_UNSET) — тогда не клампим.
+        fun clampPositionMs(positionMs: Long): Long {
+            val floored = positionMs.coerceAtLeast(0L)
+            val durationMs = exo.duration
+            return if (durationMs == C.TIME_UNSET) floored else floored.coerceAtMost(durationMs)
+        }
+
         onPlayerControlsReady(object : PlayerControls {
             override fun forward(seconds: Float) {
-                exo.seekTo(exo.currentPosition + (seconds * 1000).toLong())
+                exo.seekTo(clampPositionMs(exo.currentPosition + (seconds * 1000).toLong()))
             }
 
             override fun rewind(seconds: Float) {
-                exo.seekTo((exo.currentPosition - (seconds * 1000).toLong()).coerceAtLeast(0L))
+                exo.seekTo(clampPositionMs(exo.currentPosition - (seconds * 1000).toLong()))
             }
 
             override fun seekTo(positionSeconds: Float) {
-                exo.seekTo((positionSeconds * 1000).toLong().coerceAtLeast(0L))
+                exo.seekTo(clampPositionMs((positionSeconds * 1000).toLong()))
             }
 
             override fun stop() {
