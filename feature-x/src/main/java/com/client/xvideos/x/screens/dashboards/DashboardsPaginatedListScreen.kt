@@ -1,5 +1,8 @@
 package com.client.xvideos.x.screens.dashboards
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,6 +104,7 @@ fun DashboardsPaginatedListScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DashboardsPaginatedListContent(
     items: ImmutableList<ItemsX>,
@@ -113,6 +117,9 @@ fun DashboardsPaginatedListContent(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
+        // Окно предзагрузки долей вьюпорта: каждая карточка — живое видео-превью,
+        // и заднее окно не даёт пересоздавать плееры при прокрутке вверх.
+        state = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
     )
     {
         itemsIndexed(items, key = { index, it -> "${it.id}_$index" })

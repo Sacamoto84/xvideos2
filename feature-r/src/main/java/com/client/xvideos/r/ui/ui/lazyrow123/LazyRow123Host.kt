@@ -3,17 +3,16 @@ package com.client.xvideos.r.ui.ui.lazyrow123
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.cachedIn
+import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.Order
@@ -83,11 +82,20 @@ class LazyRow123Host(
 
     val feedKey: String = "RFeed:${typePager.name}:${extraString}:${nextFeedId.incrementAndGet()}"
 
+    /**
+     * Окно предзагрузки сетки. Доля вьюпорта, а не фиксированные dp: число
+     * колонок здесь переключаемое (2..4), и одна и та же константа в dp
+     * означала бы разное количество рядов.
+     *
+     * Заднее окно ненулевое намеренно: элемент сетки — живое видео-превью со
+     * своим `ExoPlayer`, и при `behind = 0` прокрутка вверх пересоздавала
+     * плееры, которые только что были отпущены.
+     */
     @OptIn(ExperimentalFoundationApi::class)
-    val dpCacheWindow = LazyLayoutCacheWindow(ahead = 100.dp, behind = 0.dp)
+    val cacheWindow = viewportFractionCacheWindow(ahead = 0.5f, behind = 0.25f)
 
     @OptIn(ExperimentalFoundationApi::class)
-    val state: LazyGridState = LazyGridState(cacheWindow = dpCacheWindow)
+    val state: LazyGridState = LazyGridState(cacheWindow = cacheWindow)
 
     val stateColumn = LazyListState()
 
