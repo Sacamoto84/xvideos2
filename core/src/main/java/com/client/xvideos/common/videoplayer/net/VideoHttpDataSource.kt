@@ -24,10 +24,15 @@ object VideoHttpDataSource {
     private val client: HttpClient by lazy {
         HttpClient(OkHttp) {
             followRedirects = true
+            // Общего `requestTimeoutMillis` здесь быть не должно: у Ktor он ограничивает
+            // запрос целиком, вместе с чтением тела. Для видео тело читается ровно столько,
+            // сколько длится загрузка прогрессивного mp4 или длинного HLS-сегмента, и на
+            // медленной сети такой таймаут оборвёт запрос посреди воспроизведения.
+            // Оставляем только connect (установка соединения) и socket (пауза между байтами) —
+            // они ловят реально зависшую сеть, не мешая долгой, но живой загрузке.
             install(HttpTimeout) {
                 connectTimeoutMillis = 15_000
                 socketTimeoutMillis = 15_000
-                requestTimeoutMillis = 60_000
             }
         }
     }
