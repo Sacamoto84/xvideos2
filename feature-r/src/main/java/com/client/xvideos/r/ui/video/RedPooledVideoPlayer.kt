@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -74,8 +75,13 @@ fun RedPooledVideoPlayer(
     var isBuffering by remember(player) { mutableStateOf(true) }
     LaunchedEffect(isBuffering) { isBuferring(isBuffering) }
 
-    LaunchedEffect(player, play, isCurrentPage) {
+    // Именно LifecycleStartEffect, а не LaunchedEffect: прежний путь ленты вешал
+    // `LifecycleEventObserver` (см. `ExoPlayerLifecycle.rememberExoPlayerWithLifecycle`)
+    // и снимал playWhenReady на ON_PAUSE/ON_STOP. Без этого свёрнутое приложение
+    // продолжает играть звук ленты, а setForegroundMode(true) ещё и удерживает декодеры.
+    LifecycleStartEffect(player, play, isCurrentPage) {
         player?.playWhenReady = play && isCurrentPage
+        onStopOrDispose { player?.playWhenReady = false }
     }
 
     LaunchedEffect(player, isMute) {
