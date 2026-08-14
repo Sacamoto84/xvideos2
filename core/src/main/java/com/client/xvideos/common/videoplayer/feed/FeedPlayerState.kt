@@ -12,6 +12,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.PlayerPool
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
@@ -72,7 +73,12 @@ class FeedPlayerState(
                     .build()
             )
             .setCache(FeedVideoCache.get(appContext))
-            .setDataSourceFactory(VideoHttpDataSource.factory())
+            // Не голая http-фабрика: `DefaultPreloadManager` подставляет её как есть,
+            // вместо своего `DefaultDataSource.Factory`, и локальные файлы (скачанные
+            // ролики отдаются голым путём, без схемы) ушли бы в Ktor как HTTP-запрос.
+            // `DefaultDataSource` разбирает схему и уводит локальные файлы в
+            // `FileDataSource`, а сеть — в Ktor.
+            .setDataSourceFactory(DefaultDataSource.Factory(appContext, VideoHttpDataSource.factory()))
 
     val playerPool: PlayerPool<ExoPlayer> = PlayerPool(poolCapacity) {
         builder.buildExoPlayer().apply {
