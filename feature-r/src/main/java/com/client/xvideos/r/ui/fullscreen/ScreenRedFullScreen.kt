@@ -136,9 +136,7 @@ private fun RedFullScreenFeed(
             }
         },
         onRangeLeaveWindow = { range ->
-            feedState.removeRange(range) { i ->
-                listGifs.peekUrl(i, vm)
-            }
+            feedState.removeRange(range)
         },
     )
 

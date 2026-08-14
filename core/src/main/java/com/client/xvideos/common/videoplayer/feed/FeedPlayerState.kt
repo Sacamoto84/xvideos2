@@ -86,6 +86,16 @@ class FeedPlayerState(
     val preloadManager: DefaultPreloadManager = builder.build()
 
     /**
+     * Что именно мы отдали в прогрев: индекс в ленте → добавленный `MediaItem`.
+     *
+     * Собрать `MediaItem` заново по данным пейджинга в момент удаления нельзя:
+     * к тому времени, когда индекс покидает окно, пейджинг уже мог выбросить
+     * этот элемент из списка — url не найдётся, `remove` не вызовется, и
+     * источник останется в preload-менеджере навсегда. Поэтому помним сами.
+     */
+    private val preloadedItems = mutableMapOf<Int, MediaItem>()
+
+    /**
      * Ключ элемента для preload-менеджера. `mediaId` — позиция в ленте (по нему
      * менеджер удаляет элементы), `customCacheKey` — сам url, чтобы дисковый кеш
      * переживал перетасовку списка.
@@ -101,6 +111,7 @@ class FeedPlayerState(
     fun mediaSourceFor(mediaItem: MediaItem, index: Int): MediaSource {
         preloadManager.getMediaSource(mediaItem)?.let { return it }
         preloadManager.add(mediaItem, index)
+        preloadedItems[index] = mediaItem
         return checkNotNull(preloadManager.getMediaSource(mediaItem)) {
             "preloadManager не отдал источник для ${mediaItem.mediaId}"
         }
@@ -120,21 +131,24 @@ class FeedPlayerState(
     fun addRange(indices: IntRange, urlAt: (Int) -> String?) {
         indices.forEach { index ->
             val url = urlAt(index) ?: return@forEach
-            preloadManager.add(mediaItemFor(index, url), index)
+            val mediaItem = mediaItemFor(index, url)
+            preloadManager.add(mediaItem, index)
+            preloadedItems[index] = mediaItem
         }
         preloadManager.invalidate()
     }
 
-    /** Элементы вышли из окна — снимаем с прогрева. */
-    fun removeRange(indices: IntRange, urlAt: (Int) -> String?) {
+    /** Элементы вышли из окна — снимаем с прогрева по собственному учёту. */
+    fun removeRange(indices: IntRange) {
         indices.forEach { index ->
-            val url = urlAt(index) ?: return@forEach
-            preloadManager.remove(mediaItemFor(index, url))
+            val mediaItem = preloadedItems.remove(index) ?: return@forEach
+            preloadManager.remove(mediaItem)
         }
     }
 
     /** Кеш ([FeedVideoCache]) намеренно не трогаем: он процессный. */
     fun release() {
+        preloadedItems.clear()
         playerPool.release()
         preloadManager.release()
     }
