@@ -113,6 +113,11 @@ class FeedPlayerState(
     fun updateCurrentPage(index: Int) {
         statusControl.currentPlayingIndex = index
         preloadManager.setCurrentPlayingIndex(index)
+        // setCurrentPlayingIndex только обновляет компаратор ранжирования, пересчёт
+        // целей он не запускает. Без invalidate свайп внутри уже добавленного окна
+        // оставил бы приоритеты протухшими: новый текущий ролик не поднялся бы в
+        // NEAR_LOADED.
+        preloadManager.invalidate()
     }
 
     /** Элементы вошли в окно вокруг текущей страницы. `urlAt` возвращает null, если элемент ещё не подгружен пейджингом. */
