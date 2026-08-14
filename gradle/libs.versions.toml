@@ -99,6 +99,8 @@ material3 = { module = "androidx.compose.material3:material3", version.ref = "ma
 
 #Media3
 androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "media3" }
+androidx-media3-common-ktx = { module = "androidx.media3:media3-common-ktx", version.ref = "media3" }
+androidx-media3-database = { module = "androidx.media3:media3-database", version.ref = "media3" }
 androidx-media3-datasource = { module = "androidx.media3:media3-datasource", version.ref = "media3" }
 androidx-media3-decoder = { module = "androidx.media3:media3-decoder", version.ref = "media3" }
 androidx-media3-effect = { module = "androidx.media3:media3-effect", version.ref = "media3" }
