@@ -2,20 +2,26 @@ package com.client.xvideos.r.ui.video
 
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -32,6 +38,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import kotlin.math.absoluteValue
+
+/**
+ * Прежний плеер клампил перемотку длительностью (`coerceAtMost(duration)`).
+ * Без верхней границы при repeatMode = REPEAT_MODE_ONE перелёт за конец
+ * мгновенно перезапускает ролик вместо остановки на последнем кадре.
+ * До подготовки длительность неизвестна (C.TIME_UNSET) — тогда не клампим.
+ */
+private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long {
+    val floored = positionMs.coerceAtLeast(0L)
+    val durationMs = duration
+    return if (durationMs == C.TIME_UNSET) floored else floored.coerceAtMost(durationMs)
+}
 
 /**
  * Страница ленты, работающая на общем пуле плееров [FeedPlayerState].
@@ -69,7 +88,6 @@ fun RedPooledVideoPlayer(
             exo.setMediaSource(feedState.mediaSourceFor(mediaItem, index))
             exo.prepare()
         },
-        playerTeardown = { exo -> exo.playWhenReady = false },
     )
 
     var isBuffering by remember(player) { mutableStateOf(true) }
@@ -122,18 +140,20 @@ fun RedPooledVideoPlayer(
     // чтобы поведение полосы времени и A-B не изменилось.
     LaunchedEffect(player, isCurrentPage, enableAB, timeA, timeB) {
         val exo = player ?: return@LaunchedEffect
+        // Нетекущие страницы не играют (playWhenReady = play && isCurrentPage), время на них
+        // не движется — крутить на них опрос смысла нет. Без этого выхода при трёх живых
+        // страницах работали бы три корутины по 20 Гц.
+        if (!isCurrentPage) return@LaunchedEffect
         // Аналог прежнего `distinctUntilChanged()`: на паузе значение не меняется,
         // и апстрим не дёргается 20 раз в секунду впустую.
         var lastReported: Pair<Float, Int>? = null
         while (isActive) {
             val position = (exo.currentPosition / 1000f).coerceAtLeast(0f)
             val durationMs = exo.duration.takeIf { it != C.TIME_UNSET } ?: 0L
-            if (isCurrentPage) {
-                val tick = position to (durationMs / 1000).toInt()
-                if (tick != lastReported) {
-                    lastReported = tick
-                    onChangeTime(tick)
-                }
+            val tick = position to (durationMs / 1000).toInt()
+            if (tick != lastReported) {
+                lastReported = tick
+                onChangeTime(tick)
             }
             if (enableAB && position >= timeB) exo.seekTo((timeA * 1000).toLong())
             delay(50)
@@ -144,27 +164,17 @@ fun RedPooledVideoPlayer(
         val exo = player ?: return@LaunchedEffect
         if (!isCurrentPage) return@LaunchedEffect
 
-        // Прежний плеер клампил перемотку длительностью (`coerceAtMost(duration)`).
-        // Без верхней границы при repeatMode = REPEAT_MODE_ONE перелёт за конец
-        // мгновенно перезапускает ролик вместо остановки на последнем кадре.
-        // До подготовки длительность неизвестна (C.TIME_UNSET) — тогда не клампим.
-        fun clampPositionMs(positionMs: Long): Long {
-            val floored = positionMs.coerceAtLeast(0L)
-            val durationMs = exo.duration
-            return if (durationMs == C.TIME_UNSET) floored else floored.coerceAtMost(durationMs)
-        }
-
         onPlayerControlsReady(object : PlayerControls {
             override fun forward(seconds: Float) {
-                exo.seekTo(clampPositionMs(exo.currentPosition + (seconds * 1000).toLong()))
+                exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + (seconds * 1000).toLong()))
             }
 
             override fun rewind(seconds: Float) {
-                exo.seekTo(clampPositionMs(exo.currentPosition - (seconds * 1000).toLong()))
+                exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition - (seconds * 1000).toLong()))
             }
 
             override fun seekTo(positionSeconds: Float) {
-                exo.seekTo(clampPositionMs((positionSeconds * 1000).toLong()))
+                exo.seekTo(exo.clampSeekPositionMs((positionSeconds * 1000).toLong()))
             }
 
             override fun stop() {
@@ -184,7 +194,28 @@ fun RedPooledVideoPlayer(
 
     val zoomState = rememberZoomState(maxScale = 3f)
 
-    Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
+    // Перемотка горизонтальным драгом по нижней трети экрана — как в прежнем пути ленты
+    // (`VideoPlayerWithMenuContent`, seekDragEnabled): размашистый жест (> 400 px) двигает
+    // на секунду, короткий — на кадр (1/30 c), направление задаёт знак смещения.
+    // Детектор горизонтальный, поэтому вертикальный свайп страницы уходит пейджеру.
+    var seekDragAmount by remember { mutableFloatStateOf(0f) }
+    val seekDragModifier = Modifier.pointerInput(player) {
+        val exo = player ?: return@pointerInput
+        detectHorizontalDragGestures(
+            onDragStart = { seekDragAmount = 0f },
+            onDragEnd = {
+                val stepMs = if (seekDragAmount.absoluteValue > 400) 1000L else (1000 / 30f).toLong()
+                val deltaMs = if (seekDragAmount > 0) stepMs else -stepMs
+                exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + deltaMs))
+            },
+            onDragCancel = { },
+            onHorizontalDrag = { _, dragAmount -> seekDragAmount += dragAmount }
+        )
+    }
+
+    // clipToBounds — как в прежнем `Box(modifier.clipToBounds())`: увеличенный зумом кадр
+    // не должен выезжать поверх оверлея и нижней панели.
+    Box(modifier = modifier.fillMaxSize().clipToBounds().background(Color.Black)) {
         ContentFrame(
             player = player,
             modifier = Modifier
@@ -196,6 +227,15 @@ fun RedPooledVideoPlayer(
                 ),
             contentScale = ContentScale.Fit,
             keepContentOnReset = true,
+        )
+
+        // Нижняя сенсорная зона перемотки — та же треть высоты, что и в прежнем плеере.
+        Box(
+            modifier = Modifier
+                .fillMaxHeight(1 / 3f)
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .then(seekDragModifier)
         )
 
         if (isBuffering) {
