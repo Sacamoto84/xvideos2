@@ -36,7 +36,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.compose.lifecycle.SlidingWindowEffect
 import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.core.screen.Screen
@@ -50,15 +53,16 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.transitions.ScreenTransition
 import com.client.xvideos.core.R
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.videoplayer.feed.FeedPlayerState
+import com.client.xvideos.common.videoplayer.feed.rememberFeedPlayerState
 import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
-import com.client.xvideos.r.ui.video.RedVideoPlayerWithMenu
+import com.client.xvideos.r.ui.video.RedPooledVideoPlayer
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedControls_Container_Line0
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.RFeedSessionStore
 import com.client.xvideos.common.ui.atom.DownloadIndicator
 import kotlinx.coroutines.flow.distinctUntilChanged
-import timber.log.Timber
 import kotlin.math.max
 
 @OptIn(ExperimentalVoyagerApi::class)
@@ -103,6 +107,7 @@ class ScreenRedFullScreen(
     }
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun RedFullScreenFeed(
     host: LazyRow123Host,
@@ -117,10 +122,31 @@ private fun RedFullScreenFeed(
     val pagerState = rememberPagerState(initialPage = startIndex.coerceAtLeast(0)) { pagerCount.coerceAtLeast(1) }
     var isVideoBuffering by remember { mutableStateOf(false) }
 
+    val feedState = rememberFeedPlayerState()
+
+    SlidingWindowEffect(
+        itemCountProvider = { pagerState.pageCount },
+        currentItemProvider = { pagerState.settledPage },
+        maxLookbehind = 2,
+        maxLookahead = 4,
+        batchSize = 3,
+        onRangeEnterWindow = { range ->
+            feedState.addRange(range) { i ->
+                listGifs.peekUrl(i, vm)
+            }
+        },
+        onRangeLeaveWindow = { range ->
+            feedState.removeRange(range) { i ->
+                listGifs.peekUrl(i, vm)
+            }
+        },
+    )
+
     LaunchedEffect(pagerState, host) {
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
             .collect { page ->
+                feedState.updateCurrentPage(page)
                 host.currentIndex = page
                 host.returnToIndex = page
                 vm.play = true
@@ -134,7 +160,9 @@ private fun RedFullScreenFeed(
         VerticalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
-            beyondViewportPageCount = 2
+            // Плееров теперь ровно столько, сколько в пуле (3): держать в композиции
+            // пять страниц незачем — прогрев соседей делает preload-менеджер.
+            beyondViewportPageCount = 1
         ) { index ->
             val currentItem = if (index < listGifs.itemCount) listGifs[index] else null
             val isCurrentPage = pagerState.currentPage == index
@@ -144,6 +172,8 @@ private fun RedFullScreenFeed(
                     item = currentItem,
                     vm = vm,
                     navigator = navigator,
+                    feedState = feedState,
+                    index = index,
                     bottomPadding = bottomPadding,
                     play = vm.play && isCurrentPage,
                     isCurrentPage = isCurrentPage,
@@ -161,6 +191,8 @@ private fun RedFullScreenFeed(
                             item = fallbackItem,
                             vm = vm,
                             navigator = navigator,
+                            feedState = feedState,
+                            index = index,
                             bottomPadding = bottomPadding,
                             play = vm.play,
                             isCurrentPage = true,
@@ -184,11 +216,15 @@ private fun RedFullScreenSingle(
 ) {
     var isVideoBuffering by remember { mutableStateOf(false) }
 
+    val feedState = rememberFeedPlayerState(poolCapacity = 1)
+
     RedFullScreenScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
         RedFullScreenPage(
             item = item,
             vm = vm,
             navigator = navigator,
+            feedState = feedState,
+            index = 0,
             bottomPadding = bottomPadding,
             play = vm.play,
             isCurrentPage = true,
@@ -248,49 +284,46 @@ private fun RedFullScreenPage(
     item: GifsInfo,
     vm: ScreenRedFullScreenSM,
     navigator: Navigator,
+    feedState: FeedPlayerState,
+    index: Int,
     bottomPadding: Dp,
     play: Boolean,
     isCurrentPage: Boolean,
     showOverlay: Boolean,
     onBuffering: (Boolean) -> Unit
 ) {
-    val videoUri = remember(item.id, item.userName) {
-        Timber.tag("???").i("Recalculate Red fullscreen video id=${item.id}")
-        if (vm.downloadRed.downloader.findVideoInDownload(item.id, item.userName)) {
-            "${AppPath.r_cache_download}/${item.userName}/${item.id}.mp4"
-        } else {
-            "https://api.redgifs.com/v2/gifs/${item.id.lowercase()}/hd.m3u8"
-        }
-    }
+    val videoUri = remember(item.id, item.userName) { redVideoUrl(item, vm) }
 
     Box(Modifier.fillMaxSize()) {
-        RedVideoPlayerWithMenu(
-            modifier = Modifier.padding(bottom = bottomPadding),
+        RedPooledVideoPlayer(
+            feedState = feedState,
+            index = index,
             url = videoUri,
+            modifier = Modifier.padding(bottom = bottomPadding),
             play = play,
+            isMute = vm.mute,
+            isCurrentPage = isCurrentPage,
+            autoRotate = vm.autoRotate,
+            timeA = vm.timeA,
+            timeB = vm.timeB,
+            enableAB = vm.enableAB,
             onChangeTime = { time ->
                 if (isCurrentPage) {
                     vm.currentPlayerTime = time.first
                     vm.currentPlayerDuration = time.second
                 }
             },
-            isMute = vm.mute,
             onPlayerControlsReady = { controls ->
                 if (isCurrentPage) {
                     vm.currentPlayerControls = controls
                 }
             },
-            timeA = vm.timeA,
-            timeB = vm.timeB,
-            enableAB = vm.enableAB,
             onClick = { if (isCurrentPage) vm.play = !vm.play },
-            autoRotate = vm.autoRotate,
-            isCurrentPage = isCurrentPage,
             isBuferring = { buffering ->
                 if (isCurrentPage) {
                     onBuffering(buffering)
                 }
-            }
+            },
         )
 
         if (showOverlay) {
@@ -306,5 +339,29 @@ private fun RedFullScreenPage(
         }
     }
 }
+
+/**
+ * Адрес видео для элемента ленты: локальный файл, если ролик уже скачан,
+ * иначе HLS с api.redgifs.com. Общая точка для страницы и для предзагрузки —
+ * ключи preload-менеджера обязаны совпадать с тем, что реально играет плеер.
+ */
+/**
+ * Url элемента ленты по индексу для окна предзагрузки. `peek` (а не `get`) —
+ * намеренно: он не дёргает пейджинг на подгрузку соседних страниц. Индекс может
+ * выйти за пределы уже загруженного списка (счётчик страниц пейджера больше
+ * `itemCount` на «хвост» дозагрузки), поэтому проверяем границу — `peek`
+ * за пределами `itemCount` бросает IndexOutOfBoundsException.
+ */
+private fun LazyPagingItems<GifsInfo>.peekUrl(index: Int, vm: ScreenRedFullScreenSM): String? {
+    if (index < 0 || index >= itemCount) return null
+    return peek(index)?.let { redVideoUrl(it, vm) }
+}
+
+private fun redVideoUrl(item: GifsInfo, vm: ScreenRedFullScreenSM): String =
+    if (vm.downloadRed.downloader.findVideoInDownload(item.id, item.userName)) {
+        "${AppPath.r_cache_download}/${item.userName}/${item.id}.mp4"
+    } else {
+        "https://api.redgifs.com/v2/gifs/${item.id.lowercase()}/hd.m3u8"
+    }
 
 
