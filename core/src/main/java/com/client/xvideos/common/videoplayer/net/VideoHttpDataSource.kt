@@ -6,6 +6,7 @@ import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.ktor.KtorDataSource
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.HttpTimeout
 
 /**
@@ -15,6 +16,10 @@ import io.ktor.client.plugins.HttpTimeout
  *
  * Клиент процессный: `HttpClient` держит пул соединений, создавать его на
  * каждый плеер — терять keep-alive между роликами.
+ *
+ * [USER_AGENT] подставной: он заменяет дефолтный UA ExoPlayer, потому что
+ * хостинги отдают видео по браузероподобному агенту, а на UA плеера отвечают
+ * ошибкой.
  */
 @OptIn(UnstableApi::class)
 object VideoHttpDataSource {
@@ -23,7 +28,13 @@ object VideoHttpDataSource {
 
     private val client: HttpClient by lazy {
         HttpClient(OkHttp) {
-            followRedirects = true
+            // Кросс-протокольные редиректы: у плагина HttpRedirect по умолчанию
+            // allowHttpsDowngrade = false, и переход https → http вернулся бы в
+            // KtorDataSource как ошибка 30x. Раньше эквивалент включался явно —
+            // `setAllowCrossProtocolRedirects(true)` на фабриках в ExoplayerHelper.
+            install(HttpRedirect) {
+                allowHttpsDowngrade = true
+            }
             // Общего `requestTimeoutMillis` здесь быть не должно: у Ktor он ограничивает
             // запрос целиком, вместе с чтением тела. Для видео тело читается ровно столько,
             // сколько длится загрузка прогрессивного mp4 или длинного HLS-сегмента, и на
