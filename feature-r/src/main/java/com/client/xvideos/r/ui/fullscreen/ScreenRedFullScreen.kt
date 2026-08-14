@@ -354,11 +354,6 @@ private fun RedFullScreenPage(
 }
 
 /**
- * Адрес видео для элемента ленты: локальный файл, если ролик уже скачан,
- * иначе HLS с api.redgifs.com. Общая точка для страницы и для предзагрузки —
- * ключи preload-менеджера обязаны совпадать с тем, что реально играет плеер.
- */
-/**
  * Url элемента ленты по индексу для окна предзагрузки. `peek` (а не `get`) —
  * намеренно: он не дёргает пейджинг на подгрузку соседних страниц. Индекс может
  * выйти за пределы уже загруженного списка (счётчик страниц пейджера больше
@@ -370,6 +365,11 @@ private fun LazyPagingItems<GifsInfo>.peekUrl(index: Int, vm: ScreenRedFullScree
     return peek(index)?.let { redVideoUrl(it, vm) }
 }
 
+/**
+ * Адрес видео для элемента ленты: локальный файл, если ролик уже скачан,
+ * иначе HLS с api.redgifs.com. Общая точка для страницы и для предзагрузки —
+ * ключи preload-менеджера обязаны совпадать с тем, что реально играет плеер.
+ */
 private fun redVideoUrl(item: GifsInfo, vm: ScreenRedFullScreenSM): String =
     if (vm.downloadRed.downloader.findVideoInDownload(item.id, item.userName)) {
         "${AppPath.r_cache_download}/${item.userName}/${item.id}.mp4"

@@ -83,14 +83,14 @@ dependencies {
     api(libs.voyager.hilt)
     api(libs.voyager.livedata)
 
-    // extractor и decoder оставлены явно, хотя прямых импортов у них нет:
-    // явная строка фиксирует версию через version.ref, а не полагается на то,
-    // какую версию притащит транзитивно exoplayer.
     api libs.androidx.media3.ui
     api libs.androidx.media3.exoplayer
     api libs.androidx.media3.exoplayer.hls
     api libs.androidx.media3.common
     api libs.androidx.media3.common.ktx
+    // extractor и decoder оставлены явно, хотя прямых импортов у них нет:
+    // явная строка фиксирует версию через version.ref, а не полагается на то,
+    // какую версию притащит транзитивно exoplayer.
     api libs.androidx.media3.extractor
     api libs.androidx.media3.decoder
     api libs.androidx.media3.datasource

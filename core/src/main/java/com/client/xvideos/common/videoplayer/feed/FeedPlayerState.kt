@@ -127,12 +127,11 @@ class FeedPlayerState(
 
     fun updateCurrentPage(index: Int) {
         statusControl.currentPlayingIndex = index
+        // Отдельный invalidate() не нужен: setCurrentPlayingIndex доходит до
+        // SimpleRankingDataComparator, а тот при смене индекса синхронно дёргает
+        // InvalidationListener, который BasePreloadManager в конструкторе повесил
+        // на собственный invalidate().
         preloadManager.setCurrentPlayingIndex(index)
-        // setCurrentPlayingIndex только обновляет компаратор ранжирования, пересчёт
-        // целей он не запускает. Без invalidate свайп внутри уже добавленного окна
-        // оставил бы приоритеты протухшими: новый текущий ролик не поднялся бы в
-        // NEAR_LOADED.
-        preloadManager.invalidate()
     }
 
     /**
