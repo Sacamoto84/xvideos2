@@ -94,6 +94,7 @@ dependencies {
     api libs.androidx.media3.extractor
     api libs.androidx.media3.decoder
     api libs.androidx.media3.datasource
+    api libs.androidx.media3.datasource.ktor
     api libs.androidx.media3.database
     api(libs.androidx.media3.ui.compose)
     api libs.androidx.media3.effect

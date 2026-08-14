@@ -7,7 +7,6 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.drm.DefaultDrmSessionManager
 import androidx.media3.exoplayer.drm.FrameworkMediaDrm
 import androidx.media3.exoplayer.drm.LocalMediaDrmCallback
@@ -17,6 +16,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.client.xvideos.common.videoplayer.host.DrmConfig
+import com.client.xvideos.common.videoplayer.net.VideoHttpDataSource
 
 @OptIn(UnstableApi::class)
 fun applyQualitySelection(
@@ -65,13 +65,7 @@ fun applySubTitleTrackSelection(
 
 @OptIn(UnstableApi::class)
 fun createHlsMediaSource(mediaItem: MediaItem, headers: Map<String, String>?): MediaSource {
-    val headersMap = headers ?: emptyMap()
-    val dataSourceFactory = DefaultHttpDataSource.Factory()
-        .setAllowCrossProtocolRedirects(true)
-        .setConnectTimeoutMs(15_000)
-        .setReadTimeoutMs(15_000)
-        .setDefaultRequestProperties(headersMap)
-
+    val dataSourceFactory = VideoHttpDataSource.factory(headers)
     return HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
 }
 
@@ -81,13 +75,7 @@ fun createProgressiveMediaSource(
     context: Context,
     headers: Map<String, String>?
 ): MediaSource {
-    val headersMap = headers ?: emptyMap()
-    val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-        .setAllowCrossProtocolRedirects(true)
-        .setConnectTimeoutMs(15_000)
-        .setReadTimeoutMs(15_000)
-        .setDefaultRequestProperties(headersMap)
-
+    val httpDataSourceFactory = VideoHttpDataSource.factory(headers)
     return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context, httpDataSourceFactory))
         .createMediaSource(mediaItem)
 }
@@ -98,12 +86,7 @@ fun createHlsMediaSourceWithDrm(
     headers: Map<String, String>?,
     drmConfig: DrmConfig
 ): MediaSource {
-    val headersMap = headers ?: emptyMap()
-    val dataSourceFactory = DefaultHttpDataSource.Factory()
-        .setAllowCrossProtocolRedirects(true)
-        .setConnectTimeoutMs(15_000)
-        .setReadTimeoutMs(15_000)
-        .setDefaultRequestProperties(headersMap)
+    val dataSourceFactory = VideoHttpDataSource.factory(headers)
 
     val drmSessionManager = try {
         DefaultDrmSessionManager.Builder()

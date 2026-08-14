@@ -17,6 +17,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.preload.DefaultPreloadManager
 import androidx.media3.exoplayer.source.preload.TargetPreloadStatusControl
+import com.client.xvideos.common.videoplayer.net.VideoHttpDataSource
 
 /**
  * Пул плееров + менеджер предзагрузки для вертикальной ленты.
@@ -71,6 +72,7 @@ class FeedPlayerState(
                     .build()
             )
             .setCache(FeedVideoCache.get(appContext))
+            .setDataSourceFactory(VideoHttpDataSource.factory())
 
     val playerPool: PlayerPool<ExoPlayer> = PlayerPool(poolCapacity) {
         builder.buildExoPlayer().apply {
