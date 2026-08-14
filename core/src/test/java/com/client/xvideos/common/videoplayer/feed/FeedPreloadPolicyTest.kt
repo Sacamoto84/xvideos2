@@ -1,6 +1,7 @@
 package com.client.xvideos.common.videoplayer.feed
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FeedPreloadPolicyTest {
@@ -32,9 +33,27 @@ class FeedPreloadPolicyTest {
     }
 
     @Test
-    fun `длительности прогрева убывают с расстоянием`() {
-        assertEquals(3_000L, FeedPreloadPolicy.NEAR_LOADED_MS)
-        assertEquals(1_000L, FeedPreloadPolicy.FAR_LOADED_MS)
-        assertEquals(5_000L, FeedPreloadPolicy.CACHED_ONLY_MS)
+    fun `пул на один плеер оставляет только ближний прогрев и кеш`() {
+        assertEquals(FeedPreloadTier.NEAR_LOADED, FeedPreloadPolicy.tierFor(5, 5, 1))
+        assertEquals(FeedPreloadTier.NEAR_LOADED, FeedPreloadPolicy.tierFor(6, 5, 1))
+        // Диапазон 2..1 пустой, поэтому FAR_LOADED при таком пуле не существует:
+        // греть в память некуда, всё дальше соседей уходит на диск.
+        assertEquals(FeedPreloadTier.CACHED_ONLY, FeedPreloadPolicy.tierFor(7, 5, 1))
+        assertEquals(FeedPreloadTier.CACHED_ONLY, FeedPreloadPolicy.tierFor(3, 5, 1))
+    }
+
+    @Test
+    fun `в памяти дальний прогрев короче ближнего`() {
+        assertTrue(FeedPreloadTier.FAR_LOADED.durationMs < FeedPreloadTier.NEAR_LOADED.durationMs)
+    }
+
+    @Test
+    fun `на диск тянем длиннее, чем греем в память`() {
+        // 5000 против 3000 — не опечатка и не нарушение «чем дальше, тем короче»:
+        // CACHED_ONLY уходит в specifiedRangeCached(), то есть на диск, и оперативную
+        // память не занимает вовсе. Шкала другая, сравнивать с NEAR/FAR как «больше
+        // прогрева» нельзя. Дешёвый дисковый отрезок берём с запасом — при быстрой
+        // прокрутке ролик тогда стартует с диска, а не из сети.
+        assertTrue(FeedPreloadTier.CACHED_ONLY.durationMs > FeedPreloadTier.NEAR_LOADED.durationMs)
     }
 }

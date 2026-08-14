@@ -41,23 +41,19 @@ class FeedPlayerState(
         object : TargetPreloadStatusControl<Int, DefaultPreloadManager.PreloadStatus> {
             var currentPlayingIndex: Int = C.INDEX_UNSET
 
-            override fun getTargetPreloadStatus(rankingData: Int): DefaultPreloadManager.PreloadStatus =
-                when (FeedPreloadPolicy.tierFor(rankingData, currentPlayingIndex, poolCapacity)) {
-                    FeedPreloadTier.NEAR_LOADED ->
-                        DefaultPreloadManager.PreloadStatus.specifiedRangeLoaded(
-                            FeedPreloadPolicy.NEAR_LOADED_MS
-                        )
-
-                    FeedPreloadTier.FAR_LOADED ->
-                        DefaultPreloadManager.PreloadStatus.specifiedRangeLoaded(
-                            FeedPreloadPolicy.FAR_LOADED_MS
-                        )
+            override fun getTargetPreloadStatus(rankingData: Int): DefaultPreloadManager.PreloadStatus {
+                val tier = FeedPreloadPolicy.tierFor(rankingData, currentPlayingIndex, poolCapacity)
+                // Длительность берём у самого уровня — так её нельзя перепутать
+                // с чужой. Отличается только назначение отрезка: ближние уровни
+                // держим в памяти, дальний — на диске.
+                return when (tier) {
+                    FeedPreloadTier.NEAR_LOADED, FeedPreloadTier.FAR_LOADED ->
+                        DefaultPreloadManager.PreloadStatus.specifiedRangeLoaded(tier.durationMs)
 
                     FeedPreloadTier.CACHED_ONLY ->
-                        DefaultPreloadManager.PreloadStatus.specifiedRangeCached(
-                            FeedPreloadPolicy.CACHED_ONLY_MS
-                        )
+                        DefaultPreloadManager.PreloadStatus.specifiedRangeCached(tier.durationMs)
                 }
+            }
         }
 
     private val builder: DefaultPreloadManager.Builder =

@@ -2,16 +2,28 @@ package com.client.xvideos.common.videoplayer.feed
 
 import kotlin.math.abs
 
-/** Насколько глубоко готовим элемент ленты к воспроизведению. */
-enum class FeedPreloadTier {
+/**
+ * Насколько глубоко готовим элемент ленты к воспроизведению.
+ *
+ * @property durationMs длина отрезка от начала ролика, который готовим на этом
+ *   уровне. Значения разных уровней сравнимы только внутри своей шкалы: у
+ *   [NEAR_LOADED] и [FAR_LOADED] отрезок держится в памяти
+ *   (`specifiedRangeLoaded`), у [CACHED_ONLY] — на диске (`specifiedRangeCached`).
+ */
+enum class FeedPreloadTier(val durationMs: Long) {
     /** Текущая страница и прямые соседи: держим готовый к старту отрезок в памяти. */
-    NEAR_LOADED,
+    NEAR_LOADED(3_000L),
 
-    /** Ещё в пределах ёмкости пула: короткий отрезок, чтобы свайп не упирался в сеть. */
-    FAR_LOADED,
+    /** Дистанция не больше ёмкости пула: короткий отрезок, чтобы свайп не упирался в сеть. */
+    FAR_LOADED(1_000L),
 
-    /** Далеко: только тянем начало файла в дисковый кеш, память не занимаем. */
-    CACHED_ONLY,
+    /**
+     * Далеко: только тянем начало файла в дисковый кеш, память не занимаем.
+     * Отрезок здесь длиннее, чем у ближних уровней, и это не опечатка: дисковый
+     * кеш не отъедает оперативную память, поэтому запас дешёвый — при быстрой
+     * прокрутке ролик стартует уже с диска, а не из сети.
+     */
+    CACHED_ONLY(5_000L),
 }
 
 /**
@@ -21,15 +33,13 @@ enum class FeedPreloadTier {
  */
 object FeedPreloadPolicy {
 
-    const val NEAR_LOADED_MS = 3_000L
-    const val FAR_LOADED_MS = 1_000L
-    const val CACHED_ONLY_MS = 5_000L
-
     /**
      * @param itemIndex индекс элемента ленты, для которого считаем приоритет.
      * @param currentIndex индекс текущей страницы пейджера; отрицательное значение
      *        (`C.INDEX_UNSET`) означает «страница ещё не определилась».
-     * @param poolCapacity размер пула плееров.
+     * @param poolCapacity размер пула плееров. При ёмкости 1 и меньше диапазон
+     *        `2..poolCapacity` пуст, и уровень [FeedPreloadTier.FAR_LOADED] не
+     *        выдаётся вовсе: греть в память нечем.
      */
     fun tierFor(itemIndex: Int, currentIndex: Int, poolCapacity: Int): FeedPreloadTier {
         if (currentIndex < 0) return FeedPreloadTier.CACHED_ONLY
