@@ -135,10 +135,25 @@ class FeedPlayerState(
         preloadManager.invalidate()
     }
 
+    /**
+     * Индексы, которые вошли в окно, но не имели url на тот момент.
+     *
+     * `SlidingWindowEffect` считает диапазон вошедшим сразу и второй раз
+     * `onRangeEnterWindow` для него не позовёт. Худший случай — первый кадр
+     * экрана: пейджинг ещё пуст, стартовое окно целиком отдаёт null, и ровно то
+     * окно, ради которого фича делалась, остаётся холодным. Помним такие
+     * индексы и догреваем их из [retryPending], когда данные приедут.
+     */
+    private val pendingIndices = mutableSetOf<Int>()
+
     /** Элементы вошли в окно вокруг текущей страницы. `urlAt` возвращает null, если элемент ещё не подгружен пейджингом. */
     fun addRange(indices: IntRange, urlAt: (Int) -> String?) {
         indices.forEach { index ->
-            val url = urlAt(index) ?: return@forEach
+            val url = urlAt(index)
+            if (url == null) {
+                pendingIndices += index
+                return@forEach
+            }
             val mediaItem = mediaItemFor(index, url)
             preloadManager.add(mediaItem, index)
             preloadedItems[index] = mediaItem
@@ -146,9 +161,27 @@ class FeedPlayerState(
         preloadManager.invalidate()
     }
 
+    /** Догреть индексы, у которых url не было в момент входа в окно. */
+    fun retryPending(urlAt: (Int) -> String?) {
+        if (pendingIndices.isEmpty()) return
+        var added = false
+        val iterator = pendingIndices.iterator()
+        while (iterator.hasNext()) {
+            val index = iterator.next()
+            val url = urlAt(index) ?: continue
+            val mediaItem = mediaItemFor(index, url)
+            preloadManager.add(mediaItem, index)
+            preloadedItems[index] = mediaItem
+            iterator.remove()
+            added = true
+        }
+        if (added) preloadManager.invalidate()
+    }
+
     /** Элементы вышли из окна — снимаем с прогрева по собственному учёту. */
     fun removeRange(indices: IntRange) {
         indices.forEach { index ->
+            pendingIndices -= index
             val mediaItem = preloadedItems.remove(index) ?: return@forEach
             preloadManager.remove(mediaItem)
         }
@@ -157,6 +190,7 @@ class FeedPlayerState(
     /** Кеш ([FeedVideoCache]) намеренно не трогаем: он процессный. */
     fun release() {
         preloadedItems.clear()
+        pendingIndices.clear()
         playerPool.release()
         preloadManager.release()
     }

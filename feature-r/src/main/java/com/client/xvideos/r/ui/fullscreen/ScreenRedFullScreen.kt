@@ -145,6 +145,10 @@ private fun RedFullScreenFeed(
             .distinctUntilChanged()
             .collect { page ->
                 feedState.updateCurrentPage(page)
+                // Догреваем то, чего не было в списке на момент входа окна:
+                // на первом кадре экрана пейджинг ещё пуст, и повторного
+                // onRangeEnterWindow для стартового окна уже не будет.
+                feedState.retryPending { i -> listGifs.peekUrl(i, vm) }
                 host.currentIndex = page
                 host.returnToIndex = page
                 vm.play = true
