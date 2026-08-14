@@ -140,6 +140,17 @@ private fun RedFullScreenFeed(
         },
     )
 
+    // Пейджинг отдаёт элементы асинхронно, и первое окно на старте почти всегда пустое:
+    // `peekUrl` для стартовых индексов вернул null, а повторного onRangeEnterWindow не будет.
+    // Поэтому догреваем окно ещё и по приходу новых элементов, а не только на смене страницы.
+    LaunchedEffect(listGifs, feedState) {
+        snapshotFlow { listGifs.itemCount }
+            .distinctUntilChanged()
+            .collect {
+                feedState.retryPending { i -> listGifs.peekUrl(i, vm) }
+            }
+    }
+
     LaunchedEffect(pagerState, host) {
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
