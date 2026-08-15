@@ -39,6 +39,10 @@ lifecycleViewmodelCompose = "2.11.0"
 lottie = "6.7.1"
 lottieCompose = "6.7.1"
 material = "1.14.0"
+# Alpha сознательно: 1.5.0 в стабильном канале ещё нет, а нужные компоненты
+# (ExposedDropdownMenu в новом виде) есть только здесь. Обновляем вместе с
+# composeBom и проверяем compileDebugKotlin всех feature-модулей — alpha правит
+# API между сборками.
 material3 = "1.5.0-alpha26"
 media3 = "1.11.0"
 pagingRuntime = "3.5.1"

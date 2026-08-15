@@ -236,6 +236,15 @@ private fun RedFullScreenFeed(
     }
 }
 
+/**
+ * Экран одного ролика — вход без ленты (`feedKey == null`).
+ *
+ * Использует тот же [FeedPlayerState], что и лента, хотя прогревать здесь нечего:
+ * альтернатива — второй путь создания плеера, то есть ровно та дублирующая
+ * обвязка, которую ветка удаляла. Цена общего пути мала: `SimpleCache` и так
+ * процессный и общий с лентой, `DefaultPreloadManager` без соседних элементов
+ * ничего не делает, пул сведён к одному плееру через `poolCapacity = 1`.
+ */
 @Composable
 private fun RedFullScreenSingle(
     item: GifsInfo,
