@@ -87,6 +87,7 @@ fun RedPooledVideoPlayer(
     enableAB: Boolean,
     onTimeChanged: FeedTimeListener,
     onPlayerControlsReady: (PlayerControls) -> Unit,
+    onPlayerControlsRelease: (PlayerControls) -> Unit,
     onClick: () -> Unit,
     isBuferring: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -176,36 +177,43 @@ fun RedPooledVideoPlayer(
         }
     }
 
-    LaunchedEffect(player, isCurrentPage) {
-        val exo = player ?: return@LaunchedEffect
-        if (!isCurrentPage) return@LaunchedEffect
+    // DisposableEffect, а не LaunchedEffect: страница обязана отозвать свои controls
+    // при уходе из композиции. PlayerPool.yield() к этому моменту уже сделал плееру
+    // stop() и clearMediaItems(), и оставленная снаружи ссылка дёргала бы пустой плеер.
+    DisposableEffect(player, isCurrentPage) {
+        val exo = player
+        if (exo == null || !isCurrentPage) {
+            onDispose { }
+        } else {
+            val controls = object : PlayerControls {
+                override fun forward(seconds: Float) {
+                    exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + (seconds * 1000).toLong()))
+                }
 
-        onPlayerControlsReady(object : PlayerControls {
-            override fun forward(seconds: Float) {
-                exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + (seconds * 1000).toLong()))
-            }
+                override fun rewind(seconds: Float) {
+                    exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition - (seconds * 1000).toLong()))
+                }
 
-            override fun rewind(seconds: Float) {
-                exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition - (seconds * 1000).toLong()))
-            }
+                override fun seekTo(positionSeconds: Float) {
+                    exo.seekTo(exo.clampSeekPositionMs((positionSeconds * 1000).toLong()))
+                }
 
-            override fun seekTo(positionSeconds: Float) {
-                exo.seekTo(exo.clampSeekPositionMs((positionSeconds * 1000).toLong()))
-            }
+                override fun stop() {
+                    exo.playWhenReady = false
+                    exo.seekTo(0L)
+                }
 
-            override fun stop() {
-                exo.playWhenReady = false
-                exo.seekTo(0L)
-            }
+                override fun pause() {
+                    exo.playWhenReady = false
+                }
 
-            override fun pause() {
-                exo.playWhenReady = false
+                override fun play() {
+                    exo.playWhenReady = true
+                }
             }
-
-            override fun play() {
-                exo.playWhenReady = true
-            }
-        })
+            onPlayerControlsReady(controls)
+            onDispose { onPlayerControlsRelease(controls) }
+        }
     }
 
     val zoomState = rememberZoomState(maxScale = 3f)

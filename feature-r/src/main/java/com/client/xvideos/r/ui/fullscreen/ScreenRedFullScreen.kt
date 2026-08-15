@@ -175,7 +175,8 @@ private fun RedFullScreenFeed(
                 host.currentIndex = page
                 host.returnToIndex = page
                 vm.play = true
-                vm.currentPlayerControls = null
+                // currentPlayerControls здесь не обнуляем: их отзывает сама
+                // страница в onPlayerControlsRelease, и только свои.
                 vm.currentPlayerTime = 0f
                 vm.currentPlayerDuration = 0
             }
@@ -351,6 +352,11 @@ private fun RedFullScreenPage(
                 if (isCurrentPage) {
                     vm.currentPlayerControls = controls
                 }
+            },
+            onPlayerControlsRelease = { controls ->
+                // Сравнение по ссылке: страница отзывает только свои controls и не
+                // затирает те, что успела выставить пришедшая ей на смену.
+                if (vm.currentPlayerControls === controls) vm.currentPlayerControls = null
             },
             onClick = { if (isCurrentPage) vm.play = !vm.play },
             isBuferring = { buffering ->
