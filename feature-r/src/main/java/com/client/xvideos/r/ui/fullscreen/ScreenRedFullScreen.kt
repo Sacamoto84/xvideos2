@@ -57,6 +57,7 @@ import com.client.xvideos.common.videoplayer.feed.FeedPlayerState
 import com.client.xvideos.common.videoplayer.feed.rememberFeedPlayerState
 import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
 import com.client.xvideos.r.ui.video.RedPooledVideoPlayer
+import com.client.xvideos.r.common.downloader.downloadedVideoKey
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedControls_Container_Line0
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
@@ -117,6 +118,7 @@ private fun RedFullScreenFeed(
     navigator: Navigator
 ) {
     val listGifs = host.pager.collectAsLazyPagingItems()
+    val downloadedKeys by vm.downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
     val appendExtra = if (listGifs.loadState.append is LoadState.Loading && listGifs.itemCount > 0) 1 else 0
     val pagerCount = max(startIndex + 1, listGifs.itemCount + appendExtra)
     val pagerState = rememberPagerState(initialPage = startIndex.coerceAtLeast(0)) { pagerCount.coerceAtLeast(1) }
@@ -132,7 +134,7 @@ private fun RedFullScreenFeed(
         batchSize = 3,
         onRangeEnterWindow = { range ->
             feedState.addRange(range) { i ->
-                listGifs.peekUrl(i, vm)
+                listGifs.peekUrl(i, downloadedKeys)
             }
         },
         onRangeLeaveWindow = { range ->
@@ -147,7 +149,7 @@ private fun RedFullScreenFeed(
         snapshotFlow { listGifs.itemCount }
             .distinctUntilChanged()
             .collect {
-                feedState.retryPending { i -> listGifs.peekUrl(i, vm) }
+                feedState.retryPending { i -> listGifs.peekUrl(i, downloadedKeys) }
             }
     }
 
@@ -159,7 +161,7 @@ private fun RedFullScreenFeed(
                 // Догреваем то, чего не было в списке на момент входа окна:
                 // на первом кадре экрана пейджинг ещё пуст, и повторного
                 // onRangeEnterWindow для стартового окна уже не будет.
-                feedState.retryPending { i -> listGifs.peekUrl(i, vm) }
+                feedState.retryPending { i -> listGifs.peekUrl(i, downloadedKeys) }
                 host.currentIndex = page
                 host.returnToIndex = page
                 vm.play = true
@@ -186,6 +188,7 @@ private fun RedFullScreenFeed(
                     vm = vm,
                     navigator = navigator,
                     feedState = feedState,
+                    downloadedKeys = downloadedKeys,
                     index = index,
                     bottomPadding = bottomPadding,
                     play = vm.play && isCurrentPage,
@@ -205,6 +208,7 @@ private fun RedFullScreenFeed(
                             vm = vm,
                             navigator = navigator,
                             feedState = feedState,
+                            downloadedKeys = downloadedKeys,
                             index = index,
                             bottomPadding = bottomPadding,
                             play = vm.play,
@@ -228,6 +232,7 @@ private fun RedFullScreenSingle(
     navigator: Navigator
 ) {
     var isVideoBuffering by remember { mutableStateOf(false) }
+    val downloadedKeys by vm.downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
 
     val feedState = rememberFeedPlayerState(poolCapacity = 1)
 
@@ -241,6 +246,7 @@ private fun RedFullScreenSingle(
             vm = vm,
             navigator = navigator,
             feedState = feedState,
+            downloadedKeys = downloadedKeys,
             index = 0,
             bottomPadding = bottomPadding,
             play = vm.play,
@@ -302,6 +308,7 @@ private fun RedFullScreenPage(
     vm: ScreenRedFullScreenSM,
     navigator: Navigator,
     feedState: FeedPlayerState,
+    downloadedKeys: Set<String>,
     index: Int,
     bottomPadding: Dp,
     play: Boolean,
@@ -309,7 +316,7 @@ private fun RedFullScreenPage(
     showOverlay: Boolean,
     onBuffering: (Boolean) -> Unit
 ) {
-    val videoUri = remember(item.id, item.userName) { redVideoUrl(item, vm) }
+    val videoUri = remember(item.id, item.userName, downloadedKeys) { redVideoUrl(item, downloadedKeys) }
 
     Box(Modifier.fillMaxSize()) {
         RedPooledVideoPlayer(
@@ -359,23 +366,24 @@ private fun RedFullScreenPage(
 
 /**
  * Url элемента ленты по индексу для окна предзагрузки. `peek` (а не `get`) —
- * намеренно: он не дёргает пейджинг на подгрузку соседних страниц. Индекс может
- * выйти за пределы уже загруженного списка (счётчик страниц пейджера больше
- * `itemCount` на «хвост» дозагрузки), поэтому проверяем границу — `peek`
- * за пределами `itemCount` бросает IndexOutOfBoundsException.
+ * намеренно: он не дёргает пейджинг на подгрузку соседних страниц. Границу всё
+ * равно проверяем: `peek` за пределами `itemCount` бросает IndexOutOfBoundsException.
  */
-private fun LazyPagingItems<GifsInfo>.peekUrl(index: Int, vm: ScreenRedFullScreenSM): String? {
+private fun LazyPagingItems<GifsInfo>.peekUrl(index: Int, downloadedKeys: Set<String>): String? {
     if (index < 0 || index >= itemCount) return null
-    return peek(index)?.let { redVideoUrl(it, vm) }
+    return peek(index)?.let { redVideoUrl(it, downloadedKeys) }
 }
 
 /**
  * Адрес видео для элемента ленты: локальный файл, если ролик уже скачан,
  * иначе HLS с api.redgifs.com. Общая точка для страницы и для предзагрузки —
  * ключи preload-менеджера обязаны совпадать с тем, что реально играет плеер.
+ *
+ * Скачанность берётся из готового набора ключей, а не из `File.exists()`:
+ * функция зовётся из окна предзагрузки на главном потоке для каждого индекса.
  */
-private fun redVideoUrl(item: GifsInfo, vm: ScreenRedFullScreenSM): String =
-    if (vm.downloadRed.downloader.findVideoInDownload(item.id, item.userName)) {
+private fun redVideoUrl(item: GifsInfo, downloadedKeys: Set<String>): String =
+    if (downloadedVideoKey(item.userName, item.id) in downloadedKeys) {
         "${AppPath.r_cache_download}/${item.userName}/${item.id}.mp4"
     } else {
         "https://api.redgifs.com/v2/gifs/${item.id.lowercase()}/hd.m3u8"

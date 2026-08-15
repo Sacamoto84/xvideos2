@@ -50,6 +50,17 @@ class DownloadRed @Inject constructor(
     private val _downloadList = MutableStateFlow<List<GifsInfo>>(emptyList())
     val downloadList: StateFlow<List<GifsInfo>> = _downloadList.asStateFlow()
 
+    /**
+     * Ключи роликов, у которых на диске лежит готовый `.mp4`.
+     *
+     * Отдельно от [downloadList]: тот собирается по `.info`-файлам, а `.info`
+     * существует и у оборванной закачки без видео. Нужен, чтобы окно
+     * предзагрузки ленты не дёргало `File.exists()` на главном потоке для
+     * каждого индекса — набор перестраивается тем же обходом, что и список.
+     */
+    private val _downloadedVideoKeys = MutableStateFlow<Set<String>>(emptySet())
+    val downloadedVideoKeys: StateFlow<Set<String>> = _downloadedVideoKeys.asStateFlow()
+
 
     init {
         refreshDownloadList()
@@ -139,8 +150,11 @@ class DownloadRed @Inject constructor(
         scope.launch(Dispatchers.IO) {
             val rootDir = File(AppPath.r_cache_download)
 
-            val infoFiles = if (rootDir.exists() && rootDir.isDirectory) {
-                rootDir.walkTopDown().filter { it.isFile && it.extension == "info" }.toList()
+            // Один обход на оба результата: раньше папка обходилась ради `.info`,
+            // а скачанность видео проверялась потом по одному File.exists() на
+            // элемент — и делалось это на главном потоке.
+            val allFiles = if (rootDir.exists() && rootDir.isDirectory) {
+                rootDir.walkTopDown().filter { it.isFile }.toList()
             } else {
                 emptyList()
             }
@@ -149,8 +163,8 @@ class DownloadRed @Inject constructor(
 
             val result = mutableListOf<GifsInfo>()
 
-            // Пример обработки каждого файла
-            infoFiles.forEach { file ->
+            allFiles.forEach { file ->
+                if (file.extension != "info") return@forEach
                 try {
                     val content = file.readText()
                     val obj = gson.fromJson(content, GifsInfo::class.java)
@@ -161,8 +175,8 @@ class DownloadRed @Inject constructor(
                 }
             }
 
-            // Можно отдать список путей или объектов
             _downloadList.emit(result)
+            _downloadedVideoKeys.emit(downloadedVideoKeys(allFiles.filter { it.extension == "mp4" }))
         }
     }
 
@@ -289,3 +303,21 @@ class DownloadRed @Inject constructor(
     }
 
 }
+
+/**
+ * Ключ скачанного ролика: креатор + id. Формат совпадает с раскладкой кеша
+ * `<r_cache_download>/<userName>/<id>.mp4`, поэтому набор ключей строится
+ * прямо из списка файлов, без повторного обхода диска.
+ */
+internal fun downloadedVideoKey(userName: String, id: String): String = "$userName/$id"
+
+/**
+ * Набор ключей скачанных видео по списку `.mp4`-файлов кеша.
+ *
+ * Отдельная функция, а не лямбда внутри обхода: это единственная арифметика в
+ * этом пути, и она проверяется обычным JVM-тестом.
+ */
+internal fun downloadedVideoKeys(videoFiles: List<File>): Set<String> =
+    videoFiles.mapTo(mutableSetOf()) {
+        downloadedVideoKey(it.parentFile?.name.orEmpty(), it.nameWithoutExtension)
+    }
