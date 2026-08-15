@@ -87,6 +87,15 @@ class FeedPlayerState(
             .setCache(FeedVideoCache.get(appContext))
             .setDataSourceFactory(dataSourceFactory)
 
+    /**
+     * Пул плееров ленты.
+     *
+     * Внимание: `PlayerPool.yield()` при возврате плеера сбрасывает только
+     * `playWhenReady`, `stop()` и `clearMediaItems()`. Любое другое свойство,
+     * выставленное на плеере страницей (громкость, видеоэффекты, скорость),
+     * страница обязана снять сама через `playerTeardown` у `rememberPooledPlayer` —
+     * пул за этим не следит.
+     */
     val playerPool: PlayerPool<ExoPlayer> = PlayerPool(poolCapacity) {
         builder.buildExoPlayer().apply {
             repeatMode = Player.REPEAT_MODE_ONE

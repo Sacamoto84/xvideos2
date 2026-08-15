@@ -101,6 +101,14 @@ fun RedPooledVideoPlayer(
             exo.setMediaSource(feedState.mediaSourceFor(mediaItem, index))
             exo.prepare()
         },
+        // PlayerPool.yield() сбрасывает только playWhenReady/stop/clearMediaItems.
+        // Всё, что страница ставила на плеер сама, она обязана снять сама —
+        // иначе следующая страница получит чужой поворот, громкость и скорость.
+        playerTeardown = { exo ->
+            exo.setVideoEffects(emptyList())
+            exo.volume = 1f
+            exo.setPlaybackSpeed(1f)
+        },
     )
 
     var isBuffering by remember(player) { mutableStateOf(true) }
