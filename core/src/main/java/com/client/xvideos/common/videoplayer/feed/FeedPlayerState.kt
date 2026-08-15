@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -184,6 +185,17 @@ class FeedPlayerState(
         preloadManager.setCurrentPlayingIndex(index)
     }
 
+    /**
+     * Держать ли кодеки прогретыми.
+     *
+     * `setForegroundMode(true)` удерживает декодеры даже на снятом `playWhenReady`,
+     * поэтому на уходе приложения в фон режим нужно снимать явно — иначе плееры
+     * пула держат аппаратные декодеры всё время, пока приложение свёрнуто.
+     */
+    fun setForegroundMode(foreground: Boolean) {
+        playerPool.executeForAll { setForegroundMode(foreground) }
+    }
+
     /** Элементы вошли в окно вокруг текущей страницы. `urlAt` возвращает null, если элемент ещё не подгружен пейджингом. */
     fun addRange(indices: IntRange, urlAt: (Int) -> String?) {
         indices.forEach { index ->
@@ -236,6 +248,10 @@ fun rememberFeedPlayerState(
 ): FeedPlayerState {
     val context = LocalContext.current
     val state = remember(context, poolCapacity) { FeedPlayerState(context, poolCapacity) }
+    LifecycleStartEffect(state) {
+        state.setForegroundMode(true)
+        onStopOrDispose { state.setForegroundMode(false) }
+    }
     DisposableEffect(state) { onDispose { state.release() } }
     return state
 }
