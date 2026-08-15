@@ -127,10 +127,20 @@ private fun RedFullScreenFeed(
     val feedState = rememberFeedPlayerState()
 
     SlidingWindowEffect(
-        itemCountProvider = { pagerState.pageCount },
-        currentItemProvider = { pagerState.settledPage },
+        // Именно itemCount пейджинга, а не pagerState.pageCount: счётчик страниц
+        // пейджера больше списка на «хвост» дозагрузки и на startIndex до прихода
+        // данных. Для таких индексов url не существует, они оседали в ожидании
+        // догрева навсегда.
+        itemCountProvider = { listGifs.itemCount },
+        // Тот же currentPage, что уходит в updateCurrentPage ниже. Раньше окно
+        // велось по settledPage, а ранжирование — по currentPage, и ранжирование
+        // могло ссылаться на индекс, ещё не вошедший в окно.
+        currentItemProvider = { pagerState.currentPage },
         maxLookbehind = 2,
         maxLookahead = 4,
+        // Батч применяется только при восстановлении после прыжка: в обычной
+        // прокрутке SlidingWindowEffect каждый раз пересобирает окно целиком
+        // (см. ветку else в его reconcile), и порционная догрузка не включается.
         batchSize = 3,
         onRangeEnterWindow = { range ->
             feedState.addRange(range) { i ->
