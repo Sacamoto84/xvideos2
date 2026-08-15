@@ -29,6 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
+import java.util.WeakHashMap
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -164,7 +165,10 @@ fun CMPPlayer2(
  */
 private object KeepScreenOnCounter {
 
-    private val counts = mutableMapOf<View, Int>()
+    // WeakHashMap, а не mutableMapOf: карта переживает свои View (счётчик —
+    // process-wide object), и непарный release превратил бы её в утечку всей
+    // Compose-иерархии. Слабый ключ делает такую утечку невозможной.
+    private val counts = WeakHashMap<View, Int>()
 
     fun acquire(view: View) {
         val next = (counts[view] ?: 0) + 1
