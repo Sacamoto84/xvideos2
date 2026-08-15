@@ -97,17 +97,12 @@ fun RedPooledVideoPlayer(
     val player: ExoPlayer? = rememberPooledPlayer(
         mediaItem = mediaItem,
         playerPool = feedState.playerPool,
+        // playerTeardown намеренно не передаём: см. KDoc у FeedPlayerState.playerPool.
+        // Всё, что страница ставит на плеер, она выставляет заново при получении —
+        // эффектами с ключом `player` ниже, а не снимает при возврате в пул.
         playerSetup = { exo ->
             exo.setMediaSource(feedState.mediaSourceFor(mediaItem, index))
             exo.prepare()
-        },
-        // PlayerPool.yield() сбрасывает только playWhenReady/stop/clearMediaItems.
-        // Всё, что страница ставила на плеер сама, она обязана снять сама —
-        // иначе следующая страница получит чужой поворот, громкость и скорость.
-        playerTeardown = { exo ->
-            exo.setVideoEffects(emptyList())
-            exo.volume = 1f
-            exo.setPlaybackSpeed(1f)
         },
     )
 

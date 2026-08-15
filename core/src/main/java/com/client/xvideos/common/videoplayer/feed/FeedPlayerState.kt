@@ -91,11 +91,19 @@ class FeedPlayerState(
     /**
      * Пул плееров ленты.
      *
-     * Внимание: `PlayerPool.yield()` при возврате плеера сбрасывает только
-     * `playWhenReady`, `stop()` и `clearMediaItems()`. Любое другое свойство,
-     * выставленное на плеере страницей (громкость, видеоэффекты, скорость),
-     * страница обязана снять сама через `playerTeardown` у `rememberPooledPlayer` —
-     * пул за этим не следит.
+     * `PlayerPool.yield()` при возврате плеера сбрасывает только `playWhenReady`,
+     * `stop()` и `clearMediaItems()`. Любое другое свойство (громкость,
+     * видеоэффекты, скорость) пул не трогает — страница обязана выставлять их
+     * **при получении** плеера, эффектом с ключом `player`.
+     *
+     * Именно при получении, а не через `playerTeardown` у `rememberPooledPlayer`.
+     * Teardown выполняется внутри деактивации подкомпозиции Compose, в один момент
+     * с отцеплением surface у `ContentFrame`: лишняя работа над плеером там роняет
+     * операцию по таймауту (`ERROR_CODE_TIMEOUT`, `ExoPlaybackException: Unexpected
+     * runtime error`), плеер уходит в `STATE_IDLE` и возвращается в пул сломанным.
+     * Через несколько свайпов так вырождаются все плееры пула, и лента встаёт на
+     * вечном спиннере. Проверено на устройстве: с `setVideoEffects` в teardown
+     * таймаут ловится на 3-5 свайпе, без него за 20 свайпов не воспроизводится.
      */
     val playerPool: PlayerPool<ExoPlayer> = PlayerPool(poolCapacity) {
         builder.buildExoPlayer().apply {
