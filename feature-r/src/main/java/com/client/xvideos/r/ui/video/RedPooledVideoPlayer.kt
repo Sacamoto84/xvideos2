@@ -89,7 +89,7 @@ fun RedPooledVideoPlayer(
     onPlayerControlsReady: (PlayerControls) -> Unit,
     onPlayerControlsRelease: (PlayerControls) -> Unit,
     onClick: () -> Unit,
-    isBuferring: (Boolean) -> Unit,
+    onBufferingChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val mediaItem = remember(index, url) { feedState.mediaItemFor(index, url) }
@@ -112,7 +112,7 @@ fun RedPooledVideoPlayer(
     )
 
     var isBuffering by remember(player) { mutableStateOf(true) }
-    LaunchedEffect(isBuffering) { isBuferring(isBuffering) }
+    LaunchedEffect(isBuffering) { onBufferingChanged(isBuffering) }
 
     // Именно LifecycleStartEffect, а не LaunchedEffect: прежний путь ленты вешал
     // `LifecycleEventObserver` (см. `ExoPlayerLifecycle.rememberExoPlayerWithLifecycle`)

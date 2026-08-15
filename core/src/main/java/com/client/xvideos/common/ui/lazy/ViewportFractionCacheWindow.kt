@@ -25,7 +25,12 @@ import kotlin.math.roundToInt
 fun viewportFractionCacheWindow(
     ahead: Float = 0.5f,
     behind: Float = 0.15f,
-): LazyLayoutCacheWindow = ViewportFractionCacheWindow(ahead, behind)
+): LazyLayoutCacheWindow {
+    require(ahead >= 0f && behind >= 0f) {
+        "Доли окна не могут быть отрицательными: ahead=$ahead, behind=$behind"
+    }
+    return ViewportFractionCacheWindow(ahead, behind)
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 private class ViewportFractionCacheWindow(

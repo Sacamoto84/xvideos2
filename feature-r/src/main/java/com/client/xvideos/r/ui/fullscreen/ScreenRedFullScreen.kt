@@ -359,7 +359,7 @@ private fun RedFullScreenPage(
                 if (vm.currentPlayerControls === controls) vm.currentPlayerControls = null
             },
             onClick = { if (isCurrentPage) vm.play = !vm.play },
-            isBuferring = { buffering ->
+            onBufferingChanged = { buffering ->
                 if (isCurrentPage) {
                     onBuffering(buffering)
                 }
