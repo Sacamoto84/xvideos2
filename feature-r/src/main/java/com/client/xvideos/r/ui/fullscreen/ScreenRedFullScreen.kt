@@ -331,10 +331,10 @@ private fun RedFullScreenPage(
             timeA = vm.timeA,
             timeB = vm.timeB,
             enableAB = vm.enableAB,
-            onChangeTime = { time ->
+            onTimeChanged = { position, duration ->
                 if (isCurrentPage) {
-                    vm.currentPlayerTime = time.first
-                    vm.currentPlayerDuration = time.second
+                    vm.currentPlayerTime = position
+                    vm.currentPlayerDuration = duration
                 }
             },
             onPlayerControlsReady = { controls ->

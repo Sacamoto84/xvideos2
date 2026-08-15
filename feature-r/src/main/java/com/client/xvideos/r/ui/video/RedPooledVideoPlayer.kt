@@ -53,6 +53,18 @@ private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long {
 }
 
 /**
+ * Тик времени плеера ленты.
+ *
+ * `fun interface`, а не `(Float, Int) -> Unit`: у Kotlin-функциональных типов
+ * параметры генерик, `Function2<Float, Integer, Unit>` боксит оба примитива на
+ * каждом вызове — а вызовов здесь 20 в секунду. У `fun interface` сигнатура
+ * компилируется в `onTime(float, int)`, без бокса и без промежуточного `Pair`.
+ */
+fun interface FeedTimeListener {
+    fun onTime(positionSeconds: Float, durationSeconds: Int)
+}
+
+/**
  * Страница ленты, работающая на общем пуле плееров [FeedPlayerState].
  *
  * Отличие от прежнего плеера ленты: `ExoPlayer` не создаётся на каждую страницу,
@@ -73,7 +85,7 @@ fun RedPooledVideoPlayer(
     timeA: Float,
     timeB: Float,
     enableAB: Boolean,
-    onChangeTime: (Pair<Float, Int>) -> Unit,
+    onTimeChanged: FeedTimeListener,
     onPlayerControlsReady: (PlayerControls) -> Unit,
     onClick: () -> Unit,
     isBuferring: (Boolean) -> Unit,
@@ -145,15 +157,19 @@ fun RedPooledVideoPlayer(
         // страницах работали бы три корутины по 20 Гц.
         if (!isCurrentPage) return@LaunchedEffect
         // Аналог прежнего `distinctUntilChanged()`: на паузе значение не меняется,
-        // и апстрим не дёргается 20 раз в секунду впустую.
-        var lastReported: Pair<Float, Int>? = null
+        // и апстрим не дёргается 20 раз в секунду впустую. Примитивные локальные
+        // переменные вместо Pair — на 20 Гц это единственная аллокация в цикле.
+        // NaN не равен ничему, включая себя, поэтому первый проход всегда репортит.
+        var lastPosition = Float.NaN
+        var lastDuration = -1
         while (isActive) {
             val position = (exo.currentPosition / 1000f).coerceAtLeast(0f)
             val durationMs = exo.duration.takeIf { it != C.TIME_UNSET } ?: 0L
-            val tick = position to (durationMs / 1000).toInt()
-            if (tick != lastReported) {
-                lastReported = tick
-                onChangeTime(tick)
+            val duration = (durationMs / 1000).toInt()
+            if (position != lastPosition || duration != lastDuration) {
+                lastPosition = position
+                lastDuration = duration
+                onTimeChanged.onTime(position, duration)
             }
             if (enableAB && position >= timeB) exo.seekTo((timeA * 1000).toLong())
             delay(50)
