@@ -2,6 +2,7 @@ package com.client.xvideos.common.videoplayer.feed
 
 import android.content.Context
 import android.net.Uri
+import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
@@ -161,6 +162,7 @@ class FeedPlayerState(
 
     /** Источник для страницы: уже прогретый, либо добавленный сейчас. */
     fun mediaSourceFor(mediaItem: MediaItem, index: Int): MediaSource {
+        verifyMainThread()
         preloadManager.getMediaSource(mediaItem)?.let { return it }
         val action = registry.track(index, mediaItem)
         applyAction(index, action)
@@ -186,6 +188,7 @@ class FeedPlayerState(
         DefaultMediaSourceFactory(appContext).setDataSourceFactory(dataSourceFactory)
 
     fun updateCurrentPage(index: Int) {
+        verifyMainThread()
         statusControl.currentPlayingIndex = index
         // Отдельный invalidate() не нужен: setCurrentPlayingIndex доходит до
         // SimpleRankingDataComparator, а тот при смене индекса синхронно дёргает
@@ -202,11 +205,13 @@ class FeedPlayerState(
      * пула держат аппаратные декодеры всё время, пока приложение свёрнуто.
      */
     fun setForegroundMode(foreground: Boolean) {
+        verifyMainThread()
         playerPool.executeForAll { setForegroundMode(foreground) }
     }
 
     /** Элементы вошли в окно вокруг текущей страницы. `urlAt` возвращает null, если элемент ещё не подгружен пейджингом. */
     fun addRange(indices: IntRange, urlAt: (Int) -> String?) {
+        verifyMainThread()
         indices.forEach { index ->
             val url = urlAt(index)
             if (url == null) {
@@ -220,6 +225,7 @@ class FeedPlayerState(
 
     /** Догреть индексы, у которых url не было в момент входа в окно. */
     fun retryPending(urlAt: (Int) -> String?) {
+        verifyMainThread()
         val waiting = registry.pendingIndices()
         if (waiting.isEmpty()) return
         var resolvedAny = false
@@ -233,6 +239,7 @@ class FeedPlayerState(
 
     /** Элементы вышли из окна — снимаем с прогрева по собственному учёту. */
     fun removeRange(indices: IntRange) {
+        verifyMainThread()
         indices.forEach { index ->
             val mediaItem = registry.forget(index) ?: return@forEach
             preloadManager.remove(mediaItem)
@@ -241,9 +248,21 @@ class FeedPlayerState(
 
     /** Кеш ([FeedVideoCache]) намеренно не трогаем: он процессный. */
     fun release() {
+        verifyMainThread()
         registry.clear()
         playerPool.release()
         preloadManager.release()
+    }
+
+    /**
+     * Тот же контракт, что у `PlayerPool.verifyMainThread()`: реестр прогрева и
+     * `DefaultPreloadManager` не потокобезопасны, а нарушение видно не сразу —
+     * оно всплывает рассинхроном учёта через десятки свайпов.
+     */
+    private fun verifyMainThread() {
+        check(Looper.myLooper() == Looper.getMainLooper()) {
+            "FeedPlayerState: все методы только с главного потока"
+        }
     }
 
     companion object {
