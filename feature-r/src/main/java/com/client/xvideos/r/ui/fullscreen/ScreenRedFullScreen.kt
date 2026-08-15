@@ -231,6 +231,10 @@ private fun RedFullScreenSingle(
 
     val feedState = rememberFeedPlayerState(poolCapacity = 1)
 
+    // Без этого statusControl.currentPlayingIndex остаётся C.INDEX_UNSET, политика
+    // всегда отдаёт CACHED_ONLY, и preload-менеджер на этом экране не делает ничего.
+    LaunchedEffect(feedState) { feedState.updateCurrentPage(0) }
+
     RedFullScreenScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
         RedFullScreenPage(
             item = item,

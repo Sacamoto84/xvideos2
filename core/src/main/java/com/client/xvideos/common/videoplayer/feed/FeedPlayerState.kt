@@ -138,7 +138,13 @@ class FeedPlayerState(
     /** Источник для страницы: уже прогретый, либо добавленный сейчас. */
     fun mediaSourceFor(mediaItem: MediaItem, index: Int): MediaSource {
         preloadManager.getMediaSource(mediaItem)?.let { return it }
-        applyAction(index, registry.track(index, mediaItem))
+        val action = registry.track(index, mediaItem)
+        applyAction(index, action)
+        // add() сам по себе только кладёт holder в карту. Без invalidate()
+        // менеджер не пересобирает очередь приоритетов, и добавленный страницей
+        // элемент не греется до следующего внешнего invalidate — а на одиночном
+        // экране такого вызова нет вовсе.
+        if (action !is PreloadAction.None) preloadManager.invalidate()
         return checkNotNull(preloadManager.getMediaSource(mediaItem)) {
             "preloadManager не отдал источник для ${mediaItem.mediaId}"
         }
