@@ -88,14 +88,16 @@ dependencies {
     api libs.androidx.media3.exoplayer.hls
     api libs.androidx.media3.common
     api libs.androidx.media3.common.ktx
-    // extractor и decoder оставлены явно, хотя прямых импортов у них нет:
-    // явная строка фиксирует версию через version.ref, а не полагается на то,
-    // какую версию притащит транзитивно exoplayer.
-    api libs.androidx.media3.extractor
-    api libs.androidx.media3.decoder
     api libs.androidx.media3.datasource
-    api libs.androidx.media3.datasource.ktor
-    api libs.androidx.media3.database
+    // implementation, а не api: прямых импортов у них нет ни в core, ни в
+    // feature-модулях — extractor и decoder нужны рантайму exoplayer, ktor-датасорс
+    // и database живут внутри VideoHttpDataSource и FeedVideoCache. Явная строка
+    // всё так же фиксирует версию через version.ref, а не полагается на то, какую
+    // версию притащит транзитивно exoplayer.
+    implementation libs.androidx.media3.extractor
+    implementation libs.androidx.media3.decoder
+    implementation libs.androidx.media3.datasource.ktor
+    implementation libs.androidx.media3.database
     api(libs.androidx.media3.ui.compose)
     api libs.androidx.media3.effect
 
