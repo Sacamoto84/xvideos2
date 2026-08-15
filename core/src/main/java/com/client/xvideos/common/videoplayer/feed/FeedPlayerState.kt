@@ -3,9 +3,6 @@ package com.client.xvideos.common.videoplayer.feed
 import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.OptIn
-import androidx.collection.MutableIntList
-import androidx.collection.MutableIntObjectMap
-import androidx.collection.MutableIntSet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -96,19 +93,29 @@ class FeedPlayerState(
 
     val preloadManager: DefaultPreloadManager = builder.build()
 
+    /** Учёт отданного в прогрев. Вся арифметика — в [FeedPreloadRegistry]. */
+    private val registry = FeedPreloadRegistry<MediaItem>()
+
     /**
-     * Что именно мы отдали в прогрев: индекс в ленте → добавленный `MediaItem`.
+     * Применить решение реестра к менеджеру прогрева.
      *
-     * Собрать `MediaItem` заново по данным пейджинга в момент удаления нельзя:
-     * к тому времени, когда индекс покидает окно, пейджинг уже мог выбросить
-     * этот элемент из списка — url не найдётся, `remove` не вызовется, и
-     * источник останется в preload-менеджере навсегда. Поэтому помним сами.
+     * `Replace` снимает старый элемент перед добавлением нового: без этого
+     * `BasePreloadManager` положил бы новый holder поверх старого через `put()`,
+     * не освободив предыдущий.
      *
-     * `MutableIntObjectMap` вместо `Map<Int, _>`: ключ — примитивный индекс, и
-     * на каждом свайпе окно прогрева правится целыми диапазонами. Обычная мапа
-     * боксила бы каждый индекс в `Integer`.
+     * Имя не `apply`: так называется scope-функция стандартной библиотеки, и
+     * затенять её членом класса — верный способ получить неочевидный вызов.
      */
-    private val preloadedItems = MutableIntObjectMap<MediaItem>()
+    private fun applyAction(index: Int, action: PreloadAction<MediaItem>) {
+        when (action) {
+            is PreloadAction.None -> Unit
+            is PreloadAction.Add -> preloadManager.add(action.item, index)
+            is PreloadAction.Replace -> {
+                preloadManager.remove(action.old)
+                preloadManager.add(action.new, index)
+            }
+        }
+    }
 
     /**
      * Ключ элемента для preload-менеджера. `mediaId` — позиция в ленте (по нему
@@ -131,8 +138,7 @@ class FeedPlayerState(
     /** Источник для страницы: уже прогретый, либо добавленный сейчас. */
     fun mediaSourceFor(mediaItem: MediaItem, index: Int): MediaSource {
         preloadManager.getMediaSource(mediaItem)?.let { return it }
-        preloadManager.add(mediaItem, index)
-        preloadedItems[index] = mediaItem
+        applyAction(index, registry.track(index, mediaItem))
         return checkNotNull(preloadManager.getMediaSource(mediaItem)) {
             "preloadManager не отдал источник для ${mediaItem.mediaId}"
         }
@@ -147,63 +153,43 @@ class FeedPlayerState(
         preloadManager.setCurrentPlayingIndex(index)
     }
 
-    /**
-     * Индексы, которые вошли в окно, но не имели url на тот момент.
-     *
-     * `SlidingWindowEffect` считает диапазон вошедшим сразу и второй раз
-     * `onRangeEnterWindow` для него не позовёт. Худший случай — первый кадр
-     * экрана: пейджинг ещё пуст, стартовое окно целиком отдаёт null, и ровно то
-     * окно, ради которого фича делалась, остаётся холодным. Помним такие
-     * индексы и догреваем их из [retryPending], когда данные приедут.
-     */
-    private val pendingIndices = MutableIntSet()
-
     /** Элементы вошли в окно вокруг текущей страницы. `urlAt` возвращает null, если элемент ещё не подгружен пейджингом. */
     fun addRange(indices: IntRange, urlAt: (Int) -> String?) {
         indices.forEach { index ->
             val url = urlAt(index)
             if (url == null) {
-                pendingIndices += index
+                registry.markPending(index)
                 return@forEach
             }
-            val mediaItem = mediaItemFor(index, url)
-            preloadManager.add(mediaItem, index)
-            preloadedItems[index] = mediaItem
+            applyAction(index, registry.track(index, mediaItemFor(index, url)))
         }
         preloadManager.invalidate()
     }
 
     /** Догреть индексы, у которых url не было в момент входа в окно. */
     fun retryPending(urlAt: (Int) -> String?) {
-        if (pendingIndices.isEmpty()) return
-        // Снимаем добавленное отдельным проходом: править множество во время
-        // обхода нельзя, а у `MutableIntSet` нет итератора с remove().
-        val resolved = MutableIntList()
-        pendingIndices.forEach { index ->
+        val waiting = registry.pendingIndices()
+        if (waiting.isEmpty()) return
+        var resolvedAny = false
+        waiting.forEach { index ->
             val url = urlAt(index) ?: return@forEach
-            val mediaItem = mediaItemFor(index, url)
-            preloadManager.add(mediaItem, index)
-            preloadedItems[index] = mediaItem
-            resolved += index
+            applyAction(index, registry.track(index, mediaItemFor(index, url)))
+            resolvedAny = true
         }
-        if (resolved.isEmpty()) return
-        resolved.forEach { index -> pendingIndices -= index }
-        preloadManager.invalidate()
+        if (resolvedAny) preloadManager.invalidate()
     }
 
     /** Элементы вышли из окна — снимаем с прогрева по собственному учёту. */
     fun removeRange(indices: IntRange) {
         indices.forEach { index ->
-            pendingIndices -= index
-            val mediaItem = preloadedItems.remove(index) ?: return@forEach
+            val mediaItem = registry.forget(index) ?: return@forEach
             preloadManager.remove(mediaItem)
         }
     }
 
     /** Кеш ([FeedVideoCache]) намеренно не трогаем: он процессный. */
     fun release() {
-        preloadedItems.clear()
-        pendingIndices.clear()
+        registry.clear()
         playerPool.release()
         preloadManager.release()
     }
