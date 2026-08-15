@@ -52,8 +52,10 @@ fun AlbumListFilterGenres(
         filterGenreStateCount?.map { it.term }?.toSet()
     }
 
-    val genresPlus = filter.genresPlus
-    val genresMinus = filter.genresMinus
+    // distinctBy обязателен: ниже списки уходят в LazyColumn с key = { it.title },
+    // а дублирующийся ключ роняет список.
+    val genresPlus = remember(filter.genresPlus) { filter.genresPlus.distinctBy { it.title } }
+    val genresMinus = remember(filter.genresMinus) { filter.genresMinus.distinctBy { it.title } }
 
     val allGenres = mediaCategories?.genres ?: emptyList()
 

@@ -45,8 +45,11 @@ fun AlbumListFilterTags(
 
     val tagCountItems = filterTagStateCount.orEmpty()
 
-    val tagsPlus = filter.tagPlus
-    val tagsMinus = filter.tagMinus
+    // distinct обязателен: ниже эти списки уходят в LazyColumn с key = { it },
+    // а дублирующийся ключ роняет список. Фильтр приходит и из сохранённых
+    // запросов, где дубль технически возможен.
+    val tagsPlus = remember(filter.tagPlus) { filter.tagPlus.distinct() }
+    val tagsMinus = remember(filter.tagMinus) { filter.tagMinus.distinct() }
 
     val tagsCorrect = rememberSelectableTags(tagCountItems, tagsPlus, tagsMinus)
     val tagCountByTerm = rememberTagCountIndex(tagCountItems)
