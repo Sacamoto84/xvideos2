@@ -1,6 +1,7 @@
 package com.client.xvideos.common.videoplayer.feed
 
 import android.content.Context
+import android.net.Uri
 import androidx.annotation.MainThread
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
@@ -12,6 +13,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.PlayerPool
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
@@ -126,18 +128,26 @@ class FeedPlayerState(
      * менеджер удаляет элементы), `customCacheKey` — сам url, чтобы дисковый кеш
      * переживал перетасовку списка.
      *
-     * Для HLS `customCacheKey` не ставим: адаптивным потокам его запрещает
-     * `DownloadRequest` (`customCacheKey must be null for type: 2`), а до него
-     * доходит `PreCacheHelper` на уровне прогрева `specifiedRangeCached` —
+     * `customCacheKey` ставим только прогрессивным потокам. Адаптивным его
+     * запрещает `DownloadRequest` (`customCacheKey must be null for type: 2`), а
+     * до него доходит `PreCacheHelper` на уровне прогрева `specifiedRangeCached` —
      * с ключом приложение падало на первом же дальнем элементе ленты. Плейлист
      * и сегменты HLS кешируются по своим адресам, отдельный ключ им не нужен.
+     *
+     * Тип определяет `Util.inferContentType` — то же, чем пользуется сам media3.
+     * Проверка `endsWith(".m3u8")` ломалась бы на подписанном url с `?token=…`
+     * и на редиректе, то есть ровно там, где краш и вернулся бы.
      */
-    fun mediaItemFor(index: Int, url: String): MediaItem =
-        MediaItem.Builder()
-            .setUri(url)
+    fun mediaItemFor(index: Int, url: String): MediaItem {
+        val uri = Uri.parse(url)
+        return MediaItem.Builder()
+            .setUri(uri)
             .setMediaId(index.toString())
-            .apply { if (!url.endsWith(".m3u8", ignoreCase = true)) setCustomCacheKey(url) }
+            .apply {
+                if (Util.inferContentType(uri) == C.CONTENT_TYPE_OTHER) setCustomCacheKey(url)
+            }
             .build()
+    }
 
     /** Источник для страницы: уже прогретый, либо добавленный сейчас. */
     fun mediaSourceFor(mediaItem: MediaItem, index: Int): MediaSource {
