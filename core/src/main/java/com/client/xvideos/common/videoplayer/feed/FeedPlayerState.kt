@@ -15,10 +15,12 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.preload.DefaultPreloadManager
 import androidx.media3.exoplayer.source.preload.TargetPreloadStatusControl
 import com.client.xvideos.common.videoplayer.net.VideoHttpDataSource
+import timber.log.Timber
 
 /**
  * Пул плееров + менеджер предзагрузки для вертикальной ленты.
@@ -58,6 +60,13 @@ class FeedPlayerState(
             }
         }
 
+    // Не голая http-фабрика: `DefaultPreloadManager` подставляет её как есть,
+    // вместо своего `DefaultDataSource.Factory`, и локальные файлы (скачанные
+    // ролики отдаются голым путём, без схемы) ушли бы в Ktor как HTTP-запрос.
+    // `DefaultDataSource` разбирает схему и уводит локальные файлы в
+    // `FileDataSource`, а сеть — в Ktor.
+    private val dataSourceFactory = DefaultDataSource.Factory(appContext, VideoHttpDataSource.factory())
+
     private val builder: DefaultPreloadManager.Builder =
         DefaultPreloadManager.Builder(appContext, statusControl)
             .setLoadControl(
@@ -73,12 +82,7 @@ class FeedPlayerState(
                     .build()
             )
             .setCache(FeedVideoCache.get(appContext))
-            // Не голая http-фабрика: `DefaultPreloadManager` подставляет её как есть,
-            // вместо своего `DefaultDataSource.Factory`, и локальные файлы (скачанные
-            // ролики отдаются голым путём, без схемы) ушли бы в Ktor как HTTP-запрос.
-            // `DefaultDataSource` разбирает схему и уводит локальные файлы в
-            // `FileDataSource`, а сеть — в Ktor.
-            .setDataSourceFactory(DefaultDataSource.Factory(appContext, VideoHttpDataSource.factory()))
+            .setDataSourceFactory(dataSourceFactory)
 
     val playerPool: PlayerPool<ExoPlayer> = PlayerPool(poolCapacity) {
         builder.buildExoPlayer().apply {
@@ -145,10 +149,21 @@ class FeedPlayerState(
         // элемент не греется до следующего внешнего invalidate — а на одиночном
         // экране такого вызова нет вовсе.
         if (action !is PreloadAction.None) preloadManager.invalidate()
-        return checkNotNull(preloadManager.getMediaSource(mediaItem)) {
-            "preloadManager не отдал источник для ${mediaItem.mediaId}"
-        }
+        val preloaded = preloadManager.getMediaSource(mediaItem)
+        if (preloaded != null) return preloaded
+        // Метод зовётся из playerSetup прямо во время свайпа. Уронить приложение
+        // здесь нельзя: играем мимо прогрева тем же стеком датасорсов.
+        Timber.w("preloadManager не отдал источник для ${mediaItem.mediaId} — играем мимо прогрева")
+        return fallbackSourceFactory.createMediaSource(mediaItem)
     }
+
+    /**
+     * Запасная фабрика на случай, когда preload-менеджер не отдал источник.
+     * Тот же [dataSourceFactory], что и у прогрева, — иначе локальные файлы
+     * снова ушли бы в Ktor как HTTP-запрос.
+     */
+    private val fallbackSourceFactory: MediaSource.Factory =
+        DefaultMediaSourceFactory(appContext).setDataSourceFactory(dataSourceFactory)
 
     fun updateCurrentPage(index: Int) {
         statusControl.currentPlayingIndex = index
