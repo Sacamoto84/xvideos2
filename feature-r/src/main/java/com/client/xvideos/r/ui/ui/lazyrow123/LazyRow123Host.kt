@@ -92,7 +92,7 @@ class LazyRow123Host(
      * плееры, которые только что были отпущены.
      */
     @OptIn(ExperimentalFoundationApi::class)
-    val cacheWindow = viewportFractionCacheWindow(ahead = 0.5f, behind = 0.25f)
+    val cacheWindow = viewportFractionCacheWindow(ahead = 0.5f, behind = 0.15f)
 
     @OptIn(ExperimentalFoundationApi::class)
     val state: LazyGridState = LazyGridState(cacheWindow = cacheWindow)

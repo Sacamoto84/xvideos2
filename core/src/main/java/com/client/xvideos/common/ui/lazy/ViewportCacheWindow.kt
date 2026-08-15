@@ -24,7 +24,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalFoundationApi::class)
 fun viewportFractionCacheWindow(
     ahead: Float = 0.5f,
-    behind: Float = 0.25f,
+    behind: Float = 0.15f,
 ): LazyLayoutCacheWindow = ViewportFractionCacheWindow(ahead, behind)
 
 @OptIn(ExperimentalFoundationApi::class)
