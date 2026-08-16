@@ -1,6 +1,7 @@
 package com.client.xvideos.l.model
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 /**
  * Жанр из каталога Luscious — тот, по которому фильтруют список альбомов.
@@ -53,9 +54,9 @@ data class FilterGenre(
 
     @SerializedName("only_content")
     val onlyContent: OnlyContent?
-)
+) : Serializable
 
-/** Ограничение жанра по типу контента. */
+/** Ограничение жанра по типу контента. `Serializable` вслед за [FilterGenre]. */
 data class OnlyContent(
     @SerializedName("id")
     val id: String,
@@ -65,4 +66,4 @@ data class OnlyContent(
 
     @SerializedName("url")
     val url: String
-)
+) : Serializable

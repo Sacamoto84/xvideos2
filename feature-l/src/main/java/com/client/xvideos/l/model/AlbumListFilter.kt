@@ -3,7 +3,14 @@ package com.client.xvideos.l.model
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
+import java.io.Serializable
 
+/**
+ * `Serializable` обязателен: фильтр лежит в экране, который создаёт
+ * `L_ScreenAlbumList.create`, а экраны Voyager (`Screen : Serializable`) целиком
+ * уходят в saved state активити. Без этого приложение падает
+ * `NotSerializableException`, когда система сохраняет состояние.
+ */
 data class AlbumListFilter(
     val display: String = "date_newest",
     val album_type: AlbumType = AlbumType.Pictures, //manga pictures или все при отсуствии
@@ -18,4 +25,4 @@ data class AlbumListFilter(
     val tagMinus : List<String> = emptyList(),
     val searchQuery : String = "",
     val selection : String = "",
-    )
+    ) : Serializable
