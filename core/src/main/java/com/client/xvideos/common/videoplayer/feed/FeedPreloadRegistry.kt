@@ -1,5 +1,6 @@
 package com.client.xvideos.common.videoplayer.feed
 
+import androidx.collection.MutableIntList
 import androidx.collection.MutableIntObjectMap
 import androidx.collection.MutableIntSet
 
@@ -87,10 +88,13 @@ class FeedPreloadRegistry<T : Any> {
      *
      * Именно копия: вызывающий будет звать [track] прямо во время обхода, а
      * править множество во время итерации нельзя.
+     *
+     * `MutableIntList`, а не `List<Int>`: копия делается на каждый приход
+     * страницы пейджинга, и боксить индексы в `Integer` здесь незачем — по той
+     * же причине, по которой примитивные коллекции взяты выше.
      */
-    fun pendingIndices(): List<Int> {
-        if (pending.isEmpty()) return emptyList()
-        val result = ArrayList<Int>(pending.size)
+    fun pendingIndices(): MutableIntList {
+        val result = MutableIntList(pending.size)
         pending.forEach { result += it }
         return result
     }

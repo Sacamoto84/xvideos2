@@ -58,7 +58,10 @@ class FeedPreloadRegistryTest {
         registry.markPending(2)
         val snapshot = registry.pendingIndices()
         snapshot.forEach { registry.track(it, "item$it") }
-        assertEquals(listOf(1, 2), snapshot.sorted())
+        snapshot.sort()
+        assertEquals(2, snapshot.size)
+        assertEquals(1, snapshot[0])
+        assertEquals(2, snapshot[1])
         assertTrue(registry.pendingIndices().isEmpty())
     }
 
