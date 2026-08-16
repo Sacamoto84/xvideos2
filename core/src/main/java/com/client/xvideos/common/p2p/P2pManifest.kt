@@ -1,5 +1,6 @@
 package com.client.xvideos.common.p2p
 
+import com.client.xvideos.common.io.normalizeRelativePath
 import com.google.gson.Gson
 
 /**
@@ -65,6 +66,12 @@ object P2pManifestCodec {
             require(file.name != null && file.relativePath != null) {
                 "P2P-манифест: у файла нет имени или пути"
             }
+            // relativePath приходит с чужого устройства и напрямую задаёт, куда
+            // ляжет файл. Без нормализации пир кладёт `../../shared_prefs/...`
+            // и переписывает что угодно внутри UID приложения — включая хеш
+            // код-доступа. Отвергаем битый путь здесь, чтобы runCatching в
+            // P2pReceiveController поймал его до единой записи на диск.
+            normalizeRelativePath(file.relativePath)
         }
 
         return parsed

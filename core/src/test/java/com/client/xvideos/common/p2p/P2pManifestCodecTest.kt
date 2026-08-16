@@ -90,4 +90,36 @@ class P2pManifestCodecTest {
             P2pManifestCodec.fromJson("null")
         }
     }
+
+    @Test
+    fun `файл с выходом за корень отвергается`() {
+        val json = """{"type":"L","metadataFileName":null,""" +
+            """"files":[{"name":"a.jpg","relativePath":"../../shared_prefs/x.xml","payloadId":1,"size":2}]}"""
+
+        assertThrows(IllegalArgumentException::class.java) {
+            P2pManifestCodec.fromJson(json)
+        }
+    }
+
+    @Test
+    fun `файл с абсолютным путём принимается, но кладётся внутрь store`() {
+        // Ведущий слеш срезается нормализацией, поэтому манифест валиден, а
+        // P2pBundleInstaller положит файл внутрь storeRoot. Проверка того, что
+        // наружу он не уйдёт — в P2pBundleInstallerTest.
+        val json = """{"type":"L","metadataFileName":null,""" +
+            """"files":[{"name":"a.jpg","relativePath":"/data/data/com.client.xvideos/a.jpg","payloadId":1,"size":2}]}"""
+
+        val parsed = P2pManifestCodec.fromJson(json)
+        assertEquals(1, parsed.files.size)
+    }
+
+    @Test
+    fun `файл с пустым путём отвергается`() {
+        val json = """{"type":"L","metadataFileName":null,""" +
+            """"files":[{"name":"a.jpg","relativePath":"","payloadId":1,"size":2}]}"""
+
+        assertThrows(IllegalArgumentException::class.java) {
+            P2pManifestCodec.fromJson(json)
+        }
+    }
 }

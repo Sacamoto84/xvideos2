@@ -14,15 +14,20 @@ import java.io.File
  * Приводит относительный путь к каноничному виду `a/b/c` и отвергает всё, чем
  * можно выйти за корень распаковки.
  *
- * Отвергается: пустое имя, абсолютный путь, `..` и `.` в любом сегменте,
- * двоеточие (диск в windows-путях и ADS в NTFS).
+ * Отвергается: пустое имя, `..` и `.` в любом сегменте, двоеточие (диск в
+ * windows-путях и ADS в NTFS).
+ *
+ * Ведущий слеш не отвергается, а срезается: `/a/b` становится `a/b` и остаётся
+ * внутри корня. Отказ здесь ломал бы распаковку zip от архиваторов, которые
+ * пишут имена с ведущим слешем, а безопасности не добавляет — итог всё равно
+ * относительный.
  *
  * @throws IllegalArgumentException если путь небезопасен.
  */
 fun normalizeRelativePath(raw: String): String {
     val name = raw.replace('\\', '/').trim('/')
     require(name.isNotBlank()) { "Пустое имя пути" }
-    require(!name.startsWith("/") && !name.contains(':')) { "Небезопасный путь: $raw" }
+    require(!name.contains(':')) { "Небезопасный путь: $raw" }
     val parts = name.split('/').filter { it.isNotBlank() }
     require(parts.none { it == "." || it == ".." }) { "Небезопасный путь: $raw" }
     return parts.joinToString("/")

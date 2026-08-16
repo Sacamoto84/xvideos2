@@ -34,6 +34,14 @@ class SafePathTest {
     }
 
     @Test
+    fun `абсолютный путь обезвреживается, а не отвергается`() {
+        // Ведущий слеш срезается: итог относительный и остаётся внутри корня.
+        // Отказ здесь ломал бы zip от архиваторов, пишущих имена с ведущим
+        // слешем, — при том что выйти за корень таким путём всё равно нельзя.
+        assertEquals("data/a.jpg", normalizeRelativePath("/data/a.jpg"))
+    }
+
+    @Test
     fun `requireInside пропускает цель внутри корня`() {
         val root = tmp.newFolder("root")
         requireInside(root, File(root, "a/b.txt"))
