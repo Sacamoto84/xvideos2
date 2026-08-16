@@ -3,7 +3,6 @@ package com.client.xvideos.arch
 import com.client.xvideos.arch.ProjectSources.roots
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.File
 
 /**
  * Сторож: экраны Voyager обязаны целиком сериализоваться.
