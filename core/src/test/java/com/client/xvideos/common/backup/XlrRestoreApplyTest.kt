@@ -79,6 +79,26 @@ class XlrRestoreApplyTest {
     }
 
     @Test
+    fun `откат убирает папку, которой до восстановления не существовало`() {
+        val main = tmp.newFolder("main")
+        val temp = tmp.newFolder("temp")
+
+        // X появляется только из бэкапа: отодвигать нечего, значит в movedAside
+        // записи не будет и очистить target при откате может только `written`.
+        temp.writeFile("X/новое.txt", "новое")
+
+        // Второй путь ведёт за пределы корня — падение случится после того, как
+        // X уже перенесён.
+        runCatching { XlrBackupManager.applyRestoredPaths(main, temp, listOf("X", "../снаружи")) }
+            .onSuccess { error("ожидалось падение на пути за пределами корня") }
+
+        assertFalse(
+            "папка, созданная только этим восстановлением, должна быть убрана",
+            File(main, "X").exists()
+        )
+    }
+
+    @Test
     fun `отсутствующая в бэкапе папка становится пустой`() {
         val main = tmp.newFolder("main")
         val temp = tmp.newFolder("temp")

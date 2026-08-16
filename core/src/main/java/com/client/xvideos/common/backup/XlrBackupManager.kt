@@ -5,6 +5,7 @@ import android.net.Uri
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.io.normalizeRelativePath
 import com.client.xvideos.common.io.requireInside
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
@@ -138,7 +139,6 @@ object XlrBackupManager {
                 ?: error("Cannot open backup file")
 
             ZipOutputStream(BufferedOutputStream(output)).use { zip ->
-                zip.setLevel(ZipOutputStream.DEFLATED)
                 writeManifest(zip, safePaths, options)
                 safePaths.forEach { path ->
                     val source = File(AppPath.main, path)
@@ -214,6 +214,10 @@ object XlrBackupManager {
                 }
 
                 target.parentFile?.mkdirs()
+                // В список очистки — до записи, а не после: падение внутри
+                // copyRecursively оставляло полузаписанную папку, которой нет
+                // ни в written, ни в movedAside, и откат её не трогал.
+                written += target
                 val restored = File(tempRoot, path)
                 if (restored.exists()) {
                     if (!restored.renameTo(target)) {
@@ -222,7 +226,6 @@ object XlrBackupManager {
                 } else {
                     target.mkdirs()
                 }
-                written += target
             }
         } catch (e: Throwable) {
             Timber.e(e, "XlrBackupManager restore failed, rolling back")
@@ -240,22 +243,21 @@ object XlrBackupManager {
     }
 
     private fun writeManifest(zip: ZipOutputStream, selectedPaths: List<String>, options: XlrBackupOptions) {
-        val createdAt = utcNowText()
-        val pathsJson = selectedPaths.joinToString(", ") { "\"$it\"" }
-        val json = """
-            {
-              "schemaVersion": $SCHEMA_VERSION,
-              "createdAt": "$createdAt",
-              "sections": ["X", "L", "R"],
-              "paths": [$pathsJson],
-              "modes": {
-                "L": "${options.lMode.name}",
-                "R": "${options.rMode.name}"
-              }
-            }
-        """.trimIndent()
+        // Раньше JSON склеивался строками: путь с кавычкой или бэкслешем давал
+        // невалидный манифест. Сейчас его никто не парсит, но schemaVersion в
+        // файле означает, что собираются — и тогда сломались бы старые архивы.
+        val manifest = mapOf(
+            "schemaVersion" to SCHEMA_VERSION,
+            "createdAt" to utcNowText(),
+            "sections" to sections,
+            "paths" to selectedPaths,
+            "modes" to mapOf(
+                "L" to options.lMode.name,
+                "R" to options.rMode.name,
+            ),
+        )
         zip.putNextEntry(ZipEntry(MANIFEST_ENTRY))
-        zip.write(json.toByteArray(Charsets.UTF_8))
+        zip.write(GsonBuilder().setPrettyPrinting().create().toJson(manifest).toByteArray(Charsets.UTF_8))
         zip.closeEntry()
     }
 
