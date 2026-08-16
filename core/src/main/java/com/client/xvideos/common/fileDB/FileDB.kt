@@ -8,13 +8,16 @@ import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * val nichesDb = FileDB<NichesInfo>(AppPath.niches_red, "niches", object : TypeToken<NichesInfo>() {}.type)
  *
  * Все публичные методы синхронные и потокобезопасны: операции с каталогом
  * сериализованы через [lock], а запись файлов атомарна (temp + rename), чтобы
- * обрыв процесса посреди записи не оставлял обрезанный JSON.
+ * обрыв процесса посреди записи не оставлял обрезанный JSON. Публикация
+ * результата [refresh] в [list] идёт вне [lock], но упорядочена по номеру
+ * загрузки — устаревший результат не ляжет поверх свежего.
  */
 class FileDB<T>(val dirPath: String, val extension: String, private val clazz: Class<T> ) {
 
@@ -24,6 +27,19 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
     /** Сериализует операции с каталогом: два параллельных refresh() не переплетаются. */
     private val lock = Any()
+
+    /**
+     * Номер загрузки и последний опубликованный номер.
+     *
+     * Публикация в [list] стоит за пределами [lock] намеренно: `replaceWith`
+     * берёт снапшот-лок Compose, и захват `lock -> snapshotLock` встретился бы
+     * с обратным порядком у кода, который зовёт FileDB из-под снапшота.
+     * Порядок вместо этого восстанавливается по номеру: результат более старой
+     * загрузки не может лечь поверх более новой.
+     */
+    private val loadSeq = AtomicLong(0)
+    private val publishLock = Any()
+    private var publishedSeq = 0L
 
     /** Расширение временного файла, в который пишем перед атомарным переименованием. */
     private val tempExtension = "$extension.tmp"
@@ -92,14 +108,16 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
     fun read(nameFile: String): Result<T> {
         return try {
-            val file = File(dirPath, "$nameFile.$extension")
-            if (!file.exists()) {
-                return Result.failure(FileNotFoundException("!!! Файл не найден: ${file.absolutePath}"))
+            synchronized(lock) {
+                val file = File(dirPath, "$nameFile.$extension")
+                if (!file.exists()) {
+                    return Result.failure(FileNotFoundException("!!! Файл не найден: ${file.absolutePath}"))
+                }
+                val json = file.readText(Charsets.UTF_8)
+                val obj = gson.fromJson(json, clazz)
+                    ?: return Result.failure(NullPointerException("!!! Десериализация вернула null"))
+                Result.success(obj)
             }
-            val json = file.readText(Charsets.UTF_8)
-            val obj = gson.fromJson(json, clazz)
-                ?: return Result.failure(NullPointerException("!!! Десериализация вернула null"))
-            Result.success(obj)
         } catch (e: Exception) {
             Timber.e(e, "!!! Ошибка при чтении файла $nameFile")
             Result.failure(e)
@@ -108,7 +126,11 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
     fun refresh(): Result<Boolean> {
         return try {
-            val loaded = synchronized(lock) {
+            // Номер берётся под тем же локом, что и чтение каталога, поэтому
+            // порядок номеров совпадает с порядком загрузок. Пара, а не
+            // присваивание внешней val изнутри лямбды: так не приходится
+            // полагаться на definite-assignment сквозь inline-функцию.
+            val (seq, loaded) = synchronized(lock) {
                 val dir = File(dirPath)
                 if (!dir.exists() || !dir.isDirectory) {
                     return Result.failure(IOException("!!! Директория не существует: $dirPath"))
@@ -118,7 +140,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
                 val files = dir.listFiles { file -> file.extension == extension } ?: emptyArray()
 
-                files.mapNotNull { file ->
+                loadSeq.incrementAndGet() to files.mapNotNull { file ->
                     try {
                         val json = file.readText(Charsets.UTF_8)
                         gson.fromJson(json, clazz)
@@ -129,7 +151,12 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
                 }
             }
 
-            list.replaceWith(loaded)
+            synchronized(publishLock) {
+                if (seq > publishedSeq) {
+                    publishedSeq = seq
+                    list.replaceWith(loaded)
+                }
+            }
 
             Result.success(true)
         } catch (e: Exception) {
