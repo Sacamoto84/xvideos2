@@ -2,8 +2,8 @@ package com.client.xvideos.common.p2p
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -65,11 +65,8 @@ class P2pBundleInstallerTest {
             files = listOf(P2pManifestFile("a.jpg", "../stolen.txt", 200L, 4L)),
         )
 
-        try {
+        assertThrows(IllegalArgumentException::class.java) {
             P2pBundleInstaller.install(storeRoot, manifest, mapOf(200L to received))
-            fail("Ожидался отказ на пути за пределами store root")
-        } catch (e: IllegalArgumentException) {
-            // ожидаемо
         }
         assertFalse("файл не должен появиться снаружи store root", outside.exists())
     }

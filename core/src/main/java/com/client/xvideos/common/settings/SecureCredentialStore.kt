@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import timber.log.Timber
+import java.io.IOException
+import java.security.GeneralSecurityException
 
 /**
  * Отдельный файл настроек, зашифрованный ключом из Android Keystore.
@@ -38,14 +40,32 @@ object SecureCredentialStore {
         val appContext = context.applicationContext
         build(appContext)?.let { return it }
 
+        // Пересоздаём файл ТОЛЬКО если ключи действительно не подходят к нему.
+        // Раньше пересоздание запускал любой провал build(), включая временную
+        // недоступность Keystore (direct boot, часть прошивок) — и сохранённый
+        // пароль стирался там, где достаточно было вернуть null и попробовать
+        // позже.
+        if (!lastFailureLooksLikeBrokenKeyset) {
+            Timber.w("SecureCredentialStore: Keystore недоступен, $FILE_NAME оставлен как есть")
+            return null
+        }
+
         // Повреждённый keyset (сброс ключей Keystore, восстановление из бэкапа,
         // смена биометрии на части прошивок) расшифровать уже нечем — файл можно
         // только пересоздать. Пользователь потеряет сохранённый пароль и введёт
         // его заново; это лучше, чем неработающий вход в раздел L.
-        Timber.w("SecureCredentialStore: хранилище не открылось, пересоздаю $FILE_NAME")
+        Timber.w("SecureCredentialStore: keyset повреждён, пересоздаю $FILE_NAME")
         appContext.deleteSharedPreferences(FILE_NAME)
         return build(appContext)
     }
+
+    /**
+     * Признак того, что последний отказ [build] выглядит как несовпадение
+     * ключей с файлом, а не как недоступность Keystore. Хранится полем, а не
+     * возвращается, чтобы не менять сигнатуру `SharedPreferences?`.
+     */
+    @Volatile
+    private var lastFailureLooksLikeBrokenKeyset = false
 
     private fun build(appContext: Context): SharedPreferences? = try {
         val masterKey = MasterKey.Builder(appContext)
@@ -58,9 +78,23 @@ object SecureCredentialStore {
             masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-        )
+        ).also { lastFailureLooksLikeBrokenKeyset = false }
+    } catch (e: GeneralSecurityException) {
+        // Tink бросает это, когда keyset не расшифровывается имеющимся
+        // мастер-ключом — файл и ключи разошлись, чинится только пересозданием.
+        onBuildFailed(e, brokenKeyset = true)
+    } catch (e: IOException) {
+        // Keyset не разбирается: тот же случай, но на уровне формата файла.
+        onBuildFailed(e, brokenKeyset = true)
     } catch (e: Exception) {
+        // Всё остальное (IllegalStateException, NoClassDefFoundError в Preview,
+        // отказ Keystore) означает «сейчас нельзя», а не «файл испорчен».
+        onBuildFailed(e, brokenKeyset = false)
+    }
+
+    private fun onBuildFailed(e: Exception, brokenKeyset: Boolean): SharedPreferences? {
+        lastFailureLooksLikeBrokenKeyset = brokenKeyset
         Timber.e(e, "SecureCredentialStore: EncryptedSharedPreferences недоступны")
-        null
+        return null
     }
 }
