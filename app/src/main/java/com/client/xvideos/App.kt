@@ -193,7 +193,12 @@ class App : Application(), SingletonImageLoader.Factory {
      */
     override fun onTerminate() {
         super.onTerminate()
-        networkTrafficMonitor.destroy()
+        // Проверка инициализации, а не голое обращение: если onCreate упал до
+        // создания монитора, здесь вылетал UninitializedPropertyAccessException
+        // и затирал в логе настоящую причину падения.
+        if (::networkTrafficMonitor.isInitialized) {
+            networkTrafficMonitor.destroy()
+        }
     }
 
     companion object {
