@@ -13,9 +13,11 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
 
     fun create(collectionName: String): Result<Boolean> {
         return try {
-            Timber.i("!!! Создать коллекцию  collectionCreateToDisk() collectionName:$collectionName")
+            val safeName = CollectionName.normalizeOrNull(collectionName)
+                ?: return Result.failure(IOException("Недопустимое имя коллекции: $collectionName"))
+            Timber.i("!!! Создать коллекцию  collectionCreateToDisk() collectionName:$safeName")
             // Создаем директорию <userName>/block, если её нет
-            val dir = File("$path/$collectionName")
+            val dir = File(path, safeName)
             if (!dir.exists()) {
                 val created = dir.mkdirs()
                 if (!created) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
@@ -30,10 +32,12 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
 
     fun deleteCollection(collectionName: String): Result<Boolean> =
         runCatching {
-            val dir = File(path, collectionName)
+            val safeName = CollectionName.normalizeOrNull(collectionName)
+                ?: throw IOException("Недопустимое имя коллекции: $collectionName")
+            val dir = File(path, safeName)
 
             if (!dir.exists()) {
-                Timber.w("Коллекция \"$collectionName\" не найдена: ${dir.absolutePath}")
+                Timber.w("Коллекция \"$safeName\" не найдена: ${dir.absolutePath}")
                 return Result.success(false)      // ничего не удаляли
             }
 
@@ -42,7 +46,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
                 throw IOException("Не удалось удалить коллекцию: ${dir.absolutePath}")
             }
 
-            Timber.i("Удалена коллекция: $collectionName")
+            Timber.i("Удалена коллекция: $safeName")
             Result.success(true)
         }.getOrElse { e ->
             Timber.e(e, "Ошибка при удалении коллекции $collectionName")
@@ -51,17 +55,17 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
 
     fun renameCollection(oldName: String, newName: String): Result<Boolean> =
         runCatching {
-            val trimmed = newName.trim()
-            if (trimmed.isBlank()) {
-                throw IOException("Имя коллекции не может быть пустым")
-            }
-            if (oldName == trimmed) {
+            val trimmed = CollectionName.normalizeOrNull(newName)
+                ?: throw IOException("Недопустимое имя коллекции: $newName")
+            val safeOldName = CollectionName.normalizeOrNull(oldName)
+                ?: throw IOException("Недопустимое имя коллекции: $oldName")
+            if (safeOldName == trimmed) {
                 return Result.success(true)
             }
-            val oldDir = File(path, oldName)
+            val oldDir = File(path, safeOldName)
             val newDir = File(path, trimmed)
             if (!oldDir.exists()) {
-                Timber.w("Коллекция \"$oldName\" не найдена: ${oldDir.absolutePath}")
+                Timber.w("Коллекция \"$safeOldName\" не найдена: ${oldDir.absolutePath}")
                 return Result.success(false)
             }
             if (newDir.exists()) {
@@ -70,7 +74,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
             if (!oldDir.renameTo(newDir)) {
                 throw IOException("Не удалось переименовать коллекцию: ${oldDir.absolutePath}")
             }
-            Timber.i("Переименована коллекция: $oldName -> $trimmed")
+            Timber.i("Переименована коллекция: $safeOldName -> $trimmed")
             Result.success(true)
         }.getOrElse { e ->
             Timber.e(e, "Ошибка при переименовании коллекции $oldName -> $newName")
@@ -79,10 +83,12 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
 
     fun deleteItem(itemId: String, collectionName: String): Result<Boolean> {
         return try {
-            Timber.i("!!! удалить лайк GIFS -> deleteItem() id:$itemId из коллекции:$collectionName")
+            val safeName = CollectionName.normalizeOrNull(collectionName)
+                ?: return Result.failure(IOException("Недопустимое имя коллекции: $collectionName"))
+            Timber.i("!!! удалить лайк GIFS -> deleteItem() id:$itemId из коллекции:$safeName")
 
             // Папка с коллекцией
-            val dir = File(path, collectionName)
+            val dir = File(path, safeName)
 
             // Файл-блокировка, созданный при сохранении
             val likesFile = File(dir, "$itemId.collection")
@@ -108,10 +114,12 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
 
     fun insert(name: String, collectionName: String, item: T): Result<Boolean> {
         return try {
+            val safeName = CollectionName.normalizeOrNull(collectionName)
+                ?: return Result.failure(IOException("Недопустимое имя коллекции: $collectionName"))
             Timber.i("!!! сохранить лайк GIFS -> likesItem() name:${name}")
 
             // Создаем директорию <userName>/block, если её нет
-            val dir = File("$path/$collectionName")
+            val dir = File(path, safeName)
 
             if (!dir.exists()) {
                 val created = dir.mkdirs()

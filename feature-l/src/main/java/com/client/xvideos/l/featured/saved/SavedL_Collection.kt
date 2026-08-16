@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.collectionDB.CollectionName
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
@@ -83,31 +84,44 @@ class SavedL_Collection(
 
     fun createCollection(collectionName: String) {
         Timber.i("SavedL_Collection createCollection() collectionName:$collectionName")
-        val collectionRoot = File(AppPath.l_collection, collectionName)
+        val safeName = CollectionName.normalizeOrNull(collectionName)
+        if (safeName == null) {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
+        val collectionRoot = File(AppPath.l_collection, safeName)
         if (collectionRoot.exists()) {
             SnackBar.error("Коллекция уже существует")
             return
         }
         collectionRoot.mkdirs()
-        SnackBar.success("Коллекция $collectionName создана")
+        SnackBar.success("Коллекция $safeName создана")
         refreshCollectionList()
     }
 
     fun deleteCollection(collectionName: String) {
         Timber.i("SavedL_Collection deleteCollection() collectionName:$collectionName")
+        // Имя приходит из списка на экране, но список строится по содержимому
+        // каталога: папка с «плохим» именем, созданная старой сборкой или
+        // приехавшая по P2P, дала бы deleteRecursively() за пределами корня.
+        val safeName = CollectionName.normalizeOrNull(collectionName)
+        if (safeName == null) {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
         // deleteRecursively по всей коллекции — это тысячи файлов, только на IO.
         scope.launch(Dispatchers.IO) {
-            val deleted = File(AppPath.l_collection, collectionName).deleteRecursively()
+            val deleted = File(AppPath.l_collection, safeName).deleteRecursively()
             withContext(Dispatchers.Main) {
                 if (deleted) {
-                    if (currentCollectionName == collectionName) {
+                    if (currentCollectionName == safeName) {
                         currentCollectionName = null
                         listUrl.clear()
                     }
-                    SnackBar.success("Коллекция $collectionName удалена")
+                    SnackBar.success("Коллекция $safeName удалена")
                     refreshCollectionList()
                 } else {
-                    SnackBar.error("Ошибка удаления коллекции $collectionName")
+                    SnackBar.error("Ошибка удаления коллекции $safeName")
                 }
             }
         }
@@ -115,16 +129,21 @@ class SavedL_Collection(
 
     fun renameCollection(oldName: String, newName: String): Boolean {
         Timber.i("SavedL_Collection renameCollection() oldName:$oldName newName:$newName")
-        val trimmedNewName = newName.trim()
-        if (trimmedNewName.isBlank()) {
-            SnackBar.error("Название коллекции не может быть пустым")
+        val trimmedNewName = CollectionName.normalizeOrNull(newName)
+        if (trimmedNewName == null) {
+            SnackBar.error("Недопустимое название коллекции")
             return false
         }
-        if (oldName == trimmedNewName) {
+        val safeOldName = CollectionName.normalizeOrNull(oldName)
+        if (safeOldName == null) {
+            SnackBar.error("Недопустимое название коллекции")
+            return false
+        }
+        if (safeOldName == trimmedNewName) {
             return true
         }
 
-        val oldRoot = File(AppPath.l_collection, oldName)
+        val oldRoot = File(AppPath.l_collection, safeOldName)
         val newRoot = File(AppPath.l_collection, trimmedNewName)
         if (!oldRoot.exists()) {
             SnackBar.error("Коллекция не найдена")
@@ -137,7 +156,7 @@ class SavedL_Collection(
 
         val renamed = oldRoot.renameTo(newRoot)
         if (renamed) {
-            if (currentCollectionName == oldName) {
+            if (currentCollectionName == safeOldName) {
                 currentCollectionName = trimmedNewName
                 refresh()
             }
