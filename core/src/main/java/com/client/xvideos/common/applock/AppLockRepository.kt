@@ -1,6 +1,7 @@
 package com.client.xvideos.common.applock
 
 import android.content.Context
+import android.os.SystemClock
 import com.client.xvideos.common.util.defaultSharedPreferences
 import android.util.Base64
 import androidx.core.content.edit
@@ -25,14 +26,7 @@ object AppLockRepository {
     // --- Анти-брутфорс (троттлинг попыток) ---
     private const val KEY_FAILED_ATTEMPTS = "app_lock_failed_attempts"
     private const val KEY_LOCKOUT_UNTIL = "app_lock_lockout_until"
-
-    /** Сколько попыток без задержки до начала блокировки. */
-    private const val FREE_ATTEMPTS = 4
-
-    /** Базовая длительность блокировки; далее удваивается на каждую ошибку. */
-    private const val BASE_LOCKOUT_MS = 30_000L
-    private const val MAX_LOCKOUT_MS = 30 * 60_000L // 30 минут
-    private const val MAX_BACKOFF_SHIFT = 16
+    private const val KEY_LOCKOUT_UNTIL_ELAPSED = "app_lock_lockout_until_elapsed"
 
     fun isPasswordSet(context: Context): Boolean {
         val prefs = context.applicationContext.defaultSharedPreferences()
@@ -83,35 +77,43 @@ object AppLockRepository {
 
     /**
      * Сколько миллисекунд осталось до конца блокировки ввода (0 — ввод разрешён).
-     * Персистентно (переживает перезапуск процесса), поэтому простое убийство
-     * приложения не сбрасывает задержку.
+     * Срок хранится и настенными, и монотонными часами — см. [AppLockThrottle]:
+     * перезапуск приложения задержку не сбрасывает, перевод системного времени
+     * её не снимает.
      */
     fun lockoutRemainingMillis(context: Context): Long {
         val prefs = context.applicationContext.defaultSharedPreferences()
-        val until = prefs.getLong(KEY_LOCKOUT_UNTIL, 0L)
-        return (until - System.currentTimeMillis()).coerceAtLeast(0L)
+        val state = AppLockThrottle.State(
+            attempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0),
+            lockoutUntilWall = prefs.getLong(KEY_LOCKOUT_UNTIL, 0L),
+            lockoutUntilElapsed = prefs.getLong(KEY_LOCKOUT_UNTIL_ELAPSED, 0L),
+        )
+        return AppLockThrottle.remainingMillis(
+            state = state,
+            wallNow = System.currentTimeMillis(),
+            elapsedNow = SystemClock.elapsedRealtime(),
+        )
     }
 
     /**
      * Регистрирует неудачную попытку и возвращает epoch-millis, до которого ввод
      * заблокирован (0 — блокировки пока нет). Задержка растёт экспоненциально
-     * после [FREE_ATTEMPTS] ошибок и ограничена [MAX_LOCKOUT_MS].
+     * после [AppLockThrottle.FREE_ATTEMPTS] ошибок и ограничена
+     * [AppLockThrottle.MAX_LOCKOUT_MS].
      */
     fun registerFailedAttempt(context: Context): Long {
         val prefs = context.applicationContext.defaultSharedPreferences()
-        val attempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0) + 1
-        val lockoutUntil = if (attempts > FREE_ATTEMPTS) {
-            val shift = (attempts - FREE_ATTEMPTS - 1).coerceIn(0, MAX_BACKOFF_SHIFT)
-            val duration = (BASE_LOCKOUT_MS shl shift).coerceAtMost(MAX_LOCKOUT_MS)
-            System.currentTimeMillis() + duration
-        } else {
-            0L
-        }
+        val state = AppLockThrottle.onFailedAttempt(
+            attempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0),
+            wallNow = System.currentTimeMillis(),
+            elapsedNow = SystemClock.elapsedRealtime(),
+        )
         prefs.edit {
-            putInt(KEY_FAILED_ATTEMPTS, attempts)
-            putLong(KEY_LOCKOUT_UNTIL, lockoutUntil)
+            putInt(KEY_FAILED_ATTEMPTS, state.attempts)
+            putLong(KEY_LOCKOUT_UNTIL, state.lockoutUntilWall)
+            putLong(KEY_LOCKOUT_UNTIL_ELAPSED, state.lockoutUntilElapsed)
         }
-        return lockoutUntil
+        return state.lockoutUntilWall
     }
 
     /** Сбрасывает счётчик попыток и блокировку (вызывать после успешного ввода). */
@@ -120,6 +122,7 @@ object AppLockRepository {
         prefs.edit {
             remove(KEY_FAILED_ATTEMPTS)
             remove(KEY_LOCKOUT_UNTIL)
+            remove(KEY_LOCKOUT_UNTIL_ELAPSED)
         }
     }
 
