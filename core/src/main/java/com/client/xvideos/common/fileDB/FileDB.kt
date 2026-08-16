@@ -1,6 +1,7 @@
 package com.client.xvideos.common.fileDB
 
 import androidx.compose.runtime.mutableStateListOf
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.util.replaceWith
 import com.google.gson.GsonBuilder
 import timber.log.Timber
@@ -39,7 +40,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
                 gson.toJson(value).also { json ->
                     require(json != "null") { "Сериализация вернула null" }
-                    writeAtomically(file, json)
+                    file.writeTextAtomically(json)
                 }
             }
 
@@ -60,7 +61,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
                 gson.toJson(value).also { json ->
                     require(json != "null") { "Serialization returned null" }
-                    writeAtomically(file, json)
+                    file.writeTextAtomically(json)
                 }
             }
 
@@ -134,24 +135,6 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
         } catch (e: Exception) {
             Timber.e(e, "!!! Ошибка при обновлении списка из директории $dirPath")
             Result.failure(e)
-        }
-    }
-
-    /**
-     * Пишет во временный файл и переименовывает его поверх целевого.
-     * Переименование в пределах одной ФС атомарно, поэтому читатель видит
-     * либо старое содержимое целиком, либо новое целиком — но не обрывок.
-     */
-    private fun writeAtomically(file: File, json: String) {
-        val temp = File(file.parentFile, "${file.name}.tmp")
-        temp.writeText(json, Charsets.UTF_8)
-        if (!temp.renameTo(file)) {
-            // На некоторых ФС renameTo не перезаписывает существующий файл.
-            file.delete()
-            if (!temp.renameTo(file)) {
-                temp.delete()
-                throw IOException("Не удалось записать файл: ${file.absolutePath}")
-            }
         }
     }
 

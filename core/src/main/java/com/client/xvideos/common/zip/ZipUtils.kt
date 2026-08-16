@@ -1,5 +1,7 @@
 package com.client.xvideos.common.zip
 
+import com.client.xvideos.common.io.normalizeRelativePath
+import com.client.xvideos.common.io.requireInside
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -44,9 +46,9 @@ object ZipUtils {
         ZipInputStream(BufferedInputStream(zipFile.inputStream())).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
-                val name = normalizeEntryName(entry.name)
+                val name = normalizeRelativePath(entry.name)
                 val target = File(root, name).canonicalFile
-                ensureInside(root, target)
+                requireInside(root, target)
                 if (entry.isDirectory || entry.name.endsWith("/")) {
                     target.mkdirs()
                 } else {
@@ -55,23 +57,6 @@ object ZipUtils {
                 }
                 zip.closeEntry()
             }
-        }
-    }
-
-    private fun normalizeEntryName(raw: String): String {
-        val name = raw.replace('\\', '/').trim('/')
-        require(name.isNotBlank()) { "Empty zip entry name" }
-        require(!name.startsWith("/") && !name.contains(':')) { "Unsafe zip entry: $raw" }
-        val parts = name.split('/').filter { it.isNotBlank() }
-        require(parts.none { it == "." || it == ".." }) { "Unsafe zip entry: $raw" }
-        return parts.joinToString("/")
-    }
-
-    private fun ensureInside(root: File, target: File) {
-        val rootPath = root.absolutePath
-        val targetPath = target.absolutePath
-        require(targetPath == rootPath || targetPath.startsWith(rootPath + File.separator)) {
-            "Zip entry escapes target dir: $targetPath"
         }
     }
 }

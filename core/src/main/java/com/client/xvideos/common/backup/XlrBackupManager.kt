@@ -3,6 +3,8 @@ package com.client.xvideos.common.backup
 import android.content.Context
 import android.net.Uri
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.io.normalizeRelativePath
+import com.client.xvideos.common.io.requireInside
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
@@ -83,7 +85,7 @@ object XlrBackupManager {
                 val buffer = ByteArray(8 * 1024)
                 while (true) {
                     val entry = zip.nextEntry ?: break
-                    val name = normalizedEntryName(entry.name)
+                    val name = normalizeRelativePath(entry.name)
                     if (name == MANIFEST_ENTRY) {
                         zip.closeEntry()
                         continue
@@ -200,7 +202,7 @@ object XlrBackupManager {
         try {
             paths.forEach { path ->
                 val target = File(mainRoot, path)
-                ensureInside(root, target.canonicalFile)
+                requireInside(root, target.canonicalFile)
 
                 if (target.exists()) {
                     val aside = File(target.parentFile, "$RESTORE_ASIDE_PREFIX${target.name}")
@@ -332,7 +334,7 @@ object XlrBackupManager {
             var hasDataEntry = false
             while (true) {
                 val entry = zip.nextEntry ?: break
-                val name = normalizedEntryName(entry.name)
+                val name = normalizeRelativePath(entry.name)
                 if (name == MANIFEST_ENTRY) {
                     zip.closeEntry()
                     continue
@@ -366,7 +368,7 @@ object XlrBackupManager {
         ZipInputStream(BufferedInputStream(input)).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
-                val name = normalizedEntryName(entry.name)
+                val name = normalizeRelativePath(entry.name)
                 if (name == MANIFEST_ENTRY) {
                     zip.closeEntry()
                     continue
@@ -377,7 +379,7 @@ object XlrBackupManager {
                 }
 
                 val target = File(root, name).canonicalFile
-                ensureInside(root, target)
+                requireInside(root, target)
 
                 if (entry.isDirectory || name.endsWith("/")) {
                     target.mkdirs()
@@ -458,7 +460,7 @@ object XlrBackupManager {
 
     private fun normalizeSelectedPaths(paths: Set<String>): List<String> {
         val sorted = paths
-            .map { normalizedEntryName(it) }
+            .map { normalizeRelativePath(it) }
             .filter { path ->
                 val top = path.substringBefore("/")
                 top in sections
@@ -502,23 +504,6 @@ object XlrBackupManager {
                     bytes = report.bytes
                 )
             }
-    }
-
-    private fun normalizedEntryName(rawName: String): String {
-        val name = rawName.replace('\\', '/').trim('/')
-        if (name.isBlank()) error("Backup contains empty entry name")
-        if (name.startsWith("/") || name.contains(':')) error("Backup contains unsafe entry: $rawName")
-        val parts = name.split('/').filter { it.isNotBlank() }
-        if (parts.any { it == "." || it == ".." }) error("Backup contains unsafe entry: $rawName")
-        return parts.joinToString("/")
-    }
-
-    private fun ensureInside(root: File, target: File) {
-        val rootPath = root.absolutePath
-        val targetPath = target.absolutePath
-        if (targetPath != rootPath && !targetPath.startsWith(rootPath + File.separator)) {
-            error("Backup contains path outside app data folder")
-        }
     }
 
     private fun utcNowText(): String {
