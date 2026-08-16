@@ -1,7 +1,9 @@
 package com.client.xvideos.r.model
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
+/** `Serializable` вслед за [GifsInfo], который её держит. */
 data class URL1(
     @SerializedName("thumbnail") val thumbnail: String = "",     // Картинка как SD
     @SerializedName("silent") val silent: String? = null,     // * Полное видео в mp4 !!! Без звука в HD Для скачивания
@@ -9,7 +11,7 @@ data class URL1(
     @SerializedName("html") val html: String? = null,       // * Ссылка на веб-страницу с медиа. Полноэкранный режим. Типа ссылки
     @SerializedName("sd") val sd: String = "",            // * SD-ссылка на медиафайл.                                 3.5 MB
     @SerializedName("hd") val hd: String? = null,         // * HD-ссылка на медиафайл (может отсутствовать). Со звуком 21MB
-)
+) : Serializable
 
 fun URL1.sanitize(): URL1 {
     val safeThumbnail: String? = thumbnail

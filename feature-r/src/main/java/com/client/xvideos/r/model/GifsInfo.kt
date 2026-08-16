@@ -2,7 +2,15 @@ package com.client.xvideos.r.model
 
 import androidx.compose.runtime.Stable
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
+/**
+ * `Serializable` обязателен: модель лежит в `ScreenRedFullScreen`, а экраны
+ * Voyager (`Screen : Serializable`) целиком уходят в saved state активити через
+ * `Parcel.writeSerializable`. Без этого приложение падает с
+ * `NotSerializableException`, когда система сохраняет состояние.
+ * Тот же приём уже применён к `P2pSendSource`.
+ */
 @Stable
 data class GifsInfo(
     @SerializedName("id") val id: String = "",
@@ -20,7 +28,7 @@ data class GifsInfo(
     @SerializedName("duration") val duration: Double? = null, //15.033,
     @SerializedName("hls") val hls: Boolean? = null,
     @SerializedName("niches") val niches: List<String>? = null,
-)
+) : Serializable
 
 fun GifsInfo.sanitizeOrNull(): GifsInfo? {
     val safeId: String? = id
