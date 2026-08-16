@@ -1,6 +1,7 @@
 package com.client.xvideos.common.collectionDB
 
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
+import com.client.xvideos.common.io.writeTextAtomically
 import com.google.gson.Gson
 import timber.log.Timber
 import java.io.File
@@ -10,6 +11,10 @@ import java.io.IOException
  *
  */
 class  CollectionDB<T>(val path : String, val type: Class<T>) {
+
+    // Gson потокобезопасен и дорог в конструировании: раньше экземпляр
+    // создавался на каждый insert и на каждый файл в readAllCollections.
+    private val gson = Gson()
 
     fun create(collectionName: String): Result<Boolean> {
         return try {
@@ -129,10 +134,10 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
             // Создаем файл-блокировку
             val likesFile = File(dir, "${name}.collection")
 
-            // Сохраняем URL как JSON в файл
-            val gson = Gson()
-            val json = gson.toJson(item)
-            likesFile.writeText(json, Charsets.UTF_8)
+            // Атомарно: обрыв процесса посреди writeText оставлял обрезанный
+            // JSON, а readAllCollections молча выбрасывает такой файл через
+            // mapNotNull — элемент пропадал без следа в логах.
+            likesFile.writeTextAtomically(gson.toJson(item))
             Result.success(true)
         } catch (e: Exception) {
             Timber.e(e, "Ошибка при сохранении лайка GIF")
@@ -149,7 +154,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
             val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }?.mapNotNull { file ->
                 try {
                     val text = file.readText(Charsets.UTF_8)
-                    Gson().fromJson<T>(text, type)
+                    gson.fromJson<T>(text, type)
                 } catch (ex: Exception) {
                     Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
                     null
