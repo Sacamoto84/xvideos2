@@ -14,14 +14,18 @@ import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pSendPreparers
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor
 import com.client.xvideos.l.featured.saved.LSendPreparer
 import com.client.xvideos.p2p.sectionBundleImporter
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -54,22 +58,6 @@ class App : Application(), SingletonImageLoader.Factory {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // @Volatile: присваивается на главном потоке в onCreate, читается из
-    // IO-корутины MainActivity.
-    @Volatile
-    private var storageCleanup: Job? = null
-
-    /**
-     * Ждёт разовую уборку staging-папок, запущенную в [onCreate].
-     *
-     * Обязателен перед первым обращением к `AppPath.p2p_inbox`, `p2p_outbox`
-     * и `l_cacheDownload`: уборка их рекурсивно удаляет и создаёт заново, и
-     * работа с ними параллельно с этим потеряет файлы.
-     */
-    suspend fun awaitStorageCleanup() {
-        storageCleanup?.join()
-    }
-
     /**
      * Основная точка старта процесса приложения.
      *
@@ -85,7 +73,6 @@ class App : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
 
-        instance = this
         // BuildConfig генерируется на модуль, у :core он свой — поля приложения
         // базовый слой получает отсюда. Ставится до CrashLog: заголовок падения
         // печатает versionName.
@@ -99,7 +86,13 @@ class App : Application(), SingletonImageLoader.Factory {
         // дёшево. Рекурсивная чистка staging-папок уходит в фон, её результата
         // ждут через awaitStorageCleanup().
         AppPath.init(this)
-        storageCleanup = scope.launch { AppPath.cleanupTransientDirs() }
+        // Gate берётся лениво через EntryPoint, а не через `@Inject lateinit`:
+        // инъекция в Application происходит внутри super.onCreate(), то есть
+        // до AppPath.init(), а Hilt-синглтоны читают пути в конструкторе.
+        EntryPointAccessors
+            .fromApplication(this, StorageCleanupEntryPoint::class.java)
+            .storageCleanupGate()
+            .start(scope) { AppPath.cleanupTransientDirs() }
 
         // В релизе дерево тоже сажается — иначе Timber.e становится пустышкой и
         // об ошибке у пользователя узнать неоткуда. Релизное пишет ERROR в файл
@@ -201,16 +194,12 @@ class App : Application(), SingletonImageLoader.Factory {
         }
     }
 
-    companion object {
-        /**
-         * Singleton-доступ к `Application` там, где пока нет DI-контекста.
-         *
-         * Использовать осторожно: для новых зависимостей предпочтительнее Hilt,
-         * чтобы не разносить глобальное состояние по коду.
-         */
-        lateinit var instance: App
-            private set
-    }
+}
 
+/** Доступ к [StorageCleanupGate] из `App.onCreate`, где инъекция ещё слишком ранняя. */
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface StorageCleanupEntryPoint {
+    fun storageCleanupGate(): StorageCleanupGate
 }
 

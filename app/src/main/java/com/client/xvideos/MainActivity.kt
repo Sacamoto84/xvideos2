@@ -44,6 +44,7 @@ import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
 import com.client.xvideos.r.common.saved.SavedRed
@@ -75,6 +76,9 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     @Inject
     lateinit var appFileDatabase: javax.inject.Provider<AppFileDatabase>
+
+    @Inject
+    lateinit var storageCleanupGate: StorageCleanupGate
 
     /**
      * Инициализирует окно, скрывает системные панели и поднимает корневой
@@ -117,7 +121,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             // Уборка staging-папок идёт в фоне с App.onCreate. Ждём её: ниже
             // стартует приём P2P, который пишет в inbox, а уборка этот каталог
             // пересоздаёт.
-            App.instance.awaitStorageCleanup()
+            storageCleanupGate.await()
 
             appFileDatabase.get().clearVolatileCachesOnProcessStart()
             // Обход каталога кеша лент R: здесь он никого не задерживает, в
