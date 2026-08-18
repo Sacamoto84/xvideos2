@@ -1,6 +1,7 @@
 package com.client.xvideos.common.p2p
 
 import org.junit.Assert.assertEquals
+import kotlinx.serialization.SerializationException
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -50,10 +51,12 @@ class P2pManifestCodecTest {
     }
 
     /*
-     * Ниже — разбор манифеста, пришедшего с чужого устройства. Gson не смотрит на
-     * нуллабельность Kotlin: неизвестный type или отсутствующий files дают null в
-     * non-null поле, и падение случается позже, вдали от разбора. Битый манифест
-     * обязан отвергаться здесь, чтобы runCatching в P2pReceiveController его поймал.
+     * Ниже — разбор манифеста, пришедшего с чужого устройства. Структуру
+     * проверяет kotlinx: неизвестный type или отсутствующий files дают
+     * SerializationException прямо на разборе, а не null в non-null поле,
+     * который выстреливал позже и вдали от места разбора (так вёл себя Gson).
+     * Битый манифест обязан отвергаться здесь, чтобы runCatching в
+     * P2pReceiveController его поймал.
      */
 
     @Test
@@ -61,7 +64,7 @@ class P2pManifestCodecTest {
         // Так выглядит бандл из более новой версии приложения.
         val json = """{"type":"L_SOMETHING_NEW","metadataFileName":null,"files":[]}"""
 
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows(SerializationException::class.java) {
             P2pManifestCodec.fromJson(json)
         }
     }
@@ -70,7 +73,7 @@ class P2pManifestCodecTest {
     fun `манифест без списка файлов отвергается`() {
         val json = """{"type":"L","metadataFileName":"metadata.json"}"""
 
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows(SerializationException::class.java) {
             P2pManifestCodec.fromJson(json)
         }
     }
@@ -79,14 +82,14 @@ class P2pManifestCodecTest {
     fun `файл без пути отвергается`() {
         val json = """{"type":"L","metadataFileName":null,"files":[{"name":"a.jpg","payloadId":1,"size":2}]}"""
 
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows(SerializationException::class.java) {
             P2pManifestCodec.fromJson(json)
         }
     }
 
     @Test
     fun `пустой json отвергается`() {
-        assertThrows(IllegalStateException::class.java) {
+        assertThrows(SerializationException::class.java) {
             P2pManifestCodec.fromJson("null")
         }
     }
@@ -111,6 +114,41 @@ class P2pManifestCodecTest {
 
         val parsed = P2pManifestCodec.fromJson(json)
         assertEquals(1, parsed.files.size)
+    }
+
+    @Test
+    fun `манифест от Gson-версии приложения читается`() {
+        // Байт-в-байт то, что писала прежняя реализация на Gson: те же имена
+        // полей, тот же порядок. Пир со старой сборкой должен доехать до новой,
+        // иначе миграция ломает передачу между версиями.
+        val legacy = """{"type":"L_ALBUM","metadataFileName":"42.album","files":""" +
+            """[{"name":"42.album","relativePath":"42.album","payloadId":7,"size":10}]}"""
+
+        val parsed = P2pManifestCodec.fromJson(legacy)
+
+        assertEquals(P2pType.L_ALBUM, parsed.type)
+        assertEquals("42.album", parsed.metadataFileName)
+        assertEquals(listOf(P2pManifestFile("42.album", "42.album", 7L, 10L)), parsed.files)
+    }
+
+    @Test
+    fun `наш манифест читается разбором без строгих полей`() {
+        // Обратная сторона: то, что пишем мы, должна принять и старая сборка.
+        // Проверяем, что в выдаче нет ничего сверх известных полей и что
+        // metadataFileName = null сериализуется явно, а не пропадает.
+        val json = P2pManifestCodec.toJson(
+            P2pManifest(
+                type = P2pType.R_COLLECTION,
+                metadataFileName = null,
+                files = listOf(P2pManifestFile("c.zip", "c.zip", 1L, 2L)),
+            )
+        )
+
+        assertEquals(
+            """{"type":"R_COLLECTION","metadataFileName":null,"files":""" +
+                """[{"name":"c.zip","relativePath":"c.zip","payloadId":1,"size":2}]}""",
+            json,
+        )
     }
 
     @Test

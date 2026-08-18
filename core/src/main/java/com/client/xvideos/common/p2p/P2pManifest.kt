@@ -1,7 +1,9 @@
 package com.client.xvideos.common.p2p
 
 import com.client.xvideos.common.io.normalizeRelativePath
-import com.google.gson.Gson
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /**
  * Описание одного файла бандла.
@@ -11,6 +13,7 @@ import com.google.gson.Gson
  * @param payloadId id Nearby-payload'а; одинаков на обоих телефонах, по нему получатель сопоставляет байты.
  * @param size размер в байтах.
  */
+@Serializable
 data class P2pManifestFile(
     val name: String,
     val relativePath: String,
@@ -25,6 +28,7 @@ data class P2pManifestFile(
  * @param metadataFileName имя файла-метаданных среди [files] (`metadata.json` / `<id>.info`), или null.
  * @param files список файлов бандла.
  */
+@Serializable
 data class P2pManifest(
     val type: P2pType,
     val metadataFileName: String?,
@@ -33,47 +37,40 @@ data class P2pManifest(
 
 /** Сериализация манифеста для передачи BYTES-payload'ом. */
 object P2pManifestCodec {
-    private val gson = Gson()
 
-    fun toJson(manifest: P2pManifest): String = gson.toJson(manifest)
+    /*
+     * kotlinx, а не Gson. Манифест приходит с чужого устройства, а Gson не
+     * вызывает конструкторы Kotlin и не смотрит на нуллабельность: объект
+     * создаётся через Unsafe, поля заполняются рефлексией, и отсутствующее
+     * поле остаётся null в non-null типе — падение случалось позже, вдали от
+     * разбора. Раньше это компенсировалось руками: три require и
+     * @Suppress("SENSELESS_COMPARISON") на каждое поле. Теперь проверку делает
+     * сам разбор.
+     *
+     * ignoreUnknownKeys: бандл из более новой версии приложения может нести
+     * поля, которых мы не знаем. Лишнее поле — не повод отказаться от приёма;
+     * неизвестный `type` по-прежнему отказ, потому что он решает, в какое
+     * хранилище лягут файлы.
+     */
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
+    fun toJson(manifest: P2pManifest): String = json.encodeToString(manifest)
 
     /**
-     * Разбирает манифест, пришедший **с чужого устройства**, и проверяет его.
+     * Разбирает манифест, пришедший **с чужого устройства**, и проверяет пути.
      *
-     * Gson не вызывает конструктор Kotlin и не смотрит на нуллабельность: у
-     * класса без значений по умолчанию у всех полей объект создаётся через
-     * `Unsafe`, а поля заполняются рефлексией. Неизвестное значение `type`
-     * (например, из более новой версии приложения) или отсутствующий `files`
-     * дают `null` в non-null поле — и падение случается позже, вдали от разбора.
-     *
-     * Значения по умолчанию здесь были бы хуже проверки: `type` решает, в какое
-     * хранилище лягут файлы, и подстановка умолчания молча уложила бы чужой
-     * бандл не туда. Поэтому битый манифест — ошибка; вызывающая сторона
-     * (`P2pReceiveController`) уже оборачивает разбор в `runCatching`.
+     * Структуру проверяет kotlinx (отсутствующее поле, неизвестный `type` —
+     * `SerializationException`). Остаётся проверка, которую библиотека сделать
+     * не может: `relativePath` напрямую задаёт, куда ляжет файл, и без
+     * нормализации пир кладёт `../../shared_prefs/...`. Вызывающая сторона
+     * (`P2pReceiveController`) оборачивает разбор в `runCatching`.
      */
-    fun fromJson(json: String): P2pManifest {
-        val parsed = gson.fromJson(json, P2pManifest::class.java)
-            ?: error("P2P-манифест: пустой JSON")
-
-        @Suppress("SENSELESS_COMPARISON")
-        require(parsed.type != null) { "P2P-манифест: неизвестный или отсутствующий type" }
-
-        @Suppress("SENSELESS_COMPARISON")
-        require(parsed.files != null) { "P2P-манифест: отсутствует список files" }
-
-        parsed.files.forEach { file ->
-            @Suppress("SENSELESS_COMPARISON")
-            require(file.name != null && file.relativePath != null) {
-                "P2P-манифест: у файла нет имени или пути"
-            }
-            // relativePath приходит с чужого устройства и напрямую задаёт, куда
-            // ляжет файл. Без нормализации пир кладёт `../../shared_prefs/...`
-            // и переписывает что угодно внутри UID приложения — включая хеш
-            // код-доступа. Отвергаем битый путь здесь, чтобы runCatching в
-            // P2pReceiveController поймал его до единой записи на диск.
-            normalizeRelativePath(file.relativePath)
-        }
-
+    fun fromJson(raw: String): P2pManifest {
+        val parsed = json.decodeFromString<P2pManifest>(raw)
+        parsed.files.forEach { file -> normalizeRelativePath(file.relativePath) }
         return parsed
     }
 
