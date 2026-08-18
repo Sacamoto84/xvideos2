@@ -8,7 +8,20 @@ import java.io.File
 import java.io.IOException
 
 /**
+ * Хранилище **вложенных** коллекций: `<path>/<коллекция>/<id>.collection`.
  *
+ * Отличие от [com.client.xvideos.common.fileDB.FileDB] — уровень вложенности:
+ * там плоский список файлов в одной папке, здесь папка на коллекцию и файлы
+ * элементов внутри. Ревью 2026-08-16 приняло это за случайное дублирование;
+ * это не так, слияние задело бы боевой путь R-коллекций ради небольшой
+ * экономии кода.
+ *
+ * Общий контракт надёжности с `FileDB`: имя коллекции проверяется
+ * ([CollectionName]), запись атомарна
+ * ([com.client.xvideos.common.io.writeTextAtomically]), операции с каталогом
+ * сериализованы [lock], `.tmp` от прерванной записи подчищаются на чтении.
+ * Элемент, который не разобрался, молча пропускается — обрезанный JSON не
+ * должен ронять весь список.
  */
 class  CollectionDB<T>(val path : String, val type: Class<T>) {
 
@@ -16,16 +29,29 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
     // создавался на каждый insert и на каждый файл в readAllCollections.
     private val gson = Gson()
 
+    /**
+     * Сериализует операции с каталогом — тот же контракт, что у
+     * [com.client.xvideos.common.fileDB.FileDB]: две параллельные записи не
+     * переплетаются, а чтение не видит окна между `delete()` и `renameTo()`
+     * в фолбэк-ветке атомарной записи.
+     */
+    private val lock = Any()
+
+    /** Расширение временного файла из [com.client.xvideos.common.io.writeTextAtomically]. */
+    private val tempSuffix = ".collection.tmp"
+
     fun create(collectionName: String): Result<Boolean> {
         return try {
             val safeName = CollectionName.normalizeOrNull(collectionName)
                 ?: return Result.failure(IOException("Недопустимое имя коллекции: $collectionName"))
             Timber.i("!!! Создать коллекцию  collectionCreateToDisk() collectionName:$safeName")
-            // Создаем директорию <userName>/block, если её нет
-            val dir = File(path, safeName)
-            if (!dir.exists()) {
-                val created = dir.mkdirs()
-                if (!created) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
+            synchronized(lock) {
+                // Создаем директорию <userName>/block, если её нет
+                val dir = File(path, safeName)
+                if (!dir.exists()) {
+                    val created = dir.mkdirs()
+                    if (!created) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
+                }
             }
             Result.success(true)
         } catch (e: Exception) {
@@ -46,7 +72,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
                 return Result.success(false)      // ничего не удаляли
             }
 
-            val deleted = dir.deleteRecursively()
+            val deleted = synchronized(lock) { dir.deleteRecursively() }
             if (!deleted) {
                 throw IOException("Не удалось удалить коллекцию: ${dir.absolutePath}")
             }
@@ -69,15 +95,17 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
             }
             val oldDir = File(path, safeOldName)
             val newDir = File(path, trimmed)
-            if (!oldDir.exists()) {
-                Timber.w("Коллекция \"$safeOldName\" не найдена: ${oldDir.absolutePath}")
-                return Result.success(false)
-            }
-            if (newDir.exists()) {
-                throw IOException("Коллекция \"$trimmed\" уже существует")
-            }
-            if (!oldDir.renameTo(newDir)) {
-                throw IOException("Не удалось переименовать коллекцию: ${oldDir.absolutePath}")
+            synchronized(lock) {
+                if (!oldDir.exists()) {
+                    Timber.w("Коллекция \"$safeOldName\" не найдена: ${oldDir.absolutePath}")
+                    return Result.success(false)
+                }
+                if (newDir.exists()) {
+                    throw IOException("Коллекция \"$trimmed\" уже существует")
+                }
+                if (!oldDir.renameTo(newDir)) {
+                    throw IOException("Не удалось переименовать коллекцию: ${oldDir.absolutePath}")
+                }
             }
             Timber.i("Переименована коллекция: $safeOldName -> $trimmed")
             Result.success(true)
@@ -98,10 +126,12 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
             // Файл-блокировка, созданный при сохранении
             val likesFile = File(dir, "$itemId.collection")
 
-            if (likesFile.exists()) {
-                // Пытаемся удалить
-                if (!likesFile.delete()) {
-                    return Result.failure(IOException("Не удалось удалить файл: ${likesFile.absolutePath}"))
+            synchronized(lock) {
+                if (likesFile.exists()) {
+                    // Пытаемся удалить
+                    if (!likesFile.delete()) {
+                        return Result.failure(IOException("Не удалось удалить файл: ${likesFile.absolutePath}"))
+                    }
                 }
             }
 
@@ -126,18 +156,20 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
             // Создаем директорию <userName>/block, если её нет
             val dir = File(path, safeName)
 
-            if (!dir.exists()) {
-                val created = dir.mkdirs()
-                if (!created) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
+            synchronized(lock) {
+                if (!dir.exists()) {
+                    val created = dir.mkdirs()
+                    if (!created) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
+                }
+
+                // Создаем файл-блокировку
+                val likesFile = File(dir, "${name}.collection")
+
+                // Атомарно: обрыв процесса посреди writeText оставлял обрезанный
+                // JSON, а readAllCollections молча выбрасывает такой файл через
+                // mapNotNull — элемент пропадал без следа в логах.
+                likesFile.writeTextAtomically(gson.toJson(item))
             }
-
-            // Создаем файл-блокировку
-            val likesFile = File(dir, "${name}.collection")
-
-            // Атомарно: обрыв процесса посреди writeText оставлял обрезанный
-            // JSON, а readAllCollections молча выбрасывает такой файл через
-            // mapNotNull — элемент пропадал без следа в логах.
-            likesFile.writeTextAtomically(gson.toJson(item))
             Result.success(true)
         } catch (e: Exception) {
             Timber.e(e, "Ошибка при сохранении лайка GIF")
@@ -150,18 +182,22 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
         val root = File(path)
         if (!root.exists()) throw IOException("Каталог коллекций не найден: ${root.absolutePath}")
 
-        val collections: List<CollectionEntity<T>> = root.listFiles { f -> f.isDirectory }?.map { dir ->
-            val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }?.mapNotNull { file ->
-                try {
-                    val text = file.readText(Charsets.UTF_8)
-                    gson.fromJson<T>(text, type)
-                } catch (ex: Exception) {
-                    Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
-                    null
-                }
-            } ?: emptyList()
-            CollectionEntity(dir.name, itemsInDir) // itemsInDir is now explicitly List<T>
-        }?.sortedBy { it.collection } ?: emptyList()
+        val collections: List<CollectionEntity<T>> = synchronized(lock) {
+            cleanupTempFiles(root)
+
+            root.listFiles { f -> f.isDirectory }?.map { dir ->
+                val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }?.mapNotNull { file ->
+                    try {
+                        val text = file.readText(Charsets.UTF_8)
+                        gson.fromJson<T>(text, type)
+                    } catch (ex: Exception) {
+                        Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
+                        null
+                    }
+                } ?: emptyList()
+                CollectionEntity(dir.name, itemsInDir) // itemsInDir is now explicitly List<T>
+            }?.sortedBy { it.collection } ?: emptyList()
+        }
 
         Result.success(collections)
     } catch (e: Exception) {
@@ -169,6 +205,18 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
         Result.failure(e)
     }
 
-
-
+    /**
+     * Подчищает `.tmp`, оставшиеся от прерванной записи.
+     *
+     * На чтение они не влияют — фильтр идёт по расширению `collection`, — но
+     * копятся в папке пользователя. `FileDB` делает то же самое в `refresh()`.
+     */
+    private fun cleanupTempFiles(root: File) {
+        runCatching {
+            root.listFiles { f -> f.isDirectory }?.forEach { dir ->
+                dir.listFiles { f -> f.isFile && f.name.endsWith(tempSuffix) }
+                    ?.forEach { it.delete() }
+            }
+        }
+    }
 }

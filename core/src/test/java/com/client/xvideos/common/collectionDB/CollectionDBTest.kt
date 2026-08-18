@@ -58,4 +58,45 @@ class CollectionDBTest {
         assertTrue(db.insert("item1", "../побег", TestItem("item1", "https://x/1")).isFailure)
         assertEquals(0, root.listFiles()?.size ?: -1)
     }
+
+    @Test
+    fun `readAllCollections подчищает временные файлы от прерванной записи`() {
+        val root = tmp.newFolder("collections5")
+        val db = db(root)
+        db.insert("ok", "К", TestItem("ok", "https://x/ok"))
+        // Так выглядит папка после обрыва процесса посреди writeTextAtomically.
+        File(root, "К/битый.collection.tmp").writeText("{\"id\":\"би")
+
+        db.readAllCollections().getOrThrow()
+
+        val leftovers = File(root, "К").listFiles()?.map { it.name }.orEmpty()
+        assertEquals(listOf("ok.collection"), leftovers)
+    }
+
+    @Test
+    fun `параллельные insert и readAllCollections не мешают друг другу`() {
+        val root = tmp.newFolder("collections6")
+        val db = db(root)
+        db.insert("seed", "К", TestItem("seed", "https://x/seed"))
+
+        val start = java.util.concurrent.CountDownLatch(1)
+        val failures = java.util.Collections.synchronizedList(mutableListOf<String>())
+
+        val writer = Thread {
+            start.await()
+            repeat(200) { i -> db.insert("item$i", "К", TestItem("item$i", "https://x/$i")) }
+        }
+        val reader = Thread {
+            start.await()
+            repeat(200) {
+                val result = db.readAllCollections()
+                if (result.isFailure) failures += result.exceptionOrNull()?.toString().orEmpty()
+            }
+        }
+
+        writer.start(); reader.start(); start.countDown()
+        writer.join(30_000); reader.join(30_000)
+
+        assertEquals("чтение не должно падать на параллельной записи: $failures", 0, failures.size)
+    }
 }

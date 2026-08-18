@@ -59,9 +59,14 @@ class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun refreshCollectionList() {
+        // Номер берётся до чтения диска: два параллельных refresh иначе
+        // разложатся в порядке завершения, а не запуска, и устаревший список
+        // ляжет поверх свежего.
+        val seq = nextLoadSeq()
         val a = collectionDb.readAllCollections()
         if (a.isSuccess) {
-            collectionList.replaceWith(
+            publish(
+                seq,
                 a.getOrThrow().map { collection ->
                     collection.copy(items = collection.items.sanitizeGifsInfoList())
                 }
