@@ -114,7 +114,7 @@ dependencies {
     api(libs.ktor.client.android)
     api(libs.ktor.network)
     api(libs.ktor.client.content.negotiation)
-    api(libs.ktor.serialization.kotlinx.json)
+    api(libs.ktor.serialization.gson)
     api libs.kotlinx.serialization.json
 
     api libs.gson

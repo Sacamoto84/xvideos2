@@ -158,7 +158,10 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }
+# Именно gson, а не kotlinx: конвертер Ktor-клиента исторически на Gson.
+# Алиас раньше назывался ktor-serialization-kotlinx-json и вводил в
+# заблуждение — код подключал его, думая, что сеть на kotlinx.
+ktor-serialization-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }
 slf4j-android = { module = "org.slf4j:slf4j-android", version.ref = "slf4jAndroid" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
