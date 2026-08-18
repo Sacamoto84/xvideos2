@@ -1,5 +1,7 @@
 # Код-ревью xvideos — проход 2
 
+> **Срез:** `13c3bac` · **Статус:** закрыт · **Индекс:** [все документы](README.md)
+
 Срез: `master` @ `13c3bac`, один модуль `:app`, 464 Kotlin-файла, 54 601 строка.
 
 Отличия от [первого прохода](CODE_REVIEW_2026-07-30.md): применены правки первого ревью, обновлён version catalog (Kotlin `2.3.21` → `2.4.10`, AGP `9.2.1` → `9.3.1`, Hilt, Coil, Ktor, Compose BOM), `compose-stability-analyzer` поднят `0.8.0` → `0.12.0` — из-за этого чинилось падение компилятора (`ClassCastException` в `StabilityAnalyzerPluginRegistrar`: плагин 0.8.0 не знал про изменившийся в Kotlin 2.4 `FirExtensionRegistrarAdapter`).
