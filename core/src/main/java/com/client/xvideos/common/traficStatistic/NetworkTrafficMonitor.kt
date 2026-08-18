@@ -39,17 +39,6 @@ class NetworkTrafficMonitor @Inject constructor() {
         initializeCounters()
     }
 
-    companion object {
-        /**
-         * Монитор процесса: создаёт и запускает его `App`, а виджеты базового
-         * слоя берут готовый. Класс приложения им не виден — он в точке сборки.
-         *
-         * null до `App.onCreate` и в unit-тестах.
-         */
-        @Volatile
-        var current: NetworkTrafficMonitor? = null
-    }
-
     private fun initializeCounters() {
         val currentRxBytes = TrafficStats.getUidRxBytes(appUid)
         val currentTxBytes = TrafficStats.getUidTxBytes(appUid)

@@ -17,16 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.util.formatBytes
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun AppNetworkSpeedMonitor() {
-    val trafficFlow = remember {
-        NetworkTrafficMonitor.current?.trafficFlow ?: MutableStateFlow(TrafficData())
-    }
+    val trafficFlow = rememberTrafficFlow()
     val trafficData by trafficFlow.collectAsStateWithLifecycle()
     AppNetworkSpeedMonitorContent(trafficData)
 }

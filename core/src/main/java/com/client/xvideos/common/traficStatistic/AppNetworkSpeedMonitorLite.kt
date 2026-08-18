@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.util.formatBytes
-import kotlinx.coroutines.flow.MutableStateFlow
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlin.math.roundToInt
 
@@ -30,9 +29,7 @@ fun AppNetworkSpeedMonitorLite() {
 
     //return
 
-    val trafficFlow = remember {
-        NetworkTrafficMonitor.current?.trafficFlow ?: MutableStateFlow(TrafficData())
-    }
+    val trafficFlow = rememberTrafficFlow()
     val trafficData by trafficFlow.collectAsStateWithLifecycle()
 
 //    val rawProgress by remember{

@@ -16,6 +16,7 @@ import com.client.xvideos.common.p2p.P2pSendPreparers
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor
+import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitorEntryPoint
 import com.client.xvideos.l.featured.saved.LSendPreparer
 import com.client.xvideos.p2p.sectionBundleImporter
 import dagger.hilt.EntryPoint
@@ -101,9 +102,11 @@ class App : Application(), SingletonImageLoader.Factory {
         if (BuildConfig.DEBUG) Timber.plant(DebugTree()) else Timber.plant(CrashLog.releaseTree())
         CrashLog.install()
 
-        // Инициализируем монитор трафика
-        networkTrafficMonitor = NetworkTrafficMonitor()
-        NetworkTrafficMonitor.current = networkTrafficMonitor
+        // Монитор берётся из графа — тем же EntryPoint, что и gate уборки:
+        // здесь мы уже после AppPath.init(), синглтоны создавать можно.
+        networkTrafficMonitor = EntryPointAccessors
+            .fromApplication(this, NetworkTrafficMonitorEntryPoint::class.java)
+            .networkTrafficMonitor()
         networkTrafficMonitor.startMonitoring()
 
         // Обработчик необработанных исключений ставит CrashLog.install() выше:
