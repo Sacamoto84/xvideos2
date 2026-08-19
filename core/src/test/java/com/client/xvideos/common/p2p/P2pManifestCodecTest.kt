@@ -132,6 +132,22 @@ class P2pManifestCodecTest {
     }
 
     @Test
+    fun `манифест Gson-версии без поля metadataFileName читается`() {
+        // Gson по умолчанию НЕ сериализует null-поля, поэтому старая версия при
+        // metadataFileName = null (типы L_COLLECTION и R_COLLECTION) писала
+        // манифест вообще без этого ключа. Коллекция от старой сборки обязана
+        // приниматься новой.
+        val legacy = """{"type":"L_COLLECTION","files":""" +
+            """[{"name":"MyCol.zip","relativePath":"MyCol.zip","payloadId":1,"size":100}]}"""
+
+        val parsed = P2pManifestCodec.fromJson(legacy)
+
+        assertEquals(P2pType.L_COLLECTION, parsed.type)
+        assertEquals(null, parsed.metadataFileName)
+        assertEquals(1, parsed.files.size)
+    }
+
+    @Test
     fun `наш манифест читается разбором без строгих полей`() {
         // Обратная сторона: то, что пишем мы, должна принять и старая сборка.
         // Проверяем, что в выдаче нет ничего сверх известных полей и что

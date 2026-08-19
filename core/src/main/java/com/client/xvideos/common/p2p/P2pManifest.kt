@@ -31,7 +31,14 @@ data class P2pManifestFile(
 @Serializable
 data class P2pManifest(
     val type: P2pType,
-    val metadataFileName: String?,
+    /*
+     * Значение по умолчанию обязательно, и это не косметика. Gson не
+     * сериализует null-поля, поэтому сборки до перехода на kotlinx писали
+     * манифест L_COLLECTION и R_COLLECTION вообще без этого ключа. Без
+     * `= null` поле для kotlinx обязательное, и такой бандл отвергался бы с
+     * MissingFieldException — приём коллекций от старой версии ломался.
+     */
+    val metadataFileName: String? = null,
     val files: List<P2pManifestFile>,
 )
 
