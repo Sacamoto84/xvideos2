@@ -3,7 +3,6 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -13,6 +12,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,12 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.ui.theme.XvideosTheme
-import com.composeunstyled.Text
 
 @Composable
 internal fun LCollectionsTopBar(
@@ -39,16 +36,9 @@ internal fun LCollectionsTopBar(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
-
-    Column(
-        modifier = Modifier
-            .then(
-                if (usePadding) Modifier.displayCutoutPadding()
-                else Modifier
-            )
-    )
+    Column( modifier = Modifier  )
     {
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -75,8 +65,6 @@ internal fun LCollectionsTopBar(
                         fontFamily = Theme.L.fontFamilyDMsanss
                     )
                 }
-
-
 
             }
 

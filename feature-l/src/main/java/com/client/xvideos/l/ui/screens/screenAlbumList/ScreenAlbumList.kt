@@ -212,12 +212,8 @@ private fun Screen.ScreenAlbumListContent(
                             item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
                                 Box(
                                     Modifier
-                                        . then (
-                                            if (usePadding) Modifier.height(topInset)      //.displayCutoutPadding()
-                                            else Modifier
-                                        )
                                         .then(
-                                            if (title != "") Modifier.height(32.dp) else Modifier.height(0.dp)
+                                            if (title != "") Modifier.height(40.dp) else Modifier.height(topInset)
                                         )
                                         .background(Theme.L.red)
                                         .padding(start = 24.dp), contentAlignment = Alignment.CenterStart

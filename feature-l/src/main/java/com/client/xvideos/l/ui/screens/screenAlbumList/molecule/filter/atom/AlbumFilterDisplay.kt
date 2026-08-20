@@ -38,7 +38,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.albumFilterDisplay
 
-
 @Preview(showSystemUi = false, showBackground = false)
 @Composable
 fun PreviewAlbumFilterDisplay() {

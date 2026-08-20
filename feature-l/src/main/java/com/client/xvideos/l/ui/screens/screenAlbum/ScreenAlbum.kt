@@ -171,11 +171,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                             .padding(horizontal = 4.dp))
                         {
 
-                            val brush = Brush.verticalGradient(listOf(Theme.L.red, Color(0xFF202020), Color(0x80262626)))
-
-                            Box(modifier = Modifier.fillMaxWidth().height(topInset).background(brush)){
-
-                            }
+                            Box(modifier = Modifier.fillMaxWidth().height(topInset)){ }
 
                             if (parsed != null) {
 

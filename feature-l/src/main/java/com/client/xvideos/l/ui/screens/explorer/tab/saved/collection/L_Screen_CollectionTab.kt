@@ -3,6 +3,8 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -14,13 +16,17 @@ import androidx.compose.material.icons.filled.Share
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.coil.UrlImage
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -46,7 +52,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.ui.theme.XvideosTheme
-import com.composeunstyled.Text
+
 import kotlinx.coroutines.DelicateCoroutinesApi
 
 object L_Screen_CollectionTab : Screen {
@@ -92,7 +98,10 @@ object L_Screen_CollectionTab : Screen {
                     }
                 },
                 content = {
-                    Text(pending, fontSize = 16.sp, color = Theme.L.b0)
+
+                    Box(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), contentAlignment =  Alignment.Center) {
+                        Text(pending, fontSize = 24.sp, color = Theme.L.b0)
+                    }
 
                     DropdownMenuItem(
                         text = { Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
@@ -134,7 +143,32 @@ object L_Screen_CollectionTab : Screen {
                         value = renameValue,
                         onValueChange = { renameValue = it },
                         singleLine = true,
-                        textStyle = Theme.L.Type.body
+                        textStyle = Theme.L.Type.body.copy(color = Color.Black),
+
+                        colors = OutlinedTextFieldDefaults.colors(
+                            cursorColor = Color.Black,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Color.Black,
+                            unfocusedBorderColor = Color.Black,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+
+                            focusedLeadingIconColor = Color.Black,
+                            unfocusedLeadingIconColor = Color.Black,
+                            focusedTrailingIconColor = Color.Black,
+                            unfocusedTrailingIconColor = Color.Black,
+
+                            focusedPlaceholderColor = Color.Black,
+                            unfocusedPlaceholderColor = Color.Black,
+                            focusedLabelColor = Color.Black,
+                            unfocusedLabelColor = Color.Black,
+
+                            focusedSupportingTextColor = Color.Black,
+                            unfocusedSupportingTextColor = Color.Black,
+
+
+                        )
                     )
                 },
                 confirmText = "Сохранить",
@@ -182,6 +216,7 @@ object L_Screen_CollectionTab : Screen {
             // во вложенном Navigator. Back внутри сбрасывает currentCollectionName.
             Navigator(ScreenCollectionName(selectedCollection))
         }
+
     }
 }
 

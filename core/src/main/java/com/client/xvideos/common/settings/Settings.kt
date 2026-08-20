@@ -92,6 +92,10 @@ object Settings {
 
     /**
      * Используем смещение экрана сверху, область моноброви и камеры
+     *
+     * ```kotlin
+     * val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
+     * ```
      */
     val useCutoutPadding by lazy { SettingElementBoolean(pref, "use_cutout_padding", true) }
 

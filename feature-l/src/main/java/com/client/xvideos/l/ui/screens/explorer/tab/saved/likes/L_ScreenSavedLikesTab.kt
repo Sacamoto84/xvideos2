@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -35,6 +36,7 @@ import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.client.xvideos.common.settings.ColumnSelect_AddColumn
+import com.client.xvideos.common.util.getTopInsetDp
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -68,6 +70,8 @@ object L_ScreenSavedLikesTab : Screen {
 
         val column = Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
 
+        val topInset = getTopInsetDp()
+
         LaunchedEffect(column) {
             if (column != 0) {
                 vm.host.columns = column
@@ -90,7 +94,7 @@ object L_ScreenSavedLikesTab : Screen {
                 tag = "lLikes",
                 itemBefore = {
 
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.displayCutoutPadding().padding(horizontal = 4.dp)) {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(top = topInset).padding(horizontal = 4.dp)) {
 
                         options.forEachIndexed { index, label ->
                             SegmentedButton(

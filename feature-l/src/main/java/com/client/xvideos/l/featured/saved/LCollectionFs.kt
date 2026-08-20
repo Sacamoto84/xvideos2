@@ -11,7 +11,6 @@ enum class LCollectionSortOrder(val title: String) {
     RECENT("Сначала новые"),
     NAME("По названию"),
     SIZE("Больше элементов"),
-    DUPLICATES("Сначала дубли")
 }
 
 data class LCollectionDuplicateGroup(
@@ -67,10 +66,7 @@ internal fun lReadCollections(
             compareByDescending<LCollectionEntity> { it.itemsCount }
                 .thenBy { it.collection.lowercase() }
         )
-        LCollectionSortOrder.DUPLICATES -> collections.sortedWith(
-            compareByDescending<LCollectionEntity> { it.duplicateCount }
-                .thenBy { it.collection.lowercase() }
-        )
+
     }
 }
 

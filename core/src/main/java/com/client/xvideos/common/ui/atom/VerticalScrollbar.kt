@@ -27,6 +27,13 @@ import androidx.compose.ui.graphics.Color
  * ```
  * val scrollPercent = rememberVisibleRangePercent...(state)   // без by!
  * VerticalScrollbar { scrollPercent.value }
+ *
+ * // Scrollbar
+ * Box( modifier = Modifier.fillMaxHeight()
+ *                 .align(Alignment.CenterEnd).width(2.dp)) {
+ *                     VerticalScrollbar { scrollPercent.value }
+ *                 }
+ *
  * ```
  *
  * `BoxWithConstraints` здесь раньше поднимал субкомпозицию ради высоты

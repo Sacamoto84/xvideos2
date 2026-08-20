@@ -37,8 +37,8 @@ import com.client.xvideos.common.ui.atom.TabBarPoints
 // перекомпоновывался чаще, чем нужно.
 private val l = persistentListOf(
     Icons.Outlined.Movie,
-    Icons.Outlined.Group,
     Icons.Outlined.BookmarkBorder,
+    Icons.Outlined.Group,
     Icons.Outlined.Search
 )
 
@@ -78,15 +78,17 @@ class ScreenRedExplorer : Screen {
 
 
         }, containerColor = Theme.background) { paddingValues ->
+
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
                 when (screenType) {
                     0 -> R_ScreenGifsTab.Content()
-                    1 -> R_ScreenNichesTab.Content()
-                    2 -> R_ScreenSavedTab.Content()
+                    1 -> R_ScreenSavedTab.Content()
+                    2 -> R_ScreenNichesTab.Content()
                     3 -> SearchTab.Content()
                     else -> R_ScreenGifsTab.Content()
                 }
             }
+
         }
 
     }
