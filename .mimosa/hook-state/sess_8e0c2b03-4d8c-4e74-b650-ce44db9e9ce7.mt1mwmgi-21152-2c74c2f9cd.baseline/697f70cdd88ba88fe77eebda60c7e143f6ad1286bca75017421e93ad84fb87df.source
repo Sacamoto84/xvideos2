@@ -1,0 +1,206 @@
+[versions]
+accompanistSystemuicontroller = "0.36.0"
+activityKtx = "1.13.0"
+agp = "9.3.1"
+
+coil = "3.5.0"
+componentsResources = "1.11.1"
+composeExtendedGestures = "3.1"
+composeThemeAdapter = "1.2.1"
+composeZoom = "0.5.0"
+core = "1.49.9"
+coreSplashscreen = "1.2.0"
+desugar_jdk_libs = "2.1.5"
+diskLruCache = "1.7"
+
+gson = "2.14.0"
+hiltAndroid = "2.60.1"
+hiltAndroidCompiler = "2.60.1"
+hiltNavigationCompose = "1.4.0"
+imageLoader = "1.10.0"
+jsoup = "1.23.1"
+kotlin = "2.4.10"
+detekt = "1.23.8"
+ksp = "2.3.10"
+coreKtx = "1.19.0"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+androidxCollection = "1.6.0"
+kotlinxCollectionsImmutable = "0.5.1"
+kotlinxSerializationJson = "1.11.0"
+ktor= "3.5.2"
+
+lazycolumnscrollbar = "2.2.0"
+lifecycleProcess = "2.11.0"
+lifecycleRuntimeKtx = "2.11.0"
+composeBom = "2026.08.00"
+lifecycleViewmodelCompose = "2.11.0"
+lottie = "6.7.1"
+lottieCompose = "6.7.1"
+material = "1.14.0"
+# Alpha сознательно: 1.5.0 в стабильном канале ещё нет, а нужные компоненты
+# (ExposedDropdownMenu в новом виде) есть только здесь. Обновляем вместе с
+# composeBom и проверяем compileDebugKotlin всех feature-модулей — alpha правит
+# API между сборками.
+material3 = "1.5.0-alpha26"
+media3 = "1.11.0"
+pagingRuntime = "3.5.1"
+pagingCompose = "3.5.1"
+securityCrypto = "1.1.0"
+slf4jAndroid = "1.7.36"
+timber = "5.0.1"
+storage = "1.6.0"
+googleGmsGoogleServices = "4.5.0"
+uiAndroid = "1.12.0"
+volley = "1.2.1"
+voyager = "2.2.21-1.10.3"
+zoomable = "2.13.0"
+junitKtx = "1.3.0"
+runtimeSavedInstanceState = "1.0.0-alpha11"
+uiautomator = "2.4.0"
+playServicesNearby = "19.4.0"
+kotlinxCoroutinesTest = "1.11.0"
+
+[libraries]
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
+androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive" }
+androidx-compose-ui-android = { module = "androidx.compose.ui:ui-android", version.ref = "uiAndroid" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+
+#Material
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
+androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRuntime" }
+
+androidx-runtime = { module = "androidx.compose.runtime:runtime" }
+
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
+coil-network-cache-control = { module = "io.coil-kt.coil3:coil-network-cache-control", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+
+components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "componentsResources" }
+compose-extended-gestures = { module = "com.github.SmartToolFactory:Compose-Extended-Gestures", version.ref = "composeExtendedGestures" }
+compose-zoom = { module = "com.github.SmartToolFactory:Compose-Zoom", version.ref = "composeZoom" }
+desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
+image-loader = { module = "io.github.qdsfdhvh:image-loader", version.ref = "imageLoader" }
+androidx-collection = { module = "androidx.collection:collection", version.ref = "androidxCollection" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+
+lazycolumnscrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", version.ref = "lazycolumnscrollbar" }
+lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+androidx-material = { module = "androidx.compose.material:material" }
+androidx-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+
+#Media3
+androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "media3" }
+androidx-media3-common-ktx = { module = "androidx.media3:media3-common-ktx", version.ref = "media3" }
+androidx-media3-database = { module = "androidx.media3:media3-database", version.ref = "media3" }
+androidx-media3-datasource = { module = "androidx.media3:media3-datasource", version.ref = "media3" }
+androidx-media3-datasource-ktor = { module = "androidx.media3:media3-datasource-ktor", version.ref = "media3" }
+androidx-media3-decoder = { module = "androidx.media3:media3-decoder", version.ref = "media3" }
+androidx-media3-effect = { module = "androidx.media3:media3-effect", version.ref = "media3" }
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
+androidx-media3-exoplayer-hls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3" }
+androidx-media3-extractor = { module = "androidx.media3:media3-extractor", version.ref = "media3" }
+androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
+androidx-media3-ui-compose = { module = "androidx.media3:media3-ui-compose", version.ref = "media3" }
+
+compose-theme-adapter = { module = "com.google.android.material:compose-theme-adapter", version.ref = "composeThemeAdapter" }
+core = { module = "com.composables:core", version.ref = "core" }
+
+
+#Json
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+
+#Hilt
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
+
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+
+#Test
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+play-services-nearby = { group = "com.google.android.gms", name = "play-services-nearby", version.ref = "playServicesNearby" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityKtx" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+
+#Ktor
+ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
+# Именно gson, а не kotlinx: конвертер Ktor-клиента исторически на Gson.
+# Алиас раньше назывался ktor-serialization-kotlinx-json и вводил в
+# заблуждение — код подключал его, думая, что сеть на kotlinx.
+ktor-serialization-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }
+slf4j-android = { module = "org.slf4j:slf4j-android", version.ref = "slf4jAndroid" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
+
+#Storage
+androidx-storage = { group = "androidx.test.services", name = "storage", version.ref = "storage" }
+disk-lru-cache = { module = "com.github.solkin:disk-lru-cache", version.ref = "diskLruCache" }
+
+volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+
+voyager-bottom-sheet-navigator = { module = "cafe.adriel.voyager:voyager-bottom-sheet-navigator", version.ref = "voyager" }
+voyager-hilt = { module = "cafe.adriel.voyager:voyager-hilt", version.ref = "voyager" }
+voyager-livedata = { module = "cafe.adriel.voyager:voyager-livedata", version.ref = "voyager" }
+voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+voyager-screenmodel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
+voyager-tab-navigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
+voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+
+
+zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
+
+ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-animation-core = { group = "androidx.compose.animation", name = "animation-core" }
+ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
+androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
+androidx-compose-runtime-saved-instance-state = { group = "androidx.compose.runtime", name = "runtime-saved-instance-state", version.ref = "runtimeSavedInstanceState" }
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+
+stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.12.0" }
+android-test = { id = "com.android.test", version.ref = "agp" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

@@ -1,0 +1,163 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+
+    alias(libs.plugins.ksp)
+    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.google.gms.google.services)
+
+    // serialization и parcelize уехали вместе с моделями в :feature-*:
+    // в :app не осталось ни одного @Serializable и ни одного @Parcelize.
+
+    //https://github.com/skydoves/compose-stability-analyzer
+    alias(libs.plugins.stability.analyzer)
+
+    alias(libs.plugins.detekt)
+
+}
+
+// Отчёты compose-компилятора о стабильности классов и пропускаемости
+// composable-функций. По умолчанию выключены — замедляют сборку и пишут файлы.
+// Включить на один прогон:
+//   ./gradlew :app:compileDebugKotlin -PcomposeReports --rerun-tasks
+// Результат — app/build/compose_compiler/app-classes.txt и app-composables.txt.
+if (project.hasProperty("composeReports")) {
+    composeCompiler {
+        reportsDestination = layout.buildDirectory.dir("compose_compiler")
+        metricsDestination = layout.buildDirectory.dir("compose_compiler")
+    }
+}
+
+// Статический анализ. Конфиг — config/detekt/detekt.yml, всё что было найдено
+// на существующем коде зафиксировано в baseline: сборка не падает, но новые
+// нарушения будут видны. Запуск: ./gradlew :app:detekt
+detekt {
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline.xml")
+    parallel = true
+    buildUponDefaultConfig = true
+    // Плагин сам вешает detekt на `check`, поэтому новые нарушения свалят
+    // и `check`, и CI — это и нужно. Существующие в baseline не мешают.
+    ignoreFailures = false
+}
+
+
+// Ключ для release-подписи берём из keystore.properties в корне проекта.
+// Файл в .gitignore — пароли не должны лежать в репозитории (раньше здесь был
+// закомментированный signingConfigs с паролем открытым текстом).
+// Пример содержимого:
+//   storeFile=D:/AndroidKey/MyKey.jks
+//   storePassword=...
+//   keyAlias=...
+//   keyPassword=...
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def hasReleaseKeystore = keystorePropertiesFile.exists()
+def keystoreProperties = new Properties()
+if (hasReleaseKeystore) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
+android {
+    namespace = 'com.client.xvideos'
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = "com.client.xvideos"
+        // 29 (Android 10): нижняя граница MediaStore с RELATIVE_PATH/IS_PENDING.
+        // На нём «В галерею» работает без единого разрешения на хранилище.
+        minSdk = 29
+        targetSdk = 37
+        // versionCode кодирует versionName: 159.19 -> 15919. Раньше он был
+        // намертво равен 1, поэтому обновление поверх установленной версии
+        // Android отклонял, а versionName отставал от версии в коммитах.
+        versionCode = 15919
+        versionName = "159.19"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled = true
+    }
+
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            release {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = true
+            // shrinkResources — следующий шаг, отдельно от R8: ресурсы режутся
+            // по другим правилам, и мешать два источника отказов в одном
+            // изменении не стоит.
+            //shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Пока keystore.properties нет — собираем как раньше, debug-ключом,
+            // чтобы локальная сборка не падала. Публиковать такой APK нельзя:
+            // debug-ключ общеизвестен.
+            signingConfig = hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+    compileOptions {
+
+        coreLibraryDesugaringEnabled = true
+
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    lint {
+        // Было false — lint для release не запускался никогда, поэтому
+        // release-специфичные проблемы не ловились в принципе. Проверено:
+        // `:app:lintRelease` проходит без ошибок.
+        checkReleaseBuilds = true
+        // После распила в :app осталось 36 файлов из 517 — остальные уехали в
+        // :core и разделы. Без этого флага lint их исходники не смотрит вообще,
+        // и включённый выше checkReleaseBuilds проверял бы одну четырнадцатую
+        // проекта. detekt такой же перекос уже пережил и решён дублированием
+        // блока по модулям; у lint для этого есть один флаг.
+        checkDependencies = true
+    }
+
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add('-XXLanguage:+PropertyParamAnnotationDefaultTargetMode')
+    }
+}
+
+dependencies {
+
+    // Модули проекта. :core приходит транзитивно через разделы, но объявлен
+    // явно: :app пользуется базовым слоем напрямую (тема, настройки, P2P).
+    implementation project(':core')
+    implementation project(':feature-l')
+    implementation project(':feature-x')
+    implementation project(':feature-r')
+
+    // Библиотеки Compose, Coil, media3, Voyager, ktor и прочие :core отдаёт
+    // через api — здесь их перечислять больше не нужно. Осталось только то,
+    // что нужно самому :app.
+
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    // @HiltAndroidApp живёт здесь, поэтому и плагин, и процессор нужны.
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    debugImplementation libs.androidx.ui.test.manifest
+
+    androidTestImplementation platform(libs.androidx.compose.bom)
+
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+}

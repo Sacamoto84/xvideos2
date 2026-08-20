@@ -1,0 +1,149 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
+    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.detekt)
+    // compileSdk, minSdk, Java 17, compose и настройка
+    // detekt — общие для четырёх библиотек, лежат в build-logic.
+    id 'xvideos.android-library'
+}
+
+android {
+    // Пакеты внутри остались прежними (com.client.xvideos.common, .ui) —
+    // namespace задаёт только, где сгенерируются R и BuildConfig модуля.
+    namespace = 'com.client.xvideos.core'
+
+    defaultConfig {
+        consumerProguardFiles "consumer-rules.pro"
+    }
+}
+
+// api, а не implementation: разделы и точка сборки пользуются теми же
+// Compose, Coil, media3 и Voyager, что и базовый слой. Дублировать список
+// в каждом модуле смысла нет — :core отдаёт его наружу.
+//
+// Решение это про перечисленные библиотеки. Остальные попадали под api заодно,
+// хотя за пределы :core не выходят — замер по импортам в app/ и feature-*
+// показал ноль. Такие переведены в implementation: они больше не висят на
+// класспате компиляции четырёх модулей, а правило про Compose и Coil осталось
+// как было.
+//
+// Осторожность: библиотеки с ресурсами и темами (material, splashscreen)
+// оставлены в api независимо от импортов — их стили используются из XML, а для
+// этого зависимость должна быть видна потребителю на этапе компиляции ресурсов.
+dependencies {
+
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    api platform(libs.androidx.compose.bom)
+    api libs.androidx.compose.runtime
+    api(libs.androidx.compose.ui.android)
+    api(libs.androidx.runtime)
+    api libs.androidx.compose.runtime.saved.instance.state
+    api libs.androidx.ui
+    api libs.androidx.ui.graphics
+    api libs.androidx.ui.tooling.preview
+    api libs.androidx.foundation.layout
+    api libs.androidx.animation.core
+    api libs.ui
+    debugApi libs.androidx.ui.tooling
+
+    api libs.material
+    api libs.androidx.material
+    api libs.androidx.material3
+    api(libs.material3)
+    api libs.compose.theme.adapter
+    api libs.androidx.material.icons.core
+    api libs.androidx.material.icons.extended
+    api libs.androidx.adaptive
+
+    api libs.androidx.core.ktx
+    api libs.androidx.activity.ktx
+    api libs.androidx.activity.compose
+    api libs.androidx.lifecycle.runtime.ktx
+    api libs.androidx.lifecycle.viewmodel.compose
+    api(libs.androidx.lifecycle.process)
+    api libs.androidx.hilt.navigation.compose
+    api(libs.androidx.core.splashscreen)
+    api libs.androidx.storage
+    // Только внутри :core — зашифрованные настройки (учётные данные Luscious).
+    implementation(libs.androidx.security.crypto)
+    api(libs.androidx.paging.runtime)
+    api(libs.androidx.paging.compose)
+
+    api(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    api(libs.voyager.navigator)
+    api(libs.voyager.screenmodel)
+    api(libs.voyager.bottom.sheet.navigator)
+    api(libs.voyager.tab.navigator)
+    api(libs.voyager.transitions)
+    api(libs.voyager.hilt)
+    api(libs.voyager.livedata)
+
+    api libs.androidx.media3.ui
+    api libs.androidx.media3.exoplayer
+    api libs.androidx.media3.exoplayer.hls
+    api libs.androidx.media3.common
+    api libs.androidx.media3.common.ktx
+    api libs.androidx.media3.datasource
+    // implementation, а не api: прямых импортов у них нет ни в core, ни в
+    // feature-модулях — extractor и decoder нужны рантайму exoplayer, ktor-датасорс
+    // и database живут внутри VideoHttpDataSource и FeedVideoCache. Явная строка
+    // всё так же фиксирует версию через version.ref, а не полагается на то, какую
+    // версию притащит транзитивно exoplayer.
+    implementation libs.androidx.media3.extractor
+    implementation libs.androidx.media3.decoder
+    implementation libs.androidx.media3.datasource.ktor
+    implementation libs.androidx.media3.database
+    api(libs.androidx.media3.ui.compose)
+    api libs.androidx.media3.effect
+
+    api(libs.coil.compose)
+    api(libs.coil.network.okhttp)
+    api(libs.coil.gif)
+    api(libs.coil.network.cache.control)
+    api(libs.image.loader)
+
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.cio)
+    api(libs.ktor.client.okhttp)
+    api(libs.ktor.client.logging)
+    api(libs.ktor.client.android)
+    api(libs.ktor.network)
+    api(libs.ktor.client.content.negotiation)
+    api(libs.ktor.serialization.gson)
+    api libs.kotlinx.serialization.json
+
+    api libs.gson
+    api libs.jsoup
+    api libs.timber
+    // Бэкенд логирования и кеши: компиляции потребителей не касаются.
+    implementation libs.slf4j.android
+    implementation libs.disk.lru.cache
+    implementation libs.volley
+    api libs.kotlinx.collections.immutable
+    // Примитивные коллекции без боксинга (IntSet/IntObjectMap) — для горячих
+    // путей вроде окна предзагрузки ленты. Наружу не выходят, потому implementation.
+    implementation libs.androidx.collection
+    api libs.components.resources
+    api(libs.core)
+
+    api libs.lottie
+    api libs.lottie.compose
+    api libs.lazycolumnscrollbar
+    api(libs.compose.zoom)
+    api libs.compose.extended.gestures
+    api libs.zoomable
+    api(libs.accompanist.systemuicontroller)
+
+    // P2P Nearby Connections. Весь обмен живёт в common/p2p, наружу уходят
+    // только собственные типы :core — разделы про Nearby не знают.
+    implementation libs.play.services.nearby
+
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+}

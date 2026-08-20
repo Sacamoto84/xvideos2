@@ -1,0 +1,33 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.parcelize)
+    // Модели поиска X помечены @Serializable — нужен плагин, а не только
+    // рантайм-библиотека из :core.
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.detekt)
+    id 'xvideos.android-library'
+}
+
+android {
+    namespace = 'com.client.xvideos.feature.x'
+}
+
+// Список короткий: всё общее приходит транзитивно из :core, который отдаёт
+// свои зависимости через api.
+dependencies {
+
+    api project(':core')
+
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    // Плагин hilt требует зависимость объявленной явно в самом модуле —
+    // транзитивной через :core ему недостаточно.
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+}
