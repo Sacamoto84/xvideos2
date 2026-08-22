@@ -5,6 +5,7 @@ import com.client.xvideos.common.theme.Theme
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -96,7 +97,7 @@ object ScreenRoot : Screen {
         ) {
             Scaffold(
 
-                modifier = Modifier
+                modifier = Modifier.systemBarsPadding()
                 ,
                 floatingActionButtonPosition = FabPosition.Start,
                 containerColor = Theme.backgroundAppRoot,

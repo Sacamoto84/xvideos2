@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Surface
 import androidx.compose.runtime.LaunchedEffect
@@ -97,6 +97,13 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
         val window = this.window
 
+        // На Android 15+ нижняя панель жестов прозрачна. Фон под ней рисует
+        // корневой Compose Box, поэтому системный scrim для кнопочной навигации
+        // здесь тоже не нужен.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
+
         val windowInsetsController = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
         windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
@@ -129,7 +136,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             appFileDatabase.get().deleteExpiredCaches()
             VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
             savedRed.nichesCache.refreshIfStale()
-            
+
             // Запуск P2P сервиса если включен в настройках
             if (Settings.p2p_background_receive.field.value && P2pPermissions.allGranted(applicationContext)) {
                 toggleP2pService(applicationContext, true)
@@ -171,9 +178,10 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.tappableElement.only(WindowInsetsSides.Bottom))
+                        .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
                         .background(Color.Black)
-                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTagsAsResourceId = true },
+                    color = Color.Black,
                 )
                 {
                     Box(modifier = Modifier.fillMaxSize()) {
