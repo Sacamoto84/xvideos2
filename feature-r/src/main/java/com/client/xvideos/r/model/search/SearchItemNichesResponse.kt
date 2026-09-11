@@ -1,21 +1,16 @@
 package com.client.xvideos.r.model.search
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-
+@Serializable
 data class SearchNichesShortResponse(
-    @SerializedName("page") val page : Long,
-    @SerializedName("pages") val pages : Long,
-    @SerializedName("total") val total : Long,
-    @SerializedName("niches") val niches : List<SearchItemNichesResponse>
+    @SerializedName("page") @SerialName("page") val page: Long = 0L,
+    @SerializedName("pages") @SerialName("pages") val pages: Long = 0L,
+    @SerializedName("total") @SerialName("total") val total: Long = 0L,
+    @SerializedName("niches") @SerialName("niches") val niches: List<SearchItemNichesResponse> = emptyList()
 )
-
-
-//"type": "niche",
-//"text": "Anal Sex",
-//"id": "anal-sex",
-//"image": "https://userpic.redgifs.com/niches/thumbnails/anal-sex-f764b259.jpg",
-//"subscribers": "276347"
 
 /**
 {
@@ -37,12 +32,13 @@ data class SearchNichesShortResponse(
     "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/orgasms.jpg"
 }
 */
+@Serializable
 data class SearchItemNichesResponse(
-    @SerializedName("id")  val id: String,
-    @SerializedName("name")  val name: String ,
-    @SerializedName("gifs")  val  gifs: Long ,
-    @SerializedName("subscribers") val subscribers : Long,
-    @SerializedName("tags")  val  tags: List<String> ,
-    @SerializedName("preferences")  val  preferences: List<String> = emptyList(),
-    @SerializedName("thumbnail")  val thumbnail : String
+    @SerializedName("id") @SerialName("id") val id: String = "",
+    @SerializedName("name") @SerialName("name") val name: String = "",
+    @SerializedName("gifs") @SerialName("gifs") val gifs: Long = 0L,
+    @SerializedName("subscribers") @SerialName("subscribers") val subscribers: Long = 0L,
+    @SerializedName("tags") @SerialName("tags") val tags: List<String> = emptyList(),
+    @SerializedName("preferences") @SerialName("preferences") val preferences: List<String> = emptyList(),
+    @SerializedName("thumbnail") @SerialName("thumbnail") val thumbnail: String = ""
 )

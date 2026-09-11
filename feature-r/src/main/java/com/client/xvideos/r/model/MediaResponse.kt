@@ -1,13 +1,16 @@
 package com.client.xvideos.r.model
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MediaResponse(
-    @SerializedName("page") val page: Int,
-    @SerializedName("pages") val pages: Int,
-    @SerializedName("total") val total: Int,
-    @SerializedName("gifs") val gifs: List<GifsInfo>,
-    @SerializedName("users") val users: List<UserInfo>,
-    @SerializedName("niches") val niches: List<NichesInfo>,
-    @SerializedName("tags") val tags: List<String>
+    @SerializedName("page") @SerialName("page") val page: Int = 0,
+    @SerializedName("pages") @SerialName("pages") val pages: Int = 0,
+    @SerializedName("total") @SerialName("total") val total: Int = 0,
+    @SerializedName("gifs") @SerialName("gifs") val gifs: List<GifsInfo> = emptyList(),
+    @SerializedName("users") @SerialName("users") val users: List<UserInfo> = emptyList(),
+    @SerializedName("niches") @SerialName("niches") val niches: List<NichesInfo> = emptyList(),
+    @SerializedName("tags") @SerialName("tags") val tags: List<String> = emptyList()
 )

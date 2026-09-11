@@ -2,6 +2,7 @@ package com.client.xvideos.r.model
 
 import androidx.compose.runtime.Stable
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 /**
@@ -12,22 +13,23 @@ import java.io.Serializable
  * Тот же приём уже применён к `P2pSendSource`.
  */
 @Stable
+@kotlinx.serialization.Serializable
 data class GifsInfo(
-    @SerializedName("id") val id: String = "",
-    @SerializedName("createDate") val createDate: Long = 0,
-    @SerializedName("contentType") val contentType: String = "Solo Female",
-    @SerializedName("likes") val likes: Int = 0,
-    @SerializedName("width") val width: Int = 100,
-    @SerializedName("height") val height: Int = 100,
-    @SerializedName("tags") val tags: List<String> = emptyList(),
-    @SerializedName("description") val description: String = "Описание",
-    @SerializedName("views") val views: Long? = null,
-    @SerializedName("type") val type: Int = 0,  //1-Gif 2-Image
-    @SerializedName("userName") val userName: String = "userName",           // "lilijunex"
-    @SerializedName("urls") val urls: URL1 = URL1(),
-    @SerializedName("duration") val duration: Double? = null, //15.033,
-    @SerializedName("hls") val hls: Boolean? = null,
-    @SerializedName("niches") val niches: List<String>? = null,
+    @SerializedName("id") @SerialName("id") val id: String = "",
+    @SerializedName("createDate") @SerialName("createDate") val createDate: Long = 0,
+    @SerializedName("contentType") @SerialName("contentType") val contentType: String = "Solo Female",
+    @SerializedName("likes") @SerialName("likes") val likes: Int = 0,
+    @SerializedName("width") @SerialName("width") val width: Int = 100,
+    @SerializedName("height") @SerialName("height") val height: Int = 100,
+    @SerializedName("tags") @SerialName("tags") val tags: List<String> = emptyList(),
+    @SerializedName("description") @SerialName("description") val description: String = "Описание",
+    @SerializedName("views") @SerialName("views") val views: Long? = null,
+    @SerializedName("type") @SerialName("type") val type: Int = 0,  //1-Gif 2-Image
+    @SerializedName("userName") @SerialName("userName") val userName: String = "userName",           // "lilijunex"
+    @SerializedName("urls") @SerialName("urls") val urls: URL1 = URL1(),
+    @SerializedName("duration") @SerialName("duration") val duration: Double? = null, //15.033,
+    @SerializedName("hls") @SerialName("hls") val hls: Boolean? = null,
+    @SerializedName("niches") @SerialName("niches") val niches: List<String>? = null,
 ) : Serializable
 
 fun GifsInfo.sanitizeOrNull(): GifsInfo? {

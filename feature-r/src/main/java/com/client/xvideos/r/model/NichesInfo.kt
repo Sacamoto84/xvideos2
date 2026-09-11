@@ -1,9 +1,12 @@
 package com.client.xvideos.r.model
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class NicheResponse(
-    @SerializedName("niche") val niche: NichesInfo
+    @SerializedName("niche") @SerialName("niche") val niche: NichesInfo
 )
 
 /**
@@ -33,14 +36,15 @@ data class NicheResponse(
  *     },
  *     ```
  */
+@Serializable
 data class NichesInfo(
-    @SerializedName("cover") val cover: String? = "cover",           //Большая широкая картинка
-    @SerializedName("description") val description: String = "description",
-    @SerializedName("gifs") val gifs: Long = -1,
-    @SerializedName("id") val id: String = "",
-    @SerializedName("name") val name: String = "",
-    @SerializedName("owner") val owner: String = "owner",
-    @SerializedName("subscribers") val subscribers: Long = -1,
-    @SerializedName("thumbnail") val thumbnail: String = "thumbnail", //200x200 картинка
-    @SerializedName("rules") val rules: String? = "rules",
+    @SerializedName("cover") @SerialName("cover") val cover: String? = "cover",           //Большая широкая картинка
+    @SerializedName("description") @SerialName("description") val description: String = "description",
+    @SerializedName("gifs") @SerialName("gifs") val gifs: Long = -1,
+    @SerializedName("id") @SerialName("id") val id: String = "",
+    @SerializedName("name") @SerialName("name") val name: String = "",
+    @SerializedName("owner") @SerialName("owner") val owner: String = "owner",
+    @SerializedName("subscribers") @SerialName("subscribers") val subscribers: Long = -1,
+    @SerializedName("thumbnail") @SerialName("thumbnail") val thumbnail: String = "thumbnail", //200x200 картинка
+    @SerializedName("rules") @SerialName("rules") val rules: String? = "rules",
 )

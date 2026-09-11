@@ -1,14 +1,15 @@
 package com.client.xvideos.r.model
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-
-
+@Serializable
 data class NichesResponse(
-    @SerializedName("niches") val niches: List<Niche>,
-    @SerializedName("page") val page: Int,
-    @SerializedName("pages") val pages: Int,
-    @SerializedName("total") val total: Int
+    @SerializedName("niches") @SerialName("niches") val niches: List<Niche> = emptyList(),
+    @SerializedName("page") @SerialName("page") val page: Int = 0,
+    @SerializedName("pages") @SerialName("pages") val pages: Int = 0,
+    @SerializedName("total") @SerialName("total") val total: Int = 0
 )
 
 /**
@@ -34,18 +35,20 @@ data class NichesResponse(
  *             ]
  * ```
  */
+@Serializable
 data class Niche(
-    @SerializedName("id") val id: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("gifs") val gifs: Long,
-    @SerializedName("subscribers") val subscribers: Long,
-    @SerializedName("thumbnail") val thumbnail: String,
-    @SerializedName("previews") val previews: List<Preview>?
+    @SerializedName("id") @SerialName("id") val id: String = "",
+    @SerializedName("name") @SerialName("name") val name: String = "",
+    @SerializedName("gifs") @SerialName("gifs") val gifs: Long = 0L,
+    @SerializedName("subscribers") @SerialName("subscribers") val subscribers: Long = 0L,
+    @SerializedName("thumbnail") @SerialName("thumbnail") val thumbnail: String = "",
+    @SerializedName("previews") @SerialName("previews") val previews: List<Preview>? = null
 )
 
+@Serializable
 data class Preview(
-    @SerializedName("id") val id: String,
-    @SerializedName("thumbnail") val thumbnail: String
+    @SerializedName("id") @SerialName("id") val id: String = "",
+    @SerializedName("thumbnail") @SerialName("thumbnail") val thumbnail: String = ""
 )
 
 
