@@ -36,7 +36,7 @@ import com.client.xvideos.r.common.UsersRed
 import com.client.xvideos.r.ui.expand_menu_video.ExpandMenuVideo
 import com.client.xvideos.r.ui.expand_menu_video.ExpandMenuVideoTags
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
+import com.client.xvideos.r.ui.explorer.LocalRNavigationState
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 
 
@@ -48,6 +48,8 @@ internal fun RedFullScreenOverlay(
     downloadList: List<GifsInfo>,
     haptic: () -> Unit
 ) {
+    val navigationState = LocalRNavigationState.current
+
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -139,7 +141,7 @@ internal fun RedFullScreenOverlay(
                 onClick = { tag ->
                     vm.search.searchText.value = TextFieldValue(text = tag, selection = TextRange(tag.length))
                     vm.search.searchTextDone.value = tag
-                    ScreenRedExplorer.screenType = 0
+                    navigationState.rootTab = 0
                     navigator.pop()
                 },
             )

@@ -64,8 +64,8 @@ class GlobalStateTest {
     }
 
     /**
-     * Непубличные `var` — прямые члены именованного `object` или
-     * `companion object`.
+     * Изменяемые `var` (включая `private var`, `lateinit var`, `internal var`) —
+     * прямые члены именованного `object` или `companion object`.
      *
      * Три ограничения, каждое отсекает свой класс ложных срабатываний:
      *
@@ -84,6 +84,8 @@ class GlobalStateTest {
         return sequence {
             for (raw in file.readLines()) {
                 val line = raw.trim()
+                if (line.startsWith("//") || line.startsWith("*") || line.startsWith("/*")) continue
+
                 if (!insideStaticScope && NAMED_STATIC_SCOPE.containsMatchIn(line)) {
                     insideStaticScope = true
                     braceDepth = 0
@@ -93,19 +95,11 @@ class GlobalStateTest {
                 val depthBefore = braceDepth
                 braceDepth += line.count { it == '{' } - line.count { it == '}' }
 
-                val declaration = line.removePrefix("@Volatile").trim()
-                val isDeclaration = declaration.startsWith("var ") ||
-                    declaration.startsWith("internal var ")
-                // depthBefore, а не braceDepth: `var x = mutableStateOf(0)` со
-                // скобкой на той же строке иначе выпадает из подсчёта.
-                if (isDeclaration && depthBefore == 1 && !declaration.contains("by remember")) {
-                    val name = declaration
-                        .substringAfter("var ")
-                        .substringBefore(':')
-                        .substringBefore('=')
-                        .substringBefore(" by ")
-                        .trim()
-                    yield("$path::$name")
+                if (depthBefore == 1 && !line.contains("by remember")) {
+                    VAR_DECLARATION.find(line)?.let { match ->
+                        val name = match.groupValues[1].removeSurrounding("`")
+                        yield("$path::$name")
+                    }
                 }
 
                 if (braceDepth <= 0 && line.contains('}')) insideStaticScope = false
@@ -118,6 +112,10 @@ class GlobalStateTest {
         /** Именованный `object Foo {` или `companion object [Имя] {`, но не `object : Интерфейс {`. */
         val NAMED_STATIC_SCOPE = Regex("""^(private |internal |public )?(companion )?object\s+[A-Za-z_]|^(private |internal |public )?companion object\s*\{""")
 
+        val VAR_DECLARATION = Regex(
+            """^(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:private|internal|public|protected|lateinit|open|final|override)\s+)*var\s+(`[^`]+`|[A-Za-z0-9_]+)"""
+        )
+
         /**
          * Известные изменяемые глобальные точки. Каждая — с причиной,
          * почему она не инжектируется.
@@ -127,20 +125,41 @@ class GlobalStateTest {
             // приложения там нет. Точка сборки публикует их сюда.
             "common/AppBuildInfo.kt::debug",
             "common/AppBuildInfo.kt::versionName",
+            // Application-контекст для базового слоя, до которого не дотягивается DI.
+            "common/AppContextHolder.kt::context",
+            // Сессионный признак разблокировки приложения (биометрия/пин-код).
+            "common/applock/AppLockSession.kt::unlocked",
+            // Временный cache для шаринга Luscious (в cacheDir, вне бэкапа).
+            "common/AppPath.kt::l_cacheDownload",
+            // Входящие файлы P2P Nearby (в cacheDir, вне бэкапа).
+            "common/AppPath.kt::p2p_nearbyCache",
+            // Кеш ниш Red (в filesDir, вне бэкапа).
+            "common/AppPath.kt::r_nichesCache",
+            // Корень файлового хранилища (filesDir/store).
+            "common/AppPath.kt::root",
+            // Синглтон загрузчика изображений Coil процесса.
+            "common/coil/CoilImageLoaderFactory.kt::instance",
             // Базовый слой умеет передавать байты, но не знает, куда их класть:
             // фабрику импортёров ставит точка сборки.
             "common/p2p/P2pReceiveManager.kt::importerFactory",
+            // Фоновая корутина активного P2P приёма в P2pReceiveManager.
+            "common/p2p/P2pReceiveManager.kt::job",
             // Та же причина со стороны отправки.
             "common/p2p/P2pSendPreparer.kt::l",
+            // Признак повреждения keyset Keystore для безопасного пересоздания хранилища.
+            "common/settings/SecureCredentialStore.kt::lastFailureLooksLikeBrokenKeyset",
+            // Экземпляр SharedPreferences для настроек приложения.
+            "common/settings/Settings.kt::pref",
+            // Зашифрованное хранилище учетных данных Luscious.
+            "common/settings/Settings.kt::securePref",
+            // Процессный дисковый кеш видео предзагрузки ExoPlayer.
+            "common/videoplayer/feed/FeedVideoCache.kt::instance",
             // Сессионное состояние процесса: «пропустил логин» живёт до
             // перезапуска и не принадлежит ни одному экрану.
             "l/LSession.kt::loginSkipped",
             // Анонимный токен redgifs. Запись закрыта (`private set`) и идёт
             // под мьютексом; снаружи доступно только чтение.
             "r/network/http/ApiClient.kt::bearerToken",
-            // Выбранная вкладка экрана, переживающая уход из композиции.
-            "r/ui/explorer/ScreenExplorer.kt::screenType",
-            "r/ui/explorer/tab/saved/ScreenSaved.kt::screenType",
             // Выбранная страна: глобальна по смыслу, раньше была двумя
             // разрозненными top-level переменными.
             "x/feature/country/country.kt::current",

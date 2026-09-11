@@ -52,7 +52,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.ui.explorer.ScreenRedExplorer
+import com.client.xvideos.r.ui.explorer.LocalRNavigationState
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
@@ -151,6 +151,7 @@ fun LazyRow123Content(
     val state = host.state
 
     val navigator = LocalNavigator.current
+    val navigationState = LocalRNavigationState.current
     val downloadList by host.downloadRed.downloadList.collectAsStateWithLifecycle()
     val loadState = listGifs.loadState
     var wasAppendLoading by remember { mutableStateOf(false) }
@@ -219,7 +220,7 @@ fun LazyRow123Content(
                 onTagClick = { tag ->
                     host.search.searchText.value = TextFieldValue(tag, TextRange(tag.length))
                     host.search.searchTextDone.value = tag
-                    ScreenRedExplorer.screenType = 0
+                    navigationState.rootTab = 0
                     navigator?.popAll()
                 }
             )

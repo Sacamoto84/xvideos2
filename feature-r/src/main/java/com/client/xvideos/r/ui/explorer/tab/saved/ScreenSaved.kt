@@ -17,9 +17,6 @@ import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -39,13 +36,22 @@ import com.client.xvideos.common.ui.atom.TabBarPoints
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
 import kotlinx.collections.immutable.persistentListOf
 
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.hilt.ScreenModelKey
+import cafe.adriel.voyager.hilt.getScreenModel
+import com.client.xvideos.r.ui.explorer.RNavigationState
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoMap
+import javax.inject.Inject
+
 object R_ScreenSavedTab : Screen {
 
     private fun readResolve(): Any = R_ScreenSavedTab
 
     override val key: ScreenKey = uniqueScreenKey
-
-    var screenType by mutableIntStateOf(0)
 
     val l = persistentListOf(
         Icons.Outlined.FavoriteBorder,
@@ -62,6 +68,7 @@ object R_ScreenSavedTab : Screen {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
+        val vm = getScreenModel<R_SavedTabSM>()
 
         val overlay0 = normalizeRColumnCount(
             Settings.r_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
@@ -76,21 +83,21 @@ object R_ScreenSavedTab : Screen {
                 Column {
                     HorizontalDivider()
                     TabRow(
-                        value = screenType,
+                        value = vm.screenType,
                         containerColor = Theme.tabLevel1,
                         //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = l,
                         onChangeState = {
-                            if (it == screenType) {
+                            if (it == vm.screenType) {
                                 when (it) {
                                     0 -> { ColumnSelect_AddRColumn(Settings.r_likesTab_column_current_count) }
                                     4 -> { ColumnSelect_AddRColumn(Settings.r_collectionTab_column_current_count) }
                                 }
                             }
-                            screenType = it
+                            vm.screenType = it
                         },
-                        overlay0 = { TabBarPoints( overlay0, screenType == 0 ) },
-                        overlay4 = { TabBarPoints( overlay4, screenType == 4 ) },
+                        overlay0 = { TabBarPoints( overlay0, vm.screenType == 0 ) },
+                        overlay4 = { TabBarPoints( overlay4, vm.screenType == 4 ) },
                     )
                 }
             },
@@ -100,7 +107,7 @@ object R_ScreenSavedTab : Screen {
         ) { paddingValues ->
 
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-                when (screenType) {
+                when (vm.screenType) {
                     0 -> R_Screen_Saved_LikesTab.Content()
                     1 -> R_Screen_CreatorsTab.Content()
                     3 -> R_Screen_Saved_DownloadTab.Content()
@@ -112,4 +119,23 @@ object R_ScreenSavedTab : Screen {
             }
         }
     }
+}
+
+class R_SavedTabSM @Inject constructor(
+    private val navigationState: RNavigationState
+) : ScreenModel {
+    var screenType: Int
+        get() = navigationState.savedTab
+        set(value) {
+            navigationState.savedTab = value
+        }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class R_SavedTabModule {
+    @Binds
+    @IntoMap
+    @ScreenModelKey(R_SavedTabSM::class)
+    abstract fun bindR_SavedTabSM(sm: R_SavedTabSM): ScreenModel
 }

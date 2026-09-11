@@ -38,6 +38,10 @@ import dagger.multibindings.IntoMap
 import timber.log.Timber
 import javax.inject.Inject
 
+import androidx.compose.runtime.CompositionLocalProvider
+import com.client.xvideos.r.ui.explorer.LocalRNavigationState
+import com.client.xvideos.r.ui.explorer.RNavigationState
+
 class R_Screen_Root : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
@@ -49,14 +53,15 @@ class R_Screen_Root : Screen {
 
         val vm: ScreenRedRootSM = getScreenModel()
 
-        val savedRed = vm.savedRed
+        CompositionLocalProvider(LocalRNavigationState provides vm.navigationState) {
+            val savedRed = vm.savedRed
 
-        val percentDownload = vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value
+            val percentDownload = vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value
 
-        BackHandler { Timber.i("iii BackHandler Root") }
+            BackHandler { Timber.i("iii BackHandler Root") }
 
-        //Диалог коллекции
-        if (savedRed.collections.visibleDialog) { R_DialogCollection(savedRed = {savedRed}) }
+            //Диалог коллекции
+            if (savedRed.collections.visibleDialog) { R_DialogCollection(savedRed = {savedRed}) }
 
         if (savedRed.collections.visibleDialogCreateNew) {
 
@@ -104,6 +109,7 @@ class R_Screen_Root : Screen {
 
 
             }
+        }
         }
     }
 }
@@ -154,7 +160,8 @@ private fun R_DialogCollection(savedRed: () -> SavedRed){
 class ScreenRedRootSM @Inject constructor(
     val savedRed: SavedRed,
     val downloadRed: DownloadRed,
-    val block: BlockRed
+    val block: BlockRed,
+    val navigationState: RNavigationState
 ) : ScreenModel
 
 @Module

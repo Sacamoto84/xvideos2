@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.explorer
 
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -10,6 +11,9 @@ import javax.inject.Singleton
 
 @Singleton
 class RNavigationState @Inject constructor() {
+    var rootTab by mutableIntStateOf(0)
+    var savedTab by mutableIntStateOf(0)
+
     var nichesSort by mutableStateOf(Order.NICHES_SUBSCRIBERS_D)
         private set
 
@@ -33,3 +37,5 @@ class RNavigationState @Inject constructor() {
         nichesFirstVisibleItemScrollOffset = 0
     }
 }
+
+val LocalRNavigationState = compositionLocalOf { RNavigationState() }
