@@ -226,6 +226,7 @@ fun SettingsSwitchRow(
     text: String,
     subtitle: String,
     value: Boolean,
+    enabled: Boolean = true,
     onValueChange: (Boolean) -> Unit
 ) {
     SettingsListItem(
@@ -235,6 +236,7 @@ fun SettingsSwitchRow(
         trailing = {
             Switch(
                 checked = value,
+                enabled = enabled,
                 onCheckedChange = onValueChange
             )
         }

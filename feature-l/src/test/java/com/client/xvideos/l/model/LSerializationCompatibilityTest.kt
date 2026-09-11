@@ -1,10 +1,10 @@
 package com.client.xvideos.l.model
 
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.net.LAlbumBundleCache
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.net.graphQl.MediaCategoriesBootstrapResponse
 import com.client.xvideos.l.net.json.LJson
-import com.google.gson.Gson
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import org.junit.Assert.assertEquals
@@ -19,12 +19,10 @@ import java.io.ObjectOutputStream
 /**
  * Тесты сериализации моделей Luscious (:feature-l):
  * 1. Разбор через kotlinx.serialization с лояльным парсером LJson (сетевой вход).
- * 2. Полная обратная совместимость с Gson (дисковые кэши LAlbumBundleCache, LMediaPersist).
+ * 2. Полная обратная совместимость с дисковыми кэшами (LAlbumBundleCache, LMediaPersist).
  * 3. Совместимость с Java Serializable (Voyager Navigation saved state).
  */
 class LSerializationCompatibilityTest {
-
-    private val gson = Gson()
 
     /* ---------- 1. kotlinx.serialization: сетевые DTO ---------- */
 
@@ -282,10 +280,10 @@ class LSerializationCompatibilityTest {
         assertTrue(response.isActive)
     }
 
-    /* ---------- 2. Обратная совместимость с Gson (дисковые кэши) ---------- */
+    /* ---------- 2. Обратная совместимость (дисковые кэши) ---------- */
 
     @Test
-    fun `Gson по-прежнему корректно читает и пишет AlbumDetails`() {
+    fun `AppJson корректно читает и пишет AlbumDetails`() {
         val original = AlbumDetails(
             id = "disk-album-1",
             title = "Disk Album",
@@ -297,8 +295,8 @@ class LSerializationCompatibilityTest {
             cover = Cover(width = 400, height = 600, size = "cover", url = "https://cdn/c.jpg")
         )
 
-        val json = gson.toJson(original)
-        val deserialized = gson.fromJson(json, AlbumDetails::class.java)
+        val json = AppJson.encodeToString(original)
+        val deserialized = AppJson.decodeFromString<AlbumDetails>(json)
 
         assertEquals(original.id, deserialized.id)
         assertEquals(original.title, deserialized.title)
@@ -309,7 +307,7 @@ class LSerializationCompatibilityTest {
     }
 
     @Test
-    fun `Gson и LJson взаимно читают PicsDetails`() {
+    fun `AppJson и LJson взаимно читают PicsDetails`() {
         val item = PicsDetails(
             height = 800,
             width = 1200,
@@ -321,23 +319,23 @@ class LSerializationCompatibilityTest {
             )
         )
 
-        // LJson -> Gson
-        val jsonFromKtx = LJson.encodeToString(item)
-        val fromGson = gson.fromJson(jsonFromKtx, PicsDetails::class.java)
-        assertEquals(item.height, fromGson.height)
-        assertEquals(item.url_to_original, fromGson.url_to_original)
-        assertEquals(item.thumbnails?.size, fromGson.thumbnails?.size)
+        // LJson -> AppJson
+        val jsonFromLJson = LJson.encodeToString(item)
+        val fromAppJson = AppJson.decodeFromString<PicsDetails>(jsonFromLJson)
+        assertEquals(item.height, fromAppJson.height)
+        assertEquals(item.url_to_original, fromAppJson.url_to_original)
+        assertEquals(item.thumbnails?.size, fromAppJson.thumbnails?.size)
 
-        // Gson -> LJson
-        val jsonFromGson = gson.toJson(item)
-        val fromKtx = LJson.decodeFromString<PicsDetails>(jsonFromGson)
-        assertEquals(item.height, fromKtx.height)
-        assertEquals(item.url_to_original, fromKtx.url_to_original)
-        assertEquals(item.thumbnails?.size, fromKtx.thumbnails?.size)
+        // AppJson -> LJson
+        val jsonFromAppJson = AppJson.encodeToString(item)
+        val fromLJson = LJson.decodeFromString<PicsDetails>(jsonFromAppJson)
+        assertEquals(item.height, fromLJson.height)
+        assertEquals(item.url_to_original, fromLJson.url_to_original)
+        assertEquals(item.thumbnails?.size, fromLJson.thumbnails?.size)
     }
 
     @Test
-    fun `LAlbumBundleCache формат дискового кэша полностью совместим с Gson`() {
+    fun `LAlbumBundleCache формат дискового кэша полностью совместим с AppJson и LJson`() {
         val bundle = LAlbumBundleCache(
             schemaVersion = 1,
             cachedAtMs = 1700000000000L,
@@ -348,8 +346,8 @@ class LSerializationCompatibilityTest {
             )
         )
 
-        val json = gson.toJson(bundle)
-        val restored = gson.fromJson(json, LAlbumBundleCache::class.java)
+        val json = LJson.encodeToString(bundle)
+        val restored = AppJson.decodeFromString<LAlbumBundleCache>(json)
 
         assertNotNull(restored)
         assertEquals(1, restored.schemaVersion)

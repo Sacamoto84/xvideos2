@@ -1,12 +1,13 @@
 package com.client.xvideos.r.common.downloader
 
 import com.client.xvideos.common.AppPath
-import com.google.gson.GsonBuilder
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.serialization.encodeToString
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -81,9 +82,8 @@ class Downloader @Inject constructor(
                     percent.value = -2f
 
                     SnackBar.success("Скачивание завершено")
-                    val gson = GsonBuilder().create()
-                    val text = gson.toJson(item)
-                    File(p, "${item.id}.info").writeText(text.toString())
+                    val text = AppJson.encodeToString(item)
+                    File(p, "${item.id}.info").writeText(text)
 
                     onComplete()
                     //DownloadRed.refreshDownloadList()

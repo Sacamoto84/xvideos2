@@ -1,8 +1,8 @@
 package com.client.xvideos.r.common.block.useCase
 
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.r.model.GifsInfo
-import com.google.gson.Gson
 import timber.log.Timber
 import java.io.File
 
@@ -14,7 +14,6 @@ fun blockGetGifsInfoByUserName(userName: String = "lilijunex"): List<GifsInfo> {
         return emptyList()
     }
 
-    val gson = Gson()
     val blockedGifs = mutableListOf<GifsInfo>()
 
     blockDir.listFiles { file ->
@@ -22,7 +21,7 @@ fun blockGetGifsInfoByUserName(userName: String = "lilijunex"): List<GifsInfo> {
     }?.forEach { file ->
         try {
             val json = file.readText(Charsets.UTF_8)
-            val gifInfo = gson.fromJson(json, GifsInfo::class.java)
+            val gifInfo = AppJson.decodeFromString<GifsInfo>(json)
             blockedGifs.add(gifInfo)
         } catch (e: Exception) {
             Timber.e(e, "Ошибка чтения файла блокировки: ${file.name}")

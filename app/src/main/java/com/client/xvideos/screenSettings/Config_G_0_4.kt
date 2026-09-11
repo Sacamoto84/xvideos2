@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.client.xvideos.common.json.JsonTypes
 import com.client.xvideos.common.settings.element.SettingElementList
 import com.skydoves.compose.stability.runtime.TraceRecomposition
 
@@ -108,7 +107,6 @@ fun PreviewConfig_G_0_4() {
         SettingElementList<Boolean>(
             sharedPrefs = context.defaultSharedPreferences(),
             name = "l_likesTab_G_0_4",
-            typeToken = JsonTypes.listOf(Boolean::class.javaObjectType),
             default = listOf(false, true, true, true, true)
         )
     }

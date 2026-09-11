@@ -8,11 +8,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
-import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import com.client.xvideos.r.model.Niche
+import kotlinx.serialization.encodeToString
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -85,8 +85,7 @@ class R_Saved_NichesCaches(
                     progress += step
                 }
                 list.replaceWith(niches)
-                val gson = GsonBuilder().setPrettyPrinting().create()
-                val json = gson.toJson(niches)
+                val json = AppJson.encodeToString(niches)
                 val file = cacheFile()
                 if (file.exists()) {
                     file.delete()
@@ -131,8 +130,7 @@ class R_Saved_NichesCaches(
         }
         runCatching {
             val json = file.readText()
-            val gson = GsonBuilder().setPrettyPrinting().create()
-            val niches = gson.fromJson<List<Niche>>(json, object : TypeToken<List<Niche>>() {}.type)
+            val niches = AppJson.decodeFromString<List<Niche>>(json)
             list.replaceWith(niches)
             version++
             timeRefresh()

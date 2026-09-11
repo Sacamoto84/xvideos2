@@ -55,21 +55,10 @@
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="33" />
 
-    <!--
-        FOREGROUND_SERVICE, FOREGROUND_SERVICE_CONNECTED_DEVICE и POST_NOTIFICATIONS
-        удалены отсюда: в коде приложения нет ни одного Service и ни одной
-        нотификации. P2pReceiveManager работает, только пока приложение активно
-        (см. его KDoc), фоновым сервисом он не является.
-
-        Из merged manifest все три разрешения теперь тоже ушли. Раньше
-        FOREGROUND_SERVICE там оставался, потому что его для своих сервисов
-        объявлял play-services-cast-framework, а тот приезжал транзитивно из
-        media3-cast. Вместе с чисткой неиспользуемых модулей media3 ушёл и
-        media3-cast, а с ним — cast-framework и его манифест.
-
-        Вернуть вместе с реальным ForegroundService, когда фоновый приём P2P
-        будет реализован.
-    -->
+    <!-- Фоновые загрузки через WorkManager с поддержкой Foreground Service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
 
 
@@ -106,6 +95,22 @@
             </intent-filter>
         </activity>
 
+        <activity-alias
+            android:name=".CalculatorAlias"
+            android:targetActivity=".SplashActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:icon="@drawable/ic_launcher_calculator"
+            android:roundIcon="@drawable/ic_launcher_calculator"
+            android:label="@string/app_name_calculator"
+            android:theme="@style/Theme.MyApp.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <activity
             android:name=".MainActivity"
             android:exported="false"
@@ -127,6 +132,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Сервис Foreground Service для WorkManager загрузок -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
 
     </application>
 

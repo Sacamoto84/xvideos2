@@ -15,9 +15,10 @@ import com.client.xvideos.r.model.search.SearchNichesShortResponse
 import com.client.xvideos.r.model.tag.TagSuggestion
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.annotations.SerializedName
+import com.client.xvideos.r.network.json.RJson
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -284,13 +285,16 @@ class RedApi @Inject constructor(
         return api.request(route)
     }
 
-    data class TagsContainerGson(@SerializedName("tags") val tags: List<String>)
+    @Serializable
+    data class TagsContainer(
+        @SerialName("tags") val tags: List<String> = emptyList()
+    )
 
     //https://api.redgifs.com/v2/niches/pumped-pussy/top-tags
 
     suspend fun getNichesTopTags(niches: String = "pumped-pussy"): List<String> {
         val route = Route(method = "GET", path = "/v2/niches/{niches}/top-tags", "niches" to niches)
-        return api.request<TagsContainerGson>(route).getOrNull()?.tags ?: emptyList()
+        return api.request<TagsContainer>(route).getOrNull()?.tags ?: emptyList()
     }
 
 
@@ -342,9 +346,6 @@ class RedApi @Inject constructor(
 
 }
 
-/** Один Gson на весь модуль: сборка билдера на каждый запрос ничего не давала. */
-private val mediaResponseGson: Gson = GsonBuilder().create()
-
 /**
  * Ответ из кеша, а если там пусто — из сети, с укладкой в кеш.
  *
@@ -363,10 +364,9 @@ private suspend fun cacheMediaResponse(
 ): Result<MediaResponse> {
 
     // Битая запись — не повод показывать ошибку: выкидываем её и идём дальше,
-    // как будто кеша не было. Разбор общего Gson может вернуть и null, если в
-    // файле оказался пустой JSON, — это тот же случай.
+    // как будто кеша не было.
     val cached = cache.get(route.url)?.let { entry ->
-        runCatching { mediaResponseGson.fromJson(entry.content, MediaResponse::class.java) }
+        runCatching { RJson.decodeFromString<MediaResponse>(entry.content) }
             .getOrElse { e ->
                 Timber.e(e, "!!! Битая запись кеша ${route.url}")
                 null
@@ -384,7 +384,8 @@ private suspend fun cacheMediaResponse(
 
     Timber.i("!!! Берем данные из Сети ${route.url}")
     return redApi.api.request<MediaResponse>(route)
-        .onSuccess { cache.put(route.url, mediaResponseGson.toJson(it)) }
+        .onSuccess { cache.put(route.url, RJson.encodeToString(it)) }
         .onFailure { Timber.e(it, "!!! Ошибка сети при запросе ${route.url}") }
 }
+
 

@@ -7,12 +7,15 @@ import com.client.xvideos.l.net.graphQl.getAlbumInfo
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.LusciousEndpoints
 import com.client.xvideos.l.repository.RepositoryUriConfig
-import com.google.gson.Gson
-import com.google.gson.JsonParser
+import com.client.xvideos.l.net.json.LJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
 class AlbumInfo(
@@ -21,10 +24,6 @@ class AlbumInfo(
     repository: Repository,
     scope: CoroutineScope,
 ) {
-
-    private companion object {
-        val gson = Gson()
-    }
 
     val albumPicsDetails = AlbumPicsDetails(id,  repository)
 
@@ -76,7 +75,7 @@ class AlbumInfo(
     private suspend fun restoreBundleIfFresh(repository: Repository): Boolean {
         val cachedJson = repository.getAlbumBundleCache(id, L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS) ?: return false
         val bundle = runCatching {
-            gson.fromJson(cachedJson, LAlbumBundleCache::class.java)
+            LJson.decodeFromString<LAlbumBundleCache>(cachedJson)
         }.getOrNull()
 
         if (
@@ -109,21 +108,19 @@ class AlbumInfo(
             totalPages = snapshot.totalPages,
             pics = snapshot.pics
         )
-        repository.putAlbumBundleCache(id, gson.toJson(bundle))
+        repository.putAlbumBundleCache(id, LJson.encodeToString(bundle))
         Timber.i("!!! L album bundle cache saved id:$id items:${snapshot.pics.size}")
     }
 
     private fun parseAlbumDetails(response: String): Result<AlbumDetails> = runCatching {
-        val json = JsonParser.parseString(response).asJsonObject
+        val json = LJson.parseToJsonElement(response).jsonObject
         val get = json["data"]
-            ?.asJsonObject
+            ?.jsonObject
             ?.get("album")
-            ?.asJsonObject
+            ?.jsonObject
             ?.get("get")
-            ?.asJsonObject
             ?: error("AlbumInfo response missing data.album.get")
-        gson.fromJson(get, AlbumDetails::class.java)
-            ?: error("AlbumInfo response data.album.get is empty")
+        LJson.decodeFromJsonElement<AlbumDetails>(get)
     }
 
     /**

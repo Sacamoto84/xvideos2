@@ -12,7 +12,7 @@ import kotlin.onSuccess
 
 class SavedX_Favorites(val scope: CoroutineScope) {
 
-    private val favoritesDb = FileDB(AppPath.x_favorites, "ItemsX", ItemsX::class.java)
+    private val favoritesDb = FileDB(AppPath.x_favorites, "ItemsX", ItemsX.serializer())
 
     val list = favoritesDb.list
 

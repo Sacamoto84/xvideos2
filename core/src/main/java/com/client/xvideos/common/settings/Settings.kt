@@ -3,7 +3,6 @@ package com.client.xvideos.common.settings
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.client.xvideos.common.json.JsonTypes
 import com.client.xvideos.common.settings.element.SettingElementBoolean
 import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
@@ -90,6 +89,18 @@ object Settings {
 
     val app_lock_enabled by lazy { SettingElementBoolean(pref, "app_lock_enabled", false) }
 
+    /**
+     * Инкогнито для клавиатуры: отключает персонализированное обучение IME,
+     * автозамену и историю в словаре клавиатуры для конфиденциального ввода.
+     */
+    val keyboard_incognito_enabled by lazy { SettingElementBoolean(pref, "keyboard_incognito_enabled", true) }
+
+    /**
+     * Маскировка приложения: смена иконки и имени на «Калькулятор» со скрытым
+     * экраном расчётов для ввода PIN-кода.
+     */
+    val camouflage_calculator_enabled by lazy { SettingElementBoolean(pref, "camouflage_calculator_enabled", false) }
+
     val p2p_background_receive by lazy { SettingElementBoolean(pref, "p2p_background_receive", false) }
 
 
@@ -166,7 +177,7 @@ object Settings {
     /**
      * Количество столбиков в L Gifs Tab T 1 2 3 4
      */
-    val l_gifsTab_G_0_4 by lazy {  SettingElementList<Boolean>( pref, "l_gifsTab_G_0_4",  typeToken = JsonTypes.listOf(Boolean::class.javaObjectType) , default = listOf(false, true, true, true, true))  }
+    val l_gifsTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "l_gifsTab_G_0_4", default = listOf(false, true, true, true, true)) }
 
 
     /**
@@ -179,7 +190,7 @@ object Settings {
     /**
      * Количество столбиков в L Likes Tab T 1 2 3 4
      */
-    val l_likesTab_G_0_4 by lazy {  SettingElementList<Boolean>( pref, "l_likesTab_G_0_4",  typeToken = JsonTypes.listOf(Boolean::class.javaObjectType) , default = listOf(false, true, true, true, true))  }
+    val l_likesTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "l_likesTab_G_0_4", default = listOf(false, true, true, true, true)) }
 
     /**
      * Текущее количество столбиков в L Likes Tab
@@ -189,7 +200,7 @@ object Settings {
     /**
      * Количество столбиков в L Collection Tab T 1 2 3 4
      */
-    val l_collectionTab_G_0_4 by lazy {  SettingElementList<Boolean>( pref, "l_collectionTab_G_0_4",  typeToken = JsonTypes.listOf(Boolean::class.javaObjectType) , default = listOf(false, true, true, true, true))  }
+    val l_collectionTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "l_collectionTab_G_0_4", default = listOf(false, true, true, true, true)) }
 
     /**
      * Текущее количество столбиков в L Collection Tab

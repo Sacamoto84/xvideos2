@@ -3,7 +3,6 @@ package com.client.xvideos.l.model
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import kotlinx.parcelize.Parcelize
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -65,7 +64,7 @@ import kotlinx.serialization.Serializable
  * статически стабильным, и каждое сравнение элемента сетки уходило в проверку
  * стабильности на рантайме.
  *
- * Обещание правдиво: все поля `val`, список приходит из Gson и нигде не
+ * Обещание правдиво: все поля `val`, список приходит из JSON и нигде не
  * мутируется. Если кто-то соберётся его менять — сначала снять аннотацию.
  */
 @Immutable
@@ -73,22 +72,22 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Suppress("ConstructorParameterNaming")
 data class PicsDetails(
-    @SerializedName("height") @SerialName("height") val height: Int = 0, //"846"
-    @SerializedName("width") @SerialName("width") val width: Int = 0, //"1280"
-    @SerializedName("is_animated") @SerialName("is_animated") val is_animated: Boolean = false,
-    @SerializedName("url_to_original") @SerialName("url_to_original") val url_to_original: String? = null,
-    @SerializedName("url_to_video") @SerialName("url_to_video") val url_to_video: String? = null,
-    @SerializedName("album") @SerialName("album") val album: String? = "null",
-    @SerializedName("thumbnails") @SerialName("thumbnails") val thumbnails: List<Thumbnails>? = emptyList()
+    @SerialName("height") val height: Int = 0, //"846"
+    @SerialName("width") val width: Int = 0, //"1280"
+    @SerialName("is_animated") val is_animated: Boolean = false,
+    @SerialName("url_to_original") val url_to_original: String? = null,
+    @SerialName("url_to_video") val url_to_video: String? = null,
+    @SerialName("album") val album: String? = "null",
+    @SerialName("thumbnails") val thumbnails: List<Thumbnails>? = emptyList()
 ) : Parcelable
 
 @Parcelize
 @Serializable
 data class Thumbnails(
-    @SerializedName("width") @SerialName("width") val width: Int = 0, //640,
-    @SerializedName("height") @SerialName("height") val height: Int = 0, //3779,
-    @SerializedName("size") @SerialName("size") val size: String? = null, //"small", "xMax"
-    @SerializedName("url") @SerialName("url") val url: String? = null //"https://..."
+    @SerialName("width") val width: Int = 0, //640,
+    @SerialName("height") val height: Int = 0, //3779,
+    @SerialName("size") val size: String? = null, //"small", "xMax"
+    @SerialName("url") val url: String? = null //"https://..."
 ) : Parcelable
 
 //https://cdni.luscious.net/venividivici2k13/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.640x0.jpg?md5=sn0bj1zYPF7ziGsGKnGRQA&expires=1773900756

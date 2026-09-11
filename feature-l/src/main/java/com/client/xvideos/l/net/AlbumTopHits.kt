@@ -4,14 +4,16 @@ import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.AlbumListTopHits
 import com.client.xvideos.l.net.graphQl.getAlbumListTopHitsQuery
+import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.repository.Repository
-import com.google.gson.Gson
-import com.google.gson.JsonParser
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
 class AlbumTopHitsImpl(
@@ -28,12 +30,11 @@ class AlbumTopHitsImpl(
                 val q = getAlbumListTopHitsQuery()
                 val res = repository.openURI(q)
                 if (res.isFailure) return@launch
-                val json = JsonParser.parseString(res.getOrNull()).asJsonObject
+                val json = LJson.parseToJsonElement(res.getOrNull().orEmpty()).jsonObject
                 val get =
-                    json["data"]?.asJsonObject?.get("album")?.asJsonObject?.get("list_top_hits")?.asJsonArray
-                val gson = Gson()
+                    json["data"]?.jsonObject?.get("album")?.jsonObject?.get("list_top_hits")?.jsonArray
                 get?.mapNotNull { element ->
-                    runCatching { gson.fromJson(element, AlbumListTopHits::class.java) }.getOrNull()
+                    runCatching { LJson.decodeFromJsonElement<AlbumListTopHits>(element) }.getOrNull()
                 }.orEmpty()
             } catch (t: CancellationException) {
                 throw t

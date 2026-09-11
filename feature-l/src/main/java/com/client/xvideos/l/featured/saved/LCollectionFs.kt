@@ -1,8 +1,11 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.isLVideoFileUrl
-import com.google.gson.GsonBuilder
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import java.io.File
 
 private const val L_COLLECTION_CONFIG_FILE_NAME = "collection.json"
@@ -18,6 +21,7 @@ data class LCollectionDuplicateGroup(
     val items: List<PicsDetails>
 )
 
+@Serializable
 internal data class LCollectionConfig(
     val schemaVersion: Int = 1,
     val coverFolderName: String? = null
@@ -173,21 +177,18 @@ private fun lResolveCollectionLastModified(collectionFolder: File): Long {
     return newestItem ?: collectionFolder.lastModified()
 }
 
-private val lCollectionConfigGson = GsonBuilder().setPrettyPrinting().create()
-
 internal fun lReadCollectionConfig(collectionFolder: File): LCollectionConfig {
     val file = File(collectionFolder, L_COLLECTION_CONFIG_FILE_NAME)
     if (!file.exists()) return LCollectionConfig()
     return runCatching {
-        lCollectionConfigGson.fromJson(file.readText(Charsets.UTF_8), LCollectionConfig::class.java)
-            ?: LCollectionConfig()
+        AppJson.decodeFromString<LCollectionConfig>(file.readText(Charsets.UTF_8))
     }.getOrDefault(LCollectionConfig())
 }
 
 internal fun lWriteCollectionConfig(collectionFolder: File, config: LCollectionConfig) {
     collectionFolder.mkdirs()
     File(collectionFolder, L_COLLECTION_CONFIG_FILE_NAME)
-        .writeText(lCollectionConfigGson.toJson(config), Charsets.UTF_8)
+        .writeText(AppJson.encodeToString(config), Charsets.UTF_8)
 }
 
 internal fun lCollectionItemIdentifiers(item: PicsDetails): List<String> {

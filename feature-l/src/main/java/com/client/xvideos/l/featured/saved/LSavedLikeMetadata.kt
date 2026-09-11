@@ -1,12 +1,16 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.Thumbnails
-import com.google.gson.GsonBuilder
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import timber.log.Timber
 import java.io.File
 
+@Serializable
 data class LSavedLikePreview(
     val fileName: String,
     val sourceUrl: String,
@@ -15,6 +19,7 @@ data class LSavedLikePreview(
     val size: String?
 )
 
+@Serializable
 data class LSavedLikeMetadata(
     val schemaVersion: Int = 1,
     val savedAt: Long = System.currentTimeMillis(),
@@ -36,8 +41,6 @@ data class LSavedLikeMetadata(
     val picture: PicsDetails = PicsDetails()
 )
 
-private val lSavedLikeGson = GsonBuilder().setPrettyPrinting().create()
-
 fun readLSavedLikeMetadata(file: File): LSavedLikeMetadata? {
     if (!file.exists()) {
         Timber.w("L saved metadata missing, skip folder: ${file.parentFile?.absolutePath ?: file.absolutePath}")
@@ -45,7 +48,7 @@ fun readLSavedLikeMetadata(file: File): LSavedLikeMetadata? {
     }
 
     return try {
-        lSavedLikeGson.fromJson(file.readText(Charsets.UTF_8), LSavedLikeMetadata::class.java)
+        AppJson.decodeFromString<LSavedLikeMetadata>(file.readText(Charsets.UTF_8))
     } catch (e: Exception) {
         Timber.e(e, "!!! read L like metadata error: ${file.absolutePath}")
         null
@@ -54,7 +57,7 @@ fun readLSavedLikeMetadata(file: File): LSavedLikeMetadata? {
 
 fun writeLSavedLikeMetadata(file: File, metadata: LSavedLikeMetadata) {
     file.parentFile?.mkdirs()
-    file.writeText(lSavedLikeGson.toJson(metadata), Charsets.UTF_8)
+    file.writeText(AppJson.encodeToString(metadata), Charsets.UTF_8)
 }
 
 fun LSavedLikeMetadata.toPicsDetails(folder: File): PicsDetails? {

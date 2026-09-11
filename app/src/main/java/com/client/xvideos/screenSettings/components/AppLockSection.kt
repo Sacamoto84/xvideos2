@@ -36,8 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockRepository
-import com.client.xvideos.R
 import com.client.xvideos.common.applock.DisableAppLockAutofill
+import com.client.xvideos.R
+import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 
@@ -54,6 +55,10 @@ fun AppLockSettingsSection() {
     LaunchedEffect(appLockEnabled, passwordSet) {
         if (appLockEnabled && !passwordSet) {
             Settings.app_lock_enabled.setValue(false)
+        }
+        if (!passwordSet && Settings.camouflage_calculator_enabled.field.value) {
+            Settings.camouflage_calculator_enabled.setValue(false)
+            LauncherAliasManager.setCalculatorAliasEnabled(context, false)
         }
     }
 
@@ -94,6 +99,39 @@ fun AppLockSettingsSection() {
                 }
             )
         }
+    }
+
+    val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+    val camouflageSubtitle = when {
+        !passwordSet -> "Сначала задайте код доступа"
+        isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
+        else -> "Выключена (стандартная иконка приложения)"
+    }
+    SettingsGroup {
+        SettingsSwitchRow(
+            icon = R.drawable.ic_launcher_calculator,
+            text = "Маскировка под калькулятор",
+            subtitle = camouflageSubtitle,
+            value = isCamouflage && passwordSet,
+            enabled = passwordSet,
+            onValueChange = { enable ->
+                if (passwordSet) {
+                    Settings.camouflage_calculator_enabled.setValue(enable)
+                    LauncherAliasManager.setCalculatorAliasEnabled(context, enable)
+                }
+            }
+        )
+    }
+
+    val keyboardIncognito = Settings.keyboard_incognito_enabled.field.collectAsStateWithLifecycle().value
+    SettingsGroup {
+        SettingsSwitchRow(
+            icon = R.drawable.memory_24,
+            text = "Инкогнито-клавиатура",
+            subtitle = if (keyboardIncognito) "Клавиатура не сохраняет поисковые запросы" else "Стандартный режим ввода",
+            value = keyboardIncognito,
+            onValueChange = { Settings.keyboard_incognito_enabled.setValue(it) }
+        )
     }
 }
 

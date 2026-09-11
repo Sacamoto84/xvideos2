@@ -9,7 +9,7 @@ import kotlin.onSuccess
 
 class R_Saved_Creator {
 
-    val creatorDb = FileDB(AppPath.r_creators, "creator", UserInfo::class.java)
+    val creatorDb = FileDB(AppPath.r_creators, "creator", UserInfo.serializer())
 
     var list = creatorDb.list
 

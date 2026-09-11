@@ -39,20 +39,9 @@
 # LineNumberTable строки теряются даже без обфускации.
 -keepattributes SourceFile,LineNumberTable
 
-# ---------- Gson ----------
+# ---------- Serialization & Enums ----------
 
-# Класс, у которого есть хотя бы одно поле с @SerializedName, — это модель,
-# которую Gson заполняет рефлексией. Сохраняем такой класс ЦЕЛИКОМ.
-#
-# Почему не хватает обычного `-keepclassmembers ... @SerializedName <fields>`:
-# он защищает только аннотированные поля. У моделей проекта рядом лежат поля
-# без аннотации (например, в `l/net/AlbumList.kt` и `r/model/URL1.kt`), и их
-# Gson ищет по имени. Обфускация сломала бы это молча: JSON бы распарсился,
-# а поля остались бы null — без единого исключения в логе.
--if class * {
-    @com.google.gson.annotations.SerializedName <fields>;
-}
--keep class <1> { *; }
+# Сериализация enum по имени константы.
 
 # Gson пишет и читает enum по имени константы.
 -keepclassmembers enum * {

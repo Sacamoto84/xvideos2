@@ -1,8 +1,7 @@
 package com.client.xvideos.r.network.http
 
 import android.annotation.SuppressLint
-import com.google.gson.TypeAdapter
-import com.google.gson.annotations.SerializedName
+import com.client.xvideos.r.network.json.RJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -17,13 +16,12 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.gson.gson
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonToken
-import com.google.gson.stream.JsonWriter
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import timber.log.Timber
 import okhttp3.ConnectionSpec
 import java.util.concurrent.TimeUnit
@@ -45,11 +43,7 @@ object ApiClient {
             }
         }
         install(ContentNegotiation) {
-            gson {
-                this.registerTypeAdapter(UInt::class.java, UIntAdapter()).create()
-                this.registerTypeAdapter(ULong::class.java, ULongAdapter()).create()
-                this.registerTypeAdapter(Long::class.java, LongAdapter()).create()
-            }
+            json(RJson)
         }
         install(HttpRequestRetry) {
             retryOnExceptionOrServerErrors(maxRetries = 3)
@@ -82,7 +76,8 @@ object ApiClient {
 
     private val tokenMutex = Mutex()
 
-    data class TokenResponse(@SerializedName("token") val token: String)
+    @Serializable
+    data class TokenResponse(@SerialName("token") val token: String)
 
     /**
      * Гарантирует наличие токена. При параллельных запросах без токена
@@ -211,35 +206,5 @@ object ApiClient {
             token?.let { headers { append(HttpHeaders.Authorization, "Bearer $it") } }
             params.forEach { (key, value) -> parameter(key, value) }
         }.bodyAsText()
-    }
-}
-
-class UIntAdapter : TypeAdapter<UInt>() {
-    override fun write(out: JsonWriter?, value: UInt?) {
-        if (value == null) out?.nullValue() else out?.value(value.toLong())
-    }
-    override fun read(input: JsonReader?): UInt? {
-        if (input?.peek() == JsonToken.NULL) { input.nextNull(); return null }
-        return input?.nextLong()?.toUInt()
-    }
-}
-
-class ULongAdapter : TypeAdapter<ULong>() {
-    override fun write(out: JsonWriter?, value: ULong?) {
-        if (value == null) out?.nullValue() else out?.value(value.toLong())
-    }
-    override fun read(input: JsonReader?): ULong? {
-        if (input?.peek() == JsonToken.NULL) { input.nextNull(); return null }
-        return input?.nextLong()?.toULong()
-    }
-}
-
-class LongAdapter : TypeAdapter<Long>() {
-    override fun write(out: JsonWriter?, value: Long?) {
-        if (value == null) out?.nullValue() else out?.value(value)
-    }
-    override fun read(input: JsonReader?): Long? {
-        if (input?.peek() == JsonToken.NULL) { input.nextNull(); return null }
-        return input?.nextLong()
     }
 }

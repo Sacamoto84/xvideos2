@@ -34,6 +34,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.client.xvideos.calculator.CalculatorScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
@@ -189,20 +191,36 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                         P2pBackgroundOverlay()
 
                         if (isAppLocked) {
-                            BackHandler { moveTaskToBack(true) }
-                            AppLockScreen(
-                                onUnlock = { password ->
-                                    // suspend-лямбда: проверка кода считает
-                                    // PBKDF2 на Dispatchers.Default, а не здесь.
-                                    if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
-                                        AppLockSession.unlock()
-                                        isAppLocked = false
-                                        true
-                                    } else {
-                                        false
+                            val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+                            if (isCamouflage) {
+                                CalculatorScreen(
+                                    onUnlock = { password ->
+                                        if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                                            AppLockSession.unlock()
+                                            isAppLocked = false
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    },
+                                    onBack = { moveTaskToBack(true) }
+                                )
+                            } else {
+                                BackHandler { moveTaskToBack(true) }
+                                AppLockScreen(
+                                    onUnlock = { password ->
+                                        // suspend-лямбда: проверка кода считает
+                                        // PBKDF2 на Dispatchers.Default, а не здесь.
+                                        if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                                            AppLockSession.unlock()
+                                            isAppLocked = false
+                                            true
+                                        } else {
+                                            false
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
 

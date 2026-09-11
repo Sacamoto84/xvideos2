@@ -1,18 +1,17 @@
 package com.client.xvideos.r.model
 
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 /** `Serializable` вслед за [GifsInfo], который её держит. */
 @kotlinx.serialization.Serializable
 data class URL1(
-    @SerializedName("thumbnail") @SerialName("thumbnail") val thumbnail: String = "",     // Картинка как SD
-    @SerializedName("silent") @SerialName("silent") val silent: String? = null,     // * Полное видео в mp4 !!! Без звука в HD Для скачивания
-    @SerializedName("poster") @SerialName("poster") val poster: String? = null,     // Большая картинка Видео как HD
-    @SerializedName("html") @SerialName("html") val html: String? = null,       // * Ссылка на веб-страницу с медиа. Полноэкранный режим. Типа ссылки
-    @SerializedName("sd") @SerialName("sd") val sd: String = "",            // * SD-ссылка на медиафайл.                                 3.5 MB
-    @SerializedName("hd") @SerialName("hd") val hd: String? = null,         // * HD-ссылка на медиафайл (может отсутствовать). Со звуком 21MB
+    @SerialName("thumbnail") val thumbnail: String = "",     // Картинка как SD
+    @SerialName("silent") val silent: String? = null,     // * Полное видео в mp4 !!! Без звука в HD Для скачивания
+    @SerialName("poster") val poster: String? = null,     // Большая картинка Видео как HD
+    @SerialName("html") val html: String? = null,       // * Ссылка на веб-страницу с медиа. Полноэкранный режим. Типа ссылки
+    @SerialName("sd") val sd: String = "",            // * SD-ссылка на медиафайл.                                 3.5 MB
+    @SerialName("hd") val hd: String? = null,         // * HD-ссылка на медиафайл (может отсутствовать). Со звуком 21MB
 ) : Serializable
 
 fun URL1.sanitize(): URL1 {

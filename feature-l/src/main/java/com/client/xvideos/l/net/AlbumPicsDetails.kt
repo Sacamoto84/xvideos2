@@ -10,18 +10,25 @@ import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lBestThumbnailImageUrl
 import com.client.xvideos.l.net.graphQl.GraphQlRequest
+import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.repository.LRepositoryProtectionUiState
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
 data class LAlbumPageLoadIssue(
@@ -45,7 +52,6 @@ class AlbumPicsDetails(
 ) {
 
     private companion object {
-        val gson = Gson()
         const val PAGE_REQUEST_DELAY_MS = 250L
     }
 
@@ -131,7 +137,7 @@ class AlbumPicsDetails(
     private fun parsePage(page: Int, response: String): PageLoadResult {
         val list = mutableListOf<PicsDetails>()
 
-        val json = JsonParser.parseString(response).asJsonObject
+        val json = LJson.parseToJsonElement(response).jsonObject
         val get = json["data"]
             ?.asJsonObjectOrNull()
             ?.get("picture")
@@ -141,20 +147,20 @@ class AlbumPicsDetails(
             ?: error("AlbumPicsDetails response missing data.picture.list")
 
         get["errors"]
-            ?.takeIf { !it.isJsonNull }
+            ?.takeIf { it !is JsonNull }
             ?.let { error("AlbumPicsDetails response errors: ${it.toString().take(300)}") }
 
         val info = get["info"]?.asJsonObjectOrNull()
         val pages = info.readInt("total_pages")?.coerceAtLeast(1) ?: 1
 
-        val itemsArray = get["items"]?.takeIf { it.isJsonArray }?.asJsonArray
+        val itemsArray = get["items"]?.takeIf { it is JsonArray }?.jsonArray
             ?: error("AlbumPicsDetails response missing data.picture.list.items")
 
         itemsArray.forEachIndexed { index, element ->
             runCatching {
-                gson.fromJson(element, PicsDetails::class.java)
+                LJson.decodeFromJsonElement<PicsDetails>(element)
             }.onSuccess { pic ->
-                if (pic != null && pic.hasAnyMediaUrl()) {
+                if (pic.hasAnyMediaUrl()) {
                     list.add(pic)
                 } else {
                     Timber.w("!!! AlbumPicsDetails $id page $page item $index has no media urls")
@@ -319,13 +325,13 @@ class AlbumPicsDetails(
                 thumbnails?.any { !it.url.isNullOrBlank() } == true
     }
 
-    private fun com.google.gson.JsonElement.asJsonObjectOrNull(): JsonObject? {
-        return takeIf { it.isJsonObject }?.asJsonObject
+    private fun JsonElement.asJsonObjectOrNull(): JsonObject? {
+        return this as? JsonObject
     }
 
     private fun JsonObject?.readInt(name: String): Int? {
         return runCatching {
-            this?.get(name)?.takeIf { !it.isJsonNull }?.asInt
+            this?.get(name)?.takeIf { it !is JsonNull }?.jsonPrimitive?.intOrNull
         }.getOrNull()
     }
 

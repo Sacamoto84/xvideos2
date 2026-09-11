@@ -9,7 +9,7 @@ import kotlin.onSuccess
 
 class R_Saved_Niches {
 
-    val nichesDb = FileDB(AppPath.r_niches, "niches", NichesInfo::class.java)
+    val nichesDb = FileDB(AppPath.r_niches, "niches", NichesInfo.serializer())
     val list = nichesDb.list
 
     fun add(item: NichesInfo) {

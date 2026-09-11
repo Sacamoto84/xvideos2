@@ -3,7 +3,10 @@ package com.client.xvideos.common.collectionDB
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.writeTextAtomically
-import com.google.gson.Gson
+import com.client.xvideos.common.json.AppJson
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
@@ -24,11 +27,18 @@ import java.io.IOException
  * Элемент, который не разобрался, молча пропускается — обрезанный JSON не
  * должен ронять весь список.
  */
-class  CollectionDB<T>(val path : String, val type: Class<T>) {
+class CollectionDB<T>(
+    val path: String,
+    private val serializer: KSerializer<T>,
+    private val json: Json = AppJson
+) {
 
-    // Gson потокобезопасен и дорог в конструировании: раньше экземпляр
-    // создавался на каждый insert и на каждый файл в readAllCollections.
-    private val gson = Gson()
+    companion object {
+        inline operator fun <reified T> invoke(
+            path: String,
+            json: Json = AppJson
+        ): CollectionDB<T> = CollectionDB(path, serializer<T>(), json)
+    }
 
     /**
      * Сериализует операции с каталогом — тот же контракт, что у
@@ -168,7 +178,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
                 // Атомарно: обрыв процесса посреди writeText оставлял обрезанный
                 // JSON, а readAllCollections молча выбрасывает такой файл через
                 // mapNotNull — элемент пропадал без следа в логах.
-                likesFile.writeTextAtomically(gson.toJson(item))
+                likesFile.writeTextAtomically(json.encodeToString(serializer, item))
             }
             Result.success(true)
         } catch (e: Exception) {
@@ -189,7 +199,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
                 val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }?.mapNotNull { file ->
                     try {
                         val text = file.readText(Charsets.UTF_8)
-                        gson.fromJson<T>(text, type)
+                        json.decodeFromString(serializer, text)
                     } catch (ex: Exception) {
                         Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
                         null

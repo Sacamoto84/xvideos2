@@ -1,9 +1,9 @@
 package com.client.xvideos.r.common.p2p
 
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.p2p.P2pManifest
 import com.client.xvideos.common.p2p.imports.BundleImporter
 import com.client.xvideos.r.model.GifsInfo
-import com.google.gson.GsonBuilder
 import timber.log.Timber
 import java.io.File
 
@@ -22,8 +22,7 @@ class RLikesBundleImporter(
             ?: error("В манифесте нет метаданных (${manifest.metadataFileName})")
         val file = receivedFiles[meta.payloadId]
             ?: error("Файл метаданных не получен (payloadId=${meta.payloadId})")
-        val item = GsonBuilder().create().fromJson(file.readText(), GifsInfo::class.java)
-            ?: error("Пустые метаданные")
+        val item = AppJson.decodeFromString<GifsInfo>(file.readText())
         // Полученные файлы никуда не кладутся намеренно: «лайк» в R — это
         // запись метаданных, а превью и видео LikesTab тянет по URL.
         Timber.i("P2P R: импорт лайка id=${item.id} user=${item.userName}")

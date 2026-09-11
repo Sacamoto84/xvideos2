@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.collectionDB.CollectionDB
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
+import kotlinx.serialization.KSerializer
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -18,10 +19,10 @@ import java.util.concurrent.atomic.AtomicLong
  */
 abstract class LinkCollectionStore<T>(
     path: String,
-    clazz: Class<T>
+    serializer: KSerializer<T>
 ) {
 
-    val collectionDb = CollectionDB<T>(path, clazz)
+    val collectionDb = CollectionDB<T>(path, serializer)
 
     var collectionList = mutableStateListOf<CollectionEntity<T>>()
 

@@ -3,19 +3,20 @@ package com.client.xvideos.l.featured.saved
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
-import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 import timber.log.Timber
 
 class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
 
-    val albumDb = FileDB(AppPath.l_albums, "album", AlbumDetails::class.java)
+    val albumDb = FileDB(AppPath.l_albums, "album", AlbumDetails.serializer())
     val list = albumDb.list
 
     fun add(item: AlbumDetails) {
@@ -51,8 +52,7 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
                 list.add(item)
 
                 scope.launch(Dispatchers.IO) {
-                    val gson = Gson()
-                    db.lAlbumPictureCache.put(albumId.toString(), gson.toJson(picsDetails))
+                    db.lAlbumPictureCache.put(albumId.toString(), AppJson.encodeToString(picsDetails))
                 }
 
             }

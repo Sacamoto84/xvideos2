@@ -5,7 +5,9 @@ import android.net.Uri
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.io.normalizeRelativePath
 import com.client.xvideos.common.io.requireInside
-import com.google.gson.GsonBuilder
+import com.client.xvideos.common.json.AppJson
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
@@ -242,22 +244,28 @@ object XlrBackupManager {
         movedAside.forEach { (_, aside) -> aside.deleteRecursively() }
     }
 
+    @Serializable
+    private data class XlrManifestData(
+        val schemaVersion: Int,
+        val createdAt: String,
+        val sections: List<String>,
+        val paths: List<String>,
+        val modes: Map<String, String>,
+    )
+
     private fun writeManifest(zip: ZipOutputStream, selectedPaths: List<String>, options: XlrBackupOptions) {
-        // Раньше JSON склеивался строками: путь с кавычкой или бэкслешем давал
-        // невалидный манифест. Сейчас его никто не парсит, но schemaVersion в
-        // файле означает, что собираются — и тогда сломались бы старые архивы.
-        val manifest = mapOf(
-            "schemaVersion" to SCHEMA_VERSION,
-            "createdAt" to utcNowText(),
-            "sections" to sections,
-            "paths" to selectedPaths,
-            "modes" to mapOf(
+        val manifest = XlrManifestData(
+            schemaVersion = SCHEMA_VERSION,
+            createdAt = utcNowText(),
+            sections = sections,
+            paths = selectedPaths,
+            modes = mapOf(
                 "L" to options.lMode.name,
                 "R" to options.rMode.name,
             ),
         )
         zip.putNextEntry(ZipEntry(MANIFEST_ENTRY))
-        zip.write(GsonBuilder().setPrettyPrinting().create().toJson(manifest).toByteArray(Charsets.UTF_8))
+        zip.write(AppJson.encodeToString(manifest).toByteArray(Charsets.UTF_8))
         zip.closeEntry()
     }
 

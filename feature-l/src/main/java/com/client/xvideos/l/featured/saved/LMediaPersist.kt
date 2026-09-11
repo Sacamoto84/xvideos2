@@ -15,10 +15,12 @@ import com.client.xvideos.l.repository.LusciousEndpoints
 import com.client.xvideos.l.net.L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS
 import com.client.xvideos.l.net.L_ALBUM_BUNDLE_CACHE_SCHEMA_VERSION
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
+import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.repository.RepositoryUriConfig
-import com.google.gson.Gson
-import com.google.gson.JsonParser
 import io.ktor.client.HttpClient
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.defaultRequest
@@ -273,20 +275,19 @@ internal suspend fun lFetchAlbumDetails(luscious: Luscious, albumId: Int): Album
 }
 
 private fun String.parseAlbumBundleCache(): LAlbumBundleCache? = runCatching {
-    Gson().fromJson(this, LAlbumBundleCache::class.java)
+    LJson.decodeFromString<LAlbumBundleCache>(this)
 }.onFailure {
     Timber.w(it, "L album bundle cache parse failed")
 }.getOrNull()
 
 private fun String.parseAlbumDetails(): AlbumDetails? = runCatching {
-    val get = JsonParser.parseString(this).asJsonObject["data"]
-        ?.asJsonObject
+    val get = LJson.parseToJsonElement(this).jsonObject["data"]
+        ?.jsonObject
         ?.get("album")
-        ?.asJsonObject
+        ?.jsonObject
         ?.get("get")
-        ?.asJsonObject
         ?: return null
-    Gson().fromJson(get, AlbumDetails::class.java)
+    LJson.decodeFromJsonElement<AlbumDetails>(get)
 }.onFailure {
     Timber.w(it, "L album metadata parse failed")
 }.getOrNull()

@@ -20,8 +20,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.ScaleAndRotateTransformation
 import androidx.media3.ui.compose.ContentFrame
-import com.client.xvideos.common.videoplayer.host.DrmConfig
-import com.client.xvideos.common.videoplayer.host.MediaPlayerError
+import com.client.xvideos.common.videoplayer.model.PlayerPlaybackCallbacks
+import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
@@ -34,41 +34,24 @@ import java.util.WeakHashMap
 @OptIn(UnstableApi::class)
 @Composable
 fun CMPPlayer2(
-    modifier: Modifier,
-    url: String,
-    isPause: Boolean,
-    totalTime: (Int) -> Unit,
-    currentTime: (Float) -> Unit,
-    isSliding: Boolean,
-    seekToTime: Float?,
-    speed: PlayerSpeed,
-    size: ScreenResize,
-    bufferCallback: (Boolean) -> Unit,
-    didEndVideo: () -> Unit,
-    loop: Boolean,
-    volume: Float,
-    isLiveStream: Boolean,
-    error: (MediaPlayerError) -> Unit,
-    headers: Map<String, String>?,
-    drmConfig: DrmConfig?,
-    selectedQuality: VideoQuality?,
-    autoRotate: Boolean,
-    poster: (Boolean) -> Unit
+    modifier: Modifier = Modifier,
+    config: PlayerPlaybackConfig,
+    callbacks: PlayerPlaybackCallbacks = PlayerPlaybackCallbacks()
 ) {
     val context = LocalContext.current
     val minBufferMs = 12_000
     val maxBufferMs = 45_000
 
     val exoPlayer = rememberExoPlayerWithLifecycle(
-        url,
+        config.url,
         context,
-        isPause,
-        isLiveStream,
-        loop,
-        headers,
-        drmConfig,
-        error,
-        selectedQuality,
+        config.isPause,
+        config.isLiveStream,
+        config.loop,
+        config.headers,
+        config.drmConfig,
+        callbacks.error,
+        config.selectedQuality,
         minBufferMs = minBufferMs,
         maxBufferMs = maxBufferMs,
         bufferForPlaybackMs = 50,
@@ -78,7 +61,7 @@ fun CMPPlayer2(
     var isBuffering by remember { mutableStateOf(false) }
 
     LaunchedEffect(isBuffering) {
-        bufferCallback(isBuffering)
+        callbacks.bufferCallback(isBuffering)
     }
 
     LaunchedEffect(exoPlayer) {
@@ -87,22 +70,22 @@ fun CMPPlayer2(
                 emit((exoPlayer.currentPosition / 1000f).coerceAtLeast(0f))
                 delay(50)
             }
-        }.collectLatest { currentTime(it) }
+        }.collectLatest { callbacks.currentTime(it) }
     }
 
-    LaunchedEffect(autoRotate) {
+    LaunchedEffect(config.autoRotate) {
         val rotateEffect = ScaleAndRotateTransformation.Builder()
-            .setRotationDegrees(if (autoRotate) -90f else 0f).build()
+            .setRotationDegrees(if (config.autoRotate) -90f else 0f).build()
         exoPlayer.setVideoEffects(listOf(rotateEffect))
     }
 
     // Раньше эти четыре строки жили в `update` у AndroidView. Теперь это обычные
     // эффекты: применяются при изменении своего входа, а не на каждый layout.
-    LaunchedEffect(exoPlayer, isPause) { exoPlayer.playWhenReady = !isPause }
-    LaunchedEffect(exoPlayer, volume) { exoPlayer.volume = volume }
-    LaunchedEffect(exoPlayer, speed) { exoPlayer.setPlaybackSpeed(speed.toFloat()) }
-    LaunchedEffect(exoPlayer, seekToTime) {
-        seekToTime?.let { exoPlayer.seekTo((it * 1000).toLong()) }
+    LaunchedEffect(exoPlayer, config.isPause) { exoPlayer.playWhenReady = !config.isPause }
+    LaunchedEffect(exoPlayer, config.volume) { exoPlayer.volume = config.volume }
+    LaunchedEffect(exoPlayer, config.speed) { exoPlayer.setPlaybackSpeed(config.speed.toFloat()) }
+    LaunchedEffect(exoPlayer, config.seekToTime) {
+        config.seekToTime?.let { exoPlayer.seekTo((it * 1000).toLong()) }
     }
 
     // Экран не гасим только пока реально идёт воспроизведение. Флаг живёт на
@@ -111,8 +94,8 @@ fun CMPPlayer2(
     // когда замолчал последний. Раньше он висел на своём PlayerView и такой
     // проблемы не было.
     val view = LocalView.current
-    DisposableEffect(view, isPause) {
-        if (isPause) {
+    DisposableEffect(view, config.isPause) {
+        if (config.isPause) {
             onDispose { }
         } else {
             KeepScreenOnCounter.acquire(view)
@@ -125,7 +108,7 @@ fun CMPPlayer2(
         ContentFrame(
             player = exoPlayer,
             modifier = modifier,
-            contentScale = when (size) {
+            contentScale = when (config.size) {
                 ScreenResize.FIT -> ContentScale.Fit
                 ScreenResize.FILL -> ContentScale.Crop
             },
@@ -135,14 +118,14 @@ fun CMPPlayer2(
         // Manage player listener and lifecycle
         DisposableEffect(key1 = exoPlayer) {
             val listener = createPlayerListener(
-                isSliding,
-                totalTime,
+                config.isSliding,
+                callbacks.totalTime,
                 currentTime = {},
                 loadingState = { isBuffering = it },
-                didEndVideo,
-                error,
-                poster,
-                sourceUrl = url
+                callbacks.didEndVideo,
+                callbacks.error,
+                callbacks.poster,
+                sourceUrl = config.url
             )
 
             exoPlayer.addListener(listener)

@@ -26,7 +26,8 @@ import io.ktor.http.Parameters
 import kotlinx.coroutines.CancellationException
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
-import io.ktor.serialization.gson.gson
+import io.ktor.serialization.kotlinx.json.json
+import com.client.xvideos.l.net.json.LJson
 import timber.log.Timber
 import java.io.IOException
 
@@ -44,7 +45,7 @@ class KtorRequestHandler(
 
     val client = HttpClient(OkHttp) {
 
-        install(ContentNegotiation) { gson() }
+        install(ContentNegotiation) { json(LJson) }
 
         // Подключаем поддержку куков (сохраняет cookies между запросами)
         install(HttpCookies) {

@@ -4,6 +4,7 @@ import android.net.Uri
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.gallery.GallerySaver
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.runCatchingCancellable
@@ -12,7 +13,7 @@ import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
-import com.google.gson.GsonBuilder
+import kotlinx.serialization.encodeToString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,6 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
 
     private val dir: String = AppPath.x_cache_download
     private val kDownloader by lazy { KDownloader.create(AppContextHolder.applicationContext) }
-    private val gson = GsonBuilder().create()
 
     /** `0f..1f` — прогресс, `-2f` — простой/готово, `-3f` — ошибка. */
     val percent = MutableStateFlow(-2f)
@@ -117,7 +117,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 onCompleted = {
                     percent.value = -2f
                     runCatching {
-                        File(dir, "${item.id}.info").writeText(gson.toJson(item))
+                        File(dir, "${item.id}.info").writeText(AppJson.encodeToString(item))
                     }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
                     SnackBar.success("Скачано")
                     refresh()
@@ -185,7 +185,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             }
 
             val result = infos.mapNotNull { f ->
-                runCatching { gson.fromJson(f.readText(), ItemsX::class.java) }
+                runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
                     .onFailure { Timber.e(it, "X saved: битый .info ${f.absolutePath}") }
                     .getOrNull()
             }

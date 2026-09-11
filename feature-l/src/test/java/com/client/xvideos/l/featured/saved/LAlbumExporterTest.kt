@@ -1,10 +1,11 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.p2p.P2pType
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Content
 import com.client.xvideos.l.model.Cover
-import com.google.gson.GsonBuilder
+import kotlinx.serialization.decodeFromString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -51,7 +52,7 @@ class LAlbumExporterTest {
     }
 
     @Test
-    fun `L album exporter writes gson file to outbox when not saved`() {
+    fun `L album exporter writes json file to outbox when not saved`() {
         val main = tmp.newFolder("xvideos")
         val savedRoot = File(main, "L/Album").apply { mkdirs() }
         val outboxRoot = File(main, "outbox/L/Album")
@@ -63,8 +64,7 @@ class LAlbumExporterTest {
         val file = File(outboxRoot, "42.album")
         assertTrue(file.exists())
         // содержимое читается обратно как AlbumDetails (формат FileDB)
-        val back = GsonBuilder().setPrettyPrinting().create()
-            .fromJson(file.readText(), AlbumDetails::class.java)
+        val back = AppJson.decodeFromString<AlbumDetails>(file.readText())
         assertEquals("42", back.id)
         assertEquals("Test Album", back.title)
     }

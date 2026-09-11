@@ -115,10 +115,10 @@ dependencies {
     api(libs.ktor.client.android)
     api(libs.ktor.network)
     api(libs.ktor.client.content.negotiation)
-    api(libs.ktor.serialization.gson)
+    api(libs.ktor.serialization.kotlinx.json)
     api libs.kotlinx.serialization.json
+    api libs.androidx.work.runtime.ktx
 
-    api libs.gson
     api libs.jsoup
     api libs.timber
     // Бэкенд логирования и кеши: компиляции потребителей не касаются.

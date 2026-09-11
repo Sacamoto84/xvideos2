@@ -1,9 +1,10 @@
 package com.client.xvideos.r.common.block.useCase
 
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.r.model.GifsInfo
-import com.google.gson.Gson
 import kotlinx.io.IOException
+import kotlinx.serialization.encodeToString
 import timber.log.Timber
 import java.io.File
 
@@ -23,9 +24,8 @@ fun blockItem(item: GifsInfo): Result<Boolean> {
         // Создаем файл-блокировку
         val blockFile = File(blockDir, "${item.id}.block")
 
-        // Сохраняем URL как JSON в файл
-        val gson = Gson()
-        val json = gson.toJson(item)
+        // Сохраем URL как JSON в файл
+        val json = AppJson.encodeToString(item)
         blockFile.writeText(json, Charsets.UTF_8)
         Result.success(true)
     } catch (e: Exception) {

@@ -2,51 +2,46 @@ package com.client.xvideos.common.settings.element
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.google.gson.Gson
+import com.client.xvideos.common.json.AppJsonCompact
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.lang.reflect.Type
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
-
-/**
- * ```kotlin
- * // Использование:
- * val stringListSetting = SettingElementList<String>(
- *     sharedPrefs,
- *     "my_strings",
- *     emptyList(),
- *     typeToken = object : TypeToken<List<String>>() {}.type
- * )
- *
- * val customObjectSetting = SettingElementList<MyDataClass>(
- *     sharedPrefs,
- *     "my_objects",
- *     typeToken = object : TypeToken<List<MyDataClass>>() {}.type
- * )
- * ```
- */
 class SettingElementList<T>(
     private val sharedPrefs: SharedPreferences,
     val name: String,
     private val default: List<T> = emptyList(),
-    private val gson: Gson = Gson(),
-    private val typeToken: Type
+    private val serializer: KSerializer<T>,
+    private val json: Json = AppJsonCompact
 ) {
+    companion object {
+        inline operator fun <reified T> invoke(
+            sharedPrefs: SharedPreferences,
+            name: String,
+            default: List<T> = emptyList(),
+            json: Json = AppJsonCompact
+        ): SettingElementList<T> = SettingElementList(sharedPrefs, name, default, serializer<T>(), json)
+    }
+
+    private val listSerializer = ListSerializer(serializer)
     private val _field = MutableStateFlow(load())
     val field: StateFlow<List<T>> = _field.asStateFlow()
 
     private fun load(): List<T> {
-        val json = sharedPrefs.getString(name, null) ?: return default
+        val raw = sharedPrefs.getString(name, null) ?: return default
         return try {
-            gson.fromJson(json, typeToken)
+            json.decodeFromString(listSerializer, raw)
         } catch (e: Exception) {
             default
         }
     }
 
     fun setValue(value: List<T>) {
-        sharedPrefs.edit { putString(name, gson.toJson(value)) }
+        sharedPrefs.edit { putString(name, json.encodeToString(listSerializer, value)) }
         _field.value = value
     }
 

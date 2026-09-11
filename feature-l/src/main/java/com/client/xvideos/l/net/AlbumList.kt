@@ -5,36 +5,36 @@ import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.FacetCollectionInfo
 import com.client.xvideos.l.net.graphQl.getAlbumListGraphQL1
 import com.client.xvideos.l.net.graphQl.getAlbumListWithAggregations
+import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
-import com.google.gson.Gson
-import com.google.gson.JsonParser
-import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
 @Serializable
 data class AlbumListFilterGenreCountResponse(
-    @SerializedName("count")
     @SerialName("count")
     val count: Int = 0,
 
-    @SerializedName("term")
     @SerialName("term")
     val term: String = "",
 
-    @SerializedName("is_active")
     @SerialName("is_active")
     val isActive: Boolean = false
 )
 
 @Serializable
 data class AlbumListFilterGenreCountResponseList(
-    @SerializedName("list")
     @SerialName("list")
     val list: List<AlbumListFilterGenreCountResponse> = emptyList()
 )
@@ -103,49 +103,33 @@ data class getAlbumListAggregationsResult(
             }
 
             val res = result.getOrThrow()
-            val json = JsonParser.parseString(res).asJsonObject
-            val get =
-                json["data"]?.asJsonObject?.get("album")?.asJsonObject?.get("list_with_aggregations")?.asJsonObject
-            val aggregations = get?.get("aggregations")?.asJsonArray
+            val json = LJson.parseToJsonElement(res).jsonObject
+            val get = json["data"]?.jsonObject?.get("album")?.jsonObject?.get("list_with_aggregations")?.jsonObject
+            val aggregations = get?.get("aggregations")?.jsonArray
 
-
-            ////
-            val indexGenre = aggregations?.mapIndexedNotNull { i, el ->
-                val obj = el.asJsonObject
-                val shortName = obj.getAsJsonObject("field")?.get("short_name")?.asString
-                if (shortName == "genre_ids") i else null
-            }?.firstOrNull()
+            val indexGenre = aggregations?.indexOfFirst { el ->
+                (el as? JsonObject)?.get("field")?.jsonObject?.get("short_name")?.jsonPrimitive?.contentOrNull == "genre_ids"
+            }?.takeIf { it >= 0 }
 
             if (indexGenre != null) {
-                val genreValues =
-                    aggregations.get(indexGenre)?.getAsJsonObject()?.get("values")?.asJsonArray
-                val gson = Gson()
-                val list = mutableListOf<AlbumListFilterGenreCountResponse>()
-                genreValues?.forEach { element ->
-                    val pic = gson.fromJson(element, AlbumListFilterGenreCountResponse::class.java)
-                    list.add(pic)
-                }
+                val genreValues = aggregations[indexGenre].jsonObject["values"]?.jsonArray
+                val list = genreValues?.mapNotNull { element ->
+                    runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
+                }.orEmpty()
 
                 filterGenreStateCount.addAll(list)
                 Timber.i("!!! getAlbumListAggregations list размер : ${list.size}")
             }
 
-            ////
-            val indexTagged = aggregations?.mapIndexedNotNull { i, el ->
-                val obj = el.asJsonObject
-                val shortName = obj.getAsJsonObject("field")?.get("short_name")?.asString
-                if (shortName == "tagged") i else null
-            }?.firstOrNull()
+            val indexTagged = aggregations?.indexOfFirst { el ->
+                (el as? JsonObject)?.get("field")?.jsonObject?.get("short_name")?.jsonPrimitive?.contentOrNull == "tagged"
+            }?.takeIf { it >= 0 }
 
             if (indexTagged != null) {
-                val taggedValues =
-                    aggregations.get(indexTagged)?.getAsJsonObject()?.get("values")?.asJsonArray
-                val gson = Gson()
-                val list = mutableListOf<AlbumListFilterGenreCountResponse>()
-                taggedValues?.forEach { element ->
-                    val pic = gson.fromJson(element, AlbumListFilterGenreCountResponse::class.java)
-                    list.add(pic)
-                }
+                val taggedValues = aggregations[indexTagged].jsonObject["values"]?.jsonArray
+                val list = taggedValues?.mapNotNull { element ->
+                    runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
+                }.orEmpty()
                 withContext(Dispatchers.Main) {
                     filterTaggedStateCount.addAll(list)
                     Timber.i(
@@ -156,26 +140,19 @@ data class getAlbumListAggregationsResult(
                         }")
                 }
             }
-            ///
-            val indexPicture = aggregations?.mapIndexedNotNull { i, el ->
-                val obj = el.asJsonObject
-                val shortName = obj.getAsJsonObject("field")?.get("short_name")?.asString
-                if (shortName == "picture_count_rank") i else null
-            }
-                ?.firstOrNull()
+
+            val indexPicture = aggregations?.indexOfFirst { el ->
+                (el as? JsonObject)?.get("field")?.jsonObject?.get("short_name")?.jsonPrimitive?.contentOrNull == "picture_count_rank"
+            }?.takeIf { it >= 0 }
 
             if (indexPicture != null) {
-                val pictureValues = aggregations.get(indexPicture)?.getAsJsonObject()?.get("values")?.asJsonArray
-                val gson = Gson()
-                val list = mutableListOf<AlbumListFilterGenreCountResponse>()
-                pictureValues?.forEach { element ->
-                    val pic = gson.fromJson(element, AlbumListFilterGenreCountResponse::class.java)
-                    list.add(pic)
-                }
+                val pictureValues = aggregations[indexPicture].jsonObject["values"]?.jsonArray
+                val list = pictureValues?.mapNotNull { element ->
+                    runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
+                }.orEmpty()
 
                 filterPictureCountStateCount.addAll(list)
                 Timber.i("!!! getAlbumListAggregations list filterPictureCountStateCount размер : ${list.size}")
-
             }
 
             filterPictureCountStateCount
@@ -256,32 +233,26 @@ private fun parseAlbumListResponse(
     filter: AlbumListFilter,
     page: Int
 ): Result<AlbumListImplInfoAndList> = runCatching {
-    val json = JsonParser.parseString(response).asJsonObject
+    val json = LJson.parseToJsonElement(response).jsonObject
     val listJson = json["data"]
-        ?.takeIf { it.isJsonObject }
-        ?.asJsonObject
+        ?.jsonObject
         ?.get("album")
-        ?.takeIf { it.isJsonObject }
-        ?.asJsonObject
+        ?.jsonObject
         ?.get("list")
-        ?.takeIf { it.isJsonObject }
-        ?.asJsonObject
+        ?.jsonObject
         ?: error("AlbumList response missing data.album.list")
 
     val infoJson = listJson["info"]
-        ?.takeIf { it.isJsonObject }
+        ?.jsonObject
         ?: error("AlbumList response missing data.album.list.info")
 
     val itemsJson = listJson["items"]
-        ?.takeIf { it.isJsonArray }
-        ?.asJsonArray
+        ?.jsonArray
         ?: error("AlbumList response missing data.album.list.items")
 
-    val gson = Gson()
-    val info = gson.fromJson(infoJson, FacetCollectionInfo::class.java)
-        ?: error("AlbumList response info is empty")
+    val info = LJson.decodeFromJsonElement<FacetCollectionInfo>(infoJson)
     val items = itemsJson.mapNotNull { itemJson ->
-        gson.fromJson(itemJson, Album::class.java)
+        runCatching { LJson.decodeFromJsonElement<Album>(itemJson) }.getOrNull()
     }
 
     AlbumListImplInfoAndList(

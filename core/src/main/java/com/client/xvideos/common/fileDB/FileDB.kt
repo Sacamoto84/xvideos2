@@ -3,8 +3,11 @@ package com.client.xvideos.common.fileDB
 import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.writeTextAtomically
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.util.replaceWith
-import com.google.gson.GsonBuilder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
@@ -12,7 +15,7 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * val nichesDb = FileDB<NichesInfo>(AppPath.niches_red, "niches", object : TypeToken<NichesInfo>() {}.type)
+ * val nichesDb = FileDB<NichesInfo>(AppPath.niches_red, "niches", NichesInfo.serializer())
  *
  * Все публичные методы синхронные и потокобезопасны: операции с каталогом
  * сериализованы через [lock], а запись файлов атомарна (temp + rename), чтобы
@@ -27,11 +30,22 @@ import java.util.concurrent.atomic.AtomicLong
  * Держите надёжность обоих в одном состоянии — атомарная запись, лок операций,
  * уборка `.tmp`.
  */
-class FileDB<T>(val dirPath: String, val extension: String, private val clazz: Class<T> ) {
+class FileDB<T>(
+    val dirPath: String,
+    val extension: String,
+    private val serializer: KSerializer<T>,
+    private val json: Json = AppJson
+) {
+
+    companion object {
+        inline operator fun <reified T> invoke(
+            dirPath: String,
+            extension: String,
+            json: Json = AppJson
+        ): FileDB<T> = FileDB(dirPath, extension, serializer<T>(), json)
+    }
 
     val list = mutableStateListOf<T>()
-
-    private val gson = GsonBuilder().setPrettyPrinting().create()
 
     /** Сериализует операции с каталогом: два параллельных refresh() не переплетаются. */
     private val lock = Any()
@@ -60,10 +74,8 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
                 val file = File(dirPath, "${nameFile}.${extension}")
 
-                gson.toJson(value).also { json ->
-                    require(json != "null") { "Сериализация вернула null" }
-                    file.writeTextAtomically(json)
-                }
+                val jsonString = json.encodeToString(serializer, value)
+                file.writeTextAtomically(jsonString)
             }
 
             Result.success(true)
@@ -82,10 +94,8 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
                     return Result.failure(FileNotFoundException("File not found: ${file.absolutePath}"))
                 }
 
-                gson.toJson(value).also { json ->
-                    require(json != "null") { "Serialization returned null" }
-                    file.writeTextAtomically(json)
-                }
+                val jsonString = json.encodeToString(serializer, value)
+                file.writeTextAtomically(jsonString)
             }
 
             Result.success(true)
@@ -122,9 +132,8 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
                 if (!file.exists()) {
                     return Result.failure(FileNotFoundException("!!! Файл не найден: ${file.absolutePath}"))
                 }
-                val json = file.readText(Charsets.UTF_8)
-                val obj = gson.fromJson(json, clazz)
-                    ?: return Result.failure(NullPointerException("!!! Десериализация вернула null"))
+                val jsonString = file.readText(Charsets.UTF_8)
+                val obj = json.decodeFromString(serializer, jsonString)
                 Result.success(obj)
             }
         } catch (e: Exception) {
@@ -151,8 +160,8 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
                 loadSeq.incrementAndGet() to files.mapNotNull { file ->
                     try {
-                        val json = file.readText(Charsets.UTF_8)
-                        gson.fromJson(json, clazz)
+                        val jsonString = file.readText(Charsets.UTF_8)
+                        json.decodeFromString(serializer, jsonString)
                     } catch (e: Exception) {
                         Timber.e(e, "!!! FileDB refresh Ошибка при чтении файла $dirPath ${file.name}")
                         null

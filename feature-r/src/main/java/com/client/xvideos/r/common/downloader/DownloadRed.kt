@@ -4,12 +4,12 @@ import android.content.Context
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.gallery.GallerySaver
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
-import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -140,7 +140,7 @@ class DownloadRed @Inject constructor(
         scope.launch(Dispatchers.IO) {
             val tmpRoot = File(appContext.cacheDir, "p2p_r_export")
             tmpRoot.deleteRecursively()
-            val infoJson = GsonBuilder().create().toJson(item)
+            val infoJson = AppJson.encodeToString(item)
             val bundle = buildRMetaBundle(tmpRoot, item.userName, item.id, infoJson)
             withContext(Dispatchers.Main) { onReady(bundle) }
         }
@@ -159,15 +159,13 @@ class DownloadRed @Inject constructor(
                 emptyList()
             }
 
-            val gson = GsonBuilder().create()
-
             val result = mutableListOf<GifsInfo>()
 
             allFiles.forEach { file ->
                 if (file.extension != "info") return@forEach
                 try {
                     val content = file.readText()
-                    val obj = gson.fromJson(content, GifsInfo::class.java)
+                    val obj = AppJson.decodeFromString<GifsInfo>(content)
                     result.add(obj)
                 } catch (e: Exception) {
                     // Битый .info пропускаем, но в лог приложения, а не в stdout.
@@ -266,14 +264,12 @@ class DownloadRed @Inject constructor(
             emptyList()
         }
 
-        val gson = GsonBuilder().create()
         var invalidInfoFiles = 0
         val candidates = mutableListOf<RedDownloadRecoveryCandidate>()
 
         infoFiles.forEach { infoFile ->
             runCatching {
-                val item = gson.fromJson(infoFile.readText(), GifsInfo::class.java)
-                    ?: error("Empty info json")
+                val item = AppJson.decodeFromString<GifsInfo>(infoFile.readText())
                 val parent = infoFile.parentFile ?: error("Missing parent folder")
                 val id = item.id.takeIf { it.isNotBlank() } ?: infoFile.nameWithoutExtension
                 val userName = item.userName.takeIf { it.isNotBlank() } ?: parent.name

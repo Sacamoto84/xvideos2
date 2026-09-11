@@ -1,7 +1,7 @@
 package com.client.xvideos.common.fileDB.folder
 
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonParser
+import com.client.xvideos.common.json.AppJson
+import kotlinx.serialization.encodeToString
 
 data class FileStringCacheEntry(
     val key: String,
@@ -92,16 +92,13 @@ class FileStringCacheTable(
     }
 }
 
-private val fileDbPrettyGson = GsonBuilder()
-    .setPrettyPrinting()
-    .create()
-
 private fun String.prettyJsonOrSelf(): String {
     val trimmed = trimStart()
     if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return this
 
     return runCatching {
-        fileDbPrettyGson.toJson(JsonParser.parseString(this))
+        val element = AppJson.parseToJsonElement(this)
+        AppJson.encodeToString(element)
     }.getOrElse {
         this
     }

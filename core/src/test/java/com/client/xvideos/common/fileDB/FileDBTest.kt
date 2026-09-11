@@ -6,16 +6,18 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import kotlinx.serialization.Serializable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+@Serializable
 data class Row(val id: String, val value: String)
 
 class FileDBTest {
 
     @get:Rule val tmp = TemporaryFolder()
 
-    private fun db(root: File) = FileDB(root.absolutePath, "row", Row::class.java)
+    private fun db(root: File) = FileDB(root.absolutePath, "row", Row.serializer())
 
     @Test
     fun `insert и read возвращают записанное`() {

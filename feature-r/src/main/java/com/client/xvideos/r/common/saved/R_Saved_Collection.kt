@@ -14,7 +14,7 @@ import timber.log.Timber
 
 class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
     AppPath.r_collection,
-    GifsInfo::class.java
+    GifsInfo.serializer()
 )
 {
     //----- Диалоги (UI-состояние R-раздела) -----

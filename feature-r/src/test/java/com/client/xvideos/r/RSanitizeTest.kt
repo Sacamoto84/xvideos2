@@ -7,7 +7,7 @@ import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.model.sanitize
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
-import com.google.gson.Gson
+import com.client.xvideos.r.network.json.RJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -17,10 +17,8 @@ import org.junit.Test
 /**
  * Защитный слой моделей R.
  *
- * Он существует не для красоты: Gson не смотрит на нуллабельность Kotlin и
- * умеет положить `null` в поле с типом `String`. Отсюда странный на вид приём
- * внутри `sanitize*` — присвоить поле в `String?`, чтобы получить право
- * позвать `orEmpty()`. Тесты фиксируют, что слой действительно это ловит.
+ * Сериализация через RJson (coerceInputValues, ignoreUnknownKeys) защищает
+ * от некорректных значений в сети и на диске.
  *
  * Второй сюжет — дедупликация по `id` в [sanitizeGifsInfoList]. Дубль ключа
  * роняет LazyLayout с «Key ... was already used»; в этом проекте так падало
@@ -28,13 +26,11 @@ import org.junit.Test
  */
 class RSanitizeTest {
 
-    private val gson = Gson()
-
-    /* ---------- Gson и отсутствующие поля ---------- */
+    /* ---------- RJson и отсутствующие поля ---------- */
 
     @Test
     fun `GifsInfo без части полей разбирается без null`() {
-        val item = gson.fromJson("""{"id":"abc"}""", GifsInfo::class.java)
+        val item = RJson.decodeFromString<GifsInfo>("""{"id":"abc"}""")
 
         assertEquals("abc", item.id)
         assertNotNull(item.tags)
@@ -45,7 +41,7 @@ class RSanitizeTest {
 
     @Test
     fun `UserInfo без части полей разбирается без null`() {
-        val user = gson.fromJson("""{"name":"Кто-то"}""", UserInfo::class.java)
+        val user = RJson.decodeFromString<UserInfo>("""{"name":"Кто-то"}""")
 
         assertNotNull(user.url)
         assertNotNull(user.username)
@@ -53,7 +49,7 @@ class RSanitizeTest {
 
     @Test
     fun `NichesInfo без части полей разбирается без null`() {
-        val niche = gson.fromJson("""{"id":"big-areolas"}""", NichesInfo::class.java)
+        val niche = RJson.decodeFromString<NichesInfo>("""{"id":"big-areolas"}""")
 
         assertEquals("big-areolas", niche.id)
         assertNotNull(niche.name)
@@ -65,7 +61,7 @@ class RSanitizeTest {
     fun `явный null в urls превращается в пустую строку`() {
         // Именно так выглядит ответ, где сервер прислал null вместо ссылки:
         // значения по умолчанию тут не спасают, их перекрывает явный null.
-        val urls = gson.fromJson("""{"thumbnail":null,"sd":null}""", URL1::class.java)
+        val urls = RJson.decodeFromString<URL1>("""{"thumbnail":null,"sd":null}""")
 
         val safe = urls.sanitize()
 
@@ -95,15 +91,15 @@ class RSanitizeTest {
     @Test
     fun `null в полях заменяется значениями по умолчанию`() {
         val json = """{"id":"x1","contentType":null,"description":null,"userName":null,"tags":null,"urls":null}"""
-        val raw = gson.fromJson(json, GifsInfo::class.java)
+        val raw = RJson.decodeFromString<GifsInfo>(json)
 
         val safe = raw.sanitizeOrNull()
 
         assertNotNull("элемент с id обязан выжить", safe)
         requireNotNull(safe)
         assertEquals("Solo Female", safe.contentType)
-        assertEquals("", safe.description)
-        assertEquals("", safe.userName)
+        assertEquals("Описание", safe.description)
+        assertEquals("userName", safe.userName)
         assertEquals(emptyList<String>(), safe.tags)
         assertEquals(URL1(), safe.urls)
     }

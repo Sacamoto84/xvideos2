@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.IncognitoKeyboard
 
 
 @Preview(device = "spec:width=411dp,height=891dp")
@@ -53,6 +54,7 @@ fun DaialogNewCollection(
                 onValueChange = { text = it },
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 singleLine = true,
+                keyboardOptions = IncognitoKeyboard.options(),
                 label = { Text("Название коллекции") },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Theme.DialogLavande.buttonBackground,

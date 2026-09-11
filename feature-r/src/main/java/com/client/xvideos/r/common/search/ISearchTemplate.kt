@@ -2,12 +2,13 @@ package com.client.xvideos.r.common.search
 
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.input.TextFieldValue
-import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Пауза ввода, после которой запрашиваются подсказки.
@@ -18,9 +19,10 @@ import kotlinx.coroutines.flow.stateIn
  */
 internal const val SUGGESTIONS_DEBOUNCE_MS = 300L
 
+@Serializable
 data class SuggestionItem(
-    @SerializedName("text") val text: String,  //
-    @SerializedName("count") val count: Long,  //
+    @SerialName("text") val text: String = "",
+    @SerialName("count") val count: Long = 0,
 )
 
 abstract class ISearchTemplate(

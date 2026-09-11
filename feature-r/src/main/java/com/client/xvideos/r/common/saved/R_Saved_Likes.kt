@@ -12,7 +12,7 @@ import kotlin.onSuccess
 
 class R_Saved_Likes {
 
-    val likesDb = FileDB(AppPath.r_likes, "likes", GifsInfo::class.java)
+    val likesDb = FileDB(AppPath.r_likes, "likes", GifsInfo.serializer())
 
     var list = likesDb.list
 

@@ -2,8 +2,8 @@ package com.client.xvideos.r.model
 
 import com.client.xvideos.r.model.search.SearchNichesShortResponse
 import com.client.xvideos.r.model.tag.TagSuggestion
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.r.network.json.RJson
-import com.google.gson.Gson
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import org.junit.Assert.assertEquals
@@ -12,11 +12,9 @@ import org.junit.Test
 /**
  * Тесты сериализации моделей R:
  * 1. Разбор через kotlinx.serialization (сетевой вход).
- * 2. Полная обратная совместимость с Gson (дисковые хранилища FileDB и CollectionDB).
+ * 2. Полная обратная совместимость с форматом диска (дисковые хранилища FileDB и CollectionDB).
  */
 class RSerializationCompatibilityTest {
-
-    private val gson = Gson()
 
     /* ---------- kotlinx.serialization: сетевые DTO ---------- */
 
@@ -174,63 +172,51 @@ class RSerializationCompatibilityTest {
         assertEquals("tag", suggestion.type)
     }
 
-    /* ---------- Обратная совместимость с Gson (дисковые хранилища) ---------- */
+    /* ---------- Обратная совместимость со старыми данными диска (ранее писавшимися Gson) ---------- */
 
     @Test
-    fun `Gson по-прежнему корректно сериализует и десериализует GifsInfo`() {
-        val original = GifsInfo(
-            id = "disk-id-123",
-            contentType = "Solo Female",
-            likes = 42,
-            width = 1920,
-            height = 1080,
-            tags = listOf("tagA", "tagB"),
-            description = "Test Description",
-            views = 999L,
-            userName = "author1",
-            urls = URL1(thumbnail = "https://cdn/t.jpg", sd = "https://cdn/sd.mp4")
-        )
+    fun `AppJson корректно читает и сериализует GifsInfo формата диска`() {
+        val legacyGsonJson = """
+            {
+                "id": "disk-id-123",
+                "contentType": "Solo Female",
+                "likes": 42,
+                "width": 1920,
+                "height": 1080,
+                "tags": ["tagA", "tagB"],
+                "description": "Test Description",
+                "views": 999,
+                "userName": "author1",
+                "urls": {
+                    "thumbnail": "https://cdn/t.jpg",
+                    "sd": "https://cdn/sd.mp4"
+                }
+            }
+        """.trimIndent()
 
-        val jsonFromGson = gson.toJson(original)
-        val deserialized = gson.fromJson(jsonFromGson, GifsInfo::class.java)
+        val deserialized = AppJson.decodeFromString<GifsInfo>(legacyGsonJson)
 
-        assertEquals(original.id, deserialized.id)
-        assertEquals(original.likes, deserialized.likes)
-        assertEquals(original.tags, deserialized.tags)
-        assertEquals(original.urls.thumbnail, deserialized.urls.thumbnail)
-        assertEquals(original.urls.sd, deserialized.urls.sd)
+        assertEquals("disk-id-123", deserialized.id)
+        assertEquals(42, deserialized.likes)
+        assertEquals(listOf("tagA", "tagB"), deserialized.tags)
+        assertEquals("https://cdn/t.jpg", deserialized.urls.thumbnail)
+        assertEquals("https://cdn/sd.mp4", deserialized.urls.sd)
+
+        val encoded = AppJson.encodeToString(deserialized)
+        val roundTrip = AppJson.decodeFromString<GifsInfo>(encoded)
+        assertEquals(deserialized.id, roundTrip.id)
+        assertEquals(deserialized.urls.thumbnail, roundTrip.urls.thumbnail)
     }
 
     @Test
-    fun `kotlinx и Gson взаимно читают сериализованные GifsInfo`() {
-        val item = GifsInfo(
-            id = "cross-test-456",
-            description = "Round trip",
-            urls = URL1(thumbnail = "https://t.jpg", sd = "https://s.mp4")
-        )
-
-        // kotlinx -> Gson
-        val jsonFromKtx = RJson.encodeToString(item)
-        val fromGson = gson.fromJson(jsonFromKtx, GifsInfo::class.java)
-        assertEquals(item.id, fromGson.id)
-        assertEquals(item.urls.thumbnail, fromGson.urls.thumbnail)
-
-        // Gson -> kotlinx
-        val jsonFromGson = gson.toJson(item)
-        val fromKtx = RJson.decodeFromString<GifsInfo>(jsonFromGson)
-        assertEquals(item.id, fromKtx.id)
-        assertEquals(item.urls.thumbnail, fromKtx.urls.thumbnail)
-    }
-
-    @Test
-    fun `Gson по-прежнему корректно читает UserInfo и NichesInfo`() {
+    fun `AppJson корректно читает старые UserInfo и NichesInfo с диска`() {
         val userJson = """{"username":"disk_user","name":"Disk User","followers":500}"""
-        val user = gson.fromJson(userJson, UserInfo::class.java)
+        val user = AppJson.decodeFromString<UserInfo>(userJson)
         assertEquals("disk_user", user.username)
         assertEquals(500L, user.followers)
 
         val nicheJson = """{"id":"disk_niche","name":"Disk Niche","gifs":100}"""
-        val niche = gson.fromJson(nicheJson, NichesInfo::class.java)
+        val niche = AppJson.decodeFromString<NichesInfo>(nicheJson)
         assertEquals("disk_niche", niche.id)
         assertEquals(100L, niche.gifs)
     }

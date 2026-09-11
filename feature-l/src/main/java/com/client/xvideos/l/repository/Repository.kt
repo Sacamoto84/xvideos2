@@ -6,7 +6,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
-import com.google.gson.JsonParser
+import com.client.xvideos.l.net.json.LJson
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -314,11 +314,11 @@ class Repository(
         }
 
         return runCatching {
-            val json = JsonParser.parseString(normalized)
-            if (!json.isJsonObject) {
+            val json = LJson.parseToJsonElement(normalized)
+            if (json !is kotlinx.serialization.json.JsonObject) {
                 error("Response is not a JSON object: ${normalized.previewForLog()}")
             }
-            if (json.asJsonObject.has("errors")) {
+            if (json.containsKey("errors")) {
                 error("GraphQL errors: ${normalized.previewForLog()}")
             }
             normalized

@@ -1,18 +1,20 @@
 package com.client.xvideos.l.featured.saved
 
 import android.content.Context
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.p2p.P2pSendPreparer
 import com.client.xvideos.common.p2p.P2pSendPreparerFactory
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
-import com.google.gson.Gson
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import java.io.File
 
 /**
@@ -20,11 +22,11 @@ import java.io.File
  * JSON-строкой и про [PicsDetails] не знает.
  */
 fun lP2pSendSource(item: PicsDetails): P2pSendSource.DownloadL =
-    P2pSendSource.DownloadL(Gson().toJson(item))
+    P2pSendSource.DownloadL(AppJson.encodeToString(item))
 
 /** Обратный разбор [lP2pSendSource]; null, если строка битая. */
 fun lP2pItem(itemJson: String): PicsDetails? =
-    runCatching { Gson().fromJson(itemJson, PicsDetails::class.java) }.getOrNull()
+    runCatching { AppJson.decodeFromString<PicsDetails>(itemJson) }.getOrNull()
 
 /** Доступ к Hilt-синглтонам из объекта вне DI-графа. */
 @EntryPoint

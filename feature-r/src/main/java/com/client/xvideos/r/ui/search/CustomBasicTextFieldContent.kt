@@ -29,7 +29,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import com.client.xvideos.common.ui.IncognitoKeyboard
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -233,7 +233,7 @@ private fun SearchInputRow(
             ),
             modifier = Modifier.weight(1f).onFocusChanged { onFocusChanged(it.isFocused) },
             cursorBrush = SolidColor(Theme.R.colorYellow),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = KeyboardType.Text ),
+            keyboardOptions = IncognitoKeyboard.options(imeAction = ImeAction.Done, keyboardType = KeyboardType.Text),
             keyboardActions = KeyboardActions(onDone = { onDone(value.text) })
         )
 

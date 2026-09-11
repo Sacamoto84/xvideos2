@@ -22,7 +22,7 @@ class R_Saved_Subscriptions(
     val redApi: RedApi,
 ) {
 
-    private val creatorDb = FileDB(AppPath.r_subscriptions, "subscriptions", UserInfo::class.java)
+    private val creatorDb = FileDB(AppPath.r_subscriptions, "subscriptions", UserInfo.serializer())
 
     /**
      * Список авторов на которых подписаны

@@ -1,12 +1,11 @@
 package com.client.xvideos.r.model.search
 
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class SearchCreatorsResponse(
-    @SerializedName("items") @SerialName("items") val items: List<SearchItemCreatorsResponse> = emptyList()
+    @SerialName("items") val items: List<SearchItemCreatorsResponse> = emptyList()
 )
 
 //{
@@ -29,11 +28,11 @@ data class SearchCreatorsResponse(
 //},
 @Serializable
 data class SearchItemCreatorsResponse(
-    @SerializedName("type") @SerialName("type") val type: String = "creator",
-    @SerializedName("text") @SerialName("text") val text: String = "@elfsandi",
-    @SerializedName("name") @SerialName("name") val name: String = "Ana",
-    @SerializedName("image") @SerialName("image") val image: String? = null,
-    @SerializedName("verified") @SerialName("verified") val verified: Boolean = true,
-    @SerializedName("studio") @SerialName("studio") val studio: Boolean = false,
-    @SerializedName("followers") @SerialName("followers") val followers: Long = 0L
+    @SerialName("type") val type: String = "creator",
+    @SerialName("text") val text: String = "@elfsandi",
+    @SerialName("name") val name: String = "Ana",
+    @SerialName("image") val image: String? = null,
+    @SerialName("verified") val verified: Boolean = true,
+    @SerialName("studio") val studio: Boolean = false,
+    @SerialName("followers") val followers: Long = 0L
 )

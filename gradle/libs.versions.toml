@@ -13,7 +13,7 @@ coreSplashscreen = "1.2.0"
 desugar_jdk_libs = "2.1.5"
 diskLruCache = "1.7"
 
-gson = "2.14.0"
+work = "2.10.0"
 hiltAndroid = "2.60.1"
 hiltAndroidCompiler = "2.60.1"
 hiltNavigationCompose = "1.4.0"
@@ -117,9 +117,6 @@ compose-theme-adapter = { module = "com.google.android.material:compose-theme-ad
 core = { module = "com.composables:core", version.ref = "core" }
 
 
-#Json
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-
 #Hilt
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
@@ -151,16 +148,14 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
-# Именно gson, а не kotlinx: конвертер Ktor-клиента исторически на Gson.
-# Алиас раньше назывался ktor-serialization-kotlinx-json и вводил в
-# заблуждение — код подключал его, думая, что сеть на kotlinx.
-ktor-serialization-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 slf4j-android = { module = "org.slf4j:slf4j-android", version.ref = "slf4jAndroid" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 
 #Storage
 androidx-storage = { group = "androidx.test.services", name = "storage", version.ref = "storage" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 disk-lru-cache = { module = "com.github.solkin:disk-lru-cache", version.ref = "diskLruCache" }
 
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }

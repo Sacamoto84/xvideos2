@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import com.client.xvideos.common.ui.IncognitoKeyboard
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
@@ -117,7 +117,7 @@ object L_ScreenAlbumSearch : Screen {
                                 }
                             }
                         },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardOptions = IncognitoKeyboard.options(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { vm.search(); keyboard?.hide() })
                     )
                 }

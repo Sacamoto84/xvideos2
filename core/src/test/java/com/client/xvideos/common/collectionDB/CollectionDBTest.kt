@@ -1,5 +1,6 @@
 package com.client.xvideos.common.collectionDB
 
+import kotlinx.serialization.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -7,13 +8,14 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
+@Serializable
 data class TestItem(val id: String, val url: String)
 
 class CollectionDBTest {
 
     @get:Rule val tmp = TemporaryFolder()
 
-    private fun db(root: File) = CollectionDB(root.absolutePath, TestItem::class.java)
+    private fun db(root: File) = CollectionDB(root.absolutePath, TestItem.serializer())
 
     @Test
     fun `insert пишет через временный файл и не оставляет мусора`() {

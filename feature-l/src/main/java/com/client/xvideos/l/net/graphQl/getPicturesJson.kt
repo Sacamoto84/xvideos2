@@ -1,6 +1,9 @@
 package com.client.xvideos.l.net.graphQl
 
-import com.google.gson.Gson
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 
 fun getPicturesJson(albumId: Int, page: Int = 1): String {
     val query = """
@@ -37,18 +40,21 @@ fun getPicturesJson(albumId: Int, page: Int = 1): String {
         
     """.trimIndent()
 
-    val json = mapOf(
-        "query" to query,
-        "variables" to mapOf(
-            "input" to mapOf(
-                "display" to "position",
-                "filters" to listOf(
-                    mapOf("name" to "album_id", "value" to albumId.toString())
-                ),
-                "page" to page
-            )
-        )
-    )
+    val json = buildJsonObject {
+        put("query", query)
+        putJsonObject("variables") {
+            putJsonObject("input") {
+                put("display", "position")
+                put("filters", buildJsonArray {
+                    add(buildJsonObject {
+                        put("name", "album_id")
+                        put("value", albumId.toString())
+                    })
+                })
+                put("page", page)
+            }
+        }
+    }
 
-    return Gson().toJson(json)
+    return json.toString()
 }
