@@ -166,12 +166,7 @@ object R_Screen_CollectionTab : Screen {
                 onConfirm = {
                     val targetName = renameValue
                     itemPendingRename = null
-                    // renameCollection — renameTo папки, на части ФС с копированием
-                    // содержимого; вместе с refresh это обход дерева. Раньше шло
-                    // синхронно в onConfirm, то есть на главном потоке (проход 10, T2).
-                    savedRed.scope.launch(Dispatchers.IO) {
-                        savedRed.collections.renameCollection(pending, targetName)
-                    }
+                    vm.renameCollection(pending, targetName)
                 },
             )
         }
@@ -189,13 +184,8 @@ object R_Screen_CollectionTab : Screen {
                 },
                 confirmText = "Удалить",
                 onConfirm = {
-                    // deleteCollection — deleteRecursively по всей папке коллекции:
-                    // на большой коллекции это ANR на главном потоке (проход 10, T2).
-                    // Снекбар и обновление списка хранилище показывает само.
-                    savedRed.scope.launch(Dispatchers.IO) {
-                        savedRed.collections.deleteCollection(pending)
-                    }
                     itemPendingDelete = null
+                    vm.deleteCollection(pending)
                 },
                 destructive = true,
             )
@@ -270,6 +260,24 @@ class ScreenSavedCollectionSM @Inject constructor(
 ) : ScreenModel {
 
     val gridState = LazyGridState()
+
+    /**
+     * Переименование коллекции на пуле IO.
+     */
+    fun renameCollection(oldName: String, newName: String) {
+        savedRed.scope.launch(Dispatchers.IO) {
+            savedRed.collections.renameCollection(oldName, newName)
+        }
+    }
+
+    /**
+     * Рекурсивное удаление коллекции на пуле IO.
+     */
+    fun deleteCollection(name: String) {
+        savedRed.scope.launch(Dispatchers.IO) {
+            savedRed.collections.deleteCollection(name)
+        }
+    }
 }
 
 @Module

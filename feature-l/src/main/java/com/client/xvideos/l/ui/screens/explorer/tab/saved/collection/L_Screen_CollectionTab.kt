@@ -51,8 +51,6 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.ui.theme.XvideosTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 object L_Screen_CollectionTab : Screen {
 
@@ -175,13 +173,7 @@ object L_Screen_CollectionTab : Screen {
                 onConfirm = {
                     val targetName = renameValue
                     itemPendingRename = null
-                    // Переименование и удаление L-коллекции — операции над папкой
-                    // со скачанными медиа, удаление — deleteRecursively по всему
-                    // содержимому. Синхронно в onConfirm это был блокирующий I/O
-                    // на главном потоке; снекбары и refresh стор делает сам.
-                    savedL.scope.launch(Dispatchers.IO) {
-                        savedL.collection.renameCollection(pending, targetName)
-                    }
+                    vm.renameCollection(pending, targetName)
                 },
             )
         }
@@ -197,10 +189,8 @@ object L_Screen_CollectionTab : Screen {
                 },
                 confirmText = "Удалить",
                 onConfirm = {
-                    savedL.scope.launch(Dispatchers.IO) {
-                        savedL.collection.deleteCollection(pending)
-                    }
                     itemPendingDelete = null
+                    vm.deleteCollection(pending)
                 },
                 destructive = true,
             )
