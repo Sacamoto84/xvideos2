@@ -78,4 +78,19 @@ class FileDBTest {
 
         assertEquals(20, db.list.size)
     }
+
+    @Test
+    fun `FileDB отвергает небезопасные имена элементов`() {
+        val root = tmp.newFolder("db_unsafe")
+        val db = db(root)
+
+        assertTrue(db.insert("../evil", Row("1", "val")).isFailure)
+        assertTrue(db.insert("evil/name", Row("1", "val")).isFailure)
+        assertTrue(db.insert("evil\\name", Row("1", "val")).isFailure)
+        assertTrue(db.insert("   ", Row("1", "val")).isFailure)
+
+        assertTrue(db.read("../evil").isFailure)
+        assertTrue(db.update("../evil", Row("1", "val")).isFailure)
+        assertTrue(db.delete("../evil").isFailure)
+    }
 }

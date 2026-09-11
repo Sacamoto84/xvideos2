@@ -42,12 +42,18 @@ class P2pReceiveControllerTest {
             )
 
             // Манифест приходит раньше файла.
-            fake.emit(P2pEvent.ConnectionInitiated("E1", "Other"))
+            fake.emit(P2pEvent.ConnectionInitiated("E1", "Other", "1234"))
+            controller.accept()
             fake.emit(P2pEvent.Connected("E1"))
             fake.emit(P2pEvent.BytesPayloadReceived(P2pManifestCodec.toBytes(manifest)))
             assertTrue("Импорт не должен случиться до прихода файла", imported == null)
 
             fake.emit(P2pEvent.FilePayloadReceived(5L, fileA))
+
+            val deadline = System.currentTimeMillis() + 3000
+            while (controller.state.value !is ReceiveState.Done && System.currentTimeMillis() < deadline) {
+                Thread.sleep(10)
+            }
 
             assertEquals(manifest, imported!!.first)
             assertEquals(fileA, imported!!.second.getValue(5L))
@@ -59,13 +65,15 @@ class P2pReceiveControllerTest {
         }
 
     @Test
-    fun `connection initiated is auto-accepted`() = runTest(UnconfinedTestDispatcher()) {
+    fun `connection initiated requires explicit accept`() = runTest(UnconfinedTestDispatcher()) {
         val fake = FakeNearbyClient()
         val controller = P2pReceiveController(fake, { _, _ -> }, backgroundScope, "Pixel-Test")
         controller.start()
 
-        fake.emit(P2pEvent.ConnectionInitiated("E9", "Other"))
+        fake.emit(P2pEvent.ConnectionInitiated("E9", "Other", "1234"))
 
+        assertEquals(ReceiveState.Connecting("Other", "1234"), controller.state.value)
+        controller.accept()
         assertEquals(listOf("E9"), fake.accepted)
     }
 
@@ -75,7 +83,7 @@ class P2pReceiveControllerTest {
         val controller = P2pReceiveController(fake, { _, _ -> }, backgroundScope, "Pixel-Test")
         controller.start()
 
-        fake.emit(P2pEvent.ConnectionInitiated("E1", "Galaxy S24"))
+        fake.emit(P2pEvent.ConnectionInitiated("E1", "Galaxy S24", "1234"))
 
         assertEquals("Galaxy S24", controller.peerName)
     }
@@ -128,10 +136,15 @@ class P2pReceiveControllerTest {
                 metadataFileName = "1.info",
                 files = listOf(P2pManifestFile("1.mp4", "1.mp4", 7L, 1L)),
             )
-            fake.emit(P2pEvent.ConnectionInitiated("E1", "Other"))
+            fake.emit(P2pEvent.ConnectionInitiated("E1", "Other", "1234"))
+            controller.accept()
             fake.emit(P2pEvent.Connected("E1"))
             fake.emit(P2pEvent.BytesPayloadReceived(P2pManifestCodec.toBytes(manifest)))
             fake.emit(P2pEvent.FilePayloadReceived(7L, fileA))
+            val deadline = System.currentTimeMillis() + 3000
+            while (controller.state.value !is ReceiveState.Done && System.currentTimeMillis() < deadline) {
+                Thread.sleep(10)
+            }
             assertEquals(ReceiveState.Done, controller.state.value)
 
             // Менеджер сразу перезапускает рекламу после Done…

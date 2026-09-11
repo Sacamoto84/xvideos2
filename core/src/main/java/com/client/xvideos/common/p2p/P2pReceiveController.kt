@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
 import java.io.File
 
@@ -16,7 +18,7 @@ import java.io.File
 sealed interface ReceiveState {
     data object Idle : ReceiveState
     data object Advertising : ReceiveState
-    data class Connecting(val endpointName: String) : ReceiveState
+    data class Connecting(val endpointName: String, val authDigits: String) : ReceiveState
     data class Receiving(val transferred: Long, val total: Long) : ReceiveState
     data object Done : ReceiveState
     data class Error(val message: String) : ReceiveState
@@ -62,11 +64,10 @@ class P2pReceiveController(
         Timber.d("P2P Receiver: handle event $event")
         when (event) {
             is P2pEvent.ConnectionInitiated -> {
-                Timber.d("P2P Receiver: Connection initiated from ${event.endpointName} (id=${event.endpointId}). Automatically accepting.")
+                Timber.d("P2P Receiver: Connection initiated from ${event.endpointName} (id=${event.endpointId}, auth=${event.authenticationDigits}). Waiting for confirmation.")
                 currentEndpoint = event.endpointId
                 peerName = event.endpointName
-                _state.value = ReceiveState.Connecting(event.endpointName)
-                nearby.acceptConnection(event.endpointId)
+                _state.value = ReceiveState.Connecting(event.endpointName, event.authenticationDigits)
             }
             is P2pEvent.Connected -> {
                 Timber.d("P2P Receiver: Connected to $currentEndpoint")
@@ -109,7 +110,9 @@ class P2pReceiveController(
         if (!m.files.all { receivedFiles.containsKey(it.payloadId) }) return
         try {
             Timber.d("P2P Receiver: All files received, importing bundle...")
-            importer.import(m, receivedFiles.toMap())
+            withContext(Dispatchers.IO) {
+                importer.import(m, receivedFiles.toMap())
+            }
             _state.value = ReceiveState.Done
             // Не вызываем stopAll сразу, даем время отправителю получить подтверждение.
             // Если рекламу успели перезапустить (start() отменяет job и проверка state
@@ -124,6 +127,13 @@ class P2pReceiveController(
         } catch (e: Exception) {
             Timber.e(e, "P2P Receiver: Import failed")
             _state.value = ReceiveState.Error(e.message ?: "Ошибка импорта")
+        }
+    }
+
+    fun accept() {
+        currentEndpoint?.let {
+            Timber.d("P2P Receiver: Manual accept for $it")
+            nearby.acceptConnection(it)
         }
     }
 

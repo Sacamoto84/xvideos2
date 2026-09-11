@@ -4,7 +4,6 @@ import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.r.model.tag.TagInfo
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,16 +26,26 @@ class SavedRed @Inject constructor(
     val nichesCache = R_Saved_NichesCaches(scope, redApi)
 
 
+    // Пишется из корутины на Dispatchers.IO (refreshTagList), читается с
+    // главного — без @Volatile у читателя нет гарантии увидеть свежую запись.
+    @Volatile
     var tagsList = listOf<TagInfo>()
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun refreshTagList() { scope.launch(Dispatchers.IO) { tagsList =
         redApi.tags.getTags().getOrNull()?.tags ?: emptyList()
     } }
 
     init {
-        collections.refreshCollectionList()
-        nichesCache.refreshIfStale()
+        // refreshCollectionList — синхронный обход каталога коллекций с
+        // Gson-разбором каждого файла. Из конструктора Hilt-синглтона, который
+        // MainActivity внедряет в onCreate, этот обход шёл на главном потоке
+        // на пути запуска (проход 8, T2). X и L свою начальную загрузку уже
+        // делают асинхронно; список публикуется Compose-состоянием, экраны
+        // дождутся его и без блокировки старта.
+        scope.launch(Dispatchers.IO) {
+            collections.refreshCollectionList()
+            nichesCache.refreshIfStale()
+        }
     }
 
     /**

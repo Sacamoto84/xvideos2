@@ -86,13 +86,18 @@ object SecureCredentialStore {
     } catch (e: IOException) {
         // Keyset не разбирается: тот же случай, но на уровне формата файла.
         onBuildFailed(e, brokenKeyset = true)
+    } catch (e: NoClassDefFoundError) {
+        // Compose Preview: Tink-классов нет в classpath превью. Это Error, а не
+        // Exception — прежний общий catch его пропускал, и Preview падал мимо
+        // контракта createOrNull «верни null, если сейчас нельзя».
+        onBuildFailed(e, brokenKeyset = false)
     } catch (e: Exception) {
-        // Всё остальное (IllegalStateException, NoClassDefFoundError в Preview,
-        // отказ Keystore) означает «сейчас нельзя», а не «файл испорчен».
+        // Всё остальное (IllegalStateException, отказ Keystore) означает
+        // «сейчас нельзя», а не «файл испорчен».
         onBuildFailed(e, brokenKeyset = false)
     }
 
-    private fun onBuildFailed(e: Exception, brokenKeyset: Boolean): SharedPreferences? {
+    private fun onBuildFailed(e: Throwable, brokenKeyset: Boolean): SharedPreferences? {
         lastFailureLooksLikeBrokenKeyset = brokenKeyset
         Timber.e(e, "SecureCredentialStore: EncryptedSharedPreferences недоступны")
         return null

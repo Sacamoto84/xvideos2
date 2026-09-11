@@ -19,6 +19,7 @@ import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import java.io.File
@@ -192,7 +193,7 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     private val connectionLifecycle = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             Timber.d("P2P: onConnectionInitiated(id=$endpointId, name=${info.endpointName}, auth=${info.authenticationDigits})")
-            emit(P2pEvent.ConnectionInitiated(endpointId, info.endpointName))
+            emit(P2pEvent.ConnectionInitiated(endpointId, info.endpointName, info.authenticationDigits))
         }
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
             val status = resolution.status
@@ -225,12 +226,14 @@ class NearbyClientImpl(context: Context) : NearbyClient {
                     // Отправителю — подтверждение доставки (Done только после всех).
                     emit(P2pEvent.PayloadTransferred(update.payloadId))
                     val payload = incomingFiles.remove(update.payloadId) ?: return
-                    val received = payload.asFile()?.let { receiveToCache(update.payloadId, it) }
-                    if (received != null) {
-                        emit(P2pEvent.FilePayloadReceived(update.payloadId, received))
-                    } else {
-                        Timber.e("P2P: FILE payload ${update.payloadId} прочитать не удалось")
-                        emit(P2pEvent.PayloadTransferFailed(update.payloadId))
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        val received = payload.asFile()?.let { receiveToCache(update.payloadId, it) }
+                        if (received != null) {
+                            emit(P2pEvent.FilePayloadReceived(update.payloadId, received))
+                        } else {
+                            Timber.e("P2P: FILE payload ${update.payloadId} прочитать не удалось")
+                            emit(P2pEvent.PayloadTransferFailed(update.payloadId))
+                        }
                     }
                 }
                 PayloadTransferUpdate.Status.FAILURE,

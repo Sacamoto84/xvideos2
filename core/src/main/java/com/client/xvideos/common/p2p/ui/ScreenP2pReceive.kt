@@ -92,8 +92,16 @@ private fun ScreenP2pReceiveContent(
                     Text("Ожидание отправителя…", modifier = Modifier.padding(top = 16.dp))
                 }
                 is ReceiveState.Connecting -> {
-                    CircularProgressIndicator()
-                    Text("Подключение к: ${s.endpointName}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
+                    Text("Подключение к: ${s.endpointName}", style = MaterialTheme.typography.titleMedium)
+                    Text("Код подтверждения:", modifier = Modifier.padding(top = 16.dp))
+                    Text(s.authDigits, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 8.dp))
+                    androidx.compose.foundation.layout.Row(modifier = Modifier.padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Button(onClick = { P2pReceiveManager.controller.value?.accept() }) { Text("Принять") }
+                        androidx.compose.material3.OutlinedButton(onClick = {
+                            P2pReceiveManager.controller.value?.reject()
+                            onPop()
+                        }) { Text("Отклонить") }
+                    }
                 }
                 is ReceiveState.Receiving -> {
                     CircularProgressIndicator()
@@ -118,7 +126,7 @@ private fun ScreenP2pReceiveContent(
 private fun PreviewScreenP2pReceiveConnecting() {
     XvideosTheme {
         ScreenP2pReceiveContent(
-            state = ReceiveState.Connecting("Pixel 6"),
+            state = ReceiveState.Connecting("Pixel 6", "1234"),
             onPop = {}
         )
     }

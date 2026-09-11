@@ -4,7 +4,6 @@ import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.UserInfo
-import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
 import kotlin.onSuccess
 
@@ -53,7 +52,6 @@ class R_Saved_Creator {
             .isSuccess
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun refresh() {
         creatorDb.refresh()
     }

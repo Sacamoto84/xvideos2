@@ -1,6 +1,7 @@
 package com.client.xvideos.common.fileDB
 
 import androidx.compose.runtime.mutableStateListOf
+import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.util.replaceWith
 import com.google.gson.GsonBuilder
@@ -48,10 +49,8 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
     private val publishLock = Any()
     private var publishedSeq = 0L
 
-    /** Расширение временного файла, в который пишем перед атомарным переименованием. */
-    private val tempExtension = "$extension.tmp"
-
     fun insert(nameFile: String, value: T): Result<Boolean> {
+        if (isUnsafeItemName(nameFile)) return unsafeName(nameFile)
         return try {
             synchronized(lock) {
                 val dir = File(dirPath)
@@ -75,6 +74,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
     }
 
     fun update(nameFile: String, value: T): Result<Boolean> {
+        if (isUnsafeItemName(nameFile)) return unsafeName(nameFile)
         return try {
             synchronized(lock) {
                 val file = File(dirPath, "$nameFile.$extension")
@@ -96,6 +96,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
     }
 
     fun delete(name: String): Result<Boolean> {
+        if (isUnsafeItemName(name)) return unsafeName(name)
         return try {
             synchronized(lock) {
                 val file = File(dirPath, "$name.$extension")
@@ -114,6 +115,7 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
 
 
     fun read(nameFile: String): Result<T> {
+        if (isUnsafeItemName(nameFile)) return unsafeName(nameFile)
         return try {
             synchronized(lock) {
                 val file = File(dirPath, "$nameFile.$extension")
@@ -175,9 +177,20 @@ class FileDB<T>(val dirPath: String, val extension: String, private val clazz: C
     /** Подчищает временные файлы, оставшиеся от прерванной записи. */
     private fun cleanupTempFiles(dir: File) {
         runCatching {
-            dir.listFiles { file -> file.name.endsWith(".$tempExtension") }
+            // Суффикс общий для writeTextAtomically, а не «расширение.tmp»:
+            // tmp-имя теперь случайное и целевое расширение в него не входит.
+            dir.listFiles { file -> file.name.endsWith(".tmp") }
                 ?.forEach { it.delete() }
         }
+    }
+
+    /**
+     * Отказ для имени, которым можно выйти из своего каталога. Отдельная
+     * функция, а не общий catch: это не сбой ввода-вывода, а отвергнутый вход.
+     */
+    private fun <R> unsafeName(name: String): Result<R> {
+        Timber.w("FileDB: имя элемента отвергнуто как путь: \"$name\"")
+        return Result.failure(IllegalArgumentException("Имя элемента не может быть путём: $name"))
     }
 
 }

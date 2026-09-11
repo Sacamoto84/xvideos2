@@ -27,7 +27,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
@@ -61,7 +61,8 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -71,7 +72,6 @@ object R_Screen_CollectionTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @OptIn(DelicateCoroutinesApi::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
@@ -89,10 +89,12 @@ object R_Screen_CollectionTab : Screen {
             savedRed.collections.selectedCollection.value = null
         }
 
-        var itemPendingAction by remember { mutableStateOf<String?>(null) }
-        var itemPendingRename by remember { mutableStateOf<String?>(null) }
-        var renameValue by remember { mutableStateOf("") }
-        var itemPendingDelete by remember { mutableStateOf<String?>(null) }
+        // Открытый диалог и набранный текст переживают пересоздание
+        // композиции: на remember пересоздание Activity молча закрывало их.
+        var itemPendingAction by rememberSaveable { mutableStateOf<String?>(null) }
+        var itemPendingRename by rememberSaveable { mutableStateOf<String?>(null) }
+        var renameValue by rememberSaveable { mutableStateOf("") }
+        var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
 
         fun coverOf(name: String): String? =
             savedRed.collections.collectionList
@@ -162,8 +164,13 @@ object R_Screen_CollectionTab : Screen {
                 },
                 confirmText = "Сохранить",
                 onConfirm = {
-                    if (savedRed.collections.renameCollection(pending, renameValue)) {
-                        itemPendingRename = null
+                    val targetName = renameValue
+                    itemPendingRename = null
+                    // renameCollection — renameTo папки, на части ФС с копированием
+                    // содержимого; вместе с refresh это обход дерева. Раньше шло
+                    // синхронно в onConfirm, то есть на главном потоке (проход 10, T2).
+                    savedRed.scope.launch(Dispatchers.IO) {
+                        savedRed.collections.renameCollection(pending, targetName)
                     }
                 },
             )
@@ -182,7 +189,12 @@ object R_Screen_CollectionTab : Screen {
                 },
                 confirmText = "Удалить",
                 onConfirm = {
-                    savedRed.collections.deleteCollection(pending)
+                    // deleteCollection — deleteRecursively по всей папке коллекции:
+                    // на большой коллекции это ANR на главном потоке (проход 10, T2).
+                    // Снекбар и обновление списка хранилище показывает само.
+                    savedRed.scope.launch(Dispatchers.IO) {
+                        savedRed.collections.deleteCollection(pending)
+                    }
                     itemPendingDelete = null
                 },
                 destructive = true,

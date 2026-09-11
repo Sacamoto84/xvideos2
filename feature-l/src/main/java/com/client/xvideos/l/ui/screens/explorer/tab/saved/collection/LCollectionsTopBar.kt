@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -36,7 +37,17 @@ internal fun LCollectionsTopBar(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Column( modifier = Modifier  )
+    // Топ-бар лежит в Scaffold(topBar = ...) — Material3 не применяет инсет
+    // к этому слоту, а хост таба паддит только низ. Соседние таби (Albums,
+    // Likes) отступают от выреза сами; этот бар при миграции на Material3
+    // потерял displayCutoutPadding и рендерился от y=0, под камерой.
+    val topInset = getTopInsetDp()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = topInset)
+    )
     {
 
         Row(

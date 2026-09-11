@@ -32,6 +32,9 @@ object Settings {
 
     private lateinit var pref: SharedPreferences
 
+    /** `true`, если [init] уже вызван с экземпляром SharedPreferences. */
+    val isInitialized: Boolean get() = ::pref.isInitialized
+
     /**
      * Зашифрованное хранилище для секретов. `null`, если Keystore недоступен
      * (Compose Preview) или [init] вызвали без контекста.

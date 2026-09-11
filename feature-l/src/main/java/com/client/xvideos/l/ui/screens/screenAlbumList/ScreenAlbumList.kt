@@ -48,7 +48,6 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.ui.element.AlbumListItem
@@ -128,8 +127,6 @@ private fun Screen.ScreenAlbumListContent(
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
         var totalPages by remember { mutableIntStateOf(1) }
-
-        val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
 
         // ✅ Состояние для диалога
         var showFilterDialog by remember { mutableStateOf(false) }
@@ -213,7 +210,10 @@ private fun Screen.ScreenAlbumListContent(
                                 Box(
                                     Modifier
                                         .then(
-                                            if (title != "") Modifier.height(40.dp) else Modifier.height(topInset)
+                                            // Хедер с заголовком обязан учитывать вырез:
+                                            // фиксированные 40.dp без topInset прятали текст
+                                            // под камерой на вырезах выше 40dp (проход 10, UI3).
+                                            if (title != "") Modifier.height(topInset + 40.dp) else Modifier.height(topInset)
                                         )
                                         .background(Theme.L.red)
                                         .padding(start = 24.dp), contentAlignment = Alignment.CenterStart

@@ -61,4 +61,24 @@ class SafePathTest {
         val sibling = File(root.parentFile, "data_backup")
         assertThrows(IllegalArgumentException::class.java) { requireInside(root, sibling) }
     }
+
+    @Test
+    fun `isUnsafeItemName отвергает опасные имена и пропускает допустимые`() {
+        // Опасные: пустые, текущий/родительский каталог, с разделителями
+        org.junit.Assert.assertTrue(isUnsafeItemName(""))
+        org.junit.Assert.assertTrue(isUnsafeItemName("   "))
+        org.junit.Assert.assertTrue(isUnsafeItemName("."))
+        org.junit.Assert.assertTrue(isUnsafeItemName(".."))
+        org.junit.Assert.assertTrue(isUnsafeItemName("../escape"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("a/b"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("a\\b"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("..\\escape"))
+
+        // Безопасные: обычные имена, имена с точками, дефисами, двоеточиями
+        org.junit.Assert.assertFalse(isUnsafeItemName("normal_name"))
+        org.junit.Assert.assertFalse(isUnsafeItemName("12345"))
+        org.junit.Assert.assertFalse(isUnsafeItemName(".hidden_item"))
+        org.junit.Assert.assertFalse(isUnsafeItemName("id:456"))
+        org.junit.Assert.assertFalse(isUnsafeItemName("item.with.dots"))
+    }
 }

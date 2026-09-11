@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Share
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.coil.UrlImage
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -24,7 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,8 +51,8 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.ui.theme.XvideosTheme
-
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object L_Screen_CollectionTab : Screen {
 
@@ -61,7 +60,6 @@ object L_Screen_CollectionTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @OptIn(DelicateCoroutinesApi::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
@@ -77,10 +75,12 @@ object L_Screen_CollectionTab : Screen {
         // Back обрабатывается внутри L_CollectionNameContent (через onExitCollection),
         // когда коллекция открыта. Отдельный BackHandler на уровне таба не нужен.
 
-        var itemPendingAction by remember { mutableStateOf<String?>(null) }
-        var itemPendingRename by remember { mutableStateOf<String?>(null) }
-        var itemPendingDelete by remember { mutableStateOf<String?>(null) }
-        var renameValue by remember { mutableStateOf("") }
+        // Открытый диалог и набранный текст переживают пересоздание
+        // композиции: на remember пересоздание Activity молча закрывало их.
+        var itemPendingAction by rememberSaveable { mutableStateOf<String?>(null) }
+        var itemPendingRename by rememberSaveable { mutableStateOf<String?>(null) }
+        var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
+        var renameValue by rememberSaveable { mutableStateOf("") }
 
         itemPendingAction?.let { pending ->
 
@@ -173,8 +173,14 @@ object L_Screen_CollectionTab : Screen {
                 },
                 confirmText = "Сохранить",
                 onConfirm = {
-                    if (savedL.collection.renameCollection(pending, renameValue)) {
-                        itemPendingRename = null
+                    val targetName = renameValue
+                    itemPendingRename = null
+                    // Переименование и удаление L-коллекции — операции над папкой
+                    // со скачанными медиа, удаление — deleteRecursively по всему
+                    // содержимому. Синхронно в onConfirm это был блокирующий I/O
+                    // на главном потоке; снекбары и refresh стор делает сам.
+                    savedL.scope.launch(Dispatchers.IO) {
+                        savedL.collection.renameCollection(pending, targetName)
                     }
                 },
             )
@@ -191,7 +197,9 @@ object L_Screen_CollectionTab : Screen {
                 },
                 confirmText = "Удалить",
                 onConfirm = {
-                    savedL.collection.deleteCollection(pending)
+                    savedL.scope.launch(Dispatchers.IO) {
+                        savedL.collection.deleteCollection(pending)
+                    }
                     itemPendingDelete = null
                 },
                 destructive = true,

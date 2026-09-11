@@ -73,6 +73,7 @@ fun interface FeedTimeListener {
  * соседние ролики уже частично загружены к моменту свайпа.
  */
 @OptIn(UnstableApi::class)
+@Suppress("LongParameterList", "CyclomaticComplexMethod")
 @Composable
 fun RedPooledVideoPlayer(
     feedState: FeedPlayerState,

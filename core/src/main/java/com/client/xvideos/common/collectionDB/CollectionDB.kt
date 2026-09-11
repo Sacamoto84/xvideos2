@@ -1,6 +1,7 @@
 package com.client.xvideos.common.collectionDB
 
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
+import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.writeTextAtomically
 import com.google.gson.Gson
 import timber.log.Timber
@@ -36,9 +37,6 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
      * в фолбэк-ветке атомарной записи.
      */
     private val lock = Any()
-
-    /** Расширение временного файла из [com.client.xvideos.common.io.writeTextAtomically]. */
-    private val tempSuffix = ".collection.tmp"
 
     fun create(collectionName: String): Result<Boolean> {
         return try {
@@ -118,6 +116,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
         return try {
             val safeName = CollectionName.normalizeOrNull(collectionName)
                 ?: return Result.failure(IOException("Недопустимое имя коллекции: $collectionName"))
+            if (isUnsafeItemName(itemId)) return unsafeItemName(itemId)
             Timber.i("!!! удалить лайк GIFS -> deleteItem() id:$itemId из коллекции:$safeName")
 
             // Папка с коллекцией
@@ -151,6 +150,7 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
         return try {
             val safeName = CollectionName.normalizeOrNull(collectionName)
                 ?: return Result.failure(IOException("Недопустимое имя коллекции: $collectionName"))
+            if (isUnsafeItemName(name)) return unsafeItemName(name)
             Timber.i("!!! сохранить лайк GIFS -> likesItem() name:${name}")
 
             // Создаем директорию <userName>/block, если её нет
@@ -213,10 +213,21 @@ class  CollectionDB<T>(val path : String, val type: Class<T>) {
      */
     private fun cleanupTempFiles(root: File) {
         runCatching {
+            // Суффикс общий для writeTextAtomically: tmp-имя теперь случайное
+            // и «.collection.tmp» больше не образуется.
             root.listFiles { f -> f.isDirectory }?.forEach { dir ->
-                dir.listFiles { f -> f.isFile && f.name.endsWith(tempSuffix) }
+                dir.listFiles { f -> f.isFile && f.name.endsWith(".tmp") }
                     ?.forEach { it.delete() }
             }
         }
+    }
+
+    /**
+     * Отказ для имени элемента, которым можно выйти из каталога коллекции.
+     * Как и в `FileDB`: это отвергнутый вход, а не сбой ввода-вывода.
+     */
+    private fun <R> unsafeItemName(name: String): Result<R> {
+        Timber.w("CollectionDB: имя элемента отвергнуто как путь: \"$name\"")
+        return Result.failure(IllegalArgumentException("Имя элемента не может быть путём: $name"))
     }
 }

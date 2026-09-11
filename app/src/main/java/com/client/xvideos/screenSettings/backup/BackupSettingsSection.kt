@@ -20,9 +20,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+
+import com.client.xvideos.common.di.rememberApplicationScope
 
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
@@ -61,7 +62,9 @@ internal fun BackupSettingsSection(
 ) {
     val downloadRed = data.downloadRed
     val savedL = data.savedL
-    val scope = rememberCoroutineScope()
+    // ApplicationScope гарантирует, что запись ZIP или распаковка архива не оборвётся
+    // посреди файла при переключении страниц настроек или сворачивании (T6).
+    val scope = rememberApplicationScope()
     var screen by rememberSaveable { mutableStateOf(BackupFlowScreen.CREATE) }
     var isWorking by rememberSaveable { mutableStateOf(false) }
     var lBackupMode by rememberSaveable { mutableStateOf(XlrBackupContentMode.MINI) }

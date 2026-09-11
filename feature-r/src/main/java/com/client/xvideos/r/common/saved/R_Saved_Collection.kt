@@ -3,11 +3,9 @@ package com.client.xvideos.r.common.saved
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.model.LinkCollectionStore
 import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
-import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
 
 class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
@@ -22,8 +20,13 @@ class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
             return
         }
         Timber.i("R_Saved_Collection addCollection() item:${safeItem.id} collectionName:$collectionName")
+        // Раньше Result отбрасывался: при ошибке записи не было ни снекбара,
+        // ни лога — соседние операции здесь результат обрабатывают.
         collectionDb.insert(safeItem.id, collectionName, safeItem)
-        refreshCollectionList()
+            .onSuccess { refreshCollectionList() }
+            .onFailure { e ->
+                SnackBar.error("Ошибка добавления GIF в коллекцию $collectionName ${e.message}")
+            }
     }
 
     override fun deleteItemFromCollection(itemId: String, collectionName: String) {
@@ -57,7 +60,6 @@ class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
             }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun refreshCollectionList() {
         // Номер берётся до чтения диска: два параллельных refresh иначе
         // разложатся в порядке завершения, а не запуска, и устаревший список

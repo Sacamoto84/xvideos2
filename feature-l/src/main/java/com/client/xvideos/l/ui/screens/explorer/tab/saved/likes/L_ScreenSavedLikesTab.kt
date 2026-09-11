@@ -4,10 +4,13 @@ import com.client.xvideos.common.theme.Theme
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -94,7 +97,15 @@ object L_ScreenSavedLikesTab : Screen {
                 tag = "lLikes",
                 itemBefore = {
 
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(top = topInset).padding(horizontal = 4.dp)) {
+                    // Верх — от topInset (вырез в портрете), бока — от displayCutout:
+                    // прежний displayCutoutPadding закрывал всё сразу, миграция на
+                    // topInset потеряла боковую защиту в ландшафте (проход 10, UI3).
+                    SingleChoiceSegmentedButtonRow(
+                        modifier = Modifier
+                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+                            .padding(top = topInset)
+                            .padding(horizontal = 4.dp)
+                    ) {
 
                         options.forEachIndexed { index, label ->
                             SegmentedButton(

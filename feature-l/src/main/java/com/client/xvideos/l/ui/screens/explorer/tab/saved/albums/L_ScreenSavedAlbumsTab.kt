@@ -1,6 +1,5 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.albums
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,8 +12,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +47,6 @@ object L_ScreenSavedAlbumsTab : Screen {
 
     private fun readResolve(): Any = L_ScreenSavedAlbumsTab
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -57,7 +54,9 @@ object L_ScreenSavedAlbumsTab : Screen {
         val vm: ScreenLSavedAlbumsSM = getScreenModel()
         val state = vm.state
 
-        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(state)
+        // itemsToIgnore = 1: нулевой item грида — full-span спейсер под вырез,
+        // без него индикатор считает спейсер контентом и врёт по позиции и длине.
+        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(state, itemsToIgnore = 1)
 
 
         val topInset = getTopInsetDp()
@@ -81,13 +80,17 @@ object L_ScreenSavedAlbumsTab : Screen {
                             Box(modifier = Modifier.height(topInset))
                         }
 
-                        items(vm.albums, key = { it.id }) {
-                            val albumId = it.id.toLongOrNull()
+                        // Индекс в ключе обязателен: сохранённый список может
+                        // содержать один альбом дважды, а дублирующийся ключ
+                        // роняет LazyLayout ("Key ... was already used") — тот же
+                        // приём, что и в ScreenAlbumList.
+                        itemsIndexed(vm.albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
+                            val albumId = item.id.toLongOrNull()
                             AlbumListItem(
-                                title = it.title,
-                                coverUrl = it.cover?.url.orEmpty(),
-                                numberOfAnimatedPictures = it.number_of_animated_pictures,
-                                numberOfPictures = it.number_of_pictures,
+                                title = item.title,
+                                coverUrl = item.cover?.url.orEmpty(),
+                                numberOfAnimatedPictures = item.number_of_animated_pictures,
+                                numberOfPictures = item.number_of_pictures,
                                 modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
                             ) {
                                 if (albumId != null) {
