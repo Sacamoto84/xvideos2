@@ -185,13 +185,12 @@ BUILD SUCCESSFUL in 1s.
 2. **T6 (Устойчивость бэкапа)**: в `BackupSettingsSection.kt` скоуп заменён на `rememberApplicationScope()`. Фоновые операции экспорта/импорта не прерываются при уходе с вкладки или уничтожении экрана.
 3. **UI1 (Устранение глобальной статики навигации R)**: в `:feature-r` создан `RNavigationState` (`@Singleton`), внедрены `ScreenRedExplorerSM` и `R_SavedTabSM`. Статические `screenType` полностью удалены из `ScreenRedExplorer.companion object` и `R_ScreenSavedTab`.
 4. **A1 (Расширение сторожа GlobalStateTest)**: детектор переведён на регулярное выражение `VAR_DECLARATION`, улавливающее `private var`, `lateinit var`, `internal lateinit var` и аннотации (`@Volatile` на той же или отдельной строке). Список `ALLOWED` синхронизирован, исключены `ScreenExplorer.screenType` и `ScreenSaved.screenType`, добавлены и обоснованы 10 ранее невидимых точек.
+5. **A2 (Очистка слоя данных :core от UI-состояний диалогов)**: флаги диалогов (`visibleDialog`, `visibleDialogCreateNew`, `selectedCollection`, `collectionItemGifInfo`) вынесены из `:core` (`LinkCollectionStore`) в фичевое хранилище `:feature-r` (`R_Saved_Collection`). Базовый класс освобождён от UI-состояний; реактивные `mutableStateListOf` в `FileDB` и `LinkCollectionStore` сохранены как осознанное архитектурное решение для прямого наблюдения из Compose без шаблонных обёрток.
 
 ---
 
 ## Что осталось в бэклоге
 
 1. **Архитектурный долг проходов 8–9**:
-   - **UI2**: отсутствие `ScreenModel`/`ViewModel` в отдельных фичевых экранах (постепенная миграция по мере развития разделов).
-   - **A2**: хранение состояния Compose (`visibleDialogCreateNew` и др.) в классах хранилищ данных `:core`.
-   - **A3**: миграция сетевых моделей R и L с GSON на `kotlinx.serialization`.
-
+   - **UI2**: отсутствие `ScreenModel`/`ViewModel` в отдельных вторичных экранах (постепенная миграция по мере развития разделов).
+   - **A3**: унификация сериализации моделей R и L с GSON на `kotlinx.serialization` (приведение к общему стандарту с `:feature-x`).

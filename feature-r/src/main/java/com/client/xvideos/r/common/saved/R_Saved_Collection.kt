@@ -1,11 +1,15 @@
 package com.client.xvideos.r.common.saved
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.model.LinkCollectionStore
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
+import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
 
 class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
@@ -13,6 +17,17 @@ class R_Saved_Collection : LinkCollectionStore<GifsInfo>(
     GifsInfo::class.java
 )
 {
+    //----- Диалоги (UI-состояние R-раздела) -----
+    /** Отобразить диалог коллекции (выбор куда положить элемент) */
+    var visibleDialog by mutableStateOf(false)
+
+    /** Отобразить диалог создания новой коллекции */
+    var visibleDialogCreateNew by mutableStateOf(false)
+
+    var collectionItemGifInfo by mutableStateOf<GifsInfo?>(null)
+
+    var selectedCollection = MutableStateFlow<String?>(null)
+    //-------------------------------------------
 
     override fun addCollection(item: GifsInfo, collectionName: String) {
         val safeItem = item.sanitizeOrNull() ?: run {
