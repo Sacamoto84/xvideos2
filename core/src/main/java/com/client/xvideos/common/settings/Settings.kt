@@ -8,6 +8,7 @@ import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
 import com.client.xvideos.common.settings.element.SettingElementSecureString
 import com.client.xvideos.common.settings.element.SettingElementString
+import com.client.xvideos.common.net.doh.DohProvider
 import timber.log.Timber
 
 //data class DC_galleryCount(var g0: Boolean, var g1: Boolean, var g2: Boolean, var g3: Boolean, var g4: Boolean )
@@ -100,6 +101,31 @@ object Settings {
      * экраном расчётов для ввода PIN-кода.
      */
     val camouflage_calculator_enabled by lazy { SettingElementBoolean(pref, "camouflage_calculator_enabled", false) }
+
+    /**
+     * Включение/выключение DNS-over-HTTPS (DoH).
+     */
+    val doh_enabled by lazy { SettingElementBoolean(pref, "doh_enabled", true) }
+
+    /**
+     * Выбранный провайдер DoH (CLOUDFLARE, GOOGLE, ADGUARD, CUSTOM).
+     */
+    val doh_provider by lazy { SettingElementString(pref, "doh_provider", DohProvider.CLOUDFLARE.name) }
+
+    /**
+     * Пользовательский URL DoH-резолвера (при doh_provider = CUSTOM).
+     */
+    val doh_custom_url by lazy { SettingElementString(pref, "doh_custom_url", "") }
+
+    /**
+     * Автоматический fallback на системный DNS при недоступности DoH.
+     */
+    val doh_fallback_to_system by lazy { SettingElementBoolean(pref, "doh_fallback_to_system", true) }
+
+    /**
+     * Запрашивать только IPv4-адреса (отключает AAAA-запросы для ускорения резолвинга).
+     */
+    val doh_ipv4_only by lazy { SettingElementBoolean(pref, "doh_ipv4_only", true) }
 
     val p2p_background_receive by lazy { SettingElementBoolean(pref, "p2p_background_receive", false) }
 

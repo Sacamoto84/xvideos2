@@ -1,5 +1,6 @@
 package com.client.xvideos.x.feature.net
 
+import com.client.xvideos.common.net.doh.AppDns
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -19,6 +20,11 @@ import timber.log.Timber
  */
 private val htmlClient: HttpClient by lazy {
     HttpClient(OkHttp) {
+        engine {
+            config {
+                dns(AppDns)
+            }
+        }
         install(HttpTimeout) {
             // Конечные таймауты: зависшее соединение не должно держать корутину/ресурсы вечно.
             requestTimeoutMillis = 30_000

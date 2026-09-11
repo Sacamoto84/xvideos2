@@ -11,6 +11,7 @@ import coil3.gif.GifDecoder
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowHardware
+import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.settings.Settings
 import okhttp3.OkHttpClient
 import timber.log.Timber
@@ -55,6 +56,7 @@ object CoilImageLoaderFactory {
         val ramCachePercent = normalizedRamCachePercent() / 100.0
 
         val okHttpBuilder = OkHttpClient.Builder()
+            .dns(AppDns)
             .apply {
                 if (diskCacheEnabled) {
                     cache(

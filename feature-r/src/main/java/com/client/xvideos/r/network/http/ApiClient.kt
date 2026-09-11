@@ -1,6 +1,7 @@
 package com.client.xvideos.r.network.http
 
 import android.annotation.SuppressLint
+import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.r.network.json.RJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -35,6 +36,7 @@ object ApiClient {
     val client = HttpClient(OkHttp) {
         engine {
             config {
+                dns(AppDns)
                 connectTimeout(30, TimeUnit.SECONDS)
                 readTimeout(30, TimeUnit.SECONDS)
                 writeTimeout(30, TimeUnit.SECONDS)

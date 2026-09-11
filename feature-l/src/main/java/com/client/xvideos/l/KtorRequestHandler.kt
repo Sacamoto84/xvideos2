@@ -1,6 +1,7 @@
 package com.client.xvideos.l
 
 import com.client.xvideos.common.AppBuildInfo
+import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.l.repository.LusciousEndpoints.LOGIN
 import com.client.xvideos.common.net.UserAgentProvider
 import io.ktor.client.HttpClient
@@ -44,6 +45,11 @@ class KtorRequestHandler(
     private var password: String? = password
 
     val client = HttpClient(OkHttp) {
+        engine {
+            config {
+                dns(AppDns)
+            }
+        }
 
         install(ContentNegotiation) { json(LJson) }
 

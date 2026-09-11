@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
@@ -52,6 +53,11 @@ private const val DEFAULT_BUFFER_SIZE = 8 * 1024
  * Создаёт настроенный [HttpClient] для скачивания media-файлов luscious.
  */
 internal fun lCreateMediaClient(): HttpClient = HttpClient(OkHttp) {
+    engine {
+        config {
+            dns(AppDns)
+        }
+    }
     install(HttpTimeout) {
         requestTimeoutMillis = 60_000
         connectTimeoutMillis = 30_000

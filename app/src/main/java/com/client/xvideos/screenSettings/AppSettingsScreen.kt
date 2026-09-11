@@ -5,6 +5,7 @@ import com.client.xvideos.screenSettings.section.CacheSettingsSection
 import com.client.xvideos.screenSettings.section.DiagnosticsSettingsSection
 import com.client.xvideos.screenSettings.section.DisplaySettingsSection
 import com.client.xvideos.screenSettings.section.LSettingsSection
+import com.client.xvideos.screenSettings.section.NetworkSettingsSection
 import com.client.xvideos.screenSettings.section.P2PSettingsSection
 import com.client.xvideos.screenSettings.section.RSettingsSection
 import com.client.xvideos.screenSettings.section.XSettingsSection
@@ -281,16 +282,6 @@ private fun AppSettingsScreenBody(
     context: Context,
     onBackupDataChanged: () -> Unit
 ) {
-    val ramCachePercent = Settings.image_cache_ram_percent.field.collectAsStateWithLifecycle().value
-    val diskCacheEnabled = Settings.image_cache_disk_enabled.field.collectAsStateWithLifecycle().value
-    val diskCacheSizeMb = Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle().value
-    val l_login = Settings.l_login.field.collectAsStateWithLifecycle().value
-
-    val isNichesCacheDownloading = data.savedRed?.nichesCache?.isDownloading ?: false
-    val nichesCacheProgress = data.savedRed?.nichesCache?.progress ?: 0f
-    val nichesCacheSize = data.savedRed?.nichesCache?.list?.size ?: 0
-    val nichesCacheLastModifiedHour = data.savedRed?.nichesCache?.lastModifiedHour ?: 0L
-
     Column(
         modifier = modifier
             .background(SettingsScreenBackground)
@@ -320,42 +311,84 @@ private fun AppSettingsScreenBody(
                 }
             }
         } else {
-            Spacer(Modifier.height(4.dp))
-            when (currentPage) {
-                SettingsPage.Main -> Unit
-                SettingsPage.Privacy -> AppLockSettingsSection()
-                SettingsPage.Display -> DisplaySettingsSection()
-                SettingsPage.Cache -> CacheSettingsSection(
-                    ramCachePercent = ramCachePercent,
-                    diskCacheEnabled = diskCacheEnabled,
-                    diskCacheSizeMb = diskCacheSizeMb,
+            SettingsDetailPage(
+                params = SettingsDetailParams(
+                    currentPage = currentPage,
                     imageCacheSizeBytes = imageCacheSizeBytes,
-                    onClearImageCache = onClearImageCache,
-                    context = context
-                )
-                SettingsPage.L -> LSettingsSection(lLogin = l_login)
-                SettingsPage.Red -> RSettingsSection(
+                    storageStats = storageStats,
                     sizeRedTotal = sizeRedTotal,
                     sizeRedDownload = sizeRedDownload,
+                    onClearImageCache = onClearImageCache,
                     onClearDownload = onClearDownload,
-                    savedRed = data.savedRed,
-                    downloadRed = data.downloadRed,
-                    isNichesCacheDownloading = isNichesCacheDownloading,
-                    nichesCacheProgress = nichesCacheProgress,
-                    nichesCacheSize = nichesCacheSize,
-                    nichesCacheLastModifiedHour = nichesCacheLastModifiedHour
-                )
-                SettingsPage.X -> XSettingsSection()
-                SettingsPage.Storage -> StorageStatisticsSection(storageStats)
-                SettingsPage.Backup -> BackupSettingsSection(
-                    context = context,
                     data = data,
-                    onDataChanged = onBackupDataChanged
+                    context = context,
+                    onBackupDataChanged = onBackupDataChanged
                 )
-                SettingsPage.P2P -> P2PSettingsSection()
-                SettingsPage.Diagnostics -> DiagnosticsSettingsSection()
-            }
+            )
         }
+    }
+}
+
+private data class SettingsDetailParams(
+    val currentPage: SettingsPage,
+    val imageCacheSizeBytes: Long,
+    val storageStats: List<StorageStat>,
+    val sizeRedTotal: Long,
+    val sizeRedDownload: Long,
+    val onClearImageCache: () -> Unit,
+    val onClearDownload: () -> Unit,
+    val data: SettingsDataHolders,
+    val context: Context,
+    val onBackupDataChanged: () -> Unit
+)
+
+@Composable
+private fun SettingsDetailPage(params: SettingsDetailParams) {
+    val ramCachePercent = Settings.image_cache_ram_percent.field.collectAsStateWithLifecycle().value
+    val diskCacheEnabled = Settings.image_cache_disk_enabled.field.collectAsStateWithLifecycle().value
+    val diskCacheSizeMb = Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle().value
+    val lLogin = Settings.l_login.field.collectAsStateWithLifecycle().value
+
+    val isNichesCacheDownloading = params.data.savedRed?.nichesCache?.isDownloading ?: false
+    val nichesCacheProgress = params.data.savedRed?.nichesCache?.progress ?: 0f
+    val nichesCacheSize = params.data.savedRed?.nichesCache?.list?.size ?: 0
+    val nichesCacheLastModifiedHour = params.data.savedRed?.nichesCache?.lastModifiedHour ?: 0L
+
+    Spacer(Modifier.height(4.dp))
+    when (params.currentPage) {
+        SettingsPage.Main -> Unit
+        SettingsPage.Privacy -> AppLockSettingsSection()
+        SettingsPage.Display -> DisplaySettingsSection()
+        SettingsPage.Network -> NetworkSettingsSection()
+        SettingsPage.Cache -> CacheSettingsSection(
+            ramCachePercent = ramCachePercent,
+            diskCacheEnabled = diskCacheEnabled,
+            diskCacheSizeMb = diskCacheSizeMb,
+            imageCacheSizeBytes = params.imageCacheSizeBytes,
+            onClearImageCache = params.onClearImageCache,
+            context = params.context
+        )
+        SettingsPage.L -> LSettingsSection(lLogin = lLogin)
+        SettingsPage.Red -> RSettingsSection(
+            sizeRedTotal = params.sizeRedTotal,
+            sizeRedDownload = params.sizeRedDownload,
+            onClearDownload = params.onClearDownload,
+            savedRed = params.data.savedRed,
+            downloadRed = params.data.downloadRed,
+            isNichesCacheDownloading = isNichesCacheDownloading,
+            nichesCacheProgress = nichesCacheProgress,
+            nichesCacheSize = nichesCacheSize,
+            nichesCacheLastModifiedHour = nichesCacheLastModifiedHour
+        )
+        SettingsPage.X -> XSettingsSection()
+        SettingsPage.Storage -> StorageStatisticsSection(params.storageStats)
+        SettingsPage.Backup -> BackupSettingsSection(
+            context = params.context,
+            data = params.data,
+            onDataChanged = params.onBackupDataChanged
+        )
+        SettingsPage.P2P -> P2PSettingsSection()
+        SettingsPage.Diagnostics -> DiagnosticsSettingsSection()
     }
 }
 
@@ -378,6 +411,11 @@ private enum class SettingsPage(
         title = "Отображение",
         icon = R.drawable.crop_free,
         subtitle = "Вырез экрана и отступы"
+    ),
+    Network(
+        title = "Сеть и DNS",
+        icon = R.drawable.ic_dns_24,
+        subtitle = "DNS-over-HTTPS, IPv4/IPv6"
     ),
     Cache(
         title = "Кэш",
@@ -423,7 +461,7 @@ private enum class SettingsPage(
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Cache, Storage, Backup, P2P, Diagnostics)
+        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Network, Cache, Storage, Backup, P2P, Diagnostics)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages

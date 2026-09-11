@@ -1,5 +1,6 @@
 package com.client.xvideos.x.search
 
+import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.x.urlStart
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -15,6 +16,11 @@ import java.net.URLEncoder
 suspend fun getSearchResults(query: String): String? {
 
     val client = HttpClient(OkHttp) {
+        engine {
+            config {
+                dns(AppDns)
+            }
+        }
         install(HttpTimeout) {
             // Конечные таймауты вместо Long.MAX_VALUE.
             requestTimeoutMillis = 30_000

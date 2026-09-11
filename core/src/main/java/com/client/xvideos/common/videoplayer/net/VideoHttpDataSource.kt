@@ -4,6 +4,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.ktor.KtorDataSource
+import com.client.xvideos.common.net.doh.AppDns
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpRedirect
@@ -28,6 +29,11 @@ object VideoHttpDataSource {
 
     private val client: HttpClient by lazy {
         HttpClient(OkHttp) {
+            engine {
+                config {
+                    dns(AppDns)
+                }
+            }
             // Кросс-протокольные редиректы: у плагина HttpRedirect по умолчанию
             // allowHttpsDowngrade = false, и переход https → http вернулся бы в
             // KtorDataSource как ошибка 30x. Раньше эквивалент включался явно —

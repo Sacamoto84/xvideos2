@@ -26,8 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
@@ -79,13 +77,9 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
         val vm = getScreenModel<ScreenLAlbumSM, ScreenLAlbumSM.Factory> { factory -> factory.create(idAlbum) }
 
-        // Виброотклик при возврате из альбома. Активен только когда НЕ открыта
-        // полноэкранная картинка — в этом случае back перехватывает L_FullScreenImage
-        // (закрывает картинку), и выход из альбома не происходит.
-        val haptic = LocalHapticFeedback.current
-
+        // Активен только когда НЕ открыта полноэкранная картинка — в этом случае
+        // back перехватывает L_FullScreenImage (закрывает картинку), и выход из альбома не происходит.
         BackHandler(enabled = vm.host.selectedImage == null) {
-            //haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             navigator.pop()
         }
 
