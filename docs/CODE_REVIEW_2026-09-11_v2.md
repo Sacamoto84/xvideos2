@@ -179,7 +179,7 @@ BUILD SUCCESSFUL in 1s.
 
 ---
 
-## Дополнительно закрыто в текущей сессии (коммиты c770e21, d45a928, 1a64f09)
+## Дополнительно закрыто в текущей сессии (коммиты c770e21, d45a928, 1a64f09, 2bb961b, 3047a36, 7fa428d, 4ca4dd2 + рабочий пакет)
 
 1. **C5 (Разблокировка тестов :core)**: согласовано обновление `P2pReceiveControllerTest.kt` под контракт Nearby/P2P (`authenticationDigits = "1234"`). Все 136 тестов `:core` и 140 тестов проекта проходят на 100%.
 2. **T6 (Устойчивость бэкапа)**: в `BackupSettingsSection.kt` скоуп заменён на `rememberApplicationScope()`. Фоновые операции экспорта/импорта не прерываются при уходе с вкладки или уничтожении экрана.
@@ -187,11 +187,16 @@ BUILD SUCCESSFUL in 1s.
 4. **A1 (Расширение сторожа GlobalStateTest)**: детектор переведён на регулярное выражение `VAR_DECLARATION`, улавливающее `private var`, `lateinit var`, `internal lateinit var` и аннотации (`@Volatile` на той же или отдельной строке). Список `ALLOWED` синхронизирован, исключены `ScreenExplorer.screenType` и `ScreenSaved.screenType`, добавлены и обоснованы 10 ранее невидимых точек.
 5. **A2 (Очистка слоя данных :core от UI-состояний диалогов)**: флаги диалогов (`visibleDialog`, `visibleDialogCreateNew`, `selectedCollection`, `collectionItemGifInfo`) вынесены из `:core` (`LinkCollectionStore`) в фичевое хранилище `:feature-r` (`R_Saved_Collection`). Базовый класс освобождён от UI-состояний; реактивные `mutableStateListOf` в `FileDB` и `LinkCollectionStore` сохранены как осознанное архитектурное решение для прямого наблюдения из Compose без шаблонных обёрток.
 6. **UI2 (ScreenModel в табах коллекций)**: операции дискового I/O (`renameCollection`, `deleteCollection`) вынесены из UI-композаблов `R_Screen_CollectionTab` и `L_Screen_CollectionTab` в соответствующие `ScreenSavedCollectionSM` модулей `:feature-r` и `:feature-l`. Все 40 экранов приложения приведены к единообразной ScreenModel/SM архитектуре.
-7. **A3 (Сериализация моделей сети R на `kotlinx.serialization`)**: плагин `kotlin.serialization` подключён в `:feature-r`. Сетевые DTO (`MediaResponse`, `CreatorResponse`, `NichesResponse`, `TopCreatorsResponse`, поиск, теги) и базовые модели (`GifsInfo`, `UserInfo`, `NichesInfo`, `URL1`) переведены на `@Serializable` с лояльным парсером `RJson`. Дисковое хранилище (`FileDB`, `CollectionDB`) на 100% сохранило обратную совместимость с Gson через `@SerializedName`. Добавлен регрессионный тест `RSerializationCompatibilityTest`.
+7. **A3 (Сериализация моделей сети R и L на `kotlinx.serialization`)**:
+   - `:feature-r`: сетевые DTO и базовые модели переведены на `@Serializable` с лояльным парсером `RJson` и тестами `RSerializationCompatibilityTest`.
+   - `:feature-l`: сетевые GraphQL DTO (`AlbumDetails`, `AlbumListType`, `PicsDetails`, `FilterGenre`, `MediaCategoriesBootstrap`, `AlbumList`) переведены на `@Serializable` с лояльным парсером `LJson` и тестами `LSerializationCompatibilityTest`.
+   - Дисковые хранилища и кэши (`FileDB`, `CollectionDB`, `LAlbumBundleCache`, `LMediaPersist`, `SavedL_Albums`) на 100% сохранили обратную совместимость с Gson через сохранение `@SerializedName`.
+8. **Оптимизация релиза (`shrinkResources`)**: в `app/build.gradle` успешно включён `shrinkResources = true` для релизной сборки. R8 сжатие кода и ресурсов собирается без ошибок (`assembleRelease` зелёный).
+9. **M3 и очистка устаревшего кода UI**: компонент `SwipeableBottomPanel` в `:feature-l` очищен от устаревшего вызова Material 2 `swipeable` и 220+ строк закомментированного чернового кода.
 
 ---
 
 ## Что осталось в бэклоге
 
-1. **Модели сети :feature-l (расширение A3)**: аналогичный перевод DTO Luscious GraphQL/HTTP на `kotlinx.serialization` (при сохранении Gson для существующих кешей на диске).
-2. **Финальное smoke-тестирование на физическом устройстве**: сквозная проверка навигации табов, работы плееров, P2P передачи и стабильности сессий.
+1. **Финальное smoke-тестирование на физическом устройстве**: сквозная проверка навигации табов, работы плееров, P2P передачи и стабильности сессий.
+

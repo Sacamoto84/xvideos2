@@ -1,6 +1,7 @@
 package com.client.xvideos.l.net.graphQl
 
 import com.client.xvideos.l.model.FilterGenre
+import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
 import com.google.gson.Gson
@@ -8,6 +9,8 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import timber.log.Timber
 
 private val mediaCategoriesBootstrap =
@@ -23,8 +26,13 @@ suspend fun refreshMediaCategories(repository: Repository) {
 
     if (res.isFailure) return
 
-    val gson = Gson()
-    val response = gson.fromJson(res.getOrNull(), MediaCategoriesBootstrapResponse::class.java)
+    val raw = res.getOrNull().orEmpty()
+    val response = runCatching {
+        LJson.decodeFromString<MediaCategoriesBootstrapResponse>(raw)
+    }.getOrElse {
+        val gson = Gson()
+        gson.fromJson(raw, MediaCategoriesBootstrapResponse::class.java)
+    }
 
     withContext(Dispatchers.Main) {
         mediaCategoriesFlow.value = MediaCategories(
@@ -35,107 +43,139 @@ suspend fun refreshMediaCategories(repository: Repository) {
             response.data.mediaCategories.audiences
         )
     }
-
 }
 
 // Основной класс для всего ответа
+@Serializable
 data class MediaCategoriesBootstrapResponse(
     @SerializedName("data")
-    val data: ApiData
+    @SerialName("data")
+    val data: ApiData = ApiData()
 )
 
 // Класс для данных
+@Serializable
 data class ApiData(
     @SerializedName("media_categories")
-    val mediaCategories: MediaCategories
+    @SerialName("media_categories")
+    val mediaCategories: MediaCategories = MediaCategories()
 )
 
 // Класс для медиа категорий
+@Serializable
 data class MediaCategories(
     @SerializedName("genres")
-    val genres: List<FilterGenre>,
+    @SerialName("genres")
+    val genres: List<FilterGenre> = emptyList(),
 
     @SerializedName("filter_settings")
-    val filterSettings: FilterSettings,
+    @SerialName("filter_settings")
+    val filterSettings: FilterSettings = FilterSettings(),
 
     @SerializedName("languages")
-    val languages: List<Language>,
+    @SerialName("languages")
+    val languages: List<Language> = emptyList(),
 
     @SerializedName("content_types")
-    val contentTypes: List<ContentType>,
+    @SerialName("content_types")
+    val contentTypes: List<ContentType> = emptyList(),
 
     @SerializedName("audiences")
-    val audiences: List<Audience>
+    @SerialName("audiences")
+    val audiences: List<Audience> = emptyList()
 )
 
 // Жанр и его ограничение по контенту переехали в model.FilterGenre: на них
 // ссылается AlbumListFilter, то есть слой ниже сети.
 
 // Класс для настроек фильтров
+@Serializable
 data class FilterSettings(
     @SerializedName("user_id")
-    val userId: Long,
+    @SerialName("user_id")
+    val userId: Long = 0L,
 
     @SerializedName("has_custom_filters")
-    val hasCustomFilters: Boolean,
+    @SerialName("has_custom_filters")
+    val hasCustomFilters: Boolean = false,
 
     @SerializedName("uses_default_warnings")
-    val usesDefaultWarnings: Boolean,
+    @SerialName("uses_default_warnings")
+    val usesDefaultWarnings: Boolean = false,
 
     @SerializedName("audience_ids")
-    val audienceIds: List<String>,
+    @SerialName("audience_ids")
+    val audienceIds: List<String> = emptyList(),
 
     @SerializedName("genres_blocked_ids")
-    val genresBlockedIds: List<String>,
+    @SerialName("genres_blocked_ids")
+    val genresBlockedIds: List<String> = emptyList(),
 
     @SerializedName("genres_subscribed_ids")
-    val genresSubscribedIds: List<String>,
+    @SerialName("genres_subscribed_ids")
+    val genresSubscribedIds: List<String> = emptyList(),
 
     @SerializedName("preferred_language_ids")
-    val preferredLanguageIds: List<String>,
+    @SerialName("preferred_language_ids")
+    val preferredLanguageIds: List<String> = emptyList(),
 
     @SerializedName("default_dashboard_content_id")
-    val defaultDashboardContentId: String
+    @SerialName("default_dashboard_content_id")
+    val defaultDashboardContentId: String = ""
 )
 
 // Класс для языков
+@Serializable
 data class Language(
     @SerializedName("id")
-    val id: String,
+    @SerialName("id")
+    val id: String = "",
 
     @SerializedName("title")
-    val title: String,
+    @SerialName("title")
+    val title: String = "",
 
     @SerializedName("url")
-    val url: String
+    @SerialName("url")
+    val url: String = ""
 )
 
 // Класс для типов контента
+@Serializable
 data class ContentType(
     @SerializedName("id")
-    val id: String,
+    @SerialName("id")
+    val id: String = "",
 
     @SerializedName("title")
-    val title: String,
+    @SerialName("title")
+    val title: String = "",
 
     @SerializedName("url")
-    val url: String
+    @SerialName("url")
+    val url: String = ""
 )
 
 // Класс для аудиторий
+@Serializable
 data class Audience(
     @SerializedName("id")
-    val id: String,
+    @SerialName("id")
+    val id: String = "",
 
     @SerializedName("title")
-    val title: String,
+    @SerialName("title")
+    val title: String = "",
 
     @SerializedName("description")
-    val description: String,
+    @SerialName("description")
+    val description: String = "",
 
     @SerializedName("poster_url")
-    val posterUrl: String?,
+    @SerialName("poster_url")
+    val posterUrl: String? = null,
 
     @SerializedName("url")
-    val url: String
+    @SerialName("url")
+    val url: String = ""
 )

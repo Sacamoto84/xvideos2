@@ -1,6 +1,7 @@
 package com.client.xvideos.l.model
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 /**
@@ -15,55 +16,73 @@ import java.io.Serializable
  * Живёт в `model`, а не рядом с запросом: на него ссылается `AlbumListFilter`,
  * то есть слой ниже сети.
  */
+@kotlinx.serialization.Serializable
 data class FilterGenre(
     @SerializedName("id")
-    val id: String,
+    @SerialName("id")
+    val id: String = "",
 
     @SerializedName("title")
-    val title: String,
+    @SerialName("title")
+    val title: String = "",
 
     @SerializedName("slug")
-    val slug: String,
+    @SerialName("slug")
+    val slug: String = "",
 
     @SerializedName("description")
-    val description: String,
+    @SerialName("description")
+    val description: String = "",
 
     @SerializedName("uploading_rules")
-    val uploadingRules: String,
+    @SerialName("uploading_rules")
+    val uploadingRules: String = "",
 
     @SerializedName("poster_url")
-    val posterUrl: String?,
+    @SerialName("poster_url")
+    val posterUrl: String? = null,
 
     @SerializedName("acts_as_warning")
-    val actsAsWarning: Boolean,
+    @SerialName("acts_as_warning")
+    val actsAsWarning: Boolean = false,
 
     @SerializedName("acts_as_default")
-    val actsAsDefault: Boolean,
+    @SerialName("acts_as_default")
+    val actsAsDefault: Boolean = false,
 
     @SerializedName("represents_uncategorized")
-    val representsUncategorized: Boolean,
+    @SerialName("represents_uncategorized")
+    val representsUncategorized: Boolean = false,
 
     @SerializedName("url")
-    val url: String,
+    @SerialName("url")
+    val url: String = "",
 
     @SerializedName("parent")
-    val parent: String?,
+    @SerialName("parent")
+    val parent: String? = null,
 
     @SerializedName("only_allows_model")
-    val onlyAllowsModel: List<String>?,
+    @SerialName("only_allows_model")
+    val onlyAllowsModel: List<String>? = null,
 
     @SerializedName("only_content")
-    val onlyContent: OnlyContent?
+    @SerialName("only_content")
+    val onlyContent: OnlyContent? = null
 ) : Serializable
 
 /** Ограничение жанра по типу контента. `Serializable` вслед за [FilterGenre]. */
+@kotlinx.serialization.Serializable
 data class OnlyContent(
     @SerializedName("id")
-    val id: String,
+    @SerialName("id")
+    val id: String = "",
 
     @SerializedName("title")
-    val title: String,
+    @SerialName("title")
+    val title: String = "",
 
     @SerializedName("url")
-    val url: String
+    @SerialName("url")
+    val url: String = ""
 ) : Serializable

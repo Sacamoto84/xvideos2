@@ -1,0 +1,392 @@
+package com.client.xvideos.l.model
+
+import com.client.xvideos.l.net.LAlbumBundleCache
+import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
+import com.client.xvideos.l.net.graphQl.MediaCategoriesBootstrapResponse
+import com.client.xvideos.l.net.json.LJson
+import com.google.gson.Gson
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+
+/**
+ * Тесты сериализации моделей Luscious (:feature-l):
+ * 1. Разбор через kotlinx.serialization с лояльным парсером LJson (сетевой вход).
+ * 2. Полная обратная совместимость с Gson (дисковые кэши LAlbumBundleCache, LMediaPersist).
+ * 3. Совместимость с Java Serializable (Voyager Navigation saved state).
+ */
+class LSerializationCompatibilityTest {
+
+    private val gson = Gson()
+
+    /* ---------- 1. kotlinx.serialization: сетевые DTO ---------- */
+
+    @Test
+    fun `AlbumDetails разбирается через LJson даже с неожиданными полями и пропусками`() {
+        val json = """
+            {
+                "id": "12345",
+                "title": "Test Album",
+                "is_manga": true,
+                "number_of_pictures": 42,
+                "download_url": "/download/12345/",
+                "like_status": "liked",
+                "tags": [
+                    {"id": "1", "text": "cosplay", "count": 10, "url": "/tags/cosplay/"}
+                ],
+                "genres": [
+                    {"id": "2", "title": "Ecchi", "acts_as_warning": false, "url": "/genres/ecchi/"}
+                ],
+                "cover": {
+                    "width": 800,
+                    "height": 1200,
+                    "size": "large",
+                    "url": "https://cdn/cover.jpg"
+                },
+                "content": {
+                    "id": "c1",
+                    "title": "Manga",
+                    "url": "/manga/"
+                },
+                "created_by": {
+                    "id": "u1",
+                    "name": "Artist1",
+                    "display_name": "Artist One",
+                    "url": "/users/u1/"
+                },
+                "language": {
+                    "id": "lang1",
+                    "title": "English",
+                    "url": "/languages/english/"
+                },
+                "unexpected_field": "some_extra_payload"
+            }
+        """.trimIndent()
+
+        val album = LJson.decodeFromString<AlbumDetails>(json)
+
+        assertEquals("12345", album.id)
+        assertEquals("Test Album", album.title)
+        assertTrue(album.is_manga)
+        assertEquals(42, album.number_of_pictures)
+        assertEquals("/download/12345/", album.download_url)
+        assertEquals("liked", album.likeStatus)
+        assertEquals(1, album.tags.size)
+        assertEquals("cosplay", album.tags[0].text)
+        assertEquals(1, album.genres.size)
+        assertEquals("Ecchi", album.genres[0].title)
+        assertEquals("https://cdn/cover.jpg", album.cover?.url)
+        assertEquals("Manga", album.content.title)
+        assertEquals("Artist1", album.createdBy?.name)
+        assertEquals("English", album.language?.title)
+    }
+
+    @Test
+    fun `PicsDetails и Thumbnails разбираются через LJson`() {
+        val json = """
+            {
+                "height": 1080,
+                "width": 1920,
+                "is_animated": false,
+                "url_to_original": "https://cdn/original.jpg",
+                "url_to_video": null,
+                "album": "album_123",
+                "thumbnails": [
+                    {
+                        "width": 640,
+                        "height": 360,
+                        "size": "small",
+                        "url": "https://cdn/small.jpg"
+                    },
+                    {
+                        "width": 1600,
+                        "height": 900,
+                        "size": "xMax",
+                        "url": "https://cdn/xmax.jpg"
+                    }
+                ]
+            }
+        """.trimIndent()
+
+        val pic = LJson.decodeFromString<PicsDetails>(json)
+
+        assertEquals(1080, pic.height)
+        assertEquals(1920, pic.width)
+        assertEquals(false, pic.is_animated)
+        assertEquals("https://cdn/original.jpg", pic.url_to_original)
+        assertEquals("album_123", pic.album)
+        assertEquals(2, pic.thumbnails?.size)
+        assertEquals("xMax", pic.thumbnails?.get(1)?.size)
+    }
+
+    @Test
+    fun `AlbumResponse, AlbumList и FacetCollectionInfo разбираются через LJson`() {
+        val json = """
+            {
+                "data": {
+                    "album": {
+                        "list": {
+                            "info": {
+                                "page": 1,
+                                "has_next_page": true,
+                                "has_previous_page": false,
+                                "total_items": 100,
+                                "total_pages": 4,
+                                "items_per_page": 25,
+                                "url_complete": "https://example/list"
+                            },
+                            "items": [
+                                {
+                                    "__typename": "Album",
+                                    "id": "a1",
+                                    "title": "Album One",
+                                    "number_of_pictures": 10,
+                                    "is_manga": true,
+                                    "url": "/albums/a1/",
+                                    "download_url": "/download/a1/"
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val response = LJson.decodeFromString<AlbumResponse>(json)
+        val list = response.data.album.list
+
+        assertEquals(1, list.info.page)
+        assertTrue(list.info.hasNextPage)
+        assertEquals(100, list.info.totalItems)
+        assertEquals(1, list.items.size)
+        assertEquals("a1", list.items[0].id)
+        assertEquals("Album One", list.items[0].title)
+        assertTrue(list.items[0].isManga)
+    }
+
+    @Test
+    fun `Landing_page_albumType и AlbumListTopHits разбираются через LJson`() {
+        val landingJson = """
+            {
+                "title": "Frontpage",
+                "sections": [
+                    {
+                        "title": "Trending",
+                        "count": 5,
+                        "item_type": "album",
+                        "url": "/trending/",
+                        "items": [
+                            {"id": "t1", "title": "Top Album 1"}
+                        ]
+                    }
+                ]
+            }
+        """.trimIndent()
+
+        val landing = LJson.decodeFromString<Landing_page_albumType>(landingJson)
+        assertEquals("Frontpage", landing.title)
+        assertEquals(1, landing.sections.size)
+        assertEquals("Trending", landing.sections[0].title)
+        assertEquals("t1", landing.sections[0].items[0].id)
+
+        val topHitsJson = """
+            {
+                "title": "Top Hits",
+                "url": "/tophits/",
+                "count": 1,
+                "item_type": "album",
+                "items": [{"id": "th1", "title": "Top Hit 1"}]
+            }
+        """.trimIndent()
+
+        val topHits = LJson.decodeFromString<AlbumListTopHits>(topHitsJson)
+        assertEquals("Top Hits", topHits.title)
+        assertEquals(1, topHits.items.size)
+        assertEquals("th1", topHits.items[0].id)
+    }
+
+    @Test
+    fun `MediaCategoriesBootstrapResponse и FilterGenre разбираются через LJson`() {
+        val json = """
+            {
+                "data": {
+                    "media_categories": {
+                        "genres": [
+                            {
+                                "id": "g1",
+                                "title": "Fantasy",
+                                "slug": "fantasy",
+                                "description": "Fantasy genre",
+                                "uploading_rules": "rules",
+                                "acts_as_warning": false,
+                                "acts_as_default": true,
+                                "represents_uncategorized": false,
+                                "url": "/genres/fantasy/",
+                                "only_content": {
+                                    "id": "c1",
+                                    "title": "Pictures",
+                                    "url": "/pictures/"
+                                }
+                            }
+                        ],
+                        "filter_settings": {
+                            "user_id": 999,
+                            "has_custom_filters": true,
+                            "uses_default_warnings": false,
+                            "audience_ids": ["1", "2"],
+                            "genres_blocked_ids": [],
+                            "genres_subscribed_ids": ["g1"],
+                            "preferred_language_ids": ["en"],
+                            "default_dashboard_content_id": "0"
+                        },
+                        "languages": [
+                            {"id": "l1", "title": "English", "url": "/lang/en/"}
+                        ],
+                        "content_types": [
+                            {"id": "ct1", "title": "Manga", "url": "/manga/"}
+                        ],
+                        "audiences": [
+                            {"id": "aud1", "title": "Adults", "description": "18+", "url": "/aud/adults/"}
+                        ]
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val response = LJson.decodeFromString<MediaCategoriesBootstrapResponse>(json)
+        val categories = response.data.mediaCategories
+
+        assertEquals(1, categories.genres.size)
+        assertEquals("Fantasy", categories.genres[0].title)
+        assertEquals("Pictures", categories.genres[0].onlyContent?.title)
+        assertEquals(999L, categories.filterSettings.userId)
+        assertEquals(1, categories.languages.size)
+        assertEquals(1, categories.contentTypes.size)
+        assertEquals(1, categories.audiences.size)
+    }
+
+    @Test
+    fun `AlbumListFilterGenreCountResponse разбирается через LJson`() {
+        val json = """{"count": 15, "term": "hentai", "is_active": true}"""
+        val response = LJson.decodeFromString<AlbumListFilterGenreCountResponse>(json)
+
+        assertEquals(15, response.count)
+        assertEquals("hentai", response.term)
+        assertTrue(response.isActive)
+    }
+
+    /* ---------- 2. Обратная совместимость с Gson (дисковые кэши) ---------- */
+
+    @Test
+    fun `Gson по-прежнему корректно читает и пишет AlbumDetails`() {
+        val original = AlbumDetails(
+            id = "disk-album-1",
+            title = "Disk Album",
+            is_manga = true,
+            number_of_pictures = 50,
+            download_url = "/download/disk/",
+            likeStatus = "favorite",
+            content = Content(id = "c1", title = "Art", url = "/art/"),
+            cover = Cover(width = 400, height = 600, size = "cover", url = "https://cdn/c.jpg")
+        )
+
+        val json = gson.toJson(original)
+        val deserialized = gson.fromJson(json, AlbumDetails::class.java)
+
+        assertEquals(original.id, deserialized.id)
+        assertEquals(original.title, deserialized.title)
+        assertEquals(original.is_manga, deserialized.is_manga)
+        assertEquals(original.number_of_pictures, deserialized.number_of_pictures)
+        assertEquals(original.content.title, deserialized.content.title)
+        assertEquals(original.cover?.url, deserialized.cover?.url)
+    }
+
+    @Test
+    fun `Gson и LJson взаимно читают PicsDetails`() {
+        val item = PicsDetails(
+            height = 800,
+            width = 1200,
+            is_animated = true,
+            url_to_original = "https://cdn/anim.mp4",
+            album = "333",
+            thumbnails = listOf(
+                Thumbnails(width = 300, height = 200, size = "small", url = "https://cdn/s.jpg")
+            )
+        )
+
+        // LJson -> Gson
+        val jsonFromKtx = LJson.encodeToString(item)
+        val fromGson = gson.fromJson(jsonFromKtx, PicsDetails::class.java)
+        assertEquals(item.height, fromGson.height)
+        assertEquals(item.url_to_original, fromGson.url_to_original)
+        assertEquals(item.thumbnails?.size, fromGson.thumbnails?.size)
+
+        // Gson -> LJson
+        val jsonFromGson = gson.toJson(item)
+        val fromKtx = LJson.decodeFromString<PicsDetails>(jsonFromGson)
+        assertEquals(item.height, fromKtx.height)
+        assertEquals(item.url_to_original, fromKtx.url_to_original)
+        assertEquals(item.thumbnails?.size, fromKtx.thumbnails?.size)
+    }
+
+    @Test
+    fun `LAlbumBundleCache формат дискового кэша полностью совместим с Gson`() {
+        val bundle = LAlbumBundleCache(
+            schemaVersion = 1,
+            cachedAtMs = 1700000000000L,
+            album = AlbumDetails(id = "bundle-1", title = "Bundle Album"),
+            totalPages = 3,
+            pics = listOf(
+                PicsDetails(height = 600, width = 800, url_to_original = "https://cdn/p1.jpg")
+            )
+        )
+
+        val json = gson.toJson(bundle)
+        val restored = gson.fromJson(json, LAlbumBundleCache::class.java)
+
+        assertNotNull(restored)
+        assertEquals(1, restored.schemaVersion)
+        assertEquals("bundle-1", restored.album.id)
+        assertEquals(3, restored.totalPages)
+        assertEquals(1, restored.pics.size)
+        assertEquals("https://cdn/p1.jpg", restored.pics[0].url_to_original)
+    }
+
+    /* ---------- 3. Совместимость с Java Serializable (Voyager) ---------- */
+
+    @Test
+    fun `FilterGenre сериализуется через Java ObjectOutputStream`() {
+        val original = FilterGenre(
+            id = "g_test",
+            title = "Test Genre",
+            slug = "test-genre",
+            description = "Test Description",
+            uploadingRules = "rules",
+            actsAsWarning = true,
+            actsAsDefault = false,
+            representsUncategorized = false,
+            url = "https://example/genre",
+            onlyContent = OnlyContent(id = "oc1", title = "Pictures", url = "/pics/")
+        )
+
+        val bytes = ByteArrayOutputStream().use { baos ->
+            ObjectOutputStream(baos).use { oos -> oos.writeObject(original) }
+            baos.toByteArray()
+        }
+
+        val restored = ByteArrayInputStream(bytes).use { bais ->
+            ObjectInputStream(bais).use { ois -> ois.readObject() as FilterGenre }
+        }
+
+        assertEquals(original.id, restored.id)
+        assertEquals(original.title, restored.title)
+        assertEquals(original.onlyContent?.title, restored.onlyContent?.title)
+    }
+}

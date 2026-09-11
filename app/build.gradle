@@ -92,10 +92,7 @@ android {
     buildTypes {
         release {
             minifyEnabled = true
-            // shrinkResources — следующий шаг, отдельно от R8: ресурсы режутся
-            // по другим правилам, и мешать два источника отказов в одном
-            // изменении не стоит.
-            //shrinkResources = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // Пока keystore.properties нет — собираем как раньше, debug-ключом,
             // чтобы локальная сборка не падала. Публиковать такой APK нельзя:

@@ -289,10 +289,8 @@ class L_FullScreenImage(
                 // Панель выезжает снизу и уезжает вниз ({ it } = на полную свою высоту).
                 enter = fadeIn(),
                 exit  = fadeOut(),
-            )
-            {
-                SwipeableBottomPanel { swipeableState, hiddenOffset ->
-
+            ) {
+                SwipeableBottomPanel {
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                         LazyRow( state = lazyRowState, modifier = Modifier.height(72.dp) )
                         {

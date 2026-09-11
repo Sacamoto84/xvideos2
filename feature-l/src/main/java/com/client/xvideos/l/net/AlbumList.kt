@@ -13,22 +13,30 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import timber.log.Timber
 
+@Serializable
 data class AlbumListFilterGenreCountResponse(
     @SerializedName("count")
-    val count: Int,
+    @SerialName("count")
+    val count: Int = 0,
 
     @SerializedName("term")
-    val term: String,
+    @SerialName("term")
+    val term: String = "",
 
     @SerializedName("is_active")
-    val isActive: Boolean
+    @SerialName("is_active")
+    val isActive: Boolean = false
 )
 
+@Serializable
 data class AlbumListFilterGenreCountResponseList(
     @SerializedName("list")
-    val list: List<AlbumListFilterGenreCountResponse>
+    @SerialName("list")
+    val list: List<AlbumListFilterGenreCountResponse> = emptyList()
 )
 
 
