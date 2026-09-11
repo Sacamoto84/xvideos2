@@ -179,18 +179,19 @@ BUILD SUCCESSFUL in 1s.
 
 ---
 
-## Дополнительно закрыто в текущей сессии (коммиты c770e21, d45a928)
+## Дополнительно закрыто в текущей сессии (коммиты c770e21, d45a928, 1a64f09)
 
 1. **C5 (Разблокировка тестов :core)**: согласовано обновление `P2pReceiveControllerTest.kt` под контракт Nearby/P2P (`authenticationDigits = "1234"`). Все 136 тестов `:core` и 140 тестов проекта проходят на 100%.
 2. **T6 (Устойчивость бэкапа)**: в `BackupSettingsSection.kt` скоуп заменён на `rememberApplicationScope()`. Фоновые операции экспорта/импорта не прерываются при уходе с вкладки или уничтожении экрана.
 3. **UI1 (Устранение глобальной статики навигации R)**: в `:feature-r` создан `RNavigationState` (`@Singleton`), внедрены `ScreenRedExplorerSM` и `R_SavedTabSM`. Статические `screenType` полностью удалены из `ScreenRedExplorer.companion object` и `R_ScreenSavedTab`.
 4. **A1 (Расширение сторожа GlobalStateTest)**: детектор переведён на регулярное выражение `VAR_DECLARATION`, улавливающее `private var`, `lateinit var`, `internal lateinit var` и аннотации (`@Volatile` на той же или отдельной строке). Список `ALLOWED` синхронизирован, исключены `ScreenExplorer.screenType` и `ScreenSaved.screenType`, добавлены и обоснованы 10 ранее невидимых точек.
 5. **A2 (Очистка слоя данных :core от UI-состояний диалогов)**: флаги диалогов (`visibleDialog`, `visibleDialogCreateNew`, `selectedCollection`, `collectionItemGifInfo`) вынесены из `:core` (`LinkCollectionStore`) в фичевое хранилище `:feature-r` (`R_Saved_Collection`). Базовый класс освобождён от UI-состояний; реактивные `mutableStateListOf` в `FileDB` и `LinkCollectionStore` сохранены как осознанное архитектурное решение для прямого наблюдения из Compose без шаблонных обёрток.
+6. **UI2 (ScreenModel в табах коллекций)**: операции дискового I/O (`renameCollection`, `deleteCollection`) вынесены из UI-композаблов `R_Screen_CollectionTab` и `L_Screen_CollectionTab` в соответствующие `ScreenSavedCollectionSM` модулей `:feature-r` и `:feature-l`. Все 40 экранов приложения приведены к единообразной ScreenModel/SM архитектуре.
+7. **A3 (Сериализация моделей сети R на `kotlinx.serialization`)**: плагин `kotlin.serialization` подключён в `:feature-r`. Сетевые DTO (`MediaResponse`, `CreatorResponse`, `NichesResponse`, `TopCreatorsResponse`, поиск, теги) и базовые модели (`GifsInfo`, `UserInfo`, `NichesInfo`, `URL1`) переведены на `@Serializable` с лояльным парсером `RJson`. Дисковое хранилище (`FileDB`, `CollectionDB`) на 100% сохранило обратную совместимость с Gson через `@SerializedName`. Добавлен регрессионный тест `RSerializationCompatibilityTest`.
 
 ---
 
 ## Что осталось в бэклоге
 
-1. **Архитектурный долг проходов 8–9**:
-   - **UI2**: отсутствие `ScreenModel`/`ViewModel` в отдельных вторичных экранах (постепенная миграция по мере развития разделов).
-   - **A3**: унификация сериализации моделей R и L с GSON на `kotlinx.serialization` (приведение к общему стандарту с `:feature-x`).
+1. **Модели сети :feature-l (расширение A3)**: аналогичный перевод DTO Luscious GraphQL/HTTP на `kotlinx.serialization` (при сохранении Gson для существующих кешей на диске).
+2. **Финальное smoke-тестирование на физическом устройстве**: сквозная проверка навигации табов, работы плееров, P2P передачи и стабильности сессий.
