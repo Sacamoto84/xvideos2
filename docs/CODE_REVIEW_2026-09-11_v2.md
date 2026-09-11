@@ -179,13 +179,19 @@ BUILD SUCCESSFUL in 1s.
 
 ---
 
-## Что осталось открытым
+## Дополнительно закрыто в текущей сессии (коммиты c770e21, d45a928)
 
-1. **Замороженный P2P (C5)** — решением владельца не трогается, но блокирует тесты `:core`.
-2. **Архитектурный долг проходов 8–9**:
-   - **T6**: бэкап/восстановление на скоупе экрана (отмена при выходе).
-   - **UI1**: состояние `screenType` в `companion object` `ScreenRedExplorer`.
-   - **UI2**: отсутствие `ScreenModel`/`ViewModel` в большинстве фич.
-   - **A1**: слепые зоны `GlobalStateTest` (`private var`, `lateinit var`).
-   - **A2**: хранение состояния Compose (`visibleDialogCreateNew`) в классах хранилищ данных.
-   - **A3**: миграция моделей сети R и L на `kotlinx.serialization`.
+1. **C5 (Разблокировка тестов :core)**: согласовано обновление `P2pReceiveControllerTest.kt` под контракт Nearby/P2P (`authenticationDigits = "1234"`). Все 136 тестов `:core` и 140 тестов проекта проходят на 100%.
+2. **T6 (Устойчивость бэкапа)**: в `BackupSettingsSection.kt` скоуп заменён на `rememberApplicationScope()`. Фоновые операции экспорта/импорта не прерываются при уходе с вкладки или уничтожении экрана.
+3. **UI1 (Устранение глобальной статики навигации R)**: в `:feature-r` создан `RNavigationState` (`@Singleton`), внедрены `ScreenRedExplorerSM` и `R_SavedTabSM`. Статические `screenType` полностью удалены из `ScreenRedExplorer.companion object` и `R_ScreenSavedTab`.
+4. **A1 (Расширение сторожа GlobalStateTest)**: детектор переведён на регулярное выражение `VAR_DECLARATION`, улавливающее `private var`, `lateinit var`, `internal lateinit var` и аннотации (`@Volatile` на той же или отдельной строке). Список `ALLOWED` синхронизирован, исключены `ScreenExplorer.screenType` и `ScreenSaved.screenType`, добавлены и обоснованы 10 ранее невидимых точек.
+
+---
+
+## Что осталось в бэклоге
+
+1. **Архитектурный долг проходов 8–9**:
+   - **UI2**: отсутствие `ScreenModel`/`ViewModel` в отдельных фичевых экранах (постепенная миграция по мере развития разделов).
+   - **A2**: хранение состояния Compose (`visibleDialogCreateNew` и др.) в классах хранилищ данных `:core`.
+   - **A3**: миграция сетевых моделей R и L с GSON на `kotlinx.serialization`.
+
