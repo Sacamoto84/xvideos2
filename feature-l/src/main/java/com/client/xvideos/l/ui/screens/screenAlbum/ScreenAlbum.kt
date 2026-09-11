@@ -85,7 +85,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         val haptic = LocalHapticFeedback.current
 
         BackHandler(enabled = vm.host.selectedImage == null) {
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            //haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             navigator.pop()
         }
 
