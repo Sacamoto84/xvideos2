@@ -1,6 +1,9 @@
 package com.client.xvideos.r.common.downloader
 
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
@@ -8,6 +11,7 @@ import com.client.xvideos.r.model.GifsInfo
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.encodeToString
+import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -41,9 +45,26 @@ class Downloader @Inject constructor(
     fun downloadRedName(item: GifsInfo, onComplete: () -> Unit = {}) {
 
         val videoUrl = item.downloadVideoUrl()
-        if ((videoUrl == null) || (item.userName == "")) {
+        if ((videoUrl == null) || (item.userName == "") || (item.id == "")) {
             //Toast("Ошибка в названии файла или креатор")
             percent.value = -3f
+            return
+        }
+
+        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
+            percent.value = -3f
+            SnackBar.error("Недопустимое имя файла или креатора")
+            return
+        }
+
+        val rootDir = File(AppPath.r_cache_download)
+        val creatorDir = File(rootDir, item.userName)
+        try {
+            requireInside(rootDir, creatorDir)
+        } catch (e: Exception) {
+            Timber.w(e, "Downloader: недопустимый путь к папке креатора: ${item.userName}")
+            percent.value = -3f
+            SnackBar.error("Недопустимый путь к папке креатора")
             return
         }
 
@@ -54,8 +75,8 @@ class Downloader @Inject constructor(
         //Записи нет можно скачивать
         if (!findVideoInDownload(item.id, item.userName)) {
 
-            val p = AppPath.r_cache_download + "/" + item.userName
-            File(p).mkdirs()
+            val p = creatorDir.absolutePath
+            creatorDir.mkdirs()
 
             item.previewUrl()?.let { imageUrl ->
                 val requestImage = kDownloader.newRequestBuilder(imageUrl, p, "${item.id}.jpg").build()
@@ -83,7 +104,7 @@ class Downloader @Inject constructor(
 
                     SnackBar.success("Скачивание завершено")
                     val text = AppJson.encodeToString(item)
-                    File(p, "${item.id}.info").writeText(text)
+                    File(p, "${item.id}.info").writeTextAtomically(text)
 
                     onComplete()
                     //DownloadRed.refreshDownloadList()
@@ -105,9 +126,21 @@ class Downloader @Inject constructor(
         if (item.id.isBlank() || item.userName.isBlank()) {
             return RedDownloadEnqueueReport()
         }
+        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
+            return RedDownloadEnqueueReport()
+        }
 
-        val p = AppPath.r_cache_download + "/" + item.userName
-        File(p).mkdirs()
+        val rootDir = File(AppPath.r_cache_download)
+        val creatorDir = File(rootDir, item.userName)
+        try {
+            requireInside(rootDir, creatorDir)
+        } catch (e: Exception) {
+            Timber.w(e, "Downloader: недопустимый путь к папке креатора: ${item.userName}")
+            return RedDownloadEnqueueReport()
+        }
+
+        val p = creatorDir.absolutePath
+        creatorDir.mkdirs()
 
         val videoFile = File(p, "${item.id}.mp4")
         val previewFile = File(p, "${item.id}.jpg")

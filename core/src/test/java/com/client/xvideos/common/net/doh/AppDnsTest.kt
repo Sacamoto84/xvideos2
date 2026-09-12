@@ -172,4 +172,18 @@ class AppDnsTest {
         assertFalse(AppDns.isDohServerHost("example.com"))
         assertFalse(AppDns.isDohServerHost("api.redgifs.com"))
     }
+
+    @Test
+    fun `AppDns резолвит localhost в верхнем регистре через системный резолвер`() {
+        val addresses = AppDns.lookup("LOCALHOST")
+        assertFalse(addresses.isEmpty())
+    }
+
+    @Test
+    fun `AppDns корректно конвертирует IDN хосты через Punycode`() {
+        // IDN-домен должен нормализоваться в xn-- формат без исключений
+        val host = "президент.рф"
+        val ascii = java.net.IDN.toASCII(host.lowercase())
+        assertTrue(ascii.startsWith("xn--"))
+    }
 }

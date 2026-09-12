@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.isLVideoFileUrl
@@ -188,7 +189,7 @@ internal fun lReadCollectionConfig(collectionFolder: File): LCollectionConfig {
 internal fun lWriteCollectionConfig(collectionFolder: File, config: LCollectionConfig) {
     collectionFolder.mkdirs()
     File(collectionFolder, L_COLLECTION_CONFIG_FILE_NAME)
-        .writeText(AppJson.encodeToString(config), Charsets.UTF_8)
+        .writeTextAtomically(AppJson.encodeToString(config))
 }
 
 internal fun lCollectionItemIdentifiers(item: PicsDetails): List<String> {

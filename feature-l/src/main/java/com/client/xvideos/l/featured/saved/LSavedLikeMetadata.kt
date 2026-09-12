@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
@@ -57,7 +58,7 @@ fun readLSavedLikeMetadata(file: File): LSavedLikeMetadata? {
 
 fun writeLSavedLikeMetadata(file: File, metadata: LSavedLikeMetadata) {
     file.parentFile?.mkdirs()
-    file.writeText(AppJson.encodeToString(metadata), Charsets.UTF_8)
+    file.writeTextAtomically(AppJson.encodeToString(metadata))
 }
 
 fun LSavedLikeMetadata.toPicsDetails(folder: File): PicsDetails? {

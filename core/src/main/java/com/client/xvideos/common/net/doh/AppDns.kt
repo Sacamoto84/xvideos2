@@ -66,11 +66,14 @@ object AppDns : Dns {
     private val cache = ConcurrentHashMap<String, CacheEntry>()
 
     override fun lookup(hostname: String): List<InetAddress> {
-        val cleanHost = hostname.trim().trimEnd('.')
+        val trimmed = hostname.trim().trimEnd('.')
 
-        if (cleanHost.isEmpty()) {
+        if (trimmed.isEmpty()) {
             throw UnknownHostException("Empty hostname")
         }
+
+        // Нормализация хоста: нижний регистр по RFC 1035 + Punycode (IDN) для интернационализованных доменов
+        val cleanHost = runCatching { java.net.IDN.toASCII(trimmed.lowercase()) }.getOrDefault(trimmed.lowercase())
 
         // Если это уже числовой IP-адрес — сразу возвращаем InetAddress без DNS
         if (isIpAddress(cleanHost)) {
@@ -202,16 +205,14 @@ object AppDns : Dns {
             .header("Accept", DNS_JSON_MIME)
             .build()
 
-        val response = dohHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) {
-            val code = response.code
-            response.close()
-            throw IOException("DoH HTTP error $code from $endpoint")
+        return dohHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("DoH HTTP error ${response.code} from $endpoint")
+            }
+            val body = response.body?.string() ?: throw IOException("Empty body from $endpoint")
+            val dohResponse = json.decodeFromString<DohResponse>(body)
+            dohResponse.answer.filter { it.type == typeCode && it.data.isNotBlank() }
         }
-
-        val body = response.body.string()
-        val dohResponse = json.decodeFromString<DohResponse>(body)
-        return dohResponse.answer.filter { it.type == typeCode && it.data.isNotBlank() }
     }
 
     private fun getActiveEndpoints(): List<String> {

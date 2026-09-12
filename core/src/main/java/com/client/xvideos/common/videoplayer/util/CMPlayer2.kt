@@ -27,8 +27,6 @@ import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import java.util.WeakHashMap
 
@@ -65,13 +63,20 @@ fun CMPPlayer2(
         callbacks.bufferCallback(isBuffering)
     }
 
-    LaunchedEffect(exoPlayer) {
-        flow {
-            while (isActive) {
-                emit((exoPlayer.currentPosition / 1000f).coerceAtLeast(0f))
-                delay(50)
+    LaunchedEffect(exoPlayer, config.isPause) {
+        var lastPosition = Float.NaN
+        while (isActive) {
+            val position = (exoPlayer.currentPosition / 1000f).coerceAtLeast(0f)
+            if (position != lastPosition) {
+                lastPosition = position
+                callbacks.currentTime(position)
             }
-        }.collectLatest { callbacks.currentTime(it) }
+            if (config.isPause) {
+                // На паузе позиция не меняется — после первой отправки не крутим 20 Гц опрос
+                break
+            }
+            delay(50)
+        }
     }
 
     LaunchedEffect(config.autoRotate) {

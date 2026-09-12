@@ -13,7 +13,11 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.requireInside
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.net.doh.AppDns
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.job
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -44,13 +48,13 @@ class MediaDownloadWorker(
         val tempFile: File,
     )
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val urlString = inputData.getString(DownloadWorkRequest.KEY_URL)
-            ?: return Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to "Missing URL"))
+            ?: return@withContext Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to "Missing URL"))
         val destDir = inputData.getString(DownloadWorkRequest.KEY_DEST_DIR)
-            ?: return Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to "Missing destination directory"))
+            ?: return@withContext Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to "Missing destination directory"))
         val fileName = inputData.getString(DownloadWorkRequest.KEY_FILE_NAME)
-            ?: return Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to "Missing file name"))
+            ?: return@withContext Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to "Missing file name"))
         val title = inputData.getString(DownloadWorkRequest.KEY_TITLE) ?: fileName
         val metaContent = inputData.getString(DownloadWorkRequest.KEY_META_CONTENT)
         val metaFileName = inputData.getString(DownloadWorkRequest.KEY_META_FILE_NAME)
@@ -61,7 +65,7 @@ class MediaDownloadWorker(
         val filesResult = prepareFiles(destDir, fileName, metaFileName)
         val targets = filesResult.getOrElse { err ->
             Timber.e(err)
-            return Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to (err.message ?: "File error")))
+            return@withContext Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to (err.message ?: "File error")))
         }
 
         runCatching {
@@ -70,7 +74,7 @@ class MediaDownloadWorker(
             Timber.w(it, "MediaDownloadWorker: Не удалось запустить foreground info (продолжаем в фоне)")
         }
 
-        return try {
+        return@withContext try {
             downloadFile(
                 urlString = urlString,
                 headers = headers,
@@ -80,7 +84,7 @@ class MediaDownloadWorker(
 
             if (isStopped) {
                 Timber.w("MediaDownloadWorker: Загрузка отменена или остановлена ОС")
-                return Result.failure()
+                return@withContext Result.failure()
             }
 
             finalizeDownloadedFile(targets, metaContent, metaFileName)
@@ -152,7 +156,7 @@ class MediaDownloadWorker(
 
         if (!metaContent.isNullOrBlank()) {
             val infoName = metaFileName ?: "${targets.targetFile.nameWithoutExtension}.info"
-            File(targets.dir, infoName).writeText(metaContent, Charsets.UTF_8)
+            File(targets.dir, infoName).writeTextAtomically(metaContent)
         }
     }
 
@@ -192,56 +196,74 @@ class MediaDownloadWorker(
         urlString: String,
         headers: Map<String, String>,
         tempFile: File,
-        title: String,
+        title: String
     ) {
         var resumeOffset = if (tempFile.exists()) tempFile.length() else 0L
         var request = buildDownloadRequest(urlString, headers, resumeOffset)
 
-        var response = downloadOkHttpClient.newCall(request).execute()
+        var call = downloadOkHttpClient.newCall(request)
+        var cancellationHandle = kotlin.coroutines.coroutineContext.job.invokeOnCompletion {
+            call.cancel()
+        }
 
-        // Если сервер вернул HTTP 416 (Range Not Satisfiable), значит существующий .tmp
-        // повреждён или его размер больше/равен длине файла. Удаляем .tmp и качаем с нуля.
-        if (response.code == 416 && resumeOffset > 0) {
-            response.close()
-            Timber.w("MediaDownloadWorker: HTTP 416 для $urlString, удаляем невалидный $tempFile и качаем заново")
-            if (tempFile.exists()) {
+        try {
+            var response = call.execute()
+
+            // Если сервер вернул HTTP 416 (Range Not Satisfiable), значит существующий .tmp
+            // повреждён или его размер больше/равен длине файла. Удаляем .tmp и качаем с нуля.
+            if (response.code == 416 && resumeOffset > 0) {
+                response.close()
+                cancellationHandle.dispose()
+                Timber.w("MediaDownloadWorker: HTTP 416 для $urlString, удаляем невалидный $tempFile и качаем заново")
+                if (tempFile.exists()) {
+                    tempFile.delete()
+                }
+                resumeOffset = 0L
+                request = buildDownloadRequest(urlString, headers, resumeOffset = 0L)
+                call = downloadOkHttpClient.newCall(request)
+                cancellationHandle = kotlin.coroutines.coroutineContext.job.invokeOnCompletion {
+                    call.cancel()
+                }
+                response = call.execute()
+            }
+
+            val responseCode = response.code
+            val isResume = responseCode == 206
+            val isOk = response.isSuccessful && !isResume
+
+            if (!isOk && !isResume) {
+                val message = response.message
+                response.close()
+                throw IOException("Сервер вернул HTTP $responseCode: $message")
+            }
+
+            val responseBody = response.body
+                ?: run {
+                    response.close()
+                    throw IOException("Сервер вернул пустой ответ без тела (HTTP $responseCode)")
+                }
+            val totalBytes = calculateTotalBytes(isResume, resumeOffset, responseBody.contentLength())
+
+            val append = isResume
+            if (!append && tempFile.exists()) {
                 tempFile.delete()
             }
-            resumeOffset = 0L
-            request = buildDownloadRequest(urlString, headers, resumeOffset = 0L)
-            response = downloadOkHttpClient.newCall(request).execute()
-        }
 
-        val responseCode = response.code
-        val isResume = responseCode == 206
-        val isOk = response.isSuccessful && !isResume
-
-        if (!isOk && !isResume) {
-            val message = response.message
-            response.close()
-            throw IOException("Сервер вернул HTTP $responseCode: $message")
-        }
-
-        val responseBody = response.body
-        val totalBytes = calculateTotalBytes(isResume, resumeOffset, responseBody.contentLength())
-
-        val append = isResume
-        if (!append && tempFile.exists()) {
-            tempFile.delete()
-        }
-
-        response.use {
-            responseBody.byteStream().use { input ->
-                FileOutputStream(tempFile, append).use { output ->
-                    copyStreamWithProgress(
-                        input = input,
-                        output = output,
-                        initialDownloaded = if (append) resumeOffset else 0L,
-                        totalBytes = totalBytes,
-                        title = title
-                    )
+            response.use {
+                responseBody.byteStream().use { input ->
+                    FileOutputStream(tempFile, append).use { output ->
+                        copyStreamWithProgress(
+                            input = input,
+                            output = output,
+                            initialDownloaded = if (append) resumeOffset else 0L,
+                            totalBytes = totalBytes,
+                            title = title
+                        )
+                    }
                 }
             }
+        } finally {
+            cancellationHandle.dispose()
         }
     }
 

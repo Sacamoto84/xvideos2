@@ -4,6 +4,7 @@ import android.net.Uri
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.gallery.GallerySaver
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
@@ -117,7 +118,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 onCompleted = {
                     percent.value = -2f
                     runCatching {
-                        File(dir, "${item.id}.info").writeText(AppJson.encodeToString(item))
+                        File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
                     }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
                     SnackBar.success("Скачано")
                     refresh()
