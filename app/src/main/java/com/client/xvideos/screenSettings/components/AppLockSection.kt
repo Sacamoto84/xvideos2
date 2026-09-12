@@ -138,9 +138,9 @@ fun AppLockSettingsSection() {
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.ic_blur_24,
-            text = "Размывать в диспетчере задач",
+            text = "Защита в диспетчере задач",
             subtitle = if (blurRecentTasks) {
-                "Содержимое экрана размывается в карусели недавних задач"
+                "Превью скрыто/размыто в карусели недавних задач"
             } else {
                 "Отображается обычный снимок экрана"
             },

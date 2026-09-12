@@ -140,6 +140,15 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
             val shouldBlur = (isAppMinimized && blurRecentTasks) || isAppLocked
 
+            // SECURITY: аппаратная защита превью в Recent Apps через FLAG_SECURE
+            LaunchedEffect(blurRecentTasks, isAppLocked) {
+                if (blurRecentTasks || isAppLocked) {
+                    window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
             KeepScreenOn()
             XvideosTheme(darkTheme = true) {
                 Box(
@@ -199,6 +208,10 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
+        }
+
+        if (Settings.blur_recent_tasks.field.value || AppLockRepository.shouldShowLock(this)) {
+            currentWindow.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 
