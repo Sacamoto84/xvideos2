@@ -103,6 +103,12 @@ object Settings {
     val camouflage_calculator_enabled by lazy { SettingElementBoolean(pref, "camouflage_calculator_enabled", false) }
 
     /**
+     * Размытие экрана приложения в карусели недавних задач (Recent Apps / диспетчере задач)
+     * для защиты приватности от подглядывания.
+     */
+    val blur_recent_tasks by lazy { SettingElementBoolean(pref, "blur_recent_tasks", true) }
+
+    /**
      * Включение/выключение DNS-over-HTTPS (DoH).
      */
     val doh_enabled by lazy { SettingElementBoolean(pref, "doh_enabled", true) }

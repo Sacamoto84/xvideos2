@@ -133,6 +133,21 @@ fun AppLockSettingsSection() {
             onValueChange = { Settings.keyboard_incognito_enabled.setValue(it) }
         )
     }
+
+    val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
+    SettingsGroup {
+        SettingsSwitchRow(
+            icon = R.drawable.ic_blur_24,
+            text = "Размывать в диспетчере задач",
+            subtitle = if (blurRecentTasks) {
+                "Содержимое экрана размывается в карусели недавних задач"
+            } else {
+                "Отображается обычный снимок экрана"
+            },
+            value = blurRecentTasks,
+            onValueChange = { Settings.blur_recent_tasks.setValue(it) }
+        )
+    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF353535)

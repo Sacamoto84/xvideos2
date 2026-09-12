@@ -7,6 +7,12 @@ import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +26,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -82,83 +89,47 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     @Inject
     lateinit var storageCleanupGate: StorageCleanupGate
 
+    private var isAppMinimized by mutableStateOf(false)
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        isAppMinimized = true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        isAppMinimized = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isAppMinimized = false
+    }
+
     /**
      * Инициализирует окно, скрывает системные панели и поднимает корневой
      * Compose UI.
      */
     @OptIn(ExperimentalVoyagerApi::class, ExperimentalLayoutApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        // Edge-to-edge: на 26-28 красит navigationBarColor, на 29-34 дополнительно
-        // снимает contrast-scrim, на 35+ цвет задаёт приложение (корневой Box в setContent).
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(0xFF212121.toInt()),
         )
         super.onCreate(savedInstanceState)
 
-        val window = this.window
+        configureWindow()
 
-        // На Android 15+ нижняя панель жестов прозрачна. Фон под ней рисует
-        // корневой Compose Box, поэтому системный scrim для кнопочной навигации
-        // здесь тоже не нужен.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isNavigationBarContrastEnforced = false
-        }
-
-        val windowInsetsController = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
-        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-
-        // Статус-бар скрыт всегда (раньше это делал windowFullscreen из темы)
-        windowInsetsController?.hide(WindowInsetsCompat.Type.statusBars())
-
-        window?.attributes = window.attributes?.apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            }
-        }
-
-        // SECURITY: показ замка определяется ИСКЛЮЧИТЕЛЬНО состоянием блокировки.
-        // Нельзя завязываться на intent-extra от вызывающего: даже если Activity
-        // запустят напрямую (напр. `adb am start`) без extra, замок обязан показаться.
         val shouldShowAppLock = AppLockRepository.shouldShowLock(this)
         if (shouldShowAppLock) {
-            window.decorView.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+            window?.decorView?.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
         }
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            // Уборка staging-папок идёт в фоне с App.onCreate. Ждём её: ниже
-            // стартует приём P2P, который пишет в inbox, а уборка этот каталог
-            // пересоздаёт.
-            storageCleanupGate.await()
-
-            appFileDatabase.get().clearVolatileCachesOnProcessStart()
-            // Обход каталога кеша лент R: здесь он никого не задерживает, в
-            // отличие от initApp(), которую ждут перед первым экраном.
-            appFileDatabase.get().deleteExpiredCaches()
-            VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
-            savedRed.nichesCache.refreshIfStale()
-
-            // Запуск P2P сервиса если включен в настройках
-            if (Settings.p2p_background_receive.field.value && P2pPermissions.allGranted(applicationContext)) {
-                toggleP2pService(applicationContext, true)
-            }
-        }
+        launchStartupCleanup()
 
         setContent {
-
-            //val topInset = getTopInsetDp()
-            //val topStatusBar = getStatusBarInsetDp()
-
-            //Timber.i("QQQ $topInset statusbar:$topStatusBar")
-
             var isAppLocked by rememberSaveable { mutableStateOf(shouldShowAppLock) }
 
-            // SECURITY: замок взводится не только при создании Activity.
-            // Возврат по иконке лаунчера больше не пересоздаёт MainActivity
-            // (см. ранний выход в SplashActivity), поэтому состояние замка
-            // перечитывается на каждом выходе на передний план. Снимать замок
-            // здесь нельзя — только ставить.
             val lifecycleOwner = LocalLifecycleOwner.current
             LaunchedEffect(lifecycleOwner) {
                 lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -166,80 +137,140 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 }
             }
 
-            // SECURITY: скрываем превью приватного экрана в карусели недавних задач (Recent Apps), пока активен замок
-            LaunchedEffect(isAppLocked) {
-                if (isAppLocked) {
-                    window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-                } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                }
-            }
+            val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
+            val shouldBlur = (isAppMinimized && blurRecentTasks) || isAppLocked
 
             KeepScreenOn()
             XvideosTheme(darkTheme = true) {
-
-                // Подложка: на API 35+ системный бар прозрачный, полосу #212121 под
-                // кнопками рисует это приложение. tappableElement снизу = высота
-                // кнопочного бара, 0 на жестовой навигации.
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFF212121))
                 ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-                        .background(Color.Black)
-                        .semantics { testTagsAsResourceId = true },
-                    color = Color.Black,
-                )
-                {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        ScreenRoot.Content()
-                        P2pBackgroundOverlay()
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+                            .background(Color.Black)
+                            .semantics { testTagsAsResourceId = true },
+                        color = Color.Black,
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .then(
+                                        if (shouldBlur) {
+                                            Modifier.blur(25.dp)
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                            ) {
+                                ScreenRoot.Content()
+                                P2pBackgroundOverlay()
+                            }
 
-                        if (isAppLocked) {
-                            val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
-                            if (isCamouflage) {
-                                CalculatorScreen(
-                                    onUnlock = { password ->
-                                        if (AppLockRepository.lockoutRemainingMillis(this@MainActivity) > 0L) {
-                                            false
-                                        } else if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
-                                            AppLockRepository.resetFailedAttempts(this@MainActivity)
-                                            AppLockSession.unlock()
-                                            isAppLocked = false
-                                            true
-                                        } else {
-                                            AppLockRepository.registerFailedAttempt(this@MainActivity)
-                                            false
-                                        }
-                                    },
-                                    onBack = { moveTaskToBack(true) }
-                                )
-                            } else {
-                                BackHandler { moveTaskToBack(true) }
-                                AppLockScreen(
-                                    onUnlock = { password ->
-                                        // suspend-лямбда: проверка кода считает
-                                        // PBKDF2 на Dispatchers.Default, а не здесь.
-                                        if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
-                                            AppLockSession.unlock()
-                                            isAppLocked = false
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    }
-                                )
+                            if (isAppMinimized && blurRecentTasks) {
+                                MinimizedPrivacyOverlay()
+                            }
+
+                            if (isAppLocked) {
+                                AppLockOverlay(onUnlockSuccess = { isAppLocked = false })
                             }
                         }
                     }
-
                 }
-                } // Box-подложка
             }
+        }
+    }
+
+    private fun configureWindow() {
+        val currentWindow = this.window ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            currentWindow.isNavigationBarContrastEnforced = false
+        }
+
+        val windowInsetsController = WindowCompat.getInsetsController(currentWindow, currentWindow.decorView)
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+
+        currentWindow.attributes = currentWindow.attributes?.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
+    }
+
+    private fun launchStartupCleanup() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            storageCleanupGate.await()
+            appFileDatabase.get().clearVolatileCachesOnProcessStart()
+            appFileDatabase.get().deleteExpiredCaches()
+            VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
+            savedRed.nichesCache.refreshIfStale()
+
+            if (Settings.p2p_background_receive.field.value && P2pPermissions.allGranted(applicationContext)) {
+                toggleP2pService(applicationContext, true)
+            }
+        }
+    }
+
+    @Composable
+    private fun MinimizedPrivacyOverlay() {
+        val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+        val scrimAlpha = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 0.45f else 0.88f
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = scrimAlpha)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(
+                    if (isCamouflage) R.drawable.ic_launcher_calculator
+                    else R.drawable.icon_red
+                ),
+                contentDescription = null,
+                modifier = Modifier.size(72.dp),
+                tint = Color.White.copy(alpha = 0.8f)
+            )
+        }
+    }
+
+    @Composable
+    private fun AppLockOverlay(onUnlockSuccess: () -> Unit) {
+        val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+        if (isCamouflage) {
+            CalculatorScreen(
+                onUnlock = { password ->
+                    if (AppLockRepository.lockoutRemainingMillis(this@MainActivity) > 0L) {
+                        false
+                    } else if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                        AppLockRepository.resetFailedAttempts(this@MainActivity)
+                        AppLockSession.unlock()
+                        onUnlockSuccess()
+                        true
+                    } else {
+                        AppLockRepository.registerFailedAttempt(this@MainActivity)
+                        false
+                    }
+                },
+                onBack = { moveTaskToBack(true) }
+            )
+        } else {
+            BackHandler { moveTaskToBack(true) }
+            AppLockScreen(
+                onUnlock = { password ->
+                    if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                        AppLockSession.unlock()
+                        onUnlockSuccess()
+                        true
+                    } else {
+                        false
+                    }
+                }
+            )
         }
     }
 }
