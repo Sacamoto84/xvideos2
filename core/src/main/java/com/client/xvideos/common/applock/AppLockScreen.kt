@@ -121,8 +121,8 @@ fun AppLockScreen(
                 AppLockRepository.resetFailedAttempts(context)
             } else {
                 password = ""
-                val until = AppLockRepository.registerFailedAttempt(context)
-                lockoutRemainingMs = (until - System.currentTimeMillis()).coerceAtLeast(0L)
+                val remaining = AppLockRepository.registerFailedAttempt(context)
+                lockoutRemainingMs = remaining
                 // Только причина отказа. Про блокировку и оставшиеся секунды
                 // экран рассказывает сам, из lockoutRemainingMs, и обновляет
                 // счётчик каждые полсекунды.

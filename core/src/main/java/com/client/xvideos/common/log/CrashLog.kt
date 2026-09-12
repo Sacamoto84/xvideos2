@@ -33,7 +33,13 @@ object CrashLog {
     /** Потолок размера файла: старое обрезается с головы, свежее остаётся в хвосте. */
     private const val MAX_BYTES = 256 * 1024
 
+    internal val lock = Any()
+
     private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+
+    internal fun formatTimestamp(): String = synchronized(lock) {
+        timeFormat.format(Date())
+    }
 
     val file: File get() = File(AppPath.main, "crash.log")
 
@@ -71,7 +77,7 @@ object CrashLog {
 
     private fun crashHeader(threadName: String): String = buildString {
         append("FATAL ")
-        append(timeFormat.format(Date()))
+        append(formatTimestamp())
         append(" v")
         append(AppBuildInfo.versionName)
         append(" поток=")
@@ -86,8 +92,6 @@ object CrashLog {
 
     private class ReleaseErrorTree(private val target: File) : Timber.Tree() {
 
-        private val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-
         override fun isLoggable(tag: String?, priority: Int): Boolean =
             priority >= android.util.Log.ERROR
 
@@ -95,7 +99,7 @@ object CrashLog {
             runCatching {
                 appendEntry(
                     target = target,
-                    header = "ERROR ${format.format(Date())} ${tag.orEmpty()}",
+                    header = "ERROR ${formatTimestamp()} ${tag.orEmpty()}",
                     body = if (t == null) message else "$message\n${t.stackTraceToStringCompat()}",
                     maxBytes = MAX_BYTES
                 )
@@ -121,8 +125,10 @@ internal fun appendEntry(target: File, header: String, body: String, maxBytes: I
         append("\n\n")
     }
 
-    target.appendText(entry)
-    trimToLimit(target, maxBytes)
+    synchronized(CrashLog.lock) {
+        target.appendText(entry)
+        trimToLimit(target, maxBytes)
+    }
 }
 
 /**

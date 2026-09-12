@@ -113,7 +113,7 @@ object AppLockRepository {
             putLong(KEY_LOCKOUT_UNTIL, state.lockoutUntilWall)
             putLong(KEY_LOCKOUT_UNTIL_ELAPSED, state.lockoutUntilElapsed)
         }
-        return state.lockoutUntilWall
+        return lockoutRemainingMillis(context)
     }
 
     /** Сбрасывает счётчик попыток и блокировку (вызывать после успешного ввода). */

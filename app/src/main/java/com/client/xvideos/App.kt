@@ -41,8 +41,6 @@ import timber.log.Timber.DebugTree
 @HiltAndroidApp
 class App : Application(), SingletonImageLoader.Factory {
 
-    //val ksafe = KSafe(applicationContext, lazyLoad = true)
-
     /**
      * Возвращает общий Coil `ImageLoader`, который используется всеми экранами.
      *
@@ -125,58 +123,6 @@ class App : Application(), SingletonImageLoader.Factory {
         // байты, но не знает, куда их класть и как скачать несохранённый item.
         P2pReceiveManager.importerFactory = ::sectionBundleImporter
         P2pSendPreparers.l = LSendPreparer
-
-//        val loggingInterceptor = Interceptor { chain ->
-//            val request = chain.request()
-//            val startTime = System.currentTimeMillis()
-//
-//            // Получаем информацию о том, откуда вызван запрос
-//            val callerInfo = Thread.currentThread().stackTrace
-//                .drop(2) // пропускаем первые системные вызовы
-//                .firstOrNull { it.className.contains("com.client.xvideos") }
-//                ?.let { "${it.className}.${it.methodName}:${it.lineNumber}" }
-//                ?: "Unknown caller"
-//
-//            Log.d("OkHttp", "🌐 REQUEST: ${request.method} ${request.url}")
-//            Log.d("OkHttp", "📱 Called from: $callerInfo")
-//            Log.d("OkHttp", "📋 Headers: ${request.headers}")
-//
-//            try {
-//                val response = chain.proceed(request)
-//                val endTime = System.currentTimeMillis()
-//                val duration = endTime - startTime
-//
-//                Log.d("OkHttp", "✅ RESPONSE: ${response.code} ${response.message} (${duration}ms)")
-//                response
-//
-//            } catch (e: Exception) {
-//                val endTime = System.currentTimeMillis()
-//                val duration = endTime - startTime
-//
-//                Log.e("OkHttp", "❌ REQUEST FAILED after ${duration}ms")
-//                Log.e("OkHttp", "📱 Called from: $callerInfo")
-//                Log.e("OkHttp", "🔍 URL: ${request.url}")
-//                Log.e("OkHttp", "💥 Exception: ${e.javaClass.simpleName}: ${e.message}")
-//
-//                throw e
-//            }
-//        }
-
-        // Enable only for debug flavor to avoid perf regressions in release
-        //Composer.setDiagnosticStackTraceEnabled(BuildConfig.DEBUG)
-
-
-        // Подписка-заглушка отключена (#14): тело обработки Event.Log полностью
-        // закомментировано, поэтому сам сбор событий пока бесполезен. Вернуть,
-        // когда определимся с логированием (например, записью лога в файл).
-//        scope.launch {
-//            EventBus.events.collect { event ->
-//                if (event is Event.Log) {
-//                    //saveLogToFile(event.message)
-//                }
-//            }
-//        }
-
     }
 
 

@@ -1,11 +1,17 @@
 package com.client.xvideos.r.common.block.useCase
 
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
 import timber.log.Timber
 import java.io.File
 
 fun blockGetGifsByUserNameAsListString(userName: String): List<String> {
-    val blockDir = File(AppPath.r_block, userName)
+    if (isUnsafeItemName(userName)) return emptyList()
+
+    val rootDir = File(AppPath.r_block)
+    val blockDir = File(rootDir, userName)
+    runCatching { requireInside(rootDir, blockDir) }.onFailure { return emptyList() }
 
     if (!blockDir.exists() || !blockDir.isDirectory) {
         Timber.w("Директория блокировок не найдена: ${blockDir.absolutePath}")

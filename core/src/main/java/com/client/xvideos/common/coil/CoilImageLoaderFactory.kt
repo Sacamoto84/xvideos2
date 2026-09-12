@@ -57,16 +57,6 @@ object CoilImageLoaderFactory {
 
         val okHttpBuilder = OkHttpClient.Builder()
             .dns(AppDns)
-            .apply {
-                if (diskCacheEnabled) {
-                    cache(
-                        okhttp3.Cache(
-                            directory = httpCacheDir(appContext),
-                            maxSize = diskCacheMaxBytes
-                        )
-                    )
-                }
-            }
             .addNetworkInterceptor(
                 ProgressInterceptor { requestUrl, bytes, total, done ->
                     CoilProgressManager.updateProgress(

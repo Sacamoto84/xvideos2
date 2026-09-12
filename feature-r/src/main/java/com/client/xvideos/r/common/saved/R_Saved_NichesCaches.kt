@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
@@ -87,10 +88,7 @@ class R_Saved_NichesCaches(
                 list.replaceWith(niches)
                 val json = AppJson.encodeToString(niches)
                 val file = cacheFile()
-                if (file.exists()) {
-                    file.delete()
-                }
-                file.writeText(json)
+                file.writeTextAtomically(json)
                 version++
                 timeRefresh()
                 if (showSnackBar) {

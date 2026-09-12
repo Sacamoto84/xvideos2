@@ -190,7 +190,7 @@ class CollectionDB<T>(
     @Suppress("UNCHECKED_CAST")
     fun readAllCollections(): Result<List<CollectionEntity<T>>> = try {
         val root = File(path)
-        if (!root.exists()) throw IOException("Каталог коллекций не найден: ${root.absolutePath}")
+        if (!root.exists()) return Result.success(emptyList())
 
         val collections: List<CollectionEntity<T>> = synchronized(lock) {
             cleanupTempFiles(root)

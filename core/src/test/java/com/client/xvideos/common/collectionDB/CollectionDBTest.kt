@@ -101,4 +101,14 @@ class CollectionDBTest {
 
         assertEquals("чтение не должно падать на параллельной записи: $failures", 0, failures.size)
     }
+
+    @Test
+    fun `readAllCollections на несуществующем каталоге возвращает пустой список`() {
+        val nonExistentRoot = tmp.root.resolve("does-not-exist")
+        val db = db(nonExistentRoot)
+
+        val result = db.readAllCollections()
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrThrow().isEmpty())
+    }
 }
