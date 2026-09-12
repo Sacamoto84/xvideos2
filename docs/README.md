@@ -19,7 +19,7 @@
 | [Проход 11 (проверка пакета правок, статус гейтов)](CODE_REVIEW_2026-09-11_v2.md) | 11.09.2026 | `master` | закрыт полностью |
 | [Проход 12 (DoH, WorkManager, калькулятор, Recent Apps)](CODE_REVIEW_2026-09-12.md) | 12.09.2026 | `master` (`c1c8df4`..`fe01a55`) | закрыт |
 | [Проход 13 (WorkManager I/O, DoH Punycode, плеер, атомарность)](CODE_REVIEW_2026-09-12_v2.md) | 12.09.2026 | `master` (`64e30e9`) | закрыт |
-| [Проход 14 (KDownloader Scope/finally, FolderTable path traversal, пауза плеера, скорость сети)](CODE_REVIEW_2026-09-12_v3.md) | 12.09.2026 | `master` (`6bdca7d`) | открыт |
+| [Проход 14 (KDownloader Scope/finally, FolderTable path traversal, пауза плеера, скорость сети)](CODE_REVIEW_2026-09-12_v3.md) | 12.09.2026 | `master` (`6bdca7d`..`14243d7`) | закрыт |
 
 Отдельные пояснения к статусам:
 

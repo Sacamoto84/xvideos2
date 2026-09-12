@@ -1,6 +1,6 @@
 # Код-ревью xvideos — проход 14
 
-> **Срез:** `6bdca7d` · **Статус:** открыт · **Индекс:** [все документы](README.md)
+> **Срез:** `6bdca7d` · **Статус:** закрыт (`14243d7`) · **Индекс:** [все документы](README.md)
 
 База прохода — `master` (`6bdca7d`), текущий срез после закрытия всех замечаний 13-го прохода (`64e30e9`, `6bdca7d`).
 
@@ -211,14 +211,14 @@ private val idRequestMap: HashMap<Int, DownloadRequest> = hashMapOf()
 
 | Находка | Класс | Статус | Коммит |
 | --- | --- | --- | --- |
-| S3 | безопасность | открыт | — |
-| T10 | конкурентность / жизненный цикл | открыт | — |
-| C19 | корректность | открыт | — |
-| C20 | корректность | открыт | — |
-| UI9 | интерфейс / UX | открыт | — |
-| C21 | корректность | открыт | — |
-| T11 | конкурентность | открыт | — |
-| A8 | архитектура / гигиена | открыт | — |
+| S3 | безопасность | закрыт | `14243d7` |
+| T10 | конкурентность / жизненный цикл | закрыт | `14243d7` |
+| C19 | корректность | закрыт | `14243d7` |
+| C20 | корректность | закрыт | `14243d7` |
+| UI9 | интерфейс / UX | закрыт | `14243d7` |
+| C21 | корректность | закрыт | `14243d7` |
+| T11 | конкурентность | закрыт | `14243d7` |
+| A8 | архитектура / гигиена | закрыт | `14243d7` |
 
 ---
 
@@ -226,18 +226,18 @@ private val idRequestMap: HashMap<Int, DownloadRequest> = hashMapOf()
 
 ```
 ./gradlew detekt --rerun-tasks --continue
-BUILD SUCCESSFUL in 12s
+BUILD SUCCESSFUL in 13s
 12 actionable tasks: 12 executed
 (detekt 100% зелёный во всех 5 модулях: :app, :core, :feature-l, :feature-r, :feature-x)
 
 ./gradlew test --continue
-BUILD SUCCESSFUL in 57s
-273 actionable tasks: 86 executed, 187 up-to-date
-(Все 273 таски unit-тестов зелёные)
+BUILD SUCCESSFUL in 1m 4s
+273 actionable tasks: 76 executed, 197 up-to-date
+(Все 273 таски unit-тестов зелёные, включая тесты на path traversal в FolderTable)
 
 ./gradlew assembleRelease
-BUILD SUCCESSFUL in 1m 22s
-234 actionable tasks: 44 executed, 190 up-to-date
+BUILD SUCCESSFUL in 1m 37s
+234 actionable tasks: 32 executed, 202 up-to-date
 (Release APK собран успешно, R8 minifyEnabled, dex desugaring и shrinkResources без сбоев)
 ```
 
