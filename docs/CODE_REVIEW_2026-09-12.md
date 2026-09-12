@@ -1,6 +1,6 @@
 # Код-ревью xvideos — проход 12
 
-> **Срез:** `c1c8df4` · **Статус:** открыт · **Индекс:** [все документы](README.md)
+> **Срез:** `c1c8df4` · **Статус:** закрыт · **Индекс:** [все документы](README.md)
 
 База прохода — `master` (`c1c8df4`), 17 коммитов со среза прохода 11 (`6cbf5b0`),
 35 изменённых файлов, +2867 / −117 строк.
@@ -198,14 +198,14 @@ LaunchedEffect(blurRecentTasks, isAppLocked) {
 
 | Находка | Класс | Статус | Коммит |
 | --- | --- | --- | --- |
-| S1 | безопасность | открыт | — |
-| C12 | корректность | открыт | — |
-| C13 | корректность | открыт | — |
-| C14 | корректность | открыт | — |
-| C15 | корректность | открыт | — |
-| T8 | конкурентность | открыт | — |
-| A6 | архитектура | открыт | — |
-| UI7 | интерфейс / UX | открыт | — |
+| S1 | безопасность | **закрыт** | `fe01a55` |
+| C12 | корректность | **закрыт** | `fe01a55` |
+| C13 | корректность | **закрыт** | `fe01a55` |
+| C14 | корректность | **закрыт** | `fe01a55` |
+| C15 | корректность | **закрыт** | `fe01a55` |
+| T8 | конкурентность | **закрыт** | `fe01a55` |
+| A6 | архитектура | **принят** (арх. план миграции) | — |
+| UI7 | интерфейс / UX | **закрыт** | `fe01a55` |
 
 ---
 
@@ -213,19 +213,19 @@ LaunchedEffect(blurRecentTasks, isAppLocked) {
 
 ```
 ./gradlew detekt --rerun-tasks --continue
-BUILD SUCCESSFUL in 4s
+BUILD SUCCESSFUL in 3s
 12 actionable tasks: 12 executed
 (detekt 100% зелёный во всех 5 модулях: :app, :core, :feature-l, :feature-r, :feature-x)
 
 ./gradlew test --continue
-BUILD SUCCESSFUL in 20s
-273 actionable tasks: 45 executed, 228 up-to-date
-(Все unit-тесты, включая GlobalStateTest, CalculatorStateTest, AppDnsTest, SafePathTest, тесты сериализации L и R, зелёные)
+BUILD SUCCESSFUL in 41s
+273 actionable tasks: 73 executed, 200 up-to-date
+(Все unit-тесты, включая GlobalStateTest, CalculatorStateTest, AppDnsTest, DownloadWorkRequestTest, SafePathTest, тесты сериализации L и R, зелёные)
 
 ./gradlew assembleRelease
-BUILD SUCCESSFUL in 1m 37s
-234 actionable tasks: 40 executed, 194 up-to-date
-(Release APK собран успешно, R8 minifyEnabled и shrinkResources отработали без сбоев)
+BUILD SUCCESSFUL in 1m 29s
+234 actionable tasks: 32 executed, 202 up-to-date
+(Release APK собран успешно, R8 minifyEnabled, dex desugaring и shrinkResources отработали без сбоев)
 ```
 
 ---
