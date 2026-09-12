@@ -114,4 +114,26 @@ class FileStringCacheTableTtlTest {
         // А без срока — отдаётся как прежде: старые таблицы этого не заметят.
         assertEquals("value", tableAt("no-time-free", ttlMs = null).get("k")?.content)
     }
+
+    @Test
+    fun `ключи точка-точка и точка не выходят за пределы таблицы`() = runTest {
+        val tableDir = tmp.root.resolve("safe-traversal")
+        val table = FolderTable(tableDir.absolutePath)
+
+        table.upsert("..", mapOf(FolderTable.FIELD_CONTENT to "parent-content"))
+        table.upsert(".", mapOf(FolderTable.FIELD_CONTENT to "dot-content"))
+
+        val recordDotDot = table.get("..")
+        assertNotNull(recordDotDot)
+        assertEquals("..", recordDotDot?.key)
+        assertEquals("parent-content", recordDotDot?.fields?.get(FolderTable.FIELD_CONTENT))
+
+        val recordDot = table.get(".")
+        assertNotNull(recordDot)
+        assertEquals(".", recordDot?.key)
+        assertEquals("dot-content", recordDot?.fields?.get(FolderTable.FIELD_CONTENT))
+
+        table.delete("..")
+        assertNull(table.get(".."))
+    }
 }

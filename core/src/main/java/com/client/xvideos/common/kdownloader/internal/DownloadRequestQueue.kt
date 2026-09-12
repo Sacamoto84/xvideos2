@@ -4,7 +4,7 @@ import com.client.xvideos.common.kdownloader.Status
 
 class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
 
-    private val idRequestMap: HashMap<Int, DownloadRequest> = hashMapOf()
+    private val idRequestMap = java.util.concurrent.ConcurrentHashMap<Int, DownloadRequest>()
 
     /**
     * Получить все запросы с указанным тегом

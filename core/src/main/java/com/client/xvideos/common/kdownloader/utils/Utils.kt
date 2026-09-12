@@ -51,7 +51,7 @@ private fun isRedirection(code: Int): Boolean {
             || code == Constants.HTTP_PERMANENT_REDIRECT
 }
 
-@Throws(IOException::class, IllegalAccessException::class)
+@Throws(IOException::class)
 fun getRedirectedConnectionIfAny(
     httpClient0: HttpClient,
     req: DownloadRequest
@@ -62,17 +62,20 @@ fun getRedirectedConnectionIfAny(
     var location: String? = httpClient.getResponseHeader("Location")
     while (isRedirection(code)) {
         if (location == null) {
-            throw IllegalAccessException("Location is null")
+            throw IOException("HTTP redirection code $code without Location header")
         }
         httpClient.close()
-        req.url = (location)
+        val resolvedLocation = runCatching {
+            java.net.URI(req.url).resolve(location).toString()
+        }.getOrDefault(location)
+        req.url = resolvedLocation
         httpClient = DefaultHttpClient().clone()
         httpClient.connect(req)
         code = httpClient.getResponseCode()
         location = httpClient.getResponseHeader("Location")
         redirectTimes++
         if (redirectTimes >= MAX_REDIRECTION) {
-            throw IllegalAccessException("Max redirection done")
+            throw IOException("Too many redirects: $redirectTimes (max $MAX_REDIRECTION)")
         }
     }
     return httpClient

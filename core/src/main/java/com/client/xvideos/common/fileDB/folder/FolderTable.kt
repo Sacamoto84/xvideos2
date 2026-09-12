@@ -1,5 +1,7 @@
 package com.client.xvideos.common.fileDB.folder
 
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.common.util.toMD5
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -85,8 +87,10 @@ class FolderTable(
 
     private fun rowDir(key: String, createTableDir: Boolean): File {
         if (createTableDir) tableDir.mkdirs()
-        val dirName = if (safeKeyRegex.matches(key)) key else key.toMD5()
-        return File(tableDir, dirName)
+        val dirName = if (!isUnsafeItemName(key) && safeKeyRegex.matches(key)) key else key.toMD5()
+        val row = File(tableDir, dirName)
+        requireInside(tableDir, row)
+        return row
     }
 
     private fun readRecord(rowDir: File): FolderRecord? {

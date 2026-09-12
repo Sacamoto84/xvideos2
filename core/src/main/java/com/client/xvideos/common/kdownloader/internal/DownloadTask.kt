@@ -30,10 +30,10 @@ class DownloadTask(
     private var responseCode = 0
     private var totalBytes: Long = 0
     private var inputStream: InputStream? = null
-    private lateinit var outputStream: FileDownloadOutputStream
+    private var outputStream: FileDownloadOutputStream? = null
 
     private var tempPath: String = ""
-    private lateinit var httpClient: HttpClient
+    private var httpClient: HttpClient? = null
     private var isResumeSupported = true
 
     private var lastSyncTime: Long = 0
@@ -126,22 +126,25 @@ class DownloadTask(
                     }
 
                     // use the url to download the file with HTTP Client
-                    httpClient = DefaultHttpClient().clone()
+                    val client = DefaultHttpClient().clone()
+                    httpClient = client
 
                     req.status = Status.RUNNING
 
                     listener.onStart()
 
-                    httpClient.connect(req)
+                    client.connect(req)
 
-                    eTag = httpClient.getResponseHeader(Constants.ETAG)
+                    eTag = client.getResponseHeader(Constants.ETAG)
 
                     if (checkIfFreshStartRequiredAndStart(model)) {
                         model = null
                     }
 
-                    httpClient = getRedirectedConnectionIfAny(httpClient, req)
-                    responseCode = httpClient.getResponseCode()
+                    val activeClient = httpClient ?: client
+                    val redirectedClient = getRedirectedConnectionIfAny(activeClient, req)
+                    httpClient = redirectedClient
+                    responseCode = redirectedClient.getResponseCode()
 
                     if (!isSuccessful()) {
                         listener.onError("Wrong link")
@@ -157,7 +160,7 @@ class DownloadTask(
                     }
 
                     if (totalBytes == 0L) {
-                        totalBytes = httpClient.getContentLength()
+                        totalBytes = redirectedClient.getContentLength()
                         req.totalBytes = (totalBytes)
                     }
 
@@ -165,7 +168,7 @@ class DownloadTask(
                         createAndInsertNewModel()
                     }
 
-                    inputStream = httpClient.getInputStream()
+                    inputStream = redirectedClient.getInputStream()
                     if (inputStream == null) {
                         return@withContext
                     }
@@ -183,7 +186,8 @@ class DownloadTask(
                         }
                     }
 
-                    this@DownloadTask.outputStream = FileDownloadRandomAccessFile.Companion.create(file)
+                    val outStream = FileDownloadRandomAccessFile.Companion.create(file)
+                    this@DownloadTask.outputStream = outStream
 
                     if (req.status === Status.CANCELLED) {
                         deleteTempFile()
@@ -191,13 +195,13 @@ class DownloadTask(
                         listener.onError("Cancelled")
                         return@withContext
                     } else if (req.status === Status.PAUSED) {
-                        sync(outputStream)
+                        sync(outStream)
                         listener.onPause()
                         return@withContext
                     }
 
                     if (isResumeSupported && req.downloadedBytes != 0L) {
-                        outputStream.seek(req.downloadedBytes)
+                        outStream.seek(req.downloadedBytes)
                     }
 
                     do {
@@ -212,7 +216,7 @@ class DownloadTask(
                             listener.onError("Cancelled")
                             return@withContext
                         } else if (req.status === Status.PAUSED) {
-                            sync(outputStream)
+                            sync(outStream)
                             listener.onPause()
                             return@withContext
                         }
@@ -222,15 +226,15 @@ class DownloadTask(
                             req.reset()
                             break
                         }
-                        if (!req.job.isActive) {
+                        if (req.job?.isActive == false) {
                             deleteTempFile()
                             req.reset()
                             break
                         }
-                        outputStream.write(buff, 0, byteCount)
+                        outStream.write(buff, 0, byteCount)
                         req.downloadedBytes = req.downloadedBytes + byteCount
                         withContext(Dispatchers.IO) {
-                            syncIfRequired(outputStream)
+                            syncIfRequired(outStream)
                         }
 
                         var progress = 0
@@ -246,7 +250,7 @@ class DownloadTask(
                         listener.onError("Cancelled")
                         return@withContext
                     } else if (req.status === Status.PAUSED) {
-                        sync(outputStream)
+                        sync(outStream)
                         listener.onPause()
                         return@withContext
                     }
@@ -289,7 +293,7 @@ class DownloadTask(
         return false
     }
 
-    @Throws(IOException::class, IllegalAccessException::class)
+    @Throws(IOException::class)
     private suspend fun checkIfFreshStartRequiredAndStart(model: DownloadModel?): Boolean {
         if (responseCode == Constants.HTTP_RANGE_NOT_SATISFIABLE || isETagChanged(model)) {
             if (model != null) {
@@ -298,10 +302,13 @@ class DownloadTask(
             deleteTempFile()
             req.downloadedBytes = 0
             req.totalBytes = 0
-            httpClient = DefaultHttpClient().clone()
-            httpClient.connect(req)
-            httpClient = getRedirectedConnectionIfAny(httpClient, req)
-            responseCode = httpClient.getResponseCode()
+            httpClient?.close()
+            var client = DefaultHttpClient().clone()
+            httpClient = client
+            client.connect(req)
+            client = getRedirectedConnectionIfAny(client, req)
+            httpClient = client
+            responseCode = client.getResponseCode()
             return true
         }
         return false
@@ -318,10 +325,10 @@ class DownloadTask(
         }
     }
 
-    private suspend fun closeAllSafely(outputStream: FileDownloadOutputStream) {
+    private suspend fun closeAllSafely(outputStream: FileDownloadOutputStream?) {
 
         try {
-            httpClient.close()
+            httpClient?.close()
         } catch (e: Exception) {
             Timber.e(e, "KDownloader: httpClient.close() failed")
         }
@@ -335,16 +342,17 @@ class DownloadTask(
             Timber.e(e, "KDownloader: inputStream.close() failed")
         }
 
-        try {
-            sync(outputStream)
-        } catch (e: Exception) {
-            Timber.e(e, "KDownloader: sync(outputStream) failed")
-        } finally {
-
+        if (outputStream != null) {
             try {
-                outputStream.close()
-            } catch (e: IOException) {
-                Timber.e(e, "KDownloader: outputStream.close() failed")
+                sync(outputStream)
+            } catch (e: Exception) {
+                Timber.e(e, "KDownloader: sync(outputStream) failed")
+            } finally {
+                try {
+                    outputStream.close()
+                } catch (e: IOException) {
+                    Timber.e(e, "KDownloader: outputStream.close() failed")
+                }
             }
         }
     }

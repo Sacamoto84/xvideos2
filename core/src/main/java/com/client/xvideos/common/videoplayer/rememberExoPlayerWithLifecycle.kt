@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -114,10 +115,15 @@ fun rememberExoPlayerWithLifecycle(
         }
     }
 
+    val currentIsPause by rememberUpdatedState(isPause)
     var appInBackground by remember { mutableStateOf(false) }
 
     DisposableEffect(key1 = lifecycleOwner, appInBackground) {
-        val lifecycleObserver = getExoPlayerLifecycleObserver(exoPlayer, isPause, appInBackground) {
+        val lifecycleObserver = getExoPlayerLifecycleObserver(
+            exoPlayer = exoPlayer,
+            isPause = { currentIsPause },
+            wasAppInBackground = appInBackground
+        ) {
             appInBackground = it
         }
         lifecycleOwner.lifecycle.addObserver(lifecycleObserver)

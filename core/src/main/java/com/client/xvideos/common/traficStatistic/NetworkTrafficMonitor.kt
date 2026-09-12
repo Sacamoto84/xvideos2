@@ -94,14 +94,14 @@ class NetworkTrafficMonitor @Inject constructor() {
             return _trafficFlow.value.copy(isSupported = false)
         }
 
-        val timeDiff = (currentTime - previousTime) / timeout.toFloat()
+        val timeDiffSec = (currentTime - previousTime) / 1000f
 
-        val downloadSpeed = if (timeDiff > 0 && previousRxBytes > 0) {
-            ((currentRxBytes - previousRxBytes) / timeDiff).toLong().coerceAtLeast(0L)
+        val downloadSpeed = if (timeDiffSec > 0f && previousRxBytes > 0) {
+            ((currentRxBytes - previousRxBytes) / timeDiffSec).toLong().coerceAtLeast(0L)
         } else 0L
 
-        val uploadSpeed = if (timeDiff > 0 && previousTxBytes > 0) {
-            ((currentTxBytes - previousTxBytes) / timeDiff).toLong().coerceAtLeast(0L)
+        val uploadSpeed = if (timeDiffSec > 0f && previousTxBytes > 0) {
+            ((currentTxBytes - previousTxBytes) / timeDiffSec).toLong().coerceAtLeast(0L)
         } else 0L
 
         // Обновляем предыдущие значения

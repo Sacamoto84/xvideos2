@@ -70,7 +70,7 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         }
 
         req.status = Status.CANCELLED
-        req.job.cancel()
+        req.job?.cancel()
 
         req.listener?.onError("Cancelled")
 
@@ -80,7 +80,7 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
     }
 
     fun cancelAll() {
-        scope.cancel()
+        scope.coroutineContext.cancelChildren()
         dbScope.launch {
             dbHelper.empty()
         }
