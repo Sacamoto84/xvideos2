@@ -13,8 +13,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -36,12 +34,9 @@ object LusciousModule {
     @Singleton
     @Provides
     fun provideLuscious(
-        repository: Repository
+        repository: Repository,
+        @ApplicationScope scope: CoroutineScope,
     ): Luscious {
-        // Dispatchers.IO вместо своего пула на 8 потоков: пул жил весь процесс и
-        // никогда не закрывался, а сетевой слой всё равно сериализован мьютексом
-        // в Repository.
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         return Luscious(scope, repository)
     }
 

@@ -153,6 +153,7 @@ fun LazyRow123Content(
     val navigator = LocalNavigator.current
     val navigationState = LocalRNavigationState.current
     val downloadList by host.downloadRed.downloadList.collectAsStateWithLifecycle()
+    val downloadedIds = remember(downloadList) { downloadList.mapTo(HashSet(downloadList.size)) { it.id } }
     val loadState = listGifs.loadState
     var wasAppendLoading by remember { mutableStateOf(false) }
 
@@ -198,9 +199,7 @@ fun LazyRow123Content(
         // Та же защита границы, что и для itemKey (см. выше).
         if (index >= listGifs.itemCount) return@LazyRow123ContentStateless
         listGifs[index]?.let { item ->
-            val isDownloaded = remember(item.id, downloadList) {
-                downloadList.any { it.id == item.id }
-            }
+            val isDownloaded = item.id in downloadedIds
 
             LazyRow123GridItem(
                 item = item,

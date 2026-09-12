@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.Text
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -83,7 +83,9 @@ fun DashboardsPaginatedListScreen(
         // Список очищаем только когда новая страница уже загружена: раньше
         // clear() стоял перед сетевым вызовом, и всё время запроса лента была пустой.
         val items = withContext(Dispatchers.IO) {
-            openNew(pageIndex).filter { !it.href.contains("THUMBNUM") }
+            openNew(pageIndex)
+                .filter { !it.href.contains("THUMBNUM") }
+                .distinctBy { it.id }
         }
         l.replaceWith(items)
     }
@@ -122,8 +124,7 @@ fun DashboardsPaginatedListContent(
         state = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
     )
     {
-        itemsIndexed(items, key = { index, it -> "${it.id}_$index" })
-        { index, cell ->
+        items(items, key = { it.id }) { cell ->
 
             Box(
                 modifier = Modifier
