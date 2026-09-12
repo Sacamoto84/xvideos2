@@ -32,6 +32,8 @@ class CalculatorState(
     var lastOperand by mutableStateOf<BigDecimal?>(null)
     var lastOperator by mutableStateOf<String?>(null)
     var isNewEntry by mutableStateOf(true)
+    var isVerifying by mutableStateOf(false)
+        private set
 
     /**
      * Показывать ли «AC» (All Clear) вместо «C» (Clear).
@@ -144,15 +146,28 @@ class CalculatorState(
         haptic: HapticFeedback,
         onUnlock: suspend (String) -> Boolean
     ) {
+        if (isVerifying) return
+
+        val codeToTest = displayValue.replace(" ", "").replace(",", ".")
+        val isCandidatePin = previousValue == null &&
+            pendingOperation == null &&
+            codeToTest.length >= 4 &&
+            codeToTest.all { it.isDigit() }
+
+        if (isCandidatePin) {
+            isVerifying = true
+        }
+
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         scope.launch {
-            val codeToTest = displayValue.replace(" ", "").replace(",", ".")
-            val isCandidatePin = previousValue == null &&
-                pendingOperation == null &&
-                codeToTest.length >= 4 &&
-                codeToTest.all { it.isDigit() }
-
-            if (isCandidatePin && onUnlock(codeToTest)) return@launch
+            if (isCandidatePin) {
+                val success = try {
+                    onUnlock(codeToTest)
+                } finally {
+                    isVerifying = false
+                }
+                if (success) return@launch
+            }
 
             val current = parseDisplayValue() ?: BigDecimal.ZERO
             val prev = previousValue

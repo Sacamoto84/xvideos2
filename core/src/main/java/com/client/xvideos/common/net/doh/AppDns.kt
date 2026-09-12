@@ -35,6 +35,7 @@ object AppDns : Dns {
     private const val MAX_TTL_SECONDS = 3600L
     private const val DOH_TIMEOUT_SECONDS = 5L
     private const val DNS_JSON_MIME = "application/dns-json"
+    private const val MAX_CACHE_SIZE = 256
 
     private val IPV4_REGEX = Regex("^(\\d{1,3}\\.){3}\\d{1,3}$")
 
@@ -181,7 +182,7 @@ object AppDns : Dns {
             val minTtl = validAnswers.minOfOrNull { it.ttl } ?: 300L
             val effectiveTtlSeconds = minTtl.coerceIn(MIN_TTL_SECONDS, MAX_TTL_SECONDS)
             val expiresAtMs = now + effectiveTtlSeconds * 1000L
-            cache[hostname] = CacheEntry(addresses, expiresAtMs)
+            putInCache(hostname, CacheEntry(addresses, expiresAtMs), now)
         }
 
         return addresses
@@ -241,15 +242,35 @@ object AppDns : Dns {
             host.endsWith(".internal", ignoreCase = true)
     }
 
-    private fun isDohServerHost(host: String): Boolean {
+    private fun putInCache(hostname: String, entry: CacheEntry, now: Long) {
+        if (cache.size >= MAX_CACHE_SIZE) {
+            // Очищаем просроченные по TTL записи
+            cache.entries.removeIf { now >= it.value.expiresAtMs }
+            // Если кэш всё ещё превышает лимит — вытесняем избыток старых записей
+            if (cache.size >= MAX_CACHE_SIZE) {
+                val excess = cache.size - (MAX_CACHE_SIZE * 3 / 4)
+                if (excess > 0) {
+                    val toRemove = cache.keys.take(excess)
+                    toRemove.forEach { cache.remove(it) }
+                }
+            }
+        }
+        cache[hostname] = entry
+    }
+
+    internal val cacheSize: Int
+        get() = cache.size
+
+    internal fun isDohServerHost(host: String): Boolean {
         val providerName = runCatching { Settings.doh_provider.field.value }.getOrNull()
         val provider = DohProvider.fromNameOrDefault(providerName)
 
         if (provider.bootstrapIps.contains(host)) return true
 
         if (provider == DohProvider.CUSTOM) {
-            val customUrl = runCatching { Settings.doh_custom_url.field.value }.getOrDefault("")
-            if (customUrl.contains(host, ignoreCase = true)) return true
+            val customUrl = runCatching { Settings.doh_custom_url.field.value }.getOrDefault("").trim()
+            val customHost = runCatching { java.net.URI(customUrl).host }.getOrNull()
+            if (customHost != null && customHost.equals(host, ignoreCase = true)) return true
         }
 
         return false

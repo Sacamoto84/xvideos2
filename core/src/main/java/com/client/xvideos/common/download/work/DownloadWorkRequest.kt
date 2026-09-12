@@ -3,6 +3,9 @@ package com.client.xvideos.common.download.work
 import androidx.work.Data
 import androidx.work.NetworkType
 
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.json.AppJsonCompact
+
 /**
  * Описание задачи загрузки медиа-файла через WorkManager.
  *
@@ -31,6 +34,13 @@ data class DownloadWorkRequest(
     val networkType: NetworkType = NetworkType.CONNECTED,
     val requiresCharging: Boolean = false,
 ) {
+    init {
+        require(!isUnsafeItemName(fileName)) { "Небезопасное имя файла: $fileName" }
+        metaFileName?.let {
+            require(!isUnsafeItemName(it)) { "Небезопасное имя файла метаданных: $it" }
+        }
+    }
+
     fun toWorkData(): Data {
         val builder = Data.Builder()
             .putString(KEY_ID, id)
@@ -44,7 +54,7 @@ data class DownloadWorkRequest(
         metaFileName?.let { builder.putString(KEY_META_FILE_NAME, it) }
 
         if (headers.isNotEmpty()) {
-            val serializedHeaders = headers.entries.joinToString(";") { "${it.key}=${it.value}" }
+            val serializedHeaders = AppJsonCompact.encodeToString(headers)
             builder.putString(KEY_HEADERS, serializedHeaders)
         }
 
@@ -70,7 +80,14 @@ data class DownloadWorkRequest(
 
         fun parseHeaders(headersString: String?): Map<String, String> {
             if (headersString.isNullOrBlank()) return emptyMap()
-            return headersString.split(";")
+            val trimmed = headersString.trim()
+            if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+                val parsed = runCatching {
+                    AppJsonCompact.decodeFromString<Map<String, String>>(trimmed)
+                }.getOrNull()
+                if (parsed != null) return parsed
+            }
+            return trimmed.split(";")
                 .mapNotNull { entry ->
                     val split = entry.split("=", limit = 2)
                     if (split.size == 2) split[0].trim() to split[1].trim() else null

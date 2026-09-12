@@ -59,6 +59,63 @@ class DownloadWorkRequestTest {
     }
 
     @Test
+    fun `parseHeaders и toWorkData сохраняют заголовки с точкой с запятой в значении`() {
+        val originalHeaders = mapOf(
+            "Cookie" to "session_id=abcdef123456; user_token=xyz789; theme=dark",
+            "Accept" to "text/html; charset=utf-8",
+            "User-Agent" to "TestAgent"
+        )
+        val request = DownloadWorkRequest(
+            id = "test_cookie",
+            url = "https://example.com/video.mp4",
+            destDir = "/tmp",
+            fileName = "video.mp4",
+            title = "Test Cookie",
+            headers = originalHeaders
+        )
+
+        val workData = request.toWorkData()
+        val parsed = DownloadWorkRequest.parseHeaders(workData.getString(DownloadWorkRequest.KEY_HEADERS))
+
+        assertEquals(3, parsed.size)
+        assertEquals("session_id=abcdef123456; user_token=xyz789; theme=dark", parsed["Cookie"])
+        assertEquals("text/html; charset=utf-8", parsed["Accept"])
+        assertEquals("TestAgent", parsed["User-Agent"])
+    }
+
+    @Test
+    fun `DownloadWorkRequest отвергает опасные имена файлов с выходом за пределы каталога`() {
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            DownloadWorkRequest(
+                id = "bad_1",
+                url = "https://example.com/a.mp4",
+                destDir = "/tmp",
+                fileName = "../malicious.mp4",
+                title = "Bad"
+            )
+        }
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            DownloadWorkRequest(
+                id = "bad_2",
+                url = "https://example.com/a.mp4",
+                destDir = "/tmp",
+                fileName = "a/b/c.mp4",
+                title = "Bad"
+            )
+        }
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            DownloadWorkRequest(
+                id = "bad_3",
+                url = "https://example.com/a.mp4",
+                destDir = "/tmp",
+                fileName = "good.mp4",
+                title = "Bad",
+                metaFileName = "../escaped.info"
+            )
+        }
+    }
+
+    @Test
     fun `DownloadWorkState correctly maps from WorkInfo`() {
         val uuid = UUID.randomUUID()
         val progressData = Data.Builder()

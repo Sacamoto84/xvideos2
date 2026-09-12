@@ -162,5 +162,14 @@ class AppDnsTest {
     @Test
     fun `AppDns clearCache работает без исключений`() {
         AppDns.clearCache()
+        assertEquals(0, AppDns.cacheSize)
+    }
+
+    @Test
+    fun `isDohServerHost распознает bootstrap IP-адреса публичных провайдеров`() {
+        assertTrue(AppDns.isDohServerHost("1.1.1.1"))
+        assertTrue(AppDns.isDohServerHost("1.0.0.1"))
+        assertFalse(AppDns.isDohServerHost("example.com"))
+        assertFalse(AppDns.isDohServerHost("api.redgifs.com"))
     }
 }

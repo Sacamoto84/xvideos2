@@ -11,6 +11,8 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.common.net.doh.AppDns
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -36,6 +38,12 @@ class MediaDownloadWorker(
 
     private val notificationId: Int = abs(id.hashCode())
 
+    private data class FileTargets(
+        val dir: File,
+        val targetFile: File,
+        val tempFile: File,
+    )
+
     override suspend fun doWork(): Result {
         val urlString = inputData.getString(DownloadWorkRequest.KEY_URL)
             ?: return Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to "Missing URL"))
@@ -50,27 +58,23 @@ class MediaDownloadWorker(
 
         Timber.i("MediaDownloadWorker: Старт загрузки $fileName из $urlString")
 
+        val filesResult = prepareFiles(destDir, fileName, metaFileName)
+        val targets = filesResult.getOrElse { err ->
+            Timber.e(err)
+            return Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to (err.message ?: "File error")))
+        }
+
         runCatching {
             setForeground(createForegroundInfo(progress = 0, title = title))
         }.onFailure {
             Timber.w(it, "MediaDownloadWorker: Не удалось запустить foreground info (продолжаем в фоне)")
         }
 
-        val dir = File(destDir)
-        if (!dir.exists() && !dir.mkdirs()) {
-            val err = "Не удалось создать каталог: ${dir.absolutePath}"
-            Timber.e(err)
-            return Result.failure(workDataOf(DownloadWorkRequest.KEY_OUTPUT_ERROR to err))
-        }
-
-        val targetFile = File(dir, fileName)
-        val tempFile = File(dir, "$fileName.tmp")
-
         return try {
             downloadFile(
                 urlString = urlString,
                 headers = headers,
-                tempFile = tempFile,
+                tempFile = targets.tempFile,
                 title = title,
             )
 
@@ -79,30 +83,14 @@ class MediaDownloadWorker(
                 return Result.failure()
             }
 
-            if (!tempFile.exists()) {
-                throw IOException("Временный файл отсутствует после загрузки")
-            }
-
-            if (targetFile.exists()) {
-                targetFile.delete()
-            }
-
-            if (!tempFile.renameTo(targetFile)) {
-                tempFile.copyTo(targetFile, overwrite = true)
-                tempFile.delete()
-            }
-
-            if (!metaContent.isNullOrBlank()) {
-                val infoName = metaFileName ?: "${targetFile.nameWithoutExtension}.info"
-                File(dir, infoName).writeText(metaContent, Charsets.UTF_8)
-            }
+            finalizeDownloadedFile(targets, metaContent, metaFileName)
 
             showCompletedNotification(title)
-            Timber.i("MediaDownloadWorker: Успешно скачан файл ${targetFile.absolutePath}")
+            Timber.i("MediaDownloadWorker: Успешно скачан файл ${targets.targetFile.absolutePath}")
 
             Result.success(
                 workDataOf(
-                    DownloadWorkRequest.KEY_OUTPUT_FILE_PATH to targetFile.absolutePath,
+                    DownloadWorkRequest.KEY_OUTPUT_FILE_PATH to targets.targetFile.absolutePath,
                     DownloadWorkRequest.KEY_PROGRESS to 100
                 )
             )
@@ -116,6 +104,58 @@ class MediaDownloadWorker(
             )
         }
     }
+
+    private fun prepareFiles(
+        destDir: String,
+        fileName: String,
+        metaFileName: String?
+    ): kotlin.Result<FileTargets> {
+        if (isUnsafeItemName(fileName)) {
+            return kotlin.Result.failure(IllegalArgumentException("Небезопасное имя файла: $fileName"))
+        }
+        if (metaFileName != null && isUnsafeItemName(metaFileName)) {
+            return kotlin.Result.failure(IllegalArgumentException("Небезопасное имя файла метаданных: $metaFileName"))
+        }
+
+        val dir = File(destDir)
+        if (!dir.exists() && !dir.mkdirs()) {
+            return kotlin.Result.failure(IOException("Не удалось создать каталог: ${dir.absolutePath}"))
+        }
+
+        val targetFile = File(dir, fileName)
+        val tempFile = File(dir, "$fileName.tmp")
+
+        return runCatching {
+            requireInside(dir, targetFile)
+            requireInside(dir, tempFile)
+            FileTargets(dir, targetFile, tempFile)
+        }
+    }
+
+    private fun finalizeDownloadedFile(
+        targets: FileTargets,
+        metaContent: String?,
+        metaFileName: String?
+    ) {
+        if (!targets.tempFile.exists()) {
+            throw IOException("Временный файл отсутствует после загрузки")
+        }
+
+        if (targets.targetFile.exists()) {
+            targets.targetFile.delete()
+        }
+
+        if (!targets.tempFile.renameTo(targets.targetFile)) {
+            targets.tempFile.copyTo(targets.targetFile, overwrite = true)
+            targets.tempFile.delete()
+        }
+
+        if (!metaContent.isNullOrBlank()) {
+            val infoName = metaFileName ?: "${targets.targetFile.nameWithoutExtension}.info"
+            File(targets.dir, infoName).writeText(metaContent, Charsets.UTF_8)
+        }
+    }
+
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
         val title = inputData.getString(DownloadWorkRequest.KEY_TITLE) ?: "Загрузка"
@@ -154,10 +194,24 @@ class MediaDownloadWorker(
         tempFile: File,
         title: String,
     ) {
-        val resumeOffset = if (tempFile.exists()) tempFile.length() else 0L
-        val request = buildDownloadRequest(urlString, headers, resumeOffset)
+        var resumeOffset = if (tempFile.exists()) tempFile.length() else 0L
+        var request = buildDownloadRequest(urlString, headers, resumeOffset)
 
-        val response = downloadOkHttpClient.newCall(request).execute()
+        var response = downloadOkHttpClient.newCall(request).execute()
+
+        // Если сервер вернул HTTP 416 (Range Not Satisfiable), значит существующий .tmp
+        // повреждён или его размер больше/равен длине файла. Удаляем .tmp и качаем с нуля.
+        if (response.code == 416 && resumeOffset > 0) {
+            response.close()
+            Timber.w("MediaDownloadWorker: HTTP 416 для $urlString, удаляем невалидный $tempFile и качаем заново")
+            if (tempFile.exists()) {
+                tempFile.delete()
+            }
+            resumeOffset = 0L
+            request = buildDownloadRequest(urlString, headers, resumeOffset = 0L)
+            response = downloadOkHttpClient.newCall(request).execute()
+        }
+
         val responseCode = response.code
         val isResume = responseCode == 206
         val isOk = response.isSuccessful && !isResume

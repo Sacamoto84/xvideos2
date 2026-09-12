@@ -229,4 +229,31 @@ class CalculatorStateTest {
         assertEquals("×", restored.pendingOperation)
         assertTrue(restored.isNewEntry)
     }
+
+    @Test
+    fun `isVerifying блокирует повторные параллельные вызовы onUnlock`() = runTest {
+        val state = CalculatorState()
+        state.onDigit("1", noOpHaptic)
+        state.onDigit("2", noOpHaptic)
+        state.onDigit("3", noOpHaptic)
+        state.onDigit("4", noOpHaptic)
+
+        var callCount = 0
+        state.onEquals(this, noOpHaptic) {
+            callCount++
+            kotlinx.coroutines.delay(100)
+            false
+        }
+
+        // Повторный клик во время активной проверки
+        state.onEquals(this, noOpHaptic) {
+            callCount++
+            false
+        }
+
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("onUnlock должен быть вызван только один раз", 1, callCount)
+        assertFalse(state.isVerifying)
+    }
 }

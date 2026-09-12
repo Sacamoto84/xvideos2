@@ -94,16 +94,25 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         isAppMinimized = true
+        if (Settings.isInitialized && Settings.blur_recent_tasks.field.value) {
+            window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 
     override fun onPause() {
         super.onPause()
         isAppMinimized = true
+        if (AppLockRepository.shouldShowLock(this) || (Settings.isInitialized && Settings.blur_recent_tasks.field.value)) {
+            window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 
     override fun onResume() {
         super.onResume()
         isAppMinimized = false
+        if (!AppLockRepository.shouldShowLock(this)) {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 
     /**
@@ -140,9 +149,10 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
             val shouldBlur = (isAppMinimized && blurRecentTasks) || isAppLocked
 
-            // SECURITY: аппаратная защита превью в Recent Apps через FLAG_SECURE
-            LaunchedEffect(blurRecentTasks, isAppLocked) {
-                if (blurRecentTasks || isAppLocked) {
+            // SECURITY: динамическая аппаратная защита превью в Recent Apps через FLAG_SECURE
+            LaunchedEffect(isAppMinimized, blurRecentTasks, isAppLocked) {
+                val needSecure = isAppLocked || (isAppMinimized && blurRecentTasks)
+                if (needSecure) {
                     window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
                 } else {
                     window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -210,7 +220,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             }
         }
 
-        if (Settings.blur_recent_tasks.field.value || AppLockRepository.shouldShowLock(this)) {
+        if (AppLockRepository.shouldShowLock(this)) {
             currentWindow.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
