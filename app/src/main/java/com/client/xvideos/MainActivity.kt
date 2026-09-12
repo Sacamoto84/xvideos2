@@ -166,6 +166,15 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 }
             }
 
+            // SECURITY: скрываем превью приватного экрана в карусели недавних задач (Recent Apps), пока активен замок
+            LaunchedEffect(isAppLocked) {
+                if (isAppLocked) {
+                    window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
             KeepScreenOn()
             XvideosTheme(darkTheme = true) {
 
@@ -195,11 +204,15 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                             if (isCamouflage) {
                                 CalculatorScreen(
                                     onUnlock = { password ->
-                                        if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                                        if (AppLockRepository.lockoutRemainingMillis(this@MainActivity) > 0L) {
+                                            false
+                                        } else if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                                            AppLockRepository.resetFailedAttempts(this@MainActivity)
                                             AppLockSession.unlock()
                                             isAppLocked = false
                                             true
                                         } else {
+                                            AppLockRepository.registerFailedAttempt(this@MainActivity)
                                             false
                                         }
                                     },

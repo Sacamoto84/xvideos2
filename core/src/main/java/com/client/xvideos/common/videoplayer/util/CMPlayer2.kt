@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -115,10 +116,13 @@ fun CMPPlayer2(
             keepContentOnReset = true,
         )
 
+        // Dynamic state to prevent capturing stale isSliding value across recompositions
+        val currentIsSliding by rememberUpdatedState(config.isSliding)
+
         // Manage player listener and lifecycle
         DisposableEffect(key1 = exoPlayer) {
             val listener = createPlayerListener(
-                config.isSliding,
+                isSliding = { currentIsSliding },
                 callbacks.totalTime,
                 currentTime = {},
                 loadingState = { isBuffering = it },

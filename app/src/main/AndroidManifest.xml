@@ -103,7 +103,7 @@
             android:icon="@drawable/ic_launcher_calculator"
             android:roundIcon="@drawable/ic_launcher_calculator"
             android:label="@string/app_name_calculator"
-            android:theme="@style/Theme.MyApp.Splash">
+            android:theme="@style/Theme.MyApp.Splash.Calculator">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

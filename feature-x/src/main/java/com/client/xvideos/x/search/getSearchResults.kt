@@ -13,45 +13,48 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.net.URLEncoder
 
-suspend fun getSearchResults(query: String): String? {
-
-    val client = HttpClient(OkHttp) {
+private val searchHttpClient: HttpClient by lazy {
+    HttpClient(OkHttp) {
         engine {
             config {
                 dns(AppDns)
             }
         }
         install(HttpTimeout) {
-            // Конечные таймауты вместо Long.MAX_VALUE.
             requestTimeoutMillis = 30_000
             connectTimeoutMillis = 15_000
             socketTimeoutMillis = 30_000
         }
 
         defaultRequest {
-            // Referer/Origin относятся к самому сайту, а не к стороннему redgifs.
             headers.append("Referer", "$urlStart/")
             headers.append("Origin", urlStart)
-            headers.append(HttpHeaders.UserAgent, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36")
-            headers.append(HttpHeaders.Accept, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+            headers.append(
+                HttpHeaders.UserAgent,
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36"
+            )
+            headers.append(
+                HttpHeaders.Accept,
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+            )
             headers.append(HttpHeaders.AcceptEncoding, "identity")
             headers.append(HttpHeaders.AcceptLanguage, "ru,en;q=0.9")
         }
     }
+}
 
+suspend fun getSearchResults(query: String): String? {
     // Кодируем пользовательский ввод: пробелы/спецсимволы не должны ломать URL.
     val encodedQuery = URLEncoder.encode(query, "UTF-8").replace("+", "%20")
     val url = "$urlStart/search-suggest/$encodedQuery"
 
     return try {
-        client.get(url).bodyAsText()
+        searchHttpClient.get(url).bodyAsText()
     } catch (e: CancellationException) {
         // Иначе отмена возвращалась как null и трактовалась как «ничего не найдено».
         throw e
     } catch (e: Exception) {
-        Timber.e("Ошибка " + e.message)
+        Timber.e(e, "Ошибка getSearchResults: ${e.message}")
         null
-    } finally {
-        client.close() // раньше клиент не закрывался → утечка пула соединений/потоков
     }
 }

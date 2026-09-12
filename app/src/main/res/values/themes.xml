@@ -19,8 +19,11 @@
         <!-- Фон сплэша -->
         <item name="android:windowBackground">@color/black</item>
         <!-- Лого/иконка -->
-
     </style>
 
+    <style name="Theme.MyApp.Splash.Calculator" parent="Theme.MyApp.Splash">
+        <!-- Фон сплэша камуфляжа -->
+        <item name="android:windowBackground">@color/black</item>
+    </style>
 
 </resources>

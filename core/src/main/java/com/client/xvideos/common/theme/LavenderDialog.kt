@@ -19,7 +19,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,7 +57,7 @@ fun LavenderDialog(
 
                 Text(
                     text = title,
-                    style = Theme.L.Type.dialogTitle.copy(color = Color.Black, fontWeight = FontWeight.Bold),
+                    style = Theme.L.Type.dialogTitle.copy(color = d.titleColor, fontWeight = FontWeight.Bold),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = if (centered) TextAlign.Center else TextAlign.Start,
                 )

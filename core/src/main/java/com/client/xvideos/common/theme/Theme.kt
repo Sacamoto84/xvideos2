@@ -32,9 +32,40 @@ object Theme {
     val tabLevel3 = Color(0xFF444444)
     val tabLevel4 = Color(0xFF555555)
     val tabLevel5 = Color(0xFF666666)
-
     val tabLevel6 = Color(0xFF777777)
 
+    /** Стандартизированная иерархия поверхностей (Elevation) */
+    object Surface {
+        val background = Theme.background
+        val level0 = tabLevel0
+        val level1 = tabLevel1
+        val level2 = tabLevel2
+        val level3 = tabLevel3
+        val level4 = tabLevel4
+        val border = Color(0xFF3F3F3F)
+    }
+
+    /** Семантические токены текста с повышенным контрастом (WCAG AA >= 4.5:1) */
+    object Text {
+        val primary = Color(0xFFEDEDED)
+        val secondary = Color(0xFFA8A8A8)
+        val muted = Color(0xFF757575)
+    }
+
+    /** Семантические токены системных уведомлений и статусов */
+    object Feedback {
+        val success = Color(0xFF43C558)
+        val successContainer = Color(0xFF1E3A24)
+
+        val error = Color(0xFFEA616F)
+        val errorContainer = Color(0xFF3D1F23)
+
+        val warning = Color(0xFFFFB74D)
+        val warningContainer = Color(0xFF3D2C15)
+
+        val info = Color(0xFF61B2EB)
+        val infoContainer = Color(0xFF1B2F3D)
+    }
 
     object ExpandMenu {
         val tintColor = Color(0xFF1F1F1F)  // Почти черный
@@ -43,16 +74,17 @@ object Theme {
     }
 
     /**
-     * Цвета и стили для диалогов.
+     * Цвета и стили для диалогов (Dark Lavender Glass style).
      */
     object DialogLavande {
 
-        val content = Color(0xFFEBE6EE) //Цвет фона диалогового окна
+        val content = Color(0xFF2B2833) // Глубокий темно-лавандовый фон окна
 
-        val buttonBackground = Color(0xFF6552A5) //Цвет фона кнопки
+        val buttonBackground = Color(0xFF7E6BB8) // Фиолетово-лавандовый фон кнопки действия
 
-        val buttonTextColor = Color.White //Цвет текста кнопки
+        val buttonTextColor = Color.White // Цвет текста кнопки действия
 
+        val titleColor = Color.White // Контрастный белый заголовок
 
         const val buttonBorderRadius = 50 // Радиус кнопки в процентах (50% = полукруг/pill)
 
@@ -65,9 +97,9 @@ object Theme {
             letterSpacing = 0.sp
         )
 
-        val bodyColor = Color(0xFF474747)                   // Цвет текста тела
-        val dismissTextColor = Color(0xFF6552A5)            // Цвет текста кнопки отмены
-        val buttonBackgroundDestructive = dismissTextColor //Color(0xFFF44336) // Красный для деструктива
+        val bodyColor = Color(0xFFC7C3CE)                   // Мягкий лавандово-серый текст тела
+        val dismissTextColor = Color(0xFFA3AFF5)            // Светло-лавандовый текст кнопки отмены
+        val buttonBackgroundDestructive = Color(0xFFEA616F) // Красный для деструктива
         val cornerRadius = 28.dp                            // Скругление диалога
 
         val iconSize = 96.dp                                // Размер иконки
@@ -89,6 +121,11 @@ object Theme {
 
         val colorBorderSelect = Color(0xFF444444) // = Theme.tabLevel3
         val colorBorderGray = Color(0xFF3F3F3F)   // Окантовка
+
+        // Стандартизированный акцентный канал R
+        val accent = colorYellow
+        val accentMuted = Color(0x26EBFA63) // ~15% alpha
+        val accentBorder = colorYellow
 
         val fontFamilyPopinsRegular = FontFamily(Font(Res.font.poppins_regular))
         val fontFamilyPopinsMedium = FontFamily(Font(Res.font.poppins_medium))
@@ -123,6 +160,11 @@ object Theme {
 
         val secondaryColor = Color(0xFF3b3b3b)
         val textColor = grey1
+
+        // Стандартизированный акцентный канал L
+        val accent = primaryColor
+        val accentMuted = Color(0x26FF96A3) // ~15% alpha
+        val accentBorder = primaryColor
 
         val fontFamilyPopinsRegular = FontFamily(Font(Res.font.poppins_regular))
         val fontFamilyPopinsMedium = FontFamily(Font(Res.font.poppins_medium))

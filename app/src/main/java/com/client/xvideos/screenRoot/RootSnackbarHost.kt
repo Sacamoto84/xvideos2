@@ -40,10 +40,10 @@ fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
             val uiMsg = (data.visuals as? UiSnackbarVisuals)?.ui ?: UiMessage.Info(data.visuals.message)
 
             val (bg, fg, icon) = when (uiMsg) {
-                is UiMessage.Success -> Triple(Color(0xFF0F9960), Color.White, Icons.Default.Check)
-                is UiMessage.Error -> Triple(Color(0xFFD13913), Color.White, Icons.Default.ErrorOutline)
-                is UiMessage.Info -> Triple(Color(0xFF137CBD), Color.White, Icons.Default.Info)
-                is UiMessage.Warning -> Triple(Color(0xFFFF8E0C), Color.White, Icons.Default.Info)
+                is UiMessage.Success -> Triple(Theme.Feedback.success, Color.White, Icons.Default.Check)
+                is UiMessage.Error -> Triple(Theme.Feedback.error, Color.White, Icons.Default.ErrorOutline)
+                is UiMessage.Info -> Triple(Theme.Feedback.info, Color.White, Icons.Default.Info)
+                is UiMessage.Warning -> Triple(Theme.Feedback.warning, Color.White, Icons.Default.Info)
             }
 
             LaunchedEffect(data) {

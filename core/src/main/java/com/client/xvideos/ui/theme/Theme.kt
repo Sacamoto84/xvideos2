@@ -11,36 +11,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
+import com.client.xvideos.common.theme.Theme as AppTheme
+
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-
-   background = Color(0xFF000000),
-
+    primary = AppTheme.L.primaryColor,
+    onPrimary = Color.Black,
+    secondary = AppTheme.R.colorYellow,
+    onSecondary = Color.Black,
+    tertiary = AppTheme.L.lavender,
+    onTertiary = Color.Black,
+    background = AppTheme.background,
+    onBackground = AppTheme.L.textColor,
+    surface = AppTheme.tabLevel1,
+    onSurface = AppTheme.L.textColor,
+    surfaceVariant = AppTheme.tabLevel2,
+    onSurfaceVariant = AppTheme.L.grey2,
+    outline = AppTheme.R.colorBorderGray,
+    error = AppTheme.Feedback.error,
+    onError = Color.White,
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
     tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
 )
 
 @Composable
 fun XvideosTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color is available on Android 12+ (false by default to preserve custom dark theme)
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

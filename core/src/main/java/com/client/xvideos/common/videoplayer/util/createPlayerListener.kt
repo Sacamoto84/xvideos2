@@ -6,7 +6,7 @@ import com.client.xvideos.common.videoplayer.host.MediaPlayerError
 import java.util.concurrent.TimeUnit
 
 internal fun createPlayerListener(
-    isSliding: Boolean,
+    isSliding: () -> Boolean,
     totalTime: (Int) -> Unit,
     currentTime: (Float) -> Unit,
     loadingState: (Boolean) -> Unit,
@@ -24,7 +24,7 @@ internal fun createPlayerListener(
 
         //
         override fun onEvents(player: Player, events: Player.Events) {
-            if (!isSliding) {
+            if (!isSliding()) {
                 totalTime(
                     TimeUnit.MILLISECONDS.toSeconds(player.duration).coerceAtLeast(0L).toInt()
                 )
@@ -63,3 +63,23 @@ internal fun createPlayerListener(
 
     }
 }
+
+internal fun createPlayerListener(
+    isSliding: Boolean,
+    totalTime: (Int) -> Unit,
+    currentTime: (Float) -> Unit,
+    loadingState: (Boolean) -> Unit,
+    didEndVideo: () -> Unit,
+    onError: (MediaPlayerError) -> Unit,
+    poster: (Boolean) -> Unit,
+    sourceUrl: String? = null
+): Player.Listener = createPlayerListener(
+    isSliding = { isSliding },
+    totalTime = totalTime,
+    currentTime = currentTime,
+    loadingState = loadingState,
+    didEndVideo = didEndVideo,
+    onError = onError,
+    poster = poster,
+    sourceUrl = sourceUrl
+)

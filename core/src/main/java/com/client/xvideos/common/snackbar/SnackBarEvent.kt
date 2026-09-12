@@ -137,10 +137,10 @@ fun RenderSnackBar2InfoPreview() {
 fun RenderSnackBarFilled (uiMsg: UiMessage){
 
     val (bg, fg, icon) = when (uiMsg) {
-        is UiMessage.Success -> Triple(Color(0xFF01B671), Color.Black, Icons.Rounded.Check)
-        is UiMessage.Error -> Triple(Color(0xFFE5553A), Color.Black, Icons.Rounded.ErrorOutline)
-        is UiMessage.Info -> Triple(Color(0xFF4276FE), Color.Black, Icons.Rounded.Info)
-        is UiMessage.Warning -> Triple(Color(0xFFFF8E0C), Color.Black, Icons.Rounded.WarningAmber)
+        is UiMessage.Success -> Triple(Theme.Feedback.success, Color.Black, Icons.Rounded.Check)
+        is UiMessage.Error -> Triple(Theme.Feedback.error, Color.Black, Icons.Rounded.ErrorOutline)
+        is UiMessage.Info -> Triple(Theme.Feedback.info, Color.Black, Icons.Rounded.Info)
+        is UiMessage.Warning -> Triple(Theme.Feedback.warning, Color.Black, Icons.Rounded.WarningAmber)
     }
 
     Surface(
@@ -186,10 +186,10 @@ fun RenderSnackBarFilled (uiMsg: UiMessage){
 fun RenderSnackBar2 (uiMsg: UiMessage){
 
     val (bg, fg, icon) = when (uiMsg) {
-        is UiMessage.Success -> Triple(Color(0xFF43C558), Color.Black, Icons.Outlined.CheckCircleOutline)
-        is UiMessage.Error -> Triple(Color(0xFFFD6969), Color.Black, Icons.Default.Error)
-        is UiMessage.Info -> Triple(Color(0xFFBDDBFD), Color.Black, Icons.Default.Info)
-        is UiMessage.Warning -> Triple(Color(0xFFFF8E0C), Color.Black, Icons.Default.Warning)
+        is UiMessage.Success -> Triple(Theme.Feedback.success, Color.Black, Icons.Outlined.CheckCircleOutline)
+        is UiMessage.Error -> Triple(Theme.Feedback.error, Color.Black, Icons.Default.Error)
+        is UiMessage.Info -> Triple(Theme.Feedback.info, Color.Black, Icons.Default.Info)
+        is UiMessage.Warning -> Triple(Theme.Feedback.warning, Color.Black, Icons.Default.Warning)
     }
 
     Surface(
@@ -210,11 +210,11 @@ fun RenderSnackBar2 (uiMsg: UiMessage){
         )
         {
             Box(Modifier.width(8.dp)
-                .background(Color(0xFF22C55C)
+                .background(bg
                 )){}
 
 
-                    Icon(icon, contentDescription = null, tint = Color(0xFF22C55C))
+                    Icon(icon, contentDescription = null, tint = bg)
 
 
             Spacer(Modifier.width(8.dp))
@@ -233,10 +233,10 @@ fun RenderSnackBar2 (uiMsg: UiMessage){
 fun RenderSnackBar3 (uiMsg: UiMessage){
 
     val (bg, fg, icon) = when (uiMsg) {
-        is UiMessage.Success -> Triple(Color(0xFF43C558), Color.Black, Icons.Outlined.CheckCircleOutline)
-        is UiMessage.Error -> Triple(Color(0xFFFD6969), Color.Black, Icons.Default.Error)
-        is UiMessage.Info -> Triple(Color(0xFFBDDBFD), Color.Black, Icons.Default.Info)
-        is UiMessage.Warning -> Triple(Color(0xFFFF8E0C), Color.Black, Icons.Default.Warning)
+        is UiMessage.Success -> Triple(Theme.Feedback.success, Color.Black, Icons.Outlined.CheckCircleOutline)
+        is UiMessage.Error -> Triple(Theme.Feedback.error, Color.Black, Icons.Default.Error)
+        is UiMessage.Info -> Triple(Theme.Feedback.info, Color.Black, Icons.Default.Info)
+        is UiMessage.Warning -> Triple(Theme.Feedback.warning, Color.Black, Icons.Default.Warning)
     }
 
     Surface(
@@ -257,11 +257,11 @@ fun RenderSnackBar3 (uiMsg: UiMessage){
         )
         {
             Box(Modifier.width(8.dp)
-                .background(Color(0xFF22C55C)
+                .background(bg
                 )){}
 
 
-            Icon(icon, contentDescription = null, tint = Color(0xFF22C55C))
+            Icon(icon, contentDescription = null, tint = bg)
 
 
             Spacer(Modifier.width(8.dp))
