@@ -1,8 +1,8 @@
 # Код-ревью xvideos — проход 13
 
-> **Срез:** `6361302` · **Статус:** открыт · **Индекс:** [все документы](README.md)
+> **Срез:** `64e30e9` · **Статус:** закрыт · **Индекс:** [все документы](README.md)
 
-База прохода — `master` (`6361302`), текущий срез после закрытия замечаний 12-го прохода (`fe01a55`, `6361302`).
+База прохода — `master` (`64e30e9`), срез после устранения замечаний 13-го прохода (`64e30e9`).
 
 Линзы: **подсистема фоновых загрузок WorkManager (диспетчеризация, отмена, обработка тела)**,
 **подсистема DNS-over-HTTPS (DoH: нормализация хостов, Punycode, безопасность соединений)**,
@@ -161,32 +161,32 @@ File(p).mkdirs()
 
 | Находка | Класс | Статус | Коммит |
 | --- | --- | --- | --- |
-| T9 | конкурентность | открыт | — |
-| C16 | корректность | открыт | — |
-| C17 | корректность | открыт | — |
-| UI8 | интерфейс / UX | открыт | — |
-| S2 | безопасность | открыт | — |
-| C18 | корректность | открыт | — |
-| A7 | архитектура / гигиена | открыт | — |
+| T9 | конкурентность | закрыт | `64e30e9` |
+| C16 | корректность | закрыт | `64e30e9` |
+| C17 | корректность | закрыт | `64e30e9` |
+| UI8 | интерфейс / UX | закрыт | `64e30e9` |
+| S2 | безопасность | закрыт | `64e30e9` |
+| C18 | корректность | закрыт | `64e30e9` |
+| A7 | архитектура / гигиена | закрыт | `64e30e9` |
 
 ---
 
 ## Проверка
 
 ```
-./gradlew detekt --continue
-BUILD SUCCESSFUL in 1m 10s
-12 actionable tasks: 12 up-to-date
+./gradlew detekt --rerun-tasks --continue
+BUILD SUCCESSFUL in 12s
+12 actionable tasks: 12 executed
 (detekt 100% зелёный во всех 5 модулях: :app, :core, :feature-l, :feature-r, :feature-x)
 
 ./gradlew test --continue
-BUILD SUCCESSFUL in 4s
-273 actionable tasks: 273 up-to-date
-(Все 273 таски unit-тестов зелёные)
+BUILD SUCCESSFUL in 57s
+273 actionable tasks: 86 executed, 187 up-to-date
+(Все 273 таски unit-тестов зелёные, добавлены тесты нормализации IDN/Punycode и case-insensitivity)
 
 ./gradlew assembleRelease
-BUILD SUCCESSFUL in 1m 29s
-234 actionable tasks: 32 executed, 202 up-to-date
+BUILD SUCCESSFUL in 1m 22s
+234 actionable tasks: 44 executed, 190 up-to-date
 (Release APK собран успешно, R8 minifyEnabled, dex desugaring и shrinkResources без сбоев)
 ```
 
