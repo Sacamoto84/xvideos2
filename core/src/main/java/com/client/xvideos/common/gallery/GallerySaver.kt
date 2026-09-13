@@ -13,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
 import timber.log.Timber
 import java.io.File
 import java.io.OutputStream
@@ -37,18 +39,24 @@ object GallerySaver {
     /** Копирует уже скачанный файл в галерею. Fire-and-forget, снекбары внутри. */
     fun saveLocal(context: Context, src: File, fileName: String) {
         val appContext = context.applicationContext
+        val cleanFileName = File(fileName).name
+        if (isUnsafeItemName(cleanFileName)) {
+            Timber.w("GallerySaver: отклонён небезопасный fileName: $fileName")
+            SnackBar.error("Недопустимое имя файла")
+            return
+        }
         scope.launch {
             try {
-                if (exists(appContext, fileName)) {
+                if (exists(appContext, cleanFileName)) {
                     SnackBar.info("Уже в галерее")
                     return@launch
                 }
-                publish(appContext, fileName) { output -> src.inputStream().use { it.copyTo(output) } }
+                publish(appContext, cleanFileName) { output -> src.inputStream().use { it.copyTo(output) } }
                 SnackBar.success("Сохранено в галерею")
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "GallerySaver: ошибка копирования $fileName")
+                Timber.e(e, "GallerySaver: ошибка копирования $cleanFileName")
                 SnackBar.error("Ошибка сохранения: ${e.message}")
             }
         }
@@ -71,18 +79,31 @@ object GallerySaver {
         progress: MutableStateFlow<Float>? = null,
     ) {
         val appContext = context.applicationContext
+        val cleanFileName = File(fileName).name
+        if (isUnsafeItemName(cleanFileName)) {
+            Timber.w("GallerySaver: отклонён небезопасный fileName: $fileName")
+            SnackBar.error("Недопустимое имя файла")
+            return
+        }
 
         scope.launch {
-            if (exists(appContext, fileName)) {
+            if (exists(appContext, cleanFileName)) {
                 SnackBar.info("Уже в галерее")
                 return@launch
             }
 
             val tmpDir = File(appContext.cacheDir, "gallery_tmp").apply { mkdirs() }
-            val tmpFile = File(tmpDir, fileName)
+            val tmpFile = File(tmpDir, cleanFileName)
+            try {
+                requireInside(tmpDir, tmpFile)
+            } catch (e: Exception) {
+                Timber.w(e, "GallerySaver: небезопасный путь tmpFile")
+                SnackBar.error("Недопустимый путь файла")
+                return@launch
+            }
             SnackBar.info("Сохранение в галерею…")
 
-            val request = kDownloader.newRequestBuilder(url, tmpDir.absolutePath, fileName).build()
+            val request = kDownloader.newRequestBuilder(url, tmpDir.absolutePath, cleanFileName).build()
             kDownloader.enqueue(
                 request,
                 onStart = { progress?.value = 0f },
@@ -90,7 +111,7 @@ object GallerySaver {
                 onCompleted = {
                     scope.launch {
                         try {
-                            publish(appContext, fileName) { output ->
+                            publish(appContext, cleanFileName) { output ->
                                 tmpFile.inputStream().use { it.copyTo(output) }
                             }
                             progress?.value = -2f
@@ -99,7 +120,7 @@ object GallerySaver {
                             throw e
                         } catch (e: Exception) {
                             progress?.value = -3f
-                            Timber.e(e, "GallerySaver: ошибка публикации $fileName")
+                            Timber.e(e, "GallerySaver: ошибка публикации $cleanFileName")
                             SnackBar.error("Ошибка сохранения: ${e.message}")
                         } finally {
                             tmpFile.delete()
@@ -109,7 +130,7 @@ object GallerySaver {
                 onError = { error ->
                     progress?.value = -3f
                     tmpFile.delete()
-                    Timber.e("GallerySaver: ошибка скачивания $fileName: $error")
+                    Timber.e("GallerySaver: ошибка скачивания $cleanFileName: $error")
                     SnackBar.error("Ошибка сохранения: $error")
                 },
             )

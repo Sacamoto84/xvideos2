@@ -8,6 +8,7 @@ import com.client.xvideos.x.model.ItemsX
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.onSuccess
 
 class SavedX_Favorites(val scope: CoroutineScope) {
@@ -31,8 +32,10 @@ class SavedX_Favorites(val scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
             favoritesDb.insert(item.id.toString(), item)
                 .onSuccess {
-                    list.add(item)
-                    favoriteIds.add(item.id)
+                    withContext(Dispatchers.Main) {
+                        list.add(item)
+                        favoriteIds.add(item.id)
+                    }
                     SnackBar.info("Добавлено в избранное")
                 }
                 .onFailure { e ->
@@ -45,8 +48,10 @@ class SavedX_Favorites(val scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
             favoritesDb.delete(item.id.toString())
                 .onSuccess {
-                    list.remove(item)
-                    favoriteIds.remove(item.id)
+                    withContext(Dispatchers.Main) {
+                        list.remove(item)
+                        favoriteIds.remove(item.id)
+                    }
                     SnackBar.info("Удалён из избранного")
                 }
                 .onFailure { e ->
@@ -61,8 +66,11 @@ class SavedX_Favorites(val scope: CoroutineScope) {
     fun refresh() {
         scope.launch(Dispatchers.IO) {
             favoritesDb.refresh()
-            favoriteIds.clear()
-            favoriteIds.addAll(list.map { it.id })
+            val ids = list.map { it.id }
+            withContext(Dispatchers.Main) {
+                favoriteIds.clear()
+                favoriteIds.addAll(ids)
+            }
         }
     }
 }

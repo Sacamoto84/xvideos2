@@ -50,6 +50,7 @@ class DownloadTask(
         private const val TIME_GAP_FOR_SYNC: Long = 2000
         private const val MIN_BYTES_FOR_SYNC: Long = 65536
         private const val BUFFER_SIZE = 1024 * 4
+        private val downloadSemaphore = Semaphore(4)
     }
 
     suspend inline fun run(
@@ -91,10 +92,6 @@ class DownloadTask(
     }
 
 
-    //private val downloadDispatcher = Dispatchers.IO.limitedParallelism(8)
-
-    // Семафор на 8 разрешений
-    private val downloadSemaphore = Semaphore(4)
 
     suspend fun run(listener: DownloadRequest.Listener) {
         downloadSemaphore.withPermit {
@@ -147,7 +144,9 @@ class DownloadTask(
                     responseCode = redirectedClient.getResponseCode()
 
                     if (!isSuccessful()) {
+                        req.status = Status.FAILED
                         listener.onError("Wrong link")
+                        return@withContext
                     }
 
                     setResumeSupportedOrNot()
@@ -204,6 +203,7 @@ class DownloadTask(
                         outStream.seek(req.downloadedBytes)
                     }
 
+                    var lastProgress = -1
                     do {
                         val byteCount = inputStream!!.read(buff, 0, BUFFER_SIZE)
                         if (byteCount == -1) {
@@ -241,7 +241,10 @@ class DownloadTask(
                         if (totalBytes > 0) {
                             progress = ((req.downloadedBytes * 100) / totalBytes).toInt()
                         }
-                        listener.onProgress(progress)
+                        if (progress != lastProgress) {
+                            lastProgress = progress
+                            listener.onProgress(progress)
+                        }
                     } while (true)
 
                     if (req.status === Status.CANCELLED) {
@@ -263,9 +266,9 @@ class DownloadTask(
                 } catch (e: CancellationException) {
                     deleteTempFile()
                     req.reset()
-                    req.status = Status.FAILED
-                    listener.onError(e.toString())
-                    return@withContext
+                    req.status = Status.CANCELLED
+                    listener.onError("Cancelled")
+                    throw e
                 } catch (e: Exception) {
                     if (!isResumeSupported) {
                         deleteTempFile()

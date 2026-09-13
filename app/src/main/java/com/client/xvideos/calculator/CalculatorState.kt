@@ -47,8 +47,14 @@ class CalculatorState(
 
     private val integerFormatter = DecimalFormat("#,##0", symbols)
 
+    private val enteredPinDigits = StringBuilder()
+
     fun onDigit(digit: String, haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+
+        if (enteredPinDigits.length < MAX_INPUT_DIGITS) {
+            enteredPinDigits.append(digit)
+        }
 
         if (displayValue == ERROR_TEXT || isNewEntry) {
             displayValue = digit
@@ -67,6 +73,7 @@ class CalculatorState(
 
     fun onDecimal(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        enteredPinDigits.clear()
 
         if (displayValue == ERROR_TEXT || isNewEntry) {
             displayValue = "0."
@@ -78,6 +85,7 @@ class CalculatorState(
 
     fun onPlusMinus(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        enteredPinDigits.clear()
         if (displayValue == "0" || displayValue == ERROR_TEXT) return
 
         displayValue = if (displayValue.startsWith("-")) {
@@ -89,6 +97,7 @@ class CalculatorState(
 
     fun onOperator(op: String, haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        enteredPinDigits.clear()
         if (displayValue == ERROR_TEXT) return
 
         val current = parseDisplayValue() ?: BigDecimal.ZERO
@@ -119,6 +128,7 @@ class CalculatorState(
 
     fun onPercent(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        enteredPinDigits.clear()
         if (displayValue == ERROR_TEXT) return
 
         val current = parseDisplayValue() ?: return
@@ -141,6 +151,66 @@ class CalculatorState(
         isNewEntry = true
     }
 
+    private fun isPinCandidate(s: String): Boolean = s.length >= 4 && s.all { it.isDigit() }
+
+    private fun getCandidatePin(codeToTest: String): String? {
+        if (previousValue != null || pendingOperation != null) return null
+        val rawPin = enteredPinDigits.toString()
+        return when {
+            isPinCandidate(rawPin) -> rawPin
+            isPinCandidate(codeToTest) -> codeToTest
+            else -> null
+        }
+    }
+
+    private suspend fun attemptUnlock(
+        candidatePin: String,
+        codeToTest: String,
+        onUnlock: suspend (String) -> Boolean
+    ): Boolean {
+        val unlocked = onUnlock(candidatePin)
+        if (!unlocked && candidatePin != codeToTest && isPinCandidate(codeToTest)) {
+            return onUnlock(codeToTest)
+        }
+        return unlocked
+    }
+
+    private fun evaluateCalculation(current: BigDecimal) {
+        val prev = previousValue
+        val pending = pendingOperation
+
+        if (prev != null && pending != null) {
+            val result = executeOperation(prev, current, pending)
+            if (result == null) {
+                displayValue = ERROR_TEXT
+                previousValue = null
+                pendingOperation = null
+                return
+            }
+            expressionHistory = "${formatNumber(prev)} $pending ${formatNumber(current)} ="
+            displayValue = formatNumber(result)
+            lastOperand = current
+            lastOperator = pending
+            previousValue = null
+            pendingOperation = null
+            isNewEntry = true
+        } else if (lastOperand != null && lastOperator != null) {
+            // Повторение последней операции при повторном нажатии «=»
+            val op = lastOperator!!
+            val operand = lastOperand!!
+            val result = executeOperation(current, operand, op)
+            if (result == null) {
+                displayValue = ERROR_TEXT
+                lastOperand = null
+                lastOperator = null
+                return
+            }
+            expressionHistory = "${formatNumber(current)} $op ${formatNumber(operand)} ="
+            displayValue = formatNumber(result)
+            isNewEntry = true
+        }
+    }
+
     fun onEquals(
         scope: CoroutineScope,
         haptic: HapticFeedback,
@@ -149,65 +219,32 @@ class CalculatorState(
         if (isVerifying) return
 
         val codeToTest = displayValue.replace(" ", "").replace(",", ".")
-        val isCandidatePin = previousValue == null &&
-            pendingOperation == null &&
-            codeToTest.length >= 4 &&
-            codeToTest.all { it.isDigit() }
-
-        if (isCandidatePin) {
+        val candidatePin = getCandidatePin(codeToTest)
+        if (candidatePin != null) {
             isVerifying = true
         }
 
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         scope.launch {
-            if (isCandidatePin) {
+            if (candidatePin != null) {
                 val success = try {
-                    onUnlock(codeToTest)
+                    attemptUnlock(candidatePin, codeToTest, onUnlock)
                 } finally {
                     isVerifying = false
                 }
                 if (success) return@launch
             }
+            enteredPinDigits.clear()
 
             val current = parseDisplayValue() ?: BigDecimal.ZERO
-            val prev = previousValue
-            val pending = pendingOperation
-
-            if (prev != null && pending != null) {
-                val result = executeOperation(prev, current, pending)
-                if (result == null) {
-                    displayValue = ERROR_TEXT
-                    previousValue = null
-                    pendingOperation = null
-                    return@launch
-                }
-                expressionHistory = "${formatNumber(prev)} $pending ${formatNumber(current)} ="
-                displayValue = formatNumber(result)
-                lastOperand = current
-                lastOperator = pending
-                previousValue = null
-                pendingOperation = null
-                isNewEntry = true
-            } else if (lastOperand != null && lastOperator != null) {
-                // Повторение последней операции при повторном нажатии «=»
-                val op = lastOperator!!
-                val operand = lastOperand!!
-                val result = executeOperation(current, operand, op)
-                if (result == null) {
-                    displayValue = ERROR_TEXT
-                    lastOperand = null
-                    lastOperator = null
-                    return@launch
-                }
-                expressionHistory = "${formatNumber(current)} $op ${formatNumber(operand)} ="
-                displayValue = formatNumber(result)
-                isNewEntry = true
-            }
+            evaluateCalculation(current)
         }
     }
 
+
     fun onClear(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        enteredPinDigits.clear()
         if (!isAllClear && displayValue != "0") {
             displayValue = "0"
             isNewEntry = true
@@ -224,6 +261,9 @@ class CalculatorState(
 
     fun onBackspace(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        if (enteredPinDigits.isNotEmpty()) {
+            enteredPinDigits.deleteCharAt(enteredPinDigits.length - 1)
+        }
         if (displayValue == ERROR_TEXT) {
             displayValue = "0"
             isNewEntry = true

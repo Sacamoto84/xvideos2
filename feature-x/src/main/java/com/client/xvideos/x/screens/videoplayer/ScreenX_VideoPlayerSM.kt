@@ -93,7 +93,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
             val res = db.cacheUrlStringRam.get(url)
             val s = if (res == null) {
                 val content = readHtmlFromURLDirect(url)
-                db.cacheUrlStringRam.put(url, content)
+                if (content.isNotBlank()) {
+                    db.cacheUrlStringRam.put(url, content)
+                }
                 content
             } else {
                 res.content

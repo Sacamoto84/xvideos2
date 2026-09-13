@@ -256,4 +256,92 @@ class CalculatorStateTest {
         assertEquals("onUnlock должен быть вызван только один раз", 1, callCount)
         assertFalse(state.isVerifying)
     }
+
+    @Test
+    fun `PIN с ведущими нулями 0000 корректно разблокирует калькулятор`() = runTest {
+        val state = CalculatorState()
+        state.onDigit("0", noOpHaptic)
+        state.onDigit("0", noOpHaptic)
+        state.onDigit("0", noOpHaptic)
+        state.onDigit("0", noOpHaptic)
+
+        var unlocked = false
+        state.onEquals(this, noOpHaptic) { code ->
+            if (code == "0000") {
+                unlocked = true
+                true
+            } else {
+                false
+            }
+        }
+        testScheduler.advanceUntilIdle()
+
+        assertTrue("PIN 0000 должен разблокировать калькулятор", unlocked)
+    }
+
+    @Test
+    fun `PIN с ведущим нулём 0123 корректно разблокирует калькулятор`() = runTest {
+        val state = CalculatorState()
+        state.onDigit("0", noOpHaptic)
+        state.onDigit("1", noOpHaptic)
+        state.onDigit("2", noOpHaptic)
+        state.onDigit("3", noOpHaptic)
+
+        var unlocked = false
+        state.onEquals(this, noOpHaptic) { code ->
+            if (code == "0123") {
+                unlocked = true
+                true
+            } else {
+                false
+            }
+        }
+        testScheduler.advanceUntilIdle()
+
+        assertTrue("PIN 0123 должен разблокировать калькулятор", unlocked)
+    }
+
+    @Test
+    fun `onBackspace и onClear корректно управляют PIN-буфером`() = runTest {
+        val state = CalculatorState()
+        state.onDigit("0", noOpHaptic)
+        state.onDigit("1", noOpHaptic)
+        state.onDigit("2", noOpHaptic)
+        state.onDigit("3", noOpHaptic)
+        state.onDigit("9", noOpHaptic)
+        state.onBackspace(noOpHaptic)
+
+        var unlocked = false
+        state.onEquals(this, noOpHaptic) { code ->
+            if (code == "0123") {
+                unlocked = true
+                true
+            } else {
+                false
+            }
+        }
+        testScheduler.advanceUntilIdle()
+
+        assertTrue("После Backspace PIN 0123 должен подойти", unlocked)
+
+        // Теперь проверка onClear
+        state.onClear(noOpHaptic)
+        state.onDigit("5", noOpHaptic)
+        state.onDigit("6", noOpHaptic)
+        state.onDigit("7", noOpHaptic)
+        state.onDigit("8", noOpHaptic)
+
+        var unlocked2 = false
+        state.onEquals(this, noOpHaptic) { code ->
+            if (code == "5678") {
+                unlocked2 = true
+                true
+            } else {
+                false
+            }
+        }
+        testScheduler.advanceUntilIdle()
+
+        assertTrue("После onClear новый PIN 5678 должен подойти", unlocked2)
+    }
 }

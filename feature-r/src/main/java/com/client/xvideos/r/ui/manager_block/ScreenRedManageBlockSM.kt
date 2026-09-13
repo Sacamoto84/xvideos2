@@ -13,9 +13,13 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 class ScreenRedManageBlockSM @Inject constructor(
-    blockRed: BlockRed
+    private val blockRed: BlockRed
 ) : ScreenModel {
     val blockList: StateFlow<List<GifsInfo>> = blockRed.blockList
+
+    fun unblock(item: GifsInfo) {
+        blockRed.unblockItem(item)
+    }
 }
 
 @Module

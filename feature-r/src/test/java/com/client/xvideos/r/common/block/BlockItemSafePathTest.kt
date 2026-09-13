@@ -35,4 +35,16 @@ class BlockItemSafePathTest {
         assertEquals(emptyList<String>(), blockGetGifsByUserNameAsListString("../foo"))
         assertEquals(emptyList<String>(), blockGetGifsByUserNameAsListString("a/b"))
     }
+
+    @Test
+    fun `unblockItem отвергает небезопасные userName и id`() {
+        val unsafeUser = RJson.decodeFromString<GifsInfo>("""{"id":"123","userName":"../escape"}""")
+        assertTrue(com.client.xvideos.r.common.block.useCase.unblockItem(unsafeUser).isFailure)
+
+        val unsafeId = RJson.decodeFromString<GifsInfo>("""{"id":"../123","userName":"valid_user"}""")
+        assertTrue(com.client.xvideos.r.common.block.useCase.unblockItem(unsafeId).isFailure)
+
+        val dotUser = RJson.decodeFromString<GifsInfo>("""{"id":"123","userName":".."}""")
+        assertTrue(com.client.xvideos.r.common.block.useCase.unblockItem(dotUser).isFailure)
+    }
 }

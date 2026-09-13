@@ -43,3 +43,36 @@ fun blockItem(item: GifsInfo): Result<Boolean> {
     }
 }
 
+fun unblockItem(item: GifsInfo): Result<Boolean> {
+    return try {
+        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
+            return Result.failure(IllegalArgumentException("Недопустимое имя пользователя или id для разблокировки"))
+        }
+
+        Timber.i("!!! Разблокировка GIFS -> unblockItem() id:${item.id} userName:${item.userName}")
+
+        val rootDir = File(AppPath.r_block)
+        val blockDir = File(rootDir, item.userName)
+        requireInside(rootDir, blockDir)
+
+        val blockFile = File(blockDir, "${item.id}.block")
+        requireInside(blockDir, blockFile)
+
+        if (blockFile.exists()) {
+            blockFile.delete()
+        }
+
+        if (blockDir.exists() && blockDir.isDirectory) {
+            val remaining = blockDir.listFiles()
+            if (remaining == null || remaining.isEmpty()) {
+                blockDir.delete()
+            }
+        }
+
+        Result.success(true)
+    } catch (e: Exception) {
+        Timber.e(e, "Ошибка при разблокировке GIF")
+        Result.failure(e)
+    }
+}
+

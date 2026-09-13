@@ -51,6 +51,8 @@ fun AppLockSettingsSection() {
     var passwordSet by remember { mutableStateOf(AppLockRepository.isPasswordSet(context)) }
     var dialogMode by remember { mutableStateOf<AppLockDialogMode?>(null) }
     val enabled = appLockEnabled && passwordSet
+    val scope = rememberCoroutineScope()
+    var showCamouflageVerificationDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(appLockEnabled, passwordSet) {
         if (appLockEnabled && !passwordSet) {
@@ -101,25 +103,15 @@ fun AppLockSettingsSection() {
         }
     }
 
-    val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
-    val camouflageSubtitle = when {
-        !passwordSet -> "Сначала задайте код доступа"
-        isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
-        else -> "Выключена (стандартная иконка приложения)"
-    }
-    SettingsGroup {
-        SettingsSwitchRow(
-            icon = R.drawable.ic_launcher_calculator,
-            text = "Маскировка под калькулятор",
-            subtitle = camouflageSubtitle,
-            value = isCamouflage && passwordSet,
-            enabled = passwordSet,
-            onValueChange = { enable ->
-                if (passwordSet) {
-                    Settings.camouflage_calculator_enabled.setValue(enable)
-                    LauncherAliasManager.setCalculatorAliasEnabled(context, enable)
-                }
-            }
+    CamouflageGroup(
+        passwordSet = passwordSet,
+        onEnableRequested = { showCamouflageVerificationDialog = true }
+    )
+
+    if (showCamouflageVerificationDialog) {
+        CamouflageVerificationDialog(
+            onDismiss = { showCamouflageVerificationDialog = false },
+            onSuccess = { showCamouflageVerificationDialog = false }
         )
     }
 
@@ -150,6 +142,105 @@ fun AppLockSettingsSection() {
     }
 }
 
+@Composable
+private fun CamouflageGroup(
+    passwordSet: Boolean,
+    onEnableRequested: () -> Unit
+) {
+    val context = LocalContext.current.applicationContext
+    val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+    val camouflageSubtitle = when {
+        !passwordSet -> "Сначала задайте код доступа"
+        isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
+        else -> "Выключена (стандартная иконка приложения)"
+    }
+    SettingsGroup {
+        SettingsSwitchRow(
+            icon = R.drawable.ic_launcher_calculator,
+            text = "Маскировка под калькулятор",
+            subtitle = camouflageSubtitle,
+            value = isCamouflage && passwordSet,
+            enabled = passwordSet,
+            onValueChange = { enable ->
+                if (passwordSet) {
+                    if (enable) {
+                        onEnableRequested()
+                    } else {
+                        Settings.camouflage_calculator_enabled.setValue(false)
+                        LauncherAliasManager.setCalculatorAliasEnabled(context, false)
+                        SnackBar.info("Маскировка под калькулятор отключена")
+                    }
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun CamouflageVerificationDialog(
+    onDismiss: () -> Unit,
+    onSuccess: () -> Unit
+) {
+    val context = LocalContext.current.applicationContext
+    val scope = rememberCoroutineScope()
+    var pinInput by rememberSaveable { mutableStateOf("") }
+    var pinError by rememberSaveable { mutableStateOf<String?>(null) }
+    var isVerifyingPin by remember { mutableStateOf(false) }
+
+    LavenderDialog(
+        title = "Включение маскировки",
+        onDismiss = onDismiss,
+        content = {
+            DisableAppLockAutofill()
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    "Для работы маскировки под калькулятор код доступа должен состоять только из цифр. Введите ваш текущий PIN-код для подтверждения:",
+                    style = Theme.L.Type.dialogBody.copy(color = Theme.DialogLavande.bodyColor)
+                )
+                PasswordSettingField(
+                    value = pinInput,
+                    onValueChange = {
+                        pinInput = it
+                        pinError = null
+                    },
+                    label = "Числовой PIN-код",
+                    keyboardType = KeyboardType.NumberPassword,
+                    onDone = {}
+                )
+                pinError?.let {
+                    val errorColor = Color(0xFFB3261E)
+                    Text(it, color = errorColor, style = Theme.L.Type.dialogBody.copy(color = errorColor))
+                }
+            }
+        },
+        confirmText = "Включить",
+        confirmEnabled = pinInput.length >= 4 && !isVerifyingPin,
+        onConfirm = {
+            if (isVerifyingPin) return@LavenderDialog
+            if (!pinInput.all { it.isDigit() }) {
+                pinError = "Код доступа для калькулятора должен состоять только из цифр"
+                return@LavenderDialog
+            }
+            scope.launch {
+                isVerifyingPin = true
+                try {
+                    val ok = AppLockRepository.verifyPassword(context, pinInput)
+                    if (ok) {
+                        Settings.camouflage_calculator_enabled.setValue(true)
+                        LauncherAliasManager.setCalculatorAliasEnabled(context, true)
+                        onSuccess()
+                        SnackBar.success("Маскировка под калькулятор включена")
+                    } else {
+                        pinError = "Неверный код доступа. Если текущий пароль содержит буквы, сначала измените его на числовой PIN."
+                    }
+                } finally {
+                    isVerifyingPin = false
+                }
+            }
+        }
+    )
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFF353535)
 @Composable
 private fun AppLockSettingsSectionPreview() = SettingsPreview {
@@ -172,6 +263,9 @@ internal fun AppLockPasswordDialog(
     // Пока считается хеш, повторное нажатие не должно запускать вторую проверку.
     var isSubmitting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+    val passwordKeyboardType = if (isCamouflage) KeyboardType.NumberPassword else KeyboardType.Text
 
     val needsCurrentPassword = mode == AppLockDialogMode.CHANGE || mode == AppLockDialogMode.DISABLE
     val needsNewPassword = mode == AppLockDialogMode.SET || mode == AppLockDialogMode.CHANGE
@@ -199,6 +293,11 @@ internal fun AppLockPasswordDialog(
 
                 if (needsNewPassword && newPassword != confirmPassword) {
                     errorText = "Коды доступа не совпадают"
+                    return@launch
+                }
+
+                if (isCamouflage && needsNewPassword && !newPassword.all { it.isDigit() }) {
+                    errorText = "При включённой маскировке код доступа должен состоять только из цифр"
                     return@launch
                 }
 
@@ -249,6 +348,7 @@ internal fun AppLockPasswordDialog(
                             errorText = null
                         },
                         label = "Текущий код доступа",
+                        keyboardType = passwordKeyboardType,
                         onDone = { if (canSubmit) submit() }
                     )
                 }
@@ -261,6 +361,7 @@ internal fun AppLockPasswordDialog(
                             errorText = null
                         },
                         label = "Новый код доступа",
+                        keyboardType = passwordKeyboardType,
                         onDone = { if (canSubmit) submit() }
                     )
                     PasswordSettingField(
@@ -270,6 +371,7 @@ internal fun AppLockPasswordDialog(
                             errorText = null
                         },
                         label = "Повтор кода доступа",
+                        keyboardType = passwordKeyboardType,
                         onDone = { if (canSubmit) submit() }
                     )
                 }
@@ -320,7 +422,8 @@ fun PasswordSettingField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    onDone: () -> Unit
+    onDone: () -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Text
 ) {
     DisableAppLockAutofill()
 
@@ -336,7 +439,7 @@ fun PasswordSettingField(
         visualTransformation =
             if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-            keyboardType = KeyboardType.Text,
+            keyboardType = keyboardType,
             imeAction = ImeAction.Done
         ),
         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() }),

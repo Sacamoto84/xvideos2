@@ -9,6 +9,7 @@ import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.common.block.useCase.blockGetAllBlockedGifsInfo
 import com.client.xvideos.r.common.block.useCase.blockItem as writeBlockedGif
+import com.client.xvideos.r.common.block.useCase.unblockItem as removeBlockedGif
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,6 +59,22 @@ class BlockRed @Inject constructor(
             }.onFailure { error ->
                 Timber.e(error, "!!! Не удалось заблокировать GIF")
                 SnackBar.error("Ошибка блокировки: ${error.message}")
+            }
+        }
+    }
+
+    fun unblockItem(item: GifsInfo) {
+        scope.launch {
+            runCatchingCancellable {
+                withContext(Dispatchers.IO) {
+                    removeBlockedGif(item).getOrThrow()
+                }
+                refresh()
+            }.onSuccess {
+                SnackBar.success("GIF разблокирован")
+            }.onFailure { error ->
+                Timber.e(error, "!!! Не удалось разблокировать GIF")
+                SnackBar.error("Ошибка разблокировки: ${error.message}")
             }
         }
     }

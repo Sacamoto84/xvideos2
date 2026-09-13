@@ -92,8 +92,9 @@ fun getUniqueId(url: String, dirPath: String, fileName: String): Int {
     }
     val hex = StringBuilder(hash.size * 2)
     for (b in hash) {
-        if (b and 0xFF.toByte() < 0x10) hex.append("0")
-        hex.append(Integer.toHexString((b and 0xFF.toByte()).toInt()))
+        val v = b.toInt() and 0xFF
+        if (v < 0x10) hex.append("0")
+        hex.append(Integer.toHexString(v))
     }
     return hex.toString().hashCode()
 }

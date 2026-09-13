@@ -2,6 +2,7 @@ package com.client.xvideos.common.fileDB.folder
 
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.requireInside
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.util.toMD5
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -112,14 +113,7 @@ class FolderTable(
 
     private fun writeField(rowDir: File, field: String, value: String) {
         val target = File(rowDir, fieldFileName(field))
-        val tmp = File(rowDir, "${target.name}.tmp")
-        tmp.writeText(value, Charsets.UTF_8)
-        if (target.exists() && !target.delete()) {
-            throw IllegalStateException("Cannot replace file: ${target.absolutePath}")
-        }
-        if (!tmp.renameTo(target)) {
-            throw IllegalStateException("Cannot commit file: ${target.absolutePath}")
-        }
+        target.writeTextAtomically(value)
     }
 
     private fun fieldFileName(field: String): String {

@@ -215,12 +215,24 @@ class Downloader @Inject constructor(
         if (item.id.isBlank() || item.userName.isBlank()) {
             return RedDownloadEnqueueReport()
         }
+        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
+            Timber.w("Downloader -> Отклонён небезопасный путь при recovery: userName=${item.userName}, id=${item.id}")
+            return RedDownloadEnqueueReport()
+        }
 
-        val folderPath = AppPath.r_cache_download + "/" + item.userName
-        File(folderPath).mkdirs()
+        val baseDir = File(AppPath.r_cache_download)
+        val userFolder = File(baseDir, item.userName)
+        try {
+            requireInside(baseDir, userFolder)
+        } catch (e: Exception) {
+            Timber.w(e, "Downloader -> Попытка выхода за пределы r_cache_download при recovery")
+            return RedDownloadEnqueueReport()
+        }
+        userFolder.mkdirs()
 
-        val videoFile = File(folderPath, "${item.id}.mp4")
-        val previewFile = File(folderPath, "${item.id}.jpg")
+        val folderPath = userFolder.absolutePath
+        val videoFile = File(userFolder, "${item.id}.mp4")
+        val previewFile = File(userFolder, "${item.id}.jpg")
         var queuedVideo = 0
         var queuedPreview = 0
         var skippedNoVideoUrl = 0

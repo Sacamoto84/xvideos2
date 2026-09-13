@@ -175,39 +175,33 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     }
 
     fun loadAlbumList(page: Int) {
-
-        screenModelScope.launch(Dispatchers.IO) {
-
-            when (bigList[page]?.status) {
-
-                StatusAlbumList.DOWNLOADED -> {
-                    Timber.i("!!! loadAlbumList DOWNLOADED page:$page")
-                    return@launch
-                }
-
-                StatusAlbumList.DOWNLOADING -> {
-                    Timber.i("!!! loadAlbumList DOWNLOADING page:$page")
-                    return@launch
-                }
-
-                else -> {}
+        screenModelScope.launch {
+            val status = bigList[page]?.status
+            if (status == StatusAlbumList.DOWNLOADED) {
+                Timber.i("!!! loadAlbumList DOWNLOADED page:$page")
+                return@launch
+            }
+            if (status == StatusAlbumList.DOWNLOADING) {
+                Timber.i("!!! loadAlbumList DOWNLOADING page:$page")
+                return@launch
             }
 
             try {
                 _isRequest.value = true
-
                 Timber.i("!!! loadAlbumList page:$page")
-                bigList.put(  page, AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING) )
-                val a = luscious.getAlbumList(page + 1, filter.value)
+                bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING)
+
+                val a = withContext(Dispatchers.IO) {
+                    luscious.getAlbumList(page + 1, filter.value)
+                }
                 if (a.isFailure) {
-                    bigList.put(page, AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY))
+                    bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
                     return@launch
                 }
 
                 val res = a.getOrThrow()
                 info.value = res.info
-                bigList.put( page, AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED) )
-
+                bigList[page] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
             } catch (e: CancellationException) {
                 // Уход с экрана посреди подгрузки страницы отменяет screenModelScope.
                 // Без этого catch отмена попадала в общий блок ниже и показывала
@@ -216,7 +210,7 @@ class ScreenLAlbumListSM @AssistedInject constructor(
             } catch (e: Exception) {
                 Timber.e(e, "!!! eee Error loading page $page")
                 SnackBar.error(e.message ?: "Error loading page $page")
-                bigList.put(page, AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY))
+                bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
             } finally {
                 _isRequest.value = false
             }

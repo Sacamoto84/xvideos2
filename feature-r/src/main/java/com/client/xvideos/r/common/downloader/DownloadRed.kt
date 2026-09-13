@@ -4,6 +4,8 @@ import android.content.Context
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.gallery.GallerySaver
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.p2p.P2pExportBundle
@@ -18,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.io.files.SystemPathSeparator
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -225,17 +226,30 @@ class DownloadRed @Inject constructor(
     }
 
     fun delete(item: GifsInfo) {
+        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
+            Timber.w("DownloadRed.delete -> Отклонён небезопасный путь: userName=${item.userName}, id=${item.id}")
+            return
+        }
         scope.launch(Dispatchers.IO) {
+            val baseDir = File(AppPath.r_cache_download)
+            val userDir = File(baseDir, item.userName)
+            val fileMp4 = File(userDir, "${item.id}.mp4")
+            val fileInfo = File(userDir, "${item.id}.info")
+            val fileJpg = File(userDir, "${item.id}.jpg")
 
-            val userDirPath = AppPath.r_cache_download + SystemPathSeparator + item.userName
-            val userDir = File(userDirPath)
+            try {
+                requireInside(baseDir, userDir)
+                requireInside(userDir, fileMp4)
+                requireInside(userDir, fileInfo)
+                requireInside(userDir, fileJpg)
+            } catch (e: Exception) {
+                Timber.w(e, "DownloadRed.delete -> Попытка выхода за пределы r_cache_download")
+                return@launch
+            }
 
-            val path0 = AppPath.r_cache_download+ SystemPathSeparator + item.userName + SystemPathSeparator + item.id+".mp4"
-            val path1 = AppPath.r_cache_download+ SystemPathSeparator + item.userName + SystemPathSeparator + item.id+".info"
-            val path2 = AppPath.r_cache_download+ SystemPathSeparator + item.userName + SystemPathSeparator + item.id+".jpg"
-            File(path0).delete()
-            File(path1).delete()
-            File(path2).delete()
+            fileMp4.delete()
+            fileInfo.delete()
+            fileJpg.delete()
 
             // Проверяем, осталась ли папка пользователя пустой
             if (userDir.exists() && userDir.isDirectory) {
