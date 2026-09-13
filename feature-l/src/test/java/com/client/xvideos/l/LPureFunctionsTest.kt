@@ -200,4 +200,20 @@ class LPureFunctionsTest {
         val malicious = File(root, "../../system/file")
         assertFalse(lIsInside(root, malicious))
     }
+
+    @Test
+    fun `безопасный расчёт aspect ratio при нулевых размерах возвращает 1`() {
+        val zeroWidth = picture(width = 0, height = 100)
+        val zeroHeight = picture(width = 100, height = 0)
+        val bothZero = picture(width = 0, height = 0)
+
+        fun safeAspect(item: PicsDetails): Float {
+            return if (item.width > 0 && item.height > 0) item.width.toFloat() / item.height else 1f
+        }
+
+        assertEquals(1f, safeAspect(zeroWidth), 0.001f)
+        assertEquals(1f, safeAspect(zeroHeight), 0.001f)
+        assertEquals(1f, safeAspect(bothZero), 0.001f)
+        assertEquals(0.5f, safeAspect(picture(width = 100, height = 200)), 0.001f)
+    }
 }

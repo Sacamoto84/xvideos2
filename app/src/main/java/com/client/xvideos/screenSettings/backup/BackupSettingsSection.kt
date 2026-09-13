@@ -39,7 +39,9 @@ import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.screenSettings.SettingsDataHolders
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Потолок консоли восстановления.
@@ -106,12 +108,15 @@ internal fun BackupSettingsSection(
             SnackBar.error("Выберите хотя бы одну папку")
             return@rememberLauncherForActivityResult
         }
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             isWorking = true
             appendBackupLog(
                 "Создание backup: L=${backupContentModeTitle(backupOptions.lMode)}, R=${backupContentModeTitle(backupOptions.rMode)}"
             )
-            XlrBackupManager.createBackup(context, uri, selectedBackupPaths, backupOptions)
+            val result = withContext(Dispatchers.IO) {
+                XlrBackupManager.createBackup(context, uri, selectedBackupPaths, backupOptions)
+            }
+            result
                 .onSuccess { report ->
                     appendBackupLog("Backup создан: ${report.files} файлов, ${formatBytes(report.bytes)}")
                     SnackBar.success("Backup создан: ${report.files} файлов, ${formatBytes(report.bytes)}")
@@ -129,9 +134,12 @@ internal fun BackupSettingsSection(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri == null || isWorking) return@rememberLauncherForActivityResult
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             isWorking = true
-            XlrBackupManager.inspectBackup(context, uri)
+            val result = withContext(Dispatchers.IO) {
+                XlrBackupManager.inspectBackup(context, uri)
+            }
+            result
                 .onSuccess { items ->
                     restoreUri = uri
                     restoreItems = items
@@ -292,12 +300,15 @@ internal fun BackupSettingsSection(
                                 return@SettingsButtonRowWithDialog
                             }
                             if (!isWorking) {
-                                scope.launch {
+                                scope.launch(Dispatchers.Main) {
                                     isWorking = true
                                     appendBackupLog("Восстановление backup: ${selectionSummaryText(restoreReport)}")
                                     val autoRecoverL = shouldAutoRecoverL(selectedRestorePaths)
                                     val autoRecoverRedDownload = shouldAutoRecoverRedDownload(selectedRestorePaths)
-                                    XlrBackupManager.restoreBackup(context, uri, selectedRestorePaths)
+                                    val result = withContext(Dispatchers.IO) {
+                                        XlrBackupManager.restoreBackup(context, uri, selectedRestorePaths)
+                                    }
+                                    result
                                         .onSuccess { report ->
                                             refreshBackupItems()
                                             onDataChanged()
@@ -306,8 +317,10 @@ internal fun BackupSettingsSection(
                                             // памяти: их читают один раз на старте. Без этого
                                             // раздел R оставался пустым до перезапуска, тогда
                                             // как X и L перечитывают свои экраны при входе.
-                                            data.savedRed?.refreshAll()
-                                            data.blockRed?.refresh()
+                                            withContext(Dispatchers.IO) {
+                                                data.savedRed?.refreshAll()
+                                                data.blockRed?.refresh()
+                                            }
                                             SnackBar.success("Backup восстановлен: ${report.files} файлов")
                                             appendBackupLog("Backup восстановлен: ${report.files} файлов, ${formatBytes(report.bytes)}")
                                             if (autoRecoverL) {
@@ -318,10 +331,10 @@ internal fun BackupSettingsSection(
                                                     appendBackupLog("L Likes/Collection: сканирую metadata")
                                                     lSaved.recoverIncompleteSavedMedia(
                                                         onEvent = { message ->
-                                                            scope.launch { appendBackupLog(message) }
+                                                            scope.launch(Dispatchers.Main) { appendBackupLog(message) }
                                                         },
                                                         onComplete = { recoveryReport ->
-                                                            scope.launch { appendBackupLog(lDownloadRecoveryConsoleText(recoveryReport)) }
+                                                            scope.launch(Dispatchers.Main) { appendBackupLog(lDownloadRecoveryConsoleText(recoveryReport)) }
                                                         }
                                                     )
                                                 }
@@ -334,10 +347,10 @@ internal fun BackupSettingsSection(
                                                     appendBackupLog("R Download: сканирую .info")
                                                     redDownloader.recoverIncompleteDownloads(
                                                         onEvent = { message ->
-                                                            scope.launch { appendBackupLog(message) }
+                                                            scope.launch(Dispatchers.Main) { appendBackupLog(message) }
                                                         },
                                                         onComplete = { recoveryReport ->
-                                                            scope.launch { appendBackupLog(redDownloadRecoveryConsoleText(recoveryReport)) }
+                                                            scope.launch(Dispatchers.Main) { appendBackupLog(redDownloadRecoveryConsoleText(recoveryReport)) }
                                                         }
                                                     )
                                                 }

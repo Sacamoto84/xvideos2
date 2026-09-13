@@ -25,6 +25,7 @@
 | [Проход 17 (Path Traversal R/L, KDownloader cancel/DB, Compose loop, off-main парсинг)](CODE_REVIEW_2026-09-13_v2.md) | 13.09.2026 | `master` | закрыт полностью |
 | [Проход 18 (Дедупликация Saved, Luscious URL, KDownloader idRequestMap leak, rename fallback)](CODE_REVIEW_2026-09-13_v3.md) | 13.09.2026 | `master` | закрыт полностью |
 | [Проход 19 (Защита от недокачанных файлов, KDownloader race/cancel, Compose I/O, Path traversal, Search UX)](CODE_REVIEW_2026-09-13_v4.md) | 13.09.2026 | `master` | закрыт полностью |
+| [Проход 20 (RedApi URL, плееры X/дашборды UX, L aspectRatio division by zero, Backup Compose state)](CODE_REVIEW_2026-09-13_v5.md) | 13.09.2026 | `master` | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

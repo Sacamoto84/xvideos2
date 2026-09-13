@@ -6,14 +6,24 @@ import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -56,9 +66,69 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             factory.create(url, position)
         }
 
-        if (vm.passedString == "") {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        // Альбомная ориентация + immersive на время полноэкранного режима.
+        DisposableEffect(Unit) {
+            val activity = context.findActivityOrNull()
+            val window = activity?.window
+            val prevOrientation = activity?.requestedOrientation
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            // Edge-to-edge включён глобально (MainActivity) и не перенастраивается.
+            // Статус-бар скрыт глобально — прячем/возвращаем только навигацию.
+            window?.let {
+                WindowCompat.getInsetsController(it, it.decorView)
+                    .hide(WindowInsetsCompat.Type.navigationBars())
+            }
+            onDispose {
+                activity?.requestedOrientation =
+                    prevOrientation ?: ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                window?.let {
+                    val controller = WindowCompat.getInsetsController(it, it.decorView)
+                    controller.show(WindowInsetsCompat.Type.navigationBars())
+                    // Страховка: статус-бар обязан остаться скрытым
+                    controller.hide(WindowInsetsCompat.Type.statusBars())
+                }
+            }
+        }
+
+        fun exit(currentExoPosition: Long = position) {
+            EventBus.postEvent(Event.X_FullScreenExitPosition(currentExoPosition))
+            navigator.pop()
+        }
+
+        BackHandler { exit() }
+
+        if (vm.isError) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Не удалось загрузить видео", color = Color.White)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row {
+                        Button(onClick = { vm.loadVideo() }) {
+                            Text("Повторить")
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(onClick = { exit() }) {
+                            Text("Назад")
+                        }
+                    }
+                }
+            }
+            return
+        }
+
+        if (vm.isLoading || vm.passedString.isBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
             }
             return
         }
@@ -101,36 +171,11 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             onDispose { exo.removeListener(listener) }
         }
 
-        // Альбомная ориентация + immersive на время полноэкранного режима.
-        DisposableEffect(Unit) {
-            val activity = context.findActivityOrNull()
-            val window = activity?.window
-            val prevOrientation = activity?.requestedOrientation
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            // Edge-to-edge включён глобально (MainActivity) и не перенастраивается.
-            // Статус-бар скрыт глобально — прячем/возвращаем только навигацию.
-            window?.let {
-                WindowCompat.getInsetsController(it, it.decorView)
-                    .hide(WindowInsetsCompat.Type.navigationBars())
-            }
-            onDispose {
-                activity?.requestedOrientation =
-                    prevOrientation ?: ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                window?.let {
-                    val controller = WindowCompat.getInsetsController(it, it.decorView)
-                    controller.show(WindowInsetsCompat.Type.navigationBars())
-                    // Страховка: статус-бар обязан остаться скрытым
-                    controller.hide(WindowInsetsCompat.Type.statusBars())
-                }
-            }
+        fun exitWithExo() {
+            exit(exo.currentPosition)
         }
 
-        fun exit() {
-            EventBus.postEvent(Event.X_FullScreenExitPosition(exo.currentPosition))
-            navigator.pop()
-        }
-
-        BackHandler { exit() }
+        BackHandler { exitWithExo() }
 
         AndroidView(
             factory = { ctx ->

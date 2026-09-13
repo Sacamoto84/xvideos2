@@ -154,7 +154,11 @@ fun L_LazyRowPictureDetails(
                 //{
                     Box( modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center )
                     {
-                        val aspect = item.width.toFloat() / item.height
+                        val aspect = if (item.width > 0 && item.height > 0) {
+                            item.width.toFloat() / item.height
+                        } else {
+                            1f
+                        }
 
                         val previewUrl = item.lPreviewImageUrl(thumbnailsSize)
                         val videoUrl = item.lAnimationVideoUrl()

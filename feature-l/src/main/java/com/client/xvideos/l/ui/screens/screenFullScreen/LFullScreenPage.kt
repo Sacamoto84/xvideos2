@@ -80,14 +80,16 @@ internal fun LFullScreenPage(
             .clipToBounds(),
         contentAlignment = Alignment.Center
     ) {
+    val pageRatio = if (pageItem.width > 0 && pageItem.height > 0) {
+        if (rotate) pageItem.height.toFloat() / pageItem.width
+        else pageItem.width.toFloat() / pageItem.height
+    } else {
+        1f
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .aspectRatio(
-                if (rotate) pageItem.height.toFloat() / pageItem.width
-                else pageItem.width.toFloat() / pageItem.height,
-                matchHeightConstraintsFirst = false
-            )
+            .aspectRatio(pageRatio, matchHeightConstraintsFirst = false)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             val videoUrl = pageItem.lAnimationVideoUrl()

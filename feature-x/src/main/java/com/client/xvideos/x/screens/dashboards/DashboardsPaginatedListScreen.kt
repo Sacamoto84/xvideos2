@@ -16,7 +16,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -82,10 +90,13 @@ fun DashboardsPaginatedListScreen(
 ) {
 
     val l = remember { mutableStateListOf<ItemsX>() }
+    var hasError by remember(pageIndex) { mutableStateOf(false) }
+    var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
 
-    LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch) {
+    LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch, key3 = retryTrigger) {
         // Список очищаем только когда новая страница уже загружена: раньше
         // clear() стоял перед сетевым вызовом, и всё время запроса лента была пустой.
+        hasError = false
         try {
             val (flag, items) = openNew(pageIndex)
             flag?.let { CountryState.current = it }
@@ -94,13 +105,26 @@ fun DashboardsPaginatedListScreen(
             throw e
         } catch (e: Exception) {
             Timber.e(e, "DashboardsPaginatedListScreen: ошибка загрузки pageIndex=$pageIndex")
+            hasError = true
             SnackBar.error("Ошибка загрузки видео")
         }
     }
 
 
     if (l.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){ CircularProgressIndicator(modifier = Modifier.size(40.dp)) }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (hasError) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Ошибка загрузки видео", color = Color.Gray)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = { retryTrigger++ }) {
+                        Text("Повторить")
+                    }
+                }
+            } else {
+                CircularProgressIndicator(modifier = Modifier.size(40.dp))
+            }
+        }
     } else {
         DashboardsPaginatedListContent(
             items = l.toImmutableList(),

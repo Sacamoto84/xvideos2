@@ -9,7 +9,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
-import com.client.xvideos.common.util.launchCatching
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.parcer.parseHTML5Player
@@ -22,7 +21,9 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -52,40 +53,62 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
 
     var passedString: String by mutableStateOf("")
 
+    var isError: Boolean by mutableStateOf(false)
+        private set
+
+    var isLoading: Boolean by mutableStateOf(true)
+        private set
+
     val a: MutableState<HTML5PlayerConfig?> = mutableStateOf(HTML5PlayerConfig())
 
     init {
-        // При отказе passedString остаётся пустым — экран показывает индикатор
-        // вместо того, чтобы закрыть приложение.
-        screenModelScope.launchCatching(message = "Страница видео не загрузилась: $url") {
-            Timber.e("!!! ScreenX_VideoPlayerFullScreenSM init()")
+        loadVideo()
+    }
 
-            // RAM-кэш (чистится при старте процесса), чтобы истекающий HLS-токен обновлялся.
-            val res = db.cacheUrlStringRam.get(url)
-            val s = if (res == null) {
-                val content = readHtmlFromURLDirect(url)
-                if (content.isNotBlank()) {
-                    db.cacheUrlStringRam.put(url, content)
+    fun loadVideo() {
+        isLoading = true
+        isError = false
+        screenModelScope.launch {
+            try {
+                Timber.e("!!! ScreenX_VideoPlayerFullScreenSM loadVideo()")
+
+                // RAM-кэш (чистится при старте процесса), чтобы истекающий HLS-токен обновлялся.
+                val res = db.cacheUrlStringRam.get(url)
+                val s = if (res == null) {
+                    val content = readHtmlFromURLDirect(url)
+                    if (content.isNotBlank()) {
+                        db.cacheUrlStringRam.put(url, content)
+                    }
+                    content
+                } else {
+                    res.content
                 }
-                content
-            } else {
-                res.content
-            }
 
-            val (config, hls) = withContext(Dispatchers.Default) {
-                val script = parserItemVideo(s)
-                val parsedConfig = script?.let { parseHTML5Player(it) }
-                parsedConfig to parsedConfig?.videoHLS.orEmpty()
+                val (config, hls) = withContext(Dispatchers.Default) {
+                    val script = parserItemVideo(s)
+                    val parsedConfig = script?.let { parseHTML5Player(it) }
+                    parsedConfig to parsedConfig?.videoHLS.orEmpty()
+                }
+                a.value = config
+                passedString = hls
+                if (hls.isBlank()) {
+                    isError = true
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Страница видео не загрузилась: %s", url)
+                isError = true
+            } finally {
+                isLoading = false
             }
-            a.value = config
-            passedString = hls
         }
     }
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class ScreenModuleItem {
+abstract class ScreenModuleItemFullScreen {
 
     @Binds
     @IntoMap
