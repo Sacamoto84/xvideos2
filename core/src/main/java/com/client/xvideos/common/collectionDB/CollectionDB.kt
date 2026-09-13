@@ -196,15 +196,17 @@ class CollectionDB<T>(
             cleanupTempFiles(root)
 
             root.listFiles { f -> f.isDirectory }?.map { dir ->
-                val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }?.mapNotNull { file ->
-                    try {
-                        val text = file.readText(Charsets.UTF_8)
-                        json.decodeFromString(serializer, text)
-                    } catch (ex: Exception) {
-                        Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
-                        null
-                    }
-                } ?: emptyList()
+                val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }
+                    ?.sortedByDescending { it.lastModified() }
+                    ?.mapNotNull { file ->
+                        try {
+                            val text = file.readText(Charsets.UTF_8)
+                            json.decodeFromString(serializer, text)
+                        } catch (ex: Exception) {
+                            Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
+                            null
+                        }
+                    } ?: emptyList()
                 CollectionEntity(dir.name, itemsInDir) // itemsInDir is now explicitly List<T>
             }?.sortedBy { it.collection } ?: emptyList()
         }

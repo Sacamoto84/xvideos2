@@ -156,7 +156,9 @@ class FileDB<T>(
 
                 cleanupTempFiles(dir)
 
-                val files = dir.listFiles { file -> file.extension == extension } ?: emptyArray()
+                val files = dir.listFiles { file -> file.extension == extension }
+                    ?.sortedByDescending { it.lastModified() }
+                    ?: emptyList()
 
                 loadSeq.incrementAndGet() to files.mapNotNull { file ->
                     try {

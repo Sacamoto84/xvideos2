@@ -11,7 +11,9 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 
@@ -34,7 +36,6 @@ class R_Saved_Subscriptions(
 
     init {
         refresh()
-        syncSelectedList()
     }
 
     private fun syncSelectedList() {
@@ -50,31 +51,44 @@ class R_Saved_Subscriptions(
 
     fun add(item: UserInfo) {
         Timber.i("R_Saved_Subscriptions add() id:$item")
-        creatorDb.insert(item.username, item)
-            .onSuccess {
-                SnackBar.success("Автор добавлен")
-                listCreators.add(item)
-                syncSelectedList()
-            }
-            .onFailure { e ->
-                SnackBar.error("Ошибка добавления Автора ${e.message}")
-            }
+        scope.launch(Dispatchers.IO) {
+            creatorDb.insert(item.username, item)
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        listCreators.removeAll { it.username == item.username }
+                        listCreators.add(item)
+                        syncSelectedList()
+                    }
+                    SnackBar.success("Автор добавлен")
+                }
+                .onFailure { e ->
+                    SnackBar.error("Ошибка добавления Автора ${e.message}")
+                }
+        }
     }
 
     fun remove(username: String) {
         Timber.i("R_Saved_Subscriptions remove() id:$username")
-        creatorDb.delete(username)
-            .onSuccess {
-                SnackBar.info("Автор удален")
-                refresh()
-                syncSelectedList()
-            }
-            .onFailure { e -> SnackBar.error("Ошибка удаления Автора ${e.message}") }
+        scope.launch(Dispatchers.IO) {
+            creatorDb.delete(username)
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        listCreators.removeAll { it.username == username }
+                        syncSelectedList()
+                    }
+                    SnackBar.info("Автор удален")
+                }
+                .onFailure { e -> SnackBar.error("Ошибка удаления Автора ${e.message}") }
+        }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun refresh() {
-        creatorDb.refresh()
+        scope.launch(Dispatchers.IO) {
+            creatorDb.refresh()
+            withContext(Dispatchers.Main) {
+                syncSelectedList()
+            }
+        }
     }
 
 
@@ -86,7 +100,9 @@ class R_Saved_Subscriptions(
     suspend fun refreshSubscription() : List<GifsInfo>{
         val res  = mutableListOf<GifsInfo>()
 
-        syncSelectedList()
+        withContext(Dispatchers.Main) {
+            syncSelectedList()
+        }
 
         selectedListCreator.filter { it.select }.forEach {
             try {

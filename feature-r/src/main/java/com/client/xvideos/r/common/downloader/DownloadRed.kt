@@ -178,17 +178,19 @@ class DownloadRed @Inject constructor(
 
             val result = mutableListOf<GifsInfo>()
 
-            allFiles.forEach { file ->
-                if (file.extension != "info") return@forEach
-                try {
-                    val content = file.readText()
-                    val obj = AppJson.decodeFromString<GifsInfo>(content)
-                    result.add(obj)
-                } catch (e: Exception) {
-                    // Битый .info пропускаем, но в лог приложения, а не в stdout.
-                    Timber.w(e, "Ошибка при чтении файла ${file.absolutePath}")
+            allFiles
+                .filter { it.extension == "info" }
+                .sortedByDescending { it.lastModified() }
+                .forEach { file ->
+                    try {
+                        val content = file.readText()
+                        val obj = AppJson.decodeFromString<GifsInfo>(content)
+                        result.add(obj)
+                    } catch (e: Exception) {
+                        // Битый .info пропускаем, но в лог приложения, а не в stdout.
+                        Timber.w(e, "Ошибка при чтении файла ${file.absolutePath}")
+                    }
                 }
-            }
 
             _downloadList.emit(result)
             _downloadedVideoKeys.emit(downloadedVideoKeys(allFiles.filter { it.extension == "mp4" }))

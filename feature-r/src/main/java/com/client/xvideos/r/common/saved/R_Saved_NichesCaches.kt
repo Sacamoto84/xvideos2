@@ -17,8 +17,10 @@ import kotlinx.serialization.encodeToString
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
@@ -65,7 +67,7 @@ class R_Saved_NichesCaches(
         isDownloading = true
         progress = 0f
 
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             try {
                 val niches = mutableListOf<Niche>()
                 // Раньше здесь стояло getOrNull()!!: при любой сетевой ошибке
@@ -83,27 +85,33 @@ class R_Saved_NichesCaches(
                     val res2 = redApi.explorer.getExplorerNiches(page = i, count = 100)
                         .getOrElse { error("страница $i из $pages не загрузилась: ${it.message ?: "нет сети"}") }
                     niches.addAll(res2.niches)
-                    progress += step
+                    withContext(Dispatchers.Main) {
+                        progress += step
+                    }
                 }
-                list.replaceWith(niches)
                 val json = AppJson.encodeToString(niches)
                 val file = cacheFile()
                 file.writeTextAtomically(json)
-                version++
-                timeRefresh()
-                if (showSnackBar) {
-                    SnackBar.success("Обновление завершено")
+                withContext(Dispatchers.Main) {
+                    list.replaceWith(niches)
+                    version++
+                    timeRefresh()
+                    if (showSnackBar) {
+                        SnackBar.success("Обновление завершено")
+                    }
+                    isDownloading = false
+                    isDownloaded = true
                 }
-                isDownloading = false
-                isDownloaded = true
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "R niches cache refresh error")
-                if (showSnackBar) {
-                    SnackBar.error("Ошибка обновления ${e}")
+                withContext(Dispatchers.Main) {
+                    if (showSnackBar) {
+                        SnackBar.error("Ошибка обновления ${e}")
+                    }
+                    isDownloading = false
                 }
-                isDownloading = false
             }
         }
     }
@@ -122,22 +130,28 @@ class R_Saved_NichesCaches(
     }
 
     fun readFromDisk() {
-        val file = cacheFile()
-        if (!file.exists()) {
-            return
-        }
-        runCatching {
-            val json = file.readText()
-            val niches = AppJson.decodeFromString<List<Niche>>(json)
-            list.replaceWith(niches)
-            version++
-            timeRefresh()
-            isDownloaded = list.isNotEmpty()
-        }.onFailure {
-            Timber.e(it, "R niches cache read error")
-            list.clear()
-            version++
-            isDownloaded = false
+        scope.launch(Dispatchers.IO) {
+            val file = cacheFile()
+            if (!file.exists()) {
+                return@launch
+            }
+            runCatching {
+                val json = file.readText()
+                val niches = AppJson.decodeFromString<List<Niche>>(json)
+                withContext(Dispatchers.Main) {
+                    list.replaceWith(niches)
+                    version++
+                    timeRefresh()
+                    isDownloaded = list.isNotEmpty()
+                }
+            }.onFailure {
+                Timber.e(it, "R niches cache read error")
+                withContext(Dispatchers.Main) {
+                    list.clear()
+                    version++
+                    isDownloaded = false
+                }
+            }
         }
     }
 

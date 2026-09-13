@@ -10,8 +10,10 @@ import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DropdownMenuItem_Like(item: GifsInfo? = null, onRunLike: () -> Unit, savedRed: ()-> SavedRed, onDismiss: () -> Unit){
@@ -27,9 +29,11 @@ fun DropdownMenuItem_Like(item: GifsInfo? = null, onRunLike: () -> Unit, savedRe
             savedRed.invoke().scope.launch {
                 delay(200)
                 if (!isLiked) savedRed.invoke().likes.add(item) else savedRed.invoke().likes.remove(item)
-                onRunLike.invoke()
-                onDismiss.invoke()
+                withContext(Dispatchers.Main) {
+                    onRunLike.invoke()
+                }
             }
+            onDismiss.invoke()
         }
     )
 }

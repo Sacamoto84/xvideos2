@@ -180,7 +180,9 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
             val root = File(dir)
             val infos = if (root.exists() && root.isDirectory) {
-                root.listFiles { f -> f.isFile && f.extension == "info" }?.toList() ?: emptyList()
+                root.listFiles { f -> f.isFile && f.extension == "info" }
+                    ?.sortedByDescending { it.lastModified() }
+                    ?: emptyList()
             } else {
                 emptyList()
             }
