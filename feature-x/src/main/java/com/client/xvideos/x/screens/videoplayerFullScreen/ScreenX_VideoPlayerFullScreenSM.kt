@@ -22,6 +22,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -70,9 +72,13 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
                 res.content
             }
 
-            val script = parserItemVideo(s)
-            a.value = script?.let { parseHTML5Player(it) }
-            passedString = a.value?.videoHLS.toString()
+            val (config, hls) = withContext(Dispatchers.Default) {
+                val script = parserItemVideo(s)
+                val parsedConfig = script?.let { parseHTML5Player(it) }
+                parsedConfig to parsedConfig?.videoHLS.orEmpty()
+            }
+            a.value = config
+            passedString = hls
         }
     }
 }

@@ -33,8 +33,31 @@ class KDownloader private constructor(dbHelper: DbHelper, private val config: Do
     }
 
     fun enqueue(req: DownloadRequest, listener: DownloadRequest.Listener): Int {
-        req.listener = listener
+        val wrappedListener = object : DownloadRequest.Listener {
+            override fun onStart() = listener.onStart()
+            override fun onProgress(value: Int) = listener.onProgress(value)
+            override fun onPause() = listener.onPause()
+            override fun onError(error: String) {
+                try {
+                    listener.onError(error)
+                } finally {
+                    reqQueue.remove(req.downloadId)
+                }
+            }
+            override fun onCompleted() {
+                try {
+                    listener.onCompleted()
+                } finally {
+                    reqQueue.remove(req.downloadId)
+                }
+            }
+        }
+        req.listener = wrappedListener
         return reqQueue.enqueue(req)
+    }
+
+    fun remove(id: Int) {
+        reqQueue.remove(id)
     }
 
     inline fun enqueue(

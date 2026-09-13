@@ -295,10 +295,12 @@ internal fun lFindCollectionItemFolder(root: File, identifiers: List<String>): F
  * (локальный путь к media/preview либо один из исходных URL).
  */
 internal fun lFindLikeFolder(root: File, url: String): File? {
-    val target = File(url)
-    if (lIsInside(root, target)) {
-        val parent = target.parentFile
-        if (parent != null && File(parent, L_METADATA_FILE_NAME).exists()) return parent
+    if (!url.startsWith("http://", ignoreCase = true) && !url.startsWith("https://", ignoreCase = true)) {
+        val target = File(url)
+        if (lIsInside(root, target)) {
+            val parent = target.parentFile
+            if (parent != null && File(parent, L_METADATA_FILE_NAME).exists()) return parent
+        }
     }
 
     return root.listFiles()
@@ -316,6 +318,8 @@ internal fun lFindLikeFolder(root: File, url: String): File? {
                     url in previewPaths ||
                     url == metadata.sourceMediaUrl ||
                     url == metadata.sourceOriginalUrl ||
-                    url == metadata.sourceVideoUrl
+                    url == metadata.sourceVideoUrl ||
+                    url == metadata.sourcePreviewUrl ||
+                    metadata.previewFiles?.any { it.sourceUrl == url } == true
         }
 }

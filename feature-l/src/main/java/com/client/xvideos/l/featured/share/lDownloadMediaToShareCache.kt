@@ -1,11 +1,14 @@
 package com.client.xvideos.l.featured.share
 
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.l.featured.saved.lCreateMediaClient
 import com.client.xvideos.l.featured.saved.lDownloadToFile
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.model.lSavedFileName
+import timber.log.Timber
 import java.io.File
 
 /**
@@ -20,9 +23,18 @@ import java.io.File
  */
 suspend fun lDownloadMediaToShareCache(item: PicsDetails): File? {
     val fileName = item.lSavedFileName() ?: return null
-    val url = item.lDownloadUrl() ?: return null
-    val file = File(AppPath.l_cacheDownload, fileName)
+    if (isUnsafeItemName(fileName)) return null
 
+    val rootDir = File(AppPath.l_cacheDownload)
+    val file = File(rootDir, fileName)
+    try {
+        requireInside(rootDir, file)
+    } catch (e: Exception) {
+        Timber.w(e, "lDownloadMediaToShareCache -> Попытка выхода за пределы l_cacheDownload")
+        return null
+    }
+
+    val url = item.lDownloadUrl() ?: return null
     val client = lCreateMediaClient()
 
     client.use { client ->

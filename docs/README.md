@@ -21,7 +21,10 @@
 | [Проход 13 (WorkManager I/O, DoH Punycode, плеер, атомарность)](CODE_REVIEW_2026-09-12_v2.md) | 12.09.2026 | `master` (`64e30e9`) | закрыт |
 | [Проход 14 (KDownloader Scope/finally, FolderTable path traversal, пауза плеера, скорость сети)](CODE_REVIEW_2026-09-12_v3.md) | 12.09.2026 | `master` (`6bdca7d`..`14243d7`) | закрыт |
 | [Проход 15 (Coil NPE, блокировки R, калькулятор, ScreenModel I/O, атомарность)](CODE_REVIEW_2026-09-12_v4.md) | 12.09.2026 | `master` (`eebb12a`..`f4de960`) | закрыт |
-| [Проход 16 (FileProvider утечка, блокировка калькулятора, KDownloader Looper, Compose IO)](CODE_REVIEW_2026-09-13.md) | 13.09.2026 | `0f3946b` | открыт |
+| [Проход 16 (FileProvider утечка, блокировка калькулятора, KDownloader Looper, Compose IO)](CODE_REVIEW_2026-09-13.md) | 13.09.2026 | `94cd6b2` | закрыт полностью |
+| [Проход 17 (Path Traversal R/L, KDownloader cancel/DB, Compose loop, off-main парсинг)](CODE_REVIEW_2026-09-13_v2.md) | 13.09.2026 | `master` | закрыт полностью |
+| [Проход 18 (Дедупликация Saved, Luscious URL, KDownloader idRequestMap leak, rename fallback)](CODE_REVIEW_2026-09-13_v3.md) | 13.09.2026 | `master` | закрыт полностью |
+| [Проход 19 (Защита от недокачанных файлов, KDownloader race/cancel, Compose I/O, Path traversal, Search UX)](CODE_REVIEW_2026-09-13_v4.md) | 13.09.2026 | `master` | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

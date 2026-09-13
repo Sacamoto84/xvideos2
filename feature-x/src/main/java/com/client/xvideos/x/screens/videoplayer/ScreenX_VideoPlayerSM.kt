@@ -30,8 +30,10 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -101,13 +103,17 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 res.content
             }
 
-            val script = parserItemVideo(s)
-            a.value = script?.let { parseHTML5Player(it) }
+            val parsedData = withContext(Dispatchers.Default) {
+                val script = parserItemVideo(s)
+                val config = script?.let { parseHTML5Player(it) }
+                val parsedTags = parserItemVideoTags(s)
+                val hls = config?.videoHLS.orEmpty()
+                Triple(config, parsedTags, hls)
+            }
 
-            // Список тегов
-            tags = parserItemVideoTags(s)
-
-            passedHLS = a.value?.videoHLS.toString()
+            a.value = parsedData.first
+            tags = parsedData.second
+            passedHLS = parsedData.third
         }
     }
 

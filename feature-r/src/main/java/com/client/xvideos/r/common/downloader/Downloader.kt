@@ -294,10 +294,19 @@ class Downloader @Inject constructor(
     }
 
     fun findVideoInDownload(id: String, name: String): Boolean {
-        //val mainPath = AppPath.cache_download_red + "/" + name + "/" + id + ".mp4"
-        val mainPath = "${AppPath.r_cache_download}/$name/$id.mp4"
-        val file = File(mainPath)
-        return file.exists()
+        if (id.isBlank() || name.isBlank()) return false
+        if (isUnsafeItemName(name) || isUnsafeItemName(id)) return false
+        val baseDir = File(AppPath.r_cache_download)
+        val userDir = File(baseDir, name)
+        val file = File(userDir, "$id.mp4")
+        return try {
+            requireInside(baseDir, userDir)
+            requireInside(userDir, file)
+            file.exists()
+        } catch (e: Exception) {
+            Timber.w(e, "Downloader.findVideoInDownload -> Попытка выхода за пределы r_cache_download")
+            false
+        }
     }
 
 }

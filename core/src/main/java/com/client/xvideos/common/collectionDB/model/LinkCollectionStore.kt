@@ -1,5 +1,7 @@
 package com.client.xvideos.common.collectionDB.model
 
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.collectionDB.CollectionDB
 import com.client.xvideos.common.snackbar.SnackBar
@@ -48,7 +50,18 @@ abstract class LinkCollectionStore<T>(
         synchronized(publishLock) {
             if (seq > publishedSeq) {
                 publishedSeq = seq
-                collectionList.replaceWith(items)
+                val mainLooper = runCatching { Looper.getMainLooper() }.getOrNull()
+                if (mainLooper == null || Looper.myLooper() == mainLooper) {
+                    collectionList.replaceWith(items)
+                } else {
+                    Handler(mainLooper).post {
+                        synchronized(publishLock) {
+                            if (seq >= publishedSeq) {
+                                collectionList.replaceWith(items)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

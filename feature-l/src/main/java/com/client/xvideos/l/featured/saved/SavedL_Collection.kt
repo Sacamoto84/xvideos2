@@ -176,7 +176,11 @@ class SavedL_Collection(
     }
 
     fun refresh() {
-        val collectionName = currentCollectionName ?: return
+        val rawName = currentCollectionName ?: return
+        val collectionName = CollectionName.normalizeOrNull(rawName) ?: run {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
         scope.launch(Dispatchers.IO) {
             Timber.i("SavedL_Collection refresh() collection:$collectionName")
             val items = try {
@@ -197,7 +201,8 @@ class SavedL_Collection(
     }
 
     fun refreshDuplicates(collectionName: String? = currentCollectionName) {
-        val name = collectionName ?: return
+        val rawName = collectionName ?: return
+        val name = CollectionName.normalizeOrNull(rawName) ?: return
         scope.launch(Dispatchers.IO) {
             val groups = lReadCollectionDuplicateGroups(File(AppPath.l_collection, name))
             withContext(Dispatchers.Main) {
@@ -235,10 +240,14 @@ class SavedL_Collection(
     }
 
     fun addAll(items: List<PicsDetails>, collectionName: String) {
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
         val uniqueItems = items.distinctBy { lPicsDetailsIdentityKey(it) }
         if (uniqueItems.isEmpty()) return
 
-        Timber.i("SavedL_Collection addAll() count:${uniqueItems.size} collection:$collectionName")
+        Timber.i("SavedL_Collection addAll() count:${uniqueItems.size} collection:$safeName")
 
         scope.launch(Dispatchers.IO) {
             var successCount = 0
@@ -247,7 +256,7 @@ class SavedL_Collection(
             uniqueItems.forEach { item ->
                 lPersistPicsDetailsToFolder(
                     item = item,
-                    root = File(AppPath.l_collection, collectionName),
+                    root = File(AppPath.l_collection, safeName),
                     luscious = luscious,
                     progress = progress
                 ).onSuccess {
@@ -269,7 +278,7 @@ class SavedL_Collection(
                 }
 
                 refreshCollectionList()
-                if (currentCollectionName == collectionName) {
+                if (currentCollectionName == safeName) {
                     refresh()
                 }
             }
@@ -292,10 +301,14 @@ class SavedL_Collection(
     }
 
     fun removeAll(items: List<PicsDetails>, collectionName: String) {
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
         val uniqueItems = items.distinctBy { lPicsDetailsIdentityKey(it) }
         // Обход папок коллекции на каждый элемент плюс рекурсивное удаление — на IO.
         scope.launch(Dispatchers.IO) {
-            val collectionRoot = File(AppPath.l_collection, collectionName)
+            val collectionRoot = File(AppPath.l_collection, safeName)
             val removedCount = uniqueItems.count { item ->
                 val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
                 folder?.deleteRecursively() == true
@@ -304,7 +317,7 @@ class SavedL_Collection(
             if (removedCount > 0) {
                 SnackBar.info("Удалено из коллекции: $removedCount")
                 refreshCollectionList()
-                if (currentCollectionName == collectionName) {
+                if (currentCollectionName == safeName) {
                     refresh()
                 }
             } else {
@@ -314,7 +327,11 @@ class SavedL_Collection(
     }
 
     fun setManualCover(item: PicsDetails, collectionName: String? = currentCollectionName) {
-        val name = collectionName ?: return
+        val rawName = collectionName ?: return
+        val name = CollectionName.normalizeOrNull(rawName) ?: run {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
         // Поиск папки элемента + чтение и запись config-файла — файловые операции.
         // Вызов идёт из onClick меню, с UI-потока это фриз (см. refreshCollectionList).
         scope.launch(Dispatchers.IO) {
@@ -341,7 +358,11 @@ class SavedL_Collection(
     }
 
     fun removeDuplicateItems(collectionName: String? = currentCollectionName) {
-        val name = collectionName ?: return
+        val rawName = collectionName ?: return
+        val name = CollectionName.normalizeOrNull(rawName) ?: run {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
         // Обход всех папок коллекции с чтением metadata.json каждого элемента плюс
         // рекурсивное удаление дублей — только на IO, иначе ANR на большой коллекции.
         scope.launch(Dispatchers.IO) {

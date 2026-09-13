@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
@@ -80,8 +81,18 @@ class ScreenRedManageBlock() : Screen {
                                 .weight(1f)
                                 .padding(horizontal = 12.dp)
                         ) {
-                            Text(item.userName, style = Theme.R.Type.bodyBold, color = Theme.R.colorWhite)
-                            Text(item.id, style = Theme.R.Type.caption, color = Theme.R.colorSecondaryWhite)
+                            Text(
+                                text = item.userName,
+                                color = Theme.Text.primary,
+                                fontSize = 16.sp,
+                                fontFamily = Theme.R.fontFamilyPopinsMedium
+                            )
+                            Text(
+                                text = item.id,
+                                color = Theme.Text.secondary,
+                                fontSize = 13.sp,
+                                fontFamily = Theme.R.fontFamilyDMsanss
+                            )
                         }
 
                         IconButton(

@@ -22,8 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.icons.IconFavorite18
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -44,18 +43,23 @@ import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-private suspend fun openNew(numberScreen: Int = 0): SnapshotStateList<ItemsX> {
+private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
     val url = urlStart + if (currentNumberScreen == 0) "" else "/new/${currentNumberScreen}"
     Timber.i("!!! openNew numberScreen:$numberScreen url:$url")
     val html = readHtmlFromURLWebView(url)
-    // X4: страну выставляет вызывающий, парсер остаётся чистым.
-    parseSiteCountryFlag(html)?.let { CountryState.current = it }
-    return parserListVideo(html).toMutableStateList()
+    val flag = parseSiteCountryFlag(html)
+    val items = withContext(Dispatchers.Default) {
+        parserListVideo(html)
+            .filter { !it.href.contains("THUMBNUM") }
+            .distinctBy { it.id }
+    }
+    return flag to items
 }
 
 
@@ -79,15 +83,19 @@ fun DashboardsPaginatedListScreen(
 
     val l = remember { mutableStateListOf<ItemsX>() }
 
-    LaunchedEffect(key1 = pageIndex, key2 = CountryState.current) {
+    LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch) {
         // Список очищаем только когда новая страница уже загружена: раньше
         // clear() стоял перед сетевым вызовом, и всё время запроса лента была пустой.
-        val items = withContext(Dispatchers.IO) {
-            openNew(pageIndex)
-                .filter { !it.href.contains("THUMBNUM") }
-                .distinctBy { it.id }
+        try {
+            val (flag, items) = openNew(pageIndex)
+            flag?.let { CountryState.current = it }
+            l.replaceWith(items)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "DashboardsPaginatedListScreen: ошибка загрузки pageIndex=$pageIndex")
+            SnackBar.error("Ошибка загрузки видео")
         }
-        l.replaceWith(items)
     }
 
 

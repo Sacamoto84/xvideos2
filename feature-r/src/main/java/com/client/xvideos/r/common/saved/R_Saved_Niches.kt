@@ -17,6 +17,7 @@ class R_Saved_Niches {
         nichesDb.insert(item.id, item)
             .onSuccess {
                 SnackBar.info("Группа добавлена")
+                list.removeAll { it.id == item.id }
                 list.add(item)
             }
             .onFailure { e ->
@@ -29,7 +30,7 @@ class R_Saved_Niches {
         nichesDb.delete(item.id)
             .onSuccess {
                 SnackBar.info("Группа удалена")
-                list.remove(item)
+                list.removeAll { it.id == item.id }
             }
             .onFailure { e -> SnackBar.error("Ошибка удаления группы ${e.message}") }
     }

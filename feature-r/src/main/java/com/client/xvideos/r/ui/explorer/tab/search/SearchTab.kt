@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonOutline
@@ -35,7 +35,6 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.common.util.runCatchingCancellable
 import timber.log.Timber
@@ -48,7 +47,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -94,7 +96,7 @@ fun SearchTabContent(
         }
     ) { paddingValues ->
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            items(creatorsList, key = { it.text }) { item ->
+            itemsIndexed(creatorsList, key = { index, item -> "${item.text}_${item.name}_$index" }) { _, item ->
                 SearchCreatorItem(item)
             }
         }
@@ -170,25 +172,24 @@ class ScreenRedExplorerSearchSM @Inject constructor(
 
 
         screenModelScope.launch {
+            @OptIn(FlowPreview::class)
+            searchText
+                .debounce(300)
+                .collectLatest { text ->
+                    if (text.isBlank()) {
+                        creatorsList.clear()
+                        return@collectLatest
+                    }
 
-            searchText.collect { text ->
-
-                SnackBar.info(text)
-
-                if (text == "") {
-                    creatorsList.clear()
-                    return@collect
+                    // Ловим на каждый запрос, а не на весь collect: отказ сети на
+                    // одной строке не должен завершать подписку — иначе поиск
+                    // умирал бы до ухода с экрана. Раньше getOrThrow закрывал
+                    // приложение целиком.
+                    runCatchingCancellable { redApi.search.searchCreatorsShort(text).getOrThrow() }
+                        .onSuccess { creatorsList.replaceWith(it.items) }
+                        .onFailure { Timber.w(it, "!!! Поиск авторов не удался: %s", text) }
                 }
-
-                // Ловим на каждый запрос, а не на весь collect: отказ сети на
-                // одной строке не должен завершать подписку — иначе поиск
-                // умирал бы до ухода с экрана. Раньше getOrThrow закрывал
-                // приложение целиком.
-                runCatchingCancellable { redApi.search.searchCreatorsShort(text).getOrThrow() }
-                    .onSuccess { creatorsList.replaceWith(it.items) }
-                    .onFailure { Timber.w(it, "!!! Поиск авторов не удался: %s", text) }
-
-            }
+        }
 //            val niches = RedGifs.searchNiches("Ana")
 //            nichesList.clear()
 //            nichesList.addAll(niches)
@@ -196,11 +197,7 @@ class ScreenRedExplorerSearchSM @Inject constructor(
 //            val tags = RedGifs.searchTags("Ana")
 //            tagsList.clear()
 //            tagsList.addAll(tags)
-        }
-
     }
-
-
 
 }
 

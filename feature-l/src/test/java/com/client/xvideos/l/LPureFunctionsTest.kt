@@ -6,7 +6,10 @@ import com.client.xvideos.l.featured.saved.lPicsDetailsIdentityKey
 import com.client.xvideos.l.featured.saved.sanitizeFilePart
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.Thumbnails
+import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.model.lFullScreenImageUrls
+import com.client.xvideos.l.model.lSavedFileName
+import com.client.xvideos.l.net.extractIdFromUrl
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -144,5 +147,57 @@ class LPureFunctionsTest {
         assertTrue(File("/tmp/media.jpg.part").isPartialDownload())
         assertFalse(File("/tmp/media.jpg").isPartialDownload())
         assertFalse(File("/tmp/metadata.json").isPartialDownload())
+    }
+
+    @Test
+    fun `lSavedFileName нейтрализует path traversal и слеши в альбоме`() {
+        val item = picture(
+            urlToOriginal = "https://cdn/sample.jpg",
+            album = "../../etc/passwd",
+            width = 1920,
+            height = 1080
+        )
+        val fileName = item.lSavedFileName()
+        assertEquals("1920_1080_false_____etc_passwd_sample.jpg", fileName)
+        assertFalse(fileName!!.contains('/'))
+        assertFalse(fileName.contains('\\'))
+        assertFalse(fileName.contains(".."))
+    }
+
+    /* ---------- extractIdFromUrl ---------- */
+
+    @Test
+    fun `extractIdFromUrl корректно извлекает id из url с префиксом названия`() {
+        val url = "https://www.luscious.net/albums/favorite_pictures_123456/"
+        assertEquals("123456", extractIdFromUrl(url))
+    }
+
+    @Test
+    fun `extractIdFromUrl корректно извлекает id из url без префикса`() {
+        val url = "https://members.luscious.net/albums/789012/"
+        assertEquals("789012", extractIdFromUrl(url))
+    }
+
+    @Test
+    fun `extractIdFromUrl возвращает null для неподходящих ссылок`() {
+        assertEquals(null, extractIdFromUrl("https://www.luscious.net/users/john/"))
+        assertEquals(null, extractIdFromUrl("random_string_without_album_path"))
+    }
+
+    @Test
+    fun `lDownloadUrl fallback возвращает video url когда url_to_original равен null`() {
+        val animatedItem = picture(
+            urlToOriginal = null,
+            urlToVideo = "https://cdn/video.mp4",
+            isAnimated = true
+        )
+        assertEquals("https://cdn/video.mp4", animatedItem.lDownloadUrl())
+    }
+
+    @Test
+    fun `lIsInside блокирует попытки выхода через относительные пути`() {
+        val root = File("/app/storage/likes")
+        val malicious = File(root, "../../system/file")
+        assertFalse(lIsInside(root, malicious))
     }
 }

@@ -319,6 +319,10 @@ class MediaDownloadWorker(
             }
         }
         output.flush()
+
+        if (!isStopped && totalBytes > 0 && downloadedSoFar < totalBytes) {
+            throw IOException("Download interrupted: expected $totalBytes bytes, but received only $downloadedSoFar bytes")
+        }
     }
 
     private suspend fun updateDownloadProgress(

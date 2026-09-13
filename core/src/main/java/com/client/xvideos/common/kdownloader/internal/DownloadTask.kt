@@ -104,9 +104,9 @@ class DownloadTask(
 
                     if (model == null && file.exists() && dbHelper is AppDbHelper) {
                         if (!deleteTempFile()) {
-                            tempPath =
-                                tempPath.split(".")[0] + "2." + tempPath.split(".", limit = 2)[1]
-                            file = File(tempPath)
+                            val parent = file.parentFile ?: File(req.dirPath)
+                            file = File(parent, "${file.nameWithoutExtension}_2.${file.extension}")
+                            tempPath = file.absolutePath
                         }
                     }
 
@@ -221,21 +221,16 @@ class DownloadTask(
                             return@withContext
                         }
 
-                        if (!isActive) {
+                        if (!isActive || req.job?.isActive == false) {
                             deleteTempFile()
                             req.reset()
-                            break
-                        }
-                        if (req.job?.isActive == false) {
-                            deleteTempFile()
-                            req.reset()
-                            break
+                            req.status = Status.CANCELLED
+                            listener.onError("Cancelled")
+                            return@withContext
                         }
                         outStream.write(buff, 0, byteCount)
                         req.downloadedBytes = req.downloadedBytes + byteCount
-                        withContext(Dispatchers.IO) {
-                            syncIfRequired(outStream)
-                        }
+                        syncIfRequired(outStream)
 
                         var progress = 0
                         if (totalBytes > 0) {
@@ -247,14 +242,25 @@ class DownloadTask(
                         }
                     } while (true)
 
-                    if (req.status === Status.CANCELLED) {
+                    if (!isActive || req.job?.isActive == false || req.status === Status.CANCELLED) {
                         deleteTempFile()
                         req.reset()
+                        req.status = Status.CANCELLED
                         listener.onError("Cancelled")
                         return@withContext
                     } else if (req.status === Status.PAUSED) {
                         sync(outStream)
                         listener.onPause()
+                        return@withContext
+                    }
+
+                    if (totalBytes > 0 && req.downloadedBytes < totalBytes) {
+                        if (!isResumeSupported) {
+                            deleteTempFile()
+                            req.reset()
+                        }
+                        req.status = Status.FAILED
+                        listener.onError("Download incomplete: expected $totalBytes bytes, got ${req.downloadedBytes} bytes")
                         return@withContext
                     }
 

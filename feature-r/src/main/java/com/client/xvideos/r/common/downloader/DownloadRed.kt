@@ -106,9 +106,24 @@ class DownloadRed @Inject constructor(
      */
     fun saveToGallery(item: GifsInfo) {
         if (item.id.isBlank() || item.userName.isBlank()) return
+        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
+            Timber.w("DownloadRed.saveToGallery -> Отклонён небезопасный путь: userName=${item.userName}, id=${item.id}")
+            return
+        }
+
+        val baseDir = File(AppPath.r_cache_download)
+        val userDir = File(baseDir, item.userName)
+        val local = File(userDir, "${item.id}.mp4")
+        try {
+            requireInside(baseDir, userDir)
+            requireInside(userDir, local)
+        } catch (e: Exception) {
+            Timber.w(e, "DownloadRed.saveToGallery -> Попытка выхода за пределы r_cache_download")
+            return
+        }
+
         val fileName = "r_${item.userName}_${item.id}.mp4"
 
-        val local = File("${AppPath.r_cache_download}/${item.userName}/${item.id}.mp4")
         if (local.exists()) {
             GallerySaver.saveLocal(appContext, local, fileName)
             return
@@ -137,6 +152,7 @@ class DownloadRed @Inject constructor(
      */
     fun shareMetaByP2p(item: GifsInfo, onReady: (P2pExportBundle) -> Unit) {
         if (item.id.isBlank() || item.userName.isBlank()) return
+        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) return
 
         scope.launch(Dispatchers.IO) {
             val tmpRoot = File(appContext.cacheDir, "p2p_r_export")

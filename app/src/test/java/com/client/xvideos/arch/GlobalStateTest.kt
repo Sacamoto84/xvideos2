@@ -163,6 +163,8 @@ class GlobalStateTest {
             // Выбранная страна: глобальна по смыслу, раньше была двумя
             // разрозненными top-level переменными.
             "x/feature/country/country.kt::current",
+            // Счётчик явных переключений страны пользователем для инвалидации пагинации.
+            "x/feature/country/country.kt::userSelectionEpoch",
         )
 
         /**

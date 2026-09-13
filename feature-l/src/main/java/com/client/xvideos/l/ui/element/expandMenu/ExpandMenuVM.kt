@@ -12,6 +12,7 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
 import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.net.Luscious
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -96,8 +97,9 @@ class ExpandMenuViewModel @Inject constructor(
         val haptic = LocalHapticFeedback.current
         SavedLikesItemExpandMenu(
             item,
-            onDelete = { it ->
-                item.url_to_original?.let { url -> saved.likes.remove(url) }
+            onDelete = {
+                val url = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl()
+                url?.let { saved.likes.remove(it) }
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
             onShare = { it -> onShareClicked(it) },
@@ -149,7 +151,8 @@ class ExpandMenuViewModel @Inject constructor(
     fun saveToGallery(item: PicsDetails) {
         scope.launch(Dispatchers.IO) {
             try {
-                val folder = item.url_to_original?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
+                val targetUrl = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl()
+                val folder = targetUrl?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
                 val localBig = folder
                     ?.let { f ->
                         readLSavedLikeMetadata(File(f, L_METADATA_FILE_NAME))
@@ -187,7 +190,7 @@ class ExpandMenuViewModel @Inject constructor(
     fun dismissP2p() { p2pSource = null }
 
     fun startP2p(item: PicsDetails) {
-        val url = item.url_to_original
+        val url = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl()
         val folder = url?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
         val bundle = folder?.let { LExporter.export(it) }
         // Нет в Likes (или бандл битый) — экран отправки скачает item в outbox,

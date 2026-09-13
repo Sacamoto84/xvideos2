@@ -25,19 +25,20 @@ fun getTempPath(dirPath: String, fileName: String): String {
 @Throws(IOException::class)
 fun renameFileName(oldPath: String, newPath: String) {
     val oldFile = File(oldPath)
-    try {
-        val newFile = File(newPath)
-        if (newFile.exists()) {
-            if (!newFile.delete()) {
-                throw IOException("Deletion Failed")
-            }
-        }
-        if (!oldFile.renameTo(newFile)) {
-            throw IOException("Rename Failed")
-        }
-    } finally {
-        if (oldFile.exists()) {
+    if (!oldFile.exists()) {
+        throw IOException("Source file does not exist: $oldPath")
+    }
+    val newFile = File(newPath)
+    if (newFile.exists() && !newFile.delete()) {
+        throw IOException("Deletion Failed: $newPath")
+    }
+    if (!oldFile.renameTo(newFile)) {
+        // Fallback: cross-filesystem move or temporary file handle lock
+        try {
+            oldFile.copyTo(newFile, overwrite = true)
             oldFile.delete()
+        } catch (e: Exception) {
+            throw IOException("Failed to rename or copy $oldPath to $newPath", e)
         }
     }
 }

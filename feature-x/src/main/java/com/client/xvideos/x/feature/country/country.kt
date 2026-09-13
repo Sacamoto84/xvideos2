@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -67,6 +68,7 @@ private val countries: List<Country> by lazy { parserCountry() }
  */
 object CountryState {
     var current: String by mutableStateOf("❓")    // Текущая страна
+    var userSelectionEpoch: Int by mutableIntStateOf(0)
 }
 
 @Composable
@@ -125,10 +127,11 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                                     scope.launchCatching(message = "Смена страны не удалась: ${it.name}") {
 
                                         val s = readHtmlFromURLWebView(urlStart + it.url)
-                                        parseSiteCountryFlag(s)?.let { it1 -> CountryState.current = it1 }
+                                        val flag = parseSiteCountryFlag(s)
 
                                         withContext(Dispatchers.Main) {
-                                            //CountryState.updateTrigger++
+                                            flag?.let { it1 -> CountryState.current = it1 }
+                                            CountryState.userSelectionEpoch++
                                             Toast.makeText(
                                                 AppContextHolder.applicationContext,
                                                 "${getFlagEmoji(it.flagClass)} ${it.name}",

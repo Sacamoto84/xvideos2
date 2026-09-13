@@ -8,9 +8,9 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import timber.log.Timber
 
@@ -27,14 +27,19 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
 
         Timber.i("addAlbum() id:${item.id} name:${item.title}")
-        albumDb.insert(item.id, item)
-            .onSuccess {
-                SnackBar.info("Альбом сохранен")
-                list.add(item)
-            }
-            .onFailure { e ->
-                SnackBar.error("Ошибка добавления группы ${e.message}")
-            }
+        scope.launch(Dispatchers.IO) {
+            albumDb.insert(item.id, item)
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        list.removeAll { it.id == item.id }
+                        list.add(item)
+                    }
+                    SnackBar.info("Альбом сохранен")
+                }
+                .onFailure { e ->
+                    SnackBar.error("Ошибка добавления группы ${e.message}")
+                }
+        }
     }
 
     fun addAndPicsDetails(item: AlbumDetails, picsDetails: List<PicsDetails>) {
@@ -46,37 +51,41 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
 
         Timber.i("addAndPicsDetails() id:${item.id} name:${item.title} picsDetails:${picsDetails.size}")
-        albumDb.insert(item.id, item)
-            .onSuccess {
-                SnackBar.info("Альбом сохранен")
-                list.add(item)
-
-                scope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
+            albumDb.insert(item.id, item)
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        list.removeAll { it.id == item.id }
+                        list.add(item)
+                    }
+                    SnackBar.info("Альбом сохранен")
                     db.lAlbumPictureCache.put(albumId.toString(), AppJson.encodeToString(picsDetails))
                 }
-
-            }
-            .onFailure { e ->
-                SnackBar.error("Ошибка добавления группы ${e.message}")
-            }
+                .onFailure { e ->
+                    SnackBar.error("Ошибка добавления группы ${e.message}")
+                }
+        }
     }
 
     fun remove(item: AlbumDetails) {
         Timber.i("removeAlbum() id:${item.id} name:${item.title}")
-        albumDb.delete(item.id)
-            .onSuccess {
-                SnackBar.info("Альбом удален")
-                list.remove(item)
-            }
-            .onFailure { e ->
-                SnackBar.error("Ошибка удаления группы ${e.message}")
-            }
+        scope.launch(Dispatchers.IO) {
+            albumDb.delete(item.id)
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        list.removeAll { it.id == item.id }
+                    }
+                    SnackBar.info("Альбом удален")
+                }
+                .onFailure { e ->
+                    SnackBar.error("Ошибка удаления группы ${e.message}")
+                }
+        }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun refresh() {
-        albumDb.refresh()
+        scope.launch(Dispatchers.IO) {
+            albumDb.refresh()
+        }
     }
-
-
 }

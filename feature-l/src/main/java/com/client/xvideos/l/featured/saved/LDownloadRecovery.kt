@@ -103,6 +103,10 @@ private fun scanLIncompleteSavedMedia(): Pair<LDownloadRecoveryReport, List<LRec
         }
 
         val mediaTarget = File(folder, metadata.mediaFileName)
+        if (!lIsInside(folder, mediaTarget) || !isSafeFileName(metadata.mediaFileName)) {
+            invalidMetadataFiles++
+            return@forEach
+        }
         val missingMedia = if (!mediaTarget.exists() || mediaTarget.length() == 0L) {
             LRecoveryFile(mediaTarget, metadata.sourceMediaUrl)
         } else {
@@ -141,11 +145,17 @@ private fun LSavedLikeMetadata.previewRecoveryFiles(folder: File): List<LRecover
     val previews = mutableListOf<LRecoveryFile>()
     previewFiles
         ?.forEach { preview ->
-            previews.add(LRecoveryFile(File(folder, preview.fileName), preview.sourceUrl))
+            val target = File(folder, preview.fileName)
+            if (lIsInside(folder, target) && isSafeFileName(preview.fileName)) {
+                previews.add(LRecoveryFile(target, preview.sourceUrl))
+            }
         }
 
     if (previewFileName != null && sourcePreviewUrl != null) {
-        previews.add(LRecoveryFile(File(folder, previewFileName), sourcePreviewUrl))
+        val target = File(folder, previewFileName)
+        if (lIsInside(folder, target) && isSafeFileName(previewFileName)) {
+            previews.add(LRecoveryFile(target, sourcePreviewUrl))
+        }
     }
 
     return previews.distinctBy { it.target.absolutePath }
@@ -181,3 +191,6 @@ private suspend fun lRestoreSourceToFile(client: io.ktor.client.HttpClient, sour
 
     lDownloadToFile(client, source, target)
 }
+
+private fun isSafeFileName(name: String): Boolean =
+    !name.contains("..") && !name.contains('/') && !name.contains('\\')

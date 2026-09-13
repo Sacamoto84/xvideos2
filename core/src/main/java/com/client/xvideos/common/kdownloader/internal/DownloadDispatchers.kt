@@ -40,10 +40,16 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
                 executeOnMainThread { request.listener?.onPause() }
             },
             onCompleted = {
-                executeOnMainThread { request.listener?.onCompleted() }
+                executeOnMainThread {
+                    request.listener?.onCompleted()
+                    request.listener = null
+                }
             },
             onError = {
-                executeOnMainThread { request.listener?.onError(it) }
+                executeOnMainThread {
+                    request.listener?.onError(it)
+                    request.listener = null
+                }
             }
         )
     }
@@ -59,8 +65,9 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
     }
 
     fun cancel(req: DownloadRequest) {
-
-        if (req.status == Status.PAUSED) {
+        val wasPaused = req.status == Status.PAUSED
+        val wasQueued = req.status == Status.QUEUED
+        if (wasPaused) {
             val tempPath = getTempPath(req.dirPath, req.fileName)
             val file = File(tempPath)
             if (file.exists()) {
@@ -70,9 +77,16 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         }
 
         req.status = Status.CANCELLED
-        req.job?.cancel()
+        val job = req.job
+        job?.cancel()
 
-        req.listener?.onError("Cancelled")
+        val notRunning = job?.isActive != true
+        if (wasPaused || wasQueued || notRunning) {
+            executeOnMainThread {
+                req.listener?.onError("Cancelled")
+                req.listener = null
+            }
+        }
 
         dbScope.launch {
             dbHelper.remove(req.downloadId)

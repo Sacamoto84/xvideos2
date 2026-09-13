@@ -33,6 +33,7 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             favoritesDb.insert(item.id.toString(), item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
+                        list.removeAll { it.id == item.id }
                         list.add(item)
                         favoriteIds.add(item.id)
                     }
@@ -49,7 +50,7 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             favoritesDb.delete(item.id.toString())
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.remove(item)
+                        list.removeAll { it.id == item.id }
                         favoriteIds.remove(item.id)
                     }
                     SnackBar.info("Удалён из избранного")

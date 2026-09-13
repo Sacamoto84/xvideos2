@@ -19,7 +19,7 @@ class SavedRed @Inject constructor(
     val likes       = R_Saved_Likes()
     val creators    = R_Saved_Creator()
     val niches      = R_Saved_Niches()
-    val collections = R_Saved_Collection()
+    val collections = R_Saved_Collection(scope)
 
     val subscriptions = R_Saved_Subscriptions(scope, redApi)
 

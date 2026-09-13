@@ -70,7 +70,16 @@ fun PicsDetails.lThumbnailImageUrlsBySize(): List<String> {
 
 fun PicsDetails.lSavedFileName(): String? {
     val sourceName = lDownloadUrl()?.lUrlFileName()?.takeIf { it.isNotBlank() } ?: return null
-    return "${width}_${height}_${is_animated}_${album}_$sourceName"
+    val cleanSourceName = sourceName.replace('/', '_').replace('\\', '_')
+    val rawAlbum = album?.takeIf { it.isNotBlank() } ?: "null"
+    val cleanAlbum = rawAlbum
+        .replace("..", "_")
+        .replace('/', '_')
+        .replace('\\', '_')
+        .trim()
+        .ifEmpty { "null" }
+    val candidate = "${width}_${height}_${is_animated}_${cleanAlbum}_$cleanSourceName"
+    return candidate.replace("..", "_")
 }
 
 fun lMediaRequestHeaders(): Map<String, String> {

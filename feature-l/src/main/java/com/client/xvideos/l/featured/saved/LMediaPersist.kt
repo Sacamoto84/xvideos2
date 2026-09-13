@@ -192,6 +192,9 @@ internal suspend fun lDownloadToFile(
                 }
             }
         }
+        if (totalBytes != null && totalBytes > 0L && downloadedBytes < totalBytes) {
+            throw IOException("Download incomplete: expected $totalBytes bytes, got $downloadedBytes bytes")
+        }
         if (file.exists() && !file.delete()) {
             throw IOException("Cannot replace file: ${file.absolutePath}")
         }

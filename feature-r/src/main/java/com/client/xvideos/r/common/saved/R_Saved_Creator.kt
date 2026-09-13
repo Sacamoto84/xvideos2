@@ -18,6 +18,7 @@ class R_Saved_Creator {
         creatorDb.insert(item.username, item)
             .onSuccess {
                 SnackBar.success("Автор добавлен")
+                list.removeAll { it.username == item.username }
                 list.add(item)
             }
             .onFailure { e ->
@@ -30,8 +31,7 @@ class R_Saved_Creator {
         creatorDb.delete(username)
             .onSuccess {
                 SnackBar.info("Автор удален")
-                //creatorsList.remove(item)
-                refresh()
+                list.removeAll { it.username == username }
             }
             .onFailure { e -> SnackBar.error("Ошибка удаления Автора ${e.message}") }
     }

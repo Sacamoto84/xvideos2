@@ -35,6 +35,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
@@ -184,10 +185,7 @@ class ScreenSavedLLikesSM @Inject constructor(
     }
 
     fun delete(item: PicsDetails) {
-        // url_to_original у Luscious опционален (именно поэтому ключи в
-        // LazyLayout строятся с фолбэком). Было `!!` — краш на удалении
-        // элемента без него; удалять там нечего, просто выходим.
-        val url = item.url_to_original ?: return
+        val url = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl() ?: return
         savedL.likes.remove(url)
     }
 

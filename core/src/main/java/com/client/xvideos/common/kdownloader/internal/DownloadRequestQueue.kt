@@ -56,6 +56,11 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
     }
 
     fun enqueue(request: DownloadRequest): Int {
+        val existing = idRequestMap[request.downloadId]
+        if (existing != null && (existing.status == Status.QUEUED || existing.status == Status.RUNNING)) {
+            return existing.downloadId
+        }
+        request.status = Status.QUEUED
         idRequestMap[request.downloadId] = request
         return downloader.enqueue(request)
     }
@@ -70,6 +75,10 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
         if (req != null && req.status != Status.CANCELLED) {
             downloader.cancel(req)
         }
+        idRequestMap.remove(id)
+    }
+
+    fun remove(id: Int) {
         idRequestMap.remove(id)
     }
 

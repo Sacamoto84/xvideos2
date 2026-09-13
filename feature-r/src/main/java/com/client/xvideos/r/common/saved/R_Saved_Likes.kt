@@ -28,6 +28,7 @@ class R_Saved_Likes {
         likesDb.insert(safeItem.id, safeItem)
             .onSuccess {
                 SnackBar.success("Like")
+                list.removeAll { it.id == safeItem.id }
                 list.add(safeItem)
             }
             .onFailure { e ->

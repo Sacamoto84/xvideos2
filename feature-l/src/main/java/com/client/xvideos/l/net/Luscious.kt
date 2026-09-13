@@ -39,22 +39,14 @@ class Luscious(
         download: Boolean = false,
         requestScope: CoroutineScope = scope
     ): AlbumInfo {
-
         val id = when (albumInput) {
-            is Int -> albumInput.toString()
-            is Long -> albumInput.toString()
-            is String -> extractIdFromUrl(albumInput) ?: albumInput // Если URL, извлекаем ID, иначе используем как есть
-            else -> throw IllegalArgumentException("albumInput must be Int or String")
-        }
+            is Int -> albumInput
+            is Long -> if (albumInput in 0..Int.MAX_VALUE) albumInput.toInt() else null
+            is String -> (extractIdFromUrl(albumInput) ?: albumInput.trim()).toIntOrNull()
+            else -> throw IllegalArgumentException("albumInput must be Int, Long or String: $albumInput")
+        } ?: throw IllegalArgumentException("Invalid album ID: $albumInput")
 
-        return AlbumInfo(id.toInt(), download, repository, requestScope)
-    }
-
-    // Вспомогательная функция для извлечения ID из URL
-    private fun extractIdFromUrl(url: String): String? {
-        val regex = Regex("/albums/[^_]+_(\\d+)")
-        val matchResult = regex.find(url)
-        return matchResult?.groupValues?.get(1)
+        return AlbumInfo(id, download, repository, requestScope)
     }
 
     suspend fun getAlbumListAggregations(page: Int, filter: AlbumListFilter?): Result<getAlbumListAggregationsResult> {
@@ -76,5 +68,11 @@ class Luscious(
     suspend fun getLandingPageAlbumSearch(search : String, limit : Int = 9): Result<Landing_page_albumType> {
         return LandingPageAlbumSearch(search, repository, limit)
     }
+}
 
+// Вспомогательная функция для извлечения ID из URL
+internal fun extractIdFromUrl(url: String): String? {
+    val regex = Regex("/albums/(?:[^/]*_)?(\\d+)")
+    val matchResult = regex.find(url)
+    return matchResult?.groupValues?.get(1)
 }
