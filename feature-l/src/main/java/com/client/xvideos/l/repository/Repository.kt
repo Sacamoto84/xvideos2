@@ -1,19 +1,15 @@
 package com.client.xvideos.l.repository
 
-import android.content.Context
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
 import com.client.xvideos.l.net.json.LJson
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -35,10 +31,6 @@ data class LRepositoryProtectionUiState(
 
 class Repository(
     fileDb: AppFileDatabase,
-    //private val luscious: Luscious,
-    private val scope: CoroutineScope,
-    //private val saved: SavedL
-    context: Context
 ) {
 
     //Точка входа для GraphQL
@@ -76,12 +68,7 @@ class Repository(
     val protectionUiState: StateFlow<LRepositoryProtectionUiState> = _protectionUiState.asStateFlow()
 
     private val cacheUrlStringRomDao = fileDb.cacheUrlStringRom
-    private val legacyCacheUrlStringRamDao = fileDb.cacheUrlStringRam
     private val lAlbumBundleCacheDao = fileDb.lAlbumBundleCache
-
-    init {
-        clearRamDao()
-    }
 
     private fun createHandler(): KtorRequestHandler {
         return KtorRequestHandler(
@@ -374,12 +361,6 @@ class Repository(
         return message.startsWith("Server returned HTML instead of JSON")
     }
 
-    private fun clearRamDao(){
-        scope.launch(Dispatchers.IO) {
-            ramCacheMutex.withLock { ramCache.clear() }
-            legacyCacheUrlStringRamDao.deleteAll()
-        }
-    }
 
     private companion object {
         const val MIN_NETWORK_REQUEST_INTERVAL_MS = 300L

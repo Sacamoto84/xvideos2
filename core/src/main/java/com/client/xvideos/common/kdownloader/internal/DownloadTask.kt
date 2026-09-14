@@ -41,11 +41,6 @@ class DownloadTask(
 
     private var eTag: String = ""
 
-    private val dbScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1) +
-            CoroutineExceptionHandler { _, _ ->
-
-            })
-
     companion object {
         private const val TIME_GAP_FOR_SYNC: Long = 2000
         private const val MIN_BYTES_FOR_SYNC: Long = 65536
@@ -72,8 +67,7 @@ class DownloadTask(
     })
 
     private suspend fun createAndInsertNewModel() {
-
-        dbScope.launch {
+        withContext(Dispatchers.IO) {
             dbHelper.insert(
                 DownloadModel(
                     id = req.downloadId,
@@ -86,7 +80,7 @@ class DownloadTask(
     }
 
     private suspend fun removeNoMoreNeededModelFromDatabase() {
-        dbScope.launch {
+        withContext(Dispatchers.IO) {
             dbHelper.remove(req.downloadId)
         }
     }
@@ -132,18 +126,21 @@ class DownloadTask(
 
                     client.connect(req)
 
-                    eTag = client.getResponseHeader(Constants.ETAG)
+                    var redirectedClient = getRedirectedConnectionIfAny(client, req)
+                    httpClient = redirectedClient
+                    responseCode = redirectedClient.getResponseCode()
+                    eTag = redirectedClient.getResponseHeader(Constants.ETAG)
 
                     if (checkIfFreshStartRequiredAndStart(model)) {
                         model = null
+                        redirectedClient = httpClient ?: redirectedClient
                     }
 
-                    val activeClient = httpClient ?: client
-                    val redirectedClient = getRedirectedConnectionIfAny(activeClient, req)
-                    httpClient = redirectedClient
-                    responseCode = redirectedClient.getResponseCode()
-
                     if (!isSuccessful()) {
+                        closeAllSafely(null)
+                        deleteTempFile()
+                        removeNoMoreNeededModelFromDatabase()
+                        req.reset()
                         req.status = Status.FAILED
                         listener.onError("Wrong link")
                         return@withContext
@@ -169,6 +166,12 @@ class DownloadTask(
 
                     inputStream = redirectedClient.getInputStream()
                     if (inputStream == null) {
+                        closeAllSafely(null)
+                        deleteTempFile()
+                        removeNoMoreNeededModelFromDatabase()
+                        req.reset()
+                        req.status = Status.FAILED
+                        listener.onError("Failed to obtain input stream")
                         return@withContext
                     }
 
@@ -343,6 +346,7 @@ class DownloadTask(
             client = getRedirectedConnectionIfAny(client, req)
             httpClient = client
             responseCode = client.getResponseCode()
+            eTag = client.getResponseHeader(Constants.ETAG)
             return true
         }
         return false

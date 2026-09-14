@@ -78,15 +78,18 @@ private val height = 48.dp
 fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, max: Int) {
 
 
+    val safeMax = max.coerceAtLeast(1)
+    val maxPageIndex = safeMax - 1
+
     // remember с ключом: на экране тега число страниц становится известно только
     // после разбора первой, то есть max меняется с 1 на настоящее значение. Без
     // ключа ряд навсегда оставался бы с одной кнопкой. В ленте раздела max —
     // константа, там поведение прежнее.
-    val list = remember(max) { List(max) { it + 1 } }
+    val list = remember(safeMax) { List(safeMax) { it + 1 } }
 
     val state = rememberLazyListState()
-    LaunchedEffect(value) {
-        val indexToScroll = value + 1// Индекс, к которому нужно прокрутить
+    LaunchedEffect(value, safeMax) {
+        val indexToScroll = value.coerceIn(0, maxPageIndex)
         val offset = calculateCenterOffset(state, indexToScroll)
         state.animateScrollToItem(index = indexToScroll, scrollOffset = -offset)
     }
@@ -97,7 +100,7 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        
+        val canGoBack = value > 0
         ///////////////////////////////
         Box(
             modifier = Modifier
@@ -105,15 +108,16 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
                 .width(height)
                 .height(height)
                 .background(
-                    if (value == 0) colorTextBlack else colorAccent
+                    if (!canGoBack) colorTextBlack else colorAccent
                 )
-                .clickable {
+                .clickable(enabled = canGoBack) {
                     onChange.invoke((value - 1).coerceAtLeast(0))
-                }, contentAlignment = Alignment.Center
+                },
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 "<",
-                color = if (value == 0) Color.DarkGray else Color.Black,
+                color = if (!canGoBack) Color.DarkGray else Color.Black,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -137,7 +141,7 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
                         )
                         .background(colorBlackBackground)
                         .clickable {
-                            onChange.invoke((it - 1).coerceAtLeast(0))
+                            onChange.invoke((it - 1).coerceIn(0, maxPageIndex))
                         }, contentAlignment = Alignment.Center
                 ) {
                     Text("$it", color = colorTextWhite)
@@ -147,20 +151,21 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
         }
 
         ///////////////////////////////
+        val canGoForward = value < maxPageIndex
         Box(
             modifier = Modifier
                 .padding(horizontal = (0.5).dp)
-                //.weight(1f)
                 .width(height)
                 .height(height)
-                .background(if (value >= max - 1) colorTextBlack else colorAccent)
-                .clickable {
-                    onChange.invoke((value + 1).coerceIn(0, max))
-                }, contentAlignment = Alignment.Center
+                .background(if (!canGoForward) colorTextBlack else colorAccent)
+                .clickable(enabled = canGoForward) {
+                    onChange.invoke((value + 1).coerceIn(0, maxPageIndex))
+                },
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 ">",
-                color = if (value >= (max - 1)) Color.DarkGray else Color.Black,
+                color = if (!canGoForward) Color.DarkGray else Color.Black,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )

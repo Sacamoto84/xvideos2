@@ -26,9 +26,9 @@ object LusciousModule {
     @Singleton
     @Provides
     fun provideRepository(
-        db: AppFileDatabase, @ApplicationScope scope: CoroutineScope, @ApplicationContext context: Context
+        db: AppFileDatabase
     ): Repository {
-        return Repository( db, scope, context )
+        return Repository(db)
     }
 
     @Singleton

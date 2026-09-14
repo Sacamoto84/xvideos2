@@ -57,10 +57,12 @@ fun CMPPlayer2(
         bufferForPlaybackAfterRebufferM = 100,
     )
 
+    val currentCallbacks by rememberUpdatedState(callbacks)
+    val currentConfig by rememberUpdatedState(config)
     var isBuffering by remember { mutableStateOf(false) }
 
     LaunchedEffect(isBuffering) {
-        callbacks.bufferCallback(isBuffering)
+        currentCallbacks.bufferCallback(isBuffering)
     }
 
     LaunchedEffect(exoPlayer, config.isPause) {
@@ -69,7 +71,7 @@ fun CMPPlayer2(
             val position = (exoPlayer.currentPosition / 1000f).coerceAtLeast(0f)
             if (position != lastPosition) {
                 lastPosition = position
-                callbacks.currentTime(position)
+                currentCallbacks.currentTime(position)
             }
             if (config.isPause) {
                 // На паузе позиция не меняется — после первой отправки не крутим 20 Гц опрос
@@ -93,7 +95,7 @@ fun CMPPlayer2(
     LaunchedEffect(exoPlayer, config.seekToTime) {
         config.seekToTime?.let {
             exoPlayer.seekTo((it * 1000).toLong())
-            callbacks.currentTime(it)
+            currentCallbacks.currentTime(it)
         }
     }
 
@@ -131,13 +133,13 @@ fun CMPPlayer2(
         DisposableEffect(key1 = exoPlayer) {
             val listener = createPlayerListener(
                 isSliding = { currentIsSliding },
-                callbacks.totalTime,
+                totalTime = { currentCallbacks.totalTime(it) },
                 currentTime = {},
                 loadingState = { isBuffering = it },
-                callbacks.didEndVideo,
-                callbacks.error,
-                callbacks.poster,
-                sourceUrl = config.url
+                didEndVideo = { currentCallbacks.didEndVideo() },
+                onError = { currentCallbacks.error(it) },
+                poster = { currentCallbacks.poster(it) },
+                sourceUrl = currentConfig.url
             )
 
             exoPlayer.addListener(listener)
