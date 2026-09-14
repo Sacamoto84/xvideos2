@@ -61,7 +61,7 @@
     <ID>LongMethod:CanvasTimeDurationLine.kt$@Composable fun CanvasTimeDurationLine1( currentTime: Float, duration: Int, modifier: Modifier = Modifier, timeA: Float = 0f, timeB: Float = 1f, timeABEnable: Boolean, visibleAB: Boolean = true, play: Boolean = false, isBuffering: Boolean = false, onSeek: (Float) -&gt; Unit, // 🔹 при перетаскивании onSeekFinished: (() -&gt; Unit)? = null, // 🔹 когда отпустили isVisibleTime: Boolean = true, isVisibleStep: Boolean = true )</ID>
     <ID>LongMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
     <ID>LongMethod:KeyboardNumber.kt$@Composable fun KeyboardNumber( value: Int, max: Int, theme: KeyboardNumberTheme = KeyboardNumberTheme(), onClick: (Int) -&gt; Unit, )</ID>
-    <ID>LongMethod:L_FullScreenImage.kt$L_FullScreenImage$@RequiresApi(Build.VERSION_CODES.S) @OptIn( ExperimentalFoundationApi::class, ExperimentalMaterialApi::class, DelicateCoroutinesApi::class ) @Composable override fun Content()</ID>
+    <ID>LongMethod:L_FullScreenImage.kt$L_FullScreenImage$@OptIn( ExperimentalFoundationApi::class, ExperimentalMaterialApi::class, DelicateCoroutinesApi::class ) @Composable override fun Content()</ID>
     <ID>LongMethod:L_ScreenAlbumSearch.kt$L_ScreenAlbumSearch$@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") @Composable override fun Content()</ID>
     <ID>LongMethod:L_ScreenLogin.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LLoginContent( initialLogin: String = "", initialPassword: String = "", onSaved: () -&gt; Unit, onBack: () -&gt; Unit, onSkip: () -&gt; Unit )</ID>
     <ID>LongMethod:L_Screen_CollectionTab.kt$L_Screen_CollectionTab$@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") @Composable override fun Content()</ID>

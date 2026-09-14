@@ -172,7 +172,9 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
         }
 
         fun exitWithExo() {
-            exit(exo.currentPosition)
+            val pos = exo.currentPosition
+            exo.pause()
+            exit(pos)
         }
 
         BackHandler(enabled = !vm.isError && !vm.isLoading) { exitWithExo() }

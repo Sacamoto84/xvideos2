@@ -112,7 +112,6 @@ class SplashActivity : ComponentActivity() {
         dbInstance.clearVolatileCachesOnProcessStart()
 
         val jobs = listOf(
-            async { savedRedInstance.refreshTagList() },
             async { blockRedInstance.refresh() },
             async { savedRedInstance.likes.refresh() },
             async { savedRedInstance.niches.refresh() },

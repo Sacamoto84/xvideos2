@@ -2,10 +2,8 @@ package com.client.xvideos.l.ui.screens.screenFullScreen
 
 import com.client.xvideos.common.theme.Theme
 
-import android.os.Build
 import android.os.Parcelable
 import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -106,7 +104,6 @@ class L_FullScreenImage(
     @IgnoredOnParcel
     override val key: ScreenKey = uniqueScreenKey
 
-    @RequiresApi(Build.VERSION_CODES.S)
     @OptIn(
         ExperimentalFoundationApi::class,
         ExperimentalMaterialApi::class,

@@ -82,9 +82,12 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
 
         val notRunning = job?.isActive != true
         if (wasPaused || wasQueued || notRunning) {
-            executeOnMainThread {
-                req.listener?.onError("Cancelled")
+            val listener = req.listener
+            if (listener != null) {
                 req.listener = null
+                executeOnMainThread {
+                    listener.onError("Cancelled")
+                }
             }
         }
 

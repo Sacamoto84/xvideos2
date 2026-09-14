@@ -144,23 +144,34 @@ private fun FavoritesContent(
         }
     }) { padding ->
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            // padding от Scaffold — высота topBar. Без него первая строка сетки
-            // уезжала под заголовок «Избранное».
-            modifier = Modifier.padding(padding)
-        ) {
-            items(favorites, key = { it.id }) { item ->
-                FavoriteRow(
-                    item = item,
-                    localUrl = localUrlOf(item),
-                    posterUrl = posterUrlOf(item),
-                    onDelete = { pendingDelete = item },
-                    onDownload = { onDownload(item) },
-                    onSaveToGallery = { onSaveToGallery(item) },
-                    onPlayLocal = onPlayLocal,
-                    onOpenVideo = { onOpenVideo(item) },
-                )
+        if (favorites.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Пусто", color = Color.Gray, fontSize = 16.sp)
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                // padding от Scaffold — высота topBar. Без него первая строка сетки
+                // уезжала под заголовок «Избранное».
+                modifier = Modifier.padding(padding)
+            ) {
+                items(favorites, key = { it.id }) { item ->
+                    FavoriteRow(
+                        item = item,
+                        localUrl = localUrlOf(item),
+                        posterUrl = posterUrlOf(item),
+                        onDelete = { pendingDelete = item },
+                        onDownload = { onDownload(item) },
+                        onSaveToGallery = { onSaveToGallery(item) },
+                        onPlayLocal = onPlayLocal,
+                        onOpenVideo = { onOpenVideo(item) },
+                    )
+                }
             }
         }
     }

@@ -154,8 +154,6 @@ data class getAlbumListAggregationsResult(
                 filterPictureCountStateCount.addAll(list)
                 Timber.i("!!! getAlbumListAggregations list filterPictureCountStateCount размер : ${list.size}")
             }
-
-            filterPictureCountStateCount
         } catch (e: CancellationException) {
             // Отмена корутины не должна превращаться в Result.failure: вызывающий
             // показывает такой failure снекбаром уже на другом экране.

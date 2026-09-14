@@ -95,7 +95,10 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
     }
 
     fun cancelAll() {
-        idRequestMap.clear()
+        val list = idRequestMap.values.toList()
+        for (req in list) {
+            cancel(req.downloadId)
+        }
         downloader.cancelAll()
     }
 

@@ -1,7 +1,6 @@
 package com.client.xvideos.r.common.saved
 
 import com.client.xvideos.common.di.ApplicationScope
-import com.client.xvideos.r.model.tag.TagInfo
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,14 +25,6 @@ class SavedRed @Inject constructor(
     val nichesCache = R_Saved_NichesCaches(scope, redApi)
 
 
-    // Пишется из корутины на Dispatchers.IO (refreshTagList), читается с
-    // главного — без @Volatile у читателя нет гарантии увидеть свежую запись.
-    @Volatile
-    var tagsList = listOf<TagInfo>()
-
-    fun refreshTagList() { scope.launch(Dispatchers.IO) { tagsList =
-        redApi.tags.getTags().getOrNull()?.tags ?: emptyList()
-    } }
 
     init {
         // refreshCollectionList — синхронный обход каталога коллекций с
@@ -61,7 +52,6 @@ class SavedRed @Inject constructor(
      * обновляет их вызывающий.
      */
     fun refreshAll() {
-        refreshTagList()
         likes.refresh()
         niches.refresh()
         creators.refresh()

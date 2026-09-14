@@ -71,6 +71,26 @@ class KDownloaderQueueTest {
     }
 
     @Test
+    fun `DownloadRequestQueue cancelAll marks requests cancelled and clears queue`() {
+        val downloader = DownloadDispatchers(NoOpsDbHelper())
+        val queue = DownloadRequestQueue(downloader)
+        val req1 = DownloadRequest.Builder("https://example.com/file1.mp4", tempFolder.root.absolutePath, "file1.mp4").build()
+        val req2 = DownloadRequest.Builder("https://example.com/file2.mp4", tempFolder.root.absolutePath, "file2.mp4").build()
+
+        queue.enqueue(req1)
+        queue.enqueue(req2)
+        assertEquals(2, queue.getAllRequests().size)
+
+        queue.cancelAll()
+
+        assertTrue(queue.getAllRequests().isEmpty())
+        assertEquals(Status.UNKNOWN, queue.status(req1.downloadId))
+        assertEquals(Status.UNKNOWN, queue.status(req2.downloadId))
+        assertEquals(Status.CANCELLED, req1.status)
+        assertEquals(Status.CANCELLED, req2.status)
+    }
+
+    @Test
     fun `renameFileName succeeds when file stream is closed before renaming`() {
         val root = tempFolder.newFolder("rename_stream_test")
         val source = File(root, "video.mp4.temp")
