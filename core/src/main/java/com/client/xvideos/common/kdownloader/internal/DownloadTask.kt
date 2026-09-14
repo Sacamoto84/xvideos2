@@ -189,7 +189,10 @@ class DownloadTask(
                     this@DownloadTask.outputStream = outStream
 
                     if (req.status === Status.CANCELLED) {
+                        closeAllSafely(outStream)
+                        this@DownloadTask.outputStream = null
                         deleteTempFile()
+                        removeNoMoreNeededModelFromDatabase()
                         req.reset()
                         listener.onError("Cancelled")
                         return@withContext
@@ -211,7 +214,10 @@ class DownloadTask(
                         }
 
                         if (req.status === Status.CANCELLED) {
+                            closeAllSafely(outStream)
+                            this@DownloadTask.outputStream = null
                             deleteTempFile()
+                            removeNoMoreNeededModelFromDatabase()
                             req.reset()
                             listener.onError("Cancelled")
                             return@withContext
@@ -222,7 +228,10 @@ class DownloadTask(
                         }
 
                         if (!isActive || req.job?.isActive == false) {
+                            closeAllSafely(outStream)
+                            this@DownloadTask.outputStream = null
                             deleteTempFile()
+                            removeNoMoreNeededModelFromDatabase()
                             req.reset()
                             req.status = Status.CANCELLED
                             listener.onError("Cancelled")
@@ -243,7 +252,10 @@ class DownloadTask(
                     } while (true)
 
                     if (!isActive || req.job?.isActive == false || req.status === Status.CANCELLED) {
+                        closeAllSafely(outStream)
+                        this@DownloadTask.outputStream = null
                         deleteTempFile()
+                        removeNoMoreNeededModelFromDatabase()
                         req.reset()
                         req.status = Status.CANCELLED
                         listener.onError("Cancelled")
@@ -255,8 +267,11 @@ class DownloadTask(
                     }
 
                     if (totalBytes > 0 && req.downloadedBytes < totalBytes) {
+                        closeAllSafely(outStream)
+                        this@DownloadTask.outputStream = null
                         if (!isResumeSupported) {
                             deleteTempFile()
+                            removeNoMoreNeededModelFromDatabase()
                             req.reset()
                         }
                         req.status = Status.FAILED
@@ -265,26 +280,36 @@ class DownloadTask(
                     }
 
                     val path = getPath(req.dirPath, req.fileName)
+                    closeAllSafely(outStream)
+                    this@DownloadTask.outputStream = null
                     renameFileName(tempPath, path)
+                    removeNoMoreNeededModelFromDatabase()
                     listener.onCompleted()
                     req.status = Status.COMPLETED
                     return@withContext
                 } catch (e: CancellationException) {
+                    closeAllSafely(this@DownloadTask.outputStream)
+                    this@DownloadTask.outputStream = null
                     deleteTempFile()
+                    removeNoMoreNeededModelFromDatabase()
                     req.reset()
                     req.status = Status.CANCELLED
                     listener.onError("Cancelled")
                     throw e
                 } catch (e: Exception) {
+                    closeAllSafely(this@DownloadTask.outputStream)
+                    this@DownloadTask.outputStream = null
                     if (!isResumeSupported) {
                         deleteTempFile()
+                        removeNoMoreNeededModelFromDatabase()
                         req.reset()
                     }
                     req.status = Status.FAILED
                     listener.onError(e.toString())
                     return@withContext
                 } finally {
-                    closeAllSafely(outputStream)
+                    closeAllSafely(this@DownloadTask.outputStream)
+                    this@DownloadTask.outputStream = null
                 }
             }
         }
@@ -340,6 +365,8 @@ class DownloadTask(
             httpClient?.close()
         } catch (e: Exception) {
             Timber.e(e, "KDownloader: httpClient.close() failed")
+        } finally {
+            httpClient = null
         }
 
         try {
@@ -349,6 +376,8 @@ class DownloadTask(
             inputStream?.close()
         } catch (e: IOException) {
             Timber.e(e, "KDownloader: inputStream.close() failed")
+        } finally {
+            inputStream = null
         }
 
         if (outputStream != null) {

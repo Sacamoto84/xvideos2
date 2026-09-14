@@ -69,4 +69,20 @@ class KDownloaderQueueTest {
         assertEquals(id1, id2)
         assertEquals(1, queue.getAllRequests().size)
     }
+
+    @Test
+    fun `renameFileName succeeds when file stream is closed before renaming`() {
+        val root = tempFolder.newFolder("rename_stream_test")
+        val source = File(root, "video.mp4.temp")
+        val raf = java.io.RandomAccessFile(source, "rw")
+        raf.writeBytes("partially-downloaded-stream")
+        raf.close()
+        val target = File(root, "video.mp4")
+
+        renameFileName(source.absolutePath, target.absolutePath)
+
+        assertFalse(source.exists())
+        assertTrue(target.exists())
+        assertEquals("partially-downloaded-stream", target.readText())
+    }
 }

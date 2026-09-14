@@ -32,6 +32,7 @@
 | [Проход 24 (useCaseShareFile надёжность, BackHandler в плеере X, ссылка в L Login, fullscreen кнопка, постер в диалоге)](CODE_REVIEW_2026-09-14_v3.md) | 14.09.2026 | `master` | закрыт полностью |
 | [Проход 25 (HLS query/fragments Media3, GallerySaver MediaStore, blockedIds O(1) пагинация, AppLock фокус)](CODE_REVIEW_2026-09-14_v4.md) | 14.09.2026 | `master` | закрыт полностью |
 | [Проход 26 (Синхронизация seek плеера на паузе, состояние ошибки AlbumInfo, таймаут дашбордов X, дедупликация подписок R)](CODE_REVIEW_2026-09-14_v5.md) | 14.09.2026 | `master` | закрыт полностью |
+| [Проход 27 (Дескрипторы и БД KDownloader, URL тегов X и UX списков, изоляция data-слоя L)](CODE_REVIEW_2026-09-14_v6.md) | 14.09.2026 | `master` | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

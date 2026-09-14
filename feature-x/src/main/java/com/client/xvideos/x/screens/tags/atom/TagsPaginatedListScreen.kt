@@ -3,21 +3,25 @@ package com.client.xvideos.x.screens.tags.atom
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,11 +55,13 @@ fun TagsPaginatedListScreen(
 
     var items by remember(pageIndex) { mutableStateOf<List<ItemsX>?>(null) }
     var failed by remember(pageIndex) { mutableStateOf(false) }
+    var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
 
-    LaunchedEffect(pageIndex) {
+    LaunchedEffect(pageIndex, retryTrigger) {
         // Отказ сети обязан оставаться на этом экране. Непойманное исключение в
         // корутине роняет приложение целиком, а страниц здесь грузится сразу
         // несколько: соседние готовятся заранее через beyondViewportPageCount.
+        failed = false
         try {
             items = loadPage(pageIndex)
         } catch (e: CancellationException) {
@@ -70,10 +76,23 @@ fun TagsPaginatedListScreen(
     if (loaded == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (failed) {
-                Text("Страница не загрузилась", color = Color.Gray)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Страница не загрузилась", color = Color.Gray)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = { retryTrigger++ }) {
+                        Text("Повторить")
+                    }
+                }
             } else {
                 CircularProgressIndicator(modifier = Modifier.size(40.dp))
             }
+        }
+        return
+    }
+
+    if (loaded.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Видео не найдены", color = Color.Gray)
         }
         return
     }

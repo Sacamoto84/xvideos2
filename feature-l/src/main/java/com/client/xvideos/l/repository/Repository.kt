@@ -3,7 +3,6 @@ package com.client.xvideos.l.repository
 import android.content.Context
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
 import com.client.xvideos.l.net.json.LJson
@@ -208,7 +207,6 @@ class Repository(
                 }
                 catch (e: Exception){
                     Timber.e(e, "!!! openURI() CACHE_RAM error")
-                    SnackBar.error("Ошибка запроса к Luscious")
                     return Result.failure(e)
                 }
             }

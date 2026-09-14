@@ -23,6 +23,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import timber.log.Timber
 
 class ScreenTagsViewModel @AssistedInject constructor(
@@ -65,8 +66,17 @@ class ScreenTagsViewModel @AssistedInject constructor(
      */
     suspend fun loadPage(index: Int): ModelScreenTag {
         // Страницы адресуются /tags/<тег>/N; /tags/<тег> и /tags/<тег>/0 — одно и то же.
-        val html = readHtmlFromURLDirect("$urlStart/tags/$tag/$index")
-        return withContext(Dispatchers.Default) { parserScreenTags(html) }
+        // Названия тегов парсятся с пробелами ("big tits"), а в URL XVideos использует дефисы ("big-tits").
+        val formattedTag = tag.trim().replace(Regex("\\s+"), "-")
+        val html = readHtmlFromURLDirect("$urlStart/tags/$formattedTag/$index")
+        if (html.isEmpty()) {
+            throw IOException("Не удалось загрузить страницу тега $tag")
+        }
+        val result = withContext(Dispatchers.Default) { parserScreenTags(html) }
+        if (index == 0 && (screen.lastPage <= 1 || screen.title0.isEmpty())) {
+            screen = result
+        }
+        return result
     }
 }
 
