@@ -23,6 +23,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.flow.drop
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.r.common.block.BlockRed
@@ -71,6 +72,7 @@ object R_Screen_Saved_LikesTab : Screen {
         // добавление (в т.ч. приём по P2P) и удаление лайка перезагружают pager.
         LaunchedEffect(Unit) {
             androidx.compose.runtime.snapshotFlow { vm.savedRed.likes.list.size }
+                .drop(1)
                 .collect { pager.refresh() }
         }
 

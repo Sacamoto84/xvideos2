@@ -36,8 +36,8 @@ class MediaDownloadWorker(
     workerParams: WorkerParameters,
 ) : CoroutineWorker(appContext, workerParams) {
 
-    private val notificationManager: NotificationManager =
-        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val notificationManager: NotificationManager? =
+        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
 
     private val notificationId: Int = abs(id.hashCode())
 
@@ -233,10 +233,6 @@ class MediaDownloadWorker(
             }
 
             val responseBody = response.body
-                ?: run {
-                    response.close()
-                    throw IOException("Сервер вернул пустой ответ без тела (HTTP $responseCode)")
-                }
             val totalBytes = calculateTotalBytes(isResume, resumeOffset, responseBody.contentLength())
 
             val append = isResume
@@ -268,7 +264,7 @@ class MediaDownloadWorker(
         resumeOffset: Long
     ): Request {
         val requestBuilder = Request.Builder().url(urlString)
-        val userAgent = headers["User-Agent"] ?: DEFAULT_USER_AGENT
+        val userAgent = headers.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }?.value ?: DEFAULT_USER_AGENT
         requestBuilder.header("User-Agent", userAgent)
         headers.forEach { (k, v) ->
             if (!k.equals("User-Agent", ignoreCase = true)) {
@@ -345,7 +341,8 @@ class MediaDownloadWorker(
     }
 
     private fun ensureNotificationChannel() {
-        val existing = notificationManager.getNotificationChannel(CHANNEL_ID)
+        val nm = notificationManager ?: return
+        val existing = nm.getNotificationChannel(CHANNEL_ID)
         if (existing == null) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -354,7 +351,7 @@ class MediaDownloadWorker(
             ).apply {
                 description = "Уведомления о фоновой загрузке медиа"
             }
-            notificationManager.createNotificationChannel(channel)
+            nm.createNotificationChannel(channel)
         }
     }
 
@@ -367,7 +364,7 @@ class MediaDownloadWorker(
             .setAutoCancel(true)
             .build()
         runCatching {
-            notificationManager.notify(notificationId, notification)
+            notificationManager?.notify(notificationId, notification)
         }
     }
 
@@ -380,7 +377,7 @@ class MediaDownloadWorker(
             .setAutoCancel(true)
             .build()
         runCatching {
-            notificationManager.notify(notificationId, notification)
+            notificationManager?.notify(notificationId, notification)
         }
     }
 

@@ -116,9 +116,10 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 }
 
                 val parsedData = withContext(Dispatchers.Default) {
-                    val script = parserItemVideo(s)
+                    val document = org.jsoup.Jsoup.parse(s)
+                    val script = parserItemVideo(document)
                     val config = script?.let { parseHTML5Player(it) }
-                    val parsedTags = parserItemVideoTags(s)
+                    val parsedTags = parserItemVideoTags(document)
                     val hls = config?.videoHLS.orEmpty()
                     Triple(config, parsedTags, hls)
                 }

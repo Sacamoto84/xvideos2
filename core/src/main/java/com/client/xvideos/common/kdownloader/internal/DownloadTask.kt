@@ -346,9 +346,11 @@ class DownloadTask(
                         listener.onPause()
                         return@withContext
                     }
-                    deleteTempFile()
-                    removeNoMoreNeededModelFromDatabase()
-                    req.reset()
+                    if (wasCancelled || !isResumeSupported) {
+                        deleteTempFile()
+                        removeNoMoreNeededModelFromDatabase()
+                        req.reset()
+                    }
                     if (wasCancelled) {
                         req.status = Status.CANCELLED
                         listener.onError("Cancelled")

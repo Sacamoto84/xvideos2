@@ -1,19 +1,33 @@
 package com.client.xvideos.common.vibrate
 
+import android.content.Context
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.content.Context
+import android.os.VibratorManager
+import timber.log.Timber
 
 fun vibrateWithPatternAndAmplitude(context: Context) {
-    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+        manager?.defaultVibrator ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
+    } else {
+        context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    } ?: return
 
-    //val pattern = longArrayOf(0, 200, 100, 300, 400, 500) // Пауза, вибрация, пауза, вибрация и т.д.
-    //val amplitudes = intArrayOf(0, 255, 0, 128, 0, 64) // Амплитуды для каждого сегмента (0 - пауза, 255 - максимум)
+    if (!vibrator.hasVibrator()) return
 
-    val pattern = longArrayOf(0, 25, 50, 50)    // Немедленно, вибрация на 100 мс, пауза 50 мс, снова вибрация на 100 мс
-    val amplitudes = intArrayOf(0, 255, 0, 127) // Амплитуды для каждого сегмента (0 - пауза, 255 - максимум)
+    val pattern = longArrayOf(0, 25, 50, 50)
+    val amplitudes = intArrayOf(0, 255, 0, 127)
 
-    val vibrationEffect = VibrationEffect.createWaveform(pattern, amplitudes, -1) // -1 - без повторения
-    vibrator.vibrate(vibrationEffect)
+    runCatching {
+        val effect = if (vibrator.hasAmplitudeControl()) {
+            VibrationEffect.createWaveform(pattern, amplitudes, -1)
+        } else {
+            VibrationEffect.createWaveform(pattern, -1)
+        }
+        vibrator.vibrate(effect)
+    }.onFailure { e ->
+        Timber.w(e, "vibrateWithPatternAndAmplitude: ошибка воспроизведения вибрации")
+    }
 }
-

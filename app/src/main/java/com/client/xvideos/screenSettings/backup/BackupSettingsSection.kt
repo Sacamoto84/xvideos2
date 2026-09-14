@@ -29,6 +29,8 @@ import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
 import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
+import com.client.xvideos.common.backup.XlrBackupType
+import com.client.xvideos.common.backup.XlrInvalidPasswordException
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
@@ -81,6 +83,15 @@ internal fun BackupSettingsSection(
         XlrBackupOptions(lMode = lBackupMode, rMode = rBackupMode)
     }
 
+    // Состояния для парольной защиты бэкапов
+    var showCreatePasswordDialog by rememberSaveable { mutableStateOf(false) }
+    var createPassword by remember { mutableStateOf<CharArray?>(null) }
+
+    var showRestorePasswordDialog by rememberSaveable { mutableStateOf(false) }
+    var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+    var restorePassword by remember { mutableStateOf<CharArray?>(null) }
+    var restorePasswordError by remember { mutableStateOf<String?>(null) }
+
     fun appendBackupLog(message: String) {
         if (backupConsole.size >= BACKUP_CONSOLE_MAX_LINES) {
             backupConsole.removeAt(0)
@@ -101,24 +112,33 @@ internal fun BackupSettingsSection(
     }
 
     val createBackupLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/zip")
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri ->
-        if (uri == null || isWorking) return@rememberLauncherForActivityResult
+        val password = createPassword
+        if (uri == null || isWorking) {
+            password?.fill('\u0000')
+            createPassword = null
+            return@rememberLauncherForActivityResult
+        }
         if (selectedBackupPaths.isEmpty()) {
+            password?.fill('\u0000')
+            createPassword = null
             SnackBar.error("Выберите хотя бы одну папку")
             return@rememberLauncherForActivityResult
         }
         scope.launch(Dispatchers.Main) {
             isWorking = true
             appendBackupLog(
-                "Создание backup: L=${backupContentModeTitle(backupOptions.lMode)}, R=${backupContentModeTitle(backupOptions.rMode)}"
+                "Создание зашифрованного backup: L=${backupContentModeTitle(backupOptions.lMode)}, R=${backupContentModeTitle(backupOptions.rMode)}"
             )
             val result = withContext(Dispatchers.IO) {
-                XlrBackupManager.createBackup(context, uri, selectedBackupPaths, backupOptions)
+                XlrBackupManager.createBackup(context, uri, selectedBackupPaths, backupOptions, password)
             }
+            password?.fill('\u0000')
+            createPassword = null
             result
                 .onSuccess { report ->
-                    appendBackupLog("Backup создан: ${report.files} файлов, ${formatBytes(report.bytes)}")
+                    appendBackupLog("Backup создан и зашифрован: ${report.files} файлов, ${formatBytes(report.bytes)}")
                     SnackBar.success("Backup создан: ${report.files} файлов, ${formatBytes(report.bytes)}")
                     refreshBackupItems()
                 }
@@ -136,23 +156,47 @@ internal fun BackupSettingsSection(
         if (uri == null || isWorking) return@rememberLauncherForActivityResult
         scope.launch(Dispatchers.Main) {
             isWorking = true
-            val result = withContext(Dispatchers.IO) {
-                XlrBackupManager.inspectBackup(context, uri)
+            val type = withContext(Dispatchers.IO) {
+                XlrBackupManager.detectBackupType(context, uri)
             }
-            result
-                .onSuccess { items ->
-                    restoreUri = uri
-                    restoreItems = items
-                    selectedRestorePaths = initialSectionSelection(items)
-                    SnackBar.success("Backup открыт: ${items.size} папок")
+            when (type) {
+                XlrBackupType.ENCRYPTED_XLR -> {
+                    isWorking = false
+                    pendingRestoreUri = uri
+                    restorePasswordError = null
+                    showRestorePasswordDialog = true
                 }
-                .onFailure { error ->
+                XlrBackupType.LEGACY_ZIP -> {
+                    appendBackupLog("Обнаружен незашифрованный архив (legacy ZIP)")
+                    val result = withContext(Dispatchers.IO) {
+                        XlrBackupManager.inspectBackup(context, uri, password = null)
+                    }
+                    result
+                        .onSuccess { items ->
+                            restoreUri = uri
+                            restorePassword = null
+                            restoreItems = items
+                            selectedRestorePaths = initialSectionSelection(items)
+                            SnackBar.success("Backup открыт: ${items.size} папок")
+                        }
+                        .onFailure { error ->
+                            restoreUri = null
+                            restorePassword = null
+                            restoreItems = emptyList()
+                            selectedRestorePaths = emptySet()
+                            SnackBar.error(error.message ?: "Ошибка чтения backup")
+                        }
+                    isWorking = false
+                }
+                XlrBackupType.UNSUPPORTED -> {
+                    isWorking = false
                     restoreUri = null
+                    restorePassword = null
                     restoreItems = emptyList()
                     selectedRestorePaths = emptySet()
-                    SnackBar.error(error.message ?: "Ошибка чтения backup")
+                    SnackBar.error("Неподдерживаемый формат файла: не является бэкапом XLR или ZIP")
                 }
-            isWorking = false
+            }
         }
     }
 
@@ -214,12 +258,12 @@ internal fun BackupSettingsSection(
                 SettingsDivider()
                 SettingsListItem(
                     icon = R.drawable.hard_drive_2_24,
-                    text = "Создать ZIP",
+                    text = "Создать бэкап",
                     subtitle = selectionSummaryText(backupReport),
                     trailing = {
                         Button(
                             enabled = !isWorking && selectedBackupPaths.isNotEmpty(),
-                            onClick = { createBackupLauncher.launch(XlrBackupManager.defaultFileName()) },
+                            onClick = { showCreatePasswordDialog = true },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = SettingsAccentColor,
                                 contentColor = SettingsScreenBackground
@@ -234,14 +278,14 @@ internal fun BackupSettingsSection(
             BackupFlowScreen.RESTORE -> {
                 SettingsListItem(
                     icon = R.drawable.hard_drive_2_24,
-                    text = "Открыть ZIP",
+                    text = "Открыть архив",
                     subtitle = restoreUri?.lastPathSegment ?: "Сначала выберите архив",
                     trailing = {
                         Button(
                             enabled = !isWorking,
                             onClick = {
                                 restoreBackupLauncher.launch(
-                                    arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed")
+                                    arrayOf("application/octet-stream", "application/zip", "application/x-zip-compressed", "*/*")
                                 )
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -259,7 +303,7 @@ internal fun BackupSettingsSection(
                     SettingsValueRow(
                         icon = R.drawable.hard_drive_2_24,
                         text = "Что восстановить",
-                        value = "Выберите ZIP-файл, после этого появятся папки X, L и R из архива."
+                        value = "Выберите файл бэкапа (.xlr или .zip), после этого появятся папки X, L и R из архива."
                     )
                 } else {
                     SettingsDivider()
@@ -287,12 +331,12 @@ internal fun BackupSettingsSection(
                         text = "Восстановить выбранное",
                         value = if (isWorking) "Идет..." else "Восстановить",
                         textDialogTitle = "Восстановить backup",
-                        textDialogBody = "Выбранные папки будут заменены данными из ZIP: ${selectionSummaryText(restoreReport)}. DB, настройки и кеши не трогаются.",
+                        textDialogBody = "Выбранные папки будут заменены данными из архива: ${selectionSummaryText(restoreReport)}. DB, настройки и кеши не трогаются.",
                         textDialogButton = "Восстановить",
                         onClick = {
                             val uri = restoreUri
                             if (uri == null) {
-                                SnackBar.error("Сначала выберите ZIP")
+                                SnackBar.error("Сначала выберите архив")
                                 return@SettingsButtonRowWithDialog
                             }
                             if (selectedRestorePaths.isEmpty()) {
@@ -306,7 +350,7 @@ internal fun BackupSettingsSection(
                                     val autoRecoverL = shouldAutoRecoverL(selectedRestorePaths)
                                     val autoRecoverRedDownload = shouldAutoRecoverRedDownload(selectedRestorePaths)
                                     val result = withContext(Dispatchers.IO) {
-                                        XlrBackupManager.restoreBackup(context, uri, selectedRestorePaths)
+                                        XlrBackupManager.restoreBackup(context, uri, selectedRestorePaths, restorePassword)
                                     }
                                     result
                                         .onSuccess { report ->
@@ -372,6 +416,59 @@ internal fun BackupSettingsSection(
         BackupConsole(
             lines = backupConsole,
             onClear = { backupConsole.clear() }
+        )
+    }
+
+    if (showCreatePasswordDialog) {
+        BackupCreatePasswordDialog(
+            onDismiss = {
+                showCreatePasswordDialog = false
+            },
+            onConfirm = { password ->
+                showCreatePasswordDialog = false
+                createPassword = password
+                createBackupLauncher.launch(XlrBackupManager.defaultFileName())
+            }
+        )
+    }
+
+    if (showRestorePasswordDialog) {
+        BackupRestorePasswordDialog(
+            errorMessage = restorePasswordError,
+            onDismiss = {
+                showRestorePasswordDialog = false
+                pendingRestoreUri = null
+                restorePasswordError = null
+            },
+            onConfirm = { password ->
+                val uri = pendingRestoreUri ?: return@BackupRestorePasswordDialog
+                scope.launch(Dispatchers.Main) {
+                    isWorking = true
+                    val result = withContext(Dispatchers.IO) {
+                        XlrBackupManager.inspectBackup(context, uri, password)
+                    }
+                    result
+                        .onSuccess { items ->
+                            showRestorePasswordDialog = false
+                            restorePasswordError = null
+                            restoreUri = uri
+                            restorePassword = password
+                            restoreItems = items
+                            selectedRestorePaths = initialSectionSelection(items)
+                            SnackBar.success("Архив успешно расшифрован: ${items.size} папок")
+                        }
+                        .onFailure { error ->
+                            val message = if (error is XlrInvalidPasswordException || error.cause is XlrInvalidPasswordException) {
+                                "Неверный пароль для расшифровки бэкапа"
+                            } else {
+                                error.message ?: "Ошибка расшифровки бэкапа"
+                            }
+                            restorePasswordError = message
+                            SnackBar.error(message)
+                        }
+                    isWorking = false
+                }
+            }
         )
     }
 }

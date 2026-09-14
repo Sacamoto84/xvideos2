@@ -3,7 +3,6 @@ package com.client.xvideos.common.coil
 import com.client.xvideos.common.theme.Theme
 
 import android.graphics.drawable.AnimatedImageDrawable
-import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -62,7 +61,7 @@ import java.io.File
 import kotlin.math.roundToInt
 
 
-@Suppress("UiComposable")
+@Suppress("LongMethod", "CyclomaticComplexMethod", "UiComposable")
 @Composable
 fun UrlImage(
 
@@ -181,22 +180,21 @@ fun UrlImage(
     val bytes = progress.bytes
     val total = progress.total
 
-    val dataSource = remember(url, urlGif) {
-        if (url.startsWith("https://")) {
+    val dataSource = remember(url, urlGif, albumName) {
+        if (url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)) {
             url.toUri()
         } else {
             val fileName = url.substringAfterLast('/').substringBefore('?')
             val localFile = File(url)
             if (localFile.isAbsolute || url.contains('/') || url.contains('\\')) {
                 localFile
-            } else if (albumName == "")
+            } else if (albumName.isEmpty()) {
                 File(url)
-            else {
+            } else {
                 when (albumName) {
                     "l_likes" -> File(AppPath.l_likes, fileName)
                     else -> File(url)
                 }
-
             }
         }
     }
@@ -393,7 +391,7 @@ fun UrlImage(
                 ,
                 contentAlignment = Alignment.Center
             ) {
-                if (url.contains("https://")) {
+                if (url.startsWith("http://", ignoreCase = true) || url.startsWith("https://", ignoreCase = true)) {
                     Icon( Icons.Default.Animation, contentDescription = null, tint = Color.White, modifier = Modifier.size(sizeButtonIcon) )
                 } else {
                     Icon( if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black,  modifier = Modifier.size(sizeButtonIcon) )

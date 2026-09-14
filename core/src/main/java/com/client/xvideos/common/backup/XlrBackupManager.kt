@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
@@ -42,7 +44,18 @@ object XlrBackupManager {
 
     fun defaultFileName(now: Long = System.currentTimeMillis()): String {
         val sdf = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
-        return "xvideos-xlr-backup-${sdf.format(Date(now))}.zip"
+        return "xvideos-xlr-backup-${sdf.format(Date(now))}.xlr"
+    }
+
+    fun detectBackupType(context: Context, uri: Uri): XlrBackupType {
+        return runCatching {
+            val input = context.contentResolver.openInputStream(uri) ?: return XlrBackupType.UNSUPPORTED
+            input.use { stream ->
+                val header = ByteArray(4)
+                val read = stream.read(header)
+                if (read < 4) XlrBackupType.UNSUPPORTED else XlrChunkedCrypto.detectType(header)
+            }
+        }.getOrDefault(XlrBackupType.UNSUPPORTED)
     }
 
     suspend fun currentBackupItems(
@@ -79,12 +92,14 @@ object XlrBackupManager {
         }
     }
 
-    suspend fun inspectBackup(context: Context, uri: Uri): Result<List<XlrBackupItem>> = withContext(Dispatchers.IO) {
+    suspend fun inspectBackup(
+        context: Context,
+        uri: Uri,
+        password: CharArray? = null
+    ): Result<List<XlrBackupItem>> = withContext(Dispatchers.IO) {
         runCatching {
             val stats = linkedMapOf<String, MutableReport>()
-            val input = context.contentResolver.openInputStream(uri)
-                ?: error("Cannot open backup file")
-            ZipInputStream(BufferedInputStream(input)).use { zip ->
+            openZipInputStream(context, uri, password).use { zip ->
                 val buffer = ByteArray(8 * 1024)
                 while (true) {
                     val entry = zip.nextEntry ?: break
@@ -129,7 +144,8 @@ object XlrBackupManager {
         context: Context,
         uri: Uri,
         selectedPaths: Set<String>,
-        options: XlrBackupOptions = XlrBackupOptions()
+        options: XlrBackupOptions = XlrBackupOptions(),
+        password: CharArray? = null
     ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
         runCatching {
             val safePaths = normalizeSelectedPaths(selectedPaths)
@@ -137,10 +153,16 @@ object XlrBackupManager {
 
             var files = 0
             var bytes = 0L
-            val output = context.contentResolver.openOutputStream(uri, "wt")
+            val rawOutput = context.contentResolver.openOutputStream(uri, "wt")
                 ?: error("Cannot open backup file")
 
-            ZipOutputStream(BufferedOutputStream(output)).use { zip ->
+            val outputStream: OutputStream = if (password != null && password.isNotEmpty()) {
+                XlrEncryptedOutputStream(BufferedOutputStream(rawOutput), password)
+            } else {
+                BufferedOutputStream(rawOutput)
+            }
+
+            ZipOutputStream(BufferedOutputStream(outputStream)).use { zip ->
                 writeManifest(zip, safePaths, options)
                 safePaths.forEach { path ->
                     val source = File(AppPath.main, path)
@@ -162,18 +184,19 @@ object XlrBackupManager {
     suspend fun restoreBackup(
         context: Context,
         uri: Uri,
-        selectedPaths: Set<String>
+        selectedPaths: Set<String>,
+        password: CharArray? = null
     ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
         runCatching {
             val safePaths = normalizeSelectedPaths(selectedPaths)
             if (safePaths.isEmpty()) error("Select at least one folder")
-            validateBackup(context, uri)
+            validateBackup(context, uri, password)
             val tempRoot = File(AppPath.main, ".xlr_restore_tmp").apply {
                 deleteRecursively()
                 mkdirs()
             }
             try {
-                val report = extractBackup(context, uri, tempRoot, safePaths)
+                val report = extractBackup(context, uri, tempRoot, safePaths, password)
                 applyRestoredPaths(File(AppPath.main), tempRoot, safePaths)
                 report
             } finally {
@@ -337,10 +360,8 @@ object XlrBackupManager {
         return XlrBackupReport(files = 1, bytes = source.length())
     }
 
-    private fun validateBackup(context: Context, uri: Uri) {
-        val input = context.contentResolver.openInputStream(uri)
-            ?: error("Cannot open backup file")
-        ZipInputStream(BufferedInputStream(input)).use { zip ->
+    private fun validateBackup(context: Context, uri: Uri, password: CharArray? = null) {
+        openZipInputStream(context, uri, password).use { zip ->
             var hasDataEntry = false
             while (true) {
                 val entry = zip.nextEntry ?: break
@@ -367,15 +388,14 @@ object XlrBackupManager {
         context: Context,
         uri: Uri,
         destinationRoot: File,
-        selectedPaths: List<String>
+        selectedPaths: List<String>,
+        password: CharArray? = null
     ): XlrBackupReport {
         var files = 0
         var bytes = 0L
         val root = destinationRoot.canonicalFile
-        val input = context.contentResolver.openInputStream(uri)
-            ?: error("Cannot open backup file")
 
-        ZipInputStream(BufferedInputStream(input)).use { zip ->
+        openZipInputStream(context, uri, password).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
                 val name = normalizeRelativePath(entry.name)
@@ -409,6 +429,34 @@ object XlrBackupManager {
         }
 
         return XlrBackupReport(files = files, bytes = bytes)
+    }
+
+    private fun openZipInputStream(context: Context, uri: Uri, password: CharArray?): ZipInputStream {
+        val rawInput = context.contentResolver.openInputStream(uri)
+            ?: error("Cannot open backup file")
+        val buffered = BufferedInputStream(rawInput)
+        buffered.mark(16)
+        val header = ByteArray(4)
+        val read = buffered.read(header)
+        buffered.reset()
+        if (read < 4) error("Backup file is empty or corrupted")
+
+        val type = XlrChunkedCrypto.detectType(header)
+        val decodedStream: InputStream = when (type) {
+            XlrBackupType.ENCRYPTED_XLR -> {
+                if (password == null || password.isEmpty()) {
+                    throw XlrInvalidPasswordException("Архив зашифрован. Требуется ввод пароля.")
+                }
+                XlrEncryptedInputStream(buffered, password)
+            }
+            XlrBackupType.LEGACY_ZIP -> {
+                buffered
+            }
+            XlrBackupType.UNSUPPORTED -> {
+                throw XlrCorruptedBackupException("Неподдерживаемый формат файла бэкапа")
+            }
+        }
+        return ZipInputStream(BufferedInputStream(decodedStream))
     }
 
     private fun readEntrySize(zip: ZipInputStream, buffer: ByteArray): Long {

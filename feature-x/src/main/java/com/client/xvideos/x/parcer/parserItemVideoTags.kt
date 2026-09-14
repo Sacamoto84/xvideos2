@@ -5,10 +5,7 @@ import com.client.xvideos.x.model.TagsModel
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-fun parserItemVideoTags(html: String): TagsModel {
-    // Парсим документ один раз (раньше Jsoup.parse вызывался дважды, а часть результата не использовалась).
-    val document: Document = Jsoup.parse(html)
-
+fun parserItemVideoTags(document: Document): TagsModel {
     val listMain = mutableListOf<TagsMainUploaderPornstar>()
     document.select("li.main-uploader").forEach {
         val href = it.selectFirst("a[href]")?.attr("href")?.trim().orEmpty()
@@ -37,4 +34,8 @@ fun parserItemVideoTags(html: String): TagsModel {
         .distinct()
 
     return TagsModel(listMain, listPornstar, tags)
+}
+
+fun parserItemVideoTags(html: String): TagsModel {
+    return parserItemVideoTags(Jsoup.parse(html))
 }

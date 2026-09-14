@@ -209,4 +209,23 @@ class DownloadWorkRequestTest {
         )
         assertTrue(DownloadWorkState.fromWorkInfo(cancelledInfo).isFinished)
     }
+
+    @Test
+    fun `parseHeaders и извлечение User-Agent работает независимо от регистра`() {
+        val lowerCaseHeaders = mapOf("user-agent" to "MyCustomAgent/2.0", "authorization" to "Bearer xyz")
+        val request = DownloadWorkRequest(
+            id = "test_ua",
+            url = "https://example.com/video.mp4",
+            destDir = "/tmp",
+            fileName = "ua.mp4",
+            title = "Test UA",
+            headers = lowerCaseHeaders
+        )
+
+        val workData = request.toWorkData()
+        val parsed = DownloadWorkRequest.parseHeaders(workData.getString(DownloadWorkRequest.KEY_HEADERS))
+
+        val resolvedUa = parsed.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }?.value
+        assertEquals("MyCustomAgent/2.0", resolvedUa)
+    }
 }

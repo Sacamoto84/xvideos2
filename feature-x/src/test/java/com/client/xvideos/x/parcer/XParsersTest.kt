@@ -285,4 +285,26 @@ class XParsersTest {
         assertEquals(1, result.pornstars.size)
         assertEquals("Star Name", result.pornstars[0].name)
     }
+
+    @Test
+    fun `однократный разбор Document извлекает плеер и теги без повторного парсинга`() {
+        val html = """
+            <html><body>
+              <div id="video-player-bg">
+                <script>html5player.setVideoHLS('https://cdn/hls.m3u8');</script>
+              </div>
+              <ul>
+                <li><a class="is-keyword" href="/tags/hd">HD</a></li>
+              </ul>
+            </body></html>
+        """.trimIndent()
+
+        val doc = org.jsoup.Jsoup.parse(html)
+        val script = parserItemVideo(doc)
+        val tags = parserItemVideoTags(doc)
+
+        assertNotNull(script)
+        assertTrue(script!!.contains("setVideoHLS"))
+        assertEquals(listOf("HD"), tags.tags)
+    }
 }

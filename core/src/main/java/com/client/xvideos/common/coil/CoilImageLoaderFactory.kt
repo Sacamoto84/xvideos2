@@ -135,14 +135,16 @@ object CoilImageLoaderFactory {
     }
 
     fun clearCache(context: Context) {
-        val appContext = context.applicationContext
-        getImageLoader(appContext).apply {
-            memoryCache?.clear()
-            diskCache?.clear()
+        synchronized(this) {
+            val appContext = context.applicationContext
+            instance?.apply {
+                memoryCache?.clear()
+                diskCache?.clear()
+            }
+            clearDirectory(imageCacheDir(appContext))
+            clearDirectory(httpCacheDir(appContext))
+            instance = createImageLoader(appContext)
         }
-        clearDirectory(imageCacheDir(appContext))
-        clearDirectory(httpCacheDir(appContext))
-        recreate(appContext)
     }
 
     private fun imageCacheDir(context: Context): File = File(context.cacheDir, IMAGE_CACHE_DIR_NAME)

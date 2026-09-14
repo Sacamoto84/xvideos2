@@ -5,8 +5,6 @@ import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
-import android.os.Build
 import androidx.core.content.getSystemService
 import dagger.Module
 import dagger.Provides
@@ -37,28 +35,24 @@ object ConnectivityModule {
     @Singleton
     fun provideConnectivityObserver(
         @ApplicationContext context: Context,
-        //@ApplicationScope scope: CoroutineScope
     ): ConnectivityObserver {
         return AndroidConnectivityObserver(context, CoroutineScope(SupervisorJob() + Dispatchers.IO))
     }
 
 }
 
-
-
 class AndroidConnectivityObserver(
     private val context: Context,
     private val scope: CoroutineScope
 ) : ConnectivityObserver {
 
-    private val connectivityManager = context.getSystemService<ConnectivityManager>()!!
+    private val connectivityManager = context.getSystemService<ConnectivityManager>()
     private val _isConnected = MutableStateFlow(false)
     override val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
     private var networkCallback: NetworkCallback? = null
 
     init {
-
         updateInitialConnectionState()
         registerNetworkCallback()
 
@@ -70,14 +64,18 @@ class AndroidConnectivityObserver(
                 unregisterNetworkCallback()
             }
         }
-
     }
 
     private fun updateInitialConnectionState() {
+        val cm = connectivityManager
+        if (cm == null) {
+            _isConnected.value = false
+            return
+        }
         try {
-            val activeNetwork = connectivityManager.activeNetwork
+            val activeNetwork = cm.activeNetwork
             val networkCapabilities = activeNetwork?.let {
-                connectivityManager.getNetworkCapabilities(it)
+                cm.getNetworkCapabilities(it)
             }
 
             val hasInternet = networkCapabilities?.hasCapability(
@@ -91,29 +89,43 @@ class AndroidConnectivityObserver(
             val isConnected = hasInternet && isValidated
             _isConnected.value = isConnected
 
-            Timber.w("!!! 999 Initial state - hasInternet: $hasInternet, isValidated: $isValidated, connected: $isConnected")
+            Timber.d("Initial connection state - hasInternet: $hasInternet, isValidated: $isValidated, connected: $isConnected")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "!!! 999 Failed to get initial connection state")
+            Timber.e(e, "Failed to get initial connection state")
             _isConnected.value = false
         }
     }
 
     private fun registerNetworkCallback() {
+        val cm = connectivityManager ?: return
         val callback = object : NetworkCallback() {
             override fun onAvailable(network: Network) {
-                Timber.w("!!! 999 onAvailable: $network")
-                // Не устанавливаем сразу true, ждем onCapabilitiesChanged
+                Timber.d("Network onAvailable: $network")
+                val caps = cm.getNetworkCapabilities(network)
+                if (caps != null) {
+                    val hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    val isValidated = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    _isConnected.value = hasInternet && isValidated
+                }
             }
 
             override fun onLost(network: Network) {
-                Timber.w("!!! 999 onLost: $network")
-                _isConnected.value = false
+                Timber.d("Network onLost: $network")
+                val currentActive = cm.activeNetwork
+                if (currentActive == null || currentActive == network) {
+                    _isConnected.value = false
+                } else {
+                    val caps = cm.getNetworkCapabilities(currentActive)
+                    val hasInternet = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                    val isValidated = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+                    _isConnected.value = hasInternet && isValidated
+                }
             }
 
             override fun onUnavailable() {
-                Timber.w("!!! 999 onUnavailable")
+                Timber.d("Network onUnavailable")
                 _isConnected.value = false
             }
 
@@ -130,7 +142,7 @@ class AndroidConnectivityObserver(
 
                 val isConnected = hasInternet && isValidated
 
-                Timber.w("!!! 999 onCapabilitiesChanged - network: $network, hasInternet: $hasInternet, isValidated: $isValidated, connected: $isConnected")
+                Timber.d("Network onCapabilitiesChanged - network: $network, hasInternet: $hasInternet, isValidated: $isValidated, connected: $isConnected")
                 _isConnected.value = isConnected
             }
         }
@@ -138,23 +150,22 @@ class AndroidConnectivityObserver(
         networkCallback = callback
 
         try {
-            Timber.w("!!! 999 registerDefaultNetworkCallback")
-            connectivityManager.registerDefaultNetworkCallback(callback)
+            Timber.d("Registering default network callback")
+            cm.registerDefaultNetworkCallback(callback)
         } catch (e: Exception) {
-            Timber.e(e, "!!! 999 Failed to register network callback")
+            Timber.e(e, "Failed to register network callback")
         }
     }
 
     private fun unregisterNetworkCallback() {
         networkCallback?.let { callback ->
             try {
-                connectivityManager.unregisterNetworkCallback(callback)
-                Timber.w("!!! 999 unregisterNetworkCallback success")
+                connectivityManager?.unregisterNetworkCallback(callback)
+                Timber.d("unregisterNetworkCallback success")
             } catch (e: Exception) {
-                Timber.e(e, "!!! 999 Failed to unregister network callback")
+                Timber.e(e, "Failed to unregister network callback")
             }
             networkCallback = null
         }
     }
 }
-

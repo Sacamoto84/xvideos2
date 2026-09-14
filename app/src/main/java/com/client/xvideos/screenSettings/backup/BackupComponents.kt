@@ -38,7 +38,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
-
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
@@ -364,4 +375,169 @@ internal fun BackupSectionGroup(
             }
         }
     }
+}
+
+@Composable
+internal fun BackupCreatePasswordDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (password: CharArray) -> Unit
+) {
+    var password by rememberSaveable { mutableStateOf("") }
+    var passwordConfirm by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var passwordConfirmVisible by rememberSaveable { mutableStateOf(false) }
+
+    val isLengthValid = password.length >= 4
+    val isMatching = password == passwordConfirm
+    val isValid = isLengthValid && isMatching
+
+    LavenderDialog(
+        title = "Шифрование бэкапа",
+        onDismiss = onDismiss,
+        confirmText = "Создать",
+        confirmEnabled = isValid,
+        onConfirm = {
+            if (isValid) {
+                onConfirm(password.toCharArray())
+            }
+        },
+        content = {
+            val d = Theme.DialogLavande
+            Text(
+                text = "Задайте пароль для шифрования архива. Без этого пароля восстановить данные будет невозможно.",
+                style = Theme.L.Type.dialogBody.copy(color = d.bodyColor),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Пароль архива") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
+                            tint = d.bodyColor
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = passwordConfirm,
+                onValueChange = { passwordConfirm = it },
+                label = { Text("Подтверждение пароля") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordConfirmVisible = !passwordConfirmVisible }) {
+                        Icon(
+                            imageVector = if (passwordConfirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (passwordConfirmVisible) "Скрыть пароль" else "Показать пароль",
+                            tint = d.bodyColor
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                )
+            )
+
+            if (password.isNotEmpty() && !isLengthValid) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Пароль должен быть не короче 4 символов",
+                    style = Theme.L.Type.dialogBody.copy(color = d.buttonBackgroundDestructive),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else if (passwordConfirm.isNotEmpty() && !isMatching) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Пароли не совпадают",
+                    style = Theme.L.Type.dialogBody.copy(color = d.buttonBackgroundDestructive),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    )
+}
+
+@Composable
+internal fun BackupRestorePasswordDialog(
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onConfirm: (password: CharArray) -> Unit
+) {
+    var password by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+
+    val isValid = password.isNotEmpty()
+
+    LavenderDialog(
+        title = "Ввод пароля бэкапа",
+        onDismiss = onDismiss,
+        confirmText = "Открыть",
+        confirmEnabled = isValid,
+        onConfirm = {
+            if (isValid) {
+                onConfirm(password.toCharArray())
+            }
+        },
+        content = {
+            val d = Theme.DialogLavande
+            Text(
+                text = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого.",
+                style = Theme.L.Type.dialogBody.copy(color = d.bodyColor),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Пароль архива") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
+                            tint = d.bodyColor
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = {
+                    if (isValid) onConfirm(password.toCharArray())
+                })
+            )
+
+            if (!errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = errorMessage,
+                    style = Theme.L.Type.dialogBody.copy(color = d.buttonBackgroundDestructive),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    )
 }

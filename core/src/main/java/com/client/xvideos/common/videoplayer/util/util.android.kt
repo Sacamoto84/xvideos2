@@ -3,7 +3,6 @@ package com.client.xvideos.common.videoplayer.util
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import android.os.Build
 import android.util.Base64
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
