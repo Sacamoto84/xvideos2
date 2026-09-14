@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,7 +26,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.collectionDB.ui.DaialogNewCollection
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
@@ -45,7 +50,7 @@ fun LCollectionDialogs(savedL: SavedL) {
     }
 
     if (savedL.collection.visibleDialog) {
-        L_DialogCollection(savedL = savedL)
+        L_DialogCollection(savedL)
     }
 }
 
@@ -68,40 +73,72 @@ fun L_DialogCollection(savedL: SavedL) {
         },
         onDismiss = { savedL.collection.visibleDialog = false },
         content = {
-            LazyColumn(
-                state = rememberLazyListState(),
-                modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp, max = 420.dp)
-            ) {
-                items(
-                    count = savedL.collection.collectionList.size,
-                    key = { index -> savedL.collection.collectionList[index].collection },
-                ) { index ->
-                    val collectionItem = savedL.collection.collectionList[index]
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                            .padding(vertical = 4.dp)
-                            .clickable(onClick = {
-                                savedL.collection.addPendingToCollection(collectionItem.collection)
-                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                            }),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (collectionItem.previewUrl != null) {
-                            UrlImage(
-                                url = collectionItem.previewUrl,
-                                modifier = Modifier.clip(RoundedCornerShape(25)).size(72.dp)
+            if (savedL.collection.collectionList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Нет коллекций",
+                        color = Theme.DialogLavande.bodyColor,
+                        fontFamily = Theme.L.fontFamilyDMsanss,
+                        fontSize = 16.sp
+                    )
+                }
+            } else {
+                LazyColumn(
+                    state = rememberLazyListState(),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 420.dp)
+                ) {
+                    items(
+                        count = savedL.collection.collectionList.size,
+                        key = { index -> savedL.collection.collectionList[index].collection },
+                    ) { index ->
+                        val collectionItem = savedL.collection.collectionList[index]
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable(onClick = {
+                                    savedL.collection.addPendingToCollection(collectionItem.collection)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                })
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (collectionItem.previewUrl != null) {
+                                UrlImage(
+                                    url = collectionItem.previewUrl,
+                                    modifier = Modifier.clip(RoundedCornerShape(12.dp)).size(56.dp)
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .size(56.dp)
+                                        .background(Color(0xFF3D3949)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Folder,
+                                        contentDescription = null,
+                                        tint = Theme.DialogLavande.dismissTextColor,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = collectionItem.collection,
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = Theme.L.fontFamilyDMsanss
                             )
-                        } else {
-                            Box(Modifier.clip(RoundedCornerShape(25)).size(72.dp).background(Color.Gray))
                         }
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            collectionItem.collection,
-                            color = Color.Black,
-                            fontFamily = Theme.L.fontFamilyDMsanss
-                        )
                     }
                 }
             }

@@ -108,9 +108,14 @@ object R_Screen_CollectionTab : Screen {
                 onDismiss = { itemPendingAction = null },
                 icon = { CollectionCoverIcon(coverOf(pending)) },
                 content = {
-                    androidx.compose.material3.Text(pending, fontSize = 16.sp, color = Theme.L.b0)
+                    androidx.compose.material3.Text(
+                        pending,
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
                     DropdownMenuItem(
-                        text = { androidx.compose.material3.Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        text = { androidx.compose.material3.Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                         onClick = {
                             renameValue = pending
                             itemPendingRename = pending
@@ -119,7 +124,7 @@ object R_Screen_CollectionTab : Screen {
                         leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
                     DropdownMenuItem(
-                        text = { androidx.compose.material3.Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        text = { androidx.compose.material3.Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                         onClick = {
                             itemPendingAction = null
                             navigator.push(ScreenP2pSend(P2pSendSource.ShareCollectionR(pending)))
@@ -127,7 +132,7 @@ object R_Screen_CollectionTab : Screen {
                         leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                     )
                     DropdownMenuItem(
-                        text = { androidx.compose.material3.Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        text = { androidx.compose.material3.Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                         onClick = {
                             itemPendingDelete = pending
                             itemPendingAction = null
@@ -152,13 +157,13 @@ object R_Screen_CollectionTab : Screen {
                         modifier = Modifier.fillMaxWidth(),
                         label = { androidx.compose.material3.Text("Название коллекции") },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Theme.DialogLavande.buttonBackground,
-                            unfocusedTextColor = Theme.DialogLavande.buttonBackground,
-                            cursorColor = Theme.DialogLavande.buttonBackground,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White,
                             focusedBorderColor = Theme.DialogLavande.buttonBackground,
-                            unfocusedBorderColor = Theme.DialogLavande.buttonBackground,
-                            focusedLabelColor = Theme.DialogLavande.buttonBackground,
-                            unfocusedLabelColor = Theme.DialogLavande.buttonBackground,
+                            unfocusedBorderColor = Color(0x66FFFFFF),
+                            focusedLabelColor = Theme.DialogLavande.dismissTextColor,
+                            unfocusedLabelColor = Theme.DialogLavande.bodyColor,
                         ),
                     )
                 },

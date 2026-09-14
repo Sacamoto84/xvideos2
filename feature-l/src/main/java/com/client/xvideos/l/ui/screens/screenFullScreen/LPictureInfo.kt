@@ -59,13 +59,13 @@ internal fun LPictureInfoDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Альбом: ", color = Color.DarkGray, fontFamily = Theme.L.fontFamilyKarla)
+                    Text("Альбом: ", color = Theme.DialogLavande.dismissTextColor, fontFamily = Theme.L.fontFamilyKarla)
                     if (albumId != null && onAlbumClick != null) {
                         TextButton(onClick = { onAlbumClick(albumId) }) {
                             Text(albumId.toString())
                         }
                     } else {
-                        Text(item.album ?: "-", color = Color.DarkGray, fontFamily = Theme.L.fontFamilyKarla)
+                        Text(item.album ?: "-", color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
                     }
                 }
 
@@ -97,7 +97,7 @@ private fun LPictureInfoText(
     ClickableText(
         text = annotatedText,
         style = TextStyle(
-            color = Color.DarkGray,
+            color = Theme.DialogLavande.bodyColor,
             fontFamily = Theme.L.fontFamilyKarla
         ),
         onClick = { offset ->

@@ -97,12 +97,17 @@ object L_Screen_CollectionTab : Screen {
                 },
                 content = {
 
-                    Box(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), contentAlignment =  Alignment.Center) {
-                        Text(pending, fontSize = 24.sp, color = Theme.L.b0)
+                    Box(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            pending,
+                            fontSize = 20.sp,
+                            color = Color.White,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                        )
                     }
 
                     DropdownMenuItem(
-                        text = { Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        text = { Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                         onClick = {
                             renameValue = pending
                             itemPendingRename = pending
@@ -112,7 +117,7 @@ object L_Screen_CollectionTab : Screen {
                     )
 
                     DropdownMenuItem(
-                        text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                         onClick = {
                             itemPendingAction = null
                             navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
@@ -121,7 +126,7 @@ object L_Screen_CollectionTab : Screen {
                     )
 
                     DropdownMenuItem(
-                        text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.Black)) },
+                        text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                         onClick = {
                             itemPendingDelete = pending
                             itemPendingAction = null
@@ -141,31 +146,16 @@ object L_Screen_CollectionTab : Screen {
                         value = renameValue,
                         onValueChange = { renameValue = it },
                         singleLine = true,
-                        textStyle = Theme.L.Type.body.copy(color = Color.Black),
-
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Название коллекции") },
                         colors = OutlinedTextFieldDefaults.colors(
-                            cursorColor = Color.Black,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedBorderColor = Color.Black,
-                            unfocusedBorderColor = Color.Black,
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-
-                            focusedLeadingIconColor = Color.Black,
-                            unfocusedLeadingIconColor = Color.Black,
-                            focusedTrailingIconColor = Color.Black,
-                            unfocusedTrailingIconColor = Color.Black,
-
-                            focusedPlaceholderColor = Color.Black,
-                            unfocusedPlaceholderColor = Color.Black,
-                            focusedLabelColor = Color.Black,
-                            unfocusedLabelColor = Color.Black,
-
-                            focusedSupportingTextColor = Color.Black,
-                            unfocusedSupportingTextColor = Color.Black,
-
-
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedBorderColor = Theme.DialogLavande.buttonBackground,
+                            unfocusedBorderColor = Color(0x66FFFFFF),
+                            focusedLabelColor = Theme.DialogLavande.dismissTextColor,
+                            unfocusedLabelColor = Theme.DialogLavande.bodyColor,
                         )
                     )
                 },

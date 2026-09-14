@@ -245,19 +245,19 @@ private fun LCollectionDuplicatesDialog(
         onDismiss = onDismiss,
         content = {
             if (groups.isEmpty()) {
-                Text("Дубли не найдены", color = Theme.L.grey2, style = Theme.L.Type.body)
+                Text("Дубли не найдены", color = Theme.DialogLavande.bodyColor, style = Theme.L.Type.body)
             } else {
                 Column {
                     Text(
                         "Найдено групп: ${groups.size}. При очистке останется самый новый элемент в каждой группе.",
-                        color = Theme.L.grey2,
+                        color = Theme.DialogLavande.bodyColor,
                         style = Theme.L.Type.body
                     )
                     Spacer(Modifier.height(8.dp))
                     groups.take(6).forEach { group ->
                         Text(
                             "• ${group.items.size} элемента: ${lPicsDetailsIdentityKey(group.items.first())}",
-                            color = Color.Black,
+                            color = Color.White,
                             style = Theme.L.Type.rowSubtitle
                         )
                     }

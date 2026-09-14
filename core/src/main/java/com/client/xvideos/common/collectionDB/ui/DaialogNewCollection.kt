@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
@@ -57,13 +58,13 @@ fun DaialogNewCollection(
                 keyboardOptions = IncognitoKeyboard.options(),
                 label = { Text("Название коллекции") },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Theme.DialogLavande.buttonBackground,
-                    unfocusedTextColor = Theme.DialogLavande.buttonBackground,
-                    cursorColor = Theme.DialogLavande.buttonBackground,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
                     focusedBorderColor = Theme.DialogLavande.buttonBackground,
-                    unfocusedBorderColor = Theme.DialogLavande.buttonBackground,
-                    focusedLabelColor = Theme.DialogLavande.buttonBackground,
-                    unfocusedLabelColor = Theme.DialogLavande.buttonBackground,
+                    unfocusedBorderColor = Color(0x66FFFFFF),
+                    focusedLabelColor = Theme.DialogLavande.dismissTextColor,
+                    unfocusedLabelColor = Theme.DialogLavande.bodyColor,
                 ),
             )
         },
