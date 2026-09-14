@@ -104,11 +104,17 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
 
     fun pause(id: Int) {
         val req = idRequestMap[id] ?: return
+        if (req.status != Status.RUNNING && req.status != Status.QUEUED) {
+            return
+        }
         req.status = Status.PAUSED
     }
 
     fun resume(id: Int) {
         val req = idRequestMap[id] ?: return
+        if (req.status != Status.PAUSED) {
+            return
+        }
         req.status = Status.QUEUED
         downloader.enqueue(req)
     }

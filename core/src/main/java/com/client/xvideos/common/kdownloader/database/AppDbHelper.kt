@@ -32,10 +32,10 @@ class AppDbHelper(context: Context?) : DbHelper {
             if (c.moveToFirst()) {
                 downloadModel = DownloadModel(
                     id = id,
-                    url = c.getString(c.getColumnIndex(DownloadModel.URL)),
-                    eTag = c.getString(c.getColumnIndex(DownloadModel.ETAG)),
-                    dirPath = c.getString(c.getColumnIndex(DownloadModel.DIR_PATH)),
-                    fileName = c.getString(c.getColumnIndex(DownloadModel.FILE_NAME)),
+                    url = c.getString(c.getColumnIndex(DownloadModel.URL)).orEmpty(),
+                    eTag = c.getString(c.getColumnIndex(DownloadModel.ETAG)).orEmpty(),
+                    dirPath = c.getString(c.getColumnIndex(DownloadModel.DIR_PATH)).orEmpty(),
+                    fileName = c.getString(c.getColumnIndex(DownloadModel.FILE_NAME)).orEmpty(),
                     totalBytes = c.getLong(c.getColumnIndex(DownloadModel.TOTAL_BYTES)),
                     downloadedBytes = c.getLong(c.getColumnIndex(DownloadModel.DOWNLOADED_BYTES)),
                     lastModifiedAt = c.getLong(c.getColumnIndex(DownloadModel.LAST_MODIFIED_AT))
@@ -128,10 +128,10 @@ class AppDbHelper(context: Context?) : DbHelper {
                     do {
                         val model = DownloadModel().apply {
                             id = cursor.getInt(cursor.getColumnIndex(DownloadModel.ID))
-                            url = cursor.getString(cursor.getColumnIndex(DownloadModel.URL))
-                            eTag = cursor.getString(cursor.getColumnIndex(DownloadModel.ETAG))
-                            dirPath = cursor.getString(cursor.getColumnIndex(DownloadModel.DIR_PATH))
-                            fileName = cursor.getString(cursor.getColumnIndex(DownloadModel.FILE_NAME))
+                            url = cursor.getString(cursor.getColumnIndex(DownloadModel.URL)).orEmpty()
+                            eTag = cursor.getString(cursor.getColumnIndex(DownloadModel.ETAG)).orEmpty()
+                            dirPath = cursor.getString(cursor.getColumnIndex(DownloadModel.DIR_PATH)).orEmpty()
+                            fileName = cursor.getString(cursor.getColumnIndex(DownloadModel.FILE_NAME)).orEmpty()
                             totalBytes = cursor.getLong(cursor.getColumnIndex(DownloadModel.TOTAL_BYTES))
                             downloadedBytes = cursor.getLong(cursor.getColumnIndex(DownloadModel.DOWNLOADED_BYTES))
                             lastModifiedAt = cursor.getLong(cursor.getColumnIndex(DownloadModel.LAST_MODIFIED_AT))

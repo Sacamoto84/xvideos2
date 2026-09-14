@@ -67,6 +67,7 @@ fun RSearchTextField(
             if (search.stack.isNotEmpty()) {
                 val last = search.stack.removeLast()
                 search.searchText.value = TextFieldValue(text = last, selection = TextRange(last.length))
+                search.searchTextDone.value = last
             }
         },
         onDone = {

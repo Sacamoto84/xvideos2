@@ -144,7 +144,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
      * ## Открыть экран с нужным тегом
      */
     fun openTag(tag: String, navigator: Navigator) {
-        navigator.push(ScreenTags(tag))
+        if (tag.isNotBlank()) {
+            navigator.push(ScreenTags(tag.trim()))
+        }
     }
 
     /**

@@ -133,6 +133,11 @@ class DownloadTask(
                         return@withContext
                     }
 
+                    if (req.status == Status.PAUSED) {
+                        listener.onPause()
+                        return@withContext
+                    }
+
                     req.status = Status.RUNNING
 
                     listener.onStart()
@@ -147,6 +152,12 @@ class DownloadTask(
                     if (checkIfFreshStartRequiredAndStart(model)) {
                         model = null
                         redirectedClient = httpClient ?: redirectedClient
+                    }
+
+                    if (req.status == Status.PAUSED) {
+                        closeAllSafely(null)
+                        listener.onPause()
+                        return@withContext
                     }
 
                     if (!isSuccessful()) {
@@ -328,6 +339,11 @@ class DownloadTask(
                     closeAllSafely(this@DownloadTask.outputStream)
                     this@DownloadTask.outputStream = null
                     val wasCancelled = req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true
+                    val wasPaused = req.status == Status.PAUSED
+                    if (wasPaused) {
+                        listener.onPause()
+                        return@withContext
+                    }
                     deleteTempFile()
                     removeNoMoreNeededModelFromDatabase()
                     req.reset()

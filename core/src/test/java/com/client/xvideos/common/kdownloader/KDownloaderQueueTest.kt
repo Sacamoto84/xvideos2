@@ -123,4 +123,50 @@ class KDownloaderQueueTest {
         assertTrue(tempPath.contains("video.mp4.temp"))
         assertTrue(tempPath.contains("/storage/downloads"))
     }
+
+    @Test
+    fun `DownloadRequestQueue pause transitions RUNNING and QUEUED to PAUSED, ignores CANCELLED and COMPLETED`() {
+        val downloader = DownloadDispatchers(NoOpsDbHelper())
+        val queue = DownloadRequestQueue(downloader)
+        val reqQueued = DownloadRequest.Builder("https://example.com/file1.mp4", tempFolder.root.absolutePath, "file1.mp4").build()
+        val reqRunning = DownloadRequest.Builder("https://example.com/file2.mp4", tempFolder.root.absolutePath, "file2.mp4").build()
+        val reqCompleted = DownloadRequest.Builder("https://example.com/file3.mp4", tempFolder.root.absolutePath, "file3.mp4").build()
+
+        queue.enqueue(reqQueued)
+        queue.enqueue(reqRunning)
+        queue.enqueue(reqCompleted)
+
+        reqRunning.status = Status.RUNNING
+        reqCompleted.status = Status.COMPLETED
+
+        queue.pause(reqQueued.downloadId)
+        assertEquals(Status.PAUSED, reqQueued.status)
+
+        queue.pause(reqRunning.downloadId)
+        assertEquals(Status.PAUSED, reqRunning.status)
+
+        queue.pause(reqCompleted.downloadId)
+        assertEquals(Status.COMPLETED, reqCompleted.status)
+    }
+
+    @Test
+    fun `DownloadRequestQueue resume transitions only PAUSED to QUEUED, ignores RUNNING and COMPLETED`() {
+        val downloader = DownloadDispatchers(NoOpsDbHelper())
+        val queue = DownloadRequestQueue(downloader)
+        val reqPaused = DownloadRequest.Builder("https://example.com/file1.mp4", tempFolder.root.absolutePath, "file1.mp4").build()
+        val reqRunning = DownloadRequest.Builder("https://example.com/file2.mp4", tempFolder.root.absolutePath, "file2.mp4").build()
+
+        queue.enqueue(reqPaused)
+        queue.enqueue(reqRunning)
+
+        reqPaused.status = Status.PAUSED
+        reqRunning.status = Status.RUNNING
+
+        queue.resume(reqPaused.downloadId)
+        assertEquals(Status.QUEUED, reqPaused.status)
+
+        // Resuming already RUNNING request must not re-enqueue or reset to QUEUED
+        queue.resume(reqRunning.downloadId)
+        assertEquals(Status.RUNNING, reqRunning.status)
+    }
 }

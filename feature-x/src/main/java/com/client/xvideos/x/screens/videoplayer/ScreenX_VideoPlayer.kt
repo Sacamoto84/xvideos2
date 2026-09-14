@@ -4,9 +4,11 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -52,8 +54,14 @@ class ScreenX_VideoPlayer(val url: String) : Screen {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Не удалось загрузить видео", color = Color.White)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = { vm.loadVideo() }) {
-                        Text("Повторить")
+                    Row {
+                        Button(onClick = { vm.loadVideo() }) {
+                            Text("Повторить")
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(onClick = { navigator.pop() }) {
+                            Text("Назад")
+                        }
                     }
                 }
             }
