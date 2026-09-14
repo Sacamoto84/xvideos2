@@ -10,7 +10,6 @@ import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +47,6 @@ class Downloader @Inject constructor(
     //Процент скачивания 0..1 - начало скачивания, -2 busy, -3 error
     var percent = MutableStateFlow(-2f)
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun downloadRedName(item: GifsInfo, onComplete: () -> Unit = {}) {
 
         val videoUrl = item.downloadVideoUrl()
@@ -199,14 +197,30 @@ class Downloader @Inject constructor(
                     onCompleted = {
                         percent.value = -2f
                         onEvent("R Download: video готов ${item.id}")
-                        onComplete()
+                        scope.launch(Dispatchers.IO) {
+                            val infoFile = File(p, "${item.id}.info")
+                            if (!infoFile.exists()) {
+                                runCatching {
+                                    infoFile.writeTextAtomically(AppJson.encodeToString(item))
+                                }.onFailure {
+                                    Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
+                                }
+                            }
+                            withContext(Dispatchers.Main) {
+                                onComplete()
+                            }
+                        }
                     }
                 )
                 queuedVideo++
             }
         }
 
-        if (queuedVideo == 0) onComplete()
+        if (queuedVideo == 0) {
+            scope.launch(Dispatchers.Main) {
+                onComplete()
+            }
+        }
 
         return RedDownloadEnqueueReport(
             queuedVideo = queuedVideo,
@@ -221,84 +235,11 @@ class Downloader @Inject constructor(
         onComplete: () -> Unit = {},
         onEvent: (String) -> Unit = {}
     ): RedDownloadEnqueueReport {
-        if (item.id.isBlank() || item.userName.isBlank()) {
-            return RedDownloadEnqueueReport()
-        }
-        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
-            Timber.w("Downloader -> Отклонён небезопасный путь при recovery: userName=${item.userName}, id=${item.id}")
-            return RedDownloadEnqueueReport()
-        }
-
-        val baseDir = File(AppPath.r_cache_download)
-        val userFolder = File(baseDir, item.userName)
-        try {
-            requireInside(baseDir, userFolder)
-        } catch (e: Exception) {
-            Timber.w(e, "Downloader -> Попытка выхода за пределы r_cache_download при recovery")
-            return RedDownloadEnqueueReport()
-        }
-        userFolder.mkdirs()
-
-        val folderPath = userFolder.absolutePath
-        val videoFile = File(userFolder, "${item.id}.mp4")
-        val previewFile = File(userFolder, "${item.id}.jpg")
-        var queuedVideo = 0
-        var queuedPreview = 0
-        var skippedNoVideoUrl = 0
-        var skippedNoPreviewUrl = 0
-
-        if (!previewFile.exists()) {
-            val previewUrl = item.previewUrl()
-            if (previewUrl == null) {
-                skippedNoPreviewUrl++
-                onEvent("R Download: нет preview URL ${item.id}")
-            } else {
-                val requestImage = kDownloader.newRequestBuilder(previewUrl, folderPath, "${item.id}.jpg").build()
-                kDownloader.enqueue(
-                    requestImage,
-                    onStart = { onEvent("R Download: старт preview ${item.id}") },
-                    onError = { error -> onEvent("R Download: preview не скачан ${item.id}: $error") },
-                    onCompleted = { onEvent("R Download: preview готов ${item.id}") }
-                )
-                queuedPreview++
-            }
-        }
-
-        if (!videoFile.exists()) {
-            val videoUrl = item.downloadVideoUrl()
-            if (videoUrl == null) {
-                skippedNoVideoUrl++
-                onEvent("R Download: нет video URL ${item.id}")
-            } else {
-                val request = kDownloader.newRequestBuilder(videoUrl, folderPath, "${item.id}.mp4").tag(item.id).build()
-                kDownloader.enqueue(
-                    request,
-                    onStart = {
-                        percent.value = 0f
-                        onEvent("R Download: старт video ${item.id}")
-                    },
-                    onError = { error ->
-                        percent.value = -3f
-                        onEvent("R Download: video не скачан ${item.id}: $error")
-                    },
-                    onProgress = { progress -> percent.value = progress / 100f },
-                    onCompleted = {
-                        percent.value = -2f
-                        onEvent("R Download: video готов ${item.id}")
-                        onComplete()
-                    }
-                )
-                queuedVideo++
-            }
-        }
-
-        if (queuedVideo == 0) onComplete()
-
-        return RedDownloadEnqueueReport(
-            queuedVideo = queuedVideo,
-            queuedPreview = queuedPreview,
-            skippedNoVideoUrl = skippedNoVideoUrl,
-            skippedNoPreviewUrl = skippedNoPreviewUrl
+        return downloadMissingFiles(
+            item = item,
+            onComplete = onComplete,
+            onEvent = onEvent,
+            showSnackBarErrors = false
         )
     }
 

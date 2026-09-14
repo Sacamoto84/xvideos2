@@ -99,7 +99,7 @@ data class getAlbumListAggregationsResult(
             val result = repository.openURI(q)
             if (result.isFailure) {
                 Timber.i("!!! getAlbumListAggregations error ${result.exceptionOrNull()}")
-                return Result.failure(result.exceptionOrNull()!!)
+                return Result.failure(result.exceptionOrNull() ?: IllegalStateException("Failed to load album aggregations"))
             }
 
             val res = result.getOrThrow()

@@ -18,9 +18,14 @@ class KDownloader private constructor(dbHelper: DbHelper, private val config: Do
             return if (config.databaseEnabled) {
                 KDownloader(AppDbHelper(context), config)
             } else {
-                KDownloader(NoOpsDbHelper(),config)
+                KDownloader(NoOpsDbHelper(), config)
             }
         }
+
+        fun createForTesting(
+            dbHelper: DbHelper = NoOpsDbHelper(),
+            config: DownloaderConfig = DownloaderConfig(false)
+        ): KDownloader = KDownloader(dbHelper, config)
     }
 
     private val downloader = DownloadDispatchers(dbHelper)

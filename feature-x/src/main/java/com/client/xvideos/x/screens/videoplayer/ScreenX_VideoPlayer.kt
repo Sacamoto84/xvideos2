@@ -83,11 +83,10 @@ class ScreenX_VideoPlayer(val url: String) : Screen {
                 val pos = vm.positionFromFullscreen
                 if (pos != -1L && host.totalTime > 0) {
                     host.seekTo(pos / 1000f)
+                    host.play()
                     vm.positionFromFullscreen = -1L
                 }
             }
-
-
 
             Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
                 ComposeVideoPlayer(
@@ -97,13 +96,20 @@ class ScreenX_VideoPlayer(val url: String) : Screen {
                     overlay = {
                         // Теги/каналы/порноактрисы поверх видео (вне zoomable-области)
                         Box(modifier = Modifier.align(Alignment.TopCenter)) {
-                            ComposeTags(vm.tags, onClick = { vm.openTag(it, navigator) })
+                            ComposeTags(
+                                vm.tags,
+                                onClick = {
+                                    host.pause()
+                                    vm.openTag(it, navigator)
+                                }
+                            )
                         }
                         // Панель управления снизу
                         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                             X_PlayerBottomBar(
                                 host = host,
                                 onFullScreen = {
+                                    host.pause()
                                     vm.openFullScreen(navigator, (host.currentTime * 1000).toLong())
                                 }
                             )

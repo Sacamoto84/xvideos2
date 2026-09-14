@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -89,7 +91,7 @@ fun DashboardsPaginatedListScreen(
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
 
-    val l = remember { mutableStateListOf<ItemsX>() }
+    val l = remember(pageIndex) { mutableStateListOf<ItemsX>() }
     var hasError by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
 
@@ -131,15 +133,47 @@ fun DashboardsPaginatedListScreen(
             }
         }
     } else {
-        DashboardsPaginatedListContent(
-            items = l.toImmutableList(),
-            isFavorite = isFavorite,
-            onFavoriteAdd = onFavoriteAdd,
-            onFavoriteRemove = onFavoriteRemove,
-            onDownload = onDownload,
-            onSaveToGallery = onSaveToGallery,
-            openVideoPlayer = openVideoPlayer
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            DashboardsPaginatedListContent(
+                items = l.toImmutableList(),
+                isFavorite = isFavorite,
+                onFavoriteAdd = onFavoriteAdd,
+                onFavoriteRemove = onFavoriteRemove,
+                onDownload = onDownload,
+                onSaveToGallery = onSaveToGallery,
+                openVideoPlayer = openVideoPlayer
+            )
+            if (hasError) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .align(Alignment.TopCenter)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xD9212121), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Не удалось обновить видео",
+                            color = Color.White,
+                            fontSize = 13.sp
+                        )
+                        Button(
+                            onClick = { retryTrigger++ },
+                            modifier = Modifier.height(32.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                        ) {
+                            Text("Повторить", fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

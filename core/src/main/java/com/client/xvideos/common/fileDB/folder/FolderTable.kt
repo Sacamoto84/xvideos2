@@ -79,7 +79,7 @@ class FolderTable(
                         ?.readText(Charsets.UTF_8)
                         ?.toLongOrNull()
 
-                    if (timeCreate != null && timeCreate < timeMs) {
+                    if (timeCreate == null || timeCreate < timeMs) {
                         rowDir.deleteRecursively()
                     }
                 }

@@ -58,7 +58,9 @@ fun ExpandMenuVideo(
     var chooserItem by remember { mutableStateOf<GifsInfo?>(null) }
 
     LaunchedEffect(expanded) {
-        haptic.invoke()
+        if (expanded) {
+            haptic.invoke()
+        }
     }
 
     chooserItem?.let { ci ->

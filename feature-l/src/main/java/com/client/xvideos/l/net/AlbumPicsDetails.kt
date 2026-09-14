@@ -208,7 +208,11 @@ class AlbumPicsDetails(
             delay(PAGE_REQUEST_DELAY_MS)
         }
 
-        percentLoad = 1f
+        stateMutex.withLock {
+            if (failedPages.isEmpty()) {
+                percentLoad = 1f
+            }
+        }
     }
 
     suspend fun restoreFromBundleCache(
@@ -258,9 +262,12 @@ class AlbumPicsDetails(
             // только публикация.
             val merged = if (isContiguousTail) null else (1..pages).flatMap { loadedPages[it].orEmpty() }
 
+            val successfulPages = loadedPages.count { it.value.isNotEmpty() }
+            val progress = (successfulPages.toFloat() / pages.coerceAtLeast(1)).coerceIn(0f, 1f)
+
             Snapshot.withMutableSnapshot {
                 totalPages = pages
-                percentLoad = page.page.toFloat() / pages
+                percentLoad = progress
                 if (merged == null) {
                     pics.addAll(corrected)
                 } else {
@@ -292,7 +299,11 @@ class AlbumPicsDetails(
                 delay(PAGE_REQUEST_DELAY_MS)
             }
         } finally {
-            percentLoad = 1f
+            stateMutex.withLock {
+                if (failedPages.isEmpty()) {
+                    percentLoad = 1f
+                }
+            }
             isRetryingFailedPages = false
         }
     }
