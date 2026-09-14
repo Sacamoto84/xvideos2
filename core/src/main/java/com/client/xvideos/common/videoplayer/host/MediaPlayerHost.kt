@@ -3,6 +3,7 @@ package com.client.xvideos.common.videoplayer.host
 import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
@@ -42,11 +43,11 @@ class MediaPlayerHost(
     var isPaused by mutableStateOf(isPaused)
     internal var isMuted by mutableStateOf(isMuted)
     var isLooping by mutableStateOf(isLooping)
-    var totalTime by mutableStateOf(0) // Total video duration
+    var totalTime by mutableIntStateOf(0) // Total video duration
     var currentTime by mutableFloatStateOf(0f) // Current playback position
     var isBuffering by mutableStateOf(true)
     internal var playFromTime: Float? by mutableStateOf(startTimeInSeconds)
-    var volumeLevel by mutableStateOf(if (isMuted) 0f else 1f) // Range 0.0 to 1.0
+    var volumeLevel by mutableFloatStateOf(if (isMuted) 0f else 1f) // Range 0.0 to 1.0
     internal var isFullScreen by mutableStateOf(isFullScreen)
     var headers by mutableStateOf(headers)
     var drmConfig by mutableStateOf(drmConfig)
@@ -57,7 +58,7 @@ class MediaPlayerHost(
     var subTitlesOptions by mutableStateOf(emptyList<SubtitleTrack>())
     var selectedsubTitle by mutableStateOf<SubtitleTrack?>(null)
 
-    private var lastVolumeLevel by mutableStateOf(1f)
+    private var lastVolumeLevel by mutableFloatStateOf(1f)
 
     private val m3u8Helper = M3U8Helper()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())

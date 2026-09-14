@@ -58,10 +58,8 @@ fun LandscapeOrientation(
         // не выключаем (setDecorFitsSystemWindows(true) ломал прозрачные бары).
         if (enableFullEdgeToEdge) {
             window?.attributes = window.attributes?.apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-                }
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
         windowInsetsController?.show(WindowInsetsCompat.Type.navigationBars())
@@ -74,10 +72,8 @@ fun LandscapeOrientation(
         if (isLandscape) {
             if (enableFullEdgeToEdge) {
                 window?.attributes = window.attributes?.apply {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        layoutInDisplayCutoutMode =
-                            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-                    }
+                    layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
                 }
             }
             windowInsetsController?.hide(WindowInsetsCompat.Type.navigationBars())

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,10 +62,10 @@ fun CustomSeekBar(
 ) {
     val density = LocalDensity.current
     var isDragging by remember { mutableStateOf(false) }
-    var localProgress by remember { mutableStateOf(progress) }
-    var trackWidth by remember { mutableStateOf(1f) }
-    var dragStartOffsetX by remember { mutableStateOf(0f) }
-    var initialProgress by remember { mutableStateOf(0f) }
+    var localProgress by remember { mutableFloatStateOf(progress) }
+    var trackWidth by remember { mutableFloatStateOf(1f) }
+    var dragStartOffsetX by remember { mutableFloatStateOf(0f) }
+    var initialProgress by remember { mutableFloatStateOf(0f) }
 
     // Animate ripple radius when dragging
     val rippleRadius by animateFloatAsState(

@@ -59,21 +59,15 @@ class AndroidConnectivityObserver(
 
     init {
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-            _isConnected.value = true
-        }
-        else
-        {
-            updateInitialConnectionState()
-            registerNetworkCallback()
+        updateInitialConnectionState()
+        registerNetworkCallback()
 
-            // Автоматически отменяем callback при отмене scope
-            scope.launch {
-                try {
-                    awaitCancellation()
-                } finally {
-                    unregisterNetworkCallback()
-                }
+        // Автоматически отменяем callback при отмене scope
+        scope.launch {
+            try {
+                awaitCancellation()
+            } finally {
+                unregisterNetworkCallback()
             }
         }
 
@@ -144,16 +138,8 @@ class AndroidConnectivityObserver(
         networkCallback = callback
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Timber.w("!!! 999 registerDefaultNetworkCallback")
-                connectivityManager.registerDefaultNetworkCallback(callback)
-            } else {
-                Timber.w("!!! 999 registerNetworkCallback (legacy)")
-                val request = NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .build()
-                connectivityManager.registerNetworkCallback(request, callback)
-            }
+            Timber.w("!!! 999 registerDefaultNetworkCallback")
+            connectivityManager.registerDefaultNetworkCallback(callback)
         } catch (e: Exception) {
             Timber.e(e, "!!! 999 Failed to register network callback")
         }

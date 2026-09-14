@@ -67,9 +67,8 @@ import kotlin.math.roundToInt
 fun UrlImage(
 
     url: String,
-    urlGif : String?= null, //url для gif файла
-
     modifier: Modifier = Modifier,
+    urlGif : String?= null, //url для gif файла
     contentScale: ContentScale = ContentScale.Crop,
     loadIndicator: Boolean = true,
 
@@ -240,7 +239,7 @@ fun UrlImage(
             val drawable =
                 (state as AsyncImagePainter.State.Success).result.image.asDrawable(context.resources)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && drawable is AnimatedImageDrawable) {
+            if (drawable is AnimatedImageDrawable) {
                 if (isPlaying) {
                     drawable.start()
                     Timber.d("!!! AnimatedImageDrawable started")

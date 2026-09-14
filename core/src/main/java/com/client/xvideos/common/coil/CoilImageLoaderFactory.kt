@@ -1,13 +1,11 @@
 package com.client.xvideos.common.coil
 
 import android.content.Context
-import android.os.Build
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.gif.AnimatedImageDecoder
-import coil3.gif.GifDecoder
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowHardware
@@ -83,11 +81,7 @@ object CoilImageLoaderFactory {
 
         return ImageLoader.Builder(appContext)
             .components {
-                if (Build.VERSION.SDK_INT >= 28) {
-                    add(AnimatedImageDecoder.Factory())
-                } else {
-                    add(GifDecoder.Factory())
-                }
+                add(AnimatedImageDecoder.Factory())
                 // Use custom OkHttpClient only if it was built successfully.
                 // If not, Coil will fallback to its default network fetcher.
                 okHttpClient?.let {

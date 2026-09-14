@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Surface
+import androidx.compose.material3.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,7 +49,7 @@ fun P2pBackgroundOverlay() {
     val event by EventBus.events.collectAsState(null)
     var visible by rememberSaveable { mutableStateOf(false) }
     var text by rememberSaveable { mutableStateOf("") }
-    var progress by remember { mutableStateOf(0f) }
+    var progress by remember { mutableFloatStateOf(0f) }
     var isError by rememberSaveable { mutableStateOf(false) }
     var isSuccess by rememberSaveable { mutableStateOf(false) }
 
@@ -95,7 +96,7 @@ fun P2pBackgroundOverlay() {
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             color = if (isError) Theme.L.r0 else if (isSuccess) Theme.L.g0 else Color(0xFF2C2C2C),
-            elevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

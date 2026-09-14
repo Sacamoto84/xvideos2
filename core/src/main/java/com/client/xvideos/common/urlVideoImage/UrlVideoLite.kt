@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,13 +36,13 @@ import timber.log.Timber
 @Composable
 fun UrlVideoLite(
     url: String,
-    posterUrl: String = "",
     modifier: Modifier = Modifier,
+    posterUrl: String = "",
     fallbackUrls: List<String> = emptyList(),
     onClick: () -> Unit = {}
 ) {
     val urlCandidates = remember(url, fallbackUrls) { xPreviewVideoCandidates(url, fallbackUrls) }
-    var currentUrlIndex by remember(urlCandidates) { mutableStateOf(0) }
+    var currentUrlIndex by remember(urlCandidates) { mutableIntStateOf(0) }
     val mediaUrl = urlCandidates.getOrNull(currentUrlIndex)
     var playbackError by remember(urlCandidates, currentUrlIndex) { mutableStateOf(mediaUrl == null) }
     val playerHost = remember(mediaUrl) {

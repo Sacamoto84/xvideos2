@@ -14,30 +14,22 @@ import androidx.compose.ui.platform.LocalView
 fun DisableAppLockAutofill() {
     val context = LocalContext.current
     val view = LocalView.current
-    val autofillManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        remember(context) { context.getSystemService(AutofillManager::class.java) }
-    } else {
-        null
-    }
+    val autofillManager = remember(context) { context.getSystemService(AutofillManager::class.java) }
 
     DisposableEffect(view, autofillManager) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val views = view.rootView.collectViewTree()
-            val previousValues = views.map { it to it.importantForAutofill }
+        val views = view.rootView.collectViewTree()
+        val previousValues = views.map { it to it.importantForAutofill }
 
-            views.forEach {
-                it.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        views.forEach {
+            it.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        }
+        autofillManager?.cancel()
+
+        onDispose {
+            previousValues.forEach { (targetView, previousValue) ->
+                targetView.importantForAutofill = previousValue
             }
             autofillManager?.cancel()
-
-            onDispose {
-                previousValues.forEach { (targetView, previousValue) ->
-                    targetView.importantForAutofill = previousValue
-                }
-                autofillManager?.cancel()
-            }
-        } else {
-            onDispose {}
         }
     }
 }
