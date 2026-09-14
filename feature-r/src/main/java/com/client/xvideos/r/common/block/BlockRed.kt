@@ -30,21 +30,26 @@ class BlockRed @Inject constructor(
     private val _blockList = MutableStateFlow<List<GifsInfo>>(emptyList())
     val blockList: StateFlow<List<GifsInfo>> get() = _blockList
 
+    private val _blockedIds = MutableStateFlow<Set<String>>(emptySet())
+    val blockedIds: StateFlow<Set<String>> get() = _blockedIds
+
     init {
         refresh()
     }
 
-    fun refresh() {
-        scope.launch {
-            _blockList.value = withContext(Dispatchers.IO) {
-                blockGetAllBlockedGifsInfo()
-            }
+    fun refresh(): kotlinx.coroutines.Job = scope.launch {
+        val blocked = withContext(Dispatchers.IO) {
+            blockGetAllBlockedGifsInfo()
         }
+        _blockList.value = blocked
+        _blockedIds.value = blocked.mapTo(HashSet(blocked.size)) { it.id }
     }
 
+    fun isBlocked(id: String): Boolean = id in _blockedIds.value
+
     fun refreshListAndBlock(list: MutableStateFlow<List<GifsInfo>>) {
-        val blockedSet = blockList.value.map { it.id }.toSet()
-        list.value = list.value.filterNot { it.id in blockedSet }
+        val blocked = _blockedIds.value
+        list.value = list.value.filterNot { it.id in blocked }
     }
 
     fun blockItem(item: GifsInfo) {

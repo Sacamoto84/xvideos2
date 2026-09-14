@@ -21,6 +21,7 @@ import com.client.xvideos.ui.theme.XvideosTheme
 @Composable
 fun ConfirmDeleteFavoriteDialog(
     item: ItemsX,
+    posterUrl: String = item.previewImage,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -29,7 +30,7 @@ fun ConfirmDeleteFavoriteDialog(
         onDismiss = onDismiss,
         icon = {
             UrlImage(
-                url = item.previewImage,
+                url = posterUrl,
                 modifier = Modifier
                     .width(160.dp)
                     .aspectRatio(352f / 198f)

@@ -95,7 +95,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             navigator.pop()
         }
 
-        BackHandler { exit() }
+        BackHandler(enabled = vm.isError || vm.isLoading) { exit() }
 
         if (vm.isError) {
             Box(
@@ -175,7 +175,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             exit(exo.currentPosition)
         }
 
-        BackHandler { exitWithExo() }
+        BackHandler(enabled = !vm.isError && !vm.isLoading) { exitWithExo() }
 
         AndroidView(
             factory = { ctx ->
@@ -186,7 +186,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
                     setShowFastForwardButton(true)
                     setShowNextButton(false)
                     setShowPreviousButton(false)
-                    setFullscreenButtonClickListener { exit() }
+                    setFullscreenButtonClickListener { exitWithExo() }
                 }
             },
             modifier = Modifier.fillMaxSize(),

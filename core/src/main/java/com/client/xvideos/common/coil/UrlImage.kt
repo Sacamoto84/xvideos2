@@ -286,26 +286,23 @@ fun UrlImage(
                     .then(if (!isFullScreen) Modifier.then(sizeResolver) else Modifier)
                     .then(
                         if (isFullScreen && rotate) {
+                            val scale = if (containerSize.width > 0 && containerSize.height > 0) {
+                                if (containerSize.height > containerSize.width) {
+                                    containerSize.height.toFloat() / containerSize.width
+                                } else {
+                                    containerSize.width.toFloat() / containerSize.height
+                                }
+                            } else {
+                                1f
+                            }
                             Modifier.graphicsLayer(
-
                                 rotationZ = 90f,
-                                scaleX = if (containerSize != IntSize.Zero) {
-                                    if (containerSize.height > containerSize.width)
-                                        containerSize.height.toFloat() / containerSize.width
-                                    else
-                                        containerSize.width.toFloat() / containerSize.height
-                                } else 1f,
-
-                                scaleY = if (containerSize != IntSize.Zero) {
-                                    if (containerSize.height > containerSize.width)
-                                        containerSize.height.toFloat() / containerSize.width
-                                    else
-                                        containerSize.width.toFloat() / containerSize.height
-                                } else 1f
+                                scaleX = scale,
+                                scaleY = scale
                             )
-
-                        } else
+                        } else {
                             Modifier
+                        }
                     )
                     .fillMaxSize()
                     .then(

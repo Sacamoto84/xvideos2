@@ -27,6 +27,7 @@ import com.client.xvideos.common.videoplayer.util.createHlsMediaSource
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSourceWithDrm
 import com.client.xvideos.common.videoplayer.util.createProgressiveMediaSource
 import com.client.xvideos.common.videoplayer.util.getExoPlayerLifecycleObserver
+import com.client.xvideos.common.videoplayer.util.isHlsUrl
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -90,12 +91,17 @@ fun rememberExoPlayerWithLifecycle(
     }
 
     LaunchedEffect(url) {
+        if (url.isBlank()) {
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
+            return@LaunchedEffect
+        }
         try {
             val mediaItem = MediaItem.fromUri(url.toUri())
 
             val mediaSource = when {
                 drmConfig != null -> createHlsMediaSourceWithDrm(mediaItem, headers, drmConfig)
-                isLiveStream || url.endsWith(".m3u8", ignoreCase = true) -> createHlsMediaSource(
+                isLiveStream || isHlsUrl(url) -> createHlsMediaSource(
                     mediaItem,
                     headers
                 )

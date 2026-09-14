@@ -43,7 +43,7 @@ class ItemProfilePagingSource (val profileName : String, val sort : Order, val b
 
             Timber.d("!!! load() a.gif.size = ${gifs.size}")
 
-            val blockedSet = block.blockList.value.map{it.id}.toSet()
+            val blockedSet = block.blockedIds.value
             val gifs1 = gifs.filterNot { it.id in blockedSet }
 
             val user = responseBody.users.orEmpty().distinctBy { it.username }

@@ -47,8 +47,8 @@ class ScreenX_LocalVideoPlayer(val fileUrl: String) : Screen {
                 onTap = { host.togglePlayPause() },
                 overlay = {
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                        // Локальный файл — полноэкранный режим не нужен.
-                        X_PlayerBottomBar(host = host, onFullScreen = {})
+                        // Локальный файл — отдельный полноэкранный режим не требуется
+                        X_PlayerBottomBar(host = host)
                     }
                 }
             )

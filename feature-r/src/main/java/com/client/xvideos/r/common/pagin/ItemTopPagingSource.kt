@@ -57,7 +57,7 @@ class ItemTopPagingSource(
             val gifs: List<GifsInfo> = response.gifs.sanitizeGifsInfoList()
             Timber.d("!!! load() a.gif.size = ${gifs.size} page:$page pages:${response.pages}")
 
-            val blockedSet = block.blockList.value.map { it.id }.toSet()
+            val blockedSet = block.blockedIds.value
             val gifs1 = gifs.filterNot { it.id in blockedSet }
 
             val responseUsers = response.users

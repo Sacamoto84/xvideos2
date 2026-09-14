@@ -14,8 +14,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.client.xvideos.common.theme.Theme as AppTheme
 
 private val DarkColorScheme = darkColorScheme(
-    primary = AppTheme.L.primaryColor,
-    onPrimary = Color.Black,
+    primary = Purple80,
+    onPrimary = Color(0xFF381E72),
     secondary = AppTheme.R.colorYellow,
     onSecondary = Color.Black,
     tertiary = AppTheme.L.lavender,

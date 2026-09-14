@@ -68,6 +68,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
+import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
@@ -302,7 +303,7 @@ class L_FullScreenImage(
                                     modifier = Modifier
                                         .padding(horizontal = 1.dp)
                                         .clip(RoundedCornerShape(4.dp))
-                                        .aspectRatio(it1.width.toFloat() / it1.height)
+                                        .aspectRatio(it1.safeAspectRatio())
                                         // Раньше клик выставлял dataItem, а обратный
                                         // indexOf(dataItem) на дубликатах картинки
                                         // возвращал чужой индекс и пейджер прыгал назад.

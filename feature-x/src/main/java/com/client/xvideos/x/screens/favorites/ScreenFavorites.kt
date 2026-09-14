@@ -71,8 +71,7 @@ class ScreenFavorites() : Screen {
         val vm: ScreenFavoritesSM = getScreenModel()
 
         // Множество id скачанных видео (реактивно) — для значка и локального воспроизведения.
-        val downloaded = vm.saved.downloads.list.collectAsStateWithLifecycle().value
-        val downloadedIds = remember(downloaded) { downloaded.map { it.id }.toSet() }
+        val downloadedIds by vm.saved.downloads.downloadedVideoIds.collectAsStateWithLifecycle()
 
         FavoritesContent(
             favorites = vm.favorites,
@@ -115,6 +114,7 @@ private fun FavoritesContent(
     pendingDelete?.let { item ->
         ConfirmDeleteFavoriteDialog(
             item = item,
+            posterUrl = posterUrlOf(item),
             onConfirm = {
                 onDelete(item)
                 pendingDelete = null

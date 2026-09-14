@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +101,14 @@ fun LLoginContent(
             fontStyle = FontStyle.Italic,
             textDecoration = TextDecoration.Underline,
             color = Theme.L.b0,
-            modifier = Modifier.clickable { uriHandler.openUri("https://www.luscious.net") },
+            modifier = Modifier.clickable {
+                runCatching {
+                    uriHandler.openUri("https://www.luscious.net")
+                }.onFailure { e ->
+                    Timber.w(e, "L_ScreenLogin: не удалось открыть ссылку Luscious")
+                    SnackBar.error("Не удалось открыть ссылку")
+                }
+            },
             fontSize = 24.sp
         )
 

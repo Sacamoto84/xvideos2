@@ -11,6 +11,7 @@ import com.client.xvideos.common.videoplayer.util.AudioTrack
 import com.client.xvideos.common.videoplayer.util.M3U8Helper
 import com.client.xvideos.common.videoplayer.util.SubtitleTrack
 import com.client.xvideos.common.videoplayer.util.VideoQuality
+import com.client.xvideos.common.videoplayer.util.isHlsUrl
 import com.client.xvideos.common.util.launchCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -248,7 +249,7 @@ class MediaPlayerHost(
             setAudioTrack(null)
             setSubTitle(null)
         }
-        if (videoUrl.endsWith(".m3u8", ignoreCase = true)) {
+        if (isHlsUrl(videoUrl)) {
             val m3u8Data = m3u8Helper.fetchM3U8Data(videoUrl, headers)
 
             withContext(Dispatchers.Main) {

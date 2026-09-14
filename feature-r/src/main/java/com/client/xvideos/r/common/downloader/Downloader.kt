@@ -4,12 +4,18 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.common.io.writeTextAtomically
+import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import timber.log.Timber
 import java.io.File
@@ -36,6 +42,7 @@ data class RedDownloadEnqueueReport(
 @Singleton
 class Downloader @Inject constructor(
     val kDownloader: KDownloader,
+    @ApplicationScope private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
 
     //Процент скачивания 0..1 - начало скачивания, -2 busy, -3 error
@@ -88,31 +95,33 @@ class Downloader @Inject constructor(
             kDownloader.enqueue(
                 request,
                 onStart = {
-                    println("!!! Запуск закачки")
+                    Timber.i("Downloader: запуск закачки id=${item.id}")
                     percent.value = 0f
                 },
 
                 onError = {
-                    println("!!! onError закачки: $it"); percent.value = -3f
+                    Timber.e("Downloader: ошибка закачки id=${item.id}: $it")
+                    percent.value = -3f
                     SnackBar.error("Ошибка закачки: $it")
                 },
 
                 onProgress = { it1 -> percent.value = it1 / 100f },
                 onCompleted = {
-                    println("!!! onCompleted закачки")
+                    Timber.i("Downloader: завершено скачивание id=${item.id}")
                     percent.value = -2f
 
                     SnackBar.success("Скачивание завершено")
-                    val text = AppJson.encodeToString(item)
-                    File(p, "${item.id}.info").writeTextAtomically(text)
-
-                    onComplete()
-                    //DownloadRed.refreshDownloadList()
+                    scope.launch(Dispatchers.IO) {
+                        val text = AppJson.encodeToString(item)
+                        File(p, "${item.id}.info").writeTextAtomically(text)
+                        withContext(Dispatchers.Main) {
+                            onComplete()
+                        }
+                    }
                 },
             )
         } else {
-            //Toast("Файл есть к кеше")
-            SnackBar.info("Файл есть к кеше")
+            SnackBar.info("Файл есть в кеше")
         }
 
     }

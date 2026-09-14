@@ -47,12 +47,17 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     private val _list = MutableStateFlow<List<ItemsX>>(emptyList())
     val list: StateFlow<List<ItemsX>> = _list.asStateFlow()
 
+    private val _downloadedVideoIds = MutableStateFlow<Set<Long>>(emptySet())
+    val downloadedVideoIds: StateFlow<Set<Long>> = _downloadedVideoIds.asStateFlow()
+
+    private val _downloadedPosterIds = MutableStateFlow<Set<Long>>(emptySet())
+
     init {
         refresh()
     }
 
-    /** O(1)-ish проверка: файл видео уже сохранён. */
-    fun contains(id: Long): Boolean = File(dir, "$id.mp4").exists()
+    /** O(1) in-memory проверка: файл видео уже сохранён. */
+    fun contains(id: Long): Boolean = _downloadedVideoIds.value.contains(id)
 
     /** `file://`-URI скачанного видео (для ExoPlayer). */
     fun localUrl(id: Long): String = Uri.fromFile(File(dir, "$id.mp4")).toString()
@@ -62,8 +67,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
      * UrlImage сам грузит локальный файл, если строка не начинается с `https://`.
      */
     fun localPosterPath(id: Long): String? {
-        val f = File(dir, "$id.jpg")
-        return if (f.exists()) f.absolutePath else null
+        return if (_downloadedPosterIds.value.contains(id)) File(dir, "$id.jpg").absolutePath else null
     }
 
     /**
@@ -117,11 +121,13 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 },
                 onCompleted = {
                     percent.value = -2f
-                    runCatching {
-                        File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
-                    }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
                     SnackBar.success("Скачано")
-                    refresh()
+                    scope.launch(Dispatchers.IO) {
+                        runCatching {
+                            File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
+                        }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
+                        refresh()
+                    }
                 },
             )
         }
@@ -179,19 +185,27 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     fun refresh() {
         scope.launch(Dispatchers.IO) {
             val root = File(dir)
-            val infos = if (root.exists() && root.isDirectory) {
-                root.listFiles { f -> f.isFile && f.extension == "info" }
-                    ?.sortedByDescending { it.lastModified() }
-                    ?: emptyList()
+            val allFiles = if (root.exists() && root.isDirectory) {
+                root.listFiles() ?: emptyArray()
             } else {
-                emptyList()
+                emptyArray()
             }
+
+            val videoIds = allFiles.filter { it.isFile && it.extension == "mp4" }
+                .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+            val posterIds = allFiles.filter { it.isFile && it.extension == "jpg" }
+                .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+
+            val infos = allFiles.filter { it.isFile && it.extension == "info" }
+                .sortedByDescending { it.lastModified() }
 
             val result = infos.mapNotNull { f ->
                 runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
                     .onFailure { Timber.e(it, "X saved: битый .info ${f.absolutePath}") }
                     .getOrNull()
             }
+            _downloadedVideoIds.value = videoIds
+            _downloadedPosterIds.value = posterIds
             _list.value = result
         }
     }

@@ -169,13 +169,15 @@ object GallerySaver {
 
     /** Есть ли уже такой файл в папке галереи. */
     private fun exists(context: Context, fileName: String): Boolean =
-        context.contentResolver.query(
-            collectionFor(fileName),
-            arrayOf(MediaStore.MediaColumns._ID),
-            "${MediaStore.MediaColumns.RELATIVE_PATH}=? AND ${MediaStore.MediaColumns.DISPLAY_NAME}=?",
-            arrayOf(GalleryTarget.relativePath(fileName), fileName),
-            null
-        )?.use { it.count > 0 } ?: false
+        runCatching {
+            context.contentResolver.query(
+                collectionFor(fileName),
+                arrayOf(MediaStore.MediaColumns._ID),
+                "${MediaStore.MediaColumns.RELATIVE_PATH}=? AND ${MediaStore.MediaColumns.DISPLAY_NAME}=?",
+                arrayOf(GalleryTarget.relativePath(fileName), fileName),
+                null
+            )?.use { it.count > 0 } ?: false
+        }.getOrDefault(false)
 
     private fun collectionFor(fileName: String): Uri =
         if (GalleryTarget.isVideo(fileName)) {

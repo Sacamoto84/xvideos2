@@ -76,45 +76,12 @@ fun CanvasTimeDurationLine1(
             .then(modifier)
             .fillMaxWidth()
             .height(32.dp)
-            .pointerInput(Unit) {
-                coroutineScope {
-                    while (true) {
-                        awaitPointerEventScope {
-                            val down = awaitFirstDown()
-
-                            val downX = down.position.x
-                            val newTime = (downX / size.width) * duration
-                            onSeek(newTime.coerceIn(0f, duration.toFloat()))
-
-                            var drag: PointerInputChange? = null
-                            try {
-                                drag = awaitTouchSlopOrCancellation(down.id) { change, _ ->
-                                    // Начало drag
-                                    isDragging = true
-                                    change.consume()
-                                }
-                            } catch (_: CancellationException) {
-                            }
-
-                            if (drag != null) {
-                                // Мы начали перетаскивать
-                                horizontalDrag(drag.id) { change ->
-                                    val dragX = change.position.x
-                                    val newTimeDrag = (dragX / size.width) * duration
-                                    onSeek(newTimeDrag.coerceIn(0f, duration.toFloat()))
-                                    change.consume()
-                                }
-                                isDragging = false
-                                onSeekFinished?.invoke()
-                            } else {
-                                // Просто тап, без драггинга
-                                onSeekFinished?.invoke()
-                            }
-                        }
-                    }
-                }
-            },
-
+            .timelineSeekGestures(
+                duration = duration,
+                onDraggingChange = { isDragging = it },
+                onSeek = onSeek,
+                onSeekFinished = onSeekFinished
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -239,6 +206,52 @@ fun CanvasTimeDurationLine1(
                 )
             }
 
+        }
+    }
+}
+
+internal fun calculateSeekTime(x: Float, width: Int, duration: Int): Float? {
+    if (width <= 0 || duration <= 0) return null
+    val newTime = (x / width) * duration
+    return if (!newTime.isNaN() && !newTime.isInfinite()) {
+        newTime.coerceIn(0f, duration.toFloat())
+    } else {
+        null
+    }
+}
+
+private fun Modifier.timelineSeekGestures(
+    duration: Int,
+    onDraggingChange: (Boolean) -> Unit,
+    onSeek: (Float) -> Unit,
+    onSeekFinished: (() -> Unit)?
+): Modifier = pointerInput(duration) {
+    coroutineScope {
+        while (true) {
+            awaitPointerEventScope {
+                val down = awaitFirstDown()
+                calculateSeekTime(down.position.x, size.width, duration)?.let(onSeek)
+
+                var drag: PointerInputChange? = null
+                try {
+                    drag = awaitTouchSlopOrCancellation(down.id) { change, _ ->
+                        onDraggingChange(true)
+                        change.consume()
+                    }
+                } catch (_: CancellationException) {
+                }
+
+                if (drag != null) {
+                    horizontalDrag(drag.id) { change ->
+                        calculateSeekTime(change.position.x, size.width, duration)?.let(onSeek)
+                        change.consume()
+                    }
+                    onDraggingChange(false)
+                    onSeekFinished?.invoke()
+                } else {
+                    onSeekFinished?.invoke()
+                }
+            }
         }
     }
 }

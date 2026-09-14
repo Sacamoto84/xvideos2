@@ -8,6 +8,10 @@ fun PicsDetails.lAnimationVideoUrl(): String? {
         ?: url_to_original?.takeIf { it.isLVideoFileUrl() }
 }
 
+fun PicsDetails.safeAspectRatio(): Float {
+    return if (width > 0 && height > 0) width.toFloat() / height else 1f
+}
+
 fun PicsDetails.lDownloadUrl(): String? {
     return if (is_animated) {
         lAnimationVideoUrl() ?: lImageMediaUrl()

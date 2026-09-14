@@ -23,11 +23,16 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -39,17 +44,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.client.xvideos.core.R
+import com.client.xvideos.ui.theme.Pink80
+import com.client.xvideos.ui.theme.Purple80
+import com.client.xvideos.ui.theme.PurpleGrey80
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -58,6 +73,26 @@ import kotlin.math.ceil
 // Здесь была отдельная AppLockActivity: она значилась в манифесте, но её никто
 // никогда не запускал — замок рисуется прямо в MainActivity через [AppLockScreen].
 // Мёртвый Activity удалён вместе с записью в AndroidManifest.xml.
+
+private val AppLockDarkColorScheme = darkColorScheme(
+    primary = Purple80,               // 0xFFD0BCFF - стандартный лавандовый цвет Material 3
+    onPrimary = Color(0xFF381E72),     // тёмно-фиолетовый высококонтрастный текст
+    primaryContainer = Color(0xFF4F378B),
+    onPrimaryContainer = Color(0xFFEADDFF),
+    secondary = PurpleGrey80,          // 0xFFCCC2DC
+    onSecondary = Color(0xFF332D41),
+    tertiary = Pink80,                 // 0xFFEFB8C8
+    background = Color(0xFF141218),    // глубокий тёмный фон Material 3 с мягким лавандовым отливом
+    onBackground = Color(0xFFE6E0E9),
+    surface = Color(0xFF141218),
+    onSurface = Color(0xFFE6E0E9),
+    surfaceVariant = Color(0xFF49454F),
+    onSurfaceVariant = Color(0xFFCAC4D0),
+    outline = Color(0xFF938F99),
+    outlineVariant = Color(0xFF49454F),
+    error = Color(0xFFF2B8B5),         // стандартный цвет ошибки Material 3
+    onError = Color(0xFF601410),
+)
 
 /**
  * @param onUnlock проверка кода. `suspend`, потому что проверка — это 120 000
@@ -81,25 +116,44 @@ fun AppLockScreen(
     // Пока считается хеш, повторные нажатия не должны запускать вторую проверку.
     var isChecking by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // Пока действует блокировка — обновляем обратный отсчёт раз в полсекунды.
     val isLockedOut = lockoutRemainingMs > 0L
     LaunchedEffect(isLockedOut) {
-        // Ключ false — блокировки нет, считать нечего. Ранний выход важен:
-        // иначе эффект срабатывал бы и после обычной ошибки и стирал бы
-        // «Неверный код доступа» сразу, не дав его прочитать.
-        if (!isLockedOut) return@LaunchedEffect
-
-        while (AppLockRepository.lockoutRemainingMillis(context) > 0L) {
-            lockoutRemainingMs = AppLockRepository.lockoutRemainingMillis(context)
-            delay(500)
+        if (isLockedOut) {
+            while (AppLockRepository.lockoutRemainingMillis(context) > 0L) {
+                lockoutRemainingMs = AppLockRepository.lockoutRemainingMillis(context)
+                delay(500)
+            }
+            lockoutRemainingMs = 0L
+            errorText = null
+        } else {
+            // При открытии экрана и при завершении блокировки автоматически фокусируемся на поле ввода и открываем клавиатуру
+            delay(100)
+            runCatching { focusRequester.requestFocus() }
+            keyboardController?.show()
         }
-        lockoutRemainingMs = 0L
-        // Блокировка кончилась — поле снова чистое. Держать «Неверный код
-        // доступа» после отсидки незачем: ошибка была минуту назад, а ввод уже
-        // разрешён.
-        errorText = null
+    }
+
+    // При возвращении в приложение из фона фокус и клавиатура также возвращаются в поле ввода
+    DisposableEffect(lifecycleOwner, isLockedOut) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && !isLockedOut) {
+                scope.launch {
+                    delay(100)
+                    runCatching { focusRequester.requestFocus() }
+                    keyboardController?.show()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     fun submit() {
@@ -123,16 +177,12 @@ fun AppLockScreen(
                 password = ""
                 val remaining = AppLockRepository.registerFailedAttempt(context)
                 lockoutRemainingMs = remaining
-                // Только причина отказа. Про блокировку и оставшиеся секунды
-                // экран рассказывает сам, из lockoutRemainingMs, и обновляет
-                // счётчик каждые полсекунды.
-                //
-                // Раньше сюда клали второй текст: «Слишком много попыток,
-                // подождите N с» — с числом, замороженным на момент ошибки. Пока
-                // блокировка шла, его перекрывал живой счётчик, а как только она
-                // кончалась, замороженный текст всплывал и висел под уже
-                // разблокированным полем.
                 errorText = "Неверный код доступа"
+                if (remaining <= 0L) {
+                    delay(50)
+                    focusRequester.requestFocus()
+                    keyboardController?.show()
+                }
             }
         }
     }
@@ -147,9 +197,51 @@ fun AppLockScreen(
         onShowPasswordToggle = { showPassword = !showPassword },
         errorText = errorText,
         lockoutRemainingMs = lockoutRemainingMs,
-        onSubmit = ::submit
+        onSubmit = ::submit,
+        focusRequester = focusRequester
     )
 }
+
+@Composable
+private fun AppLockHeader() {
+    Image(
+        painter = painterResource(R.drawable.logo),
+        contentDescription = null,
+        modifier = Modifier.size(88.dp)
+    )
+    Spacer(Modifier.height(28.dp))
+    Icon(
+        imageVector = Icons.Default.Lock,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.size(30.dp)
+    )
+    Spacer(Modifier.height(10.dp))
+    Text(
+        text = "Введите код доступа",
+        color = MaterialTheme.colorScheme.onBackground,
+        style = Theme.L.Type.heroTitle.copy(textAlign = TextAlign.Center)
+    )
+}
+
+@Composable
+private fun appLockTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    cursorColor = MaterialTheme.colorScheme.primary,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    errorBorderColor = MaterialTheme.colorScheme.error,
+    errorLabelColor = MaterialTheme.colorScheme.error,
+    errorCursorColor = MaterialTheme.colorScheme.error,
+    errorTextColor = MaterialTheme.colorScheme.onSurface,
+    errorTrailingIconColor = MaterialTheme.colorScheme.primary,
+)
 
 @Composable
 private fun AppLockScreenContent(
@@ -159,97 +251,102 @@ private fun AppLockScreenContent(
     onShowPasswordToggle: () -> Unit,
     errorText: String?,
     lockoutRemainingMs: Long,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    focusRequester: FocusRequester = remember { FocusRequester() }
 ) {
     val isLockedOut = lockoutRemainingMs > 0L
     val lockoutSeconds = ceil(lockoutRemainingMs / 1000.0).toInt()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {}
-            )
-            .background(Color(0xFF101014))
-            .imePadding()
-            .padding(horizontal = 28.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    MaterialTheme(colorScheme = AppLockDarkColorScheme) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {}
+                )
+                .background(MaterialTheme.colorScheme.background)
+                .imePadding()
+                .padding(horizontal = 28.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(R.drawable.logo),
-                contentDescription = null,
-                modifier = Modifier.size(88.dp)
-            )
-            Spacer(Modifier.height(28.dp))
-            Icon(
-                imageVector = Icons.Default.Lock,
-                contentDescription = null,
-                tint = Color(0xFFFFE800),
-                modifier = Modifier.size(30.dp)
-            )
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = "Введите код доступа",
-                color = Theme.L.textColor,
-                style = Theme.L.Type.heroTitle.copy(textAlign = TextAlign.Center)
-            )
-            Spacer(Modifier.height(22.dp))
-            OutlinedTextField(
-                value = password,
-                onValueChange = onPasswordChange,
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !isLockedOut,
-                label = { Text("Код доступа") },
-                isError = errorText != null || isLockedOut,
-                visualTransformation = if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = { if (password.isNotEmpty() && !isLockedOut) onSubmit() }),
-                textStyle = Theme.L.Type.body.copy(color = Color.White),
-                trailingIcon = {
-                    IconButton(onClick = onShowPasswordToggle) {
-                        Icon(
-                            imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = if (showPassword) "Скрыть код доступа" else "Показать код доступа",
-                            tint = Color(0xFFFFE800)
-                        )
-                    }
-                },
-                supportingText = {
-                    if (errorText != null || isLockedOut) {
-                        Text(
-                            text = if (isLockedOut) "Повторите через $lockoutSeconds с" else (errorText
-                                ?: ""),
-                            color = Color(0xFFFF7A7A)
-                        )
-                    }
-                }
-            )
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = onSubmit,
-                enabled = password.isNotBlank() && !isLockedOut,
-                modifier = Modifier.fillMaxWidth()
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(if (isLockedOut) "Подождите $lockoutSeconds с" else "Разблокировать")
+                AppLockHeader()
+                Spacer(Modifier.height(22.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = onPasswordChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    singleLine = true,
+                    enabled = !isLockedOut,
+                    label = { Text("Код доступа") },
+                    isError = errorText != null || isLockedOut,
+                    visualTransformation = if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { if (password.isNotBlank() && !isLockedOut) onSubmit() }),
+                    textStyle = Theme.L.Type.body.copy(color = MaterialTheme.colorScheme.onSurface),
+                    trailingIcon = {
+                        IconButton(onClick = onShowPasswordToggle) {
+                            Icon(
+                                imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = if (showPassword) "Скрыть код доступа" else "Показать код доступа",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = appLockTextFieldColors(),
+                    supportingText = {
+                        if (errorText != null || isLockedOut) {
+                            Text(
+                                text = if (isLockedOut) "Повторите через $lockoutSeconds с" else (errorText
+                                    ?: ""),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                )
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = onSubmit,
+                    enabled = password.isNotBlank() && !isLockedOut,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    )
+                ) {
+                    Text(
+                        text = if (isLockedOut) "Подождите $lockoutSeconds с" else "Разблокировать",
+                        style = Theme.L.Type.rowTitle.copy(
+                            color = if (password.isNotBlank() && !isLockedOut) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                            },
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+                Spacer(Modifier.height(28.dp))
+                Text(
+                    text = "XVIDEOS",
+                    modifier = Modifier.alpha(0.26f),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f),
+                    style = Theme.L.Type.caption
+                )
             }
-            Spacer(Modifier.height(28.dp))
-            Text(
-                text = "XVIDEOS",
-                modifier = Modifier.alpha(0.26f),
-                color = Color.White,
-                style = Theme.L.Type.caption.copy(color = Color.White)
-            )
         }
     }
 }

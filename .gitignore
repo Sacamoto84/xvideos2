@@ -14,6 +14,7 @@
 # включённой сборки build-logic каталог свой, и его артефакты (.class, .jar)
 # один раз уже уехали в индекс.
 build/
+bin/
 /captures
 .externalNativeBuild
 .cxx

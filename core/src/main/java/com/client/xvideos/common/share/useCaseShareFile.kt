@@ -3,6 +3,7 @@ package com.client.xvideos.common.share
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
+import com.client.xvideos.common.snackbar.SnackBar
 import timber.log.Timber
 import java.io.File
 
@@ -13,22 +14,34 @@ import java.io.File
  * и гифки, и видео, а более узкий MIME отсеял бы часть приложений из списка
  * «Поделиться».
  */
-fun useCaseShareFile(context: Context, file: File) {
-    Timber.i("!!! useCaseShareFile: " + file.absolutePath)
+fun useCaseShareFile(context: Context, file: File): Boolean {
+    Timber.i("!!! useCaseShareFile: ${file.absolutePath}")
 
-    val uri = FileProvider.getUriForFile(
-        context, "${context.packageName}.fileprovider", file
-    )
-
-    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-        type = "*/*"
-        putExtra(Intent.EXTRA_STREAM, uri)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    if (!file.exists()) {
+        Timber.w("useCaseShareFile -> файл не найден: ${file.path}")
+        SnackBar.error("Файл не найден")
+        return false
     }
 
-    val chooserIntent = Intent.createChooser(shareIntent, "Поделиться через").apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
+    return runCatching {
+        val uri = FileProvider.getUriForFile(
+            context, "${context.packageName}.fileprovider", file
+        )
 
-    context.startActivity(chooserIntent)
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "*/*"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val chooserIntent = Intent.createChooser(shareIntent, "Поделиться через").apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        context.startActivity(chooserIntent)
+        true
+    }.onFailure { e ->
+        Timber.e(e, "useCaseShareFile -> ошибка при отправке файла: ${file.path}")
+        SnackBar.error("Не удалось открыть меню «Поделиться»")
+    }.getOrDefault(false)
 }

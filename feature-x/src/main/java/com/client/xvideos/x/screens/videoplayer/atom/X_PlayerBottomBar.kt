@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
+import java.util.Locale
 
 /**
  * Нижняя панель управления X-плеером поверх видео.
@@ -40,7 +41,7 @@ import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 @Composable
 fun X_PlayerBottomBar(
     host: MediaPlayerHost,
-    onFullScreen: () -> Unit,
+    onFullScreen: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
@@ -98,24 +99,26 @@ fun X_PlayerBottomBar(
             fontSize = 11.sp
         )
 
-        // Полный экран
-        Icon(
-            imageVector = Icons.Filled.Fullscreen,
-            contentDescription = "Fullscreen",
-            tint = Color.White,
-            modifier = Modifier
-                .size(28.dp)
-                .clickable { onFullScreen() }
-        )
+        // Полный экран (если поддержан экраном)
+        if (onFullScreen != null) {
+            Icon(
+                imageVector = Icons.Filled.Fullscreen,
+                contentDescription = "Fullscreen",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { onFullScreen() }
+            )
+        }
     }
 }
 
 /** Секунды → `M:SS` (или `H:MM:SS` для длинных видео). */
-private fun formatTime(totalSeconds: Int): String {
+internal fun formatTime(totalSeconds: Int): String {
     val s = totalSeconds.coerceAtLeast(0)
     val h = s / 3600
     val m = (s % 3600) / 60
     val sec = s % 60
-    return if (h > 0) String.format("%d:%02d:%02d", h, m, sec)
-    else String.format("%d:%02d", m, sec)
+    return if (h > 0) String.format(Locale.US, "%d:%02d:%02d", h, m, sec)
+    else String.format(Locale.US, "%d:%02d", m, sec)
 }

@@ -19,8 +19,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
+import timber.log.Timber
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lAnimationVideoUrl
 import com.client.xvideos.l.model.lDownloadUrl
@@ -69,7 +71,14 @@ internal fun LPictureInfoDialog(
 
                 LPictureInfoText(
                     text = lPictureInfoText(item, position, total),
-                    onUrlClick = { url -> uriHandler.openUri(url) }
+                    onUrlClick = { url ->
+                        runCatching {
+                            uriHandler.openUri(url)
+                        }.onFailure { e ->
+                            Timber.w(e, "LPictureInfoDialog: не удалось открыть ссылку: $url")
+                            SnackBar.error("Не удалось открыть ссылку")
+                        }
+                    }
                 )
             }
         },

@@ -6,6 +6,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.drm.DefaultDrmSessionManager
 import androidx.media3.exoplayer.drm.FrameworkMediaDrm
@@ -62,6 +63,24 @@ fun applySubTitleTrackSelection(
     )
 }
 
+
+/**
+ * Проверяет, указывает ли URL на HLS-поток (.m3u8).
+ * Корректно обрабатывает URL с query-параметрами (например, ?token=...&expires=...),
+ * фрагментами (#...) и использует [Util.inferContentType] из Media3.
+ */
+@OptIn(UnstableApi::class)
+fun isHlsUrl(url: String?): Boolean {
+    if (url.isNullOrBlank()) return false
+    val cleanUrl = url.substringBefore('?').substringBefore('#').trim()
+    if (cleanUrl.endsWith(".m3u8", ignoreCase = true)) {
+        return true
+    }
+    return runCatching {
+        val uri = android.net.Uri.parse(url)
+        Util.inferContentType(uri) == C.CONTENT_TYPE_HLS
+    }.getOrDefault(false)
+}
 
 @OptIn(UnstableApi::class)
 fun createHlsMediaSource(mediaItem: MediaItem, headers: Map<String, String>?): MediaSource {

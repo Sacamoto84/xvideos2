@@ -9,6 +9,7 @@ import com.client.xvideos.l.model.Thumbnails
 import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.model.lFullScreenImageUrls
 import com.client.xvideos.l.model.lSavedFileName
+import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.net.extractIdFromUrl
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import org.junit.Assert.assertEquals
@@ -207,13 +208,9 @@ class LPureFunctionsTest {
         val zeroHeight = picture(width = 100, height = 0)
         val bothZero = picture(width = 0, height = 0)
 
-        fun safeAspect(item: PicsDetails): Float {
-            return if (item.width > 0 && item.height > 0) item.width.toFloat() / item.height else 1f
-        }
-
-        assertEquals(1f, safeAspect(zeroWidth), 0.001f)
-        assertEquals(1f, safeAspect(zeroHeight), 0.001f)
-        assertEquals(1f, safeAspect(bothZero), 0.001f)
-        assertEquals(0.5f, safeAspect(picture(width = 100, height = 200)), 0.001f)
+        assertEquals(1f, zeroWidth.safeAspectRatio(), 0.001f)
+        assertEquals(1f, zeroHeight.safeAspectRatio(), 0.001f)
+        assertEquals(1f, bothZero.safeAspectRatio(), 0.001f)
+        assertEquals(0.5f, picture(width = 100, height = 200).safeAspectRatio(), 0.001f)
     }
 }
