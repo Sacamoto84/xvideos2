@@ -11,21 +11,30 @@ fun parserItemVideoTags(html: String): TagsModel {
 
     val listMain = mutableListOf<TagsMainUploaderPornstar>()
     document.select("li.main-uploader").forEach {
-        val href = it.selectFirst("a[href]")?.attr("href") ?: "Unknown"
-        val name = it.selectFirst("span.name")?.ownText() ?: "Unknown"
-        val count = it.selectFirst("span.count")?.text() ?: "0"
-        listMain.add(TagsMainUploaderPornstar(href = href, name = name, count = count))
+        val href = it.selectFirst("a[href]")?.attr("href")?.trim().orEmpty()
+        val name = it.selectFirst("span.name")?.ownText()?.trim()?.takeIf { s -> s.isNotEmpty() }
+            ?: it.selectFirst("span.name")?.text()?.trim().orEmpty()
+        val count = it.selectFirst("span.count")?.text()?.trim() ?: "0"
+        if (name.isNotEmpty()) {
+            listMain.add(TagsMainUploaderPornstar(href = href, name = name, count = count))
+        }
     }
 
     val listPornstar = mutableListOf<TagsMainUploaderPornstar>()
     document.select("li.model").forEach {
-        val href = it.selectFirst("a[href]")?.attr("href") ?: "Unknown"
-        val name = it.selectFirst("span.name")?.ownText() ?: "Unknown"
-        val count = it.selectFirst("span.count")?.text() ?: "0"
-        listPornstar.add(TagsMainUploaderPornstar(href = href, name = name, count = count))
+        val href = it.selectFirst("a[href]")?.attr("href")?.trim().orEmpty()
+        val name = it.selectFirst("span.name")?.ownText()?.trim()?.takeIf { s -> s.isNotEmpty() }
+            ?: it.selectFirst("span.name")?.text()?.trim().orEmpty()
+        val count = it.selectFirst("span.count")?.text()?.trim() ?: "0"
+        if (name.isNotEmpty()) {
+            listPornstar.add(TagsMainUploaderPornstar(href = href, name = name, count = count))
+        }
     }
 
-    val tags = document.select("li a.is-keyword").map { it.text() }
+    val tags = document.select("li a.is-keyword")
+        .map { it.text().trim() }
+        .filter { it.isNotEmpty() }
+        .distinct()
 
     return TagsModel(listMain, listPornstar, tags)
 }

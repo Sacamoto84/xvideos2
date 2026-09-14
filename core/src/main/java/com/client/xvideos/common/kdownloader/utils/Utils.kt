@@ -55,14 +55,15 @@ private fun isRedirection(code: Int): Boolean {
 @Throws(IOException::class)
 fun getRedirectedConnectionIfAny(
     httpClient0: HttpClient,
-    req: DownloadRequest
+    req: DownloadRequest,
+    onNewClient: (HttpClient) -> Unit = {}
 ): HttpClient {
     var httpClient: HttpClient = httpClient0
     var redirectTimes = 0
     var code: Int = httpClient.getResponseCode()
     var location: String? = httpClient.getResponseHeader("Location")
     while (isRedirection(code)) {
-        if (location == null) {
+        if (location.isNullOrBlank()) {
             throw IOException("HTTP redirection code $code without Location header")
         }
         httpClient.close()
@@ -70,7 +71,9 @@ fun getRedirectedConnectionIfAny(
             java.net.URI(req.url).resolve(location).toString()
         }.getOrDefault(location)
         req.url = resolvedLocation
-        httpClient = DefaultHttpClient().clone()
+        val nextClient = DefaultHttpClient().clone()
+        httpClient = nextClient
+        onNewClient(nextClient)
         httpClient.connect(req)
         code = httpClient.getResponseCode()
         location = httpClient.getResponseHeader("Location")

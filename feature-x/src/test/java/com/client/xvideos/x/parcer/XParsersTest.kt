@@ -249,4 +249,40 @@ class XParsersTest {
         assertEquals(70057387L, screen.items[0].id)
         assertEquals("/video.uicfdab07bd/_", screen.items[0].href)
     }
+
+    // --- parserItemVideoTags -------------------------------------------------
+
+    @Test
+    fun `теги очищаются от пробелов и дедуплицируются`() {
+        val html = """
+            <html><body>
+              <ul>
+                <li><a class="is-keyword" href="/tags/blonde"> blonde </a></li>
+                <li><a class="is-keyword" href="/tags/blonde">blonde</a></li>
+                <li><a class="is-keyword" href="/tags/teen">teen</a></li>
+                <li><a class="is-keyword" href="/tags/empty">   </a></li>
+              </ul>
+              <li class="main-uploader">
+                <a href="/channels/sweet">
+                  <span class="name"><span>icon</span> Sweet Channel </span>
+                  <span class="count">10k</span>
+                </a>
+              </li>
+              <li class="model">
+                <a href="/pornstars/star">
+                  <span class="name">Star Name</span>
+                  <span class="count">5k</span>
+                </a>
+              </li>
+            </body></html>
+        """.trimIndent()
+
+        val result = parserItemVideoTags(html)
+
+        assertEquals(listOf("blonde", "teen"), result.tags)
+        assertEquals(1, result.mainUploader.size)
+        assertEquals("Sweet Channel", result.mainUploader[0].name)
+        assertEquals(1, result.pornstars.size)
+        assertEquals("Star Name", result.pornstars[0].name)
+    }
 }

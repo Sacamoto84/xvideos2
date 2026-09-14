@@ -13,20 +13,17 @@ import timber.log.Timber
  *
  * @return emoji-флаг (напр. "🇸🇪") или null, если не удалось определить.
  */
-fun parseSiteCountryFlag(html: String): String? {
-    val document = Jsoup.parse(html)
+fun parseSiteCountryFlag(document: Document): String? {
     val code = Regex("""\bflag-([a-z]{2})\b""")
         .find(document.select("#site-localisation").toString())
         ?.groupValues?.get(1) ?: return null
     return getFlagEmoji("flag-$code")
 }
 
-fun parserListVideo(html: String): List<ItemsX> {
+fun parseSiteCountryFlag(html: String): String? = parseSiteCountryFlag(Jsoup.parse(html))
 
+fun parserListVideo(document: Document): List<ItemsX> {
     val list = mutableListOf<ItemsX>()
-
-    // Парсим HTML-документ
-    val document: Document = Jsoup.parse(html)
 
     // Находим все видео-блоки
     val videoBlocks = document.select("div.frame-block")

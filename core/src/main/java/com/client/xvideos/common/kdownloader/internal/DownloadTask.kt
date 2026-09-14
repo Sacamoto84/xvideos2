@@ -144,7 +144,9 @@ class DownloadTask(
 
                     client.connect(req)
 
-                    var redirectedClient = getRedirectedConnectionIfAny(client, req)
+                    var redirectedClient = getRedirectedConnectionIfAny(client, req) {
+                        httpClient = it
+                    }
                     httpClient = redirectedClient
                     responseCode = redirectedClient.getResponseCode()
                     eTag = redirectedClient.getResponseHeader(Constants.ETAG)
@@ -389,7 +391,9 @@ class DownloadTask(
             var client = DefaultHttpClient().clone()
             httpClient = client
             client.connect(req)
-            client = getRedirectedConnectionIfAny(client, req)
+            client = getRedirectedConnectionIfAny(client, req) {
+                httpClient = it
+            }
             httpClient = client
             responseCode = client.getResponseCode()
             eTag = client.getResponseHeader(Constants.ETAG)

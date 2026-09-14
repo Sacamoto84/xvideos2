@@ -265,11 +265,20 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                         fontSize = 12.sp
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
-                                    Button(
-                                        onClick = { album.retry() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Theme.L.red)
-                                    ) {
-                                        Text("Повторить", color = Color.White)
+                                    Row {
+                                        Button(
+                                            onClick = { album.retry() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Theme.L.red)
+                                        ) {
+                                            Text("Повторить", color = Color.White)
+                                        }
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Button(
+                                            onClick = { navigator.pop() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Theme.tabLevel1)
+                                        ) {
+                                            Text("Назад", color = Theme.L.textColor)
+                                        }
                                     }
                                 }
                             } else if (isLoading) {

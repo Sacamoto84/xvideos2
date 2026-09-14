@@ -169,4 +169,27 @@ class KDownloaderQueueTest {
         queue.resume(reqRunning.downloadId)
         assertEquals(Status.RUNNING, reqRunning.status)
     }
+
+    @Test(expected = IOException::class)
+    fun `getRedirectedConnectionIfAny throws when redirection has blank Location header`() {
+        val mockClient = object : com.client.xvideos.common.kdownloader.httpclient.HttpClient {
+            override fun clone() = this
+            override fun connect(req: DownloadRequest) {}
+            override fun getResponseCode() = java.net.HttpURLConnection.HTTP_MOVED_TEMP
+            override fun getInputStream(): java.io.InputStream? = null
+            override fun getContentLength() = 0L
+            override fun getResponseHeader(name: String) = if (name == "Location") "   " else ""
+            override fun close() {}
+            override fun getHeaderFields() = emptyMap<String, List<String>>()
+            override fun getErrorStream(): java.io.InputStream? = null
+        }
+        val req = DownloadRequest.Builder("https://example.com/file.mp4", tempFolder.root.absolutePath, "file.mp4").build()
+        com.client.xvideos.common.kdownloader.utils.getRedirectedConnectionIfAny(mockClient, req)
+    }
+
+    @Test
+    fun `DefaultHttpClient close without connect does not throw`() {
+        val client = com.client.xvideos.common.kdownloader.httpclient.DefaultHttpClient()
+        client.close()
+    }
 }

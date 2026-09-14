@@ -63,13 +63,14 @@ private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> 
     val url = urlStart + if (currentNumberScreen == 0) "" else "/new/${currentNumberScreen}"
     Timber.i("!!! openNew numberScreen:$numberScreen url:$url")
     val html = readHtmlFromURLWebView(url)
-    val flag = parseSiteCountryFlag(html)
-    val items = withContext(Dispatchers.Default) {
-        parserListVideo(html)
+    return withContext(Dispatchers.Default) {
+        val document = org.jsoup.Jsoup.parse(html)
+        val flag = parseSiteCountryFlag(document)
+        val items = parserListVideo(document)
             .filter { !it.href.contains("THUMBNUM") }
             .distinctBy { it.id }
+        flag to items
     }
-    return flag to items
 }
 
 

@@ -3,6 +3,7 @@ package com.client.xvideos.common.kdownloader.httpclient
 import com.client.xvideos.common.kdownloader.Constants
 import com.client.xvideos.common.kdownloader.internal.DownloadRequest
 import com.client.xvideos.common.net.doh.AppDns
+import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -12,6 +13,7 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class DefaultHttpClient : HttpClient {
+    private var call: Call? = null
     private var response: Response? = null
     private var bodyStream: InputStream? = null
 
@@ -59,7 +61,9 @@ class DefaultHttpClient : HttpClient {
             baseOkHttpClient
         }
 
-        val res = client.newCall(builder.build()).execute()
+        val newCall = client.newCall(builder.build())
+        call = newCall
+        val res = newCall.execute()
         response = res
         bodyStream = res.body.byteStream()
     }
@@ -73,6 +77,7 @@ class DefaultHttpClient : HttpClient {
     override fun getResponseHeader(name: String): String = response?.header(name) ?: ""
 
     override fun close() {
+        runCatching { call?.cancel() }
         runCatching { bodyStream?.close() }
         runCatching { response?.close() }
     }

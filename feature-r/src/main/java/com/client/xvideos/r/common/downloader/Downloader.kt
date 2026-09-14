@@ -84,7 +84,7 @@ class Downloader @Inject constructor(
             creatorDir.mkdirs()
 
             item.previewUrl()?.let { imageUrl ->
-                val requestImage = kDownloader.newRequestBuilder(imageUrl, p, "${item.id}.jpg").build()
+                val requestImage = kDownloader.newRequestBuilder(imageUrl, p, "${item.id}.jpg").tag(item.id).build()
                 kDownloader.enqueue(requestImage)
             }
 
@@ -161,7 +161,7 @@ class Downloader @Inject constructor(
             if (previewUrl == null) {
                 skippedNoPreviewUrl++
             } else {
-                val requestImage = kDownloader.newRequestBuilder(previewUrl, p, "${item.id}.jpg").build()
+                val requestImage = kDownloader.newRequestBuilder(previewUrl, p, "${item.id}.jpg").tag(item.id).build()
                 kDownloader.enqueue(
                     requestImage,
                     onStart = { onEvent("R Download: старт preview ${item.id}") },
