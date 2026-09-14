@@ -69,7 +69,10 @@ class ScreenLAlbumSM @AssistedInject constructor(
      */
     fun saveAlbum() {
         scope.launch {
-            albumInfo.value?.let { saved.albums.add(it.albumInfo.value) }
+            val details = albumInfo.value?.albumInfo?.value
+            if (details != null && details.id.isNotBlank()) {
+                saved.albums.add(details)
+            }
         }
     }
 

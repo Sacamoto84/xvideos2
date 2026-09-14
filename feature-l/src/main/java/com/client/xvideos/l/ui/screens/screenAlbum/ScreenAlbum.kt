@@ -14,11 +14,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -87,9 +92,11 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
         val album = vm.albumInfo.collectAsStateWithLifecycle().value
 
-        val parsed = vm.albumInfo.collectAsStateWithLifecycle().value?.albumInfo?.collectAsStateWithLifecycle()?.value
+        val parsed = album?.albumInfo?.collectAsStateWithLifecycle()?.value
+        val loadError = album?.loadError?.collectAsStateWithLifecycle()?.value
+        val isLoading = album?.isLoading?.collectAsStateWithLifecycle()?.value ?: false
 
-        val saved = vm.saved.albums.list.any { it.id == parsed?.id }
+        val saved = parsed != null && parsed.id.isNotBlank() && vm.saved.albums.list.any { it.id == parsed.id }
 
         val albumPicsDetails = album?.albumPicsDetails
         val showInitialItemsLoading =
@@ -102,7 +109,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
             if (parsed == null) return@LaunchedEffect
 
-            val allPics = album?.albumPicsDetails?.pics?.toList() ?: emptyList()
+            val allPics = albumPicsDetails?.pics?.toList() ?: emptyList()
 
             val newFilteredAnimatedPics = allPics.filter { it.is_animated } //Список анимированных елементов
 
@@ -165,7 +172,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
                             Box(modifier = Modifier.fillMaxWidth().height(topInset)){ }
 
-                            if (parsed != null) {
+                            if (parsed != null && parsed.id.isNotBlank()) {
 
                                 Row {
                                     UrlImage( parsed.cover?.url.orEmpty(), modifier = Modifier
@@ -239,6 +246,41 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                     albumPicsDetails = albumPicsDetails,
                                     onRetryFailedPages = { vm.retryFailedAlbumPages() }
                                 )
+                            } else if (loadError != null) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Не удалось загрузить данные альбома",
+                                        color = Theme.L.textColor,
+                                        style = Theme.L.Type.rowTitle
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = loadError,
+                                        color = Color.Gray,
+                                        fontSize = 12.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Button(
+                                        onClick = { album.retry() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Theme.L.red)
+                                    ) {
+                                        Text("Повторить", color = Color.White)
+                                    }
+                                }
+                            } else if (isLoading) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Theme.L.red)
+                                }
                             }
                         }
                     }

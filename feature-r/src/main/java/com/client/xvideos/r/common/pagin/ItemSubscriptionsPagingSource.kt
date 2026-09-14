@@ -15,7 +15,10 @@ class ItemSubscriptionsPagingSource (val savedRed: SavedRed): PagingSource<Int, 
 
         return try {
             Timber.d("!!! >>>ItemLikesPagingSource::load()")
-            val res = savedRed.subscriptions.refreshSubscription().sanitizeGifsInfoList().sortedByDescending{it.createDate}
+            val res = savedRed.subscriptions.refreshSubscription()
+                .sanitizeGifsInfoList()
+                .distinctBy { it.id }
+                .sortedByDescending { it.createDate }
             LoadResult.Page( data = res, prevKey = null,   nextKey = null )
 
         } catch (e: CancellationException) {

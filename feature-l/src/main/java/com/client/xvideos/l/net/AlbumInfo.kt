@@ -1,8 +1,6 @@
 package com.client.xvideos.l.net
 
 import com.client.xvideos.l.model.AlbumDetails
-import com.client.xvideos.l.model.Content
-import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.LusciousEndpoints
@@ -21,52 +19,57 @@ import timber.log.Timber
 class AlbumInfo(
     val id: Int,
     download: Boolean = false,
-    repository: Repository,
-    scope: CoroutineScope,
+    private val repository: Repository,
+    private val scope: CoroutineScope,
 ) {
 
-    val albumPicsDetails = AlbumPicsDetails(id,  repository)
+    val albumPicsDetails = AlbumPicsDetails(id, repository)
 
-    val albumInfo = MutableStateFlow(
-        AlbumDetails(
-            id = "",
-            title = "",
-            tags = listOf(),
-            is_manga = false,
-            content = Content("", "", ""),
-            genres = listOf(),
-            cover = Cover(0, 0, "", ""),
-            description = "",
-            audiences = listOf(),
-            number_of_pictures = 0,
-            number_of_animated_pictures = 0,
-            url = "",
-            download_url = "",
-            created = 0.0,
-            modified = 0.0
-        )
-    )
+    @Suppress("MemberNameEqualsClassName")
+    val albumInfo = MutableStateFlow<AlbumDetails?>(null)
+    val loadError = MutableStateFlow<String?>(null)
+    val isLoading = MutableStateFlow(true)
 
     init {
+        loadAlbum()
+    }
+
+    fun retry() {
+        loadAlbum()
+    }
+
+    private fun loadAlbum() {
         scope.launch(Dispatchers.IO) {
-            if (restoreBundleIfFresh(repository)) return@launch
+            isLoading.value = true
+            loadError.value = null
+
+            if (restoreBundleIfFresh(repository)) {
+                isLoading.value = false
+                return@launch
+            }
 
             val query = getAlbumInfo(id)
             val result = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
             if (result.isFailure) {
-                Timber.w("!!! getAlbumInfo $id error: ${result.exceptionOrNull()?.message}")
+                val err = result.exceptionOrNull()?.message ?: "Network error"
+                Timber.w("!!! getAlbumInfo $id error: $err")
+                loadError.value = err
+                isLoading.value = false
                 return@launch
             }
             val parsed = parseAlbumDetails(result.getOrThrow())
 
             if (parsed.isFailure) {
-                Timber.w("!!! getAlbumInfo $id parse error: ${parsed.exceptionOrNull()?.message}")
+                val err = parsed.exceptionOrNull()?.message ?: "Parse error"
+                Timber.w("!!! getAlbumInfo $id parse error: $err")
+                loadError.value = err
+                isLoading.value = false
                 return@launch
             }
 
             val albumDetails = parsed.getOrThrow()
             albumInfo.value = albumDetails
-            //url = LusciousEndpoints.HOME + albumInfo.value.url
+            isLoading.value = false
             albumPicsDetails.contentUrls(pageCacheConfig = RepositoryUriConfig.DIRECT)
             cacheBundleIfComplete(repository, albumDetails)
         }
@@ -128,9 +131,9 @@ class AlbumInfo(
      * Вычисляется по требованию: `by lazy` зафиксировал бы пустое значение,
      * если бы свойство прочитали до завершения асинхронной загрузки.
      */
-    val thumbnail: String get() = albumInfo.value.cover?.url.orEmpty()
+    val thumbnail: String get() = albumInfo.value?.cover?.url.orEmpty()
 
-    val downloadUrl: String get() = LusciousEndpoints.HOME + albumInfo.value.download_url
+    val downloadUrl: String get() = LusciousEndpoints.HOME + albumInfo.value?.download_url.orEmpty()
 
 //    val artists: List<String> by lazy {
 //        tags.filter { it.category == "Artist" }.map { it.name }

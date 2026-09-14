@@ -91,7 +91,10 @@ fun CMPPlayer2(
     LaunchedEffect(exoPlayer, config.volume) { exoPlayer.volume = config.volume }
     LaunchedEffect(exoPlayer, config.speed) { exoPlayer.setPlaybackSpeed(config.speed.toFloat()) }
     LaunchedEffect(exoPlayer, config.seekToTime) {
-        config.seekToTime?.let { exoPlayer.seekTo((it * 1000).toLong()) }
+        config.seekToTime?.let {
+            exoPlayer.seekTo((it * 1000).toLong())
+            callbacks.currentTime(it)
+        }
     }
 
     // Экран не гасим только пока реально идёт воспроизведение. Флаг живёт на

@@ -180,7 +180,7 @@ fun AppLockScreen(
                 errorText = "Неверный код доступа"
                 if (remaining <= 0L) {
                     delay(50)
-                    focusRequester.requestFocus()
+                    runCatching { focusRequester.requestFocus() }
                     keyboardController?.show()
                 }
             }

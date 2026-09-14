@@ -117,7 +117,7 @@ class R_Saved_Subscriptions(
                 Timber.e(e)
             }
         }
-        return res
+        return res.distinctBy { it.id }
     }
 
 

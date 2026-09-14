@@ -137,12 +137,14 @@ class MediaPlayerHost(
     fun seekTo(seconds: Int?) {
         isSliding = true
         seekToTime = seconds?.toFloat()
+        seconds?.let { currentTime = it.toFloat() }
         isSliding = false
     }
 
     fun seekTo(seconds: Float?) {
         isSliding = true
         seekToTime = seconds
+        seconds?.let { currentTime = it }
         isSliding = false
     }
 

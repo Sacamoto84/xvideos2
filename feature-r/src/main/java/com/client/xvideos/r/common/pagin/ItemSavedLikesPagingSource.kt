@@ -14,7 +14,13 @@ class ItemSavedLikesPagingSource (val order : Order, val savedRed: SavedRed): Pa
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {
         return try {
             Timber.i("!!! >>>ItemSavedLikesPagingSource::load() sortTop:$order")
-            LoadResult.Page( data = savedRed.likes.list.toList().sanitizeGifsInfoList(), prevKey = null, nextKey = null )
+            val baseList = savedRed.likes.list.toList().sanitizeGifsInfoList()
+            val sortedList = when (order) {
+                Order.OLDEST -> baseList.sortedBy { it.createDate }
+                Order.TOP, Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP28 -> baseList.sortedByDescending { it.likes }
+                else -> baseList.sortedByDescending { it.createDate }
+            }
+            LoadResult.Page( data = sortedList, prevKey = null, nextKey = null )
         } catch (e: CancellationException) {
             throw e // G1
         } catch (e: Exception) {

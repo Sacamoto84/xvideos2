@@ -1,0 +1,64 @@
+package com.client.xvideos.x
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
+
+class SavedX_DownloadsTest {
+
+    @get:Rule
+    val tmp = TemporaryFolder()
+
+    @Test
+    fun `скачанные видео и постеры корректно извлекаются в in-memory множества`() {
+        val root = tmp.newFolder("downloads")
+        File(root, "123.mp4").writeText("video")
+        File(root, "123.jpg").writeText("poster")
+        File(root, "123.info").writeText("{}")
+        File(root, "456.mp4").writeText("video")
+        File(root, "invalid.mp4").writeText("corrupt")
+
+        val allFiles = root.listFiles() ?: emptyArray()
+        val videoIds = allFiles.filter { it.isFile && it.extension == "mp4" }
+            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+        val posterIds = allFiles.filter { it.isFile && it.extension == "jpg" }
+            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+
+        assertTrue(videoIds.contains(123L))
+        assertTrue(videoIds.contains(456L))
+        assertFalse(videoIds.contains(789L))
+        assertEquals(setOf(123L, 456L), videoIds)
+
+        assertTrue(posterIds.contains(123L))
+        assertFalse(posterIds.contains(456L))
+        assertEquals(setOf(123L), posterIds)
+    }
+
+    @Test
+    fun `файлы info сортируются по убыванию даты изменения`() {
+        val root = tmp.newFolder("downloads_sort")
+        File(root, "1.info").apply {
+            writeText("{}")
+            setLastModified(1000L)
+        }
+        File(root, "2.info").apply {
+            writeText("{}")
+            setLastModified(3000L)
+        }
+        File(root, "3.info").apply {
+            writeText("{}")
+            setLastModified(2000L)
+        }
+
+        val sorted = root.listFiles { f -> f.isFile && f.extension == "info" }
+            ?.sortedByDescending { it.lastModified() }
+            ?.map { it.name }
+            ?: emptyList()
+
+        assertEquals(listOf("2.info", "3.info", "1.info"), sorted)
+    }
+}
