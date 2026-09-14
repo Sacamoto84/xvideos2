@@ -69,9 +69,13 @@ fun DaialogNewCollection(
             )
         },
         confirmText = "Создать",
+        confirmEnabled = text.isNotBlank(),
         onConfirm = {
-            onBlockConfirmed(text)
-            onDismiss()
+            val trimmed = text.trim()
+            if (trimmed.isNotEmpty()) {
+                onBlockConfirmed(trimmed)
+                onDismiss()
+            }
         },
     )
 }

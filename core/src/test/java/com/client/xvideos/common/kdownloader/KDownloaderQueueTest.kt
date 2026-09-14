@@ -105,4 +105,22 @@ class KDownloaderQueueTest {
         assertTrue(target.exists())
         assertEquals("partially-downloaded-stream", target.readText())
     }
+
+    @Test
+    fun `DownloadModel retains dirPath and fileName for cleanup path computation`() {
+        val model = com.client.xvideos.common.kdownloader.database.DownloadModel(
+            id = 42,
+            url = "https://example.com/video.mp4",
+            eTag = "etag123",
+            dirPath = "/storage/downloads",
+            fileName = "video.mp4",
+            totalBytes = 1000L,
+            downloadedBytes = 500L,
+            lastModifiedAt = 12345L
+        )
+
+        val tempPath = com.client.xvideos.common.kdownloader.utils.getTempPath(model.dirPath, model.fileName)
+        assertTrue(tempPath.contains("video.mp4.temp"))
+        assertTrue(tempPath.contains("/storage/downloads"))
+    }
 }

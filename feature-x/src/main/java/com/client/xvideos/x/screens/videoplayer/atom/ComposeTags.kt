@@ -33,12 +33,12 @@ fun ComposeTags(tags: TagsModel, onClick: (String) -> Unit) {
 
         // Каналы
         tags.mainUploader.forEach {
-            ScreenItemTagsModelPornostars(it.name, Color(0xFF1E88E5), it.count)
+            ScreenItemTagsModelPornostars(it.name, Color(0xFF1E88E5), it.count, onClick = { onClick(it.name) })
         }
 
         // Порноактрисы
         tags.pornstars.forEach {
-            ScreenItemTagsModelPornostars(it.name, Color(0xFFDE2600), it.count)
+            ScreenItemTagsModelPornostars(it.name, Color(0xFFDE2600), it.count, onClick = { onClick(it.name) })
         }
 
         // Теги

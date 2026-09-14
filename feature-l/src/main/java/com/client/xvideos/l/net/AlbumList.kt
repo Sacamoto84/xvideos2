@@ -9,8 +9,6 @@ import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -130,15 +128,8 @@ data class getAlbumListAggregationsResult(
                 val list = taggedValues?.mapNotNull { element ->
                     runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
                 }.orEmpty()
-                withContext(Dispatchers.Main) {
-                    filterTaggedStateCount.addAll(list)
-                    Timber.i(
-                        "!!! getAlbumListAggregations list Tagged размер : ${list.size} ${
-                            list.joinToString(
-                                "\n"
-                            ) { it.term }
-                        }")
-                }
+                filterTaggedStateCount.addAll(list)
+                Timber.i("!!! getAlbumListAggregations list Tagged размер : ${list.size}")
             }
 
             val indexPicture = aggregations?.indexOfFirst { el ->

@@ -20,6 +20,11 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
 
             })
 
+    private val callbackScope = CoroutineScope(SupervisorJob() + Dispatchers.Main +
+            CoroutineExceptionHandler { _, _ ->
+
+            })
+
     fun enqueue(req: DownloadRequest): Int {
         val job = scope.launch(Dispatchers.IO.limitedParallelism(1)) {
             execute(req)
@@ -56,10 +61,10 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
 
     private fun executeOnMainThread(block: () -> Unit) {
         // Колбэки слушателя (onStart/onProgress/onCompleted/...) доходят до UI,
-        // поэтому выполняем их именно на главном потоке. Раньше launch шёл на
-        // scope с Dispatchers.IO.limitedParallelism(1), и колбэки уходили на IO
-        // вопреки имени метода.
-        scope.launch(Dispatchers.Main) {
+        // поэтому выполняем их именно на главном потоке.
+        // Используем callbackScope, чтобы cancelAll() на scope (воркеры загрузки)
+        // не сбивал нотификации слушателей об отмене.
+        callbackScope.launch {
             block()
         }
     }

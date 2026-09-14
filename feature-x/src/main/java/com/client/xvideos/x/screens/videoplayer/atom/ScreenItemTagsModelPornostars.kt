@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.videoplayer.atom
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -22,14 +23,26 @@ import androidx.compose.ui.unit.sp
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
  */
 @Composable
-fun ScreenItemTagsModelPornostars(text: String, color: Color, count: String) {
+fun ScreenItemTagsModelPornostars(
+    text: String,
+    color: Color,
+    count: String,
+    onClick: (() -> Unit)? = null
+) {
 
     Row(
         modifier = Modifier
             .padding(horizontal = 3.dp, vertical = 2.dp)
             .height(28.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(color),
+            .background(color)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

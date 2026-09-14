@@ -72,8 +72,12 @@ class DownloadTask(
                 DownloadModel(
                     id = req.downloadId,
                     url = req.url,
+                    eTag = eTag,
+                    dirPath = req.dirPath,
+                    fileName = req.fileName,
                     totalBytes = req.totalBytes,
-                    eTag = eTag
+                    downloadedBytes = req.downloadedBytes,
+                    lastModifiedAt = System.currentTimeMillis()
                 )
             )
         }
@@ -90,6 +94,7 @@ class DownloadTask(
     suspend fun run(listener: DownloadRequest.Listener) {
         downloadSemaphore.withPermit {
             withContext(Dispatchers.IO.limitedParallelism(1)) {
+                var cancelHandler: kotlinx.coroutines.DisposableHandle? = null
                 try {
                     tempPath = getTempPath(req.dirPath, req.fileName)
                     var file = File(tempPath)
@@ -119,6 +124,14 @@ class DownloadTask(
                     // use the url to download the file with HTTP Client
                     val client = DefaultHttpClient().clone()
                     httpClient = client
+                    cancelHandler = req.job?.invokeOnCompletion {
+                        runCatching { httpClient?.close() }
+                    }
+
+                    if (req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true) {
+                        req.status = Status.CANCELLED
+                        return@withContext
+                    }
 
                     req.status = Status.RUNNING
 
@@ -140,9 +153,15 @@ class DownloadTask(
                         closeAllSafely(null)
                         deleteTempFile()
                         removeNoMoreNeededModelFromDatabase()
+                        val wasCancelled = req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true
                         req.reset()
-                        req.status = Status.FAILED
-                        listener.onError("Wrong link")
+                        if (wasCancelled) {
+                            req.status = Status.CANCELLED
+                            listener.onError("Cancelled")
+                        } else {
+                            req.status = Status.FAILED
+                            listener.onError("Wrong link")
+                        }
                         return@withContext
                     }
 
@@ -169,9 +188,15 @@ class DownloadTask(
                         closeAllSafely(null)
                         deleteTempFile()
                         removeNoMoreNeededModelFromDatabase()
+                        val wasCancelled = req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true
                         req.reset()
-                        req.status = Status.FAILED
-                        listener.onError("Failed to obtain input stream")
+                        if (wasCancelled) {
+                            req.status = Status.CANCELLED
+                            listener.onError("Cancelled")
+                        } else {
+                            req.status = Status.FAILED
+                            listener.onError("Failed to obtain input stream")
+                        }
                         return@withContext
                     }
 
@@ -302,15 +327,20 @@ class DownloadTask(
                 } catch (e: Exception) {
                     closeAllSafely(this@DownloadTask.outputStream)
                     this@DownloadTask.outputStream = null
-                    if (!isResumeSupported) {
-                        deleteTempFile()
-                        removeNoMoreNeededModelFromDatabase()
-                        req.reset()
+                    val wasCancelled = req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true
+                    deleteTempFile()
+                    removeNoMoreNeededModelFromDatabase()
+                    req.reset()
+                    if (wasCancelled) {
+                        req.status = Status.CANCELLED
+                        listener.onError("Cancelled")
+                    } else {
+                        req.status = Status.FAILED
+                        listener.onError(e.toString())
                     }
-                    req.status = Status.FAILED
-                    listener.onError(e.toString())
                     return@withContext
                 } finally {
+                    cancelHandler?.dispose()
                     closeAllSafely(this@DownloadTask.outputStream)
                     this@DownloadTask.outputStream = null
                 }
