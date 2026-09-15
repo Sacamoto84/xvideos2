@@ -129,8 +129,8 @@ class FileDB<T>(
         return try {
             synchronized(lock) {
                 val file = File(dirPath, "$nameFile.$extension")
-                if (!file.exists()) {
-                    return Result.failure(FileNotFoundException("!!! Файл не найден: ${file.absolutePath}"))
+                if (!file.exists() || file.length() == 0L) {
+                    return Result.failure(FileNotFoundException("!!! Файл не найден или пуст: ${file.absolutePath}"))
                 }
                 val jsonString = file.readText(Charsets.UTF_8)
                 val obj = json.decodeFromString(serializer, jsonString)
@@ -161,8 +161,10 @@ class FileDB<T>(
                     ?: emptyList()
 
                 loadSeq.incrementAndGet() to files.mapNotNull { file ->
+                    if (file.length() == 0L) return@mapNotNull null
                     try {
                         val jsonString = file.readText(Charsets.UTF_8)
+                        if (jsonString.isBlank()) return@mapNotNull null
                         json.decodeFromString(serializer, jsonString)
                     } catch (e: Exception) {
                         Timber.e(e, "!!! FileDB refresh Ошибка при чтении файла $dirPath ${file.name}")

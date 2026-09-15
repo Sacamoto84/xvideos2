@@ -28,6 +28,7 @@ import com.client.xvideos.common.videoplayer.util.createHlsMediaSourceWithDrm
 import com.client.xvideos.common.videoplayer.util.createProgressiveMediaSource
 import com.client.xvideos.common.videoplayer.util.getExoPlayerLifecycleObserver
 import com.client.xvideos.common.videoplayer.util.isHlsUrl
+import kotlinx.coroutines.CancellationException
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -116,6 +117,8 @@ fun rememberExoPlayerWithLifecycle(
                 seekTo(0, 0)
             }
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             error(MediaPlayerError.PlaybackError(e.message ?: "Failed to load media"))
         }

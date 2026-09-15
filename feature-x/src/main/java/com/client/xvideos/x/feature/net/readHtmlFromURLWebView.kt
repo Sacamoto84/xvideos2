@@ -33,8 +33,9 @@ private const val WEB_VIEW_LOAD_TIMEOUT_MS = 45_000L
  * `CoroutineScope(Dispatchers.Main)`, который не был привязан к вызывающему и
  * продолжал жить после его отмены.
  */
-suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): String =
-    withContext(Dispatchers.Main) {
+suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): String {
+    if (url.isBlank()) return ""
+    return withContext(Dispatchers.Main) {
         withTimeoutOrNull(WEB_VIEW_LOAD_TIMEOUT_MS) {
             loadHtmlInWebView(url)
         } ?: run {
@@ -42,6 +43,7 @@ suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): Str
             ""
         }
     }
+}
 
 private suspend fun loadHtmlInWebView(url: String): String =
     suspendCancellableCoroutine { continuation ->

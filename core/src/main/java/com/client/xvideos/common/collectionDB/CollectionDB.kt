@@ -199,8 +199,10 @@ class CollectionDB<T>(
                 val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }
                     ?.sortedByDescending { it.lastModified() }
                     ?.mapNotNull { file ->
+                        if (file.length() == 0L) return@mapNotNull null
                         try {
                             val text = file.readText(Charsets.UTF_8)
+                            if (text.isBlank()) return@mapNotNull null
                             json.decodeFromString(serializer, text)
                         } catch (ex: Exception) {
                             Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")

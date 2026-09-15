@@ -273,9 +273,11 @@ class CalculatorState(
         }
 
         if (!isNewEntry) {
-            val clean = displayValue.removePrefix("-")
+            val isNegative = displayValue.startsWith("-")
+            val clean = displayValue.removePrefix("-").replace(" ", "")
             if (clean.length > 1) {
-                displayValue = displayValue.dropLast(1)
+                val dropped = clean.dropLast(1)
+                displayValue = if (isNegative) "-$dropped" else dropped
             } else {
                 displayValue = "0"
                 isNewEntry = true

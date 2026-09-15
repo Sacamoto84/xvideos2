@@ -364,4 +364,24 @@ class CalculatorStateTest {
 
         assertEquals(1, failedAttempts)
     }
+
+    @Test
+    fun `onBackspace корректно удаляет цифры из форматированного числа с пробелами`() {
+        val state = CalculatorState()
+        state.displayValue = "-1 234"
+        state.isNewEntry = false
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("-123", state.displayValue)
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("-12", state.displayValue)
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("-1", state.displayValue)
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("0", state.displayValue)
+        assertTrue(state.isNewEntry)
+    }
 }

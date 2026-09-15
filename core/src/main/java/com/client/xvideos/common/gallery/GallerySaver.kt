@@ -91,6 +91,12 @@ object GallerySaver {
             return
         }
 
+        if (url.isBlank() || (!url.startsWith("http://", ignoreCase = true) && !url.startsWith("https://", ignoreCase = true))) {
+            Timber.w("GallerySaver: отклонён некорректный url: $url")
+            SnackBar.error("Недопустимая ссылка")
+            return
+        }
+
         scope.launch {
             if (exists(appContext, cleanFileName)) {
                 SnackBar.info("Уже в галерее")

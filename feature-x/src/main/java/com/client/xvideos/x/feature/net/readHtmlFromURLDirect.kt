@@ -47,6 +47,7 @@ private val htmlClient: HttpClient by lazy {
  * все вызывающие ([SavedX_Downloads], `ScreenTagsViewModel`, плееры X).
  */
 suspend fun readHtmlFromURLDirect(url: String = "https://www.xvideos.com"): String {
+    if (url.isBlank()) return ""
 
     Timber.i("!!!..readHtmlFromURLDirect $url ")
 

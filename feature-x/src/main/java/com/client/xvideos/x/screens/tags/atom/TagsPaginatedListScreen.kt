@@ -92,7 +92,13 @@ fun TagsPaginatedListScreen(
 
     if (loaded.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Видео не найдены", color = Color.Gray)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Видео не найдены", color = Color.Gray)
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(onClick = { retryTrigger++ }) {
+                    Text("Повторить")
+                }
+            }
         }
         return
     }

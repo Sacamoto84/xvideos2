@@ -111,4 +111,15 @@ class CollectionDBTest {
         assertTrue(result.isSuccess)
         assertTrue(result.getOrThrow().isEmpty())
     }
+
+    @Test
+    fun `пустой 0-байтовый файл коллекции не ломает чтение и пропускается`() {
+        val root = tmp.newFolder("collections_zero")
+        val db = db(root)
+        db.insert("ok", "К", TestItem("ok", "https://x/ok"))
+        File(root, "К/empty.collection").writeBytes(byteArrayOf())
+
+        val items = db.readAllCollections().getOrThrow().single().items
+        assertEquals(listOf(TestItem("ok", "https://x/ok")), items)
+    }
 }

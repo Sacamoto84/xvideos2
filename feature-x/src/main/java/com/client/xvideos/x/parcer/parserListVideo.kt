@@ -30,9 +30,10 @@ fun parserListVideo(document: Document): List<ItemsX> {
 
     for (block: Element in videoBlocks) {
         try {
-            // X1: data-id обязателен и должен быть числом. Если его нет/он битый —
+            // X1: data-id обязателен и должен быть положительным числом. Если его нет/он битый/неположительный —
             // пропускаем карточку, а не роняем парсинг всей страницы.
             val videoId = block.attr("data-id").toLongOrNull() ?: continue
+            if (videoId <= 0L) continue
 
             val videoTitle = block.selectFirst("p.title a")?.text() ?: "No title"
             val href = block.selectFirst("p.title a")?.attr("href") ?: "No link"

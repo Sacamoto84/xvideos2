@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.feature.r.R
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toTwoDecimalPlacesWithColon
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
 
@@ -62,7 +63,12 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
                 .height(46.dp)
                 .width(46.dp)//.border(1.dp, Color.White)
                 //.border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
-                .clickable { vm.timeA = vm.currentPlayerTime }, verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
+                .clickable {
+                    vm.timeA = vm.currentPlayerTime
+                    if (vm.enableAB && vm.timeB <= vm.timeA) {
+                        vm.enableAB = false
+                    }
+                }, verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
         ) {
             BasicText(
                 vm.timeA.toTwoDecimalPlacesWithColon(),
@@ -89,7 +95,12 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
         Column(
             modifier = Modifier.height(46.dp).width(46.dp)
                 //.border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
-                .clickable { vm.timeB = vm.currentPlayerTime },verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
+                .clickable {
+                    vm.timeB = vm.currentPlayerTime
+                    if (vm.enableAB && vm.timeB <= vm.timeA) {
+                        vm.enableAB = false
+                    }
+                },verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             BasicText(
@@ -109,7 +120,16 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
 
         Divider()
 
-        IconButton( onClick = { vm.enableAB = vm.enableAB.not() }, modifier = Modifier.size(46.dp) ) {
+        IconButton(
+            onClick = {
+                if (!vm.enableAB && vm.timeB <= vm.timeA) {
+                    SnackBar.warning("Точка B должна быть больше точки A")
+                } else {
+                    vm.enableAB = vm.enableAB.not()
+                }
+            },
+            modifier = Modifier.size(46.dp)
+        ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(painter = painterResource(R.drawable.rg_button), contentDescription = if (vm.enableAB) "Выключить повтор отрезка A-B" else "Включить повтор отрезка A-B", tint = if (vm.enableAB) Color.Green else Color.LightGray)
                 Text("AB", color = if (vm.enableAB) Color.Green else Color.LightGray, fontSize = 8.sp, fontFamily = Theme.R.fontFamilyPopinsRegular)
