@@ -102,7 +102,9 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             // Превью-картинка (необязательно — ошибки не критичны).
             if (item.previewImage.isNotBlank()) {
                 runCatching {
-                    val reqImg = kDownloader.newRequestBuilder(item.previewImage, dir, "${item.id}.jpg").build()
+                    val reqImg = kDownloader.newRequestBuilder(item.previewImage, dir, "${item.id}.jpg")
+                        .tag(item.id.toString())
+                        .build()
                     kDownloader.enqueue(reqImg)
                 }
             }
@@ -175,6 +177,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
 
     fun delete(item: ItemsX) {
         if (item.id <= 0L) return
+        kDownloader.cancel(item.id.toString())
         scope.launch(Dispatchers.IO) {
             File(dir, "${item.id}.mp4").delete()
             File(dir, "${item.id}.jpg").delete()

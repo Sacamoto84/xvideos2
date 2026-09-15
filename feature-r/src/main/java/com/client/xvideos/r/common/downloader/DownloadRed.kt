@@ -238,6 +238,7 @@ class DownloadRed @Inject constructor(
     }
 
     fun deleteAll(onComplete: () -> Unit = {}) {
+        downloader.kDownloader.cancelAll()
         scope.launch(Dispatchers.IO) {
             File(AppPath.r_cache_download).apply {
                 deleteRecursively()
@@ -255,6 +256,7 @@ class DownloadRed @Inject constructor(
             Timber.w("DownloadRed.delete -> Отклонён небезопасный путь: userName=${item.userName}, id=${item.id}")
             return
         }
+        downloader.kDownloader.cancel(item.id)
         scope.launch(Dispatchers.IO) {
             val baseDir = File(AppPath.r_cache_download)
             val userDir = File(baseDir, item.userName)

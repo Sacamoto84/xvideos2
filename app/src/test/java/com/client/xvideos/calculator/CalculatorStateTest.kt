@@ -407,4 +407,18 @@ class CalculatorStateTest {
         assertEquals("-0.05", state.formatNumber(java.math.BigDecimal("-0.05")))
         assertEquals("-1 000.5", state.formatNumber(java.math.BigDecimal("-1000.5")))
     }
+
+    @Test
+    fun `ввод цифры после минус нуля заменяет ноль без артефакта ведущего нуля`() {
+        val state = CalculatorState()
+        state.displayValue = "-0"
+        state.isNewEntry = false
+        state.onDigit("7", noOpHaptic)
+        assertEquals("-7", state.displayValue)
+
+        state.displayValue = "-0"
+        state.isNewEntry = false
+        state.onDigit("0", noOpHaptic)
+        assertEquals("-0", state.displayValue)
+    }
 }

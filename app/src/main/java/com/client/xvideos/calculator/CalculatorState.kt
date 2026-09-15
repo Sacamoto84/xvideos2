@@ -61,6 +61,8 @@ class CalculatorState(
             isNewEntry = false
         } else if (displayValue == "0") {
             displayValue = digit
+        } else if (displayValue == "-0") {
+            displayValue = if (digit == "0") "-0" else "-$digit"
         } else {
             val rawDigits = displayValue.replace(" ", "").replace("-", "")
             if (rawDigits.length < MAX_INPUT_DIGITS) {

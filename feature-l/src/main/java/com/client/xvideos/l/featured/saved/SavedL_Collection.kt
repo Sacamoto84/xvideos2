@@ -154,14 +154,26 @@ class SavedL_Collection(
             return false
         }
 
-        val renamed = oldRoot.renameTo(newRoot)
+        val renamed = if (!oldRoot.renameTo(newRoot)) {
+            try {
+                oldRoot.copyRecursively(newRoot, overwrite = false)
+                oldRoot.deleteRecursively()
+            } catch (e: Exception) {
+                Timber.e(e, "SavedL_Collection renameCollection() fallback failed")
+                false
+            }
+        } else {
+            true
+        }
         if (renamed) {
-            if (currentCollectionName == safeOldName) {
-                currentCollectionName = trimmedNewName
-                refresh()
+            scope.launch(Dispatchers.Main) {
+                if (currentCollectionName == safeOldName) {
+                    currentCollectionName = trimmedNewName
+                    refresh()
+                }
+                refreshCollectionList()
             }
             SnackBar.success("Коллекция переименована")
-            refreshCollectionList()
         } else {
             SnackBar.error("Ошибка переименования коллекции")
         }

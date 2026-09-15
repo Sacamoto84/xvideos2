@@ -167,15 +167,11 @@ object AppSettingsScreen : Screen {
                 }
             },
             onClearDownload = {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        File(AppPath.r_cache_download).apply {
-                            deleteRecursively()
-                            mkdirs()
-                        }
+                vm.downloadRed.deleteAll {
+                    scope.launch {
+                        refreshRedSizes()
+                        SnackBar.success("Папка Download очищена")
                     }
-                    refreshRedSizes()
-                    SnackBar.success("Папка Download очищена")
                 }
             },
             data = SettingsDataHolders(

@@ -36,7 +36,8 @@ fun parserListVideo(document: Document): List<ItemsX> {
             if (videoId <= 0L) continue
 
             val videoTitle = block.selectFirst("p.title a")?.text() ?: "No title"
-            val href = block.selectFirst("p.title a")?.attr("href") ?: "No link"
+            val href = block.selectFirst("p.title a")?.attr("href")?.trim().orEmpty()
+            if (href.isBlank() || href == "No link") continue
             val videoDuration = block.selectFirst("span.duration")?.text() ?: "No duration"
 
             // Пусто, а не "null": ItemsX.previewImage — non-null String со значением

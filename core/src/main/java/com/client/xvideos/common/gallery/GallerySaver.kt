@@ -39,7 +39,7 @@ object GallerySaver {
     /** Копирует уже скачанный файл в галерею. Fire-and-forget, снекбары внутри. */
     fun saveLocal(context: Context, src: File, fileName: String) {
         val appContext = context.applicationContext
-        val cleanFileName = File(fileName).name
+        val cleanFileName = File(fileName.trim()).name.trim()
         if (isUnsafeItemName(cleanFileName)) {
             Timber.w("GallerySaver: отклонён небезопасный fileName: $fileName")
             SnackBar.error("Недопустимое имя файла")
@@ -84,7 +84,7 @@ object GallerySaver {
         progress: MutableStateFlow<Float>? = null,
     ) {
         val appContext = context.applicationContext
-        val cleanFileName = File(fileName).name
+        val cleanFileName = File(fileName.trim()).name.trim()
         if (isUnsafeItemName(cleanFileName)) {
             Timber.w("GallerySaver: отклонён небезопасный fileName: $fileName")
             SnackBar.error("Недопустимое имя файла")

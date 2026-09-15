@@ -37,5 +37,5 @@ internal object GalleryTarget {
         return "$base/$DIR/"
     }
 
-    fun extensionOf(fileName: String): String = fileName.substringAfterLast('.', "").lowercase()
+    fun extensionOf(fileName: String): String = fileName.trim().substringAfterLast('.', "").lowercase()
 }
