@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.displayCutoutPadding
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -65,7 +64,7 @@ private val cardShape = RoundedCornerShape(8.dp)
 
 /** Общий фон-«карточка» секции фильтра: отступ сверху, скругление, фон, опц. рамка. */
 private fun Modifier.filterCard(
-    border: Boolean = false,
+    border: Boolean = true,
 ): Modifier {
     val palette = StyleGenresTags.Palette
     return this
@@ -91,7 +90,6 @@ fun AlbumListFilter(
 
     var showSaveDialog by remember { mutableStateOf(false) }
     var showSavedPresetsDialog by remember { mutableStateOf(false) }
-
     val palette = StyleGenresTags.Palette
 
     Column(
@@ -101,123 +99,22 @@ fun AlbumListFilter(
             .padding(horizontal = 8.dp)
             .verticalScroll(rememberScrollState())
     ) {
-
-        Row(
-            modifier = Modifier
-                .displayCutoutPadding()
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                "Filters",
-                color = palette.textPrimary,
-                style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                // Save button
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .border(1.dp, palette.border, RoundedCornerShape(6.dp))
-                        .background(palette.field)
-                        .clickable { showSaveDialog = true }
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Save,
-                        contentDescription = "Save filter preset",
-                        tint = palette.accent,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        "Save",
-                        color = palette.textPrimary,
-                        style = Theme.L.Type.button
-                    )
-                }
-
-                // Saved presets button
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .border(1.dp, palette.border, RoundedCornerShape(6.dp))
-                        .background(palette.field)
-                        .clickable { showSavedPresetsDialog = true }
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.BookmarkBorder,
-                        contentDescription = "Saved presets",
-                        tint = palette.selectedBorder,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        "Saved (${presets.size})",
-                        color = palette.textPrimary,
-                        style = Theme.L.Type.button
-                    )
-                }
-
-                // Close button (X)
-                IconButton(
-                    onClick = onClose,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close filters",
-                        tint = palette.textSecondary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
+        AlbumListFilterHeader(
+            presetsCount = presets.size,
+            onSaveClick = { showSaveDialog = true },
+            onSavedPresetsClick = { showSavedPresetsDialog = true },
+            onClose = onClose
+        )
 
         if (filter.searchQuery.isNotBlank()) {
-            // Режим поиска: сортировка по релевантности, менять нельзя — показываем только название запроса
-            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(palette.surface).padding(6.dp)) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .border(1.dp, palette.border, RoundedCornerShape(6.dp))
-                        .background(palette.field)
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Search:",
-                        color = palette.textSecondary,
-                        style = Theme.L.Type.rowSubtitle
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        filter.searchQuery,
-                        color = palette.textPrimary,
-                        style = Theme.L.Type.rowValue,
-                        maxLines = 1
-                    )
-                }
-            }
+            AlbumFilterSearchHeader(filter.searchQuery)
         } else {
-            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(palette.surface).padding(6.dp)) {
+            Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
                 AlbumFilterDisplay(filter.display, onRequestApply = { onFilterApply(filter.copy(display = it)) })
             }
         }
 
-        Box(modifier = Modifier.filterCard().padding(4.dp)) {
+        Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
             AlbumListFilterAlbumType(
                 when (filter.album_type) {
                     AlbumType.All -> 0
@@ -235,7 +132,7 @@ fun AlbumListFilter(
             }
         }
 
-        Box(modifier = Modifier.filterCard().padding(4.dp)) {
+        Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
             AlbumListFilterContentType(filter.content_id) { onFilterApply(filter.copy(content_id = it)) }
         }
 
@@ -282,6 +179,129 @@ fun AlbumListFilter(
             },
             onDismiss = { showSavedPresetsDialog = false }
         )
+    }
+}
+
+@Composable
+private fun AlbumListFilterHeader(
+    presetsCount: Int,
+    onSaveClick: () -> Unit,
+    onSavedPresetsClick: () -> Unit,
+    onClose: () -> Unit
+) {
+    val palette = StyleGenresTags.Palette
+    Row(
+        modifier = Modifier
+            .displayCutoutPadding()
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            "Filters",
+            color = palette.textPrimary,
+            style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            // Save button
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                    .background(palette.field)
+                    .clickable { onSaveClick() }
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Save,
+                    contentDescription = "Save filter preset",
+                    tint = palette.accent,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    "Save",
+                    color = palette.textPrimary,
+                    style = Theme.L.Type.button
+                )
+            }
+
+            // Saved presets button
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                    .background(palette.field)
+                    .clickable { onSavedPresetsClick() }
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.BookmarkBorder,
+                    contentDescription = "Saved presets",
+                    tint = palette.selectedBorder,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    "Saved ($presetsCount)",
+                    color = palette.textPrimary,
+                    style = Theme.L.Type.button
+                )
+            }
+
+            // Close button (X)
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close filters",
+                    tint = palette.textSecondary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AlbumFilterSearchHeader(
+    searchQuery: String
+) {
+    val palette = StyleGenresTags.Palette
+    Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                .background(palette.field)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Search:",
+                color = palette.textSecondary,
+                style = Theme.L.Type.rowSubtitle
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                searchQuery,
+                color = palette.textPrimary,
+                style = Theme.L.Type.rowValue,
+                maxLines = 1
+            )
+        }
     }
 }
 

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumListFilter
-import com.client.xvideos.l.model.FilterGenre
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 

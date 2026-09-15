@@ -8,11 +8,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -26,17 +24,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.albumFilterDisplay
 
-@Preview(showSystemUi = false, showBackground = false)
+@Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
 @Composable
 fun PreviewAlbumFilterDisplay() {
-    val select by remember { mutableStateOf("alpha_a") }
-    AlbumFilterDisplay(select, onRequestApply = {})
+    var select by remember { mutableStateOf("date_trending") }
+    AlbumFilterDisplay(select, onRequestApply = { select = it })
 }
 
 @Composable
@@ -56,7 +53,8 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // --- Первое поле (Primary) ---
         Box(
@@ -67,7 +65,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                 .border(1.dp, palette.border, RoundedCornerShape(6.dp))
                 .background(palette.field)
                 .clickable { showPrimaryDialog = true }
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = 8.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -90,8 +88,6 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
             }
         }
 
-        Spacer(Modifier.width(4.dp))
-
         // --- Второе поле (Secondary) ---
         Box(
             modifier = Modifier
@@ -101,7 +97,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                 .border(1.dp, palette.border, RoundedCornerShape(6.dp))
                 .background(palette.field)
                 .clickable { showSecondaryDialog = true }
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = 8.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -123,22 +119,6 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                 )
             }
         }
-
-        Spacer(Modifier.width(4.dp))
-
-        // --- Кнопка Apply ---
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(48.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .border(1.dp, palette.accent, RoundedCornerShape(6.dp))
-                .background(palette.accentDark)
-                .clickable(onClick = { onRequestApply(selected.request) }),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Apply", color = Color.White, style = Theme.L.Type.button.copy(color = Color.White))
-        }
     }
 
     // --- Диалог выбора Primary ---
@@ -150,8 +130,10 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
             itemTitle = { it },
             onDismiss = { showPrimaryDialog = false },
             onSelect = { primary ->
-                selected = list.first { it.primary == primary }
+                val newSelected = list.firstOrNull { it.primary == primary } ?: list.first()
+                selected = newSelected
                 showPrimaryDialog = false
+                onRequestApply(newSelected.request)
             }
         )
     }
@@ -168,6 +150,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
             onSelect = { item ->
                 selected = item
                 showSecondaryDialog = false
+                onRequestApply(item.request)
             }
         )
     }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -45,16 +44,13 @@ fun AlbumListFilterTags(
     onChange: (AlbumListFilter) -> Unit
 ) {
     val tagCountItems = filterTagStateCount.orEmpty()
-
     val tagsPlus = remember(filter.tagPlus) { filter.tagPlus.distinct() }
     val tagsMinus = remember(filter.tagMinus) { filter.tagMinus.distinct() }
-
     val tagsCorrect = rememberSelectableTags(tagCountItems, tagsPlus, tagsMinus)
     val tagCountByTerm = rememberTagCountIndex(tagCountItems)
     val palette = StyleGenresTags.Palette
 
     var showDialog by remember { mutableStateOf(false) }
-
     val totalSelected = tagsPlus.size + tagsMinus.size
     val selectorText = if (totalSelected == 0) "Any" else "$totalSelected selected"
 
@@ -63,126 +59,19 @@ fun AlbumListFilterTags(
             .fillMaxWidth()
             .background(palette.surface)
     ) {
-        // Trigger row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Tags",
-                style = Theme.L.Type.rowTitle.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = palette.textPrimary
-                )
-            )
+        TagsTriggerRow(
+            selectorText = selectorText,
+            totalSelected = totalSelected,
+            onClick = { showDialog = true }
+        )
 
-            Row(
-                modifier = Modifier
-                    .widthIn(min = 160.dp, max = 220.dp)
-                    .height(43.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.border, RoundedCornerShape(6.dp))
-                    .background(palette.field)
-                    .clickable { showDialog = true }
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = selectorText,
-                    modifier = Modifier.weight(1f, fill = false),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = Theme.L.Type.rowTitle.copy(
-                        color = if (totalSelected == 0) palette.textPrimary else palette.selectedText,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = palette.textSecondary
-                )
-            }
-        }
-
-        // Active selection chips in main filter card
         if (tagsPlus.isNotEmpty() || tagsMinus.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                tagsPlus.forEach { item ->
-                    Row(
-                        modifier = Modifier
-                            .then(StyleGenresTags.modifierSelectTextItem)
-                            .clickable {
-                                val nextPlus = tagsPlus.toMutableList().apply { remove(item) }
-                                onChange(filter.copy(tagPlus = nextPlus))
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = item,
-                            color = StyleGenresTags.colorSelectTextItem,
-                            style = Theme.L.Type.bodyLarge.copy(
-                                color = StyleGenresTags.colorSelectTextItem,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Remove",
-                            tint = palette.selectedBorder,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-
-                tagsMinus.forEach { item ->
-                    val s = buildAnnotatedString {
-                        withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) {
-                            append("NOT")
-                        }
-                        append(" $item")
-                    }
-                    Row(
-                        modifier = Modifier
-                            .then(StyleGenresTags.modifierExcludedTextItem)
-                            .clickable {
-                                val nextMinus = tagsMinus.toMutableList().apply { remove(item) }
-                                onChange(filter.copy(tagMinus = nextMinus))
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = s,
-                            color = StyleGenresTags.colorExcludedTextItem,
-                            style = Theme.L.Type.bodyLarge.copy(
-                                color = StyleGenresTags.colorExcludedTextItem,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Remove",
-                            tint = palette.excludedBorder,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
+            ActiveTagsChips(
+                tagsPlus = tagsPlus,
+                tagsMinus = tagsMinus,
+                onRemovePlus = { item -> onChange(filter.copy(tagPlus = tagsPlus - item)) },
+                onRemoveMinus = { item -> onChange(filter.copy(tagMinus = tagsMinus - item)) }
+            )
         }
     }
 
@@ -192,20 +81,139 @@ fun AlbumListFilterTags(
             tagsMinus = tagsMinus,
             selectableTags = tagsCorrect,
             tagCountByTerm = tagCountByTerm,
-            onAddPlus = { item ->
-                onChange(filter.copy(tagPlus = tagsPlus + item))
-            },
-            onAddMinus = { item ->
-                onChange(filter.copy(tagMinus = tagsMinus + item))
-            },
-            onRemovePlus = { item ->
-                onChange(filter.copy(tagPlus = tagsPlus - item))
-            },
-            onRemoveMinus = { item ->
-                onChange(filter.copy(tagMinus = tagsMinus - item))
-            },
+            onAddPlus = { item -> onChange(filter.copy(tagPlus = tagsPlus + item)) },
+            onAddMinus = { item -> onChange(filter.copy(tagMinus = tagsMinus + item)) },
+            onRemovePlus = { item -> onChange(filter.copy(tagPlus = tagsPlus - item)) },
+            onRemoveMinus = { item -> onChange(filter.copy(tagMinus = tagsMinus - item)) },
             onDismiss = { showDialog = false }
         )
+    }
+}
+
+@Composable
+private fun TagsTriggerRow(
+    selectorText: String,
+    totalSelected: Int,
+    onClick: () -> Unit
+) {
+    val palette = StyleGenresTags.Palette
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Tags",
+            style = Theme.L.Type.rowTitle.copy(
+                fontWeight = FontWeight.Bold,
+                color = palette.textPrimary
+            )
+        )
+
+        Row(
+            modifier = Modifier
+                .widthIn(min = 160.dp, max = 220.dp)
+                .height(43.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                .background(palette.field)
+                .clickable { onClick() }
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = selectorText,
+                modifier = Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = Theme.L.Type.rowTitle.copy(
+                    color = if (totalSelected == 0) palette.textPrimary else palette.selectedText,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                tint = palette.textSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActiveTagsChips(
+    tagsPlus: List<String>,
+    tagsMinus: List<String>,
+    onRemovePlus: (String) -> Unit,
+    onRemoveMinus: (String) -> Unit
+) {
+    val palette = StyleGenresTags.Palette
+    Spacer(modifier = Modifier.height(6.dp))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        tagsPlus.forEach { item ->
+            Row(
+                modifier = Modifier
+                    .then(StyleGenresTags.modifierSelectTextItem)
+                    .clickable { onRemovePlus(item) },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = item,
+                    color = StyleGenresTags.colorSelectTextItem,
+                    style = Theme.L.Type.bodyLarge.copy(
+                        color = StyleGenresTags.colorSelectTextItem,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remove",
+                    tint = palette.selectedBorder,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+
+        tagsMinus.forEach { item ->
+            val s = buildAnnotatedString {
+                withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) {
+                    append("NOT")
+                }
+                append(" $item")
+            }
+            Row(
+                modifier = Modifier
+                    .then(StyleGenresTags.modifierExcludedTextItem)
+                    .clickable { onRemoveMinus(item) },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = s,
+                    color = StyleGenresTags.colorExcludedTextItem,
+                    style = Theme.L.Type.bodyLarge.copy(
+                        color = StyleGenresTags.colorExcludedTextItem,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remove",
+                    tint = palette.excludedBorder,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
     }
 }
 

@@ -41,6 +41,7 @@
 | [Проход 33 (DefaultHttpClient отмена Call, редиректы KDownloader, парсинг тегов и DOM X, ошибка L, превью R)](CODE_REVIEW_2026-09-14_v12.md) | 14.09.2026 | `master` (`6c5174f`) | закрыт полностью |
 | [Проход 34 (AndroidConnectivityObserver хэндовер сети, UrlImage http/albumName, безопасный виброотклик, докачка KDownloader, DOM X)](CODE_REVIEW_2026-09-14_v13.md) | 14.09.2026 | `master` (`a03105e`) | закрыт полностью |
 | [Проход 35 (MediaDownloadWorker регистр User-Agent, CoilImageLoaderFactory синхронизация, R_Screen_Saved_LikesTab drop)](CODE_REVIEW_2026-09-14_v14.md) | 14.09.2026 | `master` | закрыт полностью |
+| [Проход 36 (GlobalStateTest & thread safety, XlrChunkedCrypto GC/stream allocations, backup password wipe, AlbumFilter safe display & Compose modularization)](CODE_REVIEW_2026-09-15_v15.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

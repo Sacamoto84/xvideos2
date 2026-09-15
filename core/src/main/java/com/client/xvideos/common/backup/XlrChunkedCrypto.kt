@@ -1,6 +1,5 @@
 package com.client.xvideos.common.backup
 
-import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.EOFException
@@ -28,11 +27,13 @@ enum class XlrBackupType {
     UNSUPPORTED
 }
 
-class XlrInvalidPasswordException(message: String = "Неверный пароль для расшифровки бэкапа") :
-    GeneralSecurityException(message)
+class XlrInvalidPasswordException(
+    message: String = "Неверный пароль для расшифровки бэкапа",
+    cause: Throwable? = null
+) : GeneralSecurityException(message, cause)
 
-class XlrCorruptedBackupException(message: String) :
-    IOException(message)
+class XlrCorruptedBackupException(message: String, cause: Throwable? = null) :
+    IOException(message, cause)
 
 /**
  * Потоковое чанковое шифрование и дешифрование бэкапов.
@@ -66,28 +67,25 @@ object XlrChunkedCrypto {
     const val GCM_TAG_LENGTH_BITS = 128
     const val GCM_TAG_LENGTH_BYTES = GCM_TAG_LENGTH_BITS / 8
 
+    const val CIPHER_ALGORITHM = "AES/GCM/NoPadding"
     private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
     private const val PBKDF2_ITERATIONS = 120_000
     private const val KEY_BITS = 256
-    private const val CIPHER_ALGORITHM = "AES/GCM/NoPadding"
+
+    private fun matchesMagic(bytes: ByteArray, magic: ByteArray): Boolean {
+        if (bytes.size < magic.size) return false
+        for (i in magic.indices) {
+            if (bytes[i] != magic[i]) return false
+        }
+        return true
+    }
 
     fun detectType(firstBytes: ByteArray): XlrBackupType {
-        if (firstBytes.size < 4) return XlrBackupType.UNSUPPORTED
-        if (firstBytes[0] == MAGIC_BYTES[0] &&
-            firstBytes[1] == MAGIC_BYTES[1] &&
-            firstBytes[2] == MAGIC_BYTES[2] &&
-            firstBytes[3] == MAGIC_BYTES[3]
-        ) {
-            return XlrBackupType.ENCRYPTED_XLR
+        return when {
+            matchesMagic(firstBytes, MAGIC_BYTES) -> XlrBackupType.ENCRYPTED_XLR
+            matchesMagic(firstBytes, ZIP_MAGIC_BYTES) -> XlrBackupType.LEGACY_ZIP
+            else -> XlrBackupType.UNSUPPORTED
         }
-        if (firstBytes[0] == ZIP_MAGIC_BYTES[0] &&
-            firstBytes[1] == ZIP_MAGIC_BYTES[1] &&
-            firstBytes[2] == ZIP_MAGIC_BYTES[2] &&
-            firstBytes[3] == ZIP_MAGIC_BYTES[3]
-        ) {
-            return XlrBackupType.LEGACY_ZIP
-        }
-        return XlrBackupType.UNSUPPORTED
     }
 
     fun deriveKey(password: CharArray, salt: ByteArray): SecretKey {
@@ -118,14 +116,15 @@ object XlrChunkedCrypto {
 }
 
 /**
- * Шифрующий поток вывода. Записывает заголовок XLRB и шифрует данные порциями по 64 КБ с помощью AES-256-GCM.
+ * Зашифровывающий поток вывода. Принимает данные произвольными блоками,
+ * накапливает по 64 КБ, зашифровывает в режиме AES-GCM и пишет во внутренний поток.
  */
 class XlrEncryptedOutputStream(
-    private val target: OutputStream,
+    private val destination: OutputStream,
     password: CharArray
 ) : OutputStream() {
 
-    private val dataOutput = DataOutputStream(target)
+    private val dataOutput = DataOutputStream(destination)
     private val key: SecretKey
     private val noncePrefix = ByteArray(XlrChunkedCrypto.NONCE_PREFIX_LENGTH)
     private val buffer = ByteArray(XlrChunkedCrypto.CHUNK_SIZE)
@@ -149,7 +148,13 @@ class XlrEncryptedOutputStream(
     }
 
     override fun write(b: Int) {
-        write(byteArrayOf(b.toByte()), 0, 1)
+        check(!closed) { "Stream is closed" }
+        buffer[bufferOffset++] = b.toByte()
+        if (bufferOffset == XlrChunkedCrypto.CHUNK_SIZE) {
+            pendingChunk?.let { writeEncryptedChunk(it, isLast = false) }
+            pendingChunk = buffer.copyOf()
+            bufferOffset = 0
+        }
     }
 
     override fun write(b: ByteArray, off: Int, len: Int) {
@@ -211,7 +216,7 @@ class XlrEncryptedOutputStream(
         val nonce = XlrChunkedCrypto.buildNonce(noncePrefix, chunkIndex)
         val aad = XlrChunkedCrypto.buildAad(chunkIndex, isLast)
 
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val cipher = Cipher.getInstance(XlrChunkedCrypto.CIPHER_ALGORITHM)
         cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(XlrChunkedCrypto.GCM_TAG_LENGTH_BITS, nonce))
         cipher.updateAAD(aad)
         val ciphertext = cipher.doFinal(data)
@@ -263,9 +268,13 @@ class XlrEncryptedInputStream(
     }
 
     override fun read(): Int {
-        val one = ByteArray(1)
-        val readCount = read(one, 0, 1)
-        return if (readCount == -1) -1 else (one[0].toInt() and 0xFF)
+        check(!closed) { "Stream is closed" }
+        while (decryptedChunk == null || decryptedOffset >= decryptedChunk!!.size) {
+            if (wasLastChunkRead) return -1
+            readNextChunk()
+        }
+        val chunk = decryptedChunk ?: return -1
+        return chunk[decryptedOffset++].toInt() and 0xFF
     }
 
     override fun read(b: ByteArray, off: Int, len: Int): Int {
@@ -290,14 +299,14 @@ class XlrEncryptedInputStream(
         val isLastByte = try {
             dataInput.readByte()
         } catch (e: EOFException) {
-            throw XlrCorruptedBackupException("Архив повреждён: поток оборван до завершающего блока")
+            throw XlrCorruptedBackupException("Архив повреждён: поток оборван до завершающего блока", e)
         }
         val isLast = (isLastByte == 1.toByte())
 
         val cipherLength = try {
             dataInput.readInt()
         } catch (e: EOFException) {
-            throw XlrCorruptedBackupException("Архив повреждён: не удалось прочитать длину чанка")
+            throw XlrCorruptedBackupException("Архив повреждён: не удалось прочитать длину чанка", e)
         }
 
         if (cipherLength < XlrChunkedCrypto.GCM_TAG_LENGTH_BYTES || cipherLength > XlrChunkedCrypto.CHUNK_SIZE + XlrChunkedCrypto.GCM_TAG_LENGTH_BYTES + 1024) {
@@ -308,13 +317,13 @@ class XlrEncryptedInputStream(
         try {
             dataInput.readFully(ciphertext)
         } catch (e: EOFException) {
-            throw XlrCorruptedBackupException("Архив повреждён: неполный блок шифротекста")
+            throw XlrCorruptedBackupException("Архив повреждён: неполный блок шифротекста", e)
         }
 
         val nonce = XlrChunkedCrypto.buildNonce(noncePrefix, chunkIndex)
         val aad = XlrChunkedCrypto.buildAad(chunkIndex, isLast)
 
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val cipher = Cipher.getInstance(XlrChunkedCrypto.CIPHER_ALGORITHM)
         try {
             cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(XlrChunkedCrypto.GCM_TAG_LENGTH_BITS, nonce))
             cipher.updateAAD(aad)
@@ -324,12 +333,12 @@ class XlrEncryptedInputStream(
             chunkIndex++
         } catch (e: AEADBadTagException) {
             if (chunkIndex == 0L) {
-                throw XlrInvalidPasswordException()
+                throw XlrInvalidPasswordException(cause = e)
             } else {
-                throw XlrCorruptedBackupException("Ошибка целостности данных: несовпадение аутентификационного тега в блоке $chunkIndex")
+                throw XlrCorruptedBackupException("Ошибка целостности данных: несовпадение аутентификационного тега в блоке $chunkIndex", e)
             }
         } catch (e: GeneralSecurityException) {
-            throw XlrCorruptedBackupException("Криптографическая ошибка: ${e.message}")
+            throw XlrCorruptedBackupException("Криптографическая ошибка: ${e.message}", e)
         }
     }
 

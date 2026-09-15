@@ -15,6 +15,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -111,6 +112,15 @@ internal fun BackupSettingsSection(
         refreshBackupItems()
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            createPassword?.fill('\u0000')
+            createPassword = null
+            restorePassword?.fill('\u0000')
+            restorePassword = null
+        }
+    }
+
     val createBackupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri ->
@@ -174,6 +184,7 @@ internal fun BackupSettingsSection(
                     result
                         .onSuccess { items ->
                             restoreUri = uri
+                            restorePassword?.fill('\u0000')
                             restorePassword = null
                             restoreItems = items
                             selectedRestorePaths = initialSectionSelection(items)
@@ -181,6 +192,7 @@ internal fun BackupSettingsSection(
                         }
                         .onFailure { error ->
                             restoreUri = null
+                            restorePassword?.fill('\u0000')
                             restorePassword = null
                             restoreItems = emptyList()
                             selectedRestorePaths = emptySet()
@@ -191,6 +203,7 @@ internal fun BackupSettingsSection(
                 XlrBackupType.UNSUPPORTED -> {
                     isWorking = false
                     restoreUri = null
+                    restorePassword?.fill('\u0000')
                     restorePassword = null
                     restoreItems = emptyList()
                     selectedRestorePaths = emptySet()
@@ -352,6 +365,8 @@ internal fun BackupSettingsSection(
                                     val result = withContext(Dispatchers.IO) {
                                         XlrBackupManager.restoreBackup(context, uri, selectedRestorePaths, restorePassword)
                                     }
+                                    restorePassword?.fill('\u0000')
+                                    restorePassword = null
                                     result
                                         .onSuccess { report ->
                                             refreshBackupItems()
@@ -441,7 +456,10 @@ internal fun BackupSettingsSection(
                 restorePasswordError = null
             },
             onConfirm = { password ->
-                val uri = pendingRestoreUri ?: return@BackupRestorePasswordDialog
+                val uri = pendingRestoreUri ?: run {
+                    password.fill('\u0000')
+                    return@BackupRestorePasswordDialog
+                }
                 scope.launch(Dispatchers.Main) {
                     isWorking = true
                     val result = withContext(Dispatchers.IO) {
@@ -452,12 +470,14 @@ internal fun BackupSettingsSection(
                             showRestorePasswordDialog = false
                             restorePasswordError = null
                             restoreUri = uri
+                            restorePassword?.fill('\u0000')
                             restorePassword = password
                             restoreItems = items
                             selectedRestorePaths = initialSectionSelection(items)
                             SnackBar.success("Архив успешно расшифрован: ${items.size} папок")
                         }
                         .onFailure { error ->
+                            password.fill('\u0000')
                             val message = if (error is XlrInvalidPasswordException || error.cause is XlrInvalidPasswordException) {
                                 "Неверный пароль для расшифровки бэкапа"
                             } else {

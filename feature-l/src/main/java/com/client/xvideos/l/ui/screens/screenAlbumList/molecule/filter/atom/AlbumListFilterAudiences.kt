@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.theme.Theme
@@ -143,4 +144,14 @@ internal fun fallbackAudiences(): List<Audience> {
             url = it.url
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
+@Composable
+fun AlbumListFilterAudiencesPreview() {
+    var filter by remember { mutableStateOf(AlbumListFilter(audienceIds = "+2+3")) }
+    AlbumListFilterAudiences(
+        filter = filter,
+        onChange = { filter = it }
+    )
 }
