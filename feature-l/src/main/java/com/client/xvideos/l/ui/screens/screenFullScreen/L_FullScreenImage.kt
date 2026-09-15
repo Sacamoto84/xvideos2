@@ -146,7 +146,7 @@ class L_FullScreenImage(
         val verticalPager = Settings.l_fullscreen_vertical_pager.field.collectAsStateWithLifecycle().value
         val videoMuted = Settings.l_fullscreen_video_muted.field.collectAsStateWithLifecycle().value
 
-        val initialIndex = remember { filteredPic.indexOf(item).coerceIn(0, filteredPic.lastIndex) }
+        val initialIndex = remember(filteredPic, item) { resolveInitialIndex(filteredPic, item) }
 
         val pagerState = rememberPagerState( initialIndex, pageCount = { filteredPic.size } )
 
@@ -174,7 +174,9 @@ class L_FullScreenImage(
         // scrollToItem, а не animateScrollToItem: анимация ленты миниатюр шла
         // одновременно со снапом пейджера и на слабом телефоне отъедала кадры.
         LaunchedEffect(currentIndex) {
-            lazyRowState.scrollToItem((currentIndex - 2).coerceIn(0, filteredPic.size - 1))
+            if (filteredPic.isNotEmpty()) {
+                lazyRowState.scrollToItem(resolveScrollIndex(currentIndex, filteredPic.lastIndex))
+            }
         }
 
         Box(
@@ -340,3 +342,11 @@ class L_FullScreenImage(
         }
     }
 }
+
+private fun resolveInitialIndex(items: List<PicsDetails>, target: PicsDetails): Int {
+    if (items.isEmpty()) return 0
+    return items.indexOf(target).coerceIn(0, items.lastIndex)
+}
+
+private fun resolveScrollIndex(currentIndex: Int, maxIndex: Int): Int =
+    (currentIndex - 2).coerceIn(0, maxIndex.coerceAtLeast(0))

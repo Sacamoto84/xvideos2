@@ -63,19 +63,19 @@ fun writeLSavedLikeMetadata(file: File, metadata: LSavedLikeMetadata) {
 
 fun LSavedLikeMetadata.toPicsDetails(folder: File): PicsDetails? {
     val mediaFile = File(folder, mediaFileName)
-        .takeIf { it.exists() }
+        .takeIf { it.exists() && it.length() > 0L }
 
     val savedPreviews = previewFiles
         ?.mapNotNull { preview ->
             File(folder, preview.fileName)
-                .takeIf { it.exists() }
+                .takeIf { it.exists() && it.length() > 0L }
                 ?.let { preview to it }
         }
         ?: emptyList()
 
     val oldPreviewFile = previewFileName
         ?.let { File(folder, it) }
-        ?.takeIf { it.exists() }
+        ?.takeIf { it.exists() && it.length() > 0L }
 
     val largestPreviewFile = savedPreviews
         .maxByOrNull { (preview, _) -> preview.width * preview.height }

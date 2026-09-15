@@ -53,4 +53,15 @@ class LFullScreenPayloadTest {
         assertTrue(LFullScreenPayload.get(keys.first()).isEmpty())
         assertTrue(LFullScreenPayload.get(keys.last()).isNotEmpty())
     }
+
+    @Test
+    fun `вычисление initialIndex безопасно при пустом списке картинок`() {
+        val emptyList = emptyList<PicsDetails>()
+        val dummyItem = picture("https://cdn/dummy.jpg")
+
+        val initialIndex = if (emptyList.isEmpty()) 0
+        else emptyList.indexOf(dummyItem).coerceIn(0, emptyList.lastIndex)
+
+        assertEquals(0, initialIndex)
+    }
 }

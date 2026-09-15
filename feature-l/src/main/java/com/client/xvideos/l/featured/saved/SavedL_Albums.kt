@@ -54,12 +54,16 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
             albumDb.insert(item.id, item)
                 .onSuccess {
+                    runCatching {
+                        db.lAlbumPictureCache.put(albumId.toString(), AppJson.encodeToString(picsDetails))
+                    }.onFailure {
+                        Timber.e(it, "SavedL_Albums: ошибка кэширования картинок альбома $albumId")
+                    }
                     withContext(Dispatchers.Main) {
                         list.removeAll { it.id == item.id }
                         list.add(item)
                     }
                     SnackBar.info("Альбом сохранен")
-                    db.lAlbumPictureCache.put(albumId.toString(), AppJson.encodeToString(picsDetails))
                 }
                 .onFailure { e ->
                     SnackBar.error("Ошибка добавления группы ${e.message}")

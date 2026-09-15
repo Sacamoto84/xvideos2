@@ -434,29 +434,34 @@ object XlrBackupManager {
     private fun openZipInputStream(context: Context, uri: Uri, password: CharArray?): ZipInputStream {
         val rawInput = context.contentResolver.openInputStream(uri)
             ?: error("Cannot open backup file")
-        val buffered = BufferedInputStream(rawInput)
-        buffered.mark(16)
-        val header = ByteArray(4)
-        val read = buffered.read(header)
-        buffered.reset()
-        if (read < 4) error("Backup file is empty or corrupted")
+        try {
+            val buffered = BufferedInputStream(rawInput)
+            buffered.mark(16)
+            val header = ByteArray(4)
+            val read = buffered.read(header)
+            buffered.reset()
+            if (read < 4) error("Backup file is empty or corrupted")
 
-        val type = XlrChunkedCrypto.detectType(header)
-        val decodedStream: InputStream = when (type) {
-            XlrBackupType.ENCRYPTED_XLR -> {
-                if (password == null || password.isEmpty()) {
-                    throw XlrInvalidPasswordException("Архив зашифрован. Требуется ввод пароля.")
+            val type = XlrChunkedCrypto.detectType(header)
+            val decodedStream: InputStream = when (type) {
+                XlrBackupType.ENCRYPTED_XLR -> {
+                    if (password == null || password.isEmpty()) {
+                        throw XlrInvalidPasswordException("Архив зашифрован. Требуется ввод пароля.")
+                    }
+                    XlrEncryptedInputStream(buffered, password)
                 }
-                XlrEncryptedInputStream(buffered, password)
+                XlrBackupType.LEGACY_ZIP -> {
+                    buffered
+                }
+                XlrBackupType.UNSUPPORTED -> {
+                    throw XlrCorruptedBackupException("Неподдерживаемый формат файла бэкапа")
+                }
             }
-            XlrBackupType.LEGACY_ZIP -> {
-                buffered
-            }
-            XlrBackupType.UNSUPPORTED -> {
-                throw XlrCorruptedBackupException("Неподдерживаемый формат файла бэкапа")
-            }
+            return ZipInputStream(BufferedInputStream(decodedStream))
+        } catch (e: Throwable) {
+            runCatching { rawInput.close() }
+            throw e
         }
-        return ZipInputStream(BufferedInputStream(decodedStream))
     }
 
     private fun readEntrySize(zip: ZipInputStream, buffer: ByteArray): Long {

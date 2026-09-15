@@ -344,4 +344,24 @@ class CalculatorStateTest {
 
         assertTrue("После onClear новый PIN 5678 должен подойти", unlocked2)
     }
+
+    @Test
+    fun `onUnlockFailed вызывается ровно один раз при неудачной попытке ввода PIN`() = runTest {
+        val state = CalculatorState()
+        state.onDigit("9", noOpHaptic)
+        state.onDigit("9", noOpHaptic)
+        state.onDigit("9", noOpHaptic)
+        state.onDigit("9", noOpHaptic)
+
+        var failedAttempts = 0
+        state.onEquals(
+            scope = this,
+            haptic = noOpHaptic,
+            onUnlock = { false },
+            onUnlockFailed = { failedAttempts++ }
+        )
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, failedAttempts)
+    }
 }

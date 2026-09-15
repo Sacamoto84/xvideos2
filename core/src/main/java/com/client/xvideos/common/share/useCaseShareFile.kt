@@ -17,9 +17,9 @@ import java.io.File
 fun useCaseShareFile(context: Context, file: File): Boolean {
     Timber.i("!!! useCaseShareFile: ${file.absolutePath}")
 
-    if (!file.exists()) {
-        Timber.w("useCaseShareFile -> файл не найден: ${file.path}")
-        SnackBar.error("Файл не найден")
+    if (!file.exists() || file.length() == 0L) {
+        Timber.w("useCaseShareFile -> файл не найден или пуст: ${file.path}")
+        SnackBar.error("Файл повреждён или отсутствует")
         return false
     }
 

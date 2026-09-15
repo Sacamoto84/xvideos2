@@ -105,6 +105,13 @@ fun AlbumFilterSaveDialog(
                         .padding(horizontal = 10.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
+                    if (presetName.isEmpty()) {
+                        Text(
+                            text = "Preset name",
+                            color = palette.textSecondary.copy(alpha = 0.5f),
+                            style = Theme.L.Type.rowValue
+                        )
+                    }
                     BasicTextField(
                         value = presetName,
                         onValueChange = { presetName = it },

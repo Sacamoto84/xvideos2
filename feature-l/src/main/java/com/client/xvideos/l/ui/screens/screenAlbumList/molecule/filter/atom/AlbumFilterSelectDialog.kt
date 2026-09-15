@@ -109,7 +109,7 @@ fun <T> AlbumFilterSelectDialog(
                         .background(palette.panelBlack)
                         .padding(vertical = 4.dp)
                 ) {
-                    items(items) { item ->
+                    items(items, key = { itemTitle(it) }) { item ->
                         val isSelected = (item == selectedItem)
                         val borderColor = if (isSelected) palette.selectedBorder else Color.Transparent
                         val backgroundColor = if (isSelected) palette.selected else Color.Transparent

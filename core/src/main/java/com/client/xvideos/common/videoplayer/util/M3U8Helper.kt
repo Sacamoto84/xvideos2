@@ -1,13 +1,18 @@
 package com.client.xvideos.common.videoplayer.util
 
+import com.client.xvideos.common.net.doh.AppDns
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.net.URI
 
 data class VideoQuality(val bitrate: Double, val resolution: String, val url: String)
 data class AudioTrack(val language: String, val name: String, val groupId: String, val url: String, val isDefault: Boolean)
@@ -18,20 +23,49 @@ data class M3U8Data(
     val subtitleTracks: List<SubtitleTrack>
 )
 
+private val BANDWIDTH_REGEX = Regex("BANDWIDTH=(\\d+)")
+private val RESOLUTION_REGEX = Regex("RESOLUTION=(\\d+x\\d+)")
+private val LANGUAGE_REGEX = Regex("LANGUAGE=\"(\\w+)\"")
+private val NAME_REGEX = Regex("NAME=\"(.*?)\"")
+private val GROUP_ID_REGEX = Regex("GROUP-ID=\"(.*?)\"")
+private val URI_REGEX = Regex("URI=\"(.*?)\"")
+private val DEFAULT_REGEX = Regex("DEFAULT=(YES|NO)")
+
+private val sharedM3U8Client: HttpClient by lazy {
+    HttpClient(OkHttp) {
+        engine {
+            config {
+                dns(AppDns)
+            }
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 30_000
+            connectTimeoutMillis = 15_000
+            socketTimeoutMillis = 30_000
+        }
+    }
+}
+
 class M3U8Helper {
     suspend fun fetchM3U8Data(url: String, requestHeaders: Map<String, String>? = null): M3U8Data {
         val m3u8Content = withContext(Dispatchers.IO) {
-            val client = HttpClient(OkHttp) {
-                defaultRequest {
+            try {
+                val response = sharedM3U8Client.get(url) {
                     (requestHeaders ?: redgifsRequestHeaders()).forEach { (name, value) ->
                         headers.append(name, value)
                     }
                 }
-            }
-            try {
-                client.get(url).bodyAsText()
-            } finally {
-                client.close()
+                if (!response.status.isSuccess()) {
+                    Timber.w("fetchM3U8Data: HTTP error ${response.status.value} for $url")
+                    ""
+                } else {
+                    response.bodyAsText()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "fetchM3U8Data failed for $url")
+                ""
             }
         }
         return parseM3U8Content(m3u8Content, url)
@@ -48,7 +82,10 @@ class M3U8Helper {
         )
     }
 
-    private fun parseM3U8Content(m3u8Content: String, baseUrl: String): M3U8Data {
+    internal fun parseM3U8Content(m3u8Content: String, baseUrl: String): M3U8Data {
+        if (m3u8Content.isBlank()) {
+            return M3U8Data(emptyList(), emptyList(), emptyList())
+        }
         val videoQualities = mutableListOf<VideoQuality>()
         val audioTracks = mutableListOf<AudioTrack>()
         val subtitleTracks = mutableListOf<SubtitleTrack>()
@@ -68,38 +105,47 @@ class M3U8Helper {
                     extractSubtitleTrack(line, baseUrl)?.let { subtitleTracks.add(it) }
             }
         }
-        return M3U8Data(videoQualities.sortedBy { it.bitrate }, audioTracks.distinctBy { it.name }, subtitleTracks.distinctBy { it.name })
+        return M3U8Data(
+            videoQualities.sortedBy { it.bitrate },
+            audioTracks.distinctBy { it.name },
+            subtitleTracks.distinctBy { it.name }
+        )
+    }
+
+    private fun resolveUrl(baseUrl: String, relativeOrAbsolute: String): String {
+        val trimmed = relativeOrAbsolute.trim()
+        return try {
+            URI(baseUrl).resolve(trimmed).toString()
+        } catch (_: Exception) {
+            val baseUri = baseUrl.substringBeforeLast("/")
+            if (trimmed.startsWith("http")) trimmed else "$baseUri/$trimmed"
+        }
     }
 
     private fun extractQuality(infoLine: String, urlLine: String, baseUrl: String): VideoQuality? {
-        val bandwidthMatch = Regex("BANDWIDTH=(\\d+)").find(infoLine)
-        val resolutionMatch = Regex("RESOLUTION=(\\d+x\\d+)").find(infoLine)
-        val bitrate = bandwidthMatch?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
-        val resolution = resolutionMatch?.groupValues?.get(1)?.let { formatResolution(it) } ?: return null
-        val baseUri = baseUrl.substringBeforeLast("/")
-        val fullUrl = if (urlLine.startsWith("http")) urlLine else "$baseUri/${urlLine.trim()}"
+        val bitrate = BANDWIDTH_REGEX.find(infoLine)?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
+        val resolution = RESOLUTION_REGEX.find(infoLine)?.groupValues?.get(1)?.let { formatResolution(it) } ?: return null
+        val fullUrl = resolveUrl(baseUrl, urlLine)
         return VideoQuality(bitrate, resolution, fullUrl)
     }
 
     private fun extractAudioTrack(infoLine: String, baseUrl: String): AudioTrack? {
-        val language = Regex("LANGUAGE=\"(\\w+)\"").find(infoLine)?.groupValues?.get(1) ?: return null
-        val name = Regex("NAME=\"(.*?)\"").find(infoLine)?.groupValues?.get(1) ?: "Unknown"
-        val groupId = Regex("GROUP-ID=\"(.*?)\"").find(infoLine)?.groupValues?.get(1) ?: "default"
-        val uri = Regex("URI=\"(.*?)\"").find(infoLine)?.groupValues?.get(1) ?: return null
-        val isDefault = Regex("DEFAULT=(YES|NO)").find(infoLine)?.groupValues?.get(1)?.equals("YES", true) ?: false
-        val baseUri = baseUrl.substringBeforeLast("/")
-        val fullUrl = if (uri.startsWith("http")) uri else "$baseUri/${uri.trim()}"
+        val language = LANGUAGE_REGEX.find(infoLine)?.groupValues?.get(1) ?: return null
+        val name = NAME_REGEX.find(infoLine)?.groupValues?.get(1) ?: "Unknown"
+        val groupId = GROUP_ID_REGEX.find(infoLine)?.groupValues?.get(1) ?: "default"
+        val uri = URI_REGEX.find(infoLine)?.groupValues?.get(1) ?: return null
+        val isDefault = DEFAULT_REGEX.find(infoLine)?.groupValues?.get(1)?.equals("YES", true) ?: false
+        val fullUrl = resolveUrl(baseUrl, uri)
         return AudioTrack(language, name, groupId, fullUrl, isDefault)
     }
 
     private fun extractSubtitleTrack(infoLine: String, baseUrl: String): SubtitleTrack? {
-        val language = Regex("LANGUAGE=\"(\\w+)\"").find(infoLine)?.groupValues?.get(1) ?: return null
-        val name = Regex("NAME=\"(.*?)\"").find(infoLine)?.groupValues?.get(1) ?: "Unknown"
-        val groupId = Regex("GROUP-ID=\"(.*?)\"").find(infoLine)?.groupValues?.get(1) ?: "default"
-        val uri = Regex("URI=\"(.*?)\"").find(infoLine)?.groupValues?.get(1) ?: return null
-        val isDefault = Regex("DEFAULT=(YES|NO)").find(infoLine)?.groupValues?.get(1)?.equals("YES", true) ?: false
-        val baseUri = baseUrl.substringBeforeLast("/")
-        val fullUrl = if (uri.startsWith("http")) uri else "$baseUri/${uri.trim()}"
+        val language = LANGUAGE_REGEX.find(infoLine)?.groupValues?.get(1) ?: return null
+        val name = NAME_REGEX.find(infoLine)?.groupValues?.get(1) ?: "Unknown"
+        val groupId = GROUP_ID_REGEX.find(infoLine)?.groupValues?.get(1) ?: "default"
+        val uri = URI_REGEX.find(infoLine)?.groupValues?.get(1) ?: return null
+        val isDefault = DEFAULT_REGEX.find(infoLine)?.groupValues?.get(1)?.equals("YES", true) ?: false
+        val fullUrl = resolveUrl(baseUrl, uri)
         return SubtitleTrack(language, name, groupId, fullUrl, isDefault)
     }
 

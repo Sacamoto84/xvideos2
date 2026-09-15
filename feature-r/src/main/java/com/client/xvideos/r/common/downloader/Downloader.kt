@@ -110,8 +110,12 @@ class Downloader @Inject constructor(
 
                     SnackBar.success("Скачивание завершено")
                     scope.launch(Dispatchers.IO) {
-                        val text = AppJson.encodeToString(item)
-                        File(p, "${item.id}.info").writeTextAtomically(text)
+                        runCatching {
+                            val text = AppJson.encodeToString(item)
+                            File(p, "${item.id}.info").writeTextAtomically(text)
+                        }.onFailure {
+                            Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
+                        }
                         withContext(Dispatchers.Main) {
                             onComplete()
                         }
@@ -156,7 +160,7 @@ class Downloader @Inject constructor(
         var skippedNoVideoUrl = 0
         var skippedNoPreviewUrl = 0
 
-        if (!previewFile.exists()) {
+        if (!previewFile.exists() || previewFile.length() == 0L) {
             val previewUrl = item.previewUrl()
             if (previewUrl == null) {
                 skippedNoPreviewUrl++
@@ -177,7 +181,7 @@ class Downloader @Inject constructor(
             }
         }
 
-        if (!videoFile.exists()) {
+        if (!videoFile.exists() || videoFile.length() == 0L) {
             val videoUrl = item.downloadVideoUrl()
             if (videoUrl == null) {
                 skippedNoVideoUrl++
@@ -199,7 +203,7 @@ class Downloader @Inject constructor(
                         onEvent("R Download: video готов ${item.id}")
                         scope.launch(Dispatchers.IO) {
                             val infoFile = File(p, "${item.id}.info")
-                            if (!infoFile.exists()) {
+                            if (!infoFile.exists() || infoFile.length() == 0L) {
                                 runCatching {
                                     infoFile.writeTextAtomically(AppJson.encodeToString(item))
                                 }.onFailure {
@@ -252,7 +256,7 @@ class Downloader @Inject constructor(
         return try {
             requireInside(baseDir, userDir)
             requireInside(userDir, file)
-            file.exists()
+            file.exists() && file.length() > 0L
         } catch (e: Exception) {
             Timber.w(e, "Downloader.findVideoInDownload -> Попытка выхода за пределы r_cache_download")
             false

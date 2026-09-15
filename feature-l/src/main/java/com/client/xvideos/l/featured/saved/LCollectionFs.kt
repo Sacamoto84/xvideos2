@@ -131,7 +131,8 @@ private fun lResolveCollectionPreviewUrl(collectionFolder: File): String? {
                 it.isFile &&
                     it.name != L_METADATA_FILE_NAME &&
                     !it.isPartialDownload() &&
-                    !it.absolutePath.isLVideoFileUrl()
+                    !it.absolutePath.isLVideoFileUrl() &&
+                    it.length() > 0L
             }
         if (fallback != null) {
             return fallback.absolutePath
@@ -145,20 +146,20 @@ private fun lResolveItemPreviewUrl(folder: File, metadata: LSavedLikeMetadata): 
         ?.sortedByDescending { it.width * it.height }
         ?.forEach { preview ->
             val candidate = File(folder, preview.fileName)
-            if (candidate.exists() && !candidate.absolutePath.isLVideoFileUrl()) {
+            if (candidate.exists() && candidate.length() > 0L && !candidate.absolutePath.isLVideoFileUrl()) {
                 return candidate.absolutePath
             }
         }
 
     metadata.previewFileName?.let { previewFileName ->
         val candidate = File(folder, previewFileName)
-        if (candidate.exists() && !candidate.absolutePath.isLVideoFileUrl()) {
+        if (candidate.exists() && candidate.length() > 0L && !candidate.absolutePath.isLVideoFileUrl()) {
             return candidate.absolutePath
         }
     }
 
     val mediaFile = File(folder, metadata.mediaFileName)
-    if (mediaFile.exists() && !mediaFile.absolutePath.isLVideoFileUrl()) {
+    if (mediaFile.exists() && mediaFile.length() > 0L && !mediaFile.absolutePath.isLVideoFileUrl()) {
         return mediaFile.absolutePath
     }
 
@@ -167,7 +168,7 @@ private fun lResolveItemPreviewUrl(folder: File, metadata: LSavedLikeMetadata): 
 
 private fun lResolveCollectionItemsCount(collectionFolder: File): Int {
     return collectionFolder.listFiles()
-        ?.count { it.isDirectory && File(it, L_METADATA_FILE_NAME).exists() }
+        ?.count { it.isDirectory && File(it, L_METADATA_FILE_NAME).let { meta -> meta.exists() && meta.length() > 0L } }
         ?: 0
 }
 

@@ -149,8 +149,8 @@ fun RedPooledVideoPlayer(
     // Включили A-B — сразу встаём на точку A, как делал прежний плеер
     // (`LaunchedEffect(enableAB) { playerHost.seekTo(timeA) }`). Без этого первый
     // проход шёл бы от текущей позиции, а не от начала петли.
-    LaunchedEffect(player, enableAB) {
-        if (enableAB) player?.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
+    LaunchedEffect(player, enableAB, timeA, timeB) {
+        if (enableAB && timeB > timeA) player?.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
     }
 
     // Время/длительность и петля A-B. Шаг 50 мс — как в прежнем CMPPlayer2,
@@ -176,7 +176,9 @@ fun RedPooledVideoPlayer(
                 lastDuration = duration
                 onTimeChanged.onTime(position, duration)
             }
-            if (enableAB && position >= timeB) exo.seekTo((timeA * 1000).toLong())
+            if (enableAB && timeB > timeA && position >= timeB) {
+                exo.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
+            }
             delay(50)
         }
     }

@@ -94,10 +94,13 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         loadVideo()
     }
 
+    private var loadJob: kotlinx.coroutines.Job? = null
+
     fun loadVideo() {
+        loadJob?.cancel()
         isLoading = true
         isError = false
-        screenModelScope.launch {
+        loadJob = screenModelScope.launch {
             try {
                 Timber.e("!!! ScreenVideoPlayerSM loadVideo()")
 
@@ -120,7 +123,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                     val script = parserItemVideo(document)
                     val config = script?.let { parseHTML5Player(it) }
                     val parsedTags = parserItemVideoTags(document)
-                    val hls = config?.videoHLS.orEmpty()
+                    val hls = config?.videoHLS?.takeIf { it.isNotBlank() }
+                        ?: config?.videoUrlHigh?.takeIf { it.isNotBlank() }
+                        ?: config?.videoUrlLow.orEmpty()
                     Triple(config, parsedTags, hls)
                 }
 

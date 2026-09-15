@@ -384,7 +384,13 @@ private suspend fun cacheMediaResponse(
 
     Timber.i("!!! Берем данные из Сети ${route.url}")
     return redApi.api.request<MediaResponse>(route)
-        .onSuccess { cache.put(route.url, RJson.encodeToString(it)) }
+        .onSuccess {
+            runCatching {
+                cache.put(route.url, RJson.encodeToString(it))
+            }.onFailure { e ->
+                Timber.w(e, "Не удалось сохранить ответ в кэш: ${route.url}")
+            }
+        }
         .onFailure { Timber.e(it, "!!! Ошибка сети при запросе ${route.url}") }
 }
 

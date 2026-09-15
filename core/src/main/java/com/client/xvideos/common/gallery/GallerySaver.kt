@@ -47,6 +47,11 @@ object GallerySaver {
         }
         scope.launch {
             try {
+                if (!src.exists() || src.length() == 0L) {
+                    Timber.w("GallerySaver: исходный файл пустой или отсутствует: ${src.absolutePath}")
+                    SnackBar.error("Файл повреждён или отсутствует")
+                    return@launch
+                }
                 if (exists(appContext, cleanFileName)) {
                     SnackBar.info("Уже в галерее")
                     return@launch
@@ -111,6 +116,9 @@ object GallerySaver {
                 onCompleted = {
                     scope.launch {
                         try {
+                            if (!tmpFile.exists() || tmpFile.length() == 0L) {
+                                error("Скачанный файл пустой или повреждён")
+                            }
                             publish(appContext, cleanFileName) { output ->
                                 tmpFile.inputStream().use { it.copyTo(output) }
                             }

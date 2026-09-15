@@ -9,6 +9,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.net.URLEncoder
@@ -45,12 +46,19 @@ private val searchHttpClient: HttpClient by lazy {
 
 @Deprecated("Не используется в проекте; оставлен для возможной интеграции search-suggest")
 suspend fun getSearchResults(query: String): String? {
+    if (query.isBlank()) return null
     // Кодируем пользовательский ввод: пробелы/спецсимволы не должны ломать URL.
-    val encodedQuery = URLEncoder.encode(query, "UTF-8").replace("+", "%20")
+    val encodedQuery = URLEncoder.encode(query.trim(), "UTF-8").replace("+", "%20")
     val url = "$urlStart/search-suggest/$encodedQuery"
 
     return try {
-        searchHttpClient.get(url).bodyAsText()
+        val response = searchHttpClient.get(url)
+        if (!response.status.isSuccess()) {
+            Timber.w("getSearchResults: HTTP ${response.status.value} for $url")
+            null
+        } else {
+            response.bodyAsText()
+        }
     } catch (e: CancellationException) {
         // Иначе отмена возвращалась как null и трактовалась как «ничего не найдено».
         throw e

@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -27,6 +29,7 @@ object AlbumFilterPresetManager {
 
     private val isInitialized = AtomicBoolean(false)
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val persistMutex = Mutex()
 
     fun init(context: Context) {
         if (!isInitialized.compareAndSet(false, true)) return
@@ -51,20 +54,26 @@ object AlbumFilterPresetManager {
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val cleanName = name.trim().ifBlank { generateDefaultName(filter) }
         val newPreset = SavedAlbumFilter(name = cleanName, filter = filter)
-        var updatedList: List<SavedAlbumFilter> = emptyList()
         _presets.update { current ->
-            (listOf(newPreset) + current.filter { it.name != cleanName }).also { updatedList = it }
+            listOf(newPreset) + current.filter { it.name != cleanName }
         }
-        scope.launch { persist(prefs, updatedList) }
+        scope.launch {
+            persistMutex.withLock {
+                persist(prefs, _presets.value)
+            }
+        }
     }
 
     fun deletePreset(context: Context, id: String) {
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        var updatedList: List<SavedAlbumFilter> = emptyList()
         _presets.update { current ->
-            current.filter { it.id != id }.also { updatedList = it }
+            current.filter { it.id != id }
         }
-        scope.launch { persist(prefs, updatedList) }
+        scope.launch {
+            persistMutex.withLock {
+                persist(prefs, _presets.value)
+            }
+        }
     }
 
     private fun persist(prefs: SharedPreferences, list: List<SavedAlbumFilter>) {

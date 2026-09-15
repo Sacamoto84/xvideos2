@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,7 +56,7 @@ fun AlbumFilterSavedPresetsDialog(
     val maxListHeight = (configuration.screenHeightDp * 0.6f).dp.coerceIn(240.dp, 520.dp)
 
     val presets by AlbumFilterPresetManager.presets.collectAsStateWithLifecycle()
-    val dateFormat = SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
+    val dateFormat = remember { SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()) }
 
     Dialog(
         onDismissRequest = onDismiss,

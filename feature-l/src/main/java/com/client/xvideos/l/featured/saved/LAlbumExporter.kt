@@ -23,7 +23,7 @@ object LAlbumExporter {
         val fileName = "${album.id}.album"
 
         val savedFile = File(savedRoot, fileName)
-        if (savedFile.exists()) {
+        if (savedFile.exists() && savedFile.length() > 0L) {
             return P2pExportBundle(P2pType.L_ALBUM, savedRoot, listOf(savedFile), savedFile)
         }
 

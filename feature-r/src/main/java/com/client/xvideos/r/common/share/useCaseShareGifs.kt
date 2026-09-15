@@ -32,11 +32,11 @@ fun useCaseShareGifs(context: Context, item: GifsInfo) {
     }
 
     try {
-        if (file.exists()) {
+        if (file.exists() && file.length() > 0L) {
             useCaseShareFile(context, file)
         } else {
-            Toast.makeText(context, "Файл не найден: ${file.path}", Toast.LENGTH_SHORT).show()
-            Timber.w("shareGifs -> Файл не существует: ${file.path}")
+            Toast.makeText(context, "Файл не найден или пуст: ${file.path}", Toast.LENGTH_SHORT).show()
+            Timber.w("shareGifs -> Файл не существует или пуст: ${file.path}")
         }
     } catch (e: Exception) {
         Toast.makeText(context, "Ошибка при попытке поделиться файлом", Toast.LENGTH_SHORT).show()

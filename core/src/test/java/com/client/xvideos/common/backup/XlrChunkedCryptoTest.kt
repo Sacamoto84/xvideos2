@@ -151,4 +151,20 @@ class XlrChunkedCryptoTest {
             }
         }
     }
+
+    @Test
+    fun `битый заголовок закрывает нижележащий поток и бросает XlrCorruptedBackupException`() {
+        var closed = false
+        val badInput = object : ByteArrayInputStream(byteArrayOf(1, 2, 3, 4)) {
+            override fun close() {
+                super.close()
+                closed = true
+            }
+        }
+
+        assertThrows(XlrCorruptedBackupException::class.java) {
+            XlrEncryptedInputStream(badInput, "pass".toCharArray())
+        }
+        assertTrue("Поток данных должен быть закрыт при ошибке заголовка", closed)
+    }
 }

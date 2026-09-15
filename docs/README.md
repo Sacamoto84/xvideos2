@@ -42,6 +42,14 @@
 | [Проход 34 (AndroidConnectivityObserver хэндовер сети, UrlImage http/albumName, безопасный виброотклик, докачка KDownloader, DOM X)](CODE_REVIEW_2026-09-14_v13.md) | 14.09.2026 | `master` (`a03105e`) | закрыт полностью |
 | [Проход 35 (MediaDownloadWorker регистр User-Agent, CoilImageLoaderFactory синхронизация, R_Screen_Saved_LikesTab drop)](CODE_REVIEW_2026-09-14_v14.md) | 14.09.2026 | `master` | закрыт полностью |
 | [Проход 36 (GlobalStateTest & thread safety, XlrChunkedCrypto GC/stream allocations, backup password wipe, AlbumFilter safe display & Compose modularization)](CODE_REVIEW_2026-09-15_v15.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 37 (Защита от 0-байтовых файлов в Downloader/DownloadRed/SavedX, fallback плееров X на mp4, failover WebView)](CODE_REVIEW_2026-09-15_v16.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 38 (Mutex-сериализация пресетов фильтров, remember SimpleDateFormat, стабильные ключи LazyColumn, guard Canvas)](CODE_REVIEW_2026-09-15_v17.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 39 (Целостность шеринга и коллекций без 0-байтовых файлов, защита RAM-кэша от HTTP 404/403, оптимизация M3U8Helper)](CODE_REVIEW_2026-09-15_v18.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 40 (Стабильность A-B плеера, потокобезопасность Downloader, устранение двойного штрафа калькулятора, отказоустойчивость SplashActivity)](CODE_REVIEW_2026-09-15_v19.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 41 (Защита MediaStore от 0-байтовых файлов, устранение утечек ContentResolver в бэкапах, валидация .info и P2P-экспорта)](CODE_REVIEW_2026-09-15_v20.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 42 (Адаптивный Canvas таймлайна, отмена гонок loadVideo, защита AppLock от пустого ввода, сохранение кэша на IO)](CODE_REVIEW_2026-09-15_v21.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 43 (Защита от 0-байтовых файлов в DownloadTask, отсечение file:// в UrlImage, валидация ID и JSON, изоляция кэша RedApi)](CODE_REVIEW_2026-09-15_v22.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
+| [Проход 44 (Защита L_FullScreenImage от пустого списка, getSearchResults без холостых запросов, нормализация коллекций L, mkdirs в DownloadRed)](CODE_REVIEW_2026-09-15_v23.md) | 15.09.2026 | `a47bbf1` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

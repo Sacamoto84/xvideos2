@@ -8,6 +8,7 @@ import timber.log.Timber
 private val searchJson = Json { ignoreUnknownKeys = true }
 
 fun parseJson(json: String): SearchResult? {
+    if (json.isBlank()) return null
     return try {
         searchJson.decodeFromString(SearchResult.serializer(), json)
     } catch (e: Exception) {

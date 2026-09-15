@@ -49,6 +49,7 @@ private val OPERATOR_TEXT = Color.White
 @Composable
 fun CalculatorScreen(
     onUnlock: suspend (String) -> Boolean,
+    onUnlockFailed: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
     BackHandler(onBack = onBack)
@@ -74,7 +75,8 @@ fun CalculatorScreen(
             state = state,
             scope = scope,
             haptic = haptic,
-            onUnlock = onUnlock
+            onUnlock = onUnlock,
+            onUnlockFailed = onUnlockFailed
         )
     }
 }
@@ -127,7 +129,8 @@ private fun CalculatorKeypad(
     state: CalculatorState,
     scope: CoroutineScope,
     haptic: HapticFeedback,
-    onUnlock: suspend (String) -> Boolean
+    onUnlock: suspend (String) -> Boolean,
+    onUnlockFailed: () -> Unit = {}
 ) {
     val spacing = 12.dp
 
@@ -163,7 +166,14 @@ private fun CalculatorKeypad(
         CalcButton("+/-", DIGIT_BG, DIGIT_TEXT) { state.onPlusMinus(haptic) }
         CalcButton("0", DIGIT_BG, DIGIT_TEXT) { state.onDigit("0", haptic) }
         CalcButton(".", DIGIT_BG, DIGIT_TEXT) { state.onDecimal(haptic) }
-        CalcButton("=", OPERATOR_BG, OPERATOR_TEXT) { state.onEquals(scope, haptic, onUnlock) }
+        CalcButton("=", OPERATOR_BG, OPERATOR_TEXT) {
+            state.onEquals(
+                scope = scope,
+                haptic = haptic,
+                onUnlockFailed = onUnlockFailed,
+                onUnlock = onUnlock
+            )
+        }
     }
 }
 

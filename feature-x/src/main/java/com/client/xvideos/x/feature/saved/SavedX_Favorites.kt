@@ -29,6 +29,10 @@ class SavedX_Favorites(val scope: CoroutineScope) {
 
     /** Файловый I/O вынесен на [Dispatchers.IO]: раньше запись шла в главном потоке (риск ANR). */
     fun add(item: ItemsX) {
+        if (item.id <= 0L) {
+            SnackBar.error("Недопустимый ID видео")
+            return
+        }
         scope.launch(Dispatchers.IO) {
             favoritesDb.insert(item.id.toString(), item)
                 .onSuccess {
@@ -46,6 +50,10 @@ class SavedX_Favorites(val scope: CoroutineScope) {
     }
 
     fun remove(item: ItemsX) {
+        if (item.id <= 0L) {
+            SnackBar.error("Недопустимый ID видео")
+            return
+        }
         scope.launch(Dispatchers.IO) {
             favoritesDb.delete(item.id.toString())
                 .onSuccess {
@@ -62,7 +70,7 @@ class SavedX_Favorites(val scope: CoroutineScope) {
     }
 
     /** Быстрая O(1)-проверка принадлежности к избранному. */
-    fun contains(id: Long): Boolean = favoriteIds.contains(id)
+    fun contains(id: Long): Boolean = id > 0L && favoriteIds.contains(id)
 
     fun refresh() {
         scope.launch(Dispatchers.IO) {

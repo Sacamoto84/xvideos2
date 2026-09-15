@@ -21,4 +21,14 @@ class UseCaseShareFileTest {
 
         assertFalse(result)
     }
+
+    @Test
+    fun `useCaseShareFile возвращает false и не падает если файл пустой 0 байт`() {
+        val dummyContext = object : ContextWrapper(null) {}
+        val emptyFile = File(tmp.root, "empty.mp4").apply { createNewFile() }
+
+        val result = useCaseShareFile(dummyContext, emptyFile)
+
+        assertFalse(result)
+    }
 }

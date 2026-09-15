@@ -184,16 +184,21 @@ fun UrlImage(
         if (url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)) {
             url.toUri()
         } else {
-            val fileName = url.substringAfterLast('/').substringBefore('?')
-            val localFile = File(url)
-            if (localFile.isAbsolute || url.contains('/') || url.contains('\\')) {
+            val cleanUrl = if (url.startsWith("file://", ignoreCase = true)) {
+                url.substring(7)
+            } else {
+                url
+            }
+            val fileName = cleanUrl.substringAfterLast('/').substringBefore('?')
+            val localFile = File(cleanUrl)
+            if (localFile.isAbsolute || cleanUrl.contains('/') || cleanUrl.contains('\\')) {
                 localFile
             } else if (albumName.isEmpty()) {
-                File(url)
+                File(cleanUrl)
             } else {
                 when (albumName) {
                     "l_likes" -> File(AppPath.l_likes, fileName)
-                    else -> File(url)
+                    else -> File(cleanUrl)
                 }
             }
         }

@@ -275,9 +275,11 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                         onUnlockSuccess()
                         true
                     } else {
-                        AppLockRepository.registerFailedAttempt(this@MainActivity)
                         false
                     }
+                },
+                onUnlockFailed = {
+                    AppLockRepository.registerFailedAttempt(this@MainActivity)
                 },
                 onBack = { moveTaskToBack(true) }
             )

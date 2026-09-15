@@ -307,6 +307,17 @@ class DownloadTask(
                         return@withContext
                     }
 
+                    if (req.downloadedBytes == 0L) {
+                        closeAllSafely(outStream)
+                        this@DownloadTask.outputStream = null
+                        deleteTempFile()
+                        removeNoMoreNeededModelFromDatabase()
+                        req.reset()
+                        req.status = Status.FAILED
+                        listener.onError("Download failed: empty response body (0 bytes)")
+                        return@withContext
+                    }
+
                     if (totalBytes > 0 && req.downloadedBytes < totalBytes) {
                         closeAllSafely(outStream)
                         this@DownloadTask.outputStream = null

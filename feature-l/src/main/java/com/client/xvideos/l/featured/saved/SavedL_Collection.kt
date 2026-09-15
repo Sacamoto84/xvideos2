@@ -306,6 +306,7 @@ class SavedL_Collection(
             return
         }
         val uniqueItems = items.distinctBy { lPicsDetailsIdentityKey(it) }
+        if (uniqueItems.isEmpty()) return
         // Обход папок коллекции на каждый элемент плюс рекурсивное удаление — на IO.
         scope.launch(Dispatchers.IO) {
             val collectionRoot = File(AppPath.l_collection, safeName)
@@ -396,10 +397,14 @@ class SavedL_Collection(
 
 
     private fun remove(identifiers: List<String>, collectionName: String) {
-        Timber.i("SavedL_Collection remove() identifiers:$identifiers collection:$collectionName")
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
+        Timber.i("SavedL_Collection remove() identifiers:$identifiers collection:$safeName")
         // Поиск папки элемента обходит коллекцию, удаление рекурсивное — на IO.
         scope.launch(Dispatchers.IO) {
-            val collectionRoot = File(AppPath.l_collection, collectionName)
+            val collectionRoot = File(AppPath.l_collection, safeName)
             val folder = lFindCollectionItemFolder(collectionRoot, identifiers)
             val file = identifiers.firstOrNull()?.lToFilePath()?.let { File(it) }
 
@@ -415,7 +420,7 @@ class SavedL_Collection(
             } else {
                 SnackBar.error("Файл не найден")
             }
-            if (currentCollectionName == collectionName) {
+            if (currentCollectionName == safeName) {
                 refresh()
             }
         }

@@ -155,7 +155,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         val fileName = "x_${item.id}.mp4"
 
         val local = File(dir, "${item.id}.mp4")
-        if (local.exists()) {
+        if (local.exists() && local.length() > 0L) {
             GallerySaver.saveLocal(context, local, fileName)
             return
         }
@@ -176,7 +176,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             File(dir, "${item.id}.mp4").delete()
             File(dir, "${item.id}.jpg").delete()
             File(dir, "${item.id}.info").delete()
-            refresh()
+            loadFromDisk()
             SnackBar.info("Удалено из сохранённого")
         }
     }
@@ -184,29 +184,33 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     /** Перечитать список сохранённого по `.info`-файлам. */
     fun refresh() {
         scope.launch(Dispatchers.IO) {
-            val root = File(dir)
-            val allFiles = if (root.exists() && root.isDirectory) {
-                root.listFiles() ?: emptyArray()
-            } else {
-                emptyArray()
-            }
-
-            val videoIds = allFiles.filter { it.isFile && it.extension == "mp4" }
-                .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
-            val posterIds = allFiles.filter { it.isFile && it.extension == "jpg" }
-                .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
-
-            val infos = allFiles.filter { it.isFile && it.extension == "info" }
-                .sortedByDescending { it.lastModified() }
-
-            val result = infos.mapNotNull { f ->
-                runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
-                    .onFailure { Timber.e(it, "X saved: битый .info ${f.absolutePath}") }
-                    .getOrNull()
-            }
-            _downloadedVideoIds.value = videoIds
-            _downloadedPosterIds.value = posterIds
-            _list.value = result
+            loadFromDisk()
         }
+    }
+
+    private fun loadFromDisk() {
+        val root = File(dir)
+        val allFiles = if (root.exists() && root.isDirectory) {
+            root.listFiles() ?: emptyArray()
+        } else {
+            emptyArray()
+        }
+
+        val videoIds = allFiles.filter { it.isFile && it.extension == "mp4" && it.length() > 0L }
+            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+        val posterIds = allFiles.filter { it.isFile && it.extension == "jpg" && it.length() > 0L }
+            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+
+        val infos = allFiles.filter { it.isFile && it.extension == "info" && it.length() > 0L }
+            .sortedByDescending { it.lastModified() }
+
+        val result = infos.mapNotNull { f ->
+            runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
+                .onFailure { Timber.e(it, "X saved: битый .info ${f.absolutePath}") }
+                .getOrNull()
+        }
+        _downloadedVideoIds.value = videoIds
+        _downloadedPosterIds.value = posterIds
+        _list.value = result
     }
 }

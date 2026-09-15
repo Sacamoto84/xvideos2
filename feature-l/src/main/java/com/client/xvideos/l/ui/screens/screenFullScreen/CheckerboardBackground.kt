@@ -21,6 +21,7 @@ fun Modifier.checkerboardBackground(
 ): Modifier = this.then(
     Modifier.drawBehind {
         val squareSizePx = squareSize.toPx()
+        if (squareSizePx <= 0f || size.width <= 0f || size.height <= 0f) return@drawBehind
         val squaresHorizontal = (size.width / squareSizePx).toInt() + 1
         val squaresVertical = (size.height / squareSizePx).toInt() + 1
 

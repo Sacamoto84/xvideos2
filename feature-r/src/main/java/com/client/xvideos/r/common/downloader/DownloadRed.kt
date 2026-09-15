@@ -124,7 +124,7 @@ class DownloadRed @Inject constructor(
 
         val fileName = "r_${item.userName}_${item.id}.mp4"
 
-        if (local.exists()) {
+        if (local.exists() && local.length() > 0L) {
             GallerySaver.saveLocal(appContext, local, fileName)
             return
         }
@@ -179,7 +179,7 @@ class DownloadRed @Inject constructor(
             val result = mutableListOf<GifsInfo>()
 
             allFiles
-                .filter { it.extension == "info" }
+                .filter { it.extension == "info" && it.length() > 0L }
                 .sortedByDescending { it.lastModified() }
                 .forEach { file ->
                     try {
@@ -193,7 +193,7 @@ class DownloadRed @Inject constructor(
                 }
 
             _downloadList.emit(result)
-            _downloadedVideoKeys.emit(downloadedVideoKeys(allFiles.filter { it.extension == "mp4" }))
+            _downloadedVideoKeys.emit(downloadedVideoKeys(allFiles.filter { it.extension == "mp4" && it.length() > 0L }))
         }
     }
 
@@ -231,15 +231,22 @@ class DownloadRed @Inject constructor(
                 refreshDownloadList()
             }
 
-            onComplete(report)
+            withContext(Dispatchers.Main) {
+                onComplete(report)
+            }
         }
     }
 
     fun deleteAll(onComplete: () -> Unit = {}) {
         scope.launch(Dispatchers.IO) {
-            File(AppPath.r_cache_download).deleteRecursively()
+            File(AppPath.r_cache_download).apply {
+                deleteRecursively()
+                mkdirs()
+            }
             refreshDownloadList()
-            onComplete()
+            withContext(Dispatchers.Main) {
+                onComplete()
+            }
         }
     }
 
@@ -305,8 +312,8 @@ class DownloadRed @Inject constructor(
                 val parent = infoFile.parentFile ?: error("Missing parent folder")
                 val id = item.id.takeIf { it.isNotBlank() } ?: infoFile.nameWithoutExtension
                 val userName = item.userName.takeIf { it.isNotBlank() } ?: parent.name
-                val missingVideo = !File(parent, "$id.mp4").exists()
-                val missingPreview = !File(parent, "$id.jpg").exists()
+                val missingVideo = !File(parent, "$id.mp4").let { it.exists() && it.length() > 0L }
+                val missingPreview = !File(parent, "$id.jpg").let { it.exists() && it.length() > 0L }
                 if (missingVideo || missingPreview) {
                     candidates.add(
                         RedDownloadRecoveryCandidate(

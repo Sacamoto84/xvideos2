@@ -118,13 +118,22 @@ fun CanvasTimeDurationLine1(
             val stepColor = if (isBuffering) bufferingColor else Color.Gray
 
             if ((duration > 0) && (isVisibleStep)) {
-                val step = duration
-                val stepW = canvasWidth / duration
-                for (i in 0..step) {
+                val pxPerSec = canvasWidth / duration
+                val minStepPx = 6.dp.toPx()
+                val stepSec = when {
+                    pxPerSec >= minStepPx -> 1
+                    pxPerSec * 5 >= minStepPx -> 5
+                    pxPerSec * 10 >= minStepPx -> 10
+                    pxPerSec * 30 >= minStepPx -> 30
+                    pxPerSec * 60 >= minStepPx -> 60
+                    else -> 300
+                }
+                for (i in 0..duration step stepSec) {
+                    val x = i * pxPerSec
                     drawLine(
                         color = stepColor,
-                        start = Offset(x = i * stepW, y = canvasHeight / 2 - 0.dp.toPx()),
-                        end = Offset(x = i * stepW, y = canvasHeight / 2 + 4.dp.toPx()),
+                        start = Offset(x = x, y = canvasHeight / 2),
+                        end = Offset(x = x, y = canvasHeight / 2 + 4.dp.toPx()),
                         strokeWidth = 2.dp.toPx(),
                         cap = StrokeCap.Round
                     )

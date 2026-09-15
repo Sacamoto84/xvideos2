@@ -214,6 +214,7 @@ class CalculatorState(
     fun onEquals(
         scope: CoroutineScope,
         haptic: HapticFeedback,
+        onUnlockFailed: () -> Unit = {},
         onUnlock: suspend (String) -> Boolean
     ) {
         if (isVerifying) return
@@ -233,6 +234,7 @@ class CalculatorState(
                     isVerifying = false
                 }
                 if (success) return@launch
+                onUnlockFailed()
             }
             enteredPinDigits.clear()
 

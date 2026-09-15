@@ -63,65 +63,6 @@ class ScreenRedTopThisWeekSM @Inject constructor(
     fun changeVisibleType(newSort: VisibleType) {
         _visibleType.value = newSort
     }
-    //////////////
-
-
-    //////////////
-
-
-//    init {
-//        screenModelScope.launch {
-//            val list = mutableListOf<MediaResponse>()
-//            repeat(1) { it1 ->
-//                try {
-//                    val a = RedGifs.getTopThisWeek(100, it1 + 1)
-//                    list.add(a)
-//                    delay(1200)
-//                } catch (e: Exception) {
-//                    val txt = e.message
-//                    Timber.e("!!! Ошибка загрузки ${e.message}")
-//                    if (txt != null) {
-//                        if (txt.contains("invalid: 429")) {
-//                            val regex = """"delay"\s*:\s*(\d+)""".toRegex()
-//                            val match = regex.find(txt)
-//                            var delay  = 0
-//                            if (match != null) {
-//                                delay = match.groupValues[1].toInt()
-//                                println("Задержка: $delay секунд")
-//                            }
-//                            Toast("Большая частота запросов, жди $delay сек")
-//                        } else {
-//                            Toast("!!! Ошибка загрузки ${e.message}")
-//                        }
-//                    }
-//                }
-//
-//            }
-//            val a = list.flatMap { it.gifs }.distinctBy { it.id } // убираем дубликаты по полю id
-//            _listGifs.value = a
-//
-//            val b = list.flatMap { it.users }.distinctBy { it.username } // убираем дубликаты по полю id
-//            _listUsers.value = b
-//
-//        }
-//   }
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-//    val expandMenuVideoList =
-//        listOf(
-//            ExpandMenuVideoModel("Скачать", Icons.Filled.FileDownload, onClick = {
-//                if (it == null) return@ExpandMenuVideoModel
-//                DownloadRed.downloadItem(it)
-//            }),
-//            ExpandMenuVideoModel("Поделиться", Icons.Default.Share),
-//            ExpandMenuVideoModel("Блокировать", Icons.Default.Block, onClick = {
-//                if (it == null) return@ExpandMenuVideoModel
-//                BlockRed.blockVisibleDialog = true
-//            }),
-//
-//            )
-    //////////////////////////////////////////////////////////////////////////////////////////
-
 }
 
 

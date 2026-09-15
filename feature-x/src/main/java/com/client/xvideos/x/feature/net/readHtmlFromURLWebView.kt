@@ -97,6 +97,27 @@ private suspend fun loadHtmlInWebView(url: String): String =
 
         webView.webViewClient = object : WebViewClient() {
 
+            @Deprecated("Deprecated in Java")
+            override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                super.onReceivedError(view, errorCode, description, failingUrl)
+                Timber.w("readHtmlFromURLWebView: onReceivedError $errorCode: $description for $failingUrl")
+                if (continuation.isActive) continuation.resume("")
+                destroyWebView()
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?,
+                error: android.webkit.WebResourceError?
+            ) {
+                super.onReceivedError(view, request, error)
+                if (request?.isForMainFrame == true) {
+                    Timber.w("readHtmlFromURLWebView: main frame error for ${request.url}")
+                    if (continuation.isActive) continuation.resume("")
+                    destroyWebView()
+                }
+            }
+
             override fun onPageFinished(view: WebView?, finishedUrl: String?) {
                 super.onPageFinished(view, finishedUrl)
 

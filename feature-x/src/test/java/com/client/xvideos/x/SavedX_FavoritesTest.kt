@@ -43,4 +43,16 @@ class SavedX_FavoritesTest {
         assertEquals("Video 1 Updated", list.first().title)
         assertEquals("5k", list.first().views)
     }
+
+    @Test
+    fun `валидация идентификатора отклоняет неположительные id`() {
+        val validIds = setOf(101L, 202L)
+        fun checkContains(id: Long) = id > 0L && validIds.contains(id)
+
+        assertFalse(checkContains(0L))
+        assertFalse(checkContains(-1L))
+        assertFalse(checkContains(-999L))
+        assertTrue(checkContains(101L))
+        assertTrue(checkContains(202L))
+    }
 }

@@ -168,7 +168,12 @@ object AppSettingsScreen : Screen {
             },
             onClearDownload = {
                 scope.launch {
-                    withContext(Dispatchers.IO) { File(AppPath.r_cache_download).deleteRecursively() }
+                    withContext(Dispatchers.IO) {
+                        File(AppPath.r_cache_download).apply {
+                            deleteRecursively()
+                            mkdirs()
+                        }
+                    }
                     refreshRedSizes()
                     SnackBar.success("Папка Download очищена")
                 }

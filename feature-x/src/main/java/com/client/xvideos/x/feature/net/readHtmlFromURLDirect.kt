@@ -8,6 +8,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
@@ -50,7 +51,13 @@ suspend fun readHtmlFromURLDirect(url: String = "https://www.xvideos.com"): Stri
     Timber.i("!!!..readHtmlFromURLDirect $url ")
 
     return try {
-        htmlClient.get(url).bodyAsText()
+        val response = htmlClient.get(url)
+        if (!response.status.isSuccess()) {
+            Timber.w("readHtmlFromURLDirect: HTTP ${response.status.value} for $url")
+            ""
+        } else {
+            response.bodyAsText()
+        }
     } catch (e: CancellationException) {
         // Отмену корутины пробрасываем — иначе экран, который уже закрыли,
         // продолжит обрабатывать «успешный» пустой ответ.

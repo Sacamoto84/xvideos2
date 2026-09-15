@@ -11,12 +11,14 @@ import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -78,9 +80,14 @@ class SplashActivity : ComponentActivity() {
 
         // Запускаем инициализацию
         lifecycleScope.launch {
-            // имитация тяжёлой работы
-            withContext(Dispatchers.IO) {
-                initApp()
+            try {
+                withContext(Dispatchers.IO) {
+                    initApp()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "SplashActivity: ошибка при фоновой инициализации приложения")
             }
             isReady = true
             if (AppLockRepository.isEnabled(this@SplashActivity)) {

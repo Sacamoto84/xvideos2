@@ -108,7 +108,6 @@ fun AlbumFilterAudiencesDialog(
                         AudienceDialogRow(
                             title = "All audiences",
                             isSelected = isAllSelected,
-                            palette = palette,
                             onClick = onSelectAll
                         )
                     }
@@ -119,7 +118,6 @@ fun AlbumFilterAudiencesDialog(
                         AudienceDialogRow(
                             title = item.title,
                             isSelected = isSelected,
-                            palette = palette,
                             onClick = { onToggleAudience(item) }
                         )
                     }
@@ -133,9 +131,9 @@ fun AlbumFilterAudiencesDialog(
 private fun AudienceDialogRow(
     title: String,
     isSelected: Boolean,
-    palette: StyleGenresTags.Palette,
     onClick: () -> Unit
 ) {
+    val palette = StyleGenresTags.Palette
     val borderColor = if (isSelected) palette.selectedBorder else Color.Transparent
     val backgroundColor = if (isSelected) palette.selected else Color.Transparent
     val textColor = if (isSelected) palette.selectedText else palette.textPrimary

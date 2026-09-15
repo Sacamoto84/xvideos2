@@ -192,4 +192,16 @@ class KDownloaderQueueTest {
         val client = com.client.xvideos.common.kdownloader.httpclient.DefaultHttpClient()
         client.close()
     }
+
+    @Test
+    fun `DownloadRequest reset clears downloadedBytes and totalBytes`() {
+        val req = DownloadRequest.Builder("https://example.com/file.mp4", tempFolder.root.absolutePath, "file.mp4").build()
+        req.downloadedBytes = 1024L
+        req.totalBytes = 2048L
+        assertEquals(1024L, req.downloadedBytes)
+
+        req.reset()
+        assertEquals(0L, req.downloadedBytes)
+        assertEquals(0L, req.totalBytes)
+    }
 }

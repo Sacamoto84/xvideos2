@@ -195,6 +195,9 @@ internal suspend fun lDownloadToFile(
         if (totalBytes != null && totalBytes > 0L && downloadedBytes < totalBytes) {
             throw IOException("Download incomplete: expected $totalBytes bytes, got $downloadedBytes bytes")
         }
+        if (downloadedBytes == 0L) {
+            throw IOException("Download failed: empty response body (0 bytes) from $url")
+        }
         if (file.exists() && !file.delete()) {
             throw IOException("Cannot replace file: ${file.absolutePath}")
         }

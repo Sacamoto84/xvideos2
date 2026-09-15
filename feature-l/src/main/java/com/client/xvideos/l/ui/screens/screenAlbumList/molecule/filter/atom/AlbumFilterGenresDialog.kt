@@ -147,7 +147,7 @@ fun AlbumFilterGenresDialog(
                         }
                     }
 
-                    items(selectableGenres, key = { it.title }) { item ->
+                    items(selectableGenres, key = { it.id.ifBlank { it.title } }) { item ->
                         SelectableGenreRow(
                             item = item,
                             count = genreCountByTitle[item.title],
@@ -173,7 +173,7 @@ private fun GenreSelectedChipsBar(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        items(genresPlus, key = { "plus_${it.title}" }) { genre ->
+        items(genresPlus, key = { "plus_${it.id.ifBlank { it.title }}" }) { genre ->
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -197,7 +197,7 @@ private fun GenreSelectedChipsBar(
                 )
             }
         }
-        items(genresMinus, key = { "minus_${it.title}" }) { genre ->
+        items(genresMinus, key = { "minus_${it.id.ifBlank { it.title }}" }) { genre ->
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))

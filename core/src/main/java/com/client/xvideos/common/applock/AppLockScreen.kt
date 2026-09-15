@@ -160,6 +160,7 @@ fun AppLockScreen(
 
     fun submit() {
         if (isChecking) return
+        if (password.isEmpty()) return
         val remainingBefore = AppLockRepository.lockoutRemainingMillis(context)
         if (remainingBefore > 0L) {
             lockoutRemainingMs = remainingBefore

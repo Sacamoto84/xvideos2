@@ -111,8 +111,12 @@ class AlbumInfo(
             totalPages = snapshot.totalPages,
             pics = snapshot.pics
         )
-        repository.putAlbumBundleCache(id, LJson.encodeToString(bundle))
-        Timber.i("!!! L album bundle cache saved id:$id items:${snapshot.pics.size}")
+        runCatching {
+            repository.putAlbumBundleCache(id, LJson.encodeToString(bundle))
+            Timber.i("!!! L album bundle cache saved id:$id items:${snapshot.pics.size}")
+        }.onFailure { e ->
+            Timber.w(e, "Не удалось сохранить кэш альбома id:$id")
+        }
     }
 
     private fun parseAlbumDetails(response: String): Result<AlbumDetails> = runCatching {

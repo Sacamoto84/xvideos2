@@ -248,23 +248,28 @@ class XlrEncryptedInputStream(
     private var decryptedOffset = 0
 
     init {
-        // Чтение и проверка заголовка
-        val magic = ByteArray(4)
-        dataInput.readFully(magic)
-        if (!Arrays.equals(magic, XlrChunkedCrypto.MAGIC_BYTES)) {
-            throw XlrCorruptedBackupException("Файл не является зашифрованным бэкапом XLR")
+        try {
+            // Чтение и проверка заголовка
+            val magic = ByteArray(4)
+            dataInput.readFully(magic)
+            if (!Arrays.equals(magic, XlrChunkedCrypto.MAGIC_BYTES)) {
+                throw XlrCorruptedBackupException("Файл не является зашифрованным бэкапом XLR")
+            }
+
+            val version = dataInput.readByte()
+            if (version != XlrChunkedCrypto.CURRENT_VERSION) {
+                throw XlrCorruptedBackupException("Неподдерживаемая версия формата бэкапа: $version")
+            }
+
+            val salt = ByteArray(XlrChunkedCrypto.SALT_LENGTH)
+            dataInput.readFully(salt)
+            dataInput.readFully(noncePrefix)
+
+            key = XlrChunkedCrypto.deriveKey(password, salt)
+        } catch (e: Throwable) {
+            runCatching { dataInput.close() }
+            throw e
         }
-
-        val version = dataInput.readByte()
-        if (version != XlrChunkedCrypto.CURRENT_VERSION) {
-            throw XlrCorruptedBackupException("Неподдерживаемая версия формата бэкапа: $version")
-        }
-
-        val salt = ByteArray(XlrChunkedCrypto.SALT_LENGTH)
-        dataInput.readFully(salt)
-        dataInput.readFully(noncePrefix)
-
-        key = XlrChunkedCrypto.deriveKey(password, salt)
     }
 
     override fun read(): Int {
