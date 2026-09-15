@@ -1,5 +1,8 @@
 package com.client.xvideos.l.model.enum
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class PictureCountRank(val count: Int){
     All(-1),
     C0_25(0),       //0 to 25

@@ -1,5 +1,7 @@
 package com.client.xvideos.l.model.enum
 
+import kotlinx.serialization.Serializable
+
 /**
  * Группа filters
  *
@@ -10,6 +12,7 @@ package com.client.xvideos.l.model.enum
  * Non-Erotic 5
  * Real People 6
  */
+@Serializable
 enum class ContentId(val value: Int) {
     All(0),
     Hentai(2),

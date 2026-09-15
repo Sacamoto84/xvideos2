@@ -11,6 +11,7 @@ import java.io.Serializable
  * уходят в saved state активити. Без этого приложение падает
  * `NotSerializableException`, когда система сохраняет состояние.
  */
+@kotlinx.serialization.Serializable
 data class AlbumListFilter(
     val display: String = "date_newest",
     val album_type: AlbumType = AlbumType.Pictures, //manga pictures или все при отсуствии
@@ -25,4 +26,4 @@ data class AlbumListFilter(
     val tagMinus : List<String> = emptyList(),
     val searchQuery : String = "",
     val selection : String = "",
-    ) : Serializable
+) : Serializable

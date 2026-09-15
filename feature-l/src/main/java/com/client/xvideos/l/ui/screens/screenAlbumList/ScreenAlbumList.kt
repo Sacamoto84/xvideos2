@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -38,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -282,13 +285,15 @@ private fun Screen.ScreenAlbumListContent(
                 )
 
                 // Только панель фильтра
+                val screenHeight = LocalConfiguration.current.screenHeightDp.dp
                 Surface(
                     modifier = Modifier
-                        .fillMaxHeight(0.85f)
                         .fillMaxWidth(0.95f)
+                        .heightIn(max = screenHeight * 0.9f)
+                        .wrapContentHeight()
                         .align(Alignment.TopCenter),
                     shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
-                    color = Color.White,
+                    color = Color(0xFF171717),
                     shadowElevation = 8.dp
                 ) {
                     AlbumListFilter(
@@ -302,7 +307,6 @@ private fun Screen.ScreenAlbumListContent(
                             vm.statePager.scrollToPage(0)
                             vm.filterUpdate(newFilter)
                             vm.loadInitialData()
-                            showFilterDialog = false
                         }
                     }
                 }

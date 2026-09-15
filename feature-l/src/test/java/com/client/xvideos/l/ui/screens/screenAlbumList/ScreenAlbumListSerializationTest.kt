@@ -62,8 +62,37 @@ class ScreenAlbumListSerializationTest {
 
     @Test
     fun `фильтр сериализуется отдельно от экрана`() {
-        // Фильтр переживает не только экран: он же уходит в аргументы навигации
-        // и в сохранённое состояние списка.
         serialize(AlbumListFilter(genresPlus = listOf(genre())))
+    }
+
+    @Test
+    fun `SavedAlbumFilter сериализуется через Java serialization`() {
+        val filter = AlbumListFilter(genresPlus = listOf(genre()), tagPlus = listOf("tag1"))
+        val preset = com.client.xvideos.l.model.SavedAlbumFilter(name = "Test Preset", filter = filter)
+        serialize(preset)
+    }
+
+    @Test
+    fun `AlbumListFilter и SavedAlbumFilter сериализуются в JSON через LJson и восстанавливаются`() {
+        val filter = AlbumListFilter(
+            album_type = com.client.xvideos.l.model.enum.AlbumType.Manga,
+            content_id = com.client.xvideos.l.model.enum.ContentId.Hentai,
+            picture_count_rank = com.client.xvideos.l.model.enum.PictureCountRank.C50_100,
+            genresPlus = listOf(genre()),
+            tagPlus = listOf("tag1", "tag2"),
+            selection = "animated"
+        )
+        val preset = com.client.xvideos.l.model.SavedAlbumFilter(name = "Manga Hentai", filter = filter)
+        val json = com.client.xvideos.l.net.json.LJson.encodeToString(listOf(preset))
+        val decoded = com.client.xvideos.l.net.json.LJson.decodeFromString<List<com.client.xvideos.l.model.SavedAlbumFilter>>(json)
+
+        org.junit.Assert.assertEquals(1, decoded.size)
+        org.junit.Assert.assertEquals("Manga Hentai", decoded[0].name)
+        org.junit.Assert.assertEquals(com.client.xvideos.l.model.enum.AlbumType.Manga, decoded[0].filter.album_type)
+        org.junit.Assert.assertEquals(com.client.xvideos.l.model.enum.ContentId.Hentai, decoded[0].filter.content_id)
+        org.junit.Assert.assertEquals(com.client.xvideos.l.model.enum.PictureCountRank.C50_100, decoded[0].filter.picture_count_rank)
+        org.junit.Assert.assertEquals("animated", decoded[0].filter.selection)
+        org.junit.Assert.assertEquals(1, decoded[0].filter.genresPlus.size)
+        org.junit.Assert.assertEquals("Genre", decoded[0].filter.genresPlus[0].title)
     }
 }

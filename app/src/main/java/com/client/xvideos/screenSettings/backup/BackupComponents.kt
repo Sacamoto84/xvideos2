@@ -50,6 +50,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.client.xvideos.common.theme.LavenderDialog
+import com.client.xvideos.common.applock.DisableAppLockAutofill
+import com.client.xvideos.common.ui.IncognitoKeyboard
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
@@ -402,6 +404,7 @@ internal fun BackupCreatePasswordDialog(
             }
         },
         content = {
+            DisableAppLockAutofill()
             val d = Theme.DialogLavande
             Text(
                 text = "Задайте пароль для шифрования архива. Без этого пароля восстановить данные будет невозможно.",
@@ -426,8 +429,9 @@ internal fun BackupCreatePasswordDialog(
                         )
                     }
                 },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
+                keyboardOptions = IncognitoKeyboard.options(
+                    forceIncognito = true,
+                    keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
                 )
             )
@@ -450,8 +454,9 @@ internal fun BackupCreatePasswordDialog(
                         )
                     }
                 },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
+                keyboardOptions = IncognitoKeyboard.options(
+                    forceIncognito = true,
+                    keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done
                 )
             )
@@ -497,6 +502,7 @@ internal fun BackupRestorePasswordDialog(
             }
         },
         content = {
+            DisableAppLockAutofill()
             val d = Theme.DialogLavande
             Text(
                 text = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого.",
@@ -521,8 +527,9 @@ internal fun BackupRestorePasswordDialog(
                         )
                     }
                 },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
+                keyboardOptions = IncognitoKeyboard.options(
+                    forceIncognito = true,
+                    keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = {

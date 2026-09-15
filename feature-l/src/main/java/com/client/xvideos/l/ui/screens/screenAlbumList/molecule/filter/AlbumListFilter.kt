@@ -2,6 +2,7 @@ package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +13,22 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,19 +37,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumListFilter
+import com.client.xvideos.l.model.FilterGenre
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
-import com.client.xvideos.l.model.FilterGenre
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterDisplay
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterPresetManager
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSaveDialog
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSavedPresetsDialog
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterAlbumType
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterAudiences
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterContentType
@@ -52,10 +63,9 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.Styl
 
 private val cardShape = RoundedCornerShape(8.dp)
 
-/** Общий фон-«карточка» секции фильтра: отступ сверху, скругление, фон, опц. рамка и ограничение высоты. */
+/** Общий фон-«карточка» секции фильтра: отступ сверху, скругление, фон, опц. рамка. */
 private fun Modifier.filterCard(
     border: Boolean = false,
-    maxHeight: Dp = Dp.Unspecified,
 ): Modifier {
     val palette = StyleGenresTags.Palette
     return this
@@ -63,7 +73,6 @@ private fun Modifier.filterCard(
         .clip(cardShape)
         .background(palette.surface)
         .then(if (border) Modifier.border(1.dp, palette.border, cardShape) else Modifier)
-        .then(if (maxHeight != Dp.Unspecified) Modifier.sizeIn(maxHeight = maxHeight) else Modifier)
 }
 
 @Composable
@@ -71,27 +80,108 @@ fun AlbumListFilter(
     filter: AlbumListFilter,
     filterGCount: List<AlbumListFilterGenreCountResponse>?,
     filterTagsCount: List<AlbumListFilterGenreCountResponse>?,
-    onClose: () -> Unit, onFilterApply: (AlbumListFilter) -> Unit
+    onClose: () -> Unit,
+    onFilterApply: (AlbumListFilter) -> Unit
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        AlbumFilterPresetManager.init(context)
+    }
+    val presets by AlbumFilterPresetManager.presets.collectAsStateWithLifecycle()
 
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
-    val maxHeight = screenHeight * 2 / 4
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var showSavedPresetsDialog by remember { mutableStateOf(false) }
 
     val palette = StyleGenresTags.Palette
 
-    Column( modifier = Modifier.fillMaxHeight().background(palette.screen).padding(horizontal = 8.dp).verticalScroll( rememberScrollState()) )
-    {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(palette.screen)
+            .padding(horizontal = 8.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
 
-        Box( Modifier.displayCutoutPadding().fillMaxWidth().height(56.dp) )
-        {
-
-            Text("Filters",
+        Row(
+            modifier = Modifier
+                .displayCutoutPadding()
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Filters",
                 color = palette.textPrimary,
-                style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp, top = 4.dp)
+                style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
             )
 
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Save button
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                        .background(palette.field)
+                        .clickable { showSaveDialog = true }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Save,
+                        contentDescription = "Save filter preset",
+                        tint = palette.accent,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        "Save",
+                        color = palette.textPrimary,
+                        style = Theme.L.Type.button
+                    )
+                }
+
+                // Saved presets button
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                        .background(palette.field)
+                        .clickable { showSavedPresetsDialog = true }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.BookmarkBorder,
+                        contentDescription = "Saved presets",
+                        tint = palette.selectedBorder,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        "Saved (${presets.size})",
+                        color = palette.textPrimary,
+                        style = Theme.L.Type.button
+                    )
+                }
+
+                // Close button (X)
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close filters",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
         }
 
         if (filter.searchQuery.isNotBlank()) {
@@ -123,7 +213,7 @@ fun AlbumListFilter(
             }
         } else {
             Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(palette.surface).padding(6.dp)) {
-                AlbumFilterDisplay( filter.display, onRequestApply = { onFilterApply(filter.copy(display = it)) })
+                AlbumFilterDisplay(filter.display, onRequestApply = { onFilterApply(filter.copy(display = it)) })
             }
         }
 
@@ -145,39 +235,57 @@ fun AlbumListFilter(
             }
         }
 
-
-
         Box(modifier = Modifier.filterCard().padding(4.dp)) {
             AlbumListFilterContentType(filter.content_id) { onFilterApply(filter.copy(content_id = it)) }
         }
 
         Box(
-            modifier = Modifier.filterCard(border = true, maxHeight = maxHeight)
+            modifier = Modifier.filterCard(border = true).padding(8.dp)
         ) { AlbumListFilterAudiences(filter) { onFilterApply(it) } }
 
-        Box( modifier = Modifier.filterCard(border = true).padding(8.dp)
-        ) { AlbumListFilterSize(filter.picture_count_rank) { onFilterApply( filter.copy( picture_count_rank = it ) ) } }
+        Box(
+            modifier = Modifier.filterCard(border = true).padding(8.dp)
+        ) { AlbumListFilterSize(filter.picture_count_rank) { onFilterApply(filter.copy(picture_count_rank = it)) } }
 
-        Box( modifier = Modifier.filterCard(border = true, maxHeight = maxHeight)
+        Box(
+            modifier = Modifier.filterCard(border = true).padding(8.dp)
         ) { AlbumListFilterGenres(filter, filterGCount) { onFilterApply(it) } }
 
         Box(
-            modifier = Modifier.filterCard(border = true, maxHeight = maxHeight)
+            modifier = Modifier.filterCard(border = true).padding(8.dp)
         ) { AlbumListFilterTags(filter, filterTagsCount) { onFilterApply(it) } }
 
-        Row( modifier = Modifier.fillMaxWidth().filterCard(border = true, maxHeight = maxHeight).padding(start = 8.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Absolute.SpaceBetween)
-        {
+        Row(
+            modifier = Modifier.fillMaxWidth().filterCard(border = true).padding(start = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Absolute.SpaceBetween
+        ) {
             Text("Animated", style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold))
-            Checkbox(checked = filter.selection == "animated", onCheckedChange = { onFilterApply( filter.copy( selection = if (it) "animated" else "all" ) ) }, colors = CheckboxDefaults.colors(uncheckedBorderColor = Color.Gray))
+            Checkbox(checked = filter.selection == "animated", onCheckedChange = { onFilterApply(filter.copy(selection = if (it) "animated" else "all")) }, colors = CheckboxDefaults.colors(uncheckedBorderColor = Color.Gray))
         }
 
+        Spacer(Modifier.height(8.dp))
+
+    }
+
+    if (showSaveDialog) {
+        AlbumFilterSaveDialog(
+            filter = filter,
+            onDismiss = { showSaveDialog = false }
+        )
+    }
+
+    if (showSavedPresetsDialog) {
+        AlbumFilterSavedPresetsDialog(
+            onSelectPreset = { presetFilter ->
+                onFilterApply(presetFilter)
+            },
+            onDismiss = { showSavedPresetsDialog = false }
+        )
     }
 }
 
-
-
-@Preview(showBackground = true, backgroundColor = 0xFF1C1C1C, widthDp = 390, heightDp = 820)
+@Preview(showBackground = true, backgroundColor = 0xFF1C1C1C, widthDp = 390)
 @Composable
 private fun AlbumListFilterPreview() {
     var filter by remember { mutableStateOf(albumListFilterPreviewFilter()) }
