@@ -310,7 +310,20 @@ private fun RedFullScreenScaffold(
                 }
 
                 Box(modifier = Modifier.background(Theme.tabLevel1)) {
-                    FeedControls_Container_Line0(vm)
+                    FeedControls_Container_Line0(
+                        timeA = vm.timeA,
+                        timeB = vm.timeB,
+                        enableAB = vm.enableAB,
+                        play = vm.play,
+                        mute = vm.mute,
+                        onSetTimeA = vm::setTimeA,
+                        onSetTimeB = vm::setTimeB,
+                        onToggleAB = vm::toggleAB,
+                        onTogglePlay = vm::togglePlay,
+                        onRewind = { vm.rewind() },
+                        onForward = { vm.forward() },
+                        onToggleMute = vm::toggleMute
+                    )
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                         DownloadIndicator(vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value)
                     }

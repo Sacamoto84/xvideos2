@@ -55,7 +55,7 @@ class ScreenX_VideoPlayer(val url: String) : Screen {
                     Text("Не удалось загрузить видео", color = Color.White)
                     Spacer(modifier = Modifier.height(12.dp))
                     Row {
-                        Button(onClick = { vm.loadVideo() }) {
+                        Button(onClick = { vm.loadVideo(forceReload = true) }) {
                             Text("Повторить")
                         }
                         Spacer(modifier = Modifier.width(16.dp))

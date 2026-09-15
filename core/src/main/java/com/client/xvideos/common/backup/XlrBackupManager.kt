@@ -156,23 +156,25 @@ object XlrBackupManager {
             val rawOutput = context.contentResolver.openOutputStream(uri, "wt")
                 ?: error("Cannot open backup file")
 
-            val outputStream: OutputStream = if (password != null && password.isNotEmpty()) {
-                XlrEncryptedOutputStream(BufferedOutputStream(rawOutput), password)
-            } else {
-                BufferedOutputStream(rawOutput)
-            }
+            rawOutput.use { raw ->
+                val outputStream: OutputStream = if (password != null && password.isNotEmpty()) {
+                    XlrEncryptedOutputStream(BufferedOutputStream(raw), password)
+                } else {
+                    BufferedOutputStream(raw)
+                }
 
-            ZipOutputStream(BufferedOutputStream(outputStream)).use { zip ->
-                writeManifest(zip, safePaths, options)
-                safePaths.forEach { path ->
-                    val source = File(AppPath.main, path)
-                    if (source.exists()) {
-                        val report = writePath(zip, source, path, options)
-                        files += report.files
-                        bytes += report.bytes
-                    } else {
-                        zip.putNextEntry(ZipEntry("$path/"))
-                        zip.closeEntry()
+                ZipOutputStream(outputStream).use { zip ->
+                    writeManifest(zip, safePaths, options)
+                    safePaths.forEach { path ->
+                        val source = File(AppPath.main, path)
+                        if (source.exists()) {
+                            val report = writePath(zip, source, path, options)
+                            files += report.files
+                            bytes += report.bytes
+                        } else {
+                            zip.putNextEntry(ZipEntry("$path/"))
+                            zip.closeEntry()
+                        }
                     }
                 }
             }

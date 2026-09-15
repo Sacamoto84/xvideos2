@@ -173,12 +173,11 @@ object GallerySaver {
         try {
             resolver.openOutputStream(uri)?.use(write)
                 ?: error("Не удалось открыть поток записи для $fileName")
+            resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
         } catch (e: Throwable) {
             resolver.delete(uri, null, null)
             throw e
         }
-
-        resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
     }
 
     /** Есть ли уже такой файл в папке галереи. */

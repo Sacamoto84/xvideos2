@@ -198,7 +198,9 @@ class Downloader @Inject constructor(
                     onError = {
                         percent.value = -3f
                         onEvent("R Download: video не скачан ${item.id}: $it")
-                        SnackBar.error("Ошибка закачки: $it")
+                        if (showSnackBarErrors) {
+                            SnackBar.error("Ошибка закачки: $it")
+                        }
                     },
                     onProgress = { progress -> percent.value = progress / 100f },
                     onCompleted = {

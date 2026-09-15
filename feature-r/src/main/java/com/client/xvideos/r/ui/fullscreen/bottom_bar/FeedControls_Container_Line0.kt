@@ -3,7 +3,6 @@ package com.client.xvideos.r.ui.fullscreen.bottom_bar
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -35,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.feature.r.R
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toTwoDecimalPlacesWithColon
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
 
@@ -45,33 +43,40 @@ private fun Divider(){
 }
 
 @Composable
-fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
-
-    val border = Modifier.border(1.dp, Theme.R.colorBorderGray)
-
+fun FeedControls_Container_Line0(
+    timeA: Float,
+    timeB: Float,
+    enableAB: Boolean,
+    play: Boolean,
+    mute: Boolean,
+    onSetTimeA: () -> Unit,
+    onSetTimeB: () -> Unit,
+    onToggleAB: () -> Unit,
+    onTogglePlay: () -> Unit,
+    onRewind: () -> Unit,
+    onForward: () -> Unit,
+    onToggleMute: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth().height(48.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
             .horizontalScroll(state = rememberScrollState()),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Column(
             modifier = Modifier
                 .padding(horizontal = 4.dp)
                 .height(46.dp)
-                .width(46.dp)//.border(1.dp, Color.White)
-                //.border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
-                .clickable {
-                    vm.timeA = vm.currentPlayerTime
-                    if (vm.enableAB && vm.timeB <= vm.timeA) {
-                        vm.enableAB = false
-                    }
-                }, verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
+                .width(46.dp)
+                .clickable(onClick = onSetTimeA),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             BasicText(
-                vm.timeA.toTwoDecimalPlacesWithColon(),
+                timeA.toTwoDecimalPlacesWithColon(),
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 10.sp,
@@ -93,18 +98,15 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
         Divider()
 
         Column(
-            modifier = Modifier.height(46.dp).width(46.dp)
-                //.border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
-                .clickable {
-                    vm.timeB = vm.currentPlayerTime
-                    if (vm.enableAB && vm.timeB <= vm.timeA) {
-                        vm.enableAB = false
-                    }
-                },verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .height(46.dp)
+                .width(46.dp)
+                .clickable(onClick = onSetTimeB),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             BasicText(
-                vm.timeB.toTwoDecimalPlacesWithColon(), // Отформатируйте это значение!
+                timeB.toTwoDecimalPlacesWithColon(),
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 10.sp,
@@ -113,64 +115,102 @@ fun FeedControls_Container_Line0(vm: ScreenRedFullScreenSM) {
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Text("B", color = Color.White, fontSize = 20.sp, fontFamily = Theme.R.fontFamilyPopinsRegular, textAlign = TextAlign.Center)
-
+            Text(
+                "B",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontFamily = Theme.R.fontFamilyPopinsRegular,
+                textAlign = TextAlign.Center
+            )
         }
 
         Divider()
 
         IconButton(
-            onClick = {
-                if (!vm.enableAB && vm.timeB <= vm.timeA) {
-                    SnackBar.warning("Точка B должна быть больше точки A")
-                } else {
-                    vm.enableAB = vm.enableAB.not()
-                }
-            },
+            onClick = onToggleAB,
             modifier = Modifier.size(46.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(painter = painterResource(R.drawable.rg_button), contentDescription = if (vm.enableAB) "Выключить повтор отрезка A-B" else "Включить повтор отрезка A-B", tint = if (vm.enableAB) Color.Green else Color.LightGray)
-                Text("AB", color = if (vm.enableAB) Color.Green else Color.LightGray, fontSize = 8.sp, fontFamily = Theme.R.fontFamilyPopinsRegular)
+                Icon(
+                    painter = painterResource(R.drawable.rg_button),
+                    contentDescription = if (enableAB) "Выключить повтор отрезка A-B" else "Включить повтор отрезка A-B",
+                    tint = if (enableAB) Color.Green else Color.LightGray
+                )
+                Text(
+                    "AB",
+                    color = if (enableAB) Color.Green else Color.LightGray,
+                    fontSize = 8.sp,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular
+                )
             }
         }
 
         Divider()
 
-        IconButton(onClick = {
-            if (vm.play) {
-                vm.play = false
-                vm.currentPlayerControls?.pause()
-            } else {
-                vm.play = true
-                vm.currentPlayerControls?.play()
-            }
-        }) {
+        IconButton(onClick = onTogglePlay) {
             Icon(
-                painter = painterResource(if (vm.play) R.drawable.select_1 else R.drawable.rg_button),
-                contentDescription = null, tint = Color.White, modifier = Modifier.rotate(if (vm.play) 90f else 0f)
+                painter = painterResource(if (play) R.drawable.select_1 else R.drawable.rg_button),
+                contentDescription = if (play) "Пауза" else "Воспроизведение",
+                tint = Color.White,
+                modifier = Modifier.rotate(if (play) 90f else 0f)
             )
         }
 
         Divider()
-        IconButton(onClick = { vm.currentPlayerControls?.rewind(1f)}) { Icon(painter = painterResource(R.drawable.exo_icon_rewind), contentDescription = "Перемотать назад", tint = Color.White) }
+        IconButton(onClick = onRewind) {
+            Icon(
+                painter = painterResource(R.drawable.exo_icon_rewind),
+                contentDescription = "Перемотать назад",
+                tint = Color.White
+            )
+        }
         Divider()
-        IconButton(onClick = { vm.currentPlayerControls?.forward(1f) }) { Icon(painter = painterResource(R.drawable.exo_icon_fastforward), contentDescription = "Перемотать вперёд", tint = Color.White) }
+        IconButton(onClick = onForward) {
+            Icon(
+                painter = painterResource(R.drawable.exo_icon_fastforward),
+                contentDescription = "Перемотать вперёд",
+                tint = Color.White
+            )
+        }
         Divider()
 
         Box(
             modifier = Modifier
-                .height(46.dp) .width(46.dp)
-                .clickable(onClick = {
-                    vm.mute = vm.mute.not()
-                }), contentAlignment = Alignment.Center
+                .height(46.dp)
+                .width(46.dp)
+                .clickable(onClick = onToggleMute),
+            contentAlignment = Alignment.Center
         ) {
-            val icon = if (vm.mute) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp
-            Icon(icon, contentDescription = null, tint = if (vm.mute) Color.Gray else Color.White) }
-
+            val icon = if (mute) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
+            Icon(
+                icon,
+                contentDescription = if (mute) "Включить звук" else "Выключить звук",
+                tint = if (mute) Color.Gray else Color.White
+            )
+        }
     }
+}
 
+@Composable
+fun FeedControls_Container_Line0(
+    vm: ScreenRedFullScreenSM,
+    modifier: Modifier = Modifier,
+) {
+    FeedControls_Container_Line0(
+        timeA = vm.timeA,
+        timeB = vm.timeB,
+        enableAB = vm.enableAB,
+        play = vm.play,
+        mute = vm.mute,
+        onSetTimeA = vm::setTimeA,
+        onSetTimeB = vm::setTimeB,
+        onToggleAB = vm::toggleAB,
+        onTogglePlay = vm::togglePlay,
+        onRewind = { vm.rewind() },
+        onForward = { vm.forward() },
+        onToggleMute = vm::toggleMute,
+        modifier = modifier,
+    )
 }
 
 

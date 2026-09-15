@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pType
@@ -30,7 +31,7 @@ object LAlbumExporter {
         return runCatching {
             outboxAlbumRoot.mkdirs()
             val outFile = File(outboxAlbumRoot, fileName)
-            outFile.writeText(AppJson.encodeToString(album), Charsets.UTF_8)
+            outFile.writeTextAtomically(AppJson.encodeToString(album))
             P2pExportBundle(P2pType.L_ALBUM, outboxAlbumRoot, listOf(outFile), outFile)
         }.getOrNull()
     }

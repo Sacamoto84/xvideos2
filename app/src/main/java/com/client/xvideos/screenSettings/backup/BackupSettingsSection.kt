@@ -379,6 +379,7 @@ internal fun BackupSettingsSection(
                                             withContext(Dispatchers.IO) {
                                                 data.savedRed?.refreshAll()
                                                 data.blockRed?.refresh()
+                                                data.downloadRed?.refreshDownloadList()
                                             }
                                             SnackBar.success("Backup восстановлен: ${report.files} файлов")
                                             appendBackupLog("Backup восстановлен: ${report.files} файлов, ${formatBytes(report.bytes)}")

@@ -67,7 +67,14 @@ class ScreenTagsViewModel @AssistedInject constructor(
     suspend fun loadPage(index: Int): ModelScreenTag {
         // Страницы адресуются /tags/<тег>/N; /tags/<тег> и /tags/<тег>/0 — одно и то же.
         // Названия тегов парсятся с пробелами ("big tits"), а в URL XVideos использует дефисы ("big-tits").
-        val formattedTag = tag.trim().replace(Regex("\\s+"), "-")
+        // Также санитизируем спецсимволы путей/запросов (#, ?, &, /, \), чтобы не ломать адрес запроса.
+        val formattedTag = tag.trim()
+            .replace(Regex("[#?&/\\\\]+"), "-")
+            .replace(Regex("\\s+"), "-")
+            .trim('-')
+        if (formattedTag.isEmpty()) {
+            throw IOException("Недопустимое имя тега: $tag")
+        }
         val html = readHtmlFromURLDirect("$urlStart/tags/$formattedTag/$index")
         if (html.isEmpty()) {
             throw IOException("Не удалось загрузить страницу тега $tag")

@@ -8,7 +8,10 @@ import java.net.URI
 class X_TagUrlSanitizationTest {
 
     private fun formatTagPath(tag: String, pageIndex: Int): String {
-        val formattedTag = tag.trim().replace(Regex("\\s+"), "-")
+        val formattedTag = tag.trim()
+            .replace(Regex("[#?&/\\\\]+"), "-")
+            .replace(Regex("\\s+"), "-")
+            .trim('-')
         return "$urlStart/tags/$formattedTag/$pageIndex"
     }
 
@@ -42,5 +45,25 @@ class X_TagUrlSanitizationTest {
         assertEquals("$urlStart/tags/step-mom/2", url)
         assertFalse(url.contains(" "))
         URI.create(url)
+    }
+
+    @Test
+    fun `tag with special url characters is sanitized without corrupting path`() {
+        val url = formatTagPath("tag#with?query&slash/and\\backslash", 0)
+        assertEquals("$urlStart/tags/tag-with-query-slash-and-backslash/0", url)
+        assertFalse(url.contains("#"))
+        assertFalse(url.contains("?"))
+        assertFalse(url.contains("&"))
+        assertFalse(url.contains("\\"))
+        URI.create(url)
+    }
+
+    @Test
+    fun `tag with only special characters sanitizes to empty string`() {
+        val sanitized = "###///???".trim()
+            .replace(Regex("[#?&/\\\\]+"), "-")
+            .replace(Regex("\\s+"), "-")
+            .trim('-')
+        assertEquals("", sanitized)
     }
 }

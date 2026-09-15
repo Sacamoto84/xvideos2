@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.fullscreen
 
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -9,6 +10,7 @@ import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -23,6 +25,7 @@ import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
 
+@Stable
 class ScreenRedFullScreenSM @Inject constructor(
     val connectivityObserver: ConnectivityObserver,
     val downloadRed: DownloadRed,
@@ -45,7 +48,48 @@ class ScreenRedFullScreenSM @Inject constructor(
     var currentPlayerTime by mutableFloatStateOf(0f)
     var currentPlayerDuration by mutableIntStateOf(0)
 
-    var bufferIng by mutableStateOf(false)
+    fun setTimeA() {
+        timeA = currentPlayerTime
+        if (enableAB && timeB <= timeA) {
+            enableAB = false
+        }
+    }
+
+    fun setTimeB() {
+        timeB = currentPlayerTime
+        if (enableAB && timeB <= timeA) {
+            enableAB = false
+        }
+    }
+
+    fun toggleAB() {
+        if (!enableAB && timeB <= timeA) {
+            SnackBar.warning("Точка B должна быть больше точки A")
+        } else {
+            enableAB = !enableAB
+        }
+    }
+
+    fun togglePlay() {
+        play = !play
+        if (play) {
+            currentPlayerControls?.play()
+        } else {
+            currentPlayerControls?.pause()
+        }
+    }
+
+    fun rewind(seconds: Float = 1f) {
+        currentPlayerControls?.rewind(seconds)
+    }
+
+    fun forward(seconds: Float = 1f) {
+        currentPlayerControls?.forward(seconds)
+    }
+
+    fun toggleMute() {
+        mute = !mute
+    }
 }
 
 @Module

@@ -96,24 +96,24 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
     private var loadJob: kotlinx.coroutines.Job? = null
 
-    fun loadVideo() {
+    fun loadVideo(forceReload: Boolean = false) {
         loadJob?.cancel()
         isLoading = true
         isError = false
         loadJob = screenModelScope.launch {
             try {
-                Timber.e("!!! ScreenVideoPlayerSM loadVideo()")
+                Timber.e("!!! ScreenVideoPlayerSM loadVideo(forceReload=$forceReload)")
+
+                if (forceReload) {
+                    db.cacheUrlStringRam.delete(url)
+                }
 
                 // RAM-кэш чистится при старте процесса (clearVolatileCachesOnProcessStart),
                 // поэтому HLS-ссылки с истекающим токеном обновятся после перезапуска.
-                // ROM-кэш хранил страницу вечно → протухший токен ломал воспроизведение.
-                val res = db.cacheUrlStringRam.get(url)
+                val res = if (forceReload) null else db.cacheUrlStringRam.get(url)
+                val isFromCache = res != null
                 val s = if (res == null) {
-                    val content = readHtmlFromURLDirect(url)
-                    if (content.isNotBlank()) {
-                        db.cacheUrlStringRam.put(url, content)
-                    }
-                    content
+                    readHtmlFromURLDirect(url)
                 } else {
                     res.content
                 }
@@ -134,12 +134,16 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 passedHLS = parsedData.third
                 if (parsedData.third.isBlank()) {
                     isError = true
+                    db.cacheUrlStringRam.delete(url)
+                } else if (!isFromCache && s.isNotBlank()) {
+                    db.cacheUrlStringRam.put(url, s)
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.w(e, "Страница видео не загрузилась: %s", url)
                 isError = true
+                db.cacheUrlStringRam.delete(url)
             } finally {
                 isLoading = false
             }
