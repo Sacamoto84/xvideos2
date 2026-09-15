@@ -384,4 +384,27 @@ class CalculatorStateTest {
         assertEquals("0", state.displayValue)
         assertTrue(state.isNewEntry)
     }
+
+    @Test
+    fun `вычитание дающее отрицательную дробь между 0 и -1 сохраняет знак минус`() = runTest {
+        val state = CalculatorState()
+        state.onDigit("1", noOpHaptic)
+        state.onOperator("-", noOpHaptic)
+        state.onDigit("1", noOpHaptic)
+        state.onDecimal(noOpHaptic)
+        state.onDigit("5", noOpHaptic)
+
+        state.onEquals(this, noOpHaptic) { false }
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("-0.5", state.displayValue)
+    }
+
+    @Test
+    fun `formatNumber сохраняет знак минус для отрицательных дробей`() {
+        val state = CalculatorState()
+        assertEquals("-0.5", state.formatNumber(java.math.BigDecimal("-0.5")))
+        assertEquals("-0.05", state.formatNumber(java.math.BigDecimal("-0.05")))
+        assertEquals("-1 000.5", state.formatNumber(java.math.BigDecimal("-1000.5")))
+    }
 }

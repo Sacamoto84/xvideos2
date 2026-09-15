@@ -124,6 +124,9 @@ class Downloader @Inject constructor(
             )
         } else {
             SnackBar.info("Файл есть в кеше")
+            scope.launch(Dispatchers.Main) {
+                onComplete()
+            }
         }
 
     }

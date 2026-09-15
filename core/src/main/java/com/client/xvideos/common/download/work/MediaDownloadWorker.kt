@@ -14,6 +14,7 @@ import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.net.doh.AppDns
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
@@ -83,6 +84,7 @@ class MediaDownloadWorker(
 
             if (isStopped) {
                 Timber.w("MediaDownloadWorker: Загрузка отменена или остановлена ОС")
+                targets.tempFile.delete()
                 return@withContext Result.failure()
             }
 
@@ -97,8 +99,13 @@ class MediaDownloadWorker(
                     DownloadWorkRequest.KEY_PROGRESS to 100
                 )
             )
+        } catch (e: CancellationException) {
+            Timber.i("MediaDownloadWorker: Загрузка отменена: $fileName")
+            targets.tempFile.delete()
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "MediaDownloadWorker: Ошибка при скачивании $fileName")
+            targets.tempFile.delete()
             showFailedNotification(title, e.message ?: "Ошибка сети")
             Result.failure(
                 workDataOf(
@@ -142,6 +149,10 @@ class MediaDownloadWorker(
     ) {
         if (!targets.tempFile.exists()) {
             throw IOException("Временный файл отсутствует после загрузки")
+        }
+        if (targets.tempFile.length() == 0L) {
+            targets.tempFile.delete()
+            throw IOException("Загрузка не удалась: получен пустой файл (0 байт)")
         }
 
         if (targets.targetFile.exists()) {

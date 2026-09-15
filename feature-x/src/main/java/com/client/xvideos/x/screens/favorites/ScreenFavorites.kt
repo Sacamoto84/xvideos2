@@ -314,8 +314,9 @@ private fun FavoriteActionsExpandMenu(
 /** Продолжительность видео в правом верхнем углу с «тенью» (как в оригинале). */
 @Composable
 private fun DurationOverlay(duration: String) {
+    val text = duration.trim().removeSuffix(".")
+    if (text.isEmpty()) return
     val offsetY = (-3).dp
-    val text = duration.dropLast(1)
     Box(modifier = Modifier) {
         Text(
             text = text,

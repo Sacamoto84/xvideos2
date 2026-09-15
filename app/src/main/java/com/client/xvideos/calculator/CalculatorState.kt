@@ -302,17 +302,22 @@ class CalculatorState(
         else -> b
     }
 
-    private fun formatNumber(number: BigDecimal): String {
+    internal fun formatNumber(number: BigDecimal): String {
         val stripped = number.stripTrailingZeros()
         val plain = stripped.toPlainString()
 
-        if (plain.contains(".")) {
-            val parts = plain.split(".")
+        val isNegative = plain.startsWith("-")
+        val unsigned = if (isNegative) plain.removePrefix("-") else plain
+
+        val formatted = if (unsigned.contains(".")) {
+            val parts = unsigned.split(".")
             val intPart = parts[0].toLongOrNull()?.let { integerFormatter.format(it) } ?: parts[0]
-            return "$intPart.${parts[1]}"
+            "$intPart.${parts[1]}"
+        } else {
+            unsigned.toLongOrNull()?.let { integerFormatter.format(it) } ?: unsigned
         }
 
-        return plain.toLongOrNull()?.let { integerFormatter.format(it) } ?: plain
+        return if (isNegative) "-$formatted" else formatted
     }
 
     companion object {

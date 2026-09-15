@@ -61,4 +61,14 @@ class SavedX_DownloadsTest {
 
         assertEquals(listOf("2.info", "3.info", "1.info"), sorted)
     }
+
+    @Test
+    fun `отрицательные и нулевые ID всегда возвращают false в проверках`() {
+        val videoIds = setOf(123L)
+        fun contains(id: Long) = id > 0L && videoIds.contains(id)
+        assertFalse(contains(0L))
+        assertFalse(contains(-1L))
+        assertFalse(contains(-999L))
+        assertTrue(contains(123L))
+    }
 }

@@ -30,8 +30,9 @@ object AppLockRepository {
 
     fun isPasswordSet(context: Context): Boolean {
         val prefs = context.applicationContext.defaultSharedPreferences()
-        return !prefs.getString(KEY_PASSWORD_HASH, null).isNullOrBlank() &&
-                !prefs.getString(KEY_PASSWORD_SALT, null).isNullOrBlank()
+        val hash = prefs.getString(KEY_PASSWORD_HASH, null) ?: return false
+        val salt = prefs.getString(KEY_PASSWORD_SALT, null) ?: return false
+        return hash.isNotBlank() && salt.isNotBlank() && hash.fromBase64() != null && salt.fromBase64() != null
     }
 
     fun isEnabled(context: Context): Boolean {
@@ -153,7 +154,7 @@ object AppLockRepository {
         return Base64.encodeToString(this, Base64.NO_WRAP)
     }
 
-    private fun String.fromBase64(): ByteArray {
-        return Base64.decode(this, Base64.NO_WRAP)
+    private fun String.fromBase64(): ByteArray? {
+        return runCatching { Base64.decode(this, Base64.NO_WRAP) }.getOrNull()
     }
 }

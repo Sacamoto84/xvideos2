@@ -218,31 +218,32 @@ fun DashboardsPaginatedListContent(
                     }
                 )
                 {
+                    val durationText = cell.duration.trim().removeSuffix(".")
+                    if (durationText.isNotEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            val offsetY = (-3).dp
 
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        val offsetY = (-3).dp
+                            //Продолжительность видео
+                            Text(
+                                text = durationText,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .offset(0.5.dp, offsetY + 0.5.dp),
+                                textAlign = TextAlign.Right,
+                                fontSize = 14.sp,
+                                color = Color.Black
+                            )
 
-                        //Продолжительность видео
-                        Text(
-                            text = cell.duration.dropLast(1),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(0.5.dp, offsetY + 0.5.dp),
-                            textAlign = TextAlign.Right,
-                            fontSize = 14.sp,
-                            color = Color.Black
-                        )
-
-                        Text(
-                            text = cell.duration.dropLast(1),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(0.dp, offsetY),
-                            textAlign = TextAlign.Right,
-                            fontSize = 14.sp,
-                            color = Color.White
-                        )
-
+                            Text(
+                                text = durationText,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .offset(0.dp, offsetY),
+                                textAlign = TextAlign.Right,
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        }
                     }
 
 

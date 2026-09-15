@@ -57,7 +57,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     }
 
     /** O(1) in-memory проверка: файл видео уже сохранён. */
-    fun contains(id: Long): Boolean = _downloadedVideoIds.value.contains(id)
+    fun contains(id: Long): Boolean = id > 0L && _downloadedVideoIds.value.contains(id)
 
     /** `file://`-URI скачанного видео (для ExoPlayer). */
     fun localUrl(id: Long): String = Uri.fromFile(File(dir, "$id.mp4")).toString()
@@ -67,7 +67,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
      * UrlImage сам грузит локальный файл, если строка не начинается с `https://`.
      */
     fun localPosterPath(id: Long): String? {
-        return if (_downloadedPosterIds.value.contains(id)) File(dir, "$id.jpg").absolutePath else null
+        return if (id > 0L && _downloadedPosterIds.value.contains(id)) File(dir, "$id.jpg").absolutePath else null
     }
 
     /**
@@ -79,6 +79,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
      * Прогресс отражается в [percent], по завершении пишется `.info` и шлётся снекбар.
      */
     fun download(item: ItemsX) {
+        if (item.id <= 0L) return
         if (contains(item.id)) {
             SnackBar.info("Уже сохранено")
             return
@@ -151,6 +152,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
      * иначе резолвим прямой mp4 и качаем туда целиком.
      */
     fun saveToGallery(item: ItemsX) {
+        if (item.id <= 0L) return
         val context = AppContextHolder.applicationContext
         val fileName = "x_${item.id}.mp4"
 
@@ -172,6 +174,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     }
 
     fun delete(item: ItemsX) {
+        if (item.id <= 0L) return
         scope.launch(Dispatchers.IO) {
             File(dir, "${item.id}.mp4").delete()
             File(dir, "${item.id}.jpg").delete()

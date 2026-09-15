@@ -171,7 +171,11 @@ class SavedL_Collection(
     /* ---------- Текущая коллекция ---------- */
 
     fun setCollection(collectionName: String) {
-        currentCollectionName = collectionName
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
+            SnackBar.error("Недопустимое название коллекции")
+            return
+        }
+        currentCollectionName = safeName
         refresh()
     }
 

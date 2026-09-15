@@ -43,13 +43,19 @@ data class LSavedLikeMetadata(
 )
 
 fun readLSavedLikeMetadata(file: File): LSavedLikeMetadata? {
-    if (!file.exists()) {
-        Timber.w("L saved metadata missing, skip folder: ${file.parentFile?.absolutePath ?: file.absolutePath}")
+    if (!file.exists() || file.length() == 0L) {
+        Timber.w("L saved metadata missing or empty, skip folder: ${file.parentFile?.absolutePath ?: file.absolutePath}")
+        return null
+    }
+
+    val text = file.readText(Charsets.UTF_8)
+    if (text.isBlank()) {
+        Timber.w("L saved metadata blank, skip: ${file.absolutePath}")
         return null
     }
 
     return try {
-        AppJson.decodeFromString<LSavedLikeMetadata>(file.readText(Charsets.UTF_8))
+        AppJson.decodeFromString<LSavedLikeMetadata>(text)
     } catch (e: Exception) {
         Timber.e(e, "!!! read L like metadata error: ${file.absolutePath}")
         null

@@ -158,7 +158,7 @@ class ExpandMenuViewModel @Inject constructor(
                         readLSavedLikeMetadata(File(f, L_METADATA_FILE_NAME))
                             ?.let { File(f, it.mediaFileName) }
                     }
-                    ?.takeIf { it.exists() }
+                    ?.takeIf { it.exists() && it.length() > 0L }
 
                 val src = localBig ?: run {
                     SnackBar.info("Сохранение в галерею…")
