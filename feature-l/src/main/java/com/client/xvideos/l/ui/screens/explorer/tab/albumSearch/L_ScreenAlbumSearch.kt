@@ -63,8 +63,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -238,9 +240,11 @@ class ScreenLAlbumSearchSM @Inject constructor(
         if (query.isBlank()) return
         screenModelScope.launch {
             isLoading.value = true
-            result.value = luscious.getLandingPageAlbumSearch(query).getOrElse {
-                Timber.e(it, "!!! eee ScreenLAlbumSearchSM search")
-                null
+            result.value = withContext(Dispatchers.IO) {
+                luscious.getLandingPageAlbumSearch(query).getOrElse {
+                    Timber.e(it, "!!! eee ScreenLAlbumSearchSM search")
+                    null
+                }
             }
             isLoading.value = false
         }

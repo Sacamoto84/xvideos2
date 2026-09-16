@@ -156,10 +156,17 @@ class SavedL_Collection(
 
         val renamed = if (!oldRoot.renameTo(newRoot)) {
             try {
-                oldRoot.copyRecursively(newRoot, overwrite = false)
-                oldRoot.deleteRecursively()
+                val copied = oldRoot.copyRecursively(newRoot, overwrite = false)
+                if (copied) {
+                    oldRoot.deleteRecursively()
+                    true
+                } else {
+                    newRoot.deleteRecursively()
+                    false
+                }
             } catch (e: Exception) {
                 Timber.e(e, "SavedL_Collection renameCollection() fallback failed")
+                newRoot.deleteRecursively()
                 false
             }
         } else {

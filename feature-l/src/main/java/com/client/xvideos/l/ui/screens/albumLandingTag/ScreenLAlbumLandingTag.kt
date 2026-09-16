@@ -65,8 +65,11 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import timber.log.Timber
 
@@ -419,7 +422,19 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
     init {
         Timber.i("iii ScreenLAlbumLandingTagSM init")
         screenModelScope.launch {
-            albumTopHits.value = luscious.getLandingPageAlbumTag(tag).getOrThrow()
+            try {
+                val res = withContext(Dispatchers.IO) {
+                    luscious.getLandingPageAlbumTag(tag)
+                }
+                albumTopHits.value = res.getOrNull()
+                if (res.isFailure) {
+                    Timber.w(res.exceptionOrNull(), "ScreenLAlbumLandingTagSM: failed to load tag $tag")
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "ScreenLAlbumLandingTagSM: exception loading tag $tag")
+            }
         }
 
         depthState.depth = 100

@@ -69,6 +69,7 @@ import com.client.xvideos.l.model.lPreviewImageUrl
 import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
@@ -343,9 +344,14 @@ class L_FullScreenImage(
     }
 }
 
-private fun resolveInitialIndex(items: List<PicsDetails>, target: PicsDetails): Int {
+internal fun resolveInitialIndex(items: List<PicsDetails>, target: PicsDetails): Int {
     if (items.isEmpty()) return 0
-    return items.indexOf(target).coerceIn(0, items.lastIndex)
+    val exact = items.indexOf(target)
+    if (exact >= 0) return exact
+    val targetKey = target.selectionKey()
+    val byKey = items.indexOfFirst { it.selectionKey() == targetKey }
+    if (byKey >= 0) return byKey
+    return 0
 }
 
 private fun resolveScrollIndex(currentIndex: Int, maxIndex: Int): Int =

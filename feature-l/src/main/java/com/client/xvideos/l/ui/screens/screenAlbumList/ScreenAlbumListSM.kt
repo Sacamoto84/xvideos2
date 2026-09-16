@@ -101,17 +101,17 @@ class ScreenLAlbumListSM @AssistedInject constructor(
             try {
                 //_isRefreshing.value = true
 
-                val agr = luscious.getAlbumListAggregations(1, filter.value)
+                val agr = withContext(Dispatchers.IO) {
+                    luscious.getAlbumListAggregations(1, filter.value)
+                }
                 if (agr.isFailure) {
                     return@launch
                 }
 
-                withContext(Dispatchers.Main) {
-                    val agrRes = agr.getOrThrow()
-                    filterGenreStateCount.value = agrRes.filterGenreStateCount
-                    filterTaggedStateCount.value = agrRes.filterTaggedStateCount
-                    filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
-                }
+                val agrRes = agr.getOrThrow()
+                filterGenreStateCount.value = agrRes.filterGenreStateCount
+                filterTaggedStateCount.value = agrRes.filterTaggedStateCount
+                filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -127,34 +127,34 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     fun loadInitialData() {
         screenModelScope.launch {
             //_isRefreshing.value = true
-                try {
-                    val a = luscious.getAlbumList(1, filter.value)
-                    if (a.isFailure) {
-                        return@launch
-                    }
-
-                withContext(Dispatchers.Main) {
-                    val res = a.getOrThrow()
-                    info.value = res.info
-                    bigList.clear()
-                    delay(100)
-                    bigList.put(
-                        0,
-                        AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
-                    )
+            try {
+                val a = withContext(Dispatchers.IO) {
+                    luscious.getAlbumList(1, filter.value)
+                }
+                if (a.isFailure) {
+                    return@launch
                 }
 
-                val agr = luscious.getAlbumListAggregations(1, filter.value)
+                val res = a.getOrThrow()
+                info.value = res.info
+                bigList.clear()
+                delay(100)
+                bigList.put(
+                    0,
+                    AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
+                )
+
+                val agr = withContext(Dispatchers.IO) {
+                    luscious.getAlbumListAggregations(1, filter.value)
+                }
                 if (agr.isFailure) {
                     return@launch
                 }
 
-                withContext(Dispatchers.Main) {
-                    val agrRes = agr.getOrThrow()
-                    filterGenreStateCount.value = agrRes.filterGenreStateCount
-                    filterTaggedStateCount.value = agrRes.filterTaggedStateCount
-                    filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
-                }
+                val agrRes = agr.getOrThrow()
+                filterGenreStateCount.value = agrRes.filterGenreStateCount
+                filterTaggedStateCount.value = agrRes.filterTaggedStateCount
+                filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
 
                 //albumList.value?.getAlbumList(1, filter.value)
                 //albumList.value?.getAlbumListAggregations(1)

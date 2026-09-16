@@ -2,6 +2,7 @@ package com.client.xvideos.l
 
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.screens.screenFullScreen.LFullScreenPayload
+import com.client.xvideos.l.ui.screens.screenFullScreen.resolveInitialIndex
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -55,13 +56,23 @@ class LFullScreenPayloadTest {
     }
 
     @Test
-    fun `вычисление initialIndex безопасно при пустом списке картинок`() {
-        val emptyList = emptyList<PicsDetails>()
-        val dummyItem = picture("https://cdn/dummy.jpg")
+    fun `resolveInitialIndex находит точное совпадение`() {
+        val items = listOf(picture("https://cdn/1.jpg"), picture("https://cdn/2.jpg"), picture("https://cdn/3.jpg"))
+        assertEquals(1, resolveInitialIndex(items, items[1]))
+    }
 
-        val initialIndex = if (emptyList.isEmpty()) 0
-        else emptyList.indexOf(dummyItem).coerceIn(0, emptyList.lastIndex)
+    @Test
+    fun `resolveInitialIndex находит совпадение по selectionKey`() {
+        val original = picture("https://cdn/target.jpg")
+        val items = listOf(picture("https://cdn/1.jpg"), original, picture("https://cdn/3.jpg"))
+        val targetVariant = original.copy(album = "999")
+        assertEquals(1, resolveInitialIndex(items, targetVariant))
+    }
 
-        assertEquals(0, initialIndex)
+    @Test
+    fun `resolveInitialIndex возвращает 0 если ничего не найдено или список пуст`() {
+        assertEquals(0, resolveInitialIndex(emptyList(), picture("https://cdn/none.jpg")))
+        val items = listOf(picture("https://cdn/1.jpg"), picture("https://cdn/2.jpg"))
+        assertEquals(0, resolveInitialIndex(items, picture("https://cdn/unknown.jpg")))
     }
 }
