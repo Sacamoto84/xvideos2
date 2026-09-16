@@ -34,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,6 +89,7 @@ import timber.log.Timber
  * @param tag Тег для UI-тестов
  */
 
+@Suppress("LongMethod")
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun L_LazyRowPictureDetails(
@@ -120,6 +122,9 @@ fun L_LazyRowPictureDetails(
 
     /** Показывать ли кнопку "вверх" */
     val showScrollToTop by remember { derivedStateOf { host.state.firstVisibleItemIndex > 2 } }
+
+    /** Активный диапазон элементов для загрузки: видимые на экране + буфер перед и после скролла */
+    val activeItemRange by rememberActiveItemRange(host, showInitialLoading)
 
     val scope = rememberCoroutineScope()
 
@@ -220,7 +225,8 @@ fun L_LazyRowPictureDetails(
                                     modifier = Modifier.fillMaxSize(),
                                     albumName = host.albumName,
                                     isAnimated = false,
-                                    backgroung = Theme.tabLevel1
+                                    backgroung = Theme.tabLevel1,
+                                    isVisible = index in activeItemRange
                                 )
                             } else {
                                 AnimatedVideoPlaceholder(modifier = Modifier.fillMaxSize())
@@ -428,3 +434,26 @@ private fun LInlineAnimationVideoPreview() {
         )
     }
 }
+
+@Composable
+private fun rememberActiveItemRange(
+    host: LazyRowPictureDetailsHost,
+    showInitialLoading: Boolean
+): State<IntRange> {
+    return remember(host, showInitialLoading) {
+        derivedStateOf {
+            val visible = host.state.layoutInfo.visibleItemsInfo
+            if (visible.isEmpty()) {
+                0..15
+            } else {
+                val headerOffset = if (showInitialLoading) 2 else 1
+                val first = (visible.minOf { it.index } - headerOffset).coerceAtLeast(0)
+                val last = (visible.maxOf { it.index } - headerOffset).coerceAtLeast(0)
+                val bufferBefore = host.columns
+                val bufferAfter = host.columns * 2
+                ((first - bufferBefore).coerceAtLeast(0))..(last + bufferAfter)
+            }
+        }
+    }
+}
+

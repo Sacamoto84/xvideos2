@@ -11,6 +11,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowHardware
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.settings.Settings
+import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import timber.log.Timber
 import java.io.File
@@ -53,7 +54,13 @@ object CoilImageLoaderFactory {
         val diskCacheMaxBytes = normalizedDiskCacheSizeMb().toLong() * BYTES_IN_MB
         val ramCachePercent = normalizedRamCachePercent() / 100.0
 
+        val dispatcher = Dispatcher().apply {
+            maxRequests = 64
+            maxRequestsPerHost = 16
+        }
+
         val okHttpBuilder = OkHttpClient.Builder()
+            .dispatcher(dispatcher)
             .dns(AppDns)
             .addNetworkInterceptor(
                 ProgressInterceptor { requestUrl, bytes, total, done ->

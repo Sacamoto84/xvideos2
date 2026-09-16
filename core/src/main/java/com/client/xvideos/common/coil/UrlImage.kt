@@ -5,7 +5,6 @@ import com.client.xvideos.common.theme.Theme
 import android.graphics.drawable.AnimatedImageDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -97,10 +96,6 @@ fun UrlImage(
 
 ) {
 
-//    if (!isVisible) {
-//        Box(modifier = Modifier.fillMaxSize().background(Color.Transparent))
-//        return
-//    }
 
     //if (isAnimated) return
 
@@ -223,12 +218,18 @@ fun UrlImage(
     }
 
     var state by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
+    var hasLoaded by remember(url) { mutableStateOf(false) }
+    val shouldLoad = isVisible || hasLoaded
+
     val currentOnSuccess by rememberUpdatedState(onSuccess)
     val currentOnFailure by rememberUpdatedState(onFailure)
 
     LaunchedEffect(state) {
         when (state) {
-            is AsyncImagePainter.State.Success -> currentOnSuccess()
+            is AsyncImagePainter.State.Success -> {
+                hasLoaded = true
+                currentOnSuccess()
+            }
             is AsyncImagePainter.State.Error -> currentOnFailure()
             else -> Unit
         }
@@ -268,7 +269,7 @@ fun UrlImage(
         contentAlignment = Alignment.Center
     )
     {
-
+        if (shouldLoad) {
             AsyncImage(
                 onState = { st ->
                     state = st
@@ -314,99 +315,82 @@ fun UrlImage(
                     )
             )
 
-        when (state) {
-            is AsyncImagePainter.State.Empty -> { }
+            when (state) {
+                is AsyncImagePainter.State.Empty -> { }
 
-            is AsyncImagePainter.State.Loading -> {
+                is AsyncImagePainter.State.Loading -> {
 
-                if (isVisibleLoadingIndicator) {
+                    if (isVisibleLoadingIndicator) {
 
-                    Box( modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center )
-                    {
-                        if (isAnimated) {
-                            // Показываем прогресс в процентах если известен общий размер
-                            if (total > 0 && bytes > 0) {
-                                val progress = (bytes.toFloat() / total.toFloat())
-                                CircularProgressIndicator( progress = { progress }, modifier = Modifier.size(sizeLoadingIndicator) )
+                        Box( modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center )
+                        {
+                            if (isAnimated) {
+                                // Показываем прогресс в процентах если известен общий размер
+                                if (total > 0 && bytes > 0) {
+                                    val progress = (bytes.toFloat() / total.toFloat())
+                                    CircularProgressIndicator( progress = { progress }, modifier = Modifier.size(sizeLoadingIndicator) )
+                                } else {
+                                    CircularProgressIndicator( modifier = Modifier.size(sizeLoadingIndicator), color = Color.Gray )
+                                }
                             } else {
                                 CircularProgressIndicator( modifier = Modifier.size(sizeLoadingIndicator), color = Color.Gray )
                             }
-                        } else {
-                            CircularProgressIndicator( modifier = Modifier.size(sizeLoadingIndicator), color = Color.Gray )
                         }
+
                     }
 
                 }
 
-            }
+                is AsyncImagePainter.State.Success -> { }
 
-            is AsyncImagePainter.State.Success -> { }
-
-            is AsyncImagePainter.State.Error -> {
-                // Текст исключения был виден пользователю прямо в карточке
-                // («Ошибка загрузки: filePath == null»). Подробность нужна в
-                // журнале, на экране достаточно значка.
-                val error = (state as AsyncImagePainter.State.Error).result.throwable
-                LaunchedEffect(url, error) { Timber.w(error, "!!! UrlImage load failed url:%s", url) }
-                Box( modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center ) {
-                    Icon(
-                        imageVector = Icons.Default.BrokenImage,
-                        contentDescription = null,
-                        tint = Color.Gray,
-                        modifier = Modifier.size(sizeButtonIcon)
-                    )
+                is AsyncImagePainter.State.Error -> {
+                    // Текст исключения был виден пользователю прямо в карточке
+                    // («Ошибка загрузки: filePath == null»). Подробность нужна в
+                    // журнале, на экране достаточно значка.
+                    val error = (state as AsyncImagePainter.State.Error).result.throwable
+                    LaunchedEffect(url, error) { Timber.w(error, "!!! UrlImage load failed url:%s", url) }
+                    Box( modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center ) {
+                        Icon(
+                            imageVector = Icons.Default.BrokenImage,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(sizeButtonIcon)
+                        )
+                    }
                 }
             }
-        }
 
 
-        //        // Кнопка управления анимацией
-        if (isAnimated) {
+            // Кнопка управления анимацией
+            if (isAnimated) {
+                Box(
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .align(Alignment.BottomStart)
+                        .size(sizeButton)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (url.startsWith("http://", ignoreCase = true) || url.startsWith("https://", ignoreCase = true)) {
+                        Icon( Icons.Default.Animation, contentDescription = null, tint = Color.White, modifier = Modifier.size(sizeButtonIcon) )
+                    } else {
+                        Icon( if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black,  modifier = Modifier.size(sizeButtonIcon) )
+                        Icon( if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(sizeButtonIcon).offset((-0.5).dp, (-0.5).dp) )
+                    }
+                }
+            }
+
+            // Прогресс загрузки
+            if (isVisibleProgressText) { Box(modifier = Modifier.align(Alignment.BottomEnd)) { if (bytes > 1000) { ProgressText( bytesRead = bytes,  totalBytes = total ) } } }
+        } else {
+            // Элемент за пределами активной зоны и ещё не загружен:
+            // отображаем базовый фон без запуска или удержания сетевого запроса
             Box(
                 modifier = Modifier
-                    .padding(2.dp)
-                    .align(Alignment.BottomStart)
-                    .size(sizeButton)
-                    .clip(CircleShape)
-                    //.background(Color.Gray.copy(alpha = 0.5f), CircleShape)
-
-                    .combinedClickable(
-                        onClick = { isPlaying = !isPlaying },
-                        onLongClick = {
-
-                        }
-                    )
-
-//                    .then(
-//                        if (!url.contains("https://")) {
-//                            Modifier
-//
-//                                .combinedClickable(
-//                                    onClick = {isPlaying = !isPlaying},
-//                                    onLongClick = {
-//
-//
-//                                    }
-//                                )
-//
-//
-//
-//                        } else Modifier
-//                    )
-                ,
-                contentAlignment = Alignment.Center
-            ) {
-                if (url.startsWith("http://", ignoreCase = true) || url.startsWith("https://", ignoreCase = true)) {
-                    Icon( Icons.Default.Animation, contentDescription = null, tint = Color.White, modifier = Modifier.size(sizeButtonIcon) )
-                } else {
-                    Icon( if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black,  modifier = Modifier.size(sizeButtonIcon) )
-                    Icon( if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(sizeButtonIcon).offset((-0.5).dp, (-0.5).dp) )
-                }
-            }
+                    .fillMaxSize()
+                    .background(backgroung)
+            )
         }
-
-        // Прогресс загрузки
-        if (isVisibleProgressText) { Box(modifier = Modifier.align(Alignment.BottomEnd)) { if (bytes > 1000) { ProgressText( bytesRead = bytes,  totalBytes = total ) } } }
 
     }
 
