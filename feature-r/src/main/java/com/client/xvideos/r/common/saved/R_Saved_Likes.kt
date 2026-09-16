@@ -21,7 +21,7 @@ class R_Saved_Likes(
 
     val likesDb = FileDB(AppPath.r_likes, "likes", GifsInfo.serializer())
 
-    var list = likesDb.list
+    val list = likesDb.list
 
     fun add(item: GifsInfo) {
         val safeItem = item.sanitizeOrNull() ?: run {

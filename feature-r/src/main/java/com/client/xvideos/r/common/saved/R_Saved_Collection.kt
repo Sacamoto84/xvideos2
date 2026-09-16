@@ -33,7 +33,7 @@ class R_Saved_Collection(
 
     var collectionItemGifInfo by mutableStateOf<GifsInfo?>(null)
 
-    var selectedCollection = MutableStateFlow<String?>(null)
+    val selectedCollection = MutableStateFlow<String?>(null)
     //-------------------------------------------
 
     override fun addCollection(item: GifsInfo, collectionName: String) {

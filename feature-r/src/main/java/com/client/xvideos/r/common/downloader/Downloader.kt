@@ -17,17 +17,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import timber.log.Timber
+import androidx.compose.runtime.Immutable
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
 //Текущее содержимое готового кеша
+@Immutable
 data class ItemsRedDownload(
     val name: String = "",     //Название креатора соответствует папке
     val id: String,            //Имя файла уникально
     val url: String = "",      //Создается на этапе закачки, и после успешной закачки не используется url mp4  //https://media.redgifs.com/VictoriousGlamorousStud.m4s
 )
 
+@Immutable
 data class RedDownloadEnqueueReport(
     val queuedVideo: Int = 0,
     val queuedPreview: Int = 0,
@@ -45,7 +48,7 @@ class Downloader @Inject constructor(
 ) {
 
     //Процент скачивания 0..1 - начало скачивания, -2 busy, -3 error
-    var percent = MutableStateFlow(-2f)
+    val percent = MutableStateFlow(-2f)
 
     fun downloadRedName(item: GifsInfo, onComplete: () -> Unit = {}) {
 

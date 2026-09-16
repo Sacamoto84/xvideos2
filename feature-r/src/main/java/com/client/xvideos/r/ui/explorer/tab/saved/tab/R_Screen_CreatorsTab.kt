@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -344,6 +345,7 @@ private fun DeleteCreatorDialog(
     }
 }
 
+@Stable
 class ScreenSavedCreatorSM @Inject constructor(
     connectivityObserver: ConnectivityObserver,
     val savedRed: SavedRed,

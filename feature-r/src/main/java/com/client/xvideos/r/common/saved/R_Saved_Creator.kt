@@ -18,7 +18,7 @@ class R_Saved_Creator(
 
     val creatorDb = FileDB(AppPath.r_creators, "creator", UserInfo.serializer())
 
-    var list = creatorDb.list
+    val list = creatorDb.list
 
     fun add(item: UserInfo) {
         Timber.i("R_Saved_Creator add() id:${item.username}")

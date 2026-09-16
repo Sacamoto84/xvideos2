@@ -12,11 +12,13 @@ import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.Stable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 
+@Stable
 data class SelectedCreator(val name: String, var select: Boolean, val urlProfile : String?)
 
 class R_Saved_Subscriptions(
@@ -29,7 +31,7 @@ class R_Saved_Subscriptions(
     /**
      * Список авторов на которых подписаны
      */
-    var listCreators = creatorDb.list
+    val listCreators = creatorDb.list
 
     val selectedListCreator = mutableStateListOf<SelectedCreator>()
 

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -102,6 +103,7 @@ object R_Screen_Saved_LikesTab : Screen {
 
 }
 
+@Stable
 class ScreenSavedLikesSM @Inject constructor(
     connectivityObserver: ConnectivityObserver,
     val block: BlockRed,

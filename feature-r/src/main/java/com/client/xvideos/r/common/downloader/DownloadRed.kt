@@ -11,6 +11,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
+import androidx.compose.runtime.Immutable
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,7 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@Immutable
 data class RedDownloadRecoveryReport(
     val totalInfoFiles: Int = 0,
     val incompleteItems: Int = 0,
@@ -117,20 +119,20 @@ class DownloadRed @Inject constructor(
             return
         }
 
-        val baseDir = File(AppPath.r_cache_download)
-        val userDir = File(baseDir, item.userName)
-        val local = File(userDir, "${item.id}.mp4")
-        try {
-            requireInside(baseDir, userDir)
-            requireInside(userDir, local)
-        } catch (e: Exception) {
-            Timber.w(e, "DownloadRed.saveToGallery -> Попытка выхода за пределы r_cache_download")
-            return
-        }
-
         val fileName = "r_${item.userName}_${item.id}.mp4"
 
         scope.launch(Dispatchers.IO) {
+            val baseDir = File(AppPath.r_cache_download)
+            val userDir = File(baseDir, item.userName)
+            val local = File(userDir, "${item.id}.mp4")
+            try {
+                requireInside(baseDir, userDir)
+                requireInside(userDir, local)
+            } catch (e: Exception) {
+                Timber.w(e, "DownloadRed.saveToGallery -> Попытка выхода за пределы r_cache_download")
+                return@launch
+            }
+
             if (local.exists() && local.length() > 0L) {
                 GallerySaver.saveLocal(appContext, local, fileName)
                 return@launch

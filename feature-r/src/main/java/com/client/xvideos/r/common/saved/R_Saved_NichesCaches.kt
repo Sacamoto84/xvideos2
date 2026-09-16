@@ -1,5 +1,6 @@
 package com.client.xvideos.r.common.saved
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,6 +25,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
+@Stable
 class R_Saved_NichesCaches(
     val scope: CoroutineScope,
     val redApi: RedApi,

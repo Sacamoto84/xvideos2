@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -174,6 +175,7 @@ object SavedNichesTab : Screen {
 
 
 
+@Stable
 class ScreenSavedNichesSM @Inject constructor( val savedRed: SavedRed ) : ScreenModel
 
 @Module
