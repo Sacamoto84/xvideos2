@@ -2,6 +2,8 @@ package com.client.xvideos.r.ui.video
 
 import androidx.media3.common.C
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RedPooledVideoPlayerTest {
@@ -55,5 +57,18 @@ class RedPooledVideoPlayerTest {
     fun `calculateDragDeltaMs returns one second for large drag exceeding threshold`() {
         assertEquals(1000L, calculateDragDeltaMs(450f))
         assertEquals(-1000L, calculateDragDeltaMs(-450f))
+    }
+
+    @Test
+    fun `isFinite checks reject NaN and infinite points for AB loop`() {
+        fun isValidAB(timeA: Float, timeB: Float) =
+            timeA.isFinite() && timeB.isFinite() && timeB > timeA
+
+        assertFalse(isValidAB(Float.NaN, 5f))
+        assertFalse(isValidAB(1f, Float.NaN))
+        assertFalse(isValidAB(Float.NEGATIVE_INFINITY, 5f))
+        assertFalse(isValidAB(1f, Float.POSITIVE_INFINITY))
+        assertFalse(isValidAB(5f, 1f))
+        assertTrue(isValidAB(1f, 5f))
     }
 }

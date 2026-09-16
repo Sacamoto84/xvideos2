@@ -12,6 +12,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -132,6 +133,7 @@ object ScreenRoot : Screen {
  * поверх всего приложения диалог, полноэкранный слой или другой UI, не создавая
  * отдельный route в навигации.
  */
+@Stable
 class ScreenRootSM @Inject constructor(
     val depthState: NavigationDepthState,
     val savedL: SavedL

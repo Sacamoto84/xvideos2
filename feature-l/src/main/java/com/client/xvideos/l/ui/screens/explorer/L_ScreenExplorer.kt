@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.Topic
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -140,6 +141,7 @@ class L_ScreenExplorer : Screen {
  * корневой L-экран мог показывать общие диалоги (создание/добавление коллекции)
  * и индикатор загрузок без обращения к глобальному состоянию.
  */
+@Stable
 class L_ScreenExplorerSM @Inject constructor(
     val savedL: SavedL,
     private val navigationState: LNavigationState

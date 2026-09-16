@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.favorites
 
+import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
@@ -13,7 +14,7 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
+@Stable
 class ScreenFavoritesSM @Inject constructor(
     val saved : SavedX
 ) : ScreenModel {

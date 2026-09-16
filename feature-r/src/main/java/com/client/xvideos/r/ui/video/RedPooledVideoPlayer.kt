@@ -57,6 +57,10 @@ internal fun calculateDragDeltaMs(seekDragAmount: Float): Long {
     return if (seekDragAmount > 0f) stepMs else -stepMs
 }
 
+internal fun isValidABRange(enableAB: Boolean, timeA: Float, timeB: Float): Boolean {
+    return enableAB && timeA.isFinite() && timeB.isFinite() && timeB > timeA
+}
+
 private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long =
     com.client.xvideos.r.ui.video.clampSeekPositionMs(positionMs, duration)
 
@@ -81,7 +85,7 @@ fun interface FeedTimeListener {
  * соседние ролики уже частично загружены к моменту свайпа.
  */
 @OptIn(UnstableApi::class)
-@Suppress("LongParameterList", "CyclomaticComplexMethod")
+@Suppress("LongParameterList", "CyclomaticComplexMethod", "LongMethod")
 @Composable
 fun RedPooledVideoPlayer(
     feedState: FeedPlayerState,
@@ -158,7 +162,9 @@ fun RedPooledVideoPlayer(
     // (`LaunchedEffect(enableAB) { playerHost.seekTo(timeA) }`). Без этого первый
     // проход шёл бы от текущей позиции, а не от начала петли.
     LaunchedEffect(player, enableAB, timeA, timeB) {
-        if (enableAB && timeB > timeA) player?.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
+        if (isValidABRange(enableAB, timeA, timeB)) {
+            player?.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
+        }
     }
 
     // Время/длительность и петля A-B. Шаг 50 мс — как в прежнем CMPPlayer2,
@@ -184,7 +190,7 @@ fun RedPooledVideoPlayer(
                 lastDuration = duration
                 onTimeChanged.onTime(position, duration)
             }
-            if (enableAB && timeB > timeA && position >= timeB) {
+            if (isValidABRange(enableAB, timeA, timeB) && position >= timeB) {
                 exo.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
             }
             delay(50)

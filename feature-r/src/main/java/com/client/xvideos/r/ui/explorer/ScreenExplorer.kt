@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -98,6 +99,7 @@ class ScreenRedExplorer : Screen {
     }
 }
 
+@Stable
 class ScreenRedExplorerSM @Inject constructor(
     private val navigationState: RNavigationState
 ) : ScreenModel {

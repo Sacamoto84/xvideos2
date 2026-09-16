@@ -9,6 +9,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -157,6 +158,7 @@ private fun R_DialogCollection(savedRed: () -> SavedRed){
 
 }
 
+@Stable
 class ScreenRedRootSM @Inject constructor(
     val savedRed: SavedRed,
     val downloadRed: DownloadRed,

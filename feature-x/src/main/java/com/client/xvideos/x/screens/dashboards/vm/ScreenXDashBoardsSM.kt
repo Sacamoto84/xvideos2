@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.dashboards.vm
 
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
@@ -19,6 +20,7 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Stable
 class ScreenXDashBoardsScreenModel @Inject constructor(
     val saved : SavedX
 ) : ScreenModel {
