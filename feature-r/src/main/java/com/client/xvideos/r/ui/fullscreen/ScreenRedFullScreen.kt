@@ -179,6 +179,7 @@ private fun RedFullScreenFeed(
                 // страница в onPlayerControlsRelease, и только свои.
                 vm.currentPlayerTime = 0f
                 vm.currentPlayerDuration = 0
+                vm.enableAB = false
             }
     }
 
@@ -310,20 +311,7 @@ private fun RedFullScreenScaffold(
                 }
 
                 Box(modifier = Modifier.background(Theme.tabLevel1)) {
-                    FeedControls_Container_Line0(
-                        timeA = vm.timeA,
-                        timeB = vm.timeB,
-                        enableAB = vm.enableAB,
-                        play = vm.play,
-                        mute = vm.mute,
-                        onSetTimeA = vm::setTimeA,
-                        onSetTimeB = vm::setTimeB,
-                        onToggleAB = vm::toggleAB,
-                        onTogglePlay = vm::togglePlay,
-                        onRewind = { vm.rewind() },
-                        onForward = { vm.forward() },
-                        onToggleMute = vm::toggleMute
-                    )
+                    FeedControls_Container_Line0(vm = vm)
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                         DownloadIndicator(vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value)
                     }
@@ -380,7 +368,7 @@ private fun RedFullScreenPage(
                 // затирает те, что успела выставить пришедшая ей на смену.
                 if (vm.currentPlayerControls === controls) vm.currentPlayerControls = null
             },
-            onClick = { if (isCurrentPage) vm.play = !vm.play },
+            onClick = { if (isCurrentPage) vm.togglePlay() },
             onBufferingChanged = { buffering ->
                 if (isCurrentPage) {
                     onBuffering(buffering)

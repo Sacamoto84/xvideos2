@@ -115,6 +115,14 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
             }
         }
     }
+
+    fun onPlaybackError() {
+        Timber.w("ScreenX_VideoPlayerFullScreenSM: ошибка воспроизведения для %s, очистка RAM-кэша", url)
+        isError = true
+        screenModelScope.launch {
+            db.cacheUrlStringRam.delete(url)
+        }
+    }
 }
 
 @Module

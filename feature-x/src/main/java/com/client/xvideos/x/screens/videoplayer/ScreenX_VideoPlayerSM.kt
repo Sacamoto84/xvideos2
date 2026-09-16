@@ -150,6 +150,14 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         }
     }
 
+    fun onPlaybackError() {
+        Timber.w("ScreenX_VideoPlayerSM: ошибка воспроизведения для %s, очистка RAM-кэша", url)
+        isError = true
+        screenModelScope.launch {
+            db.cacheUrlStringRam.delete(url)
+        }
+    }
+
     /**
      * ## Открыть экран с нужным тегом
      */

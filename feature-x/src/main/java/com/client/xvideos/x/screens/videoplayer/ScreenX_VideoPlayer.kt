@@ -82,7 +82,11 @@ class ScreenX_VideoPlayer(val url: String) : Screen {
                     mediaUrl = vm.passedHLS,
                     isMuted = true, // видео X всегда без звука
                     isLooping = false,
-                )
+                ).apply {
+                    onError = {
+                        vm.onPlaybackError()
+                    }
+                }
             }
 
             // Позиция, вернувшаяся из полноэкранного экрана через EventBus.

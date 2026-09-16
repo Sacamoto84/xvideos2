@@ -14,6 +14,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -73,10 +74,21 @@ fun rememberExoPlayerWithLifecycle(
             }
     }
 
+    val currentError by rememberUpdatedState(error)
+
     // P3: единый владелец жизненного цикла плеера — тот, кто его создал.
     // Освобождаем ровно здесь, при выходе из композиции (или смене player).
     DisposableEffect(exoPlayer) {
-        onDispose { exoPlayer.release() }
+        val errorListener = object : Player.Listener {
+            override fun onPlayerError(error: PlaybackException) {
+                currentError(MediaPlayerError.PlaybackError(error.message ?: "Playback error"))
+            }
+        }
+        exoPlayer.addListener(errorListener)
+        onDispose {
+            exoPlayer.removeListener(errorListener)
+            exoPlayer.release()
+        }
     }
 
     LaunchedEffect(isLooping) {
@@ -120,7 +132,7 @@ fun rememberExoPlayerWithLifecycle(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            error(MediaPlayerError.PlaybackError(e.message ?: "Failed to load media"))
+            currentError(MediaPlayerError.PlaybackError(e.message ?: "Failed to load media"))
         }
     }
 

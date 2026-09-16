@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
@@ -141,7 +142,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             isLooping = false,
             headers = null,
             drmConfig = null,
-            error = {},
+            error = { vm.onPlaybackError() },
             selectedQuality = null,
             seekBackIncrementMs = 10_000L,    // Перемотка назад на ±10 сек
             seekForwardIncrementMs = 10_000L, // Перемотка вперёд на ±10 сек
@@ -165,6 +166,10 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
                         exo.seekTo(position)
                         seeked = true
                     }
+                }
+
+                override fun onPlayerError(error: PlaybackException) {
+                    vm.onPlaybackError()
                 }
             }
             exo.addListener(listener)

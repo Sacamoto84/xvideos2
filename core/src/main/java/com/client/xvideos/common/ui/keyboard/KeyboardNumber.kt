@@ -206,7 +206,7 @@ fun KeyboardNumber(
                 Icon(
                     painter = painterResource(R.drawable.enter),
                     tint = Color.White,
-                    contentDescription = "TODO()",
+                    contentDescription = "Ввод",
                     modifier = Modifier
                 )
             }

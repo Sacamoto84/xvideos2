@@ -27,13 +27,18 @@ import java.io.IOException
 fun File.writeTextAtomically(text: String) {
     parentFile?.mkdirs()
     val temp = File.createTempFile("atomic-", ".tmp", parentFile)
-    temp.writeText(text, Charsets.UTF_8)
-    if (!temp.renameTo(this)) {
-        // На некоторых ФС renameTo не перезаписывает существующий файл.
-        delete()
+    try {
+        temp.writeText(text, Charsets.UTF_8)
         if (!temp.renameTo(this)) {
-            temp.delete()
-            throw IOException("Не удалось записать файл: $absolutePath")
+            // На некоторых ФС renameTo не перезаписывает существующий файл.
+            delete()
+            if (!temp.renameTo(this)) {
+                temp.delete()
+                throw IOException("Не удалось записать файл: $absolutePath")
+            }
         }
+    } catch (e: Throwable) {
+        temp.delete()
+        throw e
     }
 }
