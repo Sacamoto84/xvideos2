@@ -185,5 +185,9 @@ fun calculateCenterOffset(state: LazyListState, index: Int): Int {
     // Если элемент видим, используем его ширину, иначе предполагаем стандартную ширину
     val itemWidth = itemInfo?.size ?: 0
 
-    return (viewportWidth + itemWidth) / 2 // Центр экрана минус половина ширины элемента
+    return calculateCenterOffset(viewportWidth, itemWidth)
+}
+
+internal fun calculateCenterOffset(viewportWidth: Int, itemWidth: Int): Int {
+    return ((viewportWidth - itemWidth) / 2).coerceAtLeast(0) // Центр экрана минус половина ширины элемента
 }

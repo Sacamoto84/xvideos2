@@ -51,6 +51,12 @@ internal fun clampSeekPositionMs(positionMs: Long, durationMs: Long): Long {
     return if (durationMs == C.TIME_UNSET) floored else floored.coerceAtMost(durationMs)
 }
 
+internal fun calculateDragDeltaMs(seekDragAmount: Float): Long {
+    if (seekDragAmount == 0f || !seekDragAmount.isFinite()) return 0L
+    val stepMs = if (seekDragAmount.absoluteValue > 400f) 1000L else (1000f / 30f).toLong()
+    return if (seekDragAmount > 0f) stepMs else -stepMs
+}
+
 private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long =
     com.client.xvideos.r.ui.video.clampSeekPositionMs(positionMs, duration)
 
@@ -233,16 +239,18 @@ fun RedPooledVideoPlayer(
     // на секунду, короткий — на кадр (1/30 c), направление задаёт знак смещения.
     // Детектор горизонтальный, поэтому вертикальный свайп страницы уходит пейджеру.
     var seekDragAmount by remember { mutableFloatStateOf(0f) }
-    val seekDragModifier = Modifier.pointerInput(player) {
+    val seekDragModifier = Modifier.pointerInput(player, isCurrentPage) {
         val exo = player ?: return@pointerInput
+        if (!isCurrentPage) return@pointerInput
         detectHorizontalDragGestures(
             onDragStart = { seekDragAmount = 0f },
             onDragEnd = {
-                val stepMs = if (seekDragAmount.absoluteValue > 400) 1000L else (1000 / 30f).toLong()
-                val deltaMs = if (seekDragAmount > 0) stepMs else -stepMs
-                exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + deltaMs))
+                val deltaMs = calculateDragDeltaMs(seekDragAmount)
+                if (deltaMs != 0L) {
+                    exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + deltaMs))
+                }
             },
-            onDragCancel = { },
+            onDragCancel = { seekDragAmount = 0f },
             onHorizontalDrag = { _, dragAmount -> seekDragAmount += dragAmount }
         )
     }

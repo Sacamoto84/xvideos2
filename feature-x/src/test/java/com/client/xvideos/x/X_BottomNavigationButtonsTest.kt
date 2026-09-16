@@ -1,5 +1,6 @@
 package com.client.xvideos.x
 
+import com.client.xvideos.x.screens.common.bottomKeyboard.calculateCenterOffset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -70,5 +71,17 @@ class X_BottomNavigationButtonsTest {
         assertFalse(canGoBack)
         assertFalse(canGoForward)
         assertEquals(0, nextPageIndex(value = 0, max = 0))
+    }
+
+    @Test
+    fun `calculateCenterOffset centers item within viewport`() {
+        // Viewport 1080px, item 120px -> offset = (1080 - 120) / 2 = 480px
+        assertEquals(480, calculateCenterOffset(viewportWidth = 1080, itemWidth = 120))
+    }
+
+    @Test
+    fun `calculateCenterOffset handles item width equal to or larger than viewport`() {
+        assertEquals(0, calculateCenterOffset(viewportWidth = 500, itemWidth = 500))
+        assertEquals(0, calculateCenterOffset(viewportWidth = 500, itemWidth = 800))
     }
 }

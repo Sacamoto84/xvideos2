@@ -89,14 +89,24 @@ class SavedL_Collection(
             SnackBar.error("Недопустимое название коллекции")
             return
         }
-        val collectionRoot = File(AppPath.l_collection, safeName)
-        if (collectionRoot.exists()) {
-            SnackBar.error("Коллекция уже существует")
-            return
+        scope.launch(Dispatchers.IO) {
+            val collectionRoot = File(AppPath.l_collection, safeName)
+            if (collectionRoot.exists()) {
+                withContext(Dispatchers.Main) {
+                    SnackBar.error("Коллекция уже существует")
+                }
+                return@launch
+            }
+            val created = collectionRoot.mkdirs() || collectionRoot.isDirectory
+            withContext(Dispatchers.Main) {
+                if (created) {
+                    SnackBar.success("Коллекция $safeName создана")
+                    refreshCollectionList()
+                } else {
+                    SnackBar.error("Не удалось создать папку коллекции $safeName")
+                }
+            }
         }
-        collectionRoot.mkdirs()
-        SnackBar.success("Коллекция $safeName создана")
-        refreshCollectionList()
     }
 
     fun deleteCollection(collectionName: String) {

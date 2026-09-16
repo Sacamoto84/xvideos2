@@ -36,4 +36,24 @@ class RedPooledVideoPlayerTest {
         assertEquals(0L, clampSeekPositionMs(0L, 5000L))
         assertEquals(5000L, clampSeekPositionMs(5000L, 5000L))
     }
+
+    @Test
+    fun `calculateDragDeltaMs returns zero for zero or non-finite drag`() {
+        assertEquals(0L, calculateDragDeltaMs(0f))
+        assertEquals(0L, calculateDragDeltaMs(Float.NaN))
+        assertEquals(0L, calculateDragDeltaMs(Float.POSITIVE_INFINITY))
+    }
+
+    @Test
+    fun `calculateDragDeltaMs returns one frame for small positive and negative drag`() {
+        val frameMs = (1000f / 30f).toLong()
+        assertEquals(frameMs, calculateDragDeltaMs(50f))
+        assertEquals(-frameMs, calculateDragDeltaMs(-50f))
+    }
+
+    @Test
+    fun `calculateDragDeltaMs returns one second for large drag exceeding threshold`() {
+        assertEquals(1000L, calculateDragDeltaMs(450f))
+        assertEquals(-1000L, calculateDragDeltaMs(-450f))
+    }
 }

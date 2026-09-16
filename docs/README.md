@@ -58,6 +58,7 @@
 | [Проход 51 (Detekt и smart skipping FeedControls, сброс A-B ленты R, ошибки плееров X, rememberExoPlayer, AtomicWrite, AppLock)](CODE_REVIEW_2026-09-15_v30.md) | 16.09.2026 | `80cd61c` + рабочее дерево | закрыт полностью |
 | [Проход 52 (Off-Main GraphQL и парсинг L, защита от краша LandingTag, скролл/IME логина L, initialIndex FullScreen, атомарность rename коллекций)](CODE_REVIEW_2026-09-16_v31.md) | 16.09.2026 | `8a8dcf2` + рабочее дерево | закрыт полностью |
 | [Проход 53 (Compose Pager guard в X, URL-санитизация тегов, Off-Main дисковые проверки/отмены в X и R, PlayerControls guard, Compose stability R, удаление delay в L)](CODE_REVIEW_2026-09-16_v32.md) | 16.09.2026 | `fd158b8` + рабочее дерево | закрыт полностью |
+| [Проход 54 (Паразитная перемотка RedPooledVideoPlayer, Off-Main создание коллекций L, центрирование пагинации X)](CODE_REVIEW_2026-09-16_v33.md) | 16.09.2026 | `fe45dfe` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 
