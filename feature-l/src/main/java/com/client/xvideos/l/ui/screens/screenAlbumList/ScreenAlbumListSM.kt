@@ -28,7 +28,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -138,11 +137,7 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 val res = a.getOrThrow()
                 info.value = res.info
                 bigList.clear()
-                delay(100)
-                bigList.put(
-                    0,
-                    AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
-                )
+                bigList[0] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
 
                 val agr = withContext(Dispatchers.IO) {
                     luscious.getAlbumListAggregations(1, filter.value)

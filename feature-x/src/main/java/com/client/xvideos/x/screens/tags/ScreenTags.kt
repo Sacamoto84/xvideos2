@@ -51,7 +51,7 @@ class ScreenTags(private val tag: String) : Screen {
         // Число страниц приходит с нулевой страницей; до её разбора пейджер
         // держит одну. pageCount читается лениво, поэтому рост с 1 до 149
         // пейджер подхватывает без пересоздания состояния.
-        val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage }
+        val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),

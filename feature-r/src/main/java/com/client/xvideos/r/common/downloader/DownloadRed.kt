@@ -87,7 +87,10 @@ class DownloadRed @Inject constructor(
      */
     fun ensureDownloaded(item: GifsInfo, onReady: () -> Unit) {
         scope.launch(Dispatchers.Main) {
-            if (downloader.findVideoInDownload(item.id, item.userName)) {
+            val exists = withContext(Dispatchers.IO) {
+                downloader.findVideoInDownload(item.id, item.userName)
+            }
+            if (exists) {
                 onReady()
             } else {
                 downloader.downloadRedName(item, onComplete = {
@@ -124,17 +127,19 @@ class DownloadRed @Inject constructor(
 
         val fileName = "r_${item.userName}_${item.id}.mp4"
 
-        if (local.exists() && local.length() > 0L) {
-            GallerySaver.saveLocal(appContext, local, fileName)
-            return
-        }
+        scope.launch(Dispatchers.IO) {
+            if (local.exists() && local.length() > 0L) {
+                GallerySaver.saveLocal(appContext, local, fileName)
+                return@launch
+            }
 
-        val url = item.downloadVideoUrl()
-        if (url == null) {
-            SnackBar.error("Нет ссылки на видео")
-            return
+            val url = item.downloadVideoUrl()
+            if (url == null) {
+                SnackBar.error("Нет ссылки на видео")
+                return@launch
+            }
+            GallerySaver.saveFromUrl(appContext, downloader.kDownloader, url, fileName, progress = downloader.percent)
         }
-        GallerySaver.saveFromUrl(appContext, downloader.kDownloader, url, fileName, progress = downloader.percent)
     }
 
     /** «Поделиться»: файл уже в кеше — шарим сразу, иначе скачиваем и шарим по завершению. */
@@ -256,8 +261,8 @@ class DownloadRed @Inject constructor(
             Timber.w("DownloadRed.delete -> Отклонён небезопасный путь: userName=${item.userName}, id=${item.id}")
             return
         }
-        downloader.kDownloader.cancel(item.id)
         scope.launch(Dispatchers.IO) {
+            downloader.kDownloader.cancel(item.id)
             val baseDir = File(AppPath.r_cache_download)
             val userDir = File(baseDir, item.userName)
             val fileMp4 = File(userDir, "${item.id}.mp4")

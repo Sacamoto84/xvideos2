@@ -223,6 +223,16 @@ class XParsersTest {
         assertEquals(1, parserScreenTags(html).lastPage)
     }
 
+    /** Если в пагинации стоит 0 или отрицательное число — число страниц остаётся не менее 1 (UI65). */
+    @Test
+    fun `при нулевом или некорректном last-page число страниц не падает ниже 1`() {
+        val html0 = paginationHtml("""<li><a href="/tags/public/0" class="last-page">0</a></li>""")
+        assertEquals(1, parserScreenTags(html0).lastPage)
+
+        val htmlNeg = paginationHtml("""<li><a href="/tags/public/-1" class="last-page">-5</a></li>""")
+        assertEquals(1, parserScreenTags(htmlNeg).lastPage)
+    }
+
     /** Заголовок и карточки разбираются по-прежнему. */
     @Test
     fun `заголовок и карточки страницы тега разбираются`() {

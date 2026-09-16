@@ -1,9 +1,8 @@
 package com.client.xvideos.r.ui.profile
 
 import android.content.Context
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -25,7 +24,6 @@ import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.common.network.loadGifs
 import com.client.xvideos.r.common.share.useCaseShareGifs
-import com.client.xvideos.r.common.video.PlayerControls
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -52,6 +50,7 @@ enum class TypeGifs(val value: String) {
     IMAGES("Images"),
 }
 
+@Stable
 class ScreenRedProfileSM @AssistedInject constructor(
     @Assisted val profileName: String,
     connectivityObserver: ConnectivityObserver,
@@ -140,28 +139,6 @@ class ScreenRedProfileSM @AssistedInject constructor(
             block.refreshListAndBlock(_list)
         }
     }
-
-    var play by mutableStateOf(true)
-    var mute by mutableStateOf(true)
-    var autoRotate by mutableStateOf(false)
-
-    var enableAB by mutableStateOf(false)
-    var timeA by mutableFloatStateOf(3f)
-    var timeB by mutableFloatStateOf(6f)
-
-    var currentPlayerControls by mutableStateOf<PlayerControls?>(null)
-
-    var currentPlayerTime by mutableFloatStateOf(0f)
-    var currentPlayerDuration by mutableIntStateOf(0)
-
-    var currentTikTokPage by mutableIntStateOf(0)
-
-    val currentTikTokGifInfo: GifsInfo?
-        get() = list.value.getOrNull(currentTikTokPage)
-
-    var menuCenter by mutableStateOf(false)
-
-    var tictikStartIndex by mutableIntStateOf(0)
 
     fun shareGifs(context: Context, item: GifsInfo) {
         useCaseShareGifs(context, item)

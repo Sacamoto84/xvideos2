@@ -46,11 +46,13 @@ import kotlin.math.absoluteValue
  * мгновенно перезапускает ролик вместо остановки на последнем кадре.
  * До подготовки длительность неизвестна (C.TIME_UNSET) — тогда не клампим.
  */
-private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long {
+internal fun clampSeekPositionMs(positionMs: Long, durationMs: Long): Long {
     val floored = positionMs.coerceAtLeast(0L)
-    val durationMs = duration
     return if (durationMs == C.TIME_UNSET) floored else floored.coerceAtMost(durationMs)
 }
+
+private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long =
+    com.client.xvideos.r.ui.video.clampSeekPositionMs(positionMs, duration)
 
 /**
  * Тик времени плеера ленты.
@@ -214,7 +216,9 @@ fun RedPooledVideoPlayer(
                 }
 
                 override fun play() {
-                    exo.playWhenReady = true
+                    if (isCurrentPage) {
+                        exo.playWhenReady = true
+                    }
                 }
             }
             onPlayerControlsReady(controls)

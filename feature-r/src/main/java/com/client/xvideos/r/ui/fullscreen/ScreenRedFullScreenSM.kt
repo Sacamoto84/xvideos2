@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
-import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
@@ -27,7 +26,6 @@ import javax.inject.Inject
 
 @Stable
 class ScreenRedFullScreenSM @Inject constructor(
-    val connectivityObserver: ConnectivityObserver,
     val downloadRed: DownloadRed,
     val block: BlockRed,
     val redApi: RedApi,

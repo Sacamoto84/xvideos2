@@ -158,14 +158,14 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         val context = AppContextHolder.applicationContext
         val fileName = "x_${item.id}.mp4"
 
-        val local = File(dir, "${item.id}.mp4")
-        if (local.exists() && local.length() > 0L) {
-            GallerySaver.saveLocal(context, local, fileName)
-            return
-        }
-
-        SnackBar.info("Получение ссылки на видео…")
         scope.launch(Dispatchers.IO) {
+            val local = File(dir, "${item.id}.mp4")
+            if (local.exists() && local.length() > 0L) {
+                GallerySaver.saveLocal(context, local, fileName)
+                return@launch
+            }
+
+            SnackBar.info("Получение ссылки на видео…")
             val videoUrl = resolveDirectVideoUrl(item)
             if (videoUrl.isNullOrBlank()) {
                 SnackBar.error("Не удалось получить ссылку на видео")
@@ -177,8 +177,8 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
 
     fun delete(item: ItemsX) {
         if (item.id <= 0L) return
-        kDownloader.cancel(item.id.toString())
         scope.launch(Dispatchers.IO) {
+            kDownloader.cancel(item.id.toString())
             File(dir, "${item.id}.mp4").delete()
             File(dir, "${item.id}.jpg").delete()
             File(dir, "${item.id}.info").delete()

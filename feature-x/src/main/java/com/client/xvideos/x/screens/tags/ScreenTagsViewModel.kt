@@ -68,10 +68,7 @@ class ScreenTagsViewModel @AssistedInject constructor(
         // Страницы адресуются /tags/<тег>/N; /tags/<тег> и /tags/<тег>/0 — одно и то же.
         // Названия тегов парсятся с пробелами ("big tits"), а в URL XVideos использует дефисы ("big-tits").
         // Также санитизируем спецсимволы путей/запросов (#, ?, &, /, \), чтобы не ломать адрес запроса.
-        val formattedTag = tag.trim()
-            .replace(Regex("[#?&/\\\\]+"), "-")
-            .replace(Regex("\\s+"), "-")
-            .trim('-')
+        val formattedTag = sanitizeTagForUrl(tag)
         if (formattedTag.isEmpty()) {
             throw IOException("Недопустимое имя тега: $tag")
         }
@@ -98,4 +95,16 @@ abstract class ScreenModuleTags {
         hiltDetailsScreenModelFactory: ScreenTagsViewModel.Factory,
     ): ScreenModelFactory
 
+}
+
+/**
+ * Преобразует название тега в валидный URL-сегмент для XVideos:
+ * - Заменяет пробельные символы (включая неразрывные \u00A0) и спецсимволы путей/запросов (#, ?, &, /, \) на дефисы.
+ * - Схлопывает повторяющиеся дефисы и обрезает краевые.
+ */
+internal fun sanitizeTagForUrl(tag: String): String {
+    return tag.trim()
+        .replace(Regex("[#?&/\\\\\\s\\u00A0]+"), "-")
+        .replace(Regex("-+"), "-")
+        .trim('-')
 }
