@@ -72,12 +72,8 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
     fun cancel(req: DownloadRequest) {
         val wasPaused = req.status == Status.PAUSED
         val wasQueued = req.status == Status.QUEUED
+        val tempPath = if (wasPaused) getTempPath(req.dirPath, req.fileName) else null
         if (wasPaused) {
-            val tempPath = getTempPath(req.dirPath, req.fileName)
-            val file = File(tempPath)
-            if (file.exists()) {
-                file.delete()
-            }
             req.reset()
         }
 
@@ -97,6 +93,14 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         }
 
         dbScope.launch {
+            if (tempPath != null) {
+                runCatching {
+                    val file = File(tempPath)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
+            }
             dbHelper.remove(req.downloadId)
         }
     }

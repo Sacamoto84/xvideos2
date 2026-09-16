@@ -11,9 +11,11 @@ import com.client.xvideos.l.model.lFullScreenImageUrls
 import com.client.xvideos.l.model.lSavedFileName
 import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.net.extractIdFromUrl
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.calculateGridScrollIndex
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -212,5 +214,21 @@ class LPureFunctionsTest {
         assertEquals(1f, zeroHeight.safeAspectRatio(), 0.001f)
         assertEquals(1f, bothZero.safeAspectRatio(), 0.001f)
         assertEquals(0.5f, picture(width = 100, height = 200).safeAspectRatio(), 0.001f)
+    }
+
+    @Test
+    fun `calculateGridScrollIndex корректно сдвигает индекс с учётом заголовков`() {
+        // Без лоадера: 1 заголовок (itemBefore), picture 0 -> grid index 1
+        assertEquals(1, calculateGridScrollIndex(position = 0, itemCount = 10, showInitialLoading = false))
+        assertEquals(6, calculateGridScrollIndex(position = 5, itemCount = 10, showInitialLoading = false))
+
+        // С лоадером: 2 заголовка (itemBefore + loader), picture 0 -> grid index 2
+        assertEquals(2, calculateGridScrollIndex(position = 0, itemCount = 10, showInitialLoading = true))
+        assertEquals(7, calculateGridScrollIndex(position = 5, itemCount = 10, showInitialLoading = true))
+
+        // Невалидный или выходящий за границы диапазона индекс -> null
+        assertNull(calculateGridScrollIndex(position = -1, itemCount = 10, showInitialLoading = false))
+        assertNull(calculateGridScrollIndex(position = 10, itemCount = 10, showInitialLoading = false))
+        assertNull(calculateGridScrollIndex(position = 0, itemCount = 0, showInitialLoading = false))
     }
 }

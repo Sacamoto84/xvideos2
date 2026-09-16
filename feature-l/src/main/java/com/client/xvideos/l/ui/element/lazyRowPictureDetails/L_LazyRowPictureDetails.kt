@@ -179,10 +179,11 @@ fun L_LazyRowPictureDetails(
                                     payloadKey = payloadKey,
                                     onClose = { position ->
                                         Timber.i("scrollToItem $position")
-                                        if (position != -1) {
+                                        val targetIndex = calculateGridScrollIndex(position, host.filteredPic.size, showInitialLoading)
+                                        if (targetIndex != null) {
                                             appScope.launch {
                                                 withContext(Dispatchers.Main) {
-                                                    host.state.scrollToItem(position)
+                                                    host.state.scrollToItem(targetIndex)
                                                 }
                                             }
                                         }
@@ -455,5 +456,11 @@ private fun rememberActiveItemRange(
             }
         }
     }
+}
+
+internal fun calculateGridScrollIndex(position: Int, itemCount: Int, showInitialLoading: Boolean): Int? {
+    if (position !in 0 until itemCount) return null
+    val headerOffset = if (showInitialLoading) 2 else 1
+    return position + headerOffset
 }
 

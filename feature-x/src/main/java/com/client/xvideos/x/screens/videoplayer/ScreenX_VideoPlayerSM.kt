@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.videoplayer
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,7 @@ import timber.log.Timber
  * только X-специфика: загрузка HTML страницы видео, извлечение HLS-ссылки и тегов,
  * навигация на теги/полный экран и приём позиции, возвращаемой из fullscreen.
  */
+@Stable
 class ScreenX_VideoPlayerSM @AssistedInject constructor(
     @Assisted val url: String,
     val db: AppFileDatabase

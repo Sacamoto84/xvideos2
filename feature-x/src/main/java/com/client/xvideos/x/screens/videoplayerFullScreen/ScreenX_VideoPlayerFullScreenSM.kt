@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.videoplayerFullScreen
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -35,6 +36,7 @@ import timber.log.Timber
  * и скоростью — в `MediaPlayerHost`, создаваемом в `Content()`. Стартовая позиция
  * приходит через [position] и применяется к хосту, когда медиа готово.
  */
+@Stable
 class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
     @Assisted val url: String,
     @Assisted val position: Long,
