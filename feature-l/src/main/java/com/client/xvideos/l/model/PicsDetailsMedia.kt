@@ -2,8 +2,25 @@ package com.client.xvideos.l.model
 
 import com.client.xvideos.common.settings.ThumbnailsSize
 
+fun PicsDetails.isAnimatedMedia(): Boolean {
+    if (is_animated) return true
+    if (!url_to_video.isNullOrBlank()) return true
+    val orig = url_to_original
+    if (!orig.isNullOrBlank()) {
+        val cleanOrig = orig.substringBefore('?').substringBefore('#')
+        if (cleanOrig.endsWith(".gif", ignoreCase = true) || orig.isLVideoFileUrl()) {
+            return true
+        }
+    }
+    return thumbnails?.any { thumb ->
+        val url = thumb.url ?: return@any false
+        val cleanUrl = url.substringBefore('?').substringBefore('#')
+        cleanUrl.endsWith(".gif", ignoreCase = true) || url.isLVideoFileUrl()
+    } == true
+}
+
 fun PicsDetails.lAnimationVideoUrl(): String? {
-    if (!is_animated) return null
+    if (!isAnimatedMedia()) return null
     return url_to_video?.takeIf { it.isNotBlank() }
         ?: url_to_original?.takeIf { it.isLVideoFileUrl() }
 }
@@ -13,7 +30,7 @@ fun PicsDetails.safeAspectRatio(): Float {
 }
 
 fun PicsDetails.lDownloadUrl(): String? {
-    return if (is_animated) {
+    return if (isAnimatedMedia()) {
         lAnimationVideoUrl() ?: lImageMediaUrl()
     } else {
         lImageMediaUrl()

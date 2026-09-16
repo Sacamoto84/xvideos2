@@ -48,6 +48,7 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.l.model.isAnimatedMedia
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
@@ -111,7 +112,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
             val allPics = albumPicsDetails?.pics?.toList() ?: emptyList()
 
-            val newFilteredAnimatedPics = allPics.filter { it.is_animated } //Список анимированных елементов
+            val newFilteredAnimatedPics = allPics.filter { it.isAnimatedMedia() } //Список анимированных елементов
 
             if (vm.showOnlyAnimated) {
                 vm.host.replaceFilteredPictures(newFilteredAnimatedPics)
@@ -241,7 +242,12 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                 }) { navigator.push(ScreenLAlbumLandingTag(it)) }
                                 AlbumInfoButtonSaveAlbum(saved, onClick = { if (!saved) { vm.saveAlbum() } else { itemPendingDelete = parsed } })
                                 AlbumInfoButtonShareAlbum(onClick = { vm.shareAlbumP2p(parsed) })
-                                AlbumInfoFilterButton( parsed, vm.showOnlyAnimated) { vm.showOnlyAnimated = it }
+                                AlbumInfoFilterButton(
+                                    parsed = parsed,
+                                    checked = vm.showOnlyAnimated,
+                                    hasAnimatedItems = albumPicsDetails?.pics?.any { it.isAnimatedMedia() } == true,
+                                    onCheckedChange = { vm.showOnlyAnimated = it }
+                                )
                                 LAlbumNetworkIssuePanel(
                                     albumPicsDetails = albumPicsDetails,
                                     onRetryFailedPages = { vm.retryFailedAlbumPages() }

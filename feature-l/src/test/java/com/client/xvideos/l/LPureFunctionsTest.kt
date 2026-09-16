@@ -6,6 +6,7 @@ import com.client.xvideos.l.featured.saved.lPicsDetailsIdentityKey
 import com.client.xvideos.l.featured.saved.sanitizeFilePart
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.Thumbnails
+import com.client.xvideos.l.model.isAnimatedMedia
 import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.model.lFullScreenImageUrls
 import com.client.xvideos.l.model.lSavedFileName
@@ -240,5 +241,13 @@ class LPureFunctionsTest {
         assertEquals("https://cdn/0.jpg", (list.getOrNull(0) ?: fallback).url_to_original)
         assertEquals("https://cdn/fallback.jpg", (list.getOrNull(-1) ?: fallback).url_to_original)
         assertEquals("https://cdn/fallback.jpg", (list.getOrNull(1) ?: fallback).url_to_original)
+    }
+
+    @Test
+    fun `isAnimatedMedia распознает анимации по флагу, video url и gif расширению`() {
+        assertTrue(picture(isAnimated = true).isAnimatedMedia())
+        assertTrue(picture(isAnimated = false, urlToVideo = "https://cdn/video.mp4").isAnimatedMedia())
+        assertTrue(picture(isAnimated = false, urlToOriginal = "https://cdn/anim.gif?md5=123").isAnimatedMedia())
+        assertFalse(picture(isAnimated = false, urlToOriginal = "https://cdn/pic.jpg").isAnimatedMedia())
     }
 }

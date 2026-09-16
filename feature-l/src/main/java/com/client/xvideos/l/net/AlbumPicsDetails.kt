@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.isAnimatedMedia
+import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lBestThumbnailImageUrl
 import com.client.xvideos.l.net.graphQl.GraphQlRequest
 import com.client.xvideos.l.net.json.LJson
@@ -156,7 +158,15 @@ class AlbumPicsDetails(
             ?.let { error("AlbumPicsDetails response errors: ${it.toString().take(300)}") }
 
         val info = get["info"]?.asJsonObjectOrNull()
-        val pages = info.readInt("total_pages")?.coerceAtLeast(1) ?: 1
+        val totalPagesFromInfo = info.readInt("total_pages")
+        val totalItems = info.readInt("total_items")
+        val itemsPerPage = info.readInt("items_per_page")
+        val calculatedPages = if (totalItems != null && itemsPerPage != null && itemsPerPage > 0) {
+            ((totalItems + itemsPerPage - 1) / itemsPerPage).coerceAtLeast(1)
+        } else {
+            1
+        }
+        val pages = maxOf(totalPagesFromInfo ?: calculatedPages, calculatedPages).coerceAtLeast(1)
 
         val itemsArray = get["items"]?.takeIf { it is JsonArray }?.jsonArray
             ?: error("AlbumPicsDetails response missing data.picture.list.items")
@@ -358,12 +368,24 @@ class AlbumPicsDetails(
 
     private fun normalizePictureUrls(l: List<PicsDetails>): List<PicsDetails> {
         return l.map { item ->
+            val isAnimated = item.isAnimatedMedia()
             val thumbnailUrl = item.lBestThumbnailImageUrl()
-            if (!thumbnailUrl.isNullOrBlank()) {
-                item.copy(url_to_original = thumbnailUrl)
-            } else {
-                item
+
+            val origIsAnimatedMedia = item.url_to_original?.let { orig ->
+                val clean = orig.substringBefore('?').substringBefore('#')
+                clean.endsWith(".gif", ignoreCase = true) || orig.isLVideoFileUrl()
+            } == true
+
+            val normalizedOriginal = when {
+                origIsAnimatedMedia -> item.url_to_original
+                !thumbnailUrl.isNullOrBlank() -> thumbnailUrl
+                else -> item.url_to_original
             }
+
+            item.copy(
+                is_animated = isAnimated,
+                url_to_original = normalizedOriginal
+            )
         }
     }
 

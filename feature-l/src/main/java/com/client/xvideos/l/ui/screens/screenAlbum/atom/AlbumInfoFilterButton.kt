@@ -15,9 +15,14 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.AlbumDetails
 
 @Composable
-fun AlbumInfoFilterButton(parsed: AlbumDetails?, checked : Boolean, onCheckedChange : (Boolean)->Unit ) {
+fun AlbumInfoFilterButton(
+    parsed: AlbumDetails?,
+    checked: Boolean,
+    hasAnimatedItems: Boolean = false,
+    onCheckedChange: (Boolean) -> Unit
+) {
 
-    if (parsed?.number_of_animated_pictures == 0) return
+    if ((parsed?.number_of_animated_pictures ?: 0) <= 0 && !hasAnimatedItems) return
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
