@@ -9,6 +9,7 @@ import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -87,8 +88,11 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
     }
 
+    private var refreshJob: Job? = null
+
     fun refresh() {
-        scope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             albumDb.refresh()
         }
     }

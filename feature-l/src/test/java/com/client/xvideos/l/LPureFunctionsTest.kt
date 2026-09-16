@@ -231,4 +231,14 @@ class LPureFunctionsTest {
         assertNull(calculateGridScrollIndex(position = 10, itemCount = 10, showInitialLoading = false))
         assertNull(calculateGridScrollIndex(position = 0, itemCount = 0, showInitialLoading = false))
     }
+
+    @Test
+    fun `безопасный доступ к элементу страницы возвращает fallback при выходе за границы`() {
+        val list = listOf(picture(urlToOriginal = "https://cdn/0.jpg"))
+        val fallback = picture(urlToOriginal = "https://cdn/fallback.jpg")
+
+        assertEquals("https://cdn/0.jpg", (list.getOrNull(0) ?: fallback).url_to_original)
+        assertEquals("https://cdn/fallback.jpg", (list.getOrNull(-1) ?: fallback).url_to_original)
+        assertEquals("https://cdn/fallback.jpg", (list.getOrNull(1) ?: fallback).url_to_original)
+    }
 }

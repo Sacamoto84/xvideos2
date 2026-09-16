@@ -110,6 +110,7 @@ class L_FullScreenImage(
         ExperimentalMaterialApi::class,
         DelicateCoroutinesApi::class
     )
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     @Composable
     override fun Content() {
 
@@ -220,7 +221,7 @@ class L_FullScreenImage(
                     key = { page -> "${filteredPic.getOrNull(page)?.url_to_original}#$page" }
                 ) { page ->
                     LFullScreenPage(
-                        pageItem = filteredPic[page],
+                        pageItem = filteredPic.getOrNull(page) ?: item,
                         page = page,
                         currentIndex = currentIndex,
                         pagerState = pagerState,
@@ -244,7 +245,7 @@ class L_FullScreenImage(
                 key = { page -> "${filteredPic.getOrNull(page)?.url_to_original}#$page" }
             ) { page ->
                 LFullScreenPage(
-                    pageItem = filteredPic[page],
+                    pageItem = filteredPic.getOrNull(page) ?: item,
                     page = page,
                     currentIndex = currentIndex,
                     pagerState = pagerState,

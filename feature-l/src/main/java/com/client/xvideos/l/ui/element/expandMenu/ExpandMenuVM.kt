@@ -190,12 +190,17 @@ class ExpandMenuViewModel @Inject constructor(
     fun dismissP2p() { p2pSource = null }
 
     fun startP2p(item: PicsDetails) {
-        val url = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl()
-        val folder = url?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
-        val bundle = folder?.let { LExporter.export(it) }
-        // Нет в Likes (или бандл битый) — экран отправки скачает item в outbox,
-        // не помечая его сохранённым.
-        p2pSource = if (bundle != null) P2pSendSource.Ready(bundle) else lP2pSendSource(item)
+        scope.launch(Dispatchers.IO) {
+            val url = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl()
+            val folder = url?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
+            val bundle = folder?.let { LExporter.export(it) }
+            // Нет в Likes (или бандл битый) — экран отправки скачает item в outbox,
+            // не помечая его сохранённым.
+            val source = if (bundle != null) P2pSendSource.Ready(bundle) else lP2pSendSource(item)
+            withContext(Dispatchers.Main) {
+                p2pSource = source
+            }
+        }
     }
 
     /**
