@@ -10,6 +10,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
@@ -89,7 +91,7 @@ import timber.log.Timber
  * @param tag Тег для UI-тестов
  */
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun L_LazyRowPictureDetails(
@@ -122,6 +124,21 @@ fun L_LazyRowPictureDetails(
 
     /** Показывать ли кнопку "вверх" */
     val showScrollToTop by remember { derivedStateOf { host.state.firstVisibleItemIndex > 2 } }
+
+    /** Показывать ли кнопку "вниз" */
+    val showScrollToBottom by remember {
+        derivedStateOf {
+            val layoutInfo = host.state.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val visible = layoutInfo.visibleItemsInfo
+            if (totalItems <= 4 || visible.isEmpty()) {
+                false
+            } else {
+                val lastVisibleIndex = visible.maxOf { it.index }
+                lastVisibleIndex < totalItems - 1
+            }
+        }
+    }
 
     /** Активный диапазон элементов для загрузки: видимые на экране + буфер перед и после скролла */
     val activeItemRange by rememberActiveItemRange(host, showInitialLoading)
@@ -284,17 +301,58 @@ fun L_LazyRowPictureDetails(
         /** Вертикальный индикатор прокрутки */
         Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
 
-        /** FloatingButton "Вверх" */
-        AnimatedVisibility( visible = showScrollToTop, modifier = Modifier.align(Alignment.BottomEnd), enter = fadeIn() + scaleIn(),  exit = fadeOut() + scaleOut() )
-        {
-            FloatingActionButton(
-                onClick = {
-                    haptic.performHapticFeedback( androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm )
-                    scope.launch { host.state.scrollToItem(0) }
-                },
-                modifier = Modifier.padding(16.dp)
+        /** FloatingButtons "Вверх" и "Вниз" */
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            AnimatedVisibility(
+                visible = showScrollToTop,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
             ) {
-                Icon( imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "Scroll to top" )
+                FloatingActionButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+                        scope.launch { host.state.scrollToItem(0) }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Scroll to top"
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showScrollToBottom,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+                        scope.launch {
+                            val lastIndex = host.filteredPic.lastIndex
+                            if (lastIndex >= 0) {
+                                val target = calculateGridScrollIndex(
+                                    position = lastIndex,
+                                    itemCount = host.filteredPic.size,
+                                    showInitialLoading = showInitialLoading
+                                ) ?: (host.filteredPic.size + 1)
+                                host.state.scrollToItem(target)
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Scroll to bottom"
+                    )
+                }
             }
         }
 

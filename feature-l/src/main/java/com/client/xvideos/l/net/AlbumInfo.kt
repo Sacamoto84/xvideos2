@@ -9,6 +9,7 @@ import com.client.xvideos.l.repository.RepositoryUriConfig
 import com.client.xvideos.l.net.json.LJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
@@ -31,6 +32,9 @@ class AlbumInfo(
     val albumInfo = MutableStateFlow<AlbumDetails?>(null)
     val loadError = MutableStateFlow<String?>(null)
     val isLoading = MutableStateFlow(true)
+    val isRefreshing = MutableStateFlow(false)
+
+    private var loadJob: Job? = null
 
     init {
         loadAlbum()
@@ -40,40 +44,71 @@ class AlbumInfo(
         loadAlbum()
     }
 
-    private fun loadAlbum() {
-        scope.launch(Dispatchers.IO) {
-            isLoading.value = true
+    fun refresh() {
+        if (isRefreshing.value) return
+        loadAlbum(forceNetwork = true)
+    }
+
+    suspend fun retryFailedPages() {
+        albumPicsDetails.retryFailedPages()
+        val details = albumInfo.value
+        if (details != null && albumPicsDetails.failedPages.isEmpty()) {
+            cacheBundleIfComplete(repository, details)
+        }
+    }
+
+    private fun loadAlbum(forceNetwork: Boolean = false) {
+        loadJob?.cancel()
+        loadJob = scope.launch(Dispatchers.IO) {
+            if (forceNetwork) {
+                isRefreshing.value = true
+                repository.deleteAlbumBundleCache(id)
+            } else {
+                isLoading.value = true
+            }
             loadError.value = null
 
-            if (restoreBundleIfFresh(repository)) {
-                isLoading.value = false
-                return@launch
-            }
+            try {
+                if (!forceNetwork && restoreBundleIfFresh(repository)) {
+                    isLoading.value = false
+                    return@launch
+                }
 
-            val query = getAlbumInfo(id)
-            val result = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
-            if (result.isFailure) {
-                val err = result.exceptionOrNull()?.message ?: "Network error"
-                Timber.w("!!! getAlbumInfo $id error: $err")
-                loadError.value = err
-                isLoading.value = false
-                return@launch
-            }
-            val parsed = parseAlbumDetails(result.getOrThrow())
+                val query = getAlbumInfo(id)
+                val result = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
+                if (result.isFailure) {
+                    val err = result.exceptionOrNull()?.message ?: "Network error"
+                    Timber.w("!!! getAlbumInfo $id error: $err")
+                    loadError.value = err
+                    isLoading.value = false
+                    return@launch
+                }
+                val parsed = parseAlbumDetails(result.getOrThrow())
 
-            if (parsed.isFailure) {
-                val err = parsed.exceptionOrNull()?.message ?: "Parse error"
-                Timber.w("!!! getAlbumInfo $id parse error: $err")
-                loadError.value = err
-                isLoading.value = false
-                return@launch
-            }
+                if (parsed.isFailure) {
+                    val err = parsed.exceptionOrNull()?.message ?: "Parse error"
+                    Timber.w("!!! getAlbumInfo $id parse error: $err")
+                    loadError.value = err
+                    isLoading.value = false
+                    return@launch
+                }
 
-            val albumDetails = parsed.getOrThrow()
-            albumInfo.value = albumDetails
-            isLoading.value = false
-            albumPicsDetails.contentUrls(pageCacheConfig = RepositoryUriConfig.DIRECT)
-            cacheBundleIfComplete(repository, albumDetails)
+                val albumDetails = parsed.getOrThrow()
+                albumInfo.value = albumDetails
+                isLoading.value = false
+                Timber.i(
+                    "!!! AlbumInfo [$id] Loaded metadata: title='${albumDetails.title}', " +
+                    "pictures=${albumDetails.number_of_pictures}, " +
+                    "animated=${albumDetails.number_of_animated_pictures}, " +
+                    "description='${albumDetails.description}'"
+                )
+                albumPicsDetails.contentUrls(pageCacheConfig = RepositoryUriConfig.DIRECT)
+                cacheBundleIfComplete(repository, albumDetails)
+            } finally {
+                if (forceNetwork) {
+                    isRefreshing.value = false
+                }
+            }
         }
     }
 
@@ -116,6 +151,12 @@ class AlbumInfo(
         runCatching {
             repository.putAlbumBundleCache(id, LJson.encodeToString(bundle))
             Timber.i("!!! L album bundle cache saved id:$id items:${snapshot.pics.size}")
+            if (snapshot.pics.size != albumDetails.number_of_pictures) {
+                Timber.w(
+                    "!!! AlbumInfo [$id] Discrepancy: actual loaded pictures count (${snapshot.pics.size}) " +
+                    "!= metadata number_of_pictures (${albumDetails.number_of_pictures})"
+                )
+            }
         }.onFailure { e ->
             Timber.w(e, "Не удалось сохранить кэш альбома id:$id")
         }

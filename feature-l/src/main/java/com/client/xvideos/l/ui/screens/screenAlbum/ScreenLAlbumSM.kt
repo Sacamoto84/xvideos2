@@ -142,9 +142,18 @@ class ScreenLAlbumSM @AssistedInject constructor(
         }
     }
 
+    fun refresh() {
+        val current = albumInfo.value
+        if (current != null) {
+            current.refresh()
+        } else {
+            albumInfo.value = luscious.getAlbum(idAlbum, requestScope = screenModelScope)
+        }
+    }
+
     fun retryFailedAlbumPages() {
         screenModelScope.launch {
-            albumInfo.value?.albumPicsDetails?.retryFailedPages()
+            albumInfo.value?.retryFailedPages()
         }
     }
 

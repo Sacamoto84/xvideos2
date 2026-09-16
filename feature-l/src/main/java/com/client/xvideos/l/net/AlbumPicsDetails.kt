@@ -171,6 +171,8 @@ class AlbumPicsDetails(
         val itemsArray = get["items"]?.takeIf { it is JsonArray }?.jsonArray
             ?: error("AlbumPicsDetails response missing data.picture.list.items")
 
+        var skippedNoMediaCount = 0
+        var parseErrorCount = 0
         itemsArray.forEachIndexed { index, element ->
             runCatching {
                 LJson.decodeFromJsonElement<PicsDetails>(element)
@@ -178,12 +180,21 @@ class AlbumPicsDetails(
                 if (pic.hasAnyMediaUrl()) {
                     list.add(pic)
                 } else {
-                    Timber.w("!!! AlbumPicsDetails $id page $page item $index has no media urls")
+                    skippedNoMediaCount++
+                    Timber.w("!!! AlbumPicsDetails $id page $page item $index has no media urls: $element")
                 }
             }.onFailure {
-                Timber.w(it, "!!! AlbumPicsDetails $id page $page item $index parse error")
+                parseErrorCount++
+                Timber.w(it, "!!! AlbumPicsDetails $id page $page item $index parse error: $element")
             }
         }
+
+        Timber.i(
+            "!!! AlbumPicsDetails [$id] Page $page/$pages chunk parsed: " +
+            "valid=${list.size}, raw=${itemsArray.size}, " +
+            "server info total_items=$totalItems, items_per_page=$itemsPerPage" +
+            (if (skippedNoMediaCount > 0 || parseErrorCount > 0) " (skipped: noMedia=$skippedNoMediaCount, parseError=$parseErrorCount)" else "")
+        )
 
         return PageLoadResult(page, pages, list)
     }
@@ -203,6 +214,7 @@ class AlbumPicsDetails(
             }
         }
 
+        Timber.i("!!! AlbumPicsDetails [$id] Starting chunked load (config=$pageCacheConfig)")
         val firstPage = loadPage(1, pageCacheConfig).getOrElse {
             Timber.w(it, "!!! AlbumPicsDetails $id page 1 error")
             recordPageIssue(1, it)
@@ -212,6 +224,7 @@ class AlbumPicsDetails(
 
         val pages = firstPage.totalPages
         appendPage(firstPage, pages)
+        Timber.i("!!! AlbumPicsDetails [$id] Page 1 loaded: +${firstPage.items.size} items. Total pages: $pages, loaded pics so far: ${pics.size}")
 
         for (page in 2..pages) {
             val pageResult = loadPage(page, pageCacheConfig).getOrElse {
@@ -220,6 +233,7 @@ class AlbumPicsDetails(
                 PageLoadResult(page, pages, emptyList())
             }
             appendPage(pageResult, pages)
+            Timber.i("!!! AlbumPicsDetails [$id] Page $page/$pages loaded: +${pageResult.items.size} items. Loaded pics so far: ${pics.size}")
             delay(PAGE_REQUEST_DELAY_MS)
         }
 
@@ -228,6 +242,7 @@ class AlbumPicsDetails(
                 percentLoad = 1f
             }
         }
+        Timber.i("!!! AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
     }
 
     suspend fun restoreFromBundleCache(

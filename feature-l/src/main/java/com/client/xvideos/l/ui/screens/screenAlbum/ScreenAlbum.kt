@@ -17,10 +17,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -31,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
@@ -72,8 +78,9 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @OptIn(ExperimentalZoomableApi::class)
+    @OptIn(ExperimentalZoomableApi::class, ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     @Composable
     override fun Content() {
 
@@ -90,12 +97,16 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         }
 
         val topInset = getTopInsetDp()
+        val haptic = LocalHapticFeedback.current
 
         val album = vm.albumInfo.collectAsStateWithLifecycle().value
 
         val parsed = album?.albumInfo?.collectAsStateWithLifecycle()?.value
         val loadError = album?.loadError?.collectAsStateWithLifecycle()?.value
         val isLoading = album?.isLoading?.collectAsStateWithLifecycle()?.value ?: false
+        val isRefreshing = album?.isRefreshing?.collectAsStateWithLifecycle()?.value ?: false
+
+        val pullToRefreshState = rememberPullToRefreshState()
 
         val saved = parsed != null && parsed.id.isNotBlank() && vm.saved.albums.list.any { it.id == parsed.id }
 
@@ -158,7 +169,26 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
             containerColor = Theme.background
         ) { padding ->
 
-            Box(modifier = Modifier.fillMaxSize())
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    vm.refresh()
+                },
+                modifier = Modifier.fillMaxSize(),
+                state = pullToRefreshState,
+                indicator = {
+                    Indicator(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = topInset),
+                        isRefreshing = isRefreshing,
+                        containerColor = Theme.tabLevel1,
+                        color = Theme.L.red,
+                        state = pullToRefreshState
+                    )
+                }
+            )
             {
                 L_LazyRowPictureDetails(
                     host = vm.host,
