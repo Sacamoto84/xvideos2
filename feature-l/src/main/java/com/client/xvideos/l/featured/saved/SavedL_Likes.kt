@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
@@ -23,6 +24,7 @@ import java.io.File
  * (`LMediaPersist`, `LCollectionFs`); этот класс держит публичный API и
  * Compose-state ([listUrl], [percentDownload]).
  */
+@Stable
 class SavedL_Likes(
     private val luscious: Luscious,
     private val scope: CoroutineScope
@@ -31,6 +33,7 @@ class SavedL_Likes(
     val listUrl = mutableStateListOf<PicsDetails>()
     private val progress = LDownloadProgress(scope)
     val percentDownload: StateFlow<Float> = progress.percentDownload
+    private var mutationJob: Job? = null
 
     init {
         refresh()
@@ -39,7 +42,8 @@ class SavedL_Likes(
     fun add(item: PicsDetails) {
         Timber.i("SavedL_Likes addLikes() item:${item.url_to_original}")
 
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             val result = lPersistPicsDetailsToFolder(
                 item = item,
                 root = File(AppPath.l_likes),
@@ -66,7 +70,8 @@ class SavedL_Likes(
         // Вызов приходит из onDelete в composable, то есть с main-потока, а
         // deleteRecursively() по папке с медиа — это полноценный обход каталога.
         // Уносим на IO, как это уже сделано в add() и refresh().
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             val root = File(AppPath.l_likes)
             val folder = lFindLikeFolder(root, url)
             val file = File(url)

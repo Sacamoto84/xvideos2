@@ -12,13 +12,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.Stable
 import kotlinx.serialization.encodeToString
 import timber.log.Timber
 
+@Stable
 class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
 
     val albumDb = FileDB(AppPath.l_albums, "album", AlbumDetails.serializer())
     val list = albumDb.list
+    private var mutationJob: Job? = null
 
     fun add(item: AlbumDetails) {
         if (item.id.toLongOrNull() == null) {
@@ -28,7 +31,8 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
 
         Timber.i("addAlbum() id:${item.id} name:${item.title}")
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             albumDb.insert(item.id, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
@@ -52,7 +56,8 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
 
         Timber.i("addAndPicsDetails() id:${item.id} name:${item.title} picsDetails:${picsDetails.size}")
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             albumDb.insert(item.id, item)
                 .onSuccess {
                     runCatching {
@@ -74,7 +79,8 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
 
     fun remove(item: AlbumDetails) {
         Timber.i("removeAlbum() id:${item.id} name:${item.title}")
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             albumDb.delete(item.id)
                 .onSuccess {
                     withContext(Dispatchers.Main) {

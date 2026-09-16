@@ -72,6 +72,7 @@
 | [Проход 65 (Fallback renameCollection в CollectionDB, Compose stability калькулятора и настроек)](CODE_REVIEW_2026-09-16_v44.md) | 16.09.2026 | `4b07c18` + рабочее дерево | закрыт полностью |
 | [Проход 66 (Безопасность Unicode getFlagEmoji, Compose stability и ключи списка в X)](CODE_REVIEW_2026-09-16_v45.md) | 16.09.2026 | `50a2f29` + рабочее дерево | закрыт полностью |
 | [Проход 67 (Off-main I/O saveToGallery, val-гигиена и Compose stability в R)](CODE_REVIEW_2026-09-16_v46.md) | 16.09.2026 | `b199cc2` + рабочее дерево | закрыт полностью |
+| [Проход 68 (SavedL_Likes/Albums mutation guards, off-main AlbumTopHits и Compose stability в L)](CODE_REVIEW_2026-09-16_v47.md) | 16.09.2026 | `38ae988` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

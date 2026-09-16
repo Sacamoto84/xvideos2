@@ -1,5 +1,6 @@
 package com.client.xvideos.l.net
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.AlbumListTopHits
@@ -16,15 +17,16 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
+@Stable
 class AlbumTopHitsImpl(
     val repository: Repository,
     val scope: CoroutineScope,
 ) {
 
-    var items = mutableStateListOf<AlbumListTopHits>()
+    val items = mutableStateListOf<AlbumListTopHits>()
 
     init {
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             val list = try {
                 Timber.i("!!! getAlbumTopHits")
                 val q = getAlbumListTopHitsQuery()

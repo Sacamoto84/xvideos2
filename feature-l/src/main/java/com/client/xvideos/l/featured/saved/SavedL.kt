@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import androidx.compose.runtime.Stable
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.l.net.Luscious
@@ -10,6 +11,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@Stable
 @Singleton
 class SavedL @Inject constructor(
     val db: AppFileDatabase,

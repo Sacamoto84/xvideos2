@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
@@ -404,6 +405,7 @@ private fun lAlbumLandingTagPreviewAlbum(
     )
 }
 
+@Stable
 class ScreenLAlbumLandingTagSM @AssistedInject constructor(
     @Assisted val tag: String,
     val luscious: Luscious,
@@ -417,7 +419,7 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
 
     val state = LazyListState()
 
-    var albumTopHits = MutableStateFlow<Landing_page_albumType?>(null)
+    val albumTopHits = MutableStateFlow<Landing_page_albumType?>(null)
 
     init {
         Timber.i("iii ScreenLAlbumLandingTagSM init")

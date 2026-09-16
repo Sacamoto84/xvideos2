@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -229,13 +230,14 @@ private fun ButtonSeeAllPreview() {
 }
 
 
+@Stable
 class ScreenLAlbumTopHitsSM @Inject constructor(
     val luscious: Luscious
 ) : ScreenModel {
 
     val state = LazyListState()
 
-    var albumTopHits = MutableStateFlow<AlbumTopHitsImpl?>(null)
+    val albumTopHits = MutableStateFlow<AlbumTopHitsImpl?>(null)
 
     init {
         Timber.i("iii ScreenLAlbumTopHitsSM init")

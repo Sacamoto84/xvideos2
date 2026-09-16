@@ -1,5 +1,6 @@
 package com.client.xvideos.l.net
 
+import androidx.compose.runtime.Stable
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
 import com.client.xvideos.l.repository.Repository
@@ -16,6 +17,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
+@Stable
 class AlbumInfo(
     val id: Int,
     download: Boolean = false,

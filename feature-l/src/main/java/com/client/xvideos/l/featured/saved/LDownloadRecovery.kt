@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import androidx.compose.runtime.Immutable
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.util.runCatchingCancellable
 import kotlinx.coroutines.Dispatchers
@@ -8,6 +9,7 @@ import timber.log.Timber
 import java.io.File
 import java.io.IOException
 
+@Immutable
 data class LDownloadRecoveryReport(
     val totalMetadataFiles: Int = 0,
     val incompleteItems: Int = 0,

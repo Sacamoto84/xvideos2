@@ -1,5 +1,7 @@
 package com.client.xvideos.l.net
 
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -31,6 +33,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
+@Immutable
 data class LAlbumPageLoadIssue(
     val page: Int,
     val message: String,
@@ -38,6 +41,7 @@ data class LAlbumPageLoadIssue(
     val failedAtMs: Long = System.currentTimeMillis()
 )
 
+@Immutable
 data class LAlbumPicsBundleSnapshot(
     val pics: List<PicsDetails>,
     val totalPages: Int?
@@ -46,6 +50,7 @@ data class LAlbumPicsBundleSnapshot(
 /**
  * Информация о картинках по id альбома
  */
+@Stable
 class AlbumPicsDetails(
     val id: Int,
     val repository: Repository

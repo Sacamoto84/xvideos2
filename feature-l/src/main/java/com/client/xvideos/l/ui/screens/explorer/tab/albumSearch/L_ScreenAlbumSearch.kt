@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -225,6 +226,7 @@ object L_ScreenAlbumSearch : Screen {
 }
 
 
+@Stable
 class ScreenLAlbumSearchSM @Inject constructor(
     val luscious: Luscious
 ) : ScreenModel {
