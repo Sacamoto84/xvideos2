@@ -1,5 +1,6 @@
 package com.client.xvideos.l.model
 
+import androidx.compose.runtime.Immutable
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
@@ -11,6 +12,7 @@ import java.io.Serializable
  * уходят в saved state активити. Без этого приложение падает
  * `NotSerializableException`, когда система сохраняет состояние.
  */
+@Immutable
 @kotlinx.serialization.Serializable
 data class AlbumListFilter(
     val display: String = "date_newest",

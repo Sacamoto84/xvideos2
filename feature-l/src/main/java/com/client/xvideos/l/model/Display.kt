@@ -1,5 +1,8 @@
 package com.client.xvideos.l.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class DataAlbumFilterDisplay( val primary: String, val secondary : String, val request : String )
 
 val byDate = "By Date"

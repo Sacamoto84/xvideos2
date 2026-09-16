@@ -81,6 +81,7 @@ data class PicsDetails(
     @SerialName("thumbnails") val thumbnails: List<Thumbnails>? = emptyList()
 ) : Parcelable
 
+@Immutable
 @Parcelize
 @Serializable
 data class Thumbnails(

@@ -1,5 +1,6 @@
 package com.client.xvideos.l.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import java.io.Serializable
 
@@ -15,6 +16,7 @@ import java.io.Serializable
  * Живёт в `model`, а не рядом с запросом: на него ссылается `AlbumListFilter`,
  * то есть слой ниже сети.
  */
+@Immutable
 @kotlinx.serialization.Serializable
 data class FilterGenre(
     @SerialName("id")
@@ -58,6 +60,7 @@ data class FilterGenre(
 ) : Serializable
 
 /** Ограничение жанра по типу контента. `Serializable` вслед за [FilterGenre]. */
+@Immutable
 @kotlinx.serialization.Serializable
 data class OnlyContent(
     @SerialName("id")

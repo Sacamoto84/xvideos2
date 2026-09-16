@@ -1,5 +1,6 @@
 package com.client.xvideos.l.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,6 +10,7 @@ import kotlinx.serialization.Serializable
  * coerceInputValues в kotlinx.serialization безопасно подставляет дефолты
  * при приходе null.
  */
+@Immutable
 @Serializable
 @Suppress("ConstructorParameterNaming")
 data class AlbumDetails(
@@ -40,6 +42,7 @@ data class AlbumDetails(
     @SerialName("created_by") val createdBy: User? = null
 )
 
+@Immutable
 @Serializable
 data class Content(
     @SerialName("id") val id: String = "",
