@@ -77,6 +77,7 @@
 | [Проход 70 (X video preview parser hygiene, stream encapsulation and feature-x Compose stability)](CODE_REVIEW_2026-09-16_v49.md) | 16.09.2026 | `6f484e0` + рабочее дерево | закрыт полностью |
 | [Проход 71 (R ScreenModel stability, search suggestion contracts and profile state hygiene)](CODE_REVIEW_2026-09-16_v50.md) | 16.09.2026 | `91e6837` + рабочее дерево | закрыт полностью |
 | [Проход 72 (Fix L album animated filter discrepancies and enhance pagination calculation)](CODE_REVIEW_2026-09-16_v51.md) | 16.09.2026 | `15fd5cb` + рабочее дерево | закрыт полностью |
+| [Проход 73 (Core collection entity, event bus and work manager Compose stability)](CODE_REVIEW_2026-09-16_v52.md) | 16.09.2026 | `9ae7c04` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

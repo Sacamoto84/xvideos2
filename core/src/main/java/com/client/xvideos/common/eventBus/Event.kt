@@ -1,5 +1,6 @@
 package com.client.xvideos.common.eventBus
 
+import androidx.compose.runtime.Immutable
 import com.client.xvideos.common.snackbar.UiMessage
 
 /**
@@ -8,6 +9,7 @@ import com.client.xvideos.common.snackbar.UiMessage
  * EventBus.postEvent(Event.ShowSnackBar(UiMessage.Info(message)))
  * ```
  */
+@Immutable
 sealed class Event {
     data class Log(val message: String) : Event()
 

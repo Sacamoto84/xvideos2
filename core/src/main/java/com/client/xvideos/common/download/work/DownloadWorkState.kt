@@ -1,8 +1,10 @@
 package com.client.xvideos.common.download.work
 
+import androidx.compose.runtime.Immutable
 import androidx.work.WorkInfo
 import java.util.UUID
 
+@Immutable
 enum class DownloadStatus {
     ENQUEUED,
     RUNNING,
@@ -11,6 +13,7 @@ enum class DownloadStatus {
     CANCELLED,
 }
 
+@Immutable
 data class DownloadWorkState(
     val workId: UUID,
     val tag: String,
