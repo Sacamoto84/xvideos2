@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -104,6 +105,7 @@ object L_SavedTab : Screen {
     }
 }
 
+@Stable
 class L_SavedTabSM @Inject constructor(
     private val navigationState: LNavigationState
 ) : ScreenModel {

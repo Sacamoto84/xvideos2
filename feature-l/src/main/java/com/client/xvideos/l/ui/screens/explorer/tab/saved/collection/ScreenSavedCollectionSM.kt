@@ -1,5 +1,6 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
+import androidx.compose.runtime.Stable
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
@@ -13,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Stable
 class ScreenSavedCollectionSM @Inject constructor(
     val savedL: SavedL,
 ) : ScreenModel {

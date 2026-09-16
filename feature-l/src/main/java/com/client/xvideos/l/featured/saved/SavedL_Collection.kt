@@ -206,6 +206,7 @@ class SavedL_Collection(
 
     private var refreshItemsJob: Job? = null
     private var refreshDuplicatesJob: Job? = null
+    private var mutationJob: Job? = null
 
     fun setCollection(collectionName: String) {
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
@@ -292,7 +293,8 @@ class SavedL_Collection(
 
         Timber.i("SavedL_Collection addAll() count:${uniqueItems.size} collection:$safeName")
 
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             var successCount = 0
             var errorCount = 0
 
@@ -351,7 +353,8 @@ class SavedL_Collection(
         val uniqueItems = items.distinctBy { lPicsDetailsIdentityKey(it) }
         if (uniqueItems.isEmpty()) return
         // Обход папок коллекции на каждый элемент плюс рекурсивное удаление — на IO.
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             val collectionRoot = File(AppPath.l_collection, safeName)
             val removedCount = uniqueItems.count { item ->
                 val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
@@ -378,7 +381,8 @@ class SavedL_Collection(
         }
         // Поиск папки элемента + чтение и запись config-файла — файловые операции.
         // Вызов идёт из onClick меню, с UI-потока это фриз (см. refreshCollectionList).
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             val collectionRoot = File(AppPath.l_collection, name)
             try {
                 val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
@@ -409,7 +413,8 @@ class SavedL_Collection(
         }
         // Обход всех папок коллекции с чтением metadata.json каждого элемента плюс
         // рекурсивное удаление дублей — только на IO, иначе ANR на большой коллекции.
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             val collectionRoot = File(AppPath.l_collection, name)
             val removedCount = try {
                 val groups = lFindCollectionDuplicateFolders(collectionRoot)

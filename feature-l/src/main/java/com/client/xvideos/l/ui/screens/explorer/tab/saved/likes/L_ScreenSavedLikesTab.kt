@@ -18,6 +18,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -142,6 +143,7 @@ enum class AllImagGif {
     ALL, IMAGE, GIF
 }
 
+@Stable
 class ScreenSavedLLikesSM @Inject constructor(
     val savedL: SavedL
 ) : ScreenModel {

@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -289,6 +290,7 @@ private fun PicsDetails.matchesCollectionSearch(query: String): Boolean {
 }
 
 
+@Stable
 class ScreenLCollectionNameSM @AssistedInject constructor(
     @Assisted val collectionName: String,
     val savedL: SavedL,
