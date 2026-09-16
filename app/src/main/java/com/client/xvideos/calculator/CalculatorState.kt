@@ -1,5 +1,6 @@
 package com.client.xvideos.calculator
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
@@ -21,6 +22,7 @@ import java.util.Locale
  * Поддерживает честный расчёт процентов, смену знака (+/-), повторение операции по «=»,
  * динамическое переключение «AC» / «C» и подсветку активного оператора.
  */
+@Stable
 class CalculatorState(
     initialDisplay: String = "0",
     initialHistory: String = ""

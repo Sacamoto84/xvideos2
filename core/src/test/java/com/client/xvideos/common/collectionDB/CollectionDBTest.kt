@@ -122,4 +122,53 @@ class CollectionDBTest {
         val items = db.readAllCollections().getOrThrow().single().items
         assertEquals(listOf(TestItem("ok", "https://x/ok")), items)
     }
+
+    @Test
+    fun `renameCollection успешно переименовывает коллекцию и сохраняет элементы`() {
+        val root = tmp.newFolder("collections_rename")
+        val db = db(root)
+        db.insert("item1", "СтароеИмя", TestItem("item1", "https://x/1"))
+
+        val result = db.renameCollection("СтароеИмя", "НовоеИмя")
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrThrow())
+
+        val collections = db.readAllCollections().getOrThrow()
+        assertEquals(1, collections.size)
+        assertEquals("НовоеИмя", collections.single().collection)
+        assertEquals(listOf(TestItem("item1", "https://x/1")), collections.single().items)
+    }
+
+    @Test
+    fun `renameCollection для несуществующей коллекции возвращает false`() {
+        val root = tmp.newFolder("collections_rename_absent")
+        val db = db(root)
+
+        val result = db.renameCollection("НетТакой", "КудаТо")
+        assertTrue(result.isSuccess)
+        assertEquals(false, result.getOrThrow())
+    }
+
+    @Test
+    fun `renameCollection падает если целевая коллекция уже существует`() {
+        val root = tmp.newFolder("collections_rename_conflict")
+        val db = db(root)
+        db.insert("item1", "КоллекцияА", TestItem("item1", "https://x/1"))
+        db.insert("item2", "КоллекцияБ", TestItem("item2", "https://x/2"))
+
+        val result = db.renameCollection("КоллекцияА", "КоллекцияБ")
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `renameCollection с одинаковыми именами возвращает success`() {
+        val root = tmp.newFolder("collections_rename_same")
+        val db = db(root)
+        db.insert("item1", "ТаЖеСамая", TestItem("item1", "https://x/1"))
+
+        val result = db.renameCollection("ТаЖеСамая", "ТаЖеСамая")
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrThrow())
+    }
 }
+

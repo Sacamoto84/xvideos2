@@ -112,7 +112,18 @@ class CollectionDB<T>(
                     throw IOException("Коллекция \"$trimmed\" уже существует")
                 }
                 if (!oldDir.renameTo(newDir)) {
-                    throw IOException("Не удалось переименовать коллекцию: ${oldDir.absolutePath}")
+                    val copied = try {
+                        oldDir.copyRecursively(newDir, overwrite = false)
+                    } catch (e: Exception) {
+                        Timber.e(e, "CollectionDB renameCollection fallback copy failed")
+                        false
+                    }
+                    if (copied) {
+                        oldDir.deleteRecursively()
+                    } else {
+                        newDir.deleteRecursively()
+                        throw IOException("Не удалось переименовать коллекцию: ${oldDir.absolutePath}")
+                    }
                 }
             }
             Timber.i("Переименована коллекция: $safeOldName -> $trimmed")
