@@ -7,6 +7,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.x.model.ItemsX
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.onSuccess
@@ -72,12 +73,16 @@ class SavedX_Favorites(val scope: CoroutineScope) {
     /** Быстрая O(1)-проверка принадлежности к избранному. */
     fun contains(id: Long): Boolean = id > 0L && favoriteIds.contains(id)
 
+    private var refreshJob: Job? = null
+
     fun refresh() {
-        scope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             favoritesDb.refresh()
+            val ids = withContext(Dispatchers.Main) { list.map { it.id } }
             withContext(Dispatchers.Main) {
                 favoriteIds.clear()
-                favoriteIds.addAll(list.map { it.id })
+                favoriteIds.addAll(ids)
             }
         }
     }

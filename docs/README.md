@@ -64,6 +64,7 @@
 | [Проход 57 (0-байт guard и декомпозиция Downloader R, Compose stability R и L)](CODE_REVIEW_2026-09-16_v36.md) | 16.09.2026 | `73edff1` + рабочее дерево | закрыт полностью |
 | [Проход 58 (Off-Main mkdirs в R, отмена гонок DownloadRed и R_Saved, дедупликация превью Downloader)](CODE_REVIEW_2026-09-16_v37.md) | 16.09.2026 | `5858e47` + рабочее дерево | закрыт полностью |
 | [Проход 59 (Off-Main P2P в ExpandMenuVM L, отмена гонок SavedL_Albums, guard пейджеров L_FullScreenImage)](CODE_REVIEW_2026-09-16_v38.md) | 16.09.2026 | `6f7d521` + рабочее дерево | закрыт полностью |
+| [Проход 60 (Off-Main P2P в ScreenSavedX, отмена гонок SavedX_Downloads и SavedX_Favorites)](CODE_REVIEW_2026-09-16_v39.md) | 16.09.2026 | `9497c4a` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

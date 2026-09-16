@@ -17,6 +17,7 @@ import com.client.xvideos.x.parcer.parserItemVideo
 import kotlinx.serialization.encodeToString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -194,9 +195,12 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         }
     }
 
+    private var refreshJob: Job? = null
+
     /** Перечитать список сохранённого по `.info`-файлам. */
     fun refresh() {
-        scope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             loadFromDisk()
         }
     }

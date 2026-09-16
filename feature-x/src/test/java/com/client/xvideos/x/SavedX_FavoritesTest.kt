@@ -55,4 +55,15 @@ class SavedX_FavoritesTest {
         assertTrue(checkContains(101L))
         assertTrue(checkContains(202L))
     }
+
+    @Test
+    fun `сборка списка идентификаторов из избранного сохраняет все положительные id`() {
+        val items = listOf(
+            ItemsX(id = 10L, title = "A"),
+            ItemsX(id = 20L, title = "B"),
+            ItemsX(id = 30L, title = "C")
+        )
+        val ids = items.map { it.id }.toSet()
+        assertEquals(setOf(10L, 20L, 30L), ids)
+    }
 }

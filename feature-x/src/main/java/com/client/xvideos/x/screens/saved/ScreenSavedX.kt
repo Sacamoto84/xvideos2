@@ -27,7 +27,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -119,6 +123,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 @Composable
 private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDelete: () -> Unit) {
     val navigator = LocalNavigator.currentOrThrow
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -160,11 +165,15 @@ private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDele
             )
 
             IconButton(onClick = {
-                val bundle = XExporter.export(File(AppPath.x_cache_download), item.id)
-                if (bundle == null) {
-                    SnackBar.error("Нет скачанного видео для P2P")
-                } else {
-                    navigator.push(ScreenP2pSend(P2pSendSource.Ready(bundle)))
+                coroutineScope.launch {
+                    val bundle = withContext(Dispatchers.IO) {
+                        XExporter.export(File(AppPath.x_cache_download), item.id)
+                    }
+                    if (bundle == null) {
+                        SnackBar.error("Нет скачанного видео для P2P")
+                    } else {
+                        navigator.push(ScreenP2pSend(P2pSendSource.Ready(bundle)))
+                    }
                 }
             }) {
                 Icon(
