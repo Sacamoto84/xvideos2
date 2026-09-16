@@ -1,5 +1,7 @@
 package com.client.xvideos.common.collectionDB.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Универсальное представление одной коллекции в гриде (общее для L и R).
  *
@@ -7,6 +9,7 @@ package com.client.xvideos.common.collectionDB.model
  * @param previewUrl       url или локальный путь к превью; null — серая заглушка
  * @param itemsCount       подпись со счётчиком; null — счётчик не показывать
  */
+@Immutable
 data class CollectionGridItem(
     val name: String,
     val previewUrl: String?,

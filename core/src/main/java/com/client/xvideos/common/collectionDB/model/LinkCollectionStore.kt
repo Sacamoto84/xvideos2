@@ -26,7 +26,7 @@ abstract class LinkCollectionStore<T>(
 
     val collectionDb = CollectionDB<T>(path, serializer)
 
-    var collectionList = mutableStateListOf<CollectionEntity<T>>()
+    val collectionList = mutableStateListOf<CollectionEntity<T>>()
 
     /**
      * Номер загрузки и последний опубликованный номер — тот же приём, что в

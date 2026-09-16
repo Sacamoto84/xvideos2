@@ -17,6 +17,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +27,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.util.formatBytes
 import java.io.File
 
+@Immutable
 internal data class StorageStat(
     val key: String,
     val title: String,
@@ -33,6 +35,7 @@ internal data class StorageStat(
     val fileCount: Int = 0
 )
 
+@Immutable
 internal data class FolderSnapshot(
     val sizeBytes: Long,
     val fileCount: Int

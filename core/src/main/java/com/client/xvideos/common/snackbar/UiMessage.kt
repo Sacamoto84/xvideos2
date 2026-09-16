@@ -3,7 +3,9 @@ package com.client.xvideos.common.snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarVisuals
+import androidx.compose.runtime.Immutable
 
+@Immutable
 sealed interface UiMessage {
     val text: String
 
@@ -13,6 +15,7 @@ sealed interface UiMessage {
     data class Warning(override val text: String): UiMessage
 }
 
+@Immutable
 class UiSnackbarVisuals(
     val ui: UiMessage,
     override val message: String = ui.text,

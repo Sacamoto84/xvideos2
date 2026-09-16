@@ -170,5 +170,38 @@ class CollectionDBTest {
         assertTrue(result.isSuccess)
         assertTrue(result.getOrThrow())
     }
+
+    @Test
+    fun `create успешно создаёт коллекцию и устойчив к повторному вызову`() {
+        val root = tmp.newFolder("collections_create")
+        val db = db(root)
+
+        val res1 = db.create("НоваяКоллекция")
+        assertTrue(res1.isSuccess)
+        assertTrue(res1.getOrThrow())
+        assertTrue(File(root, "НоваяКоллекция").isDirectory)
+
+        // Повторное создание уже существующей директории успешно
+        val res2 = db.create("НоваяКоллекция")
+        assertTrue(res2.isSuccess)
+        assertTrue(res2.getOrThrow())
+    }
+
+    @Test
+    fun `deleteCollection удаляет коллекцию и возвращает false если её нет`() {
+        val root = tmp.newFolder("collections_delete")
+        val db = db(root)
+        db.create("Удаляемая")
+        assertTrue(File(root, "Удаляемая").isDirectory)
+
+        val resDelete = db.deleteCollection("Удаляемая")
+        assertTrue(resDelete.isSuccess)
+        assertTrue(resDelete.getOrThrow())
+        assertTrue(!File(root, "Удаляемая").exists())
+
+        val resAbsent = db.deleteCollection("Удаляемая")
+        assertTrue(resAbsent.isSuccess)
+        assertEquals(false, resAbsent.getOrThrow())
+    }
 }
 

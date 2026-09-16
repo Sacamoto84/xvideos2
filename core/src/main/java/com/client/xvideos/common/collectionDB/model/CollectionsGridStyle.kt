@@ -1,5 +1,6 @@
 package com.client.xvideos.common.collectionDB.model
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 
@@ -7,6 +8,7 @@ import androidx.compose.ui.text.font.FontFamily
  * Цветовая и типографическая тема для [CollectionsGrid]. Заполняется на стороне
  * каждого раздела (см. `Theme.L.toCollectionsGridStyle()` / аналог для R).
  */
+@Immutable
 data class CollectionsGridStyle(
     val backgroundColor: Color,
     val titleColor: Color,

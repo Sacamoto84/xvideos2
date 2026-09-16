@@ -1,5 +1,6 @@
 package com.client.xvideos.screenSettings
 
+import androidx.compose.runtime.Immutable
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
@@ -19,6 +20,7 @@ import com.client.xvideos.r.common.saved.SavedRed
  *
  * Все поля nullable: превью экрана настроек рисуется без DI.
  */
+@Immutable
 internal data class SettingsDataHolders(
     val savedRed: SavedRed? = null,
     val blockRed: BlockRed? = null,

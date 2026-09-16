@@ -1,5 +1,7 @@
 package com.client.xvideos.common.backup
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Модели отчёта и настроек бэкапа.
  *
@@ -8,11 +10,13 @@ package com.client.xvideos.common.backup
  * их наружу расширил бы видимость кода, который пишет и удаляет данные
  * пользователя. Объявления ниже — просто модели, они переносятся как есть.
  */
+@Immutable
 data class XlrBackupReport(
     val files: Int,
     val bytes: Long
 )
 
+@Immutable
 data class XlrBackupItem(
     val path: String,
     val title: String,
@@ -27,8 +31,8 @@ enum class XlrBackupContentMode {
     MINI
 }
 
+@Immutable
 data class XlrBackupOptions(
     val lMode: XlrBackupContentMode = XlrBackupContentMode.MINI,
     val rMode: XlrBackupContentMode = XlrBackupContentMode.MINI
 )
-

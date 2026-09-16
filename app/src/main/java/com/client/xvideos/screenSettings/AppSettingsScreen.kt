@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -332,6 +333,7 @@ private fun AppSettingsScreenBody(
     }
 }
 
+@Immutable
 private data class SettingsDetailParams(
     val currentPage: SettingsPage,
     val imageCacheSizeBytes: Long,

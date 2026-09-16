@@ -58,7 +58,7 @@ class CollectionDB<T>(
                 val dir = File(path, safeName)
                 if (!dir.exists()) {
                     val created = dir.mkdirs()
-                    if (!created) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
+                    if (!created && !dir.exists()) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
                 }
             }
             Result.success(true)
@@ -75,21 +75,23 @@ class CollectionDB<T>(
                 ?: throw IOException("Недопустимое имя коллекции: $collectionName")
             val dir = File(path, safeName)
 
-            if (!dir.exists()) {
-                Timber.w("Коллекция \"$safeName\" не найдена: ${dir.absolutePath}")
-                return Result.success(false)      // ничего не удаляли
+            val deleted = synchronized(lock) {
+                if (!dir.exists()) {
+                    Timber.w("Коллекция \"$safeName\" не найдена: ${dir.absolutePath}")
+                    return@synchronized false // ничего не удаляли
+                }
+                if (!dir.deleteRecursively()) {
+                    throw IOException("Не удалось удалить коллекцию: ${dir.absolutePath}")
+                }
+                true
             }
 
-            val deleted = synchronized(lock) { dir.deleteRecursively() }
-            if (!deleted) {
-                throw IOException("Не удалось удалить коллекцию: ${dir.absolutePath}")
+            if (deleted) {
+                Timber.i("Удалена коллекция: $safeName")
             }
-
-            Timber.i("Удалена коллекция: $safeName")
-            Result.success(true)
-        }.getOrElse { e ->
+            deleted
+        }.onFailure { e ->
             Timber.e(e, "Ошибка при удалении коллекции $collectionName")
-            Result.failure(e)
         }
 
     fun renameCollection(oldName: String, newName: String): Result<Boolean> =
