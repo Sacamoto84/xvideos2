@@ -317,4 +317,35 @@ class XParsersTest {
         assertTrue(script!!.contains("setVideoHLS"))
         assertEquals(listOf("HD"), tags.tags)
     }
+
+    // --- parserVideoPreviewFromImageUrl -------------------------------------
+
+    @Test
+    fun `legacy cdn url разбирается в видеопревью`() {
+        val imgUrl = "https://cdn77-pic.xvideos-cdn.com/videos/thumbs169ll/6a/4f/6b/6a4f6bafe3abb03b5ea6108ab18ff1ad/6a4f6bafe3abb03b5ea6108ab18ff1ad.30.jpg"
+        val preview = parserVideoPreviewFromImageUrl(imgUrl)
+        assertEquals(
+            "https://cdn77-pic.xvideos-cdn.com/videos/videopreview/6a/4f/6b/6a4f6bafe3abb03b5ea6108ab18ff1ad_169.mp4",
+            preview
+        )
+    }
+
+    @Test
+    fun `new cdn url разбирается в preview_mp4`() {
+        val imgUrl = "https://thumbs-gcore.xvideos-cdn.com/abc/0/xv_18_t.jpg"
+        val preview = parserVideoPreviewFromImageUrl(imgUrl)
+        assertEquals(
+            "https://thumbs-gcore.xvideos-cdn.com/abc/0/preview.mp4",
+            preview
+        )
+    }
+
+    @Test
+    fun `некорректные адреса и null возвращают null`() {
+        assertNull(parserVideoPreviewFromImageUrl(null))
+        assertNull(parserVideoPreviewFromImageUrl(""))
+        assertNull(parserVideoPreviewFromImageUrl("   "))
+        assertNull(parserVideoPreviewFromImageUrl("null"))
+        assertNull(parserVideoPreviewFromImageUrl("https://cdn.example.com/other/path/image.jpg"))
+    }
 }

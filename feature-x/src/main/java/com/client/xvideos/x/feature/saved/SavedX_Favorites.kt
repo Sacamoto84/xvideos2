@@ -1,5 +1,6 @@
 package com.client.xvideos.x.feature.saved
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateSetOf
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.onSuccess
 
+@Stable
 class SavedX_Favorites(val scope: CoroutineScope) {
 
     private val favoritesDb = FileDB(AppPath.x_favorites, "ItemsX", ItemsX.serializer())
@@ -24,6 +26,8 @@ class SavedX_Favorites(val scope: CoroutineScope) {
      */
     val favoriteIds = mutableStateSetOf<Long>()
 
+    private var mutationJob: Job? = null
+
     init {
         refresh()
     }
@@ -34,7 +38,8 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             SnackBar.error("Недопустимый ID видео")
             return
         }
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             favoritesDb.insert(item.id.toString(), item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
@@ -55,7 +60,8 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             SnackBar.error("Недопустимый ID видео")
             return
         }
-        scope.launch(Dispatchers.IO) {
+        mutationJob?.cancel()
+        mutationJob = scope.launch(Dispatchers.IO) {
             favoritesDb.delete(item.id.toString())
                 .onSuccess {
                     withContext(Dispatchers.Main) {

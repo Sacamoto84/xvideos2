@@ -35,6 +35,8 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
     }
 
     val videosIndex = parts.indexOf("videos")
+    if (videosIndex < 0) return null
+
     val fileName = parts.lastOrNull().orEmpty()
     val hash = fileName
         .substringBefore('.')
@@ -42,15 +44,13 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
         .takeIf { it.isNotBlank() }
         ?: return null
 
-    val folders = if (videosIndex >= 0 && parts.size > videosIndex + 4) {
+    val folders = if (parts.size > videosIndex + 4) {
         parts.subList(videosIndex + 2, videosIndex + 5)
     } else if (hash.length >= 6) {
         listOf(hash.substring(0, 2), hash.substring(2, 4), hash.substring(4, 6))
     } else {
         return null
     }
-
-    if (videosIndex < 0) return null
 
     val previewParts = buildList {
         addAll(parts.take(videosIndex + 1))

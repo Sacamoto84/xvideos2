@@ -1,5 +1,6 @@
 package com.client.xvideos.x.feature.saved
 
+import androidx.compose.runtime.Stable
 import android.net.Uri
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.AppPath
@@ -37,6 +38,7 @@ import java.io.File
  *
  * `KDownloader` создаётся напрямую через фабрику (DI-модуль в проекте отключён).
  */
+@Stable
 class SavedX_Downloads(private val scope: CoroutineScope) {
 
     private val dir: String = AppPath.x_cache_download

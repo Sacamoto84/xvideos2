@@ -54,6 +54,7 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
     }
 
     var passedString: String by mutableStateOf("")
+        private set
 
     var isError: Boolean by mutableStateOf(false)
         private set

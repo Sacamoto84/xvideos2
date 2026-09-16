@@ -1,10 +1,12 @@
 package com.client.xvideos.x.feature.saved
 
+import androidx.compose.runtime.Stable
 import com.client.xvideos.common.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@Stable
 @Singleton
 class SavedX @Inject constructor(
     //val db: AppLDatabase,
