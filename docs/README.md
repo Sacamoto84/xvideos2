@@ -82,6 +82,7 @@
 | [Проход 75 (Red models deep Compose immutability for URLs, niches and users)](CODE_REVIEW_2026-09-16_v54.md) | 16.09.2026 | `e4740db` + рабочее дерево | закрыт полностью |
 | [Проход 76 (AppLock throttle stability and app import hygiene)](CODE_REVIEW_2026-09-16_v55.md) | 16.09.2026 | `9eb9f9b` + рабочее дерево | закрыт полностью |
 | [Проход 77 (L album details, thumbnails and filter Compose stability)](CODE_REVIEW_2026-09-16_v56.md) | 16.09.2026 | `fcfb2a7` + рабочее дерево | закрыт полностью |
+| [Проход 78 (X country state encapsulation and downloads progress flow safety)](CODE_REVIEW_2026-09-16_v57.md) | 16.09.2026 | `a42b3d3` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

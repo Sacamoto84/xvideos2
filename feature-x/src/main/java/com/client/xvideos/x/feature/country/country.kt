@@ -72,7 +72,18 @@ private val countries: List<Country> by lazy { parserCountry() }
 @Stable
 object CountryState {
     var current: String by mutableStateOf("❓")    // Текущая страна
+        private set
     var userSelectionEpoch: Int by mutableIntStateOf(0)
+        private set
+
+    fun updateCurrent(flag: String) {
+        current = flag
+    }
+
+    fun onCountrySelected(flag: String) {
+        current = flag
+        userSelectionEpoch++
+    }
 }
 
 @Composable
@@ -134,8 +145,7 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                                         val flag = parseSiteCountryFlag(s)
 
                                         withContext(Dispatchers.Main) {
-                                            flag?.let { it1 -> CountryState.current = it1 }
-                                            CountryState.userSelectionEpoch++
+                                            flag?.let { it1 -> CountryState.onCountrySelected(it1) }
                                             Toast.makeText(
                                                 AppContextHolder.applicationContext,
                                                 "${getFlagEmoji(it.flagClass)} ${it.name}",

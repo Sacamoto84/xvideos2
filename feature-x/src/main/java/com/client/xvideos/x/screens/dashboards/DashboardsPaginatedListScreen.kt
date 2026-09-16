@@ -102,7 +102,7 @@ fun DashboardsPaginatedListScreen(
         hasError = false
         try {
             val (flag, items) = openNew(pageIndex)
-            flag?.let { CountryState.current = it }
+            flag?.let { CountryState.updateCurrent(it) }
             if (items.isEmpty()) {
                 hasError = true
                 SnackBar.error("Не удалось загрузить видео")

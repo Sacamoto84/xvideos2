@@ -45,7 +45,8 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     private val kDownloader by lazy { KDownloader.create(AppContextHolder.applicationContext) }
 
     /** `0f..1f` — прогресс, `-2f` — простой/готово, `-3f` — ошибка. */
-    val percent = MutableStateFlow(-2f)
+    private val _percent = MutableStateFlow(-2f)
+    val percent: StateFlow<Float> = _percent.asStateFlow()
 
     private val _list = MutableStateFlow<List<ItemsX>>(emptyList())
     val list: StateFlow<List<ItemsX>> = _list.asStateFlow()
@@ -88,14 +89,14 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             return
         }
 
-        percent.value = -2f
+        _percent.value = -2f
         SnackBar.info("Получение ссылки на видео…")
 
         scope.launch(Dispatchers.IO) {
             val videoUrl = resolveDirectVideoUrl(item)
 
             if (videoUrl.isNullOrBlank()) {
-                percent.value = -3f
+                _percent.value = -3f
                 SnackBar.error("Не удалось получить ссылку на видео")
                 return@launch
             }
@@ -118,11 +119,11 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
 
             kDownloader.enqueue(
                 req,
-                onStart = { percent.value = 0f },
-                onProgress = { p -> percent.value = p / 100f },
+                onStart = { _percent.value = 0f },
+                onProgress = { p -> _percent.value = p / 100f },
                 onError = {
                     Timber.e("X download error ${item.id}: $it")
-                    percent.value = -3f
+                    _percent.value = -3f
                     SnackBar.error("Ошибка скачивания: $it")
                 },
                 onCompleted = {
@@ -130,11 +131,11 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                         val file = File(dir, "${item.id}.mp4")
                         if (!file.exists() || file.length() == 0L) {
                             file.delete()
-                            percent.value = -3f
+                            _percent.value = -3f
                             SnackBar.error("Ошибка: скачанный файл пуст")
                             return@launch
                         }
-                        percent.value = -2f
+                        _percent.value = -2f
                         SnackBar.success("Скачано")
                         runCatching {
                             File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
@@ -181,7 +182,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 SnackBar.error("Не удалось получить ссылку на видео")
                 return@launch
             }
-            GallerySaver.saveFromUrl(context, kDownloader, videoUrl, fileName, progress = percent)
+            GallerySaver.saveFromUrl(context, kDownloader, videoUrl, fileName, progress = _percent)
         }
     }
 
