@@ -80,6 +80,7 @@
 | [Проход 73 (Core collection entity, event bus and work manager Compose stability)](CODE_REVIEW_2026-09-16_v52.md) | 16.09.2026 | `9ae7c04` + рабочее дерево | закрыт полностью |
 | [Проход 74 (X video player screen state encapsulation and property hygiene)](CODE_REVIEW_2026-09-16_v53.md) | 16.09.2026 | `7411484` + рабочее дерево | закрыт полностью |
 | [Проход 75 (Red models deep Compose immutability for URLs, niches and users)](CODE_REVIEW_2026-09-16_v54.md) | 16.09.2026 | `e4740db` + рабочее дерево | закрыт полностью |
+| [Проход 76 (AppLock throttle stability and app import hygiene)](CODE_REVIEW_2026-09-16_v55.md) | 16.09.2026 | `9eb9f9b` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

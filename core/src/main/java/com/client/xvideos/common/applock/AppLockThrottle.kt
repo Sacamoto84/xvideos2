@@ -1,5 +1,7 @@
 package com.client.xvideos.common.applock
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Арифметика блокировки ввода код-доступа: чистые функции, без `Context`.
  *
@@ -29,6 +31,7 @@ object AppLockThrottle {
      * @param lockoutUntilWall срок по настенным часам (epoch millis), 0 — блокировки нет.
      * @param lockoutUntilElapsed срок по монотонным часам, 0 — блокировки нет.
      */
+    @Immutable
     data class State(
         val attempts: Int,
         val lockoutUntilWall: Long,
