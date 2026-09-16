@@ -12,7 +12,7 @@ package com.client.xvideos.x.model
  */
 fun getFlagEmoji(countryCode: String): String {
     val code = countryCode.replace("flag-", "").uppercase()
-    if (code.length != 2) return "❓"
+    if (code.length != 2 || code[0] !in 'A'..'Z' || code[1] !in 'A'..'Z') return "❓"
     val firstChar = code[0].code - 'A'.code + 0x1F1E6
     val secondChar = code[1].code - 'A'.code + 0x1F1E6
     return String(Character.toChars(firstChar)) + String(Character.toChars(secondChar))

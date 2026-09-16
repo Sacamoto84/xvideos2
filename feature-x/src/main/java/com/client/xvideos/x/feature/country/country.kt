@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +54,7 @@ import timber.log.Timber
 
 // Data class для представления страны
 // Страна: Австралия, Ссылка: /change-country/au, Класс флага: flag-au
+@Immutable
 private data class Country(val name: String, val url: String, val flagClass: String)
 
 @Preview
@@ -66,6 +69,7 @@ private val countries: List<Country> by lazy { parserCountry() }
  * Глобальное состояние выбранной страны.
  * Раньше это были две разрозненные top-level переменные — собраны в один холдер.
  */
+@Stable
 object CountryState {
     var current: String by mutableStateOf("❓")    // Текущая страна
     var userSelectionEpoch: Int by mutableIntStateOf(0)
@@ -117,7 +121,7 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
             ) {
 
                 LazyColumn(state = stateLazyList) {
-                    items(countries) {
+                    items(countries, key = { it.url }) {
 
                         Box(
                             modifier = Modifier

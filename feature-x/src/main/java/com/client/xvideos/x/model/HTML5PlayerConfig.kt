@@ -1,5 +1,8 @@
 package com.client.xvideos.x.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class HTML5PlayerConfig(
     val videoTitle: String = "",
     val encodedIdVideo: String = "",
@@ -25,6 +28,7 @@ data class HTML5PlayerConfig(
     val viewData: String = ""
 )
 
+@Immutable
 data class Sponsor(
     val link: String,
     val desc: String,
