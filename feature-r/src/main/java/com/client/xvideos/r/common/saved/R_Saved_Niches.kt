@@ -6,6 +6,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.NichesInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -49,8 +50,11 @@ class R_Saved_Niches(
         }
     }
 
+    private var refreshJob: Job? = null
+
     fun refresh() {
-        scope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             nichesDb.refresh()
         }
     }

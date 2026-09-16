@@ -15,6 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,7 +69,7 @@ class DownloadRed @Inject constructor(
     }
 
     fun downloadItem(item: GifsInfo) {
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             try {
                 Timber.i("Начало загрузки: ${item.id}")
                 downloader.downloadRedName(item, onComplete = { refreshDownloadList() })
@@ -93,11 +94,13 @@ class DownloadRed @Inject constructor(
             if (exists) {
                 onReady()
             } else {
-                downloader.downloadRedName(item, onComplete = {
-                    refreshDownloadList()
-                    // Колбэк загрузчика приходит не с Main — Toast/Intent/навигация требуют Main.
-                    scope.launch(Dispatchers.Main) { onReady() }
-                })
+                withContext(Dispatchers.IO) {
+                    downloader.downloadRedName(item, onComplete = {
+                        refreshDownloadList()
+                        // Колбэк загрузчика приходит не с Main — Toast/Intent/навигация требуют Main.
+                        scope.launch(Dispatchers.Main) { onReady() }
+                    })
+                }
             }
         }
     }
@@ -168,8 +171,12 @@ class DownloadRed @Inject constructor(
         }
     }
 
+    private var refreshJob: Job? = null
+    private var recoveryJob: Job? = null
+
     fun refreshDownloadList() {
-        scope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             val rootDir = File(AppPath.r_cache_download)
 
             // Один обход на оба результата: раньше папка обходилась ради `.info`,
@@ -210,7 +217,8 @@ class DownloadRed @Inject constructor(
         onComplete: (RedDownloadRecoveryReport) -> Unit = {},
         onEvent: (String) -> Unit = {}
     ) {
-        scope.launch(Dispatchers.IO) {
+        recoveryJob?.cancel()
+        recoveryJob = scope.launch(Dispatchers.IO) {
             val scan = scanIncompleteDownloadsInternal()
             var report = scan.report
             onEvent("R Download: info ${report.totalInfoFiles}, требуют докачки ${report.incompleteItems}")

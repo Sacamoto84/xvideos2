@@ -83,9 +83,9 @@ class Downloader @Inject constructor(
             val p = creatorDir.absolutePath
             creatorDir.mkdirs()
 
-            item.previewUrl()?.let { imageUrl ->
-                val requestImage = kDownloader.newRequestBuilder(imageUrl, p, "${item.id}.jpg").tag(item.id).build()
-                kDownloader.enqueue(requestImage)
+            val previewFile = File(p, "${item.id}.jpg")
+            if (!previewFile.exists() || previewFile.length() == 0L) {
+                enqueuePreview(item, p, showSnackBarErrors = false, onEvent = {})
             }
 
             val request = kDownloader.newRequestBuilder(videoUrl, p, "${item.id}.mp4").tag(item.id).build()

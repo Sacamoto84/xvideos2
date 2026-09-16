@@ -50,4 +50,9 @@ class DownloadedVideoKeysTest {
         assertEquals(1, validFiles.size)
         assertEquals(validFile.name, validFiles.first().name)
     }
+
+    @Test
+    fun `пустой список файлов возвращает пустое множество ключей`() {
+        assertTrue(downloadedVideoKeys(emptyList()).isEmpty())
+    }
 }

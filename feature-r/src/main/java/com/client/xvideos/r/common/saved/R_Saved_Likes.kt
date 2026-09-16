@@ -9,6 +9,7 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,10 +61,13 @@ class R_Saved_Likes(
         }
     }
 
+    private var refreshJob: Job? = null
+
     fun refresh() {
-        scope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             likesDb.refresh()
-            val current = list.toList()
+            val current = withContext(Dispatchers.Main) { list.toList() }
             val sanitized = current.sanitizeGifsInfoList()
             // Переписываем список только если санитизация реально что-то изменила,
             // иначе получаем лишнюю перезапись и мигание списка.
