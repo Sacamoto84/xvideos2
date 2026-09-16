@@ -71,4 +71,23 @@ class SavedX_DownloadsTest {
         assertFalse(contains(-999L))
         assertTrue(contains(123L))
     }
+
+    @Test
+    fun `пустые 0-байтовые файлы mp4 и info игнорируются при чтении с диска`() {
+        val root = tmp.newFolder("downloads_zero_byte")
+        File(root, "111.mp4").writeText("") // 0 bytes
+        File(root, "111.info").writeText("") // 0 bytes
+        File(root, "222.mp4").writeText("valid content")
+        File(root, "222.info").writeText("{\"id\":222}")
+
+        val allFiles = root.listFiles() ?: emptyArray()
+        val videoIds = allFiles.filter { it.isFile && it.extension == "mp4" && it.length() > 0L }
+            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+        val validInfos = allFiles.filter { it.isFile && it.extension == "info" && it.length() > 0L }
+
+        assertFalse(videoIds.contains(111L))
+        assertTrue(videoIds.contains(222L))
+        assertEquals(1, validInfos.size)
+        assertEquals("222.info", validInfos.first().name)
+    }
 }

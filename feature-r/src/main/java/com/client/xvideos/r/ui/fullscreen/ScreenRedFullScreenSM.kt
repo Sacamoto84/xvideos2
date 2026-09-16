@@ -47,14 +47,14 @@ class ScreenRedFullScreenSM @Inject constructor(
     var currentPlayerDuration by mutableIntStateOf(0)
 
     fun setTimeA() {
-        timeA = currentPlayerTime
+        timeA = sanitizePointTime(currentPlayerTime, currentPlayerDuration)
         if (enableAB && timeB <= timeA) {
             enableAB = false
         }
     }
 
     fun setTimeB() {
-        timeB = currentPlayerTime
+        timeB = sanitizePointTime(currentPlayerTime, currentPlayerDuration)
         if (enableAB && timeB <= timeA) {
             enableAB = false
         }
@@ -97,4 +97,9 @@ abstract class ScreenModuleRedFullScreen {
     @IntoMap
     @ScreenModelKey(ScreenRedFullScreenSM::class)
     abstract fun bindScreenRedFullScreenModel(screenModel: ScreenRedFullScreenSM): ScreenModel
+}
+
+internal fun sanitizePointTime(time: Float, durationSec: Int): Float {
+    if (!time.isFinite() || time < 0f) return 0f
+    return if (durationSec > 0) time.coerceAtMost(durationSec.toFloat()) else time
 }

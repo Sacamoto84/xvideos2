@@ -14,6 +14,7 @@ import com.client.xvideos.l.net.Luscious
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,11 +56,15 @@ class SavedL_Collection(
 
     /* ---------- Список коллекций ---------- */
 
+    private var refreshCollectionJob: Job? = null
+
     fun refreshCollectionList() {
         // Обход каталога коллекций (с подсчётом элементов/дублей и чтением
         // metadata.json) — на IO; обновление Compose-state — на Main, иначе ANR.
+        // Отменяем незавершённый скан при повторном запуске.
         val order = sortOrder
-        scope.launch(Dispatchers.IO) {
+        refreshCollectionJob?.cancel()
+        refreshCollectionJob = scope.launch(Dispatchers.IO) {
             Timber.i("SavedL_Collection refreshCollectionList()")
             val items = try {
                 lReadCollections(File(AppPath.l_collection), order)
@@ -199,6 +204,9 @@ class SavedL_Collection(
 
     /* ---------- Текущая коллекция ---------- */
 
+    private var refreshItemsJob: Job? = null
+    private var refreshDuplicatesJob: Job? = null
+
     fun setCollection(collectionName: String) {
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
             SnackBar.error("Недопустимое название коллекции")
@@ -214,7 +222,8 @@ class SavedL_Collection(
             SnackBar.error("Недопустимое название коллекции")
             return
         }
-        scope.launch(Dispatchers.IO) {
+        refreshItemsJob?.cancel()
+        refreshItemsJob = scope.launch(Dispatchers.IO) {
             Timber.i("SavedL_Collection refresh() collection:$collectionName")
             val items = try {
                 lReadCollectionItems(File(AppPath.l_collection, collectionName))
@@ -236,7 +245,8 @@ class SavedL_Collection(
     fun refreshDuplicates(collectionName: String? = currentCollectionName) {
         val rawName = collectionName ?: return
         val name = CollectionName.normalizeOrNull(rawName) ?: return
-        scope.launch(Dispatchers.IO) {
+        refreshDuplicatesJob?.cancel()
+        refreshDuplicatesJob = scope.launch(Dispatchers.IO) {
             val groups = lReadCollectionDuplicateGroups(File(AppPath.l_collection, name))
             withContext(Dispatchers.Main) {
                 duplicateGroups.replaceWith(groups)

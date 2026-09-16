@@ -123,13 +123,20 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                     SnackBar.error("Ошибка скачивания: $it")
                 },
                 onCompleted = {
-                    percent.value = -2f
-                    SnackBar.success("Скачано")
                     scope.launch(Dispatchers.IO) {
+                        val file = File(dir, "${item.id}.mp4")
+                        if (!file.exists() || file.length() == 0L) {
+                            file.delete()
+                            percent.value = -3f
+                            SnackBar.error("Ошибка: скачанный файл пуст")
+                            return@launch
+                        }
+                        percent.value = -2f
+                        SnackBar.success("Скачано")
                         runCatching {
                             File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
                         }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
-                        refresh()
+                        loadFromDisk()
                     }
                 },
             )

@@ -9,6 +9,7 @@ import com.client.xvideos.l.net.Luscious
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -85,10 +86,15 @@ class SavedL_Likes(
         }
     }
 
+    private var refreshJob: Job? = null
+
     fun refresh() {
         // Чтение каталога с разбором каждого metadata.json делаем на IO,
         // обновление Compose-state — на Main, чтобы не блокировать UI (ANR).
-        scope.launch(Dispatchers.IO) {
+        // Отменяем предыдущий незавершённый скан при повторном вызове,
+        // исключая гонки устаревших результатов.
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             Timber.i("SavedL_Likes refresh()")
             val items = try {
                 lReadCollectionItems(File(AppPath.l_likes))
