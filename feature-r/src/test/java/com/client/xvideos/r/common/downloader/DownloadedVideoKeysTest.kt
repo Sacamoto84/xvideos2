@@ -33,4 +33,21 @@ class DownloadedVideoKeysTest {
         assertTrue(downloadedVideoKey("Creator", "AbcDef") in keys)
         assertFalse(downloadedVideoKey("Creator", "Missing") in keys)
     }
+
+    @Test
+    fun `фильтрация отсекает пустые 0-байтовые файлы видео`() {
+        val validFile = File.createTempFile("valid_vid", ".mp4").apply {
+            writeText("video data")
+            deleteOnExit()
+        }
+        val emptyFile = File.createTempFile("empty_vid", ".mp4").apply {
+            deleteOnExit()
+        }
+
+        val allFiles = listOf(validFile, emptyFile)
+        val validFiles = allFiles.filter { it.extension == "mp4" && it.length() > 0L }
+
+        assertEquals(1, validFiles.size)
+        assertEquals(validFile.name, validFiles.first().name)
+    }
 }

@@ -106,10 +106,20 @@ class Downloader @Inject constructor(
                 onProgress = { it1 -> percent.value = it1 / 100f },
                 onCompleted = {
                     Timber.i("Downloader: завершено скачивание id=${item.id}")
-                    percent.value = -2f
-
-                    SnackBar.success("Скачивание завершено")
                     scope.launch(Dispatchers.IO) {
+                        val videoFile = File(p, "${item.id}.mp4")
+                        if (!videoFile.exists() || videoFile.length() == 0L) {
+                            videoFile.delete()
+                            percent.value = -3f
+                            withContext(Dispatchers.Main) {
+                                SnackBar.error("Ошибка: скачанный файл пуст")
+                            }
+                            return@launch
+                        }
+                        percent.value = -2f
+                        withContext(Dispatchers.Main) {
+                            SnackBar.success("Скачивание завершено")
+                        }
                         runCatching {
                             val text = AppJson.encodeToString(item)
                             File(p, "${item.id}.info").writeTextAtomically(text)
@@ -164,63 +174,19 @@ class Downloader @Inject constructor(
         var skippedNoPreviewUrl = 0
 
         if (!previewFile.exists() || previewFile.length() == 0L) {
-            val previewUrl = item.previewUrl()
-            if (previewUrl == null) {
+            if (item.previewUrl() == null) {
                 skippedNoPreviewUrl++
             } else {
-                val requestImage = kDownloader.newRequestBuilder(previewUrl, p, "${item.id}.jpg").tag(item.id).build()
-                kDownloader.enqueue(
-                    requestImage,
-                    onStart = { onEvent("R Download: старт preview ${item.id}") },
-                    onError = { error ->
-                        onEvent("R Download: preview не скачан ${item.id}: $error")
-                        if (showSnackBarErrors) {
-                            SnackBar.error("Ошибка загрузки preview: $error")
-                        }
-                    },
-                    onCompleted = { onEvent("R Download: preview готов ${item.id}") }
-                )
+                enqueuePreview(item, p, showSnackBarErrors, onEvent)
                 queuedPreview++
             }
         }
 
         if (!videoFile.exists() || videoFile.length() == 0L) {
-            val videoUrl = item.downloadVideoUrl()
-            if (videoUrl == null) {
+            if (item.downloadVideoUrl() == null) {
                 skippedNoVideoUrl++
             } else {
-                val request = kDownloader.newRequestBuilder(videoUrl, p, "${item.id}.mp4").tag(item.id).build()
-                kDownloader.enqueue(
-                    request,
-                    onStart = {
-                        percent.value = 0f
-                    },
-                    onError = {
-                        percent.value = -3f
-                        onEvent("R Download: video не скачан ${item.id}: $it")
-                        if (showSnackBarErrors) {
-                            SnackBar.error("Ошибка закачки: $it")
-                        }
-                    },
-                    onProgress = { progress -> percent.value = progress / 100f },
-                    onCompleted = {
-                        percent.value = -2f
-                        onEvent("R Download: video готов ${item.id}")
-                        scope.launch(Dispatchers.IO) {
-                            val infoFile = File(p, "${item.id}.info")
-                            if (!infoFile.exists() || infoFile.length() == 0L) {
-                                runCatching {
-                                    infoFile.writeTextAtomically(AppJson.encodeToString(item))
-                                }.onFailure {
-                                    Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
-                                }
-                            }
-                            withContext(Dispatchers.Main) {
-                                onComplete()
-                            }
-                        }
-                    }
-                )
+                enqueueVideo(item, p, videoFile, showSnackBarErrors, onEvent, onComplete)
                 queuedVideo++
             }
         }
@@ -268,6 +234,78 @@ class Downloader @Inject constructor(
         }
     }
 
+    private fun enqueuePreview(
+        item: GifsInfo,
+        dirPath: String,
+        showSnackBarErrors: Boolean,
+        onEvent: (String) -> Unit
+    ) {
+        val previewUrl = item.previewUrl() ?: return
+        val requestImage = kDownloader.newRequestBuilder(previewUrl, dirPath, "${item.id}.jpg").tag(item.id).build()
+        kDownloader.enqueue(
+            requestImage,
+            onStart = { onEvent("R Download: старт preview ${item.id}") },
+            onError = { error ->
+                onEvent("R Download: preview не скачан ${item.id}: $error")
+                if (showSnackBarErrors) {
+                    SnackBar.error("Ошибка загрузки preview: $error")
+                }
+            },
+            onCompleted = { onEvent("R Download: preview готов ${item.id}") }
+        )
+    }
+
+    private fun enqueueVideo(
+        item: GifsInfo,
+        dirPath: String,
+        videoFile: File,
+        showSnackBarErrors: Boolean,
+        onEvent: (String) -> Unit,
+        onComplete: () -> Unit
+    ) {
+        val videoUrl = item.downloadVideoUrl() ?: return
+        val request = kDownloader.newRequestBuilder(videoUrl, dirPath, "${item.id}.mp4").tag(item.id).build()
+        kDownloader.enqueue(
+            request,
+            onStart = { percent.value = 0f },
+            onError = {
+                percent.value = -3f
+                onEvent("R Download: video не скачан ${item.id}: $it")
+                if (showSnackBarErrors) {
+                    SnackBar.error("Ошибка закачки: $it")
+                }
+            },
+            onProgress = { progress -> percent.value = progress / 100f },
+            onCompleted = {
+                scope.launch(Dispatchers.IO) {
+                    if (!videoFile.exists() || videoFile.length() == 0L) {
+                        videoFile.delete()
+                        percent.value = -3f
+                        onEvent("R Download: video пустой или повреждён ${item.id}")
+                        if (showSnackBarErrors) {
+                            withContext(Dispatchers.Main) {
+                                SnackBar.error("Ошибка: скачанный файл пуст")
+                            }
+                        }
+                        return@launch
+                    }
+                    percent.value = -2f
+                    onEvent("R Download: video готов ${item.id}")
+                    val infoFile = File(dirPath, "${item.id}.info")
+                    if (!infoFile.exists() || infoFile.length() == 0L) {
+                        runCatching {
+                            infoFile.writeTextAtomically(AppJson.encodeToString(item))
+                        }.onFailure {
+                            Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
+                        }
+                    }
+                    withContext(Dispatchers.Main) {
+                        onComplete()
+                    }
+                }
+            }
+        )
+    }
 }
 
 internal fun GifsInfo.downloadVideoUrl(): String? {

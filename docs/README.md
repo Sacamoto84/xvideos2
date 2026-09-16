@@ -61,6 +61,7 @@
 | [Проход 54 (Паразитная перемотка RedPooledVideoPlayer, Off-Main создание коллекций L, центрирование пагинации X)](CODE_REVIEW_2026-09-16_v33.md) | 16.09.2026 | `fe45dfe` + рабочее дерево | закрыт полностью |
 | [Проход 55 (Валидация A-B ScreenRedFullScreenSM, отмена гонок refresh L, 0B guard SavedX)](CODE_REVIEW_2026-09-16_v34.md) | 16.09.2026 | `2f2d169` + рабочее дерево | закрыт полностью |
 | [Проход 56 (Смещение скролла L FullScreen onClose, асинхронное удаление KDownloader cancel, Compose stability X плееров)](CODE_REVIEW_2026-09-16_v35.md) | 16.09.2026 | `c56bcc5` + рабочее дерево | закрыт полностью |
+| [Проход 57 (0-байт guard и декомпозиция Downloader R, Compose stability R и L)](CODE_REVIEW_2026-09-16_v36.md) | 16.09.2026 | `73edff1` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

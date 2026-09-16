@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -47,6 +48,7 @@ data class AlbumListImplInfoAndListAndStatus(
 )
 
 @OptIn(ExperimentalFoundationApi::class)
+@Stable
 class ScreenLAlbumListSM @AssistedInject constructor(
     @Assisted val inFilter: AlbumListFilter?,
     val luscious: Luscious,

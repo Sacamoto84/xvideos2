@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.manager_block
 
+import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.r.common.block.BlockRed
@@ -12,6 +13,7 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+@Stable
 class ScreenRedManageBlockSM @Inject constructor(
     private val blockRed: BlockRed
 ) : ScreenModel {

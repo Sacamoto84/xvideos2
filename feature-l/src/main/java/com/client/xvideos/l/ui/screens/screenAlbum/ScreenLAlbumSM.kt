@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbum
 
 import android.content.Context
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -40,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+@Stable
 class ScreenLAlbumSM @AssistedInject constructor(
     @Assisted val idAlbum: Long,
     val luscious: Luscious,
