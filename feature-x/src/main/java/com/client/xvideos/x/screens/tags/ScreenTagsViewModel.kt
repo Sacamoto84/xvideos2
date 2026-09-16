@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.tags
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -26,6 +27,7 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import timber.log.Timber
 
+@Stable
 class ScreenTagsViewModel @AssistedInject constructor(
     @Assisted val tag: String,
 ) : ScreenModel {

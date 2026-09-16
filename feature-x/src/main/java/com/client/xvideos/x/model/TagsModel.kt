@@ -1,5 +1,7 @@
 package com.client.xvideos.x.model
 
+import androidx.compose.runtime.Immutable
+
 //<li class="main-uploader">
 //<a class="btn btn-default label main uploader-tag hover-name" href="/milfed">
 //<span class="name">
@@ -11,6 +13,7 @@ package com.client.xvideos.x.model
 //</span>
 //</a>
 //</li>
+@Immutable
 data class TagsMainUploaderPornstar(val href: String, val name: String, val count: String)
 
 
@@ -23,6 +26,7 @@ data class TagsMainUploaderPornstar(val href: String, val name: String, val coun
 //</span>
 //</a>
 //</li>
+@Immutable
 data class TagsModel(
     val mainUploader: List<TagsMainUploaderPornstar>,
     val pornstars: List<TagsMainUploaderPornstar>,

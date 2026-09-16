@@ -107,15 +107,21 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 Timber.e("!!! ScreenVideoPlayerSM loadVideo(forceReload=$forceReload)")
 
                 if (forceReload) {
-                    db.cacheUrlStringRam.delete(url)
+                    withContext(Dispatchers.IO) {
+                        db.cacheUrlStringRam.delete(url)
+                    }
                 }
 
                 // RAM-кэш чистится при старте процесса (clearVolatileCachesOnProcessStart),
                 // поэтому HLS-ссылки с истекающим токеном обновятся после перезапуска.
-                val res = if (forceReload) null else db.cacheUrlStringRam.get(url)
+                val res = if (forceReload) null else withContext(Dispatchers.IO) {
+                    db.cacheUrlStringRam.get(url)
+                }
                 val isFromCache = res != null
                 val s = if (res == null) {
-                    readHtmlFromURLDirect(url)
+                    withContext(Dispatchers.IO) {
+                        readHtmlFromURLDirect(url)
+                    }
                 } else {
                     res.content
                 }
@@ -136,16 +142,22 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 passedHLS = parsedData.third
                 if (parsedData.third.isBlank()) {
                     isError = true
-                    db.cacheUrlStringRam.delete(url)
+                    withContext(Dispatchers.IO) {
+                        db.cacheUrlStringRam.delete(url)
+                    }
                 } else if (!isFromCache && s.isNotBlank()) {
-                    db.cacheUrlStringRam.put(url, s)
+                    withContext(Dispatchers.IO) {
+                        db.cacheUrlStringRam.put(url, s)
+                    }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.w(e, "Страница видео не загрузилась: %s", url)
                 isError = true
-                db.cacheUrlStringRam.delete(url)
+                withContext(Dispatchers.IO) {
+                    db.cacheUrlStringRam.delete(url)
+                }
             } finally {
                 isLoading = false
             }
@@ -155,7 +167,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     fun onPlaybackError() {
         Timber.w("ScreenX_VideoPlayerSM: ошибка воспроизведения для %s, очистка RAM-кэша", url)
         isError = true
-        screenModelScope.launch {
+        screenModelScope.launch(Dispatchers.IO) {
             db.cacheUrlStringRam.delete(url)
         }
     }
