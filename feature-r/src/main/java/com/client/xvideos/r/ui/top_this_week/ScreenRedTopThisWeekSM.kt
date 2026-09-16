@@ -17,6 +17,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import androidx.compose.runtime.Stable
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
+@Stable
 class ScreenRedTopThisWeekSM @Inject constructor(
     connectivityObserver: ConnectivityObserver,
     val block: BlockRed,

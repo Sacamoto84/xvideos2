@@ -34,18 +34,41 @@ abstract class ISearchTemplate(
     /**
      * Отображаемый текст
      */
-    var searchText = MutableStateFlow(TextFieldValue(""))
+    val searchText = MutableStateFlow(TextFieldValue(""))
 
     /**
      * Текст по которому будет идти запрос на сервер
      */
-    var searchTextDone = MutableStateFlow("")
+    val searchTextDone = MutableStateFlow("")
 
-
-
-    var searchTextSuggestions = MutableStateFlow<List<SuggestionItem>>(emptyList())
+    val searchTextSuggestions = MutableStateFlow<List<SuggestionItem>>(emptyList())
 
     val stack = ArrayDeque<String>()
+
+    companion object {
+        const val MAX_STACK_SIZE = 50
+    }
+
+    fun pushHistory(query: String) {
+        if (query.isBlank()) return
+        synchronized(stack) {
+            if (stack.lastOrNull() == query) return
+            if (stack.size >= MAX_STACK_SIZE) {
+                stack.removeFirst()
+            }
+            stack.addLast(query)
+        }
+    }
+
+    fun popHistory(currentQuery: String): String? {
+        synchronized(stack) {
+            if (stack.isEmpty()) return null
+            if (stack.lastOrNull() == currentQuery) {
+                stack.removeLast()
+            }
+            return if (stack.isNotEmpty()) stack.last() else ""
+        }
+    }
 
     val focused = MutableStateFlow(false)
 

@@ -67,6 +67,7 @@
 | [Проход 60 (Off-Main P2P в ScreenSavedX, отмена гонок SavedX_Downloads и SavedX_Favorites)](CODE_REVIEW_2026-09-16_v39.md) | 16.09.2026 | `9497c4a` + рабочее дерево | закрыт полностью |
 | [Проход 61 (Валидация A-B лупа RedPooledVideoPlayer от NaN/Infinity, @Stable аннотации ScreenModel)](CODE_REVIEW_2026-09-16_v40.md) | 16.09.2026 | `b737438` + рабочее дерево | закрыт полностью |
 | [Проход 62 (Off-Main дисковый кэш в плеерах X, Compose stability тегов X)](CODE_REVIEW_2026-09-16_v41.md) | 16.09.2026 | `20e51fc` + рабочее дерево | закрыт полностью |
+| [Проход 63 (Защита стека отмены поиска R, Compose stability в R)](CODE_REVIEW_2026-09-16_v42.md) | 16.09.2026 | `0dc2864` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

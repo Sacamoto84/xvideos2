@@ -12,6 +12,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
@@ -21,6 +22,7 @@ import javax.inject.Inject
  * Выделено из `R_ScreenNichesTab.kt` (было 526 строк). Тело не менялось —
  * перенос дословный.
  */
+@Stable
 class ScreenRedExplorerNichesSM @Inject constructor(
     val navigationState: RNavigationState,
     val savedRed: SavedRed,

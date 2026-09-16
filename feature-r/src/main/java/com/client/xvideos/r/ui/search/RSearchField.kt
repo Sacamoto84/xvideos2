@@ -48,11 +48,11 @@ fun RSearchTextField(
             search.searchText.value =
                 TextFieldValue(text = suggestion.text, selection = TextRange(suggestion.text.length))
             search.searchTextDone.value = suggestion.text
+            search.pushHistory(suggestion.text)
 
-            search.scope.launch(Dispatchers.Main) {
-                if (suggestion.text.isNotEmpty()) {
+            if (suggestion.text.isNotEmpty()) {
+                search.scope.launch(Dispatchers.IO) {
                     search.add(suggestion.text)
-                    search.stack.addLast(suggestion.text)
                 }
             }
         },
@@ -64,18 +64,18 @@ fun RSearchTextField(
             search.searchTextDone.value = ""
         },
         onUndoClick = {
-            if (search.stack.isNotEmpty()) {
-                val last = search.stack.removeLast()
-                search.searchText.value = TextFieldValue(text = last, selection = TextRange(last.length))
-                search.searchTextDone.value = last
+            val prev = search.popHistory(search.searchTextDone.value)
+            if (prev != null) {
+                search.searchText.value = TextFieldValue(text = prev, selection = TextRange(prev.length))
+                search.searchTextDone.value = prev
             }
         },
         onDone = {
             search.searchTextDone.value = it
-            search.scope.launch(Dispatchers.Main) {
-                if (it.isNotEmpty()) {
+            search.pushHistory(it)
+            if (it.isNotEmpty()) {
+                search.scope.launch(Dispatchers.IO) {
                     search.add(it)
-                    search.stack.addLast(it)
                 }
             }
         },
@@ -86,7 +86,7 @@ fun RSearchTextField(
                     search.searchText.value = TextFieldValue(text = it, selection = TextRange(it.length))
                     search.searchTextDone.value = it
                 },
-                onDeleteClick = { search.scope.launch(Dispatchers.Main) { search.delete(it) } }
+                onDeleteClick = { search.scope.launch(Dispatchers.IO) { search.delete(it) } }
             )
         },
         onFocused = { search.focused.value = it }

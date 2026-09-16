@@ -25,6 +25,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -259,6 +260,7 @@ private fun CollectionCoverIcon(coverUrl: String?) {
 }
 
 
+@Stable
 class ScreenSavedCollectionSM @Inject constructor(
     val block: BlockRed,
     val savedRed: SavedRed,

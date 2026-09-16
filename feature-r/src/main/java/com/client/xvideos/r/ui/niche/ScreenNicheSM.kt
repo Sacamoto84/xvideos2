@@ -22,6 +22,7 @@ import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import dagger.Binds
 import dagger.Module
+import androidx.compose.runtime.Stable
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -30,6 +31,7 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import timber.log.Timber
 
+@Stable
 class ScreenNicheSM @AssistedInject constructor(
     @Assisted val nicheName: String,
     connectivityObserver: ConnectivityObserver,
