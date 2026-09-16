@@ -1,13 +1,16 @@
 package com.client.xvideos.r.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Immutable
 @Serializable
 data class TopCreatorsResponse(
     @SerialName("creators") val creators: List<TopCreator> = emptyList()
 )
 
+@Immutable
 @Serializable
 data class TopCreator(
     @SerialName("creationtime") val creationtime: Long = 0L,
