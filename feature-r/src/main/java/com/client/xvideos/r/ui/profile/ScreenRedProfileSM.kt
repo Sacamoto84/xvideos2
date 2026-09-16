@@ -37,6 +37,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -67,8 +68,8 @@ class ScreenRedProfileSM @AssistedInject constructor(
         fun create(profileName: String): ScreenRedProfileSM
     }
 
-    val _list = MutableStateFlow<List<GifsInfo>>(emptyList())
-    val list: StateFlow<List<GifsInfo>> = _list
+    private val _list = MutableStateFlow<List<GifsInfo>>(emptyList())
+    val list: StateFlow<List<GifsInfo>> = _list.asStateFlow()
 
     var creator: UserInfo? by mutableStateOf(null)
 

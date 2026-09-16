@@ -1,5 +1,7 @@
 package com.client.xvideos.r.common.search
 
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.input.TextFieldValue
 import kotlinx.coroutines.CoroutineScope
@@ -19,12 +21,14 @@ import kotlinx.serialization.Serializable
  */
 internal const val SUGGESTIONS_DEBOUNCE_MS = 300L
 
+@Immutable
 @Serializable
 data class SuggestionItem(
     @SerialName("text") val text: String = "",
     @SerialName("count") val count: Long = 0,
 )
 
+@Stable
 abstract class ISearchTemplate(
     val scope: CoroutineScope,
     val dao : IDaoSearchTemplate

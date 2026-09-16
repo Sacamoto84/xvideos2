@@ -75,6 +75,7 @@
 | [Проход 68 (SavedL_Likes/Albums mutation guards, off-main AlbumTopHits и Compose stability в L)](CODE_REVIEW_2026-09-16_v47.md) | 16.09.2026 | `38ae988` + рабочее дерево | закрыт полностью |
 | [Проход 69 (CollectionDB directory creation resilience and core/app Compose stability)](CODE_REVIEW_2026-09-16_v48.md) | 16.09.2026 | `a05becc` + рабочее дерево | закрыт полностью |
 | [Проход 70 (X video preview parser hygiene, stream encapsulation and feature-x Compose stability)](CODE_REVIEW_2026-09-16_v49.md) | 16.09.2026 | `6f484e0` + рабочее дерево | закрыт полностью |
+| [Проход 71 (R ScreenModel stability, search suggestion contracts and profile state hygiene)](CODE_REVIEW_2026-09-16_v50.md) | 16.09.2026 | `91e6837` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

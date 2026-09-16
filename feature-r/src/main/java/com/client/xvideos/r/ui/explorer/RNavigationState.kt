@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.explorer
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -9,6 +10,7 @@ import com.client.xvideos.r.model.Order
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@Stable
 @Singleton
 class RNavigationState @Inject constructor() {
     var rootTab by mutableIntStateOf(0)
