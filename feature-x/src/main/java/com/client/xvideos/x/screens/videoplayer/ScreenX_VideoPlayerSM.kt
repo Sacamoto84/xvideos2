@@ -64,6 +64,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
     /** HLS-ссылка для воспроизведения (master-playlist xvideos). */
     var passedHLS: String by mutableStateOf("")
+        private set
 
     var isError: Boolean by mutableStateOf(false)
         private set
@@ -76,9 +77,15 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
     /** Теги/каналы/порноактрисы для overlay поверх видео. */
     var tags by mutableStateOf(TagsModel(emptyList(), emptyList(), emptyList()))
+        private set
 
     /** Позиция (мс), возвращённая из полноэкранного режима; -1 — нет. */
     var positionFromFullscreen by mutableLongStateOf(-1L)
+        private set
+
+    fun consumePositionFromFullscreen() {
+        positionFromFullscreen = -1L
+    }
 
     init {
         // Возврат позиции из полноэкранного экрана. Подписка стояла внутри

@@ -96,7 +96,7 @@ class ScreenX_VideoPlayer(val url: String) : Screen {
                 if (pos != -1L && host.totalTime > 0) {
                     host.seekTo(pos / 1000f)
                     host.play()
-                    vm.positionFromFullscreen = -1L
+                    vm.consumePositionFromFullscreen()
                 }
             }
 
