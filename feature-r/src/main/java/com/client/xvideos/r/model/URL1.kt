@@ -1,9 +1,11 @@
 package com.client.xvideos.r.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 /** `Serializable` вслед за [GifsInfo], который её держит. */
+@Immutable
 @kotlinx.serialization.Serializable
 data class URL1(
     @SerialName("thumbnail") val thumbnail: String = "",     // Картинка как SD

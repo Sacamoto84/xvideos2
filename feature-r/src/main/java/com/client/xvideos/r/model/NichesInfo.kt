@@ -1,8 +1,10 @@
 package com.client.xvideos.r.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Immutable
 @Serializable
 data class NicheResponse(
     @SerialName("niche") val niche: NichesInfo
@@ -35,6 +37,7 @@ data class NicheResponse(
  *     },
  *     ```
  */
+@Immutable
 @Serializable
 data class NichesInfo(
     @SerialName("cover") val cover: String? = "cover",           //Большая широкая картинка
