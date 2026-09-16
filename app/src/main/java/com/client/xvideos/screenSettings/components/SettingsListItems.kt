@@ -20,7 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,20 +36,25 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
 import com.client.xvideos.screenSettings.DialogButton
 import kotlin.math.roundToInt
 
-internal val SettingsScreenBackground = Theme.L.grey6
-internal val SettingsTopBarColor = Theme.L.grey5
-internal val SettingsCardColor = Theme.L.grey4
-internal val SettingsAccentColor = Theme.L.primaryColor
-internal val SettingsRowTextPrimary = Theme.L.grey0
-internal val SettingsRowTextSecondary = Theme.L.grey1
-internal val SettingsDividerColor = Theme.L.grey3
+// Google Material 3 Dark Theme tokens (matching Chrome & Android 14+ Settings)
+internal val SettingsScreenBackground = Color(0xFF1B1B1F)
+internal val SettingsTopBarColor = SettingsScreenBackground
+internal val SettingsCardColor = Color(0xFF2B2930)
+internal val SettingsAccentColor = Color(0xFFC4C0FD)
+internal val SettingsOnAccentColor = Color(0xFF2E2961)
+internal val SettingsRowTextPrimary = Color(0xFFE5E2E9)
+internal val SettingsRowTextSecondary = Color(0xFFA6A4AC)
+internal val SettingsDividerColor = Color(0x2E79747E)
 internal val WhatsAppGreen = SettingsAccentColor
 
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
@@ -55,30 +62,36 @@ private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 @Composable
 fun SettingsSectionTitle(text: String) {
     Text(
-        text = text.uppercase(),
-        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp),
-        color = SettingsRowTextSecondary,
-        style = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
+        text = text,
+        modifier = Modifier.padding(start = 24.dp, top = 20.dp, bottom = 8.dp, end = 24.dp),
+        color = SettingsAccentColor,
+        style = Theme.L.Type.caption.copy(
+            color = SettingsAccentColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 0.1.sp
+        )
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun SettingsSectionTitlePreview() = SettingsPreview {
     SettingsSectionTitle("Защита")
 }
 
 @Composable
-fun SettingsDivider() {
+fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
     val inGroup = LocalSettingsInGroup.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (inGroup) Modifier else Modifier.padding(horizontal = 12.dp))
+            .then(if (inGroup) Modifier else Modifier.padding(horizontal = 16.dp))
             .background(SettingsCardColor)
     ) {
         HorizontalDivider(
-            modifier = Modifier.padding(start = 56.dp),
+            modifier = Modifier.padding(start = startIndent, end = 16.dp),
+            thickness = 0.5.dp,
             color = SettingsDividerColor
         )
     }
@@ -89,8 +102,8 @@ fun SettingsGroup(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(24.dp))
             .background(SettingsCardColor)
     ) {
         CompositionLocalProvider(LocalSettingsInGroup provides true) {
@@ -99,7 +112,7 @@ fun SettingsGroup(content: @Composable () -> Unit) {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun SettingsDividerPreview() = SettingsPreview {
     SettingsDivider()
@@ -107,7 +120,7 @@ private fun SettingsDividerPreview() = SettingsPreview {
 
 @Composable
 fun SettingsListItem(
-    @DrawableRes icon: Int,
+    @DrawableRes icon: Int = 0,
     text: String,
     subtitle: String? = null,
     trailing: @Composable (() -> Unit)? = null,
@@ -128,18 +141,20 @@ fun SettingsListItem(
                     Modifier
                 } else {
                     Modifier
-                        .padding(horizontal = 12.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(24.dp))
                 }
             )
             .background(SettingsCardColor)
             .then(clickableModifier)
-            .heightIn(min = 58.dp)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .heightIn(min = 60.dp)
+            .padding(horizontal = 16.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SettingsIcon(icon)
-        Spacer(Modifier.width(16.dp))
+        if (icon != 0) {
+            SettingsIcon(icon)
+            Spacer(Modifier.width(16.dp))
+        }
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
@@ -147,14 +162,24 @@ fun SettingsListItem(
             Text(
                 text = text,
                 color = SettingsRowTextPrimary,
-                style = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
+                style = Theme.L.Type.rowTitle.copy(
+                    color = SettingsRowTextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 22.sp
+                )
             )
             if (subtitle != null) {
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(3.dp))
                 Text(
                     text = subtitle,
                     color = SettingsRowTextSecondary,
-                    style = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
+                    style = Theme.L.Type.rowSubtitle.copy(
+                        color = SettingsRowTextSecondary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 18.sp
+                    )
                 )
             }
         }
@@ -165,7 +190,7 @@ fun SettingsListItem(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun SettingsListItemPreview() = SettingsPreview {
     SettingsListItem(
@@ -178,20 +203,19 @@ private fun SettingsListItemPreview() = SettingsPreview {
 @Composable
 fun SettingsIcon(@DrawableRes icon: Int) {
     Box(
-        modifier = Modifier
-            .size(28.dp),
+        modifier = Modifier.size(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
-            tint = SettingsRowTextPrimary,
-            modifier = Modifier.size(22.dp)
+            tint = SettingsRowTextSecondary,
+            modifier = Modifier.size(24.dp)
         )
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun SettingsIconPreview() = SettingsPreview {
     SettingsIcon(R.drawable.icon_red)
@@ -199,7 +223,7 @@ private fun SettingsIconPreview() = SettingsPreview {
 
 @Composable
 fun SettingsValueRow(
-    @DrawableRes icon: Int,
+    @DrawableRes icon: Int = 0,
     text: String,
     value: String
 ) {
@@ -210,7 +234,7 @@ fun SettingsValueRow(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun SettingsValueRowPreview() = SettingsPreview {
     SettingsValueRow(
@@ -222,7 +246,7 @@ private fun SettingsValueRowPreview() = SettingsPreview {
 
 @Composable
 fun SettingsSwitchRow(
-    @DrawableRes icon: Int,
+    @DrawableRes icon: Int = 0,
     text: String,
     subtitle: String,
     value: Boolean,
@@ -237,13 +261,21 @@ fun SettingsSwitchRow(
             Switch(
                 checked = value,
                 enabled = enabled,
-                onCheckedChange = onValueChange
+                onCheckedChange = onValueChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = SettingsOnAccentColor,
+                    checkedTrackColor = SettingsAccentColor,
+                    checkedBorderColor = Color.Transparent,
+                    uncheckedThumbColor = Color(0xFF938F99),
+                    uncheckedTrackColor = Color(0xFF48464F),
+                    uncheckedBorderColor = Color(0xFF79747E)
+                )
             )
         }
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun SettingsSwitchRowPreview() = SettingsPreview {
     var checked by remember { mutableStateOf(true) }
@@ -258,7 +290,7 @@ private fun SettingsSwitchRowPreview() = SettingsPreview {
 
 @Composable
 fun SettingsButtonRowWithDialog(
-    @DrawableRes icon: Int,
+    @DrawableRes icon: Int = 0,
     text: String,
     value: String,
     textDialogTitle: String,
@@ -282,16 +314,16 @@ fun SettingsButtonRowWithDialog(
     SettingsListItem(
         icon = icon,
         text = text,
-        subtitle = value,
+        subtitle = null,
         trailing = {
             TextButton(onClick = { visible = true }) {
-                Text(value, color = WhatsAppGreen)
+                Text(value, color = SettingsAccentColor, fontWeight = FontWeight.Medium)
             }
         }
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun SettingsButtonRowWithDialogPreview() = SettingsPreview {
     SettingsButtonRowWithDialog(
@@ -313,7 +345,7 @@ fun IntSliderSetting(
     max: Int,
     step: Int,
     suffix: String,
-    @DrawableRes icon: Int = R.drawable.icon_red,
+    @DrawableRes icon: Int = 0,
     enabled: Boolean = true,
     onValueChangeFinished: (Int) -> Unit
 ) {
@@ -333,15 +365,20 @@ fun IntSliderSetting(
             onValueChangeFinished = {
                 onValueChangeFinished(snapSliderValue(sliderValue, min, max, step))
             },
-            modifier = Modifier.padding(start = 72.dp, end = 16.dp),
+            modifier = Modifier.padding(start = if (icon != 0) 56.dp else 16.dp, end = 16.dp),
             valueRange = min.toFloat()..max.toFloat(),
             steps = steps,
-            enabled = enabled
+            enabled = enabled,
+            colors = SliderDefaults.colors(
+                thumbColor = SettingsAccentColor,
+                activeTrackColor = SettingsAccentColor,
+                inactiveTrackColor = SettingsDividerColor
+            )
         )
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun IntSliderSettingPreview() = SettingsPreview {
     IntSliderSetting(

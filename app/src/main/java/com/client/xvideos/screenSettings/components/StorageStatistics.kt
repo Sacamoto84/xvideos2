@@ -87,7 +87,7 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
         modifier = Modifier
             .fillMaxWidth()
             .background(SettingsCardColor)
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         SettingsIcon(storageIcon(stat.key))

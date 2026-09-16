@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -45,11 +47,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -64,7 +67,6 @@ import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.AppLockSettingsSection
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
-import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
@@ -228,28 +230,31 @@ private fun AppSettingsScreenContent(
             Row(
                 modifier = Modifier
                     .displayCutoutPadding()
-                    .height(52.dp)
+                    .height(64.dp)
                     .fillMaxWidth()
-                    .background(SettingsTopBarColor),
+                    .background(SettingsTopBarColor)
+                    .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = closeCurrentPage) {
                     Icon(
-                        painterResource(R.drawable.exo_ic_chevron_left),
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Назад",
-                        tint = SettingsAccentColor
+                        tint = SettingsRowTextPrimary
                     )
                 }
+                Spacer(Modifier.width(8.dp))
                 Text(
                     currentPage.title,
                     modifier = Modifier.weight(1f),
                     color = SettingsRowTextPrimary,
-                    style = Theme.L.Type.rowTitle.copy(
+                    style = Theme.L.Type.screenTitle.copy(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
                         color = SettingsRowTextPrimary,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Start
                     )
                 )
-                Spacer(Modifier.width(48.dp))
             }
         },
         containerColor = SettingsScreenBackground
@@ -291,7 +296,7 @@ private fun AppSettingsScreenBody(
             .background(SettingsScreenBackground)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 8.dp)
+            .padding(bottom = 24.dp)
     ) {
         if (currentPage == SettingsPage.Main) {
             SettingsSectionTitle("Основное")
@@ -304,6 +309,7 @@ private fun AppSettingsScreenBody(
                     )
                 }
             }
+            Spacer(Modifier.height(16.dp))
             SettingsSectionTitle("Разделы")
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
@@ -482,18 +488,11 @@ private fun SettingsNavigationRow(
         icon = page.icon,
         text = page.title,
         subtitle = page.subtitle,
-        onClick = onClick,
-        trailing = {
-            Icon(
-                painter = painterResource(R.drawable.exo_ic_chevron_right),
-                contentDescription = null,
-                tint = SettingsAccentColor
-            )
-        }
+        onClick = onClick
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF353535,
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F,
     device = "spec:width=1080px,height=23400px,dpi=440"
 )
 @Composable
@@ -504,22 +503,31 @@ private fun AppSettingsScreenPreview() {
         Column {
             Row(
                 modifier = Modifier
-                    .height(52.dp)
+                    .height(64.dp)
                     .fillMaxWidth()
-                    .background(SettingsTopBarColor),
+                    .background(SettingsTopBarColor)
+                    .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(Modifier.width(48.dp))
+                IconButton(onClick = {}) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = SettingsRowTextPrimary
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
                 Text(
                     "Настройки",
                     modifier = Modifier.weight(1f),
                     color = SettingsRowTextPrimary,
-                    style = Theme.L.Type.rowTitle.copy(
+                    style = Theme.L.Type.screenTitle.copy(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
                         color = SettingsRowTextPrimary,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Start
                     )
                 )
-                Spacer(Modifier.width(48.dp))
             }
             AppSettingsScreenBody(
                 imageCacheSizeBytes = 128_000_000L,

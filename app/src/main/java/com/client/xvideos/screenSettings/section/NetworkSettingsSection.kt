@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.R
@@ -129,7 +130,10 @@ private fun DohProviderSelectionGroup(
                     RadioButton(
                         selected = currentProvider == provider,
                         onClick = null,
-                        colors = RadioButtonDefaults.colors(selectedColor = SettingsAccentColor)
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = SettingsAccentColor,
+                            unselectedColor = Color(0xFF938F99)
+                        )
                     )
                 },
                 onClick = { onSelectProvider(provider) }
