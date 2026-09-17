@@ -149,9 +149,27 @@ object LocalWebServer {
             val lib = LocalLibraryProvider.getLibrary(section)
             call.respond(lib)
         }
+
+        get("/api/collections") {
+            val section = call.request.queryParameters["section"]
+            val cols = LocalLibraryProvider.getCollections(section)
+            call.respond(cols)
+        }
+
+        get("/api/collections/{section}/{name}") {
+            val section = call.parameters["section"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val items = LocalLibraryProvider.getCollectionItems(section, name)
+            call.respond(items)
+        }
     }
 
     private fun Routing.configureMediaRoutes() {
+        configureStandardMediaRoutes()
+        configureCollectionMediaRoutes()
+    }
+
+    private fun Routing.configureStandardMediaRoutes() {
         get("/media/{section}/{id}/video") {
             val section = call.parameters["section"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
@@ -186,6 +204,39 @@ object LocalWebServer {
             val fileName = call.parameters["fileName"] ?: return@get call.respond(HttpStatusCode.BadRequest)
 
             val resolved = LocalLibraryProvider.resolveLMedia(folder, fileName)
+            if (resolved == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+
+            val (file, downloadName) = resolved
+            val isDownload = call.request.queryParameters["download"] == "1"
+            if (isDownload) {
+                call.response.header(HttpHeaders.ContentDisposition, "attachment; filename=\"$downloadName\"")
+            }
+            call.respondFile(file)
+        }
+    }
+
+    private fun Routing.configureCollectionMediaRoutes() {
+        get("/media/collection/cover/{section}/{name}") {
+            val section = call.parameters["section"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+
+            val file = LocalLibraryProvider.resolveCollectionCover(section, name)
+            if (file == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respondFile(file)
+        }
+
+        get("/media/collection/l/{collection}/{itemFolder}/{fileName}") {
+            val collection = call.parameters["collection"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val itemFolder = call.parameters["itemFolder"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val fileName = call.parameters["fileName"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+
+            val resolved = LocalLibraryProvider.resolveLCollectionMedia(collection, itemFolder, fileName)
             if (resolved == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get

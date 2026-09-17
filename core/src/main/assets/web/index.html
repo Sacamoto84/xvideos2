@@ -40,10 +40,23 @@
     <button class="tab-btn" data-section="X">Xvideos <span class="tab-badge" id="badgeX">0</span></button>
     <button class="tab-btn" data-section="R">RedGifs <span class="tab-badge" id="badgeR">0</span></button>
     <button class="tab-btn" data-section="L">Luscious <span class="tab-badge" id="badgeL">0</span></button>
+    <button class="tab-btn" data-section="COLLECTIONS">📁 Коллекции <span class="tab-badge" id="badgeCollections">0</span></button>
   </nav>
 
   <!-- Основной контент -->
   <main class="main-content">
+    <!-- Навигация по открытой коллекции -->
+    <div id="breadcrumbsBar" class="breadcrumbs-bar" style="display: none;">
+      <button id="backToCollectionsBtn" class="breadcrumb-back-btn" title="Вернуться к списку коллекций">
+        <span class="back-arrow">←</span> Все коллекции
+      </button>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-folder-icon">📁</span>
+      <span id="currentCollectionTitle" class="breadcrumb-title">Коллекция</span>
+      <span class="badge-tag" id="currentCollectionTag">R</span>
+      <span class="collection-items-count" id="currentCollectionCount">0 элементов</span>
+    </div>
+
     <!-- Скелетон / Загрузка -->
     <div id="loader" class="loader-container">
       <div class="spinner"></div>
@@ -80,6 +93,7 @@
         <video id="videoPlayer" controls playsinline preload="metadata">
           Ваш браузер не поддерживает HTML5 видео.
         </video>
+        <img id="imageViewer" style="display: none; max-height: 68vh; max-width: 100%; object-fit: contain;" alt="Медиафайл">
       </div>
 
       <div class="modal-footer">

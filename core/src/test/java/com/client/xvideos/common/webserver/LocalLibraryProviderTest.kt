@@ -31,4 +31,32 @@ class LocalLibraryProviderTest {
     fun `resolveVideo returns null for unknown sections`() {
         assertNull(LocalLibraryProvider.resolveVideo("unknown", "12345"))
     }
+
+    @Test
+    fun `resolveLCollectionMedia rejects path traversal attempts`() {
+        assertNull(LocalLibraryProvider.resolveLCollectionMedia("../col", "item", "media.mp4"))
+        assertNull(LocalLibraryProvider.resolveLCollectionMedia("col", "../item", "media.mp4"))
+        assertNull(LocalLibraryProvider.resolveLCollectionMedia("col", "item", "../media.mp4"))
+        assertNull(LocalLibraryProvider.resolveLCollectionMedia("col/..", "item", "media.mp4"))
+        assertNull(LocalLibraryProvider.resolveLCollectionMedia("col", "item/..", "media.mp4"))
+        assertNull(LocalLibraryProvider.resolveLCollectionMedia("col", "item", "media.mp4/.."))
+        assertNull(LocalLibraryProvider.resolveLCollectionMedia("col", "item", "../../etc/passwd"))
+    }
+
+    @Test
+    fun `resolveCollectionCover rejects invalid collection names and path traversal`() {
+        assertNull(LocalLibraryProvider.resolveCollectionCover("r", "../secret"))
+        assertNull(LocalLibraryProvider.resolveCollectionCover("r", "..\\secret"))
+        assertNull(LocalLibraryProvider.resolveCollectionCover("l", "../../etc"))
+        assertNull(LocalLibraryProvider.resolveCollectionCover("unknown", "validName"))
+    }
+
+    @Test
+    fun `getCollectionItems returns empty list for invalid names or unknown sections`() {
+        val result1 = LocalLibraryProvider.getCollectionItems("r", "../invalid")
+        org.junit.Assert.assertTrue(result1.items.isEmpty())
+
+        val result2 = LocalLibraryProvider.getCollectionItems("unknown", "validName")
+        org.junit.Assert.assertTrue(result2.items.isEmpty())
+    }
 }

@@ -2,9 +2,12 @@
 const state = {
   items: [],
   filteredItems: [],
+  collections: [],
+  filteredCollections: [],
   activeSection: 'ALL',
+  activeCollection: null,
   searchQuery: '',
-  currentVideo: null
+  currentMedia: null
 };
 
 // DOM элементы
@@ -23,15 +26,24 @@ const dom = {
   badgeX: document.getElementById('badgeX'),
   badgeR: document.getElementById('badgeR'),
   badgeL: document.getElementById('badgeL'),
+  badgeCollections: document.getElementById('badgeCollections'),
+  // Breadcrumbs
+  breadcrumbsBar: document.getElementById('breadcrumbsBar'),
+  backToCollectionsBtn: document.getElementById('backToCollectionsBtn'),
+  currentCollectionTitle: document.getElementById('currentCollectionTitle'),
+  currentCollectionTag: document.getElementById('currentCollectionTag'),
+  currentCollectionCount: document.getElementById('currentCollectionCount'),
   // Modal
   playerModal: document.getElementById('playerModal'),
   modalBackdrop: document.getElementById('modalBackdrop'),
   videoPlayer: document.getElementById('videoPlayer'),
+  imageViewer: document.getElementById('imageViewer'),
   playerTitle: document.getElementById('playerTitle'),
   playerTag: document.getElementById('playerTag'),
   playerDownloadBtn: document.getElementById('playerDownloadBtn'),
   closePlayerBtn: document.getElementById('closePlayerBtn'),
-  speedSelect: document.getElementById('speedSelect')
+  speedSelect: document.getElementById('speedSelect'),
+  modalFooter: document.querySelector('.modal-footer')
 };
 
 // Инициализация
@@ -47,9 +59,20 @@ function initEvents() {
       dom.tabButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.activeSection = btn.dataset.section;
+      state.activeCollection = null;
+      if (dom.breadcrumbsBar) dom.breadcrumbsBar.style.display = 'none';
       applyFilter();
     });
   });
+
+  // Возврат к списку коллекций
+  if (dom.backToCollectionsBtn) {
+    dom.backToCollectionsBtn.addEventListener('click', () => {
+      state.activeCollection = null;
+      if (dom.breadcrumbsBar) dom.breadcrumbsBar.style.display = 'none';
+      applyFilter();
+    });
+  }
 
   // Поиск
   dom.searchInput.addEventListener('input', (e) => {
@@ -70,7 +93,11 @@ function initEvents() {
   dom.refreshBtn.addEventListener('click', () => {
     dom.refreshBtn.style.transform = 'rotate(360deg)';
     setTimeout(() => { dom.refreshBtn.style.transform = 'none'; }, 400);
-    loadData();
+    if (state.activeSection === 'COLLECTIONS' && state.activeCollection) {
+      openCollection(state.activeCollection.section, state.activeCollection.name);
+    } else {
+      loadData();
+    }
   });
 
   // Закрытие модального окна
@@ -90,15 +117,22 @@ function initEvents() {
 async function loadData() {
   showLoader(true);
   try {
-    // 1. Статус сервера
     fetchStatus();
 
-    // 2. Список библиотеки
-    const res = await fetch('/api/library');
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    const data = await res.json();
+    const [libRes, colRes] = await Promise.all([
+      fetch('/api/library'),
+      fetch('/api/collections')
+    ]);
 
-    state.items = data.items || [];
+    if (!libRes.ok) throw new Error(`Library HTTP error ${libRes.status}`);
+    const libData = await libRes.json();
+    state.items = libData.items || [];
+
+    if (colRes.ok) {
+      const colData = await colRes.json();
+      state.collections = colData.collections || [];
+    }
+
     updateBadges();
     applyFilter();
   } catch (err) {
@@ -136,21 +170,44 @@ function updateBadges() {
   dom.badgeX.textContent = counts.X;
   dom.badgeR.textContent = counts.R;
   dom.badgeL.textContent = counts.L;
+  if (dom.badgeCollections) {
+    dom.badgeCollections.textContent = state.collections.length;
+  }
 
-  const totalSizeStr = formatBytes(state.items.reduce((acc, it) => acc + (it.sizeBytes || 0), 0));
-  dom.statsPill.textContent = `${counts.ALL} видео (${totalSizeStr})`;
+  const totalBytes = state.items.reduce((acc, it) => acc + (it.sizeBytes || 0), 0);
+  const totalSizeStr = formatBytes(totalBytes);
+  dom.statsPill.textContent = `${counts.ALL} видео, ${state.collections.length} коллекций (${totalSizeStr})`;
 }
 
 // Фильтрация и поиск
 function applyFilter() {
   const q = state.searchQuery;
+
+  if (state.activeSection === 'COLLECTIONS') {
+    if (state.activeCollection) {
+      const items = state.activeCollection.items || [];
+      state.filteredItems = items.filter(item => {
+        if (!q) return true;
+        const inTitle = item.title && item.title.toLowerCase().includes(q);
+        const inSub = item.subtitle && item.subtitle.toLowerCase().includes(q);
+        const inTags = item.tags && item.tags.some(t => t.toLowerCase().includes(q));
+        return inTitle || inSub || inTags;
+      });
+      renderGrid();
+    } else {
+      state.filteredCollections = state.collections.filter(col => {
+        if (!q) return true;
+        return col.name && col.name.toLowerCase().includes(q);
+      });
+      renderCollectionsGrid();
+    }
+    return;
+  }
+
+  // Обычные разделы (ALL, X, R, L)
   const sec = state.activeSection;
-
   state.filteredItems = state.items.filter(item => {
-    // Фильтр по разделу
     if (sec !== 'ALL' && item.section !== sec) return false;
-
-    // Поисковый запрос
     if (q) {
       const inTitle = item.title && item.title.toLowerCase().includes(q);
       const inSub = item.subtitle && item.subtitle.toLowerCase().includes(q);
@@ -163,21 +220,105 @@ function applyFilter() {
   renderGrid();
 }
 
-// Отрисовка карточек
+// Отрисовка карточек коллекций
+function renderCollectionsGrid() {
+  const cols = state.filteredCollections;
+  dom.mediaGrid.innerHTML = '';
+
+  if (cols.length === 0) {
+    dom.emptyState.style.display = 'block';
+    dom.emptyMessage.textContent = state.searchQuery
+      ? 'По вашему запросу коллекции не найдены'
+      : 'В приложении пока нет сохранённых коллекций';
+    return;
+  }
+
+  dom.emptyState.style.display = 'none';
+  const fragment = document.createDocumentFragment();
+
+  cols.forEach(col => {
+    const card = document.createElement('div');
+    card.className = 'collection-card';
+
+    const coverHtml = col.coverUrl
+      ? `<img class="poster-img" src="${escapeHtml(col.coverUrl)}" alt="${escapeHtml(col.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'poster-placeholder\\'>📁</div>'">`
+      : `<div class="poster-placeholder">📁</div>`;
+
+    const sectionName = col.section === 'R' ? 'RedGifs' : (col.section === 'L' ? 'Luscious' : col.section);
+    const countText = `${col.itemCount} ${getNoun(col.itemCount, 'элемент', 'элемента', 'элементов')}`;
+
+    card.innerHTML = `
+      <div class="poster-wrapper">
+        ${coverHtml}
+        <span class="badge-tag tag-${col.section}">${col.section}</span>
+        <span class="collection-folder-badge">📂</span>
+        <span class="collection-badge-count">📁 ${countText}</span>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title" title="${escapeHtml(col.name)}">${escapeHtml(col.name)}</h3>
+        <div class="card-meta">
+          <span class="card-author">Коллекция • ${sectionName}</span>
+          <span class="card-size">${countText}</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn-open-collection" data-action="open">Открыть коллекцию →</button>
+        </div>
+      </div>
+    `;
+
+    const triggerOpen = () => openCollection(col.section, col.name);
+    card.addEventListener('click', triggerOpen);
+
+    fragment.appendChild(card);
+  });
+
+  dom.mediaGrid.appendChild(fragment);
+}
+
+// Открытие коллекции
+async function openCollection(section, name) {
+  showLoader(true);
+  try {
+    const res = await fetch(`/api/collections/${encodeURIComponent(section)}/${encodeURIComponent(name)}`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+
+    const items = data.items || [];
+    state.activeCollection = { section, name, items };
+
+    if (dom.currentCollectionTitle) dom.currentCollectionTitle.textContent = name;
+    if (dom.currentCollectionTag) {
+      dom.currentCollectionTag.textContent = section;
+      dom.currentCollectionTag.className = `badge-tag tag-${section}`;
+    }
+    if (dom.currentCollectionCount) {
+      dom.currentCollectionCount.textContent = `${items.length} ${getNoun(items.length, 'элемент', 'элемента', 'элементов')}`;
+    }
+    if (dom.breadcrumbsBar) dom.breadcrumbsBar.style.display = 'flex';
+
+    applyFilter();
+  } catch (err) {
+    console.error('Ошибка загрузки коллекции:', err);
+    showToast('Не удалось загрузить элементы коллекции');
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Отрисовка карточек медиафайлов
 function renderGrid() {
   const items = state.filteredItems;
   dom.mediaGrid.innerHTML = '';
 
   if (items.length === 0) {
     dom.emptyState.style.display = 'block';
-    dom.emptyMessage.textContent = state.searchQuery 
-      ? 'По вашему запросу ничего не найдено' 
+    dom.emptyMessage.textContent = state.searchQuery
+      ? 'По вашему запросу ничего не найдено'
       : 'В этом разделе пока нет сохранённых файлов';
     return;
   }
 
   dom.emptyState.style.display = 'none';
-
   const fragment = document.createDocumentFragment();
 
   items.forEach(item => {
@@ -188,12 +329,13 @@ function renderGrid() {
       ? `<img class="poster-img" src="${escapeHtml(item.posterUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'poster-placeholder\\'>▶</div>'">`
       : `<div class="poster-placeholder">▶</div>`;
 
-    const durationBadge = item.duration 
-      ? `<span class="badge-duration">${escapeHtml(item.duration)}</span>` 
+    const durationBadge = item.duration
+      ? `<span class="badge-duration">${escapeHtml(item.duration)}</span>`
       : '';
 
-    const sizeStr = formatBytes(item.sizeBytes);
-    const dateStr = item.dateModified ? formatDate(item.dateModified) : '';
+    const sizeStr = item.sizeBytes > 0 ? formatBytes(item.sizeBytes) : '';
+    const actionText = item.hasVideo ? 'Смотреть' : 'Открыть';
+    const downloadUrl = item.downloadUrl || item.videoUrl || item.posterUrl;
 
     card.innerHTML = `
       <div class="poster-wrapper">
@@ -201,7 +343,7 @@ function renderGrid() {
         <span class="badge-tag tag-${item.section}">${item.section}</span>
         ${durationBadge}
         <div class="card-play-overlay">
-          <div class="play-circle">▶</div>
+          <div class="play-circle">${item.hasVideo ? '▶' : '🔍'}</div>
         </div>
       </div>
       <div class="card-content">
@@ -211,13 +353,12 @@ function renderGrid() {
           <span class="card-size">${sizeStr}</span>
         </div>
         <div class="card-actions">
-          <button class="btn-play-card" data-action="play">Смотреть</button>
-          <a class="btn-download-card" href="${escapeHtml(item.downloadUrl || item.videoUrl)}" download title="Скачать на ПК">⬇</a>
+          <button class="btn-play-card" data-action="play">${actionText}</button>
+          ${downloadUrl ? `<a class="btn-download-card" href="${escapeHtml(downloadUrl)}" download title="Скачать на ПК">⬇</a>` : ''}
         </div>
       </div>
     `;
 
-    // Обработчик клика на постер или кнопку «Смотреть»
     const triggerPlay = () => openPlayer(item);
     card.querySelector('.poster-wrapper').addEventListener('click', triggerPlay);
     card.querySelector('.card-title').addEventListener('click', triggerPlay);
@@ -229,33 +370,49 @@ function renderGrid() {
   dom.mediaGrid.appendChild(fragment);
 }
 
-// Видеоплеер
+// Медиаплеер / Просмотрщик
 function openPlayer(item) {
-  state.currentVideo = item;
+  state.currentMedia = item;
   dom.playerTitle.textContent = item.title;
   dom.playerTag.textContent = item.section;
   dom.playerTag.className = `section-tag tag-${item.section}`;
 
-  dom.playerDownloadBtn.href = item.downloadUrl || item.videoUrl;
-  dom.playerDownloadBtn.download = (item.title || 'video').replace(/[/\\?%*:|"<>]/g, '_') + '.mp4';
+  const downloadUrl = item.downloadUrl || item.videoUrl || item.posterUrl;
+  dom.playerDownloadBtn.href = downloadUrl;
 
-  dom.videoPlayer.src = item.videoUrl;
-  dom.videoPlayer.playbackRate = parseFloat(dom.speedSelect.value);
+  const ext = item.hasVideo ? '.mp4' : '.jpg';
+  dom.playerDownloadBtn.download = (item.title || 'media').replace(/[/\\?%*:|"<>]/g, '_') + ext;
+
+  if (item.hasVideo && item.videoUrl) {
+    dom.videoPlayer.style.display = 'block';
+    dom.imageViewer.style.display = 'none';
+    if (dom.modalFooter) dom.modalFooter.style.display = 'flex';
+
+    dom.videoPlayer.src = item.videoUrl;
+    dom.videoPlayer.playbackRate = parseFloat(dom.speedSelect.value);
+    dom.videoPlayer.play().catch(e => console.log('Autoplay prevented:', e));
+  } else {
+    dom.videoPlayer.pause();
+    dom.videoPlayer.style.display = 'none';
+    dom.imageViewer.style.display = 'block';
+    if (dom.modalFooter) dom.modalFooter.style.display = 'none';
+
+    dom.imageViewer.src = item.posterUrl || item.downloadUrl;
+  }
 
   dom.playerModal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-
-  dom.videoPlayer.play().catch(e => console.log('Autoplay prevented:', e));
 }
 
 function closePlayer() {
   dom.videoPlayer.pause();
   dom.videoPlayer.removeAttribute('src');
   dom.videoPlayer.load();
+  if (dom.imageViewer) dom.imageViewer.removeAttribute('src');
 
   dom.playerModal.style.display = 'none';
   document.body.style.overflow = 'auto';
-  state.currentVideo = null;
+  state.currentMedia = null;
 }
 
 // Горячие клавиши плеера
@@ -273,16 +430,22 @@ function handleHotkeys(e) {
       break;
     case 'Space':
     case 'KeyK':
-      e.preventDefault();
-      if (player.paused) player.play(); else player.pause();
+      if (dom.videoPlayer.style.display !== 'none') {
+        e.preventDefault();
+        if (player.paused) player.play(); else player.pause();
+      }
       break;
     case 'ArrowLeft':
-      e.preventDefault();
-      player.currentTime = Math.max(0, player.currentTime - 5);
+      if (dom.videoPlayer.style.display !== 'none') {
+        e.preventDefault();
+        player.currentTime = Math.max(0, player.currentTime - 5);
+      }
       break;
     case 'ArrowRight':
-      e.preventDefault();
-      player.currentTime = Math.min(player.duration || 0, player.currentTime + 5);
+      if (dom.videoPlayer.style.display !== 'none') {
+        e.preventDefault();
+        player.currentTime = Math.min(player.duration || 0, player.currentTime + 5);
+      }
       break;
     case 'KeyF':
       e.preventDefault();
@@ -294,21 +457,29 @@ function handleHotkeys(e) {
       }
       break;
     case 'KeyM':
-      e.preventDefault();
-      player.muted = !player.muted;
+      if (dom.videoPlayer.style.display !== 'none') {
+        e.preventDefault();
+        player.muted = !player.muted;
+      }
       break;
     case 'KeyL':
-      e.preventDefault();
-      player.loop = !player.loop;
-      showToast(player.loop ? 'Повтор включён' : 'Повтор выключен');
+      if (dom.videoPlayer.style.display !== 'none') {
+        e.preventDefault();
+        player.loop = !player.loop;
+        showToast(player.loop ? 'Повтор включён' : 'Повтор выключен');
+      }
       break;
-    case 'BracketLeft': // [
-      e.preventDefault();
-      changeSpeed(-0.25);
+    case 'BracketLeft':
+      if (dom.videoPlayer.style.display !== 'none') {
+        e.preventDefault();
+        changeSpeed(-0.25);
+      }
       break;
-    case 'BracketRight': // ]
-      e.preventDefault();
-      changeSpeed(0.25);
+    case 'BracketRight':
+      if (dom.videoPlayer.style.display !== 'none') {
+        e.preventDefault();
+        changeSpeed(0.25);
+      }
       break;
   }
 }
@@ -367,6 +538,16 @@ function formatDate(timestamp) {
   if (!timestamp) return '';
   const d = new Date(timestamp);
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
+
+function getNoun(number, one, two, five) {
+  let n = Math.abs(number);
+  n %= 100;
+  if (n >= 5 && n <= 20) return five;
+  n %= 10;
+  if (n === 1) return one;
+  if (n >= 2 && n <= 4) return two;
+  return five;
 }
 
 function escapeHtml(str) {

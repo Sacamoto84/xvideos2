@@ -2,6 +2,7 @@ package com.client.xvideos.common.webserver
 
 import android.os.Build
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.collectionDB.CollectionName
 import com.client.xvideos.common.json.AppJson
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.contentOrNull
@@ -10,6 +11,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import java.io.File
+import java.net.URLEncoder
 
 @Serializable
 data class WebMediaItem(
@@ -33,7 +35,23 @@ data class WebMediaItem(
 data class WebLibraryResponse(
     val items: List<WebMediaItem>,
     val totalCount: Int,
-    val sections: List<String> = listOf("ALL", "X", "R", "L")
+    val sections: List<String> = listOf("ALL", "X", "R", "L", "COLLECTIONS")
+)
+
+@Serializable
+data class WebCollection(
+    val id: String,
+    val name: String,
+    val section: String,
+    val itemCount: Int,
+    val coverUrl: String = "",
+    val dateModified: Long = 0L
+)
+
+@Serializable
+data class WebCollectionsResponse(
+    val collections: List<WebCollection>,
+    val totalCount: Int
 )
 
 @Serializable
@@ -44,7 +62,8 @@ data class WebStatusResponse(
     val port: Int,
     val totalItems: Int,
     val totalSizeBytes: Long,
-    val deviceName: String = "${Build.MANUFACTURER} ${Build.MODEL}"
+    val deviceName: String = "${Build.MANUFACTURER} ${Build.MODEL}",
+    val totalCollections: Int = 0
 )
 
 object LocalLibraryProvider {
@@ -77,17 +96,205 @@ object LocalLibraryProvider {
     }
 
     /**
-     * Статистика сервера: общее количество медиафайлов и суммарный размер.
+     * Возвращает список всех коллекций пользователя (R и L).
+     */
+    fun getCollections(sectionFilter: String? = null): WebCollectionsResponse {
+        val result = mutableListOf<WebCollection>()
+        val filter = sectionFilter?.uppercase()?.trim()
+
+        if (filter.isNullOrBlank() || filter == "ALL" || filter == "R") {
+            result.addAll(loadRCollections())
+        }
+        if (filter.isNullOrBlank() || filter == "ALL" || filter == "L") {
+            result.addAll(loadLCollections())
+        }
+
+        result.sortByDescending { it.dateModified }
+        return WebCollectionsResponse(
+            collections = result,
+            totalCount = result.size
+        )
+    }
+
+    /**
+     * Возвращает элементы конкретной коллекции.
+     */
+    fun getCollectionItems(section: String, collectionName: String): WebLibraryResponse {
+        val safeName = CollectionName.normalizeOrNull(collectionName)
+            ?: return WebLibraryResponse(emptyList(), 0)
+
+        val items = when (section.lowercase()) {
+            "r" -> loadRCollectionItems(safeName)
+            "l" -> loadLCollectionItems(safeName)
+            else -> emptyList()
+        }
+
+        return WebLibraryResponse(
+            items = items,
+            totalCount = items.size,
+            sections = listOf(section.uppercase())
+        )
+    }
+
+    /**
+     * Статистика сервера: общее количество медиафайлов, размер и число коллекций.
      */
     fun getStatus(ip: String, port: Int): WebStatusResponse {
         val lib = getLibrary()
+        val cols = getCollections()
         val totalBytes = lib.items.sumOf { it.sizeBytes }
         return WebStatusResponse(
             ip = ip,
             port = port,
             totalItems = lib.totalCount,
-            totalSizeBytes = totalBytes
+            totalSizeBytes = totalBytes,
+            totalCollections = cols.totalCount
         )
+    }
+
+    // --- Коллекции R ---
+    private fun loadRCollections(): List<WebCollection> {
+        val root = File(AppPath.r_collection)
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val dirs = root.listFiles()?.filter { it.isDirectory }.orEmpty()
+        return dirs.mapNotNull { dir ->
+            val name = CollectionName.normalizeOrNull(dir.name) ?: return@mapNotNull null
+            val items = dir.listFiles()?.filter { it.isFile && it.extension == "collection" }.orEmpty()
+            val newestDate = items.maxOfOrNull { it.lastModified() } ?: dir.lastModified()
+            val coverUrl = if (items.isNotEmpty()) "/media/collection/cover/r/${encodePathSegment(name)}" else ""
+
+            WebCollection(
+                id = "R_$name",
+                name = name,
+                section = "R",
+                itemCount = items.size,
+                coverUrl = coverUrl,
+                dateModified = newestDate
+            )
+        }
+    }
+
+    private fun loadRCollectionItems(collectionName: String): List<WebMediaItem> {
+        val colDir = File(AppPath.r_collection, collectionName)
+        if (!isSafeInside(colDir, File(AppPath.r_collection)) || !colDir.exists()) return emptyList()
+
+        val colFiles = colDir.listFiles()?.filter { it.isFile && it.extension == "collection" }.orEmpty()
+        return colFiles.mapNotNull { file ->
+            parseRCollectionFile(file)
+        }.sortedByDescending { it.dateModified }
+    }
+
+    private data class RResolvedUrls(
+        val videoUrl: String,
+        val posterUrl: String,
+        val downloadUrl: String,
+        val hasVideo: Boolean,
+        val hasPoster: Boolean
+    )
+
+    private fun resolveRMediaUrls(
+        id: String,
+        mp4File: File?,
+        jpgFile: File?,
+        json: kotlinx.serialization.json.JsonObject
+    ): RResolvedUrls {
+        val urlsObj = json["urls"]?.jsonObject
+        val remoteMp4 = urlsObj?.get("mp4Url")?.jsonPrimitive?.contentOrNull
+        val remoteGif = urlsObj?.get("gifUrl")?.jsonPrimitive?.contentOrNull
+        val remoteJpg = urlsObj?.get("jpgUrl")?.jsonPrimitive?.contentOrNull
+
+        val hasLocalVideo = mp4File != null && mp4File.exists() && mp4File.length() > 0L
+        val hasLocalPoster = jpgFile != null && jpgFile.exists() && jpgFile.length() > 0L
+
+        val videoUrl = when {
+            hasLocalVideo -> "/media/r/$id/video"
+            !remoteMp4.isNullOrBlank() -> remoteMp4
+            !remoteGif.isNullOrBlank() -> remoteGif
+            else -> ""
+        }
+        val posterUrl = when {
+            hasLocalPoster -> "/media/r/$id/poster"
+            !remoteJpg.isNullOrBlank() -> remoteJpg
+            else -> ""
+        }
+        val downloadUrl = if (hasLocalVideo) "/media/r/$id/video?download=1" else videoUrl
+        return RResolvedUrls(
+            videoUrl = videoUrl,
+            posterUrl = posterUrl,
+            downloadUrl = downloadUrl,
+            hasVideo = videoUrl.isNotBlank(),
+            hasPoster = posterUrl.isNotBlank()
+        )
+    }
+
+    private fun parseRCollectionFile(file: File): WebMediaItem? {
+        return runCatching {
+            val text = file.readText(Charsets.UTF_8)
+            if (text.isBlank()) return null
+            val json = AppJson.parseToJsonElement(text).jsonObject
+            val id = json["id"]?.jsonPrimitive?.contentOrNull ?: file.nameWithoutExtension
+            val description = json["description"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            val userName = json["userName"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            val tags = json["tags"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
+
+            val mp4File = resolveRVideoFile(id)
+            val jpgFile = resolveRPosterFile(id)
+            val urls = resolveRMediaUrls(id, mp4File, jpgFile, json)
+
+            WebMediaItem(
+                id = id,
+                section = "R",
+                title = description.ifBlank { "Red Clip #$id" },
+                subtitle = if (userName.isNotBlank()) "@$userName" else "",
+                sizeBytes = (mp4File?.length() ?: 0L) + (jpgFile?.length() ?: 0L),
+                dateModified = mp4File?.lastModified() ?: file.lastModified(),
+                hasVideo = urls.hasVideo,
+                hasPoster = urls.hasPoster,
+                videoUrl = urls.videoUrl,
+                posterUrl = urls.posterUrl,
+                downloadUrl = urls.downloadUrl,
+                mimeType = "video/mp4",
+                tags = tags
+            )
+        }.onFailure {
+            Timber.w(it, "LocalLibraryProvider: ошибка парсинга элемента R коллекции ${file.name}")
+        }.getOrNull()
+    }
+
+    // --- Коллекции L ---
+    private fun loadLCollections(): List<WebCollection> {
+        val root = File(AppPath.l_collection)
+        if (!root.exists() || !root.isDirectory) return emptyList()
+
+        val dirs = root.listFiles()?.filter { it.isDirectory }.orEmpty()
+        return dirs.mapNotNull { dir ->
+            val name = CollectionName.normalizeOrNull(dir.name) ?: return@mapNotNull null
+            val itemDirs = dir.listFiles()?.filter { itemDir ->
+                itemDir.isDirectory && File(itemDir, "metadata.json").let { it.exists() && it.length() > 0L }
+            }.orEmpty()
+            val newestDate = itemDirs.maxOfOrNull { it.lastModified() } ?: dir.lastModified()
+            val coverUrl = if (itemDirs.isNotEmpty()) "/media/collection/cover/l/${encodePathSegment(name)}" else ""
+
+            WebCollection(
+                id = "L_$name",
+                name = name,
+                section = "L",
+                itemCount = itemDirs.size,
+                coverUrl = coverUrl,
+                dateModified = newestDate
+            )
+        }
+    }
+
+    private fun loadLCollectionItems(collectionName: String): List<WebMediaItem> {
+        val colDir = File(AppPath.l_collection, collectionName)
+        if (!isSafeInside(colDir, File(AppPath.l_collection)) || !colDir.exists()) return emptyList()
+
+        val itemDirs = colDir.listFiles()?.filter { it.isDirectory }.orEmpty()
+        return itemDirs.mapNotNull { itemDir ->
+            parseLFolder(itemDir, collectionName)
+        }.sortedByDescending { it.dateModified }
     }
 
     // --- Загрузка X ---
@@ -240,20 +447,69 @@ object LocalLibraryProvider {
     // --- Загрузка L ---
     private fun loadLItems(): List<WebMediaItem> {
         val result = mutableListOf<WebMediaItem>()
-        val lDirs = listOf(File(AppPath.l_likes), File(AppPath.l_albums), File(AppPath.l_collection))
 
-        for (baseDir in lDirs) {
-            if (!baseDir.exists() || !baseDir.isDirectory) continue
-            val folders = baseDir.listFiles()?.filter { it.isDirectory }.orEmpty()
+        val likesDir = File(AppPath.l_likes)
+        if (likesDir.exists() && likesDir.isDirectory) {
+            likesDir.listFiles()?.filter { it.isDirectory }?.forEach { folder ->
+                parseLFolder(folder, null)?.let { result.add(it) }
+            }
+        }
 
-            for (folder in folders) {
-                parseLFolder(folder)?.let { result.add(it) }
+        val albumsDir = File(AppPath.l_albums)
+        if (albumsDir.exists() && albumsDir.isDirectory) {
+            albumsDir.listFiles()?.filter { it.isDirectory }?.forEach { folder ->
+                parseLFolder(folder, null)?.let { result.add(it) }
+            }
+        }
+
+        val colRoot = File(AppPath.l_collection)
+        if (colRoot.exists() && colRoot.isDirectory) {
+            colRoot.listFiles()?.filter { it.isDirectory }?.forEach { colDir ->
+                colDir.listFiles()?.filter { it.isDirectory }?.forEach { itemDir ->
+                    parseLFolder(itemDir, colDir.name)?.let { result.add(it) }
+                }
             }
         }
         return result
     }
 
-    private fun parseLFolder(folder: File): WebMediaItem? {
+    private data class LResolvedUrls(
+        val videoUrl: String,
+        val posterUrl: String,
+        val downloadUrl: String,
+        val hasVideo: Boolean,
+        val hasPoster: Boolean
+    )
+
+    private fun resolveLFolderUrls(
+        folderName: String,
+        mediaFileName: String,
+        previewFileName: String,
+        hasMedia: Boolean,
+        isVideo: Boolean,
+        hasPoster: Boolean,
+        collectionName: String?
+    ): LResolvedUrls {
+        val basePath = if (collectionName != null) {
+            "/media/collection/l/${encodePathSegment(collectionName)}/$folderName"
+        } else {
+            "/media/l/$folderName"
+        }
+
+        val videoUrl = if (hasMedia && isVideo) "$basePath/$mediaFileName" else ""
+        val posterUrl = if (hasPoster) "$basePath/$previewFileName" else ""
+        val downloadUrl = if (hasMedia) "$basePath/$mediaFileName?download=1" else ""
+
+        return LResolvedUrls(
+            videoUrl = videoUrl,
+            posterUrl = posterUrl,
+            downloadUrl = downloadUrl,
+            hasVideo = hasMedia && isVideo,
+            hasPoster = hasPoster
+        )
+    }
+
+    private fun parseLFolder(folder: File, collectionName: String? = null): WebMediaItem? {
         val metadataFile = File(folder, "metadata.json")
         if (!metadataFile.exists() || metadataFile.length() == 0L) return null
 
@@ -270,23 +526,31 @@ object LocalLibraryProvider {
             val hasMedia = mediaFile != null && mediaFile.exists() && mediaFile.length() > 0L
             val hasPoster = previewFile != null && previewFile.exists() && previewFile.length() > 0L
 
-            val folderName = folder.name
-            val safeMediaName = mediaFile?.name.orEmpty()
-            val safePreviewName = previewFile?.name.orEmpty()
+            val urls = resolveLFolderUrls(
+                folderName = folder.name,
+                mediaFileName = mediaFile?.name.orEmpty(),
+                previewFileName = previewFile?.name.orEmpty(),
+                hasMedia = hasMedia,
+                isVideo = isVideo,
+                hasPoster = hasPoster,
+                collectionName = collectionName
+            )
+
             val sizeBytes = folder.listFiles()?.filter { it.isFile }?.sumOf { it.length() } ?: 0L
+            val id = if (collectionName != null) "${collectionName}_${folder.name}" else folder.name
 
             WebMediaItem(
-                id = folderName,
+                id = id,
                 section = "L",
                 title = albumTitle,
                 subtitle = if (isVideo) "Видео" else "Галерея / Изображение",
                 sizeBytes = sizeBytes,
                 dateModified = folder.lastModified(),
-                hasVideo = hasMedia && isVideo,
-                hasPoster = hasPoster,
-                videoUrl = if (hasMedia && isVideo) "/media/l/$folderName/$safeMediaName" else "",
-                posterUrl = if (hasPoster) "/media/l/$folderName/$safePreviewName" else "",
-                downloadUrl = if (hasMedia) "/media/l/$folderName/$safeMediaName?download=1" else "",
+                hasVideo = urls.hasVideo,
+                hasPoster = urls.hasPoster,
+                videoUrl = urls.videoUrl,
+                posterUrl = urls.posterUrl,
+                downloadUrl = urls.downloadUrl,
                 mimeType = if (isVideo) "video/mp4" else "image/jpeg"
             )
         }.onFailure {
@@ -331,7 +595,7 @@ object LocalLibraryProvider {
         val safeFolder = sanitizeId(folderName) ?: return null
         val safeFile = sanitizeFileName(fileName) ?: return null
 
-        val searchDirs = listOf(File(AppPath.l_likes), File(AppPath.l_albums), File(AppPath.l_collection))
+        val searchDirs = listOf(File(AppPath.l_likes), File(AppPath.l_albums))
         for (baseDir in searchDirs) {
             val folder = File(baseDir, safeFolder)
             if (isSafeInside(folder, baseDir) && folder.exists() && folder.isDirectory) {
@@ -340,6 +604,125 @@ object LocalLibraryProvider {
                     return Pair(targetFile, safeFile)
                 }
             }
+        }
+        val colRoot = File(AppPath.l_collection)
+        if (colRoot.exists() && colRoot.isDirectory) {
+            colRoot.listFiles()?.filter { it.isDirectory }?.forEach { colDir ->
+                val folder = File(colDir, safeFolder)
+                if (isSafeInside(folder, colDir) && folder.exists() && folder.isDirectory) {
+                    val targetFile = File(folder, safeFile)
+                    if (isSafeInside(targetFile, folder) && targetFile.exists() && targetFile.isFile) {
+                        return Pair(targetFile, safeFile)
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    fun resolveCollectionCover(section: String, collectionName: String): File? {
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: return null
+        return when (section.lowercase()) {
+            "r" -> resolveRCollectionCover(safeName)
+            "l" -> resolveLCollectionCover(safeName)
+            else -> null
+        }
+    }
+
+    private fun resolveRCollectionCover(collectionName: String): File? {
+        val colDir = File(AppPath.r_collection, collectionName)
+        if (!isSafeInside(colDir, File(AppPath.r_collection)) || !colDir.exists()) return null
+
+        val files = colDir.listFiles()?.filter { it.isFile && it.extension == "collection" }.orEmpty()
+        for (file in files) {
+            val id = runCatching {
+                val json = AppJson.parseToJsonElement(file.readText(Charsets.UTF_8)).jsonObject
+                json["id"]?.jsonPrimitive?.contentOrNull ?: file.nameWithoutExtension
+            }.getOrDefault(file.nameWithoutExtension)
+
+            val poster = resolveRPosterFile(id)
+            if (poster != null && poster.exists()) return poster
+        }
+        return null
+    }
+
+    private fun resolveLCollectionCover(collectionName: String): File? {
+        val colDir = File(AppPath.l_collection, collectionName)
+        if (!isSafeInside(colDir, File(AppPath.l_collection)) || !colDir.exists()) return null
+
+        val configFile = File(colDir, "collection.json")
+        if (configFile.exists()) {
+            val coverFromConfig = findCoverFromConfig(colDir, configFile)
+            if (coverFromConfig != null) return coverFromConfig
+        }
+
+        val itemDirs = colDir.listFiles()?.filter { it.isDirectory }?.sortedByDescending { it.lastModified() }.orEmpty()
+        for (itemDir in itemDirs) {
+            findCoverImageInFolder(itemDir)?.let { return it }
+        }
+        return null
+    }
+
+    private fun findCoverFromConfig(colDir: File, configFile: File): File? {
+        return runCatching {
+            val json = AppJson.parseToJsonElement(configFile.readText(Charsets.UTF_8)).jsonObject
+            val coverFolder = json["coverFolderName"]?.jsonPrimitive?.contentOrNull
+            if (!coverFolder.isNullOrBlank()) {
+                val targetFolder = File(colDir, coverFolder)
+                if (isSafeInside(targetFolder, colDir) && targetFolder.exists()) {
+                    findCoverImageInFolder(targetFolder)
+                } else null
+            } else null
+        }.getOrNull()
+    }
+
+    private fun findCoverImageInFolder(folder: File): File? {
+        val metaFile = File(folder, "metadata.json")
+        if (metaFile.exists()) {
+            val metaPreview = findCoverFromMeta(folder, metaFile)
+            if (metaPreview != null) return metaPreview
+        }
+        return folder.listFiles()?.firstOrNull {
+            it.isFile && it.name != "metadata.json" && isImageExtension(it.extension) && it.length() > 0L
+        }
+    }
+
+    private fun findCoverFromMeta(folder: File, metaFile: File): File? {
+        return runCatching {
+            val json = AppJson.parseToJsonElement(metaFile.readText(Charsets.UTF_8)).jsonObject
+            val previewFileName = json["previewFileName"]?.jsonPrimitive?.contentOrNull
+            if (!previewFileName.isNullOrBlank()) {
+                val preview = File(folder, previewFileName)
+                if (preview.exists() && preview.length() > 0L) return@runCatching preview
+            }
+            val mediaFileName = json["mediaFileName"]?.jsonPrimitive?.contentOrNull
+            if (!mediaFileName.isNullOrBlank() && !mediaFileName.endsWith(".mp4", ignoreCase = true)) {
+                val media = File(folder, mediaFileName)
+                if (media.exists() && media.length() > 0L) return@runCatching media
+            }
+            null
+        }.getOrNull()
+    }
+
+    private fun isImageExtension(ext: String): Boolean {
+        return ext.equals("jpg", true) || ext.equals("png", true) ||
+            ext.equals("jpeg", true) || ext.equals("webp", true)
+    }
+
+    fun resolveLCollectionMedia(collectionName: String, itemFolderName: String, fileName: String): Pair<File, String>? {
+        val safeCol = CollectionName.normalizeOrNull(collectionName) ?: return null
+        val safeFolder = sanitizeId(itemFolderName) ?: return null
+        val safeFile = sanitizeFileName(fileName) ?: return null
+
+        val colDir = File(AppPath.l_collection, safeCol)
+        if (!isSafeInside(colDir, File(AppPath.l_collection)) || !colDir.exists()) return null
+
+        val itemDir = File(colDir, safeFolder)
+        if (!isSafeInside(itemDir, colDir) || !itemDir.exists()) return null
+
+        val targetFile = File(itemDir, safeFile)
+        if (isSafeInside(targetFile, itemDir) && targetFile.exists() && targetFile.isFile) {
+            return Pair(targetFile, safeFile)
         }
         return null
     }
@@ -370,6 +753,12 @@ object LocalLibraryProvider {
             if (isSafeInside(nested, rDownloadDir) && nested.exists() && nested.isFile) return nested
         }
         return null
+    }
+
+    private fun encodePathSegment(raw: String): String {
+        return runCatching {
+            URLEncoder.encode(raw, "UTF-8").replace("+", "%20")
+        }.getOrDefault(raw)
     }
 
     /** Проверка, что файл строго лежит внутри базового каталога (защита от ../..) */
