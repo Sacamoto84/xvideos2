@@ -57,7 +57,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
     override fun onDispose() {
         super.onDispose()
-        Timber.e("!!! ScreenVideoPlayerSM onDispose")
+        Timber.d("!!! ScreenVideoPlayerSM onDispose")
     }
 
     /** HLS-ссылка для воспроизведения (master-playlist xvideos). */
@@ -116,7 +116,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         isError = false
         loadJob = screenModelScope.launch {
             try {
-                Timber.e("!!! ScreenVideoPlayerSM loadVideo(forceReload=$forceReload)")
+                Timber.d("!!! ScreenVideoPlayerSM loadVideo(forceReload=$forceReload)")
 
                 if (forceReload) {
                     withContext(Dispatchers.IO) {
@@ -126,20 +126,20 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
                 // RAM-кэш чистится при старте процесса (clearVolatileCachesOnProcessStart),
                 // поэтому HLS-ссылки с истекающим токеном обновятся после перезапуска.
-                val res = if (forceReload) null else withContext(Dispatchers.IO) {
+                val cachedHtml = if (forceReload) null else withContext(Dispatchers.IO) {
                     db.cacheUrlStringRam.get(url)
                 }
-                val isFromCache = res != null
-                val s = if (res == null) {
+                val isFromCache = cachedHtml != null
+                val htmlContent = if (cachedHtml == null) {
                     withContext(Dispatchers.IO) {
                         readHtmlFromURLDirect(url)
                     }
                 } else {
-                    res.content
+                    cachedHtml.content
                 }
 
                 val parsedData = withContext(Dispatchers.Default) {
-                    val document = org.jsoup.Jsoup.parse(s)
+                    val document = org.jsoup.Jsoup.parse(htmlContent)
                     val script = parserItemVideo(document)
                     val config = script?.let { parseHTML5Player(it) }
                     val parsedTags = parserItemVideoTags(document)
@@ -158,9 +158,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                     withContext(Dispatchers.IO) {
                         db.cacheUrlStringRam.delete(url)
                     }
-                } else if (!isFromCache && s.isNotBlank()) {
+                } else if (!isFromCache && htmlContent.isNotBlank()) {
                     withContext(Dispatchers.IO) {
-                        db.cacheUrlStringRam.put(url, s)
+                        db.cacheUrlStringRam.put(url, htmlContent)
                     }
                 }
             } catch (e: CancellationException) {

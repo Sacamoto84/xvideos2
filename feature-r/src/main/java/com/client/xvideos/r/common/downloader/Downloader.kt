@@ -83,15 +83,15 @@ class Downloader @Inject constructor(
         //Записи нет можно скачивать
         if (!findVideoInDownload(item.id, item.userName)) {
 
-            val p = creatorDir.absolutePath
+            val creatorPath = creatorDir.absolutePath
             creatorDir.mkdirs()
 
-            val previewFile = File(p, "${item.id}.jpg")
+            val previewFile = File(creatorPath, "${item.id}.jpg")
             if (!previewFile.exists() || previewFile.length() == 0L) {
-                enqueuePreview(item, p, showSnackBarErrors = false, onEvent = {})
+                enqueuePreview(item, creatorPath, showSnackBarErrors = false, onEvent = {})
             }
 
-            val request = kDownloader.newRequestBuilder(videoUrl, p, "${item.id}.mp4").tag(item.id).build()
+            val request = kDownloader.newRequestBuilder(videoUrl, creatorPath, "${item.id}.mp4").tag(item.id).build()
 
             kDownloader.enqueue(
                 request,
@@ -110,7 +110,7 @@ class Downloader @Inject constructor(
                 onCompleted = {
                     Timber.i("Downloader: завершено скачивание id=${item.id}")
                     scope.launch(Dispatchers.IO) {
-                        val videoFile = File(p, "${item.id}.mp4")
+                        val videoFile = File(creatorPath, "${item.id}.mp4")
                         if (!videoFile.exists() || videoFile.length() == 0L) {
                             videoFile.delete()
                             percent.value = -3f
@@ -125,7 +125,7 @@ class Downloader @Inject constructor(
                         }
                         runCatching {
                             val text = AppJson.encodeToString(item)
-                            File(p, "${item.id}.info").writeTextAtomically(text)
+                            File(creatorPath, "${item.id}.info").writeTextAtomically(text)
                         }.onFailure {
                             Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
                         }
@@ -166,11 +166,11 @@ class Downloader @Inject constructor(
             return RedDownloadEnqueueReport()
         }
 
-        val p = creatorDir.absolutePath
+        val creatorPath = creatorDir.absolutePath
         creatorDir.mkdirs()
 
-        val videoFile = File(p, "${item.id}.mp4")
-        val previewFile = File(p, "${item.id}.jpg")
+        val videoFile = File(creatorPath, "${item.id}.mp4")
+        val previewFile = File(creatorPath, "${item.id}.jpg")
         var queuedVideo = 0
         var queuedPreview = 0
         var skippedNoVideoUrl = 0
@@ -180,7 +180,7 @@ class Downloader @Inject constructor(
             if (item.previewUrl() == null) {
                 skippedNoPreviewUrl++
             } else {
-                enqueuePreview(item, p, showSnackBarErrors, onEvent)
+                enqueuePreview(item, creatorPath, showSnackBarErrors, onEvent)
                 queuedPreview++
             }
         }
@@ -189,7 +189,7 @@ class Downloader @Inject constructor(
             if (item.downloadVideoUrl() == null) {
                 skippedNoVideoUrl++
             } else {
-                enqueueVideo(item, p, videoFile, showSnackBarErrors, onEvent, onComplete)
+                enqueueVideo(item, creatorPath, videoFile, showSnackBarErrors, onEvent, onComplete)
                 queuedVideo++
             }
         }

@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.manager_block
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -37,11 +36,10 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.ui.manager_block.bottomr_bar.BottomrBar
 
-class ScreenRedManageBlock() : Screen {
+class ScreenRedManageBlock : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 

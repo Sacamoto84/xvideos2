@@ -6,9 +6,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 
 @Composable
@@ -23,4 +25,10 @@ internal fun DisplaySettingsSection() {
             onValueChange = { Settings.useCutoutPadding.setValue(it) }
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun DisplaySettingsSectionPreview() = SettingsPreview {
+    DisplaySettingsSection()
 }

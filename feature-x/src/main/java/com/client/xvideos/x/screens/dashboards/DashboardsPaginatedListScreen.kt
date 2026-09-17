@@ -62,7 +62,7 @@ import timber.log.Timber
 private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
     val url = urlStart + if (currentNumberScreen == 0) "" else "/new/${currentNumberScreen}"
-    Timber.i("!!! openNew numberScreen:$numberScreen url:$url")
+    Timber.i("openNew numberScreen:$numberScreen url:$url")
     val html = readHtmlFromURLWebView(url)
     return withContext(Dispatchers.Default) {
         val document = org.jsoup.Jsoup.parse(html)
@@ -76,10 +76,7 @@ private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> 
 
 
 /**
- *
- * ![Логотип Markdown](https://ah-img.luscious.net/Joking42/499900/sample_3941cb87cea03_01J9ZXQ9XTDKY6PQ01ZRWF1FFZ.1680x0.jpg)
- *
- *
+ * Экран страницы пагинированного списка видео дашборда (Best, Top Rated, Newest).
  */
 @Composable
 fun DashboardsPaginatedListScreen(
@@ -93,7 +90,7 @@ fun DashboardsPaginatedListScreen(
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
 
-    val l = remember(pageIndex) { mutableStateListOf<ItemsX>() }
+    val videoItems = remember(pageIndex) { mutableStateListOf<ItemsX>() }
     var hasError by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
 
@@ -108,7 +105,7 @@ fun DashboardsPaginatedListScreen(
                 hasError = true
                 SnackBar.error("Не удалось загрузить видео")
             } else {
-                l.replaceWith(items)
+                videoItems.replaceWith(items)
             }
         } catch (e: CancellationException) {
             throw e
@@ -120,7 +117,7 @@ fun DashboardsPaginatedListScreen(
     }
 
 
-    if (l.isEmpty()) {
+    if (videoItems.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hasError) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -137,7 +134,7 @@ fun DashboardsPaginatedListScreen(
     } else {
         Box(modifier = Modifier.fillMaxSize()) {
             DashboardsPaginatedListContent(
-                items = l.toImmutableList(),
+                items = videoItems.toImmutableList(),
                 isFavorite = isFavorite,
                 onFavoriteAdd = onFavoriteAdd,
                 onFavoriteRemove = onFavoriteRemove,

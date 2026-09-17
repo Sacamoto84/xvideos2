@@ -1,12 +1,13 @@
 package com.client.xvideos.r.ui.root
 
-import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -48,7 +49,6 @@ class R_Screen_Root : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
     @OptIn(ExperimentalVoyagerApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -64,53 +64,55 @@ class R_Screen_Root : Screen {
             //Диалог коллекции
             if (savedRed.collections.visibleDialog) { R_DialogCollection(savedRed = {savedRed}) }
 
-        if (savedRed.collections.visibleDialogCreateNew) {
+            if (savedRed.collections.visibleDialogCreateNew) {
 
                 DaialogNewCollection(
                     visible = savedRed.collections.visibleDialogCreateNew,
                     onDismiss = { savedRed.collections.visibleDialogCreateNew = false },
                     onBlockConfirmed = { collection ->
-                        if ((collection != "")) {
+                        if (collection.isNotEmpty()) {
                             savedRed.collections.createCollection(collection)
                             savedRed.collections.visibleDialogCreateNew = false
                         }
                     }
                 )
 
-        }
-
-
-        //Диалог для блокировки
-        if (vm.block.blockVisibleDialog) { R_DialogBlock(block = {vm.block}) }
-
-
-
-
-        // Раньше здесь заново публиковался LocalRootScreenModel — корневая
-        // ScreenModel приложения. Внутри R её никто не читал, а раздел из-за
-        // неё знал про точку сборки. ScreenRoot публикует её сам, выше по
-        // дереву; глубину навигации разделы берут из Hilt-графа.
-        Scaffold(
-            modifier = Modifier.imePadding(),
-            bottomBar = { DownloadIndicator(percentDownload) }) {
-            Navigator(ScreenRedExplorer()) { navigator ->
-                //SlideTransition(navigator)
-
-
-                ScreenTransition(
-                    navigator = navigator,
-                    transition = {
-                        val (initialOffset, targetOffset) = when (navigator.lastEvent) {
-                            StackEvent.Pop -> ({ size: Int -> -size }) to ({ size: Int -> size })
-                            else -> ({ size: Int -> size }) to ({ size: Int -> -size })
-                        }
-                        slideInHorizontally(tween(200), initialOffset) togetherWith  slideOutHorizontally(tween(200), targetOffset)
-                    }
-                )
-
-
             }
-        }
+
+
+            //Диалог для блокировки
+            if (vm.block.blockVisibleDialog) { R_DialogBlock(block = {vm.block}) }
+
+
+
+
+            // Раньше здесь заново публиковался LocalRootScreenModel — корневая
+            // ScreenModel приложения. Внутри R её никто не читал, а раздел из-за
+            // неё знал про точку сборки. ScreenRoot публикует её сам, выше по
+            // дереву; глубину навигации разделы берут из Hilt-графа.
+            Scaffold(
+                modifier = Modifier.imePadding(),
+                bottomBar = { DownloadIndicator(percentDownload) }) { padding ->
+                Box(modifier = Modifier.padding(padding)) {
+                    Navigator(ScreenRedExplorer()) { navigator ->
+                        //SlideTransition(navigator)
+
+
+                        ScreenTransition(
+                            navigator = navigator,
+                            transition = {
+                                val (initialOffset, targetOffset) = when (navigator.lastEvent) {
+                                    StackEvent.Pop -> ({ size: Int -> -size }) to ({ size: Int -> size })
+                                    else -> ({ size: Int -> size }) to ({ size: Int -> -size })
+                                }
+                                slideInHorizontally(tween(200), initialOffset) togetherWith  slideOutHorizontally(tween(200), targetOffset)
+                            }
+                        )
+
+
+                    }
+                }
+            }
         }
     }
 }

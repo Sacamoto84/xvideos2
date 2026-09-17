@@ -2,7 +2,6 @@ package com.client.xvideos.l.ui.screens.explorer
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -66,7 +65,6 @@ class L_ScreenExplorer : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
     @OptIn(ExperimentalMaterial3Api::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 

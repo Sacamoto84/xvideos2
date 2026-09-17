@@ -2,13 +2,13 @@ package com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -71,36 +70,21 @@ object L_ScreenAlbumTopHits : Screen {
     private fun readResolve(): Any = L_ScreenAlbumTopHits
 
     @OptIn(ExperimentalZoomableApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
         val navigator = LocalNavigator.currentOrThrow
-
         val vm: ScreenLAlbumTopHitsSM = getScreenModel()
-
         val items = vm.albumTopHits.collectAsStateWithLifecycle().value?.items
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
-        //val haptic = LocalHapticFeedback.current
-
-        //val vm: ScreenLRootSM = getScreenModel()
-
-        //var dialogExpanded by remember { mutableStateOf(false) }
-
-        //val scope = rememberCoroutineScope()
-
-        //var selectIndexDrawer by remember { mutableStateOf(SelectIndex.Unselect) }
-
-
-
-
-        Scaffold(
-            containerColor = Theme.background,
+        Box(
+            modifier = Modifier.fillMaxSize().background(Theme.background)
         ) {
 
             LazyColumn(state = vm.state) {
 
-                items(items?.size ?: 0) { index ->
+                items(items?.size ?: 0, key = { items?.get(it)?.title ?: it }) { index ->
 
                     val item = items?.get(index) ?: return@items
 
@@ -122,19 +106,19 @@ object L_ScreenAlbumTopHits : Screen {
                     )
                     {
 
-                        val itemWidth = (LocalConfiguration.current.screenWidthDp.dp - 8.dp) / 3  // учитываем padding
+                        val itemWidth = (screenWidth - 8.dp) / 3
 
-                        item.items.dropLast(1).forEach { item ->
+                        item.items.dropLast(1).forEach { album ->
                             Box(
                                 modifier = Modifier.width(itemWidth).padding(vertical = 2.dp)
                             ) {
                                 AlbumListItem(
                                     modifier = Modifier.fillMaxWidth(),
-                                    title = item.title,
-                                    coverUrl = item.cover?.url.orEmpty(),
-                                    numberOfAnimatedPictures = item.numberOfAnimatedPictures,
-                                    numberOfPictures = item.numberOfPictures,
-                                    onClick = { navigator.push(ScreenLAlbum(item.id.toLong())) }
+                                    title = album.title,
+                                    coverUrl = album.cover?.url.orEmpty(),
+                                    numberOfAnimatedPictures = album.numberOfAnimatedPictures,
+                                    numberOfPictures = album.numberOfPictures,
+                                    onClick = { navigator.push(ScreenLAlbum(album.id.toLong())) }
                                 )
                             }
                         }
@@ -161,15 +145,15 @@ object L_ScreenAlbumTopHits : Screen {
  *
  * Параметры, которых нет в URL, берутся из дефолтов [AlbumListFilter].
  */
-private fun albumListFilterFromTopHitsUrl(url: String): AlbumListFilter {
+internal fun albumListFilterFromTopHitsUrl(url: String): AlbumListFilter {
     val params: Map<String, String> = url
         .substringAfter('?', "")
         .split('&')
         .mapNotNull { pair ->
-            val i = pair.indexOf('=')
-            if (i <= 0) return@mapNotNull null
-            val name = URLDecoder.decode(pair.substring(0, i), "UTF-8")
-            val value = URLDecoder.decode(pair.substring(i + 1), "UTF-8")
+            val separatorIndex = pair.indexOf('=')
+            if (separatorIndex <= 0) return@mapNotNull null
+            val name = URLDecoder.decode(pair.substring(0, separatorIndex), "UTF-8")
+            val value = URLDecoder.decode(pair.substring(separatorIndex + 1), "UTF-8")
             name to value
         }
         .toMap()
@@ -240,7 +224,7 @@ class ScreenLAlbumTopHitsSM @Inject constructor(
     val albumTopHits = MutableStateFlow<AlbumTopHitsImpl?>(null)
 
     init {
-        Timber.i("iii ScreenLAlbumTopHitsSM init")
+        Timber.d("iii ScreenLAlbumTopHitsSM init")
         screenModelScope.launch {
             albumTopHits.value = luscious.getAlbumTopHits()
         }
@@ -248,7 +232,7 @@ class ScreenLAlbumTopHitsSM @Inject constructor(
 
     override fun onDispose() {
         super.onDispose()
-        Timber.i("iii ScreenLAlbumTopHitsSM onDispose")
+        Timber.d("iii ScreenLAlbumTopHitsSM onDispose")
     }
 
 }

@@ -27,7 +27,7 @@ import java.io.File
 fun normalizeRelativePath(raw: String): String {
     val name = raw.replace('\\', '/').trim('/')
     require(name.isNotBlank()) { "Пустое имя пути" }
-    require(!name.contains(':')) { "Небезопасный путь: $raw" }
+    require(!name.contains(':') && !name.contains('\u0000')) { "Небезопасный путь: $raw" }
     val parts = name.split('/').filter { it.isNotBlank() }
     require(parts.none { it == "." || it == ".." }) { "Небезопасный путь: $raw" }
     return parts.joinToString("/")
@@ -62,8 +62,8 @@ fun requireInside(root: File, target: File) {
  *
  * Требования слабее, чем у имени коллекции: элемент не становится папкой, поэтому
  * ведущая точка и двоеточие допустимы. Запрещено только то, чем запись уходит из
- * своего каталога: разделители и `..`.
+ * своего каталога: разделители, `..` и null-байты.
  */
 fun isUnsafeItemName(name: String): Boolean =
     name.isBlank() || name == "." || name == ".." ||
-        name.contains('/') || name.contains('\\')
+        name.contains('/') || name.contains('\\') || name.contains('\u0000')

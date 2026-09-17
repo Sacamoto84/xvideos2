@@ -1,6 +1,5 @@
 package com.client.xvideos.common.util
 
-import android.annotation.SuppressLint
 import java.util.Locale
 import kotlin.math.abs
 
@@ -11,7 +10,6 @@ import kotlin.math.abs
  * 1_450_000 -> "1.4M"
  * 900     -> "900"
  */
-@SuppressLint("DefaultLocale")
 fun Long.toPrettyCount(): String {
     val absValue = abs(this)
 
@@ -35,7 +33,6 @@ fun Long.toPrettyCount(): String {
     }
 }
 
-@SuppressLint("DefaultLocale")
 fun Long.toPrettyCount2(): String {
     val absValue = abs(this)
 
@@ -59,7 +56,6 @@ fun Long.toPrettyCount2(): String {
     }
 }
 
-@SuppressLint("DefaultLocale")
 fun Long.toPrettyCount3(): String {
     val absValue = abs(this)
 
@@ -83,7 +79,6 @@ fun Long.toPrettyCount3(): String {
     }
 }
 
-@SuppressLint("DefaultLocale")
 fun Long.toPrettyCountInt(): String {
     val absValue = abs(this)
 

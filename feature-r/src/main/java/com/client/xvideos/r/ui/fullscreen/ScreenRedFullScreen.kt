@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.fullscreen
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -75,7 +74,6 @@ class ScreenRedFullScreen(
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow

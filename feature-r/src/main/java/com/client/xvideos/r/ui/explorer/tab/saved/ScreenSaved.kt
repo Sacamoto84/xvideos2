@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.explorer.tab.saved
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,7 +53,7 @@ object R_ScreenSavedTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    val l = persistentListOf(
+    private val SAVED_TAB_ICONS = persistentListOf(
         Icons.Outlined.FavoriteBorder,
         Icons.Outlined.Person,
         Icons.Outlined.Group,
@@ -66,7 +65,6 @@ object R_ScreenSavedTab : Screen {
 
     )
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
         val vm = getScreenModel<R_SavedTabSM>()
@@ -87,7 +85,7 @@ object R_ScreenSavedTab : Screen {
                         value = vm.screenType,
                         containerColor = Theme.tabLevel1,
                         //containerColor = Theme.R.colorBottomBarBackground,
-                        titlesIcon = l,
+                        titlesIcon = SAVED_TAB_ICONS,
                         onChangeState = {
                             if (it == vm.screenType) {
                                 when (it) {

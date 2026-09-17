@@ -20,6 +20,7 @@ object CollectionName {
      * именем была бы стёрта восстановлением бэкапа.
      */
     private const val HIDDEN_PREFIX = '.'
+    private val FORBIDDEN_CHARS = charArrayOf('/', '\\', ':', '\u0000')
 
     /**
      * Возвращает имя, обрезанное по краям, или `null`, если оно непригодно как
@@ -29,7 +30,7 @@ object CollectionName {
         val name = raw.trim()
         if (name.isBlank()) return null
         if (name.startsWith(HIDDEN_PREFIX)) return null
-        if (name.any { it == '/' || it == '\\' || it == ':' }) return null
+        if (name.any { it in FORBIDDEN_CHARS }) return null
         return name
     }
 

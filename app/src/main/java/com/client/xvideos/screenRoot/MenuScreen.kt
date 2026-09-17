@@ -2,7 +2,6 @@ package com.client.xvideos.screenRoot
 
 import com.client.xvideos.R
 import com.client.xvideos.HapticDemoScreen
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,12 +16,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -52,7 +51,6 @@ object MenuScreen : Screen {
 
     private fun readResolve(): Any = MenuScreen
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -98,9 +96,12 @@ object MenuScreen : Screen {
                     }
                 }
             }
-        ) {
+        ) { paddingValues ->
             Column(
-                modifier = Modifier.fillMaxSize().background(Color(0xFF353535)),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF353535))
+                    .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom
             ) {

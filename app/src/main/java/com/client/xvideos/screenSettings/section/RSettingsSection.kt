@@ -18,12 +18,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsDividerColor
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.screenSettings.components.WhatsAppGreen
 import com.client.xvideos.common.snackbar.SnackBar
@@ -141,4 +143,20 @@ internal fun RSettingsSection(
             }
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun RSettingsSectionPreview() = SettingsPreview {
+    RSettingsSection(
+        sizeRedTotal = 1024L * 1024L * 250L,
+        sizeRedDownload = 1024L * 1024L * 50L,
+        onClearDownload = {},
+        savedRed = null,
+        downloadRed = null,
+        isNichesCacheDownloading = false,
+        nichesCacheProgress = 0.6f,
+        nichesCacheSize = 142,
+        nichesCacheLastModifiedHour = 3L
+    )
 }

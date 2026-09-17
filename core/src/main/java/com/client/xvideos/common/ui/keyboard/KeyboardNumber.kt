@@ -191,11 +191,11 @@ fun KeyboardNumber(
                     //.border(2.dp, Color(0xFF1F5AFF      ), RoundedCornerShape(theme.buttonCornerRadius))
                     .background(Color(0xFFFF7043))
                     .clickable {
-                        val a = textFieldValue.text.toIntOrNull()
-                        if (a != null) {
+                        val enteredNumber = textFieldValue.text.toIntOrNull()
+                        if (enteredNumber != null) {
                             try {
-                                val i = a.coerceIn(1, max)
-                                onClick.invoke(i)
+                                val clampedValue = enteredNumber.coerceIn(1, max)
+                                onClick.invoke(clampedValue)
                             } catch (e: Exception) {
                                 Timber.e(e.localizedMessage)
                             }

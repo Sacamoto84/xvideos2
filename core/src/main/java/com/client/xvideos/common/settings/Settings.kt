@@ -174,11 +174,6 @@ object Settings {
      */
     val r_collectionTab_column_current_count by lazy { SettingElementInt( pref, "r_collectionTab_column_current_count", 2 ) }
 
-
-
-    val current_count_gifTab by lazy { SettingElementInt(pref, "current_count_gifTab", 2) }
-
-
     val r_current_count_niches by lazy { SettingElementInt(pref, "current_count_niches", 2) }
 
     /**

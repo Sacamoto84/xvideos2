@@ -1,7 +1,6 @@
 package com.client.xvideos.r.common.search
 
 import com.client.xvideos.common.di.ApplicationScope
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CancellationException
@@ -71,7 +70,7 @@ class R_SearchNiches @Inject constructor(
             // Ввод продолжился — mapLatest отменил эту ветку штатно, ошибки нет.
             throw e
         } catch (e: Exception) {
-            SnackBar.error(e.localizedMessage ?: "Unknown error")
+            Timber.e(e, "!!! R_SearchNiches suggestions error: ${e.localizedMessage}")
             emptyList()
         }
     }

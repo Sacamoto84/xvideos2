@@ -3,7 +3,6 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.theme.LavenderDialog
 
-import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -64,7 +63,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
 
@@ -75,8 +73,6 @@ class ScreenCollectionName(
 
     override val key: ScreenKey = "LCollection:$collectionName:$popOnBack"
 
-    @OptIn(DelicateCoroutinesApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -98,8 +94,6 @@ class ScreenCollectionName(
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun L_CollectionNameContent(
     collectionName: String,

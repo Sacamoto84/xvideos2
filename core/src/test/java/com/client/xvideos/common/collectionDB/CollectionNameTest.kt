@@ -41,6 +41,13 @@ class CollectionNameTest {
     }
 
     @Test
+    fun `имя с нулевым байтом отвергается`() {
+        assertEquals(null, CollectionName.normalizeOrNull("name\u0000injection"))
+        assertEquals(null, CollectionName.normalizeOrNull("\u0000"))
+        assertFalse(CollectionName.isValid("name\u0000injection"))
+    }
+
+    @Test
     fun `isValid согласован с normalizeOrNull`() {
         assertTrue(CollectionName.isValid("нормальное"))
         assertFalse(CollectionName.isValid("../побег"))

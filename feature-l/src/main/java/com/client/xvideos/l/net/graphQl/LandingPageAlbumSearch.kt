@@ -15,8 +15,8 @@ suspend fun LandingPageAlbumSearch(
 ): Result<Landing_page_albumType> {
     try {
         Timber.i("!!! LandingPageAlbumSearch init search:$search")
-        val q = getLandingPageAlbumSearch(search, limit)
-        val res = repository.openURI(q)
+        val query = getLandingPageAlbumSearch(search, limit)
+        val res = repository.openURI(query)
         val json = LJson.parseToJsonElement(res.getOrThrow()).jsonObject
         val get = json["data"]?.jsonObject?.get("landing_page_album")?.jsonObject?.get("search")?.jsonObject
             ?: error("LandingPageAlbumSearch missing data.landing_page_album.search")
@@ -24,7 +24,7 @@ suspend fun LandingPageAlbumSearch(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.i("!!! eee LandingPageAlbumSearch Exception $e")
+        Timber.e(e, "LandingPageAlbumSearch failed for search: $search")
         return Result.failure(e)
     }
 }

@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.explorer.tab.niches
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -191,7 +190,6 @@ object R_ScreenNichesTab : Screen {
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun NichesTabContent(
     listState: LazyListState,

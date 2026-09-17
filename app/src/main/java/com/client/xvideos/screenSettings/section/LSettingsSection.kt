@@ -6,12 +6,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.Config_G_0_4
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.settings.ThumbnailsSize
 import com.client.xvideos.screenSettings.components.ThumbnailSizeSelector
@@ -61,4 +63,10 @@ internal fun LSettingsSection(lLogin: String) {
         Config_G_0_4("L Likes", Settings.l_likesTab_G_0_4)
         Config_G_0_4("L Collection", Settings.l_collectionTab_G_0_4)
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun LSettingsSectionPreview() = SettingsPreview {
+    LSettingsSection(lLogin = "preview_user")
 }

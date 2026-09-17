@@ -61,7 +61,7 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.normalizeXUrl
 import com.composables.core.HorizontalSeparator
 
-class ScreenFavorites() : Screen {
+class ScreenFavorites : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 

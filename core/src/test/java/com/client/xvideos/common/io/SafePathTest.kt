@@ -28,9 +28,11 @@ class SafePathTest {
     }
 
     @Test
-    fun `пустое имя и двоеточие отвергаются`() {
+    fun `пустое имя, двоеточие и нулевой байт отвергаются`() {
         assertThrows(IllegalArgumentException::class.java) { normalizeRelativePath("   ") }
         assertThrows(IllegalArgumentException::class.java) { normalizeRelativePath("C:/data") }
+        assertThrows(IllegalArgumentException::class.java) { normalizeRelativePath("data/\u0000/file.txt") }
+        assertThrows(IllegalArgumentException::class.java) { normalizeRelativePath("data/file\u0000.txt") }
     }
 
     @Test
@@ -64,7 +66,7 @@ class SafePathTest {
 
     @Test
     fun `isUnsafeItemName отвергает опасные имена и пропускает допустимые`() {
-        // Опасные: пустые, текущий/родительский каталог, с разделителями
+        // Опасные: пустые, текущий/родительский каталог, с разделителями, с null-байтом
         org.junit.Assert.assertTrue(isUnsafeItemName(""))
         org.junit.Assert.assertTrue(isUnsafeItemName("   "))
         org.junit.Assert.assertTrue(isUnsafeItemName("."))
@@ -73,6 +75,8 @@ class SafePathTest {
         org.junit.Assert.assertTrue(isUnsafeItemName("a/b"))
         org.junit.Assert.assertTrue(isUnsafeItemName("a\\b"))
         org.junit.Assert.assertTrue(isUnsafeItemName("..\\escape"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("file\u0000.txt"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("\u0000"))
 
         // Безопасные: обычные имена, имена с точками, дефисами, двоеточиями
         org.junit.Assert.assertFalse(isUnsafeItemName("normal_name"))

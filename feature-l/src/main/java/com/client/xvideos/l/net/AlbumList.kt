@@ -90,11 +90,9 @@ data class getAlbumListAggregationsResult(
         try {
             Timber.i("!!! getAlbumListAggregations $page")
 
-            val q = getAlbumListWithAggregations(page, filter)
+            val query = getAlbumListWithAggregations(page, filter)
 
-            //Timber.i("!!! getAlbumListAggregations $q")
-
-            val result = repository.openURI(q)
+            val result = repository.openURI(query)
             if (result.isFailure) {
                 Timber.i("!!! getAlbumListAggregations error ${result.exceptionOrNull()}")
                 return Result.failure(result.exceptionOrNull() ?: IllegalStateException("Failed to load album aggregations"))
@@ -181,9 +179,9 @@ data class getAlbumListAggregationsResult(
         try {
             Timber.i("!!! getAlbumList $page")
             val filter = filterIn ?: AlbumListFilter()
-            val q = getAlbumListGraphQL1(page, filter)
+            val query = getAlbumListGraphQL1(page, filter)
 
-            val result = repository.openURI(q, config = RepositoryUriConfig.CACHE_RAM )
+            val result = repository.openURI(query, config = RepositoryUriConfig.CACHE_RAM )
 
             if (result.isFailure) {
                 Timber.w("!!! getAlbumList error: ${result.exceptionOrNull()?.message}")
@@ -192,8 +190,8 @@ data class getAlbumListAggregationsResult(
             val parsed = parseAlbumListResponse(result.getOrThrow(), filter, page)
             if (parsed.isFailure) {
                 Timber.w("!!! getAlbumList parse error: ${parsed.exceptionOrNull()?.message}")
-                repository.deleteCache(q, RepositoryUriConfig.CACHE_RAM)
-                repository.deleteCache(q, RepositoryUriConfig.CACHE_ROM)
+                repository.deleteCache(query, RepositoryUriConfig.CACHE_RAM)
+                repository.deleteCache(query, RepositoryUriConfig.CACHE_ROM)
                 return Result.failure(parsed.exceptionOrNull() ?: IllegalStateException("getAlbumList parse error"))
             }
 

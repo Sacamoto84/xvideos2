@@ -141,11 +141,11 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                                 .clickable {
                                     scope.launchCatching(message = "Смена страны не удалась: ${it.name}") {
 
-                                        val s = readHtmlFromURLWebView(normalizeXUrl(it.url))
-                                        val flag = parseSiteCountryFlag(s)
+                                        val htmlContent = readHtmlFromURLWebView(normalizeXUrl(it.url))
+                                        val flag = parseSiteCountryFlag(htmlContent)
 
                                         withContext(Dispatchers.Main) {
-                                            flag?.let { it1 -> CountryState.onCountrySelected(it1) }
+                                            flag?.let { selectedFlag -> CountryState.onCountrySelected(selectedFlag) }
                                             Toast.makeText(
                                                 AppContextHolder.applicationContext,
                                                 "${getFlagEmoji(it.flagClass)} ${it.name}",

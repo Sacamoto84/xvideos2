@@ -68,6 +68,7 @@ import com.client.xvideos.screenSettings.components.AppLockSettingsSection
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsRowTextPrimary
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
@@ -314,10 +315,7 @@ private fun AppSettingsScreenBody(
             SettingsSectionTitle("Разделы")
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
-                    if (index > 0) {
-                        //SettingsDivider()
-                        Spacer(Modifier.fillMaxWidth().height(2.dp).background(SettingsScreenBackground))
-                    }
+                    if (index > 0) { SettingsDivider2() }
                     SettingsNavigationRow(
                         page = page,
                         onClick = { onOpenPage(page) }
@@ -418,7 +416,7 @@ private enum class SettingsPage(
     ),
     Privacy(
         title = "Приватность",
-        icon = R.drawable.icon_red,
+        icon = R.drawable.key_24,
         subtitle = "Пароль и блокировка приложения"
     ),
     Display(
@@ -485,6 +483,15 @@ private fun SettingsNavigationRow(
         text = page.title,
         subtitle = page.subtitle,
         onClick = onClick
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun SettingsNavigationRowPreview() = SettingsPreview {
+    SettingsNavigationRow(
+        page = SettingsPage.Display,
+        onClick = {}
     )
 }
 

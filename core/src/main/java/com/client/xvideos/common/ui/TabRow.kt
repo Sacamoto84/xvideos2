@@ -125,12 +125,12 @@ fun TabRow(
 @Preview
 @Composable
 fun TabRowPreview() {
-    val l = listOf(
+    val previewIcons = listOf(
         Icons.Outlined.Movie,
         Icons.Outlined.Image,
         Icons.Outlined.Person,
         Icons.Outlined.Group,
         Icons.Outlined.BookmarkBorder
     )
-    TabRow(l.toPersistentList(), onChangeState = {}, 2)
+    TabRow(previewIcons.toPersistentList(), onChangeState = {}, 2)
 }

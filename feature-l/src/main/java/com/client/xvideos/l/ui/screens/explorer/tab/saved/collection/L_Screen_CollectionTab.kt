@@ -1,6 +1,5 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,7 +57,6 @@ object L_Screen_CollectionTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -81,108 +79,47 @@ object L_Screen_CollectionTab : Screen {
         var renameValue by rememberSaveable { mutableStateOf("") }
 
         itemPendingAction?.let { pending ->
-
-            LavenderDialog(
-                title = "Действие с коллекцией",
+            val cover = savedL.collection.collectionList
+                .firstOrNull { it.collection == pending }?.previewUrl
+            CollectionActionDialog(
+                pending = pending,
+                coverUrl = cover,
                 onDismiss = { itemPendingAction = null },
-                icon = {
-                    val cover = savedL.collection.collectionList
-                        .firstOrNull { it.collection == pending }?.previewUrl
-                    val iconSize = Theme.DialogLavande.iconSize
-                    if (cover != null) {
-                        UrlImage(url = cover, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize))
-                    } else {
-                        Box(Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize).background(Color.Gray))
-                    }
+                onRename = {
+                    renameValue = pending
+                    itemPendingRename = pending
+                    itemPendingAction = null
                 },
-                content = {
-
-                    Box(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(
-                            pending,
-                            fontSize = 20.sp,
-                            color = Color.White,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                        )
-                    }
-
-                    DropdownMenuItem(
-                        text = { Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                        onClick = {
-                            renameValue = pending
-                            itemPendingRename = pending
-                            itemPendingAction = null
-                        },
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                        onClick = {
-                            itemPendingAction = null
-                            navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
-                        },
-                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                        onClick = {
-                            itemPendingDelete = pending
-                            itemPendingAction = null
-                        },
-                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
-                    )
+                onShare = {
+                    itemPendingAction = null
+                    navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
                 },
+                onDelete = {
+                    itemPendingDelete = pending
+                    itemPendingAction = null
+                }
             )
         }
 
         itemPendingRename?.let { pending ->
-            LavenderDialog(
-                title = "Переименовать коллекцию",
+            CollectionRenameDialog(
+                initialValue = renameValue,
                 onDismiss = { itemPendingRename = null },
-                content = {
-                    OutlinedTextField(
-                        value = renameValue,
-                        onValueChange = { renameValue = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Название коллекции") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = Color.White,
-                            focusedBorderColor = Theme.DialogLavande.buttonBackground,
-                            unfocusedBorderColor = Color(0x66FFFFFF),
-                            focusedLabelColor = Theme.DialogLavande.dismissTextColor,
-                            unfocusedLabelColor = Theme.DialogLavande.bodyColor,
-                        )
-                    )
-                },
-                confirmText = "Сохранить",
-                onConfirm = {
-                    val targetName = renameValue
+                onConfirm = { targetName ->
                     itemPendingRename = null
                     vm.renameCollection(pending, targetName)
-                },
+                }
             )
         }
-        /* ---------- Диалог подтверждения ---------- */
+
         itemPendingDelete?.let { pending ->
-            LavenderDialog(
-                title = "Удалить коллекцию?",
+            CollectionDeleteDialog(
+                pending = pending,
                 onDismiss = { itemPendingDelete = null },
-                body = buildAnnotatedString {
-                    append("Удалить «")
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
-                    append("» из коллекции")
-                },
-                confirmText = "Удалить",
                 onConfirm = {
                     itemPendingDelete = null
                     vm.deleteCollection(pending)
-                },
-                destructive = true,
+                }
             )
         }
 
@@ -267,4 +204,108 @@ private fun PreviewL_SavedCollectionTabContent() {
             onCreateNewCollectionClick = {}
         )
     }
+}
+
+@Composable
+private fun CollectionActionDialog(
+    pending: String,
+    coverUrl: String?,
+    onDismiss: () -> Unit,
+    onRename: () -> Unit,
+    onShare: () -> Unit,
+    onDelete: () -> Unit
+) {
+    LavenderDialog(
+        title = "Действие с коллекцией",
+        onDismiss = onDismiss,
+        icon = {
+            val iconSize = Theme.DialogLavande.iconSize
+            if (coverUrl != null) {
+                UrlImage(url = coverUrl, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize))
+            } else {
+                Box(Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize).background(Color.Gray))
+            }
+        },
+        content = {
+            Box(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(
+                    pending,
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            DropdownMenuItem(
+                text = { Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                onClick = onRename,
+                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+            )
+
+            DropdownMenuItem(
+                text = { Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                onClick = onShare,
+                leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+            )
+
+            DropdownMenuItem(
+                text = { Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                onClick = onDelete,
+                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+            )
+        }
+    )
+}
+
+@Composable
+private fun CollectionRenameDialog(
+    initialValue: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var renameValue by rememberSaveable(initialValue) { mutableStateOf(initialValue) }
+    LavenderDialog(
+        title = "Переименовать коллекцию",
+        onDismiss = onDismiss,
+        content = {
+            OutlinedTextField(
+                value = renameValue,
+                onValueChange = { renameValue = it },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Название коллекции") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Theme.DialogLavande.buttonBackground,
+                    unfocusedBorderColor = Color(0x66FFFFFF),
+                    focusedLabelColor = Theme.DialogLavande.dismissTextColor,
+                    unfocusedLabelColor = Theme.DialogLavande.bodyColor,
+                )
+            )
+        },
+        confirmText = "Сохранить",
+        onConfirm = { onConfirm(renameValue) }
+    )
+}
+
+@Composable
+private fun CollectionDeleteDialog(
+    pending: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    LavenderDialog(
+        title = "Удалить коллекцию?",
+        onDismiss = onDismiss,
+        body = buildAnnotatedString {
+            append("Удалить «")
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
+            append("» из коллекции")
+        },
+        confirmText = "Удалить",
+        onConfirm = onConfirm,
+        destructive = true
+    )
 }

@@ -3,11 +3,14 @@ package com.client.xvideos.common.di
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /** Доступ к [ApplicationScope] из composable вне DI-графа. */
 @EntryPoint
@@ -30,9 +33,14 @@ interface ApplicationScopeEntryPoint {
 @Composable
 fun rememberApplicationScope(): CoroutineScope {
     val context = LocalContext.current
-    return remember(context) {
-        EntryPointAccessors
-            .fromApplication(context.applicationContext, ApplicationScopeEntryPoint::class.java)
-            .applicationScope()
+    val inPreview = LocalInspectionMode.current
+    return remember(context, inPreview) {
+        if (inPreview) {
+            CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        } else {
+            EntryPointAccessors
+                .fromApplication(context.applicationContext, ApplicationScopeEntryPoint::class.java)
+                .applicationScope()
+        }
     }
 }

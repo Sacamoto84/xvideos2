@@ -32,6 +32,7 @@ fun parserItemVideoTags(document: Document): TagsModel {
         .map { it.text().trim() }
         .filter { it.isNotEmpty() }
         .distinct()
+        .sorted()
 
     return TagsModel(listMain, listPornstar, tags)
 }

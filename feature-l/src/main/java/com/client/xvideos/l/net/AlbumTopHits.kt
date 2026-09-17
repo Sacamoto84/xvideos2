@@ -29,8 +29,8 @@ class AlbumTopHitsImpl(
         scope.launch(Dispatchers.IO) {
             val list = try {
                 Timber.i("!!! getAlbumTopHits")
-                val q = getAlbumListTopHitsQuery()
-                val res = repository.openURI(q)
+                val query = getAlbumListTopHitsQuery()
+                val res = repository.openURI(query)
                 if (res.isFailure) return@launch
                 val json = LJson.parseToJsonElement(res.getOrNull().orEmpty()).jsonObject
                 val get =

@@ -93,16 +93,16 @@ class R_Saved_Collection(
     override fun refreshCollectionList() {
         val seq = nextLoadSeq()
         scope.launch(Dispatchers.IO) {
-            val a = collectionDb.readAllCollections()
-            if (a.isSuccess) {
-                val items = a.getOrThrow().map { collection ->
+            val collectionsResult = collectionDb.readAllCollections()
+            if (collectionsResult.isSuccess) {
+                val items = collectionsResult.getOrThrow().map { collection ->
                     collection.copy(items = collection.items.sanitizeGifsInfoList())
                 }
                 withContext(Dispatchers.Main) {
                     publish(seq, items)
                 }
             } else {
-                SnackBar.error("Ошибка чтения коллекций ${a.exceptionOrNull()?.message}")
+                SnackBar.error("Ошибка чтения коллекций ${collectionsResult.exceptionOrNull()?.message}")
             }
         }
     }

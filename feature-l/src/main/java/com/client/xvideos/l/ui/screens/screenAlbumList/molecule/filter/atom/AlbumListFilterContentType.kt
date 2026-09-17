@@ -58,14 +58,14 @@ fun AlbumListFilterContentType(onStart: ContentId, onChange: (ContentId) -> Unit
                 ),
                 onClick = {
                     selectedIndex = index
-                    val a = when (index) {
+                    val selectedContent = when (index) {
                         0 -> ContentId.All
                         1 -> ContentId.Hentai
                         2 -> ContentId.NonErotic
                         3 -> ContentId.RealPeople
                         else -> ContentId.All
                     }
-                    onChange(a)
+                    onChange(selectedContent)
                 },
                 selected = index == selectedIndex,
                 label = {

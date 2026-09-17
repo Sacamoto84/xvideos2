@@ -348,4 +348,62 @@ class XParsersTest {
         assertNull(parserVideoPreviewFromImageUrl("null"))
         assertNull(parserVideoPreviewFromImageUrl("https://cdn.example.com/other/path/image.jpg"))
     }
+
+    // --- parserListVideo & parseSiteCountryFlag ------------------------------
+
+    @Test
+    fun `разбор списка видео извлекает валидные блоки и отсекает некорректные`() {
+        val html = """
+            <div class="mozaique">
+              <div data-id="123456" class="frame-block">
+                <p class="title"><a href="/video123456/test_title" title="Test Title">Test Title</a>
+                  <span class="duration">12 min</span>
+                </p>
+                <p class="metadata"><a href="/channels/mychannel" class="name">MyChannel</a> 500k Views</p>
+                <img data-src="https://thumbs-gcore.xvideos-cdn.com/abc/0/xv_18_t.jpg">
+              </div>
+              <div class="frame-block">
+                <p class="title"><a href="/video999/bad">Bad missing id</a></p>
+              </div>
+              <div data-id="-10" class="frame-block">
+                <p class="title"><a href="/video-10/bad">Bad negative id</a></p>
+              </div>
+              <div data-id="9999" class="frame-block">
+                <p class="title"><a href="">No Link</a></p>
+              </div>
+            </div>
+        """.trimIndent()
+
+        val doc = org.jsoup.Jsoup.parse(html)
+        val list = parserListVideo(doc)
+
+        assertEquals(1, list.size)
+        val item = list[0]
+        assertEquals(123456L, item.id)
+        assertEquals("Test Title", item.title)
+        assertEquals("/video123456/test_title", item.href)
+        assertEquals("12 min", item.duration)
+        assertEquals("500k", item.views)
+        assertEquals("MyChannel", item.channel)
+        assertEquals("https://thumbs-gcore.xvideos-cdn.com/abc/0/xv_18_t.jpg", item.previewImage)
+        assertEquals("https://thumbs-gcore.xvideos-cdn.com/abc/0/preview.mp4", item.previewVideo)
+        assertEquals("MyChannel", item.nameProfile)
+        assertEquals("/channels/mychannel", item.linkProfile)
+    }
+
+    @Test
+    fun `флаг локализации извлекается из блока site-localisation`() {
+        val htmlWithFlag = """
+            <div id="site-localisation">
+              <span class="flag-de">Deutschland</span>
+            </div>
+        """.trimIndent()
+
+        val flag = parseSiteCountryFlag(htmlWithFlag)
+        assertNotNull(flag)
+        assertEquals(com.client.xvideos.x.model.getFlagEmoji("flag-de"), flag)
+
+        val htmlWithoutFlag = """<div><span>No localisation</span></div>"""
+        assertNull(parseSiteCountryFlag(htmlWithoutFlag))
+    }
 }

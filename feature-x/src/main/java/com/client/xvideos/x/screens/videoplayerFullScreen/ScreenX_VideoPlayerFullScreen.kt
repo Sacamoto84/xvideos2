@@ -1,9 +1,7 @@
 package com.client.xvideos.x.screens.videoplayerFullScreen
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
+import com.client.xvideos.common.util.findActivity
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
@@ -70,7 +68,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
 
         // Альбомная ориентация + immersive на время полноэкранного режима.
         DisposableEffect(Unit) {
-            val activity = context.findActivityOrNull()
+            val activity = context.findActivity()
             val window = activity?.window
             val prevOrientation = activity?.requestedOrientation
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -203,13 +201,4 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             onRelease = { it.player = null }
         )
     }
-}
-
-private fun Context.findActivityOrNull(): Activity? {
-    var ctx: Context? = this
-    while (ctx is ContextWrapper) {
-        if (ctx is Activity) return ctx
-        ctx = ctx.baseContext
-    }
-    return null
 }

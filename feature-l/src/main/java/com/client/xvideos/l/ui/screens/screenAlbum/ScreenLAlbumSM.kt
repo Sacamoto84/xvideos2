@@ -111,12 +111,12 @@ class ScreenLAlbumSM @AssistedInject constructor(
     }
 
     init {
-        Timber.e("!!! ScreenLAlbumSM init")
+        Timber.d("!!! ScreenLAlbumSM init")
     }
 
     override fun onDispose() {
         super.onDispose()
-        Timber.e("!!! ScreenLAlbumSM onDispose")
+        Timber.d("!!! ScreenLAlbumSM onDispose")
     }
 
 

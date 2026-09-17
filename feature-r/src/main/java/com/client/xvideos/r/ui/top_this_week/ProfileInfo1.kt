@@ -46,16 +46,12 @@ fun ProfileInfo1(
 
         Row( modifier = Modifier.then(modifier).clickable(onClick = onClick), verticalAlignment = verticalAlignment)
         {
+            val matchedUser = listUsers.firstOrNull { it.username == videoItem.userName }
+            val avatarUrl = matchedUser?.profileImageUrl
 
-            val a = listUsers.firstOrNull { it1 -> it1.username == videoItem.userName }
-
-            if (a == null){
-
-            }
-
-            if ((a != null) && (a.profileImageUrl != null)) {
+            if (avatarUrl != null) {
                 Box( modifier = Modifier.clip(RoundedCornerShape(cornerRadius)).size(sizeIcon), contentAlignment = Alignment.Center )
-                { UrlImage( a.profileImageUrl, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop ) }
+                { UrlImage( avatarUrl, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop ) }
             }
             else {
                 Box( modifier = Modifier.clip(RoundedCornerShape(cornerRadius)).size(sizeIcon).background(Color.DarkGray), contentAlignment = Alignment.Center )

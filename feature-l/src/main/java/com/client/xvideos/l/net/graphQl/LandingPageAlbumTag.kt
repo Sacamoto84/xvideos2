@@ -14,8 +14,8 @@ suspend fun LandingPageAlbumTag(
 ): Result<Landing_page_albumType> {
     try {
         Timber.i("!!! LandingPageAlbumTag init")
-        val q = getLandingPageAlbumTag(tag)
-        val res = repository.openURI(q)
+        val query = getLandingPageAlbumTag(tag)
+        val res = repository.openURI(query)
         val json = LJson.parseToJsonElement(res.getOrThrow()).jsonObject
         val get = json["data"]?.jsonObject?.get("landing_page_album")?.jsonObject?.get("tag")?.jsonObject
             ?: error("LandingPageAlbumTag missing data.landing_page_album.tag")
@@ -23,7 +23,7 @@ suspend fun LandingPageAlbumTag(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.i("!!! eee LandingPageAlbumTag Exception $e")
+        Timber.e(e, "LandingPageAlbumTag failed for tag: $tag")
         return Result.failure(e)
     }
 }

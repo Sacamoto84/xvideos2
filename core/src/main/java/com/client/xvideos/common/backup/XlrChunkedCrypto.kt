@@ -189,15 +189,16 @@ class XlrEncryptedOutputStream(
         if (closed) return
         closed = true
         try {
-            if (pendingChunk != null) {
+            val pending = pendingChunk
+            if (pending != null) {
                 if (bufferOffset > 0) {
                     // Есть отложенный полный чанк и остаток в буфере -> отложенный не последний
-                    writeEncryptedChunk(pendingChunk!!, isLast = false)
+                    writeEncryptedChunk(pending, isLast = false)
                     val lastBytes = buffer.copyOf(bufferOffset)
                     writeEncryptedChunk(lastBytes, isLast = true)
                 } else {
                     // Остатка нет -> отложенный полный чанк является последним
-                    writeEncryptedChunk(pendingChunk!!, isLast = true)
+                    writeEncryptedChunk(pending, isLast = true)
                 }
             } else {
                 // Поток меньше 64 КБ (или пустой) -> пишем текущий буфер как последний
@@ -274,7 +275,7 @@ class XlrEncryptedInputStream(
 
     override fun read(): Int {
         check(!closed) { "Stream is closed" }
-        while (decryptedChunk == null || decryptedOffset >= decryptedChunk!!.size) {
+        while (decryptedChunk == null || decryptedOffset >= (decryptedChunk?.size ?: 0)) {
             if (wasLastChunkRead) return -1
             readNextChunk()
         }
@@ -286,16 +287,17 @@ class XlrEncryptedInputStream(
         check(!closed) { "Stream is closed" }
         if (len == 0) return 0
 
-        while (decryptedChunk == null || decryptedOffset >= decryptedChunk!!.size) {
+        while (decryptedChunk == null || decryptedOffset >= (decryptedChunk?.size ?: 0)) {
             if (wasLastChunkRead) {
                 return -1 // Достигнут конец потока
             }
             readNextChunk()
         }
 
-        val available = decryptedChunk!!.size - decryptedOffset
+        val chunk = decryptedChunk ?: return -1
+        val available = chunk.size - decryptedOffset
         val toRead = minOf(len, available)
-        System.arraycopy(decryptedChunk!!, decryptedOffset, b, off, toRead)
+        System.arraycopy(chunk, decryptedOffset, b, off, toRead)
         decryptedOffset += toRead
         return toRead
     }

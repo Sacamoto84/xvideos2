@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class SettingElementString(private val sharedPrefs: SharedPreferences, val name: String, val default: String = "") {
-    private val _field = MutableStateFlow(sharedPrefs.getString(name, default)!!)
+    private val _field = MutableStateFlow(sharedPrefs.getString(name, default) ?: default)
     val field: StateFlow<String> = _field.asStateFlow()
 
     fun setValue(value: String) {
@@ -16,7 +16,7 @@ class SettingElementString(private val sharedPrefs: SharedPreferences, val name:
     }
 
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == name) { _field.value = sharedPrefs.getString(key, default)!!  }
+        if (key == name) { _field.value = sharedPrefs.getString(key, default) ?: default  }
     }
 
     init { sharedPrefs.registerOnSharedPreferenceChangeListener(listener) }

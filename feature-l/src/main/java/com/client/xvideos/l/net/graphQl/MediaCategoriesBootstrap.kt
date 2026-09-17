@@ -19,8 +19,7 @@ var mediaCategoriesFlow = MutableStateFlow<MediaCategories?>(null)
 suspend fun refreshMediaCategories(repository: Repository) {
     Timber.i("!!! refreshMediaCategories")
 
-    val q = mediaCategoriesBootstrap
-    val res = repository.openURI(q, config = RepositoryUriConfig.CACHE_ROM)
+    val res = repository.openURI(mediaCategoriesBootstrap, config = RepositoryUriConfig.CACHE_ROM)
 
     if (res.isFailure) return
 

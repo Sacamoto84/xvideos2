@@ -15,13 +15,13 @@ class ItemCollectionPagingSource(val collection: String?, val savedRed: SavedRed
         return try {
             Timber.d("!!! ItemCollectionPagingSource::load() collection:${collection}")
 
-            val a = if (!collection.isNullOrEmpty()) {
+            val items = if (!collection.isNullOrEmpty()) {
                 savedRed.collections.collectionList.firstOrNull { it.collection == collection }?.items ?: emptyList()
             } else {
                 emptyList()
             }
 
-            LoadResult.Page( data = a.sanitizeGifsInfoList(), prevKey = null, nextKey = null )
+            LoadResult.Page( data = items.sanitizeGifsInfoList(), prevKey = null, nextKey = null )
 
         } catch (e: CancellationException) {
             throw e // G1

@@ -2,7 +2,7 @@ package com.client.xvideos.r.ui.profile
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -33,13 +32,11 @@ import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFi
 import com.client.xvideos.r.ui.profile.atom.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.tags.TagsBlock
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
-import timber.log.Timber
 
 class ScreenRedProfile(val profileName: String) : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnusedBoxWithConstraintsScope")
     @Composable
     override fun Content() {
 
@@ -73,13 +70,8 @@ class ScreenRedProfile(val profileName: String) : Screen {
             likedHost = vm.likedHost,
             onTagClick = { vm.toggleSelectTag(it) },
             onAppendLoaded = { pager ->
-                Timber.tag("Paging")
-                    .d("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Произошла загрузка следующей страницы!")
-                pager.itemSnapshotList.let { it1 ->
-                    it1.items.forEach { it2 ->
-                        val t = it2.tags
-                        vm.tagsAdd(t)
-                    }
+                pager.itemSnapshotList.items.forEach { gifItem ->
+                    vm.tagsAdd(gifItem.tags)
                 }
             },
             savedRedProvider = { vm.savedRed }
@@ -89,7 +81,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun RedProfileScreenContent(
     creator: UserInfo?,
@@ -102,62 +93,42 @@ fun RedProfileScreenContent(
     onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit,
     savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed
 ) {
-
-    Scaffold(containerColor = Theme.background,
-
-
-
-
-
-        ) {
-
-
-
-
-
-
-
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            LazyRow123(
-                host = likedHost,
-                modifier = Modifier.fillMaxSize(),
-                contentBeforeList = {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-
-                        if (creator != null) {
-                            RedProfileCreaterInfo(creator, savedRed = savedRedProvider)
-                        }
-
-                        if ((creator != null) && (tags.isNotEmpty())) {
-                            TagsBlock(tags, tagsSelect, onTagClick)
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-
+    Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
+        LazyRow123(
+            host = likedHost,
+            modifier = Modifier.fillMaxSize(),
+            contentBeforeList = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (creator != null) {
+                        RedProfileCreaterInfo(creator, savedRed = savedRedProvider)
                     }
-                },
-                onAppendLoaded = onAppendLoaded,
-            )
 
-            //Индикатор загрузки
-            if (isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(56.dp),
-                        strokeWidth = 8.dp
-                    )
+                    if ((creator != null) && (tags.isNotEmpty())) {
+                        TagsBlock(tags, tagsSelect, onTagClick)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
                 }
+            },
+            onAppendLoaded = onAppendLoaded,
+        )
+
+        // Индикатор загрузки
+        if (isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(56.dp),
+                    strokeWidth = 8.dp
+                )
             }
-
-            //---- Скролл ----
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterEnd)
-                    .width(2.dp)
-            ) { VerticalScrollbar(scrollPercent) }
-
         }
+
+        // Скролл
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .align(Alignment.CenterEnd)
+                .width(2.dp)
+        ) { VerticalScrollbar(scrollPercent) }
     }
 }
 

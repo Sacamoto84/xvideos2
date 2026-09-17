@@ -50,7 +50,7 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
 
     override fun onDispose() {
         super.onDispose()
-        Timber.e("!!! ScreenX_VideoPlayerFullScreenSM onDispose")
+        Timber.d("!!! ScreenX_VideoPlayerFullScreenSM onDispose")
     }
 
     var passedString: String by mutableStateOf("")
@@ -77,7 +77,7 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
         isError = false
         loadJob = screenModelScope.launch {
             try {
-                Timber.e("!!! ScreenX_VideoPlayerFullScreenSM loadVideo(forceReload=$forceReload)")
+                Timber.d("!!! ScreenX_VideoPlayerFullScreenSM loadVideo(forceReload=$forceReload)")
 
                 if (forceReload) {
                     withContext(Dispatchers.IO) {
@@ -86,20 +86,20 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
                 }
 
                 // RAM-кэш (чистится при старте процесса), чтобы истекающий HLS-токен обновлялся.
-                val res = if (forceReload) null else withContext(Dispatchers.IO) {
+                val cachedHtml = if (forceReload) null else withContext(Dispatchers.IO) {
                     db.cacheUrlStringRam.get(url)
                 }
-                val isFromCache = res != null
-                val s = if (res == null) {
+                val isFromCache = cachedHtml != null
+                val htmlContent = if (cachedHtml == null) {
                     withContext(Dispatchers.IO) {
                         readHtmlFromURLDirect(url)
                     }
                 } else {
-                    res.content
+                    cachedHtml.content
                 }
 
                 val (config, hls) = withContext(Dispatchers.Default) {
-                    val script = parserItemVideo(s)
+                    val script = parserItemVideo(htmlContent)
                     val parsedConfig = script?.let { parseHTML5Player(it) }
                     val streamUrl = parsedConfig?.videoHLS?.takeIf { it.isNotBlank() }
                         ?: parsedConfig?.videoUrlHigh?.takeIf { it.isNotBlank() }
@@ -113,9 +113,9 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
                     withContext(Dispatchers.IO) {
                         db.cacheUrlStringRam.delete(url)
                     }
-                } else if (!isFromCache && s.isNotBlank()) {
+                } else if (!isFromCache && htmlContent.isNotBlank()) {
                     withContext(Dispatchers.IO) {
-                        db.cacheUrlStringRam.put(url, s)
+                        db.cacheUrlStringRam.put(url, htmlContent)
                     }
                 }
             } catch (e: CancellationException) {

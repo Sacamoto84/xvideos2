@@ -8,12 +8,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.IntSliderSetting
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
@@ -76,14 +79,14 @@ internal fun CacheSettingsSection(
         SettingsDivider()
 
         SettingsValueRow(
-            icon = R.drawable.icon_luscious,
+            icon = R.drawable.hard_disk_24,
             text = "Кэш картинок на диске",
             value = formatBytes(imageCacheSizeBytes)
         )
         SettingsDivider()
 
         SettingsButtonRowWithDialog(
-            icon = R.drawable.icon_luscious,
+            icon = R.drawable.hard_disk_24,
             text = "Очистить кэш картинок",
             value = "Очистить",
             textDialogTitle = "Очистить кэш картинок",
@@ -92,4 +95,18 @@ internal fun CacheSettingsSection(
             onClick = onClearImageCache
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun CacheSettingsSectionPreview() = SettingsPreview {
+    val context = LocalContext.current
+    CacheSettingsSection(
+        ramCachePercent = 15,
+        diskCacheEnabled = true,
+        diskCacheSizeMb = 512,
+        imageCacheSizeBytes = 1024L * 1024L * 128L,
+        onClearImageCache = {},
+        context = context
+    )
 }

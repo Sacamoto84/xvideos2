@@ -140,23 +140,10 @@ class RedApi @Inject constructor(
         // Запрос из сети
 
 
-        val r = api.request<MediaResponse>(route)
-        return r
-        //val res: MediaResponse = api.request(route)
-
-//        res.onSuccess { dto ->
-//            Timber.i("Got user: $dto")
-//        }.onFailure { e ->
-//            Timber.e(e, "Request failed")
-//        }
-//
-//
-//        return res
-
+        return api.request<MediaResponse>(route)
     }
 
     //--------------------------- User/Creator methods ---------------------------
-
 
     //https://api.redgifs.com/v1/users/drfunkenfootz_md
     suspend fun readCreator(
@@ -168,8 +155,7 @@ class RedApi @Inject constructor(
             "username" to userName,
         )
 
-        val res = api.request<UserInfo>(route)
-        return res
+        return api.request<UserInfo>(route)
     }
 
 

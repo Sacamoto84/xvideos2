@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +22,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.TagsModel
+
+private val TAG_CHANNEL_COLOR = Color(0xFF1E88E5)
+private val TAG_PORNSTAR_COLOR = Color(0xFFDE2600)
+private val TAG_BG_COLOR = Color(0xCC26262B)
+private val TAG_BORDER_COLOR = Color(0x33FFFFFF)
 
 /**
  * Отобразить список каналов, порноактрис, тегов
@@ -33,23 +39,24 @@ fun ComposeTags(tags: TagsModel, onClick: (String) -> Unit) {
 
         // Каналы
         tags.mainUploader.forEach {
-            ScreenItemTagsModelPornostars(it.name, Color(0xFF1E88E5), it.count, onClick = { onClick(it.name) })
+            ScreenItemTagsModelPornostars(it.name, TAG_CHANNEL_COLOR, it.count, onClick = { onClick(it.name) })
         }
 
         // Порноактрисы
         tags.pornstars.forEach {
-            ScreenItemTagsModelPornostars(it.name, Color(0xFFDE2600), it.count, onClick = { onClick(it.name) })
+            ScreenItemTagsModelPornostars(it.name, TAG_PORNSTAR_COLOR, it.count, onClick = { onClick(it.name) })
         }
 
         // Теги
-        tags.tags.sorted().forEach {
+        val sortedTags = remember(tags.tags) { tags.tags.sorted() }
+        sortedTags.forEach {
             Box(
                 modifier = Modifier
                     .padding(horizontal = 3.dp, vertical = 2.dp)
                     .height(28.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xCC26262B))
-                    .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(6.dp))
+                    .background(TAG_BG_COLOR)
+                    .border(1.dp, TAG_BORDER_COLOR, RoundedCornerShape(6.dp))
                     .clickable { onClick.invoke(it) }
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center

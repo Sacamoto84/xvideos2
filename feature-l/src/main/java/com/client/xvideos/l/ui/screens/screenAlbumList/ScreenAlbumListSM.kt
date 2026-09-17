@@ -129,14 +129,14 @@ class ScreenLAlbumListSM @AssistedInject constructor(
         screenModelScope.launch {
             //_isRefreshing.value = true
             try {
-                val a = withContext(Dispatchers.IO) {
+                val albumListResult = withContext(Dispatchers.IO) {
                     luscious.getAlbumList(1, filter.value)
                 }
-                if (a.isFailure) {
+                if (albumListResult.isFailure) {
                     return@launch
                 }
 
-                val res = a.getOrThrow()
+                val res = albumListResult.getOrThrow()
                 info.value = res.info
                 bigList.clear()
                 bigList[0] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
@@ -188,15 +188,15 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 Timber.i("!!! loadAlbumList page:$page")
                 bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING)
 
-                val a = withContext(Dispatchers.IO) {
+                val albumListResult = withContext(Dispatchers.IO) {
                     luscious.getAlbumList(page + 1, filter.value)
                 }
-                if (a.isFailure) {
+                if (albumListResult.isFailure) {
                     bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
                     return@launch
                 }
 
-                val res = a.getOrThrow()
+                val res = albumListResult.getOrThrow()
                 info.value = res.info
                 bigList[page] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
             } catch (e: CancellationException) {

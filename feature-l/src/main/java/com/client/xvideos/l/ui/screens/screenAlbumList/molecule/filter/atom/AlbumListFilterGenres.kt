@@ -156,7 +156,7 @@ fun AlbumListFilterGenres(
                 }
 
                 genresMinus.forEach { item ->
-                    val s = buildAnnotatedString {
+                    val annotatedText = buildAnnotatedString {
                         withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) {
                             append("NOT")
                         }
@@ -173,7 +173,7 @@ fun AlbumListFilterGenres(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = s,
+                            text = annotatedText,
                             color = StyleGenresTags.colorExcludedTextItem,
                             style = Theme.L.Type.bodyLarge.copy(
                                 color = StyleGenresTags.colorExcludedTextItem,

@@ -198,20 +198,22 @@ class CalculatorState(
             previousValue = null
             pendingOperation = null
             isNewEntry = true
-        } else if (lastOperand != null && lastOperator != null) {
-            // Повторение последней операции при повторном нажатии «=»
-            val op = lastOperator!!
-            val operand = lastOperand!!
-            val result = executeOperation(current, operand, op)
-            if (result == null) {
-                displayValue = ERROR_TEXT
-                lastOperand = null
-                lastOperator = null
-                return
+        } else {
+            val op = lastOperator
+            val operand = lastOperand
+            if (op != null && operand != null) {
+                // Повторение последней операции при повторном нажатии «=»
+                val result = executeOperation(current, operand, op)
+                if (result == null) {
+                    displayValue = ERROR_TEXT
+                    lastOperand = null
+                    lastOperator = null
+                    return
+                }
+                expressionHistory = "${formatNumber(current)} $op ${formatNumber(operand)} ="
+                displayValue = formatNumber(result)
+                isNewEntry = true
             }
-            expressionHistory = "${formatNumber(current)} $op ${formatNumber(operand)} ="
-            displayValue = formatNumber(result)
-            isNewEntry = true
         }
     }
 

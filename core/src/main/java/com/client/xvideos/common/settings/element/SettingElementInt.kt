@@ -7,21 +7,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class SettingElementInt(private val sharedPrefs: SharedPreferences, val name: String, val default: Int = 0) {
-    private val _galleryCheckbox = MutableStateFlow(sharedPrefs.getInt(name, default))
-    val field: StateFlow<Int> = _galleryCheckbox.asStateFlow()
+    private val _field = MutableStateFlow(sharedPrefs.getInt(name, default))
+    val field: StateFlow<Int> = _field.asStateFlow()
 
     fun setValue(value: Int) {
         sharedPrefs.edit { putInt(name, value) }
-        _galleryCheckbox.value = value
-        println("!!! setValue $value _galleryCheckbox ${ _galleryCheckbox.value} ")
+        _field.value = value
     }
 
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == name) { _galleryCheckbox.value = sharedPrefs.getInt(key, default)  }
+        if (key == name) { _field.value = sharedPrefs.getInt(key, default) }
     }
 
     init { sharedPrefs.registerOnSharedPreferenceChangeListener(listener) }
 
     fun clear() { sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
-
 }

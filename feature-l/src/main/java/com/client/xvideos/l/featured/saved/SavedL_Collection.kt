@@ -142,64 +142,71 @@ class SavedL_Collection(
         }
     }
 
-    fun renameCollection(oldName: String, newName: String): Boolean {
+    fun renameCollection(oldName: String, newName: String) {
         Timber.i("SavedL_Collection renameCollection() oldName:$oldName newName:$newName")
         val trimmedNewName = CollectionName.normalizeOrNull(newName)
         if (trimmedNewName == null) {
             SnackBar.error("Недопустимое название коллекции")
-            return false
+            return
         }
         val safeOldName = CollectionName.normalizeOrNull(oldName)
         if (safeOldName == null) {
             SnackBar.error("Недопустимое название коллекции")
-            return false
+            return
         }
         if (safeOldName == trimmedNewName) {
-            return true
+            return
         }
 
-        val oldRoot = File(AppPath.l_collection, safeOldName)
-        val newRoot = File(AppPath.l_collection, trimmedNewName)
-        if (!oldRoot.exists()) {
-            SnackBar.error("Коллекция не найдена")
-            return false
-        }
-        if (newRoot.exists()) {
-            SnackBar.error("Коллекция уже существует")
-            return false
-        }
+        // Переименование и fallback copyRecursively — это IO-операции на файловой системе
+        scope.launch(Dispatchers.IO) {
+            val oldRoot = File(AppPath.l_collection, safeOldName)
+            val newRoot = File(AppPath.l_collection, trimmedNewName)
+            if (!oldRoot.exists()) {
+                withContext(Dispatchers.Main) {
+                    SnackBar.error("Коллекция не найдена")
+                }
+                return@launch
+            }
+            if (newRoot.exists()) {
+                withContext(Dispatchers.Main) {
+                    SnackBar.error("Коллекция уже существует")
+                }
+                return@launch
+            }
 
-        val renamed = if (!oldRoot.renameTo(newRoot)) {
-            try {
-                val copied = oldRoot.copyRecursively(newRoot, overwrite = false)
-                if (copied) {
-                    oldRoot.deleteRecursively()
-                    true
-                } else {
+            val renamed = if (!oldRoot.renameTo(newRoot)) {
+                try {
+                    val copied = oldRoot.copyRecursively(newRoot, overwrite = false)
+                    if (copied) {
+                        oldRoot.deleteRecursively()
+                        true
+                    } else {
+                        newRoot.deleteRecursively()
+                        false
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "SavedL_Collection renameCollection() fallback failed")
                     newRoot.deleteRecursively()
                     false
                 }
-            } catch (e: Exception) {
-                Timber.e(e, "SavedL_Collection renameCollection() fallback failed")
-                newRoot.deleteRecursively()
-                false
+            } else {
+                true
             }
-        } else {
-            true
-        }
-        if (renamed) {
-            scope.launch(Dispatchers.Main) {
-                if (currentCollectionName == safeOldName) {
-                    currentCollectionName = trimmedNewName
-                    refresh()
+
+            withContext(Dispatchers.Main) {
+                if (renamed) {
+                    if (currentCollectionName == safeOldName) {
+                        currentCollectionName = trimmedNewName
+                        refresh()
+                    }
+                    refreshCollectionList()
+                    SnackBar.success("Коллекция переименована")
+                } else {
+                    SnackBar.error("Ошибка переименования коллекции")
                 }
-                refreshCollectionList()
             }
-            SnackBar.success("Коллекция переименована")
-        } else {
-            SnackBar.error("Ошибка переименования коллекции")
         }
-        return renamed
     }
 
     /* ---------- Текущая коллекция ---------- */

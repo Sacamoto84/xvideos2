@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.explorer
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -43,7 +42,7 @@ import javax.inject.Inject
 
 // persistentListOf, а не listOf: обычный List для Compose нестабилен, и TabRow
 // перекомпоновывался чаще, чем нужно.
-private val l = persistentListOf(
+private val EXPLORER_TAB_ICONS = persistentListOf(
     Icons.Outlined.Movie,
     Icons.Outlined.BookmarkBorder,
     Icons.Outlined.Group,
@@ -55,7 +54,6 @@ class ScreenRedExplorer : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
     @OptIn(ExperimentalMaterial3Api::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
         val vm = getScreenModel<ScreenRedExplorerSM>()
@@ -68,7 +66,7 @@ class ScreenRedExplorer : Screen {
 
             TabRow(
                 containerColor = Theme.tabLevel0,
-                titlesIcon = l,
+                titlesIcon = EXPLORER_TAB_ICONS,
                 value = vm.screenType,
                 onChangeState = {
                     if (it == vm.screenType) {

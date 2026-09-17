@@ -42,7 +42,7 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
                     SnackBar.info("Альбом сохранен")
                 }
                 .onFailure { e ->
-                    SnackBar.error("Ошибка добавления группы ${e.message}")
+                    SnackBar.error("Ошибка добавления альбома ${e.message}")
                 }
         }
     }
@@ -72,7 +72,7 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
                     SnackBar.info("Альбом сохранен")
                 }
                 .onFailure { e ->
-                    SnackBar.error("Ошибка добавления группы ${e.message}")
+                    SnackBar.error("Ошибка добавления альбома ${e.message}")
                 }
         }
     }
@@ -89,7 +89,7 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
                     SnackBar.info("Альбом удален")
                 }
                 .onFailure { e ->
-                    SnackBar.error("Ошибка удаления группы ${e.message}")
+                    SnackBar.error("Ошибка удаления альбома ${e.message}")
                 }
         }
     }

@@ -98,7 +98,7 @@ fun AppLockSettingsSection() {
         if (enabled) {
             SettingsDivider2()
             SettingsListItem(
-                icon = R.drawable.icon_red,
+                icon = R.drawable.key_24,
                 text = "Код доступа",
                 subtitle = "Отключить блокировку приложения",
                 trailing = {
@@ -242,6 +242,15 @@ private fun CamouflageVerificationDialog(
                 }
             }
         }
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Composable
+private fun CamouflageVerificationDialogPreview() = SettingsPreview {
+    CamouflageVerificationDialog(
+        onDismiss = {},
+        onSuccess = {}
     )
 }
 
@@ -432,7 +441,7 @@ fun PasswordSettingField(
     DisableAppLockAutofill()
 
     var showPassword by rememberSaveable { mutableStateOf(false) }
-    val d = Theme.DialogLavande
+    val dialogTheme = Theme.DialogLavande
 
     OutlinedTextField(
         value = value,
@@ -447,7 +456,7 @@ fun PasswordSettingField(
             imeAction = ImeAction.Done
         ),
         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() }),
-        textStyle = Theme.L.Type.body.copy(color = d.bodyColor),
+        textStyle = Theme.L.Type.body.copy(color = dialogTheme.bodyColor),
         trailingIcon = {
             IconButton(onClick = { showPassword = !showPassword }) {
                 Icon(
@@ -455,17 +464,17 @@ fun PasswordSettingField(
                         if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                     contentDescription =
                         if (showPassword) "Скрыть код доступа" else "Показать код доступа",
-                    tint = d.dismissTextColor
+                    tint = dialogTheme.dismissTextColor
                 )
             }
         },
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = d.bodyColor,
-            unfocusedTextColor = d.bodyColor,
-            cursorColor = d.dismissTextColor,
-            focusedBorderColor = d.dismissTextColor,
+            focusedTextColor = dialogTheme.bodyColor,
+            unfocusedTextColor = dialogTheme.bodyColor,
+            cursorColor = dialogTheme.dismissTextColor,
+            focusedBorderColor = dialogTheme.dismissTextColor,
             unfocusedBorderColor = Color(0xFF9A9A9A),
-            focusedLabelColor = d.dismissTextColor,
+            focusedLabelColor = dialogTheme.dismissTextColor,
             unfocusedLabelColor = Color(0xFF6E6E6E)
         )
     )

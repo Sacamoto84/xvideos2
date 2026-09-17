@@ -152,7 +152,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
         isLoading.value = true
         loadJob = currentCoroutineContext()[Job]
         try {
-            val r = loadGifs(
+            val result = loadGifs(
                 userName = userName,
                 items = items,
                 page = page,
@@ -160,8 +160,8 @@ class ScreenRedProfileSM @AssistedInject constructor(
                 type = if (typeGifs == TypeGifs.GIFS) MediaType.GIF else MediaType.IMAGE,
                 redApi
             ).getOrThrow()
-            _tags.update { it + r.tags }
-            val resp = r.gifs.sanitizeGifsInfoList()
+            _tags.update { it + result.tags }
+            val resp = result.gifs.sanitizeGifsInfoList()
             _list.update { it + resp }
         } catch (e: CancellationException) {
             throw e
@@ -189,6 +189,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
     fun clear() {
         loadJob?.cancel()
         loadJob = null
+        isLoading.value = false
         _list.update { emptyList() }
         _tags.update { emptySet() }
     }

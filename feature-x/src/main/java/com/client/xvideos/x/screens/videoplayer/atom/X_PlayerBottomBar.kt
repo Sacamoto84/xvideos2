@@ -117,10 +117,10 @@ fun X_PlayerBottomBar(
 
 /** Секунды → `M:SS` (или `H:MM:SS` для длинных видео). */
 internal fun formatTime(totalSeconds: Int): String {
-    val s = totalSeconds.coerceAtLeast(0)
-    val h = s / 3600
-    val m = (s % 3600) / 60
-    val sec = s % 60
-    return if (h > 0) String.format(Locale.US, "%d:%02d:%02d", h, m, sec)
-    else String.format(Locale.US, "%d:%02d", m, sec)
+    val validSeconds = totalSeconds.coerceAtLeast(0)
+    val hours = validSeconds / 3600
+    val minutes = (validSeconds % 3600) / 60
+    val seconds = validSeconds % 60
+    return if (hours > 0) String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+    else String.format(Locale.US, "%d:%02d", minutes, seconds)
 }

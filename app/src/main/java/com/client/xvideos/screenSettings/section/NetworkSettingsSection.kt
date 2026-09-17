@@ -22,12 +22,14 @@ import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.net.doh.DohProvider
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import kotlinx.coroutines.Dispatchers
@@ -255,5 +257,21 @@ private fun CustomDohUrlDialog(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun NetworkSettingsSectionPreview() = SettingsPreview {
+    NetworkSettingsSection()
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Composable
+private fun CustomDohUrlDialogPreview() = SettingsPreview {
+    CustomDohUrlDialog(
+        initialUrl = "https://dns.google/dns-query",
+        onDismiss = {},
+        onSave = {}
     )
 }

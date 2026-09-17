@@ -1,6 +1,5 @@
 package com.client.xvideos.r.ui.explorer.tab.search
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -61,10 +60,6 @@ object SearchTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @SuppressLint(
-        "UnusedMaterialScaffoldPaddingParameter",
-        "UnusedMaterial3ScaffoldPaddingParameter"
-    )
     @Composable
     override fun Content() {
         val vm: ScreenRedExplorerSearchSM = getScreenModel()

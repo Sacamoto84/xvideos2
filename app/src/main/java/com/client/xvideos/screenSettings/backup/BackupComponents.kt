@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.applock.DisableAppLockAutofill
 import com.client.xvideos.common.ui.IncognitoKeyboard
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
@@ -59,6 +61,7 @@ import com.client.xvideos.screenSettings.components.SettingsCardColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsDividerColor
 import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsRowTextPrimary
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsTopBarColor
@@ -404,10 +407,10 @@ internal fun BackupCreatePasswordDialog(
         },
         content = {
             DisableAppLockAutofill()
-            val d = Theme.DialogLavande
+            val dialogTheme = Theme.DialogLavande
             Text(
                 text = "Задайте пароль для шифрования архива. Без этого пароля восстановить данные будет невозможно.",
-                style = Theme.L.Type.dialogBody.copy(color = d.bodyColor),
+                style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -424,7 +427,7 @@ internal fun BackupCreatePasswordDialog(
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
-                            tint = d.bodyColor
+                            tint = dialogTheme.bodyColor
                         )
                     }
                 },
@@ -449,7 +452,7 @@ internal fun BackupCreatePasswordDialog(
                         Icon(
                             imageVector = if (passwordConfirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (passwordConfirmVisible) "Скрыть пароль" else "Показать пароль",
-                            tint = d.bodyColor
+                            tint = dialogTheme.bodyColor
                         )
                     }
                 },
@@ -464,14 +467,14 @@ internal fun BackupCreatePasswordDialog(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "Пароль должен быть не короче 4 символов",
-                    style = Theme.L.Type.dialogBody.copy(color = d.buttonBackgroundDestructive),
+                    style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
             } else if (passwordConfirm.isNotEmpty() && !isMatching) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "Пароли не совпадают",
-                    style = Theme.L.Type.dialogBody.copy(color = d.buttonBackgroundDestructive),
+                    style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -502,10 +505,10 @@ internal fun BackupRestorePasswordDialog(
         },
         content = {
             DisableAppLockAutofill()
-            val d = Theme.DialogLavande
+            val dialogTheme = Theme.DialogLavande
             Text(
                 text = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого.",
-                style = Theme.L.Type.dialogBody.copy(color = d.bodyColor),
+                style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -522,7 +525,7 @@ internal fun BackupRestorePasswordDialog(
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
-                            tint = d.bodyColor
+                            tint = dialogTheme.bodyColor
                         )
                     }
                 },
@@ -540,10 +543,83 @@ internal fun BackupRestorePasswordDialog(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = errorMessage,
-                    style = Theme.L.Type.dialogBody.copy(color = d.buttonBackgroundDestructive),
+                    style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun BackupModeSelectorPreview() = SettingsPreview {
+    var mode by remember { mutableStateOf(BackupFlowScreen.CREATE) }
+    BackupModeSelector(selected = mode, enabled = true, onSelected = { mode = it })
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun BackupContentModeSelectorPreview() = SettingsPreview {
+    var mode by remember { mutableStateOf(XlrBackupContentMode.MINI) }
+    BackupContentModeSelector(
+        title = "Режим L",
+        value = mode,
+        enabled = true,
+        description = "Только метаданные",
+        onValueChange = { mode = it }
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun BackupConsolePreview() = SettingsPreview {
+    BackupConsole(
+        lines = listOf(
+            "---------",
+            "R итог",
+            "Info: всего 50, неполных 2",
+            "Скачано/очередь: видео 10, preview 15",
+            "Пропущено: нет video URL 0",
+            "Ошибки: битых info 0"
+        ),
+        onClear = {}
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun BackupSelectionActionsPreview() = SettingsPreview {
+    BackupSelectionActions(enabled = true, onSelectAll = {}, onSelectNone = {})
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun BackupFolderListPreview() = SettingsPreview {
+    val items = listOf(
+        XlrBackupItem(section = "X", path = "X", title = "XVideos", parentPath = null, files = 120, bytes = 300_000_000L),
+        XlrBackupItem(section = "X", path = "X/Favorites", title = "Избранное", parentPath = "X", files = 100, bytes = 250_000_000L),
+        XlrBackupItem(section = "L", path = "L", title = "Luscious", parentPath = null, files = 45, bytes = 80_000_000L)
+    )
+    var selected by remember { mutableStateOf(setOf("X", "X/Favorites", "L")) }
+    BackupFolderList(
+        items = items,
+        selectedPaths = selected,
+        enabled = true,
+        onToggle = { path ->
+            selected = if (path in selected) selected - path else selected + path
+        }
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Composable
+private fun BackupCreatePasswordDialogPreview() = SettingsPreview {
+    BackupCreatePasswordDialog(onDismiss = {}, onConfirm = {})
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Composable
+private fun BackupRestorePasswordDialogPreview() = SettingsPreview {
+    BackupRestorePasswordDialog(errorMessage = "Неверный пароль архива", onDismiss = {}, onConfirm = {})
 }

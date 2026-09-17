@@ -54,7 +54,7 @@ fun TagsBlock(
         val maxW = constraints.maxWidth
 
         // Измеряем кнопку сразу, она нам нужна для расчетов лимита
-        val btnPl = subcompose("btn") {
+        val buttonPlaceable = subcompose("btn") {
             ExpandCollapseButton(expanded) { expanded = !expanded }
         }.first().measure(loose)
 
@@ -68,12 +68,12 @@ fun TagsBlock(
             val isSelected = tag in selectedSet
             
             // Предварительный замер (через subcompose только нужных)
-            val p = subcompose(tag) {
+            val placeable = subcompose(tag) {
                 TagChip(tag, isSelected, stableOnClick)
             }.first().measure(loose)
 
             if (!expanded) {
-                val needW = p.width + if (currentLines == 2) btnPl.width else 0
+                val needW = placeable.width + if (currentLines == 2) buttonPlaceable.width else 0
                 if (currentRowW + needW > maxW) {
                     if (currentLines >= 2) {
                         isOverflow = true
@@ -83,32 +83,32 @@ fun TagsBlock(
                     currentRowW = 0
                 }
             } else {
-                if (currentRowW + p.width > maxW) {
+                if (currentRowW + placeable.width > maxW) {
                     currentRowW = 0
                 }
             }
             
-            shownPlaceables.add(p)
-            currentRowW += p.width
+            shownPlaceables.add(placeable)
+            currentRowW += placeable.width
         }
 
         // Добавляем кнопку в список отрисовки, если нужно
         if (expanded || isOverflow) {
-            shownPlaceables.add(btnPl)
+            shownPlaceables.add(buttonPlaceable)
         }
 
         // Расчет итоговой высоты
         var totalHeight = 0
         var rowHeight = 0
         var xAcc = 0
-        shownPlaceables.forEach { p ->
-            if (xAcc + p.width > maxW) {
+        shownPlaceables.forEach { placeable ->
+            if (xAcc + placeable.width > maxW) {
                 totalHeight += rowHeight
                 xAcc = 0
                 rowHeight = 0
             }
-            xAcc += p.width
-            rowHeight = maxOf(rowHeight, p.height)
+            xAcc += placeable.width
+            rowHeight = maxOf(rowHeight, placeable.height)
         }
         totalHeight += rowHeight
 
@@ -116,15 +116,15 @@ fun TagsBlock(
             var x = 0
             var y = 0
             var lineH = 0
-            shownPlaceables.forEach { p ->
-                if (x + p.width > maxW) {
+            shownPlaceables.forEach { placeable ->
+                if (x + placeable.width > maxW) {
                     x = 0
                     y += lineH
                     lineH = 0
                 }
-                p.placeRelative(x, y)
-                x += p.width
-                lineH = maxOf(lineH, p.height)
+                placeable.placeRelative(x, y)
+                x += placeable.width
+                lineH = maxOf(lineH, placeable.height)
             }
         }
     }

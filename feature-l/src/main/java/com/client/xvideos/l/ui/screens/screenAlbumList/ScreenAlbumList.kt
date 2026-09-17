@@ -1,6 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -60,6 +59,9 @@ import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyVerticalGridScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
+import com.client.xvideos.l.model.Album
+import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
+import androidx.compose.ui.unit.Dp
 import com.client.xvideos.l.model.AlbumListFilter as LAlbumListFilter
 
 
@@ -109,7 +111,6 @@ private class ScreenLAlbumList(
 }
 
 @OptIn(ExperimentalZoomableApi::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun Screen.ScreenAlbumListContent(
     initialFilter: LAlbumListFilter?,
@@ -196,62 +197,14 @@ private fun Screen.ScreenAlbumListContent(
                     val pageItems = bigList[page]?.albumListImplInfoAndList?.items.orEmpty()
                     val stateGrid = vm.stateGrid.getOrPut(page) { LazyGridState() }
 
-                    LazyVerticalGridScrollbar(
-                        state = stateGrid,
-                        settings = ScrollbarSettings.Default.copy(
-                            thumbUnselectedColor = Color(0xFFA3A3A3),
-                            thumbSelectedColor = Color(0xFFB3B3B3),
-                            thumbThickness = 3.dp,
-                            scrollbarPadding = 0.dp,
-                            alwaysShowScrollbar = false
-                        )
-                    ) {
-                        LazyVerticalGrid( state = stateGrid, modifier = Modifier.fillMaxSize(),  columns = GridCells.Fixed(2) )
-                        {
-                            item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
-                                Box(
-                                    Modifier
-                                        .then(
-                                            // Хедер с заголовком обязан учитывать вырез:
-                                            // фиксированные 40.dp без topInset прятали текст
-                                            // под камерой на вырезах выше 40dp (проход 10, UI3).
-                                            if (title != "") Modifier.height(topInset + 40.dp) else Modifier.height(topInset)
-                                        )
-                                        .background(Theme.L.red)
-                                        .padding(start = 24.dp), contentAlignment = Alignment.CenterStart
-                                ) {
-                                    Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
-                                }
-                            }
-
-                            items(
-                                count = pageItems.size,
-                                // Индекс в ключе обязателен: выдача может повторить
-                                // один альбом на странице, а дублирующийся ключ роняет
-                                // LazyLayout ("Key ... was already used").
-                                key = { "${pageItems[it].id}#$it" }
-                            ) { index ->
-
-                                val item = pageItems[index]
-
-                                Box(
-                                    Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
-                                    contentAlignment = Alignment.Center
-                                )
-                                {
-                                    AlbumListItem(
-                                        title = item.title,
-                                        coverUrl = item.cover?.url.orEmpty(),
-                                        numberOfAnimatedPictures = item.numberOfAnimatedPictures,
-                                        numberOfPictures = item.numberOfPictures,
-                                    ) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                        navigator.push(ScreenLAlbum(item.id.toLong()))
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    AlbumListPageGrid(
+                        stateGrid = stateGrid,
+                        pageItems = pageItems,
+                        title = title,
+                        topInset = topInset,
+                        haptic = haptic,
+                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) }
+                    )
 
                     val status = vm.bigList[page]?.status
                     if ((status == StatusAlbumList.DOWNLOADING) && (pageItems.isEmpty())){
@@ -261,55 +214,129 @@ private fun Screen.ScreenAlbumListContent(
                 } //HorizontalPager(
 
             } //Scaffold
+
+            AlbumListFilterOverlay(
+                visible = showFilterDialog,
+                filter = currentFilter,
+                filterGCount = filterGCount,
+                filterTagsCount = filterTagsCount,
+                onClose = { showFilterDialog = false },
+                onApply = { newFilter ->
+                    vm.screenModelScope.launch {
+                        vm.stateGrid.clear()
+                        vm.statePager.scrollToPage(0)
+                        vm.filterUpdate(newFilter)
+                        vm.loadInitialData()
+                    }
+                }
+            )
         }
+    }
 
-        // ✅ ДИАЛОГ С ФИЛЬТРОМ
-        AnimatedVisibility(
-            visible = showFilterDialog,
-            enter = slideInVertically(
-                initialOffsetY = { -it },
-                animationSpec = tween(300)
-            ) + fadeIn(animationSpec = tween(300)),
-            exit = slideOutVertically(
-                targetOffsetY = { -it },
-                animationSpec = tween(300)
-            ) + fadeOut(animationSpec = tween(300))
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                // ✅ УДАЛИТЕ этот Box с затемнением:
+@Composable
+private fun AlbumListPageGrid(
+    stateGrid: LazyGridState,
+    pageItems: List<Album>,
+    title: String,
+    topInset: Dp,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    onAlbumClick: (Long) -> Unit
+) {
+    LazyVerticalGridScrollbar(
+        state = stateGrid,
+        settings = ScrollbarSettings.Default.copy(
+            thumbUnselectedColor = Color(0xFFA3A3A3),
+            thumbSelectedColor = Color(0xFFB3B3B3),
+            thumbThickness = 3.dp,
+            scrollbarPadding = 0.dp,
+            alwaysShowScrollbar = false
+        )
+    ) {
+        LazyVerticalGrid(state = stateGrid, modifier = Modifier.fillMaxSize(), columns = GridCells.Fixed(2)) {
+            item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable { showFilterDialog = false }
-                )
-
-                // Только панель фильтра
-                val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth(0.95f)
-                        .heightIn(max = screenHeight * 0.9f)
-                        .wrapContentHeight()
-                        .align(Alignment.TopCenter),
-                    shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
-                    color = Color(0xFF171717),
-                    shadowElevation = 8.dp
+                    Modifier
+                        .then(
+                            if (title.isNotEmpty()) Modifier.height(topInset + 40.dp) else Modifier.height(topInset)
+                        )
+                        .background(Theme.L.red)
+                        .padding(start = 24.dp), contentAlignment = Alignment.CenterStart
                 ) {
-                    AlbumListFilter(
-                        filter = currentFilter,
-                        filterGCount = filterGCount,
-                        filterTagsCount = filterTagsCount,
-                        onClose = { showFilterDialog = false }
-                    ) { newFilter ->
-                        vm.screenModelScope.launch {
-                            vm.stateGrid.clear()
-                            vm.statePager.scrollToPage(0)
-                            vm.filterUpdate(newFilter)
-                            vm.loadInitialData()
-                        }
+                    Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
+                }
+            }
+
+            items(
+                count = pageItems.size,
+                key = { "${pageItems[it].id}#$it" }
+            ) { index ->
+                val item = pageItems[index]
+                Box(
+                    Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AlbumListItem(
+                        title = item.title,
+                        coverUrl = item.cover?.url.orEmpty(),
+                        numberOfAnimatedPictures = item.numberOfAnimatedPictures,
+                        numberOfPictures = item.numberOfPictures,
+                    ) {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        onAlbumClick(item.id.toLong())
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AlbumListFilterOverlay(
+    visible: Boolean,
+    filter: LAlbumListFilter,
+    filterGCount: List<AlbumListFilterGenreCountResponse>?,
+    filterTagsCount: List<AlbumListFilterGenreCountResponse>?,
+    onClose: () -> Unit,
+    onApply: (LAlbumListFilter) -> Unit
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(
+            initialOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeIn(animationSpec = tween(300)),
+        exit = slideOutVertically(
+            targetOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeOut(animationSpec = tween(300))
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { onClose() }
+            )
+
+            val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .heightIn(max = screenHeight * 0.9f)
+                    .wrapContentHeight()
+                    .align(Alignment.TopCenter),
+                shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
+                color = Color(0xFF171717),
+                shadowElevation = 8.dp
+            ) {
+                AlbumListFilter(
+                    filter = filter,
+                    filterGCount = filterGCount,
+                    filterTagsCount = filterTagsCount,
+                    onClose = onClose,
+                    onFilterApply = onApply
+                )
+            }
+        }
+    }
 }
 

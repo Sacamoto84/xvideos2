@@ -247,9 +247,16 @@ class DownloadTask(
                         outStream.seek(req.downloadedBytes)
                     }
 
+                    val stream = inputStream ?: run {
+                        closeAllSafely(outStream)
+                        this@DownloadTask.outputStream = null
+                        listener.onError("Input stream closed")
+                        return@withContext
+                    }
+
                     var lastProgress = -1
                     do {
-                        val byteCount = inputStream!!.read(buff, 0, BUFFER_SIZE)
+                        val byteCount = stream.read(buff, 0, BUFFER_SIZE)
                         if (byteCount == -1) {
                             break
                         }

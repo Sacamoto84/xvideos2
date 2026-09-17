@@ -32,11 +32,14 @@ import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrInvalidPasswordException
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
@@ -492,4 +495,15 @@ internal fun BackupSettingsSection(
             }
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun BackupSettingsSectionPreview() = SettingsPreview {
+    val context = LocalContext.current
+    BackupSettingsSection(
+        context = context,
+        data = SettingsDataHolders(),
+        onDataChanged = {}
+    )
 }

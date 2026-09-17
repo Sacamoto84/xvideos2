@@ -207,12 +207,12 @@ private fun GenreSelectedChipsBar(
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val s = buildAnnotatedString {
+                val annotatedGenre = buildAnnotatedString {
                     withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) { append("NOT") }
                     append(" ${genre.title}")
                 }
                 Text(
-                    text = s,
+                    text = annotatedGenre,
                     color = palette.excludedText,
                     style = Theme.L.Type.rowValue.copy(fontWeight = FontWeight.Bold)
                 )

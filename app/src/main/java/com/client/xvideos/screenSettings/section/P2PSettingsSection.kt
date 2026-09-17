@@ -10,11 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.SettingsGroup
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.common.snackbar.SnackBar
 import kotlinx.coroutines.launch
@@ -56,4 +58,10 @@ internal fun P2PSettingsSection() {
             }
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun P2PSettingsSectionPreview() = SettingsPreview {
+    P2PSettingsSection()
 }

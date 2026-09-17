@@ -123,6 +123,30 @@ private fun SettingsDividerPreview() = SettingsPreview {
     SettingsDivider()
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun SettingsDivider2Preview() = SettingsPreview {
+    SettingsDivider2()
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun SettingsGroupPreview() = SettingsPreview {
+    SettingsGroup {
+        SettingsListItem(
+            icon = R.drawable.icon_red,
+            text = "Первый пункт",
+            subtitle = "Описание первого пункта"
+        )
+        SettingsDivider()
+        SettingsListItem(
+            icon = R.drawable.icon_red,
+            text = "Второй пункт",
+            subtitle = "Описание второго пункта"
+        )
+    }
+}
+
 @Composable
 fun SettingsListItem(
     @DrawableRes icon: Int = 0,

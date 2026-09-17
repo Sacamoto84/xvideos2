@@ -54,9 +54,9 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
                     ),
                     checked = list[settingIndex],
                     onCheckedChange = {
-                        val a = list.toMutableList()
-                        a[settingIndex] = a[settingIndex].not()
-                        setting.setValue(a)
+                        val updatedList = list.toMutableList()
+                        updatedList[settingIndex] = updatedList[settingIndex].not()
+                        setting.setValue(updatedList)
                     },
 
                     //icon = { SegmentedButtonDefaults.Icon(selectedOptions[index]) },
@@ -111,4 +111,14 @@ fun PreviewConfig_G_0_4() {
         )
     }
     Config_G_0_4("777", setting)
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun TabBarPointsPreview() {
+    Row {
+        TabBarPoints(count = 2, screenType = true)
+        TabBarPoints(count = 3, screenType = false)
+        TabBarPoints(count = 4, screenType = true)
+    }
 }

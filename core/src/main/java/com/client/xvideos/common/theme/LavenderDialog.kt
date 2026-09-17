@@ -43,11 +43,11 @@ fun LavenderDialog(
     destructive: Boolean = false,
     dismissText: String = "Отмена",
 ) {
-    val d = Theme.DialogLavande
+    val dialogTheme = Theme.DialogLavande
     val centered = icon != null
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(d.cornerRadius), color = d.content) {
+        Surface(shape = RoundedCornerShape(dialogTheme.cornerRadius), color = dialogTheme.content) {
             Column(Modifier.padding(24.dp)) {
 
                 if (icon != null) {
@@ -57,7 +57,7 @@ fun LavenderDialog(
 
                 Text(
                     text = title,
-                    style = Theme.L.Type.dialogTitle.copy(color = d.titleColor, fontWeight = FontWeight.Bold),
+                    style = Theme.L.Type.dialogTitle.copy(color = dialogTheme.titleColor, fontWeight = FontWeight.Bold),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = if (centered) TextAlign.Center else TextAlign.Start,
                 )
@@ -66,7 +66,7 @@ fun LavenderDialog(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = body,
-                        style = Theme.L.Type.dialogBody.copy(color = d.bodyColor),
+                        style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = if (centered) TextAlign.Center else TextAlign.Start,
                     )
@@ -84,7 +84,7 @@ fun LavenderDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(dismissText, style = d.button.copy(color = d.dismissTextColor))
+                        Text(dismissText, style = dialogTheme.button.copy(color = dialogTheme.dismissTextColor))
                     }
                     if (confirmText != null) {
                         Spacer(Modifier.width(8.dp))
@@ -92,12 +92,12 @@ fun LavenderDialog(
                             onClick = onConfirm,
                             enabled = confirmEnabled,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (destructive) d.buttonBackgroundDestructive else d.buttonBackground,
-                                contentColor = d.buttonTextColor,
+                                containerColor = if (destructive) dialogTheme.buttonBackgroundDestructive else dialogTheme.buttonBackground,
+                                contentColor = dialogTheme.buttonTextColor,
                             ),
-                            shape = RoundedCornerShape(d.buttonBorderRadius),
+                            shape = RoundedCornerShape(dialogTheme.buttonBorderRadius),
                         ) {
-                            Text(confirmText, color = d.buttonTextColor)
+                            Text(confirmText, color = dialogTheme.buttonTextColor)
                         }
                     }
                 }

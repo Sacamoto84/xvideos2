@@ -46,7 +46,7 @@ object L_SavedTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    val l = persistentListOf(
+    private val SAVED_TAB_ICONS = persistentListOf(
         //Icons.Outlined.FavoriteBorder,
         Icons.Outlined.Save,
         Icons.Outlined.Folder,
@@ -73,7 +73,7 @@ object L_SavedTab : Screen {
                         value = screenType,
                         containerColor = Theme.tabLevel1,
                         //containerColor = Theme.R.colorBottomBarBackground,
-                        titlesIcon = l,
+                        titlesIcon = SAVED_TAB_ICONS,
                         onChangeState = {
                             if (it == screenType) {
                                 when (it) {

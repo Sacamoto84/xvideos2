@@ -2,8 +2,8 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.likes
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -67,7 +66,6 @@ object L_ScreenSavedLikesTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -91,7 +89,7 @@ object L_ScreenSavedLikesTab : Screen {
             vm.filterSelect(selectedIndex)
         }
 
-        Scaffold(modifier = Modifier.fillMaxSize().background(Theme.background)) {
+        Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
             L_LazyRowPictureDetails(
                 vm.host,

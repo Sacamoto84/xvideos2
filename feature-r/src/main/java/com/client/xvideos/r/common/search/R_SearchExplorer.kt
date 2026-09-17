@@ -65,7 +65,7 @@ class R_SearchExplorer @Inject constructor(
             // Ввод продолжился — mapLatest отменил эту ветку штатно, ошибки нет.
             throw e
         } catch (e: Exception) {
-            Timber.e("!!! SearchRed searchText ${e.localizedMessage}")
+            Timber.e(e, "!!! SearchRed searchText error")
             emptyList()
         }
     }

@@ -2,7 +2,7 @@ package com.client.xvideos.l.ui.screens.albumLandingTag
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,7 +82,6 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
     @OptIn(ExperimentalZoomableApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -94,10 +92,10 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
-        Scaffold(
-            containerColor = Theme.background,
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier.fillMaxSize().background(Theme.background)
         ) {
 
             LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize() ) {
@@ -117,7 +115,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                     }
                 }
 
-                items(items?.size ?: 0) { index ->
+                items(items?.size ?: 0, key = { items?.get(it)?.title ?: it }) { index ->
                     val item = items?.get(index)
                     if (item == null) return@items
 
@@ -129,8 +127,6 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                     )
-
-                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
                     FlowRow(
                         maxItemsInEachRow = 3,
@@ -201,14 +197,15 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
     }
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C, widthDp = 390, heightDp = 900)
 @Composable
 private fun ScreenLAlbumLandingTagPreview() {
     val data = lAlbumLandingTagPreviewData()
 
-    Scaffold(
-        containerColor = Theme.background,
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
+    Box(
+        modifier = Modifier.fillMaxSize().background(Theme.background)
     ) {
         LazyColumn(state = rememberLazyListState()) {
             item {
@@ -222,7 +219,7 @@ private fun ScreenLAlbumLandingTagPreview() {
                 )
             }
 
-            items(data.sections.size) { index ->
+            items(data.sections.size, key = { data.sections[it].title }) { index ->
                 val section = data.sections[index]
 
                 Text(
@@ -234,7 +231,6 @@ private fun ScreenLAlbumLandingTagPreview() {
                     modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                 )
 
-                val screenWidth = LocalConfiguration.current.screenWidthDp.dp
                 FlowRow(
                     maxItemsInEachRow = 3,
                     modifier = Modifier
@@ -471,14 +467,12 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
             else -> ContentId.All
         }
 
-        val f = AlbumListFilter(
+        return AlbumListFilter(
             display = "date_trending",
             album_type = albumType,
             content_id = contentId,
-            tagPlus = listOf("$tag")
+            tagPlus = listOf(tag)
         )
-
-        return f
 
     }
 

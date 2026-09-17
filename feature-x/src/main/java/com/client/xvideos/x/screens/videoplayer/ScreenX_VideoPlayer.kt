@@ -1,9 +1,7 @@
 package com.client.xvideos.x.screens.videoplayer
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
+import com.client.xvideos.common.util.findActivity
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
@@ -34,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -90,21 +89,22 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
 
     // Альбомная ориентация + скрытие системных баров на время полноэкранного режима
     DisposableEffect(isFullScreen) {
-        val activity = context.findActivityOrNull()
+        val activity = context.findActivity()
         val window = activity?.window
         val prevOrientation = activity?.requestedOrientation
         if (isFullScreen) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             window?.let {
-                WindowCompat.getInsetsController(it, it.decorView)
-                    .hide(WindowInsetsCompat.Type.navigationBars())
+                val controller = WindowCompat.getInsetsController(it, it.decorView)
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                controller.hide(WindowInsetsCompat.Type.systemBars())
             }
         } else {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             window?.let {
                 val controller = WindowCompat.getInsetsController(it, it.decorView)
-                controller.show(WindowInsetsCompat.Type.navigationBars())
-                controller.hide(WindowInsetsCompat.Type.statusBars())
+                controller.show(WindowInsetsCompat.Type.systemBars())
             }
         }
         onDispose {
@@ -113,8 +113,7 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
                     prevOrientation ?: ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 window?.let {
                     val controller = WindowCompat.getInsetsController(it, it.decorView)
-                    controller.show(WindowInsetsCompat.Type.navigationBars())
-                    controller.hide(WindowInsetsCompat.Type.statusBars())
+                    controller.show(WindowInsetsCompat.Type.systemBars())
                 }
             }
         }
@@ -123,12 +122,11 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
     // При полном уходе с экрана гарантированно возвращаем портретную ориентацию
     DisposableEffect(Unit) {
         onDispose {
-            val activity = context.findActivityOrNull()
+            val activity = context.findActivity()
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             activity?.window?.let {
                 val controller = WindowCompat.getInsetsController(it, it.decorView)
-                controller.show(WindowInsetsCompat.Type.navigationBars())
-                controller.hide(WindowInsetsCompat.Type.statusBars())
+                controller.show(WindowInsetsCompat.Type.systemBars())
             }
         }
     }
@@ -245,13 +243,4 @@ private fun VideoPlayerContentView(
             }
         )
     }
-}
-
-private fun Context.findActivityOrNull(): Activity? {
-    var ctx: Context? = this
-    while (ctx is ContextWrapper) {
-        if (ctx is Activity) return ctx
-        ctx = ctx.baseContext
-    }
-    return null
 }

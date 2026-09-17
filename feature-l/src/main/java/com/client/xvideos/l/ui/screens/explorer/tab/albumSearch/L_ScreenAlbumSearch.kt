@@ -2,7 +2,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.albumSearch
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +25,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -78,50 +77,31 @@ object L_ScreenAlbumSearch : Screen {
 
     private fun readResolve(): Any = L_ScreenAlbumSearch
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLAlbumSearchSM = getScreenModel()
-        val keyboard = LocalSoftwareKeyboardController.current
 
         val searchText = vm.searchText.collectAsStateWithLifecycle().value
         val result = vm.result.collectAsStateWithLifecycle().value
         val isLoading = vm.isLoading.collectAsStateWithLifecycle().value
         val sections = result?.sections
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
-        Scaffold(
-            containerColor = Theme.background,
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Theme.background)
         ) {
 
             LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize()) {
 
                 item {
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { vm.searchText.value = it },
-                        modifier = Modifier
-                            .displayCutoutPadding()
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 4.dp),
-                        singleLine = true,
-                        label = { Text("Search") },
-                        textStyle = Theme.L.Type.body.copy(color = Theme.L.textColor),
-                        trailingIcon = {
-                            if (searchText.isNotEmpty()) {
-                                IconButton(onClick = { vm.searchText.value = "" }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Очистить поле поиска", tint = Theme.L.textColor)
-                                }
-                            } else {
-                                IconButton(onClick = { vm.search(); keyboard?.hide() }) {
-                                    Icon(Icons.Default.Search, contentDescription = "Искать", tint = Theme.L.textColor)
-                                }
-                            }
-                        },
-                        keyboardOptions = IncognitoKeyboard.options(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { vm.search(); keyboard?.hide() })
+                    AlbumSearchInputField(
+                        searchText = searchText,
+                        onSearchTextChange = { vm.searchText.value = it },
+                        onSearch = { vm.search() }
                     )
                 }
 
@@ -149,72 +129,24 @@ object L_ScreenAlbumSearch : Screen {
                     }
                 }
 
-                items(sections?.size ?: 0) { index ->
+                items(
+                    count = sections?.size ?: 0,
+                    key = { sections?.get(it)?.title ?: it }
+                ) { index ->
                     val section = sections?.get(index) ?: return@items
-
-                    Text(
-                        section.title,
-                        color = Theme.L.textColor,
-                        fontSize = 24.sp,
-                        fontFamily = Theme.L.fontFamilyKarla,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 4.dp, top = 16.dp)
-                    )
-
-                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-
-                    FlowRow(
-                        maxItemsInEachRow = 3,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        val itemWidth = (screenWidth - 8.dp) / 3
-                        section.items.take(9).forEach { album ->
-                            Box(
-                                modifier = Modifier
-                                    .width(itemWidth)
-                                    .padding(vertical = 2.dp)
-                            ) {
-                                AlbumListItem(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    title = album.title,
-                                    coverUrl = album.cover?.url.orEmpty(),
-                                    numberOfAnimatedPictures = album.numberOfAnimatedPictures,
-                                    numberOfPictures = album.numberOfPictures,
-                                    onClick = { navigator.push(ScreenLAlbum(album.id.toLong())) }
+                    AlbumSearchSectionBlock(
+                        section = section,
+                        screenWidth = screenWidth,
+                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
+                        onSeeAllClick = {
+                            navigator.push(
+                                L_ScreenAlbumList.create(
+                                    filter = vm.createFilter(section),
+                                    title = "Search: ${vm.searchText.value}"
                                 )
-                            }
+                            )
                         }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 4.dp)
-                            .padding(horizontal = 4.dp)
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
-                            .clickable(onClick = {
-                                navigator.push(
-                                    L_ScreenAlbumList.create(
-                                        filter = vm.createFilter(section),
-                                        title = "Search: ${vm.searchText.value}"
-                                    )
-                                )
-                            }),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "See All >",
-                            color = Theme.L.textColor,
-                            textAlign = TextAlign.Center,
-                            fontSize = 22.sp,
-                            fontFamily = Theme.L.fontFamilyKarla,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
+                    )
                 }
 
                 item {
@@ -222,6 +154,102 @@ object L_ScreenAlbumSearch : Screen {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AlbumSearchInputField(
+    searchText: String,
+    onSearchTextChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    OutlinedTextField(
+        value = searchText,
+        onValueChange = onSearchTextChange,
+        modifier = Modifier
+            .displayCutoutPadding()
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        singleLine = true,
+        label = { Text("Search") },
+        textStyle = Theme.L.Type.body.copy(color = Theme.L.textColor),
+        trailingIcon = {
+            if (searchText.isNotEmpty()) {
+                IconButton(onClick = { onSearchTextChange("") }) {
+                    Icon(Icons.Default.Close, contentDescription = "Очистить поле поиска", tint = Theme.L.textColor)
+                }
+            } else {
+                IconButton(onClick = { onSearch(); keyboard?.hide() }) {
+                    Icon(Icons.Default.Search, contentDescription = "Искать", tint = Theme.L.textColor)
+                }
+            }
+        },
+        keyboardOptions = IncognitoKeyboard.options(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch(); keyboard?.hide() })
+    )
+}
+
+@Composable
+private fun AlbumSearchSectionBlock(
+    section: Landing_page_albumSection,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    onAlbumClick: (Long) -> Unit,
+    onSeeAllClick: () -> Unit
+) {
+    Text(
+        section.title,
+        color = Theme.L.textColor,
+        fontSize = 24.sp,
+        fontFamily = Theme.L.fontFamilyKarla,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 4.dp, top = 16.dp)
+    )
+
+    FlowRow(
+        maxItemsInEachRow = 3,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val itemWidth = (screenWidth - 8.dp) / 3
+        section.items.take(9).forEach { album ->
+            Box(
+                modifier = Modifier
+                    .width(itemWidth)
+                    .padding(vertical = 2.dp)
+            ) {
+                AlbumListItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = album.title,
+                    coverUrl = album.cover?.url.orEmpty(),
+                    numberOfAnimatedPictures = album.numberOfAnimatedPictures,
+                    numberOfPictures = album.numberOfPictures,
+                    onClick = { onAlbumClick(album.id.toLong()) }
+                )
+            }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .padding(horizontal = 4.dp)
+            .fillMaxWidth()
+            .height(40.dp)
+            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
+            .clickable(onClick = onSeeAllClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "See All >",
+            color = Theme.L.textColor,
+            textAlign = TextAlign.Center,
+            fontSize = 22.sp,
+            fontFamily = Theme.L.fontFamilyKarla,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 
@@ -252,25 +280,28 @@ class ScreenLAlbumSearchSM @Inject constructor(
         }
     }
 
-    fun createFilter(section: Landing_page_albumSection): AlbumListFilter {
-        val albumType = when (section.title) {
-            "Manga" -> AlbumType.Manga
-            "Picture Sets" -> AlbumType.Pictures
-            else -> AlbumType.Pictures
-        }
-
-        return AlbumListFilter(
-            display = "search_score",
-            album_type = albumType,
-            content_id = ContentId.All,
-            searchQuery = searchText.value.trim()
-        )
-    }
+    fun createFilter(section: Landing_page_albumSection): AlbumListFilter =
+        createAlbumSearchFilter(section, searchText.value)
 
     override fun onDispose() {
         super.onDispose()
-        Timber.i("iii ScreenLAlbumSearchSM onDispose")
+        Timber.d("ScreenLAlbumSearchSM onDispose")
     }
+}
+
+internal fun createAlbumSearchFilter(section: Landing_page_albumSection, query: String): AlbumListFilter {
+    val albumType = when (section.title) {
+        "Manga" -> AlbumType.Manga
+        "Picture Sets" -> AlbumType.Pictures
+        else -> AlbumType.Pictures
+    }
+
+    return AlbumListFilter(
+        display = "search_score",
+        album_type = albumType,
+        content_id = ContentId.All,
+        searchQuery = query.trim()
+    )
 }
 
 
