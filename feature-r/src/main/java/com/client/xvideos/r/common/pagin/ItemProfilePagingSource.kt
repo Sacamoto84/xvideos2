@@ -18,21 +18,22 @@ class ItemProfilePagingSource (val profileName : String, val sort : Order, val b
 
         val page = params.key ?: 1 // API нумерует страницы с 1
 
-        return try {
-            Timber.d("!!! ItemProfilePagingSource::load() page = $page profileName:${profileName} sortTop:$sort")
+        val cleanProfileName = profileName.trim()
+        if (cleanProfileName.isBlank()) {
+            return LoadResult.Page(
+                data = emptyList(),
+                prevKey = null,
+                nextKey = null
+            )
+        }
 
-//            if (sort == Order.FORCE_TEMP) {
-//                LoadResult.Page(
-//                    data = emptyList(),
-//                    prevKey = null,
-//                    nextKey = page
-//                )
-//            }
+        return try {
+            Timber.d("!!! ItemProfilePagingSource::load() page = $page profileName:$cleanProfileName sortTop:$sort")
 
             val response = if (tags.isEmpty())
-                redApi.searchCreator(userName = profileName, page = page,  count = 100, type = MediaType.GIF,  order = sort)
+                redApi.searchCreator(userName = cleanProfileName, page = page,  count = 100, type = MediaType.GIF,  order = sort)
             else
-                redApi.searchCreator(userName = profileName, page = page,  count = 100, type = MediaType.GIF,  order = sort , tags = tags)
+                redApi.searchCreator(userName = cleanProfileName, page = page,  count = 100, type = MediaType.GIF,  order = sort , tags = tags)
 
             val responseBody = response.getOrThrow()
             val gifs : List<GifsInfo> = responseBody.gifs.sanitizeGifsInfoList()

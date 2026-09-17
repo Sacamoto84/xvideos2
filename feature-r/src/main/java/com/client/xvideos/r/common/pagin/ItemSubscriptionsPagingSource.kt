@@ -14,7 +14,7 @@ class ItemSubscriptionsPagingSource (val savedRed: SavedRed): PagingSource<Int, 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {
 
         return try {
-            Timber.d("!!! >>>ItemLikesPagingSource::load()")
+            Timber.d("!!! >>>ItemSubscriptionsPagingSource::load()")
             val res = savedRed.subscriptions.refreshSubscription()
                 .sanitizeGifsInfoList()
                 .distinctBy { it.id }

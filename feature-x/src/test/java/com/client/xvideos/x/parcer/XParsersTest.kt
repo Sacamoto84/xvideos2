@@ -91,6 +91,16 @@ class XParsersTest {
         assertEquals("https://cdn/master.m3u8", config!!.videoHLS)
     }
 
+    @Test
+    fun `протокольно-относительные адреса нормализуются в https`() {
+        val script = "html5player.setVideoHLS('\\/\\/cdn.example.com\\/master.m3u8');"
+
+        val config = parseHTML5Player(script)
+
+        assertNotNull(config)
+        assertEquals("https://cdn.example.com/master.m3u8", config!!.videoHLS)
+    }
+
     /**
      * Ни одного источника — `null`, а не конфиг с пустыми полями. Раньше отказ
      * выглядел как успех, и плеер молча получал пустые адреса.

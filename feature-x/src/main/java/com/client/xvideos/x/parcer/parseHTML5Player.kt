@@ -1,6 +1,7 @@
 package com.client.xvideos.x.parcer
 
 import com.client.xvideos.x.model.HTML5PlayerConfig
+import com.client.xvideos.x.normalizeXUrl
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
@@ -75,5 +76,8 @@ private fun extractValue(script: String, pattern: String): String? {
     return if (matcher.find()) matcher.group(1) else null
 }
 
-// X6: "https:\/\/cdn\/x.mp4" -> "https://cdn/x.mp4"; null -> "".
-private fun String?.unescapeUrl(): String = this?.replace("\\/", "/") ?: ""
+// X6: "https:\/\/cdn\/x.mp4" -> "https://cdn/x.mp4"; "//cdn..." -> "https://cdn..."; null -> "".
+private fun String?.unescapeUrl(): String {
+    val unescaped = this?.replace("\\/", "/")?.trim() ?: return ""
+    return if (unescaped.isBlank()) "" else normalizeXUrl(unescaped)
+}

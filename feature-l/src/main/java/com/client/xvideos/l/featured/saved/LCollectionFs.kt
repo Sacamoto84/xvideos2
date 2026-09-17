@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.PicsDetails
@@ -103,9 +104,9 @@ internal fun lReadStoredCollectionItems(collectionFolder: File): List<Pair<LSave
 private fun lResolveCollectionPreviewUrl(collectionFolder: File): String? {
     val config = lReadCollectionConfig(collectionFolder)
     config.coverFolderName
-        ?.takeIf { it.isNotBlank() }
+        ?.takeIf { it.isNotBlank() && !isUnsafeItemName(it) }
         ?.let { File(collectionFolder, it) }
-        ?.takeIf { it.exists() && it.isDirectory }
+        ?.takeIf { it.exists() && it.isDirectory && lIsInside(collectionFolder, it) }
         ?.let { coverFolder ->
             val metadata = readCollectionMetadata(File(coverFolder, L_METADATA_FILE_NAME))
             if (metadata != null) {
@@ -256,6 +257,8 @@ internal fun lFindCollectionItemFolder(root: File, identifiers: List<String>): F
         .flatMap { listOf(it, it.lToFilePath()) }
         .toSet()
 
+    if (normalizedIdentifiers.isEmpty()) return null
+
     normalizedIdentifiers.forEach { identifier ->
         val target = File(identifier)
         if (lIsInside(root, target)) {
@@ -296,8 +299,11 @@ internal fun lFindCollectionItemFolder(root: File, identifiers: List<String>): F
  * (локальный путь к media/preview либо один из исходных URL).
  */
 internal fun lFindLikeFolder(root: File, url: String): File? {
-    if (!url.startsWith("http://", ignoreCase = true) && !url.startsWith("https://", ignoreCase = true)) {
-        val target = File(url)
+    val trimmed = url.trim()
+    if (trimmed.isBlank()) return null
+
+    if (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true)) {
+        val target = File(trimmed)
         if (lIsInside(root, target)) {
             val parent = target.parentFile
             if (parent != null && File(parent, L_METADATA_FILE_NAME).exists()) return parent
@@ -314,13 +320,14 @@ internal fun lFindLikeFolder(root: File, url: String): File? {
             val previewPaths = metadata.previewFiles
                 ?.map { File(folder, it.fileName).absolutePath }
                 ?: emptyList()
-            url == mediaPath ||
-                    url == previewPath ||
-                    url in previewPaths ||
-                    url == metadata.sourceMediaUrl ||
-                    url == metadata.sourceOriginalUrl ||
-                    url == metadata.sourceVideoUrl ||
-                    url == metadata.sourcePreviewUrl ||
-                    metadata.previewFiles?.any { it.sourceUrl == url } == true
+            trimmed == mediaPath ||
+                    trimmed == previewPath ||
+                    trimmed in previewPaths ||
+                    trimmed == metadata.sourceMediaUrl ||
+                    trimmed == metadata.sourceOriginalUrl ||
+                    trimmed == metadata.sourceVideoUrl ||
+                    trimmed == metadata.sourcePreviewUrl ||
+                    metadata.previewFiles?.any { it.sourceUrl == trimmed } == true
         }
 }
+

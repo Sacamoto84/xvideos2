@@ -1,6 +1,5 @@
 package com.client.xvideos.r.ui.profile
 
-import android.content.Context
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,8 +11,6 @@ import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.model.MediaType
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.common.block.BlockRed
@@ -22,8 +19,6 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
-import com.client.xvideos.r.common.network.loadGifs
-import com.client.xvideos.r.common.share.useCaseShareGifs
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -33,16 +28,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import com.client.xvideos.r.model.UserInfo
-import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 
 enum class TypeGifs(val value: String) {
@@ -68,8 +59,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
         fun create(profileName: String): ScreenRedProfileSM
     }
 
-    private val _list = MutableStateFlow<List<GifsInfo>>(emptyList())
-    val list: StateFlow<List<GifsInfo>> = _list.asStateFlow()
+    val cleanProfileName = profileName.trim()
 
     var creator: UserInfo? by mutableStateOf(null)
 
@@ -93,11 +83,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
     val typeGifsList = listOf(TypeGifs.GIFS, TypeGifs.IMAGES)
     var typeGifs by mutableStateOf(TypeGifs.GIFS)
 
-    var maxCreatorGifs = 0
     var isLoading = MutableStateFlow(false)
-
-    /** Job текущей подгрузки страницы — нужен, чтобы [clear] мог её отменить, а не ждать. */
-    private var loadJob: Job? = null
 
     val selector: StateFlow<Int> = Settings.red_profile_selector.field
 
@@ -109,7 +95,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
         connectivityObserver = connectivityObserver,
         scope = screenModelScope,
         typePager = TypePager.PROFILE,
-        extraString = profileName,
+        extraString = cleanProfileName,
         visibleProfileInfo = false,
         block = block,
         redApi = redApi,
@@ -125,72 +111,29 @@ class ScreenRedProfileSM @AssistedInject constructor(
             clear()
             setSelector(2)
 
-            try {
-                val loadedCreator = redApi.readCreator(profileName).getOrNull()
-                creator = loadedCreator
-                loadedCreator?.let { savedRed.creators.updateIfSaved(it) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                creator = null
-                Timber.e(e)
-                SnackBar.error(e.message.toString())
+            if (cleanProfileName.isNotBlank()) {
+                isLoading.value = true
+                try {
+                    val loadedCreator = redApi.readCreator(cleanProfileName).getOrNull()
+                    creator = loadedCreator
+                    loadedCreator?.let { savedRed.creators.updateIfSaved(it) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    creator = null
+                    Timber.e(e)
+                    SnackBar.error(e.message.toString())
+                } finally {
+                    isLoading.value = false
+                }
+            } else {
+                Timber.w("ScreenRedProfileSM init: пустое имя профиля")
             }
-
-            block.refreshListAndBlock(_list)
         }
     }
 
-    fun shareGifs(context: Context, item: GifsInfo) {
-        useCaseShareGifs(context, item)
-    }
-
-    suspend fun loadNextPage(userName: String, items: Int = 100, page: Int = 1) {
-        Timber.d("loadNextPage isLoading.value ${isLoading.value}")
-        if (isLoading.value) return
-
-        isLoading.value = true
-        loadJob = currentCoroutineContext()[Job]
-        try {
-            val result = loadGifs(
-                userName = userName,
-                items = items,
-                page = page,
-                ord = order,
-                type = if (typeGifs == TypeGifs.GIFS) MediaType.GIF else MediaType.IMAGE,
-                redApi
-            ).getOrThrow()
-            _tags.update { it + result.tags }
-            val resp = result.gifs.sanitizeGifsInfoList()
-            _list.update { it + resp }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e, "loadNextPage failed: user=$userName page=$page")
-        } finally {
-            loadJob = null
-            isLoading.value = false
-        }
-    }
-
-    /**
-     * Сбрасывает выдачу профиля.
-     *
-     * Раньше здесь было `while (isLoading.value) { Thread.sleep(100) }` —
-     * блокирующее ожидание в потоке вызывающего. Вызывается [clear] из onClick
-     * (`GifTypes_Control`), то есть с main-потока, а [loadNextPage] снимает флаг
-     * `isLoading` в `finally` на `screenModelScope` (`Dispatchers.Main.immediate`).
-     * Заблокированный main этот `finally` выполнить не смог бы — получался не
-     * фриз, а вечный дедлок.
-     *
-     * Теперь загрузка не ожидается, а отменяется: страница, результат которой
-     * всё равно выбрасывается, не имеет смысла, а список чистится немедленно.
-     */
     fun clear() {
-        loadJob?.cancel()
-        loadJob = null
         isLoading.value = false
-        _list.update { emptyList() }
         _tags.update { emptySet() }
     }
 }

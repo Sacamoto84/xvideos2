@@ -48,6 +48,8 @@ class ScreenNicheSM @AssistedInject constructor(
         fun create(nicheName: String): ScreenNicheSM
     }
 
+    val cleanNicheName = nicheName.trim()
+
     var niche: NichesInfo by mutableStateOf(NichesInfo())
     var related by mutableStateOf(NichesResponse(emptyList(), 0, 0, 0))
     var topCreator by mutableStateOf(TopCreatorsResponse(emptyList()))
@@ -55,7 +57,7 @@ class ScreenNicheSM @AssistedInject constructor(
     val lazyHost =
         LazyRow123Host(
             connectivityObserver = connectivityObserver, scope = screenModelScope,
-            extraString = nicheName,
+            extraString = cleanNicheName,
             typePager = TypePager.NICHES,
             block = block,
             redApi = redApi,
@@ -70,40 +72,21 @@ class ScreenNicheSM @AssistedInject constructor(
 
         lazyHost.columns = 2
 
-        // getOrThrow бросает при любом отказе сети, и раньше это закрывало
-        // приложение. Экран остаётся пустым, но остаётся.
-        screenModelScope.launchCatching(message = "Ниша $nicheName не загрузилась") {
-            niche = redApi.getNiche(nicheName).getOrThrow() .niche            // Нужно кешировать
-            related = redApi.getNichesRelated(nicheName).getOrThrow()      // Нужно кешировать
-            topCreator = redApi.getNichesTopCreators(nicheName).getOrThrow()  // Нужно кешировать
+        if (cleanNicheName.isNotBlank()) {
+            // getOrThrow бросает при любом отказе сети, и раньше это закрывало
+            // приложение. Экран остаётся пустым, но остаётся.
+            screenModelScope.launchCatching(message = "Ниша $cleanNicheName не загрузилась") {
+                niche = redApi.getNiche(cleanNicheName).getOrThrow().niche            // Нужно кешировать
+                related = redApi.getNichesRelated(cleanNicheName).getOrThrow()      // Нужно кешировать
+                topCreator = redApi.getNichesTopCreators(cleanNicheName).getOrThrow()  // Нужно кешировать
+            }
+        } else {
+            Timber.w("ScreenNicheSM init: пустое имя ниши")
         }
     }
-
-//    val expandMenuVideoList =
-//        listOf(
-//            ExpandMenuVideoModel("Скачать", Icons.Filled.FileDownload, onClick = {
-//                if (it == null) return@ExpandMenuVideoModel
-//                DownloadRed.downloadItem(it)
-//            }),
-//            ExpandMenuVideoModel("Поделиться", Icons.Default.Share),
-//            ExpandMenuVideoModel("Блокировать", Icons.Default.Block, onClick = {
-//                if (it == null) return@ExpandMenuVideoModel
-//                BlockRed.blockVisibleDialog = true
-//            }),
-//
-//            ExpandMenuVideoModel("Like", Icons.Default.Favorite, onClick = {
-//                if (it == null) return@ExpandMenuVideoModel
-//                SavedRed.addLikes(it)
-//            }),
-//
-//            ExpandMenuVideoModel("!Like", Icons.Default.Block, onClick = {
-//                if (it == null) return@ExpandMenuVideoModel
-//                SavedRed.removeLikes(it)
-//            }),
-//        )
-
-
 }
+
+
 
 
 @Module

@@ -64,6 +64,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -265,18 +266,26 @@ class ScreenLAlbumSearchSM @Inject constructor(
     val result = MutableStateFlow<Landing_page_albumType?>(null)
     val isLoading = MutableStateFlow(false)
 
+    private var searchJob: Job? = null
+
     fun search() {
         val query = searchText.value.trim()
         if (query.isBlank()) return
-        screenModelScope.launch {
+        searchJob?.cancel()
+        searchJob = screenModelScope.launch {
             isLoading.value = true
-            result.value = withContext(Dispatchers.IO) {
-                luscious.getLandingPageAlbumSearch(query).getOrElse {
-                    Timber.e(it, "ScreenLAlbumSearchSM search")
-                    null
+            try {
+                result.value = withContext(Dispatchers.IO) {
+                    luscious.getLandingPageAlbumSearch(query).getOrElse {
+                        Timber.e(it, "ScreenLAlbumSearchSM search")
+                        null
+                    }
+                }
+            } finally {
+                if (searchJob === coroutineContext[Job]) {
+                    isLoading.value = false
                 }
             }
-            isLoading.value = false
         }
     }
 
@@ -285,9 +294,12 @@ class ScreenLAlbumSearchSM @Inject constructor(
 
     override fun onDispose() {
         super.onDispose()
+        searchJob?.cancel()
+        isLoading.value = false
         Timber.d("ScreenLAlbumSearchSM onDispose")
     }
 }
+
 
 internal fun createAlbumSearchFilter(section: Landing_page_albumSection, query: String): AlbumListFilter {
     val albumType = when (section.title) {

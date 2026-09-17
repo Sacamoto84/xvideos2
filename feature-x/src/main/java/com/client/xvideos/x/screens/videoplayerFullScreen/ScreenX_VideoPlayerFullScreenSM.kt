@@ -11,6 +11,7 @@ import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.HTML5PlayerConfig
+import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
 import dagger.Binds
@@ -50,6 +51,8 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
 
     override fun onDispose() {
         super.onDispose()
+        loadJob?.cancel()
+        isLoading = false
         Timber.d("!!! ScreenX_VideoPlayerFullScreenSM onDispose")
     }
 
@@ -72,6 +75,11 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
     private var loadJob: kotlinx.coroutines.Job? = null
 
     fun loadVideo(forceReload: Boolean = false) {
+        if (url.isBlank()) {
+            isLoading = false
+            isError = true
+            return
+        }
         loadJob?.cancel()
         isLoading = true
         isError = false
@@ -104,7 +112,8 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
                     val streamUrl = parsedConfig?.videoHLS?.takeIf { it.isNotBlank() }
                         ?: parsedConfig?.videoUrlHigh?.takeIf { it.isNotBlank() }
                         ?: parsedConfig?.videoUrlLow.orEmpty()
-                    parsedConfig to streamUrl
+                    val normalizedStream = if (streamUrl.isNotBlank()) normalizeXUrl(streamUrl) else ""
+                    parsedConfig to normalizedStream
                 }
                 playerConfig = config
                 passedString = hls
@@ -127,7 +136,9 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
                     db.cacheUrlStringRam.delete(url)
                 }
             } finally {
-                isLoading = false
+                if (loadJob === coroutineContext[kotlinx.coroutines.Job]) {
+                    isLoading = false
+                }
             }
         }
     }

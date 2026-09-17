@@ -17,8 +17,17 @@ class ItemNailsPagingSource (val order : Order, val nichesName : String, val blo
 
         val page = params.key ?: 1 // API нумерует страницы с 1
 
+        val cleanNichesName = nichesName.trim()
+        if (cleanNichesName.isBlank()) {
+            return LoadResult.Page(
+                data = emptyList(),
+                prevKey = null,
+                nextKey = null
+            )
+        }
+
         return try {
-            Timber.d("!!! ItemNailsPagingSource::load() page = $page sortTop:$order nichesName:$nichesName")
+            Timber.d("!!! ItemNailsPagingSource::load() page = $page sortTop:$order nichesName:$cleanNichesName")
 
             // return, а не просто выражение: без него объект создавался и
             // выбрасывался, а выполнение шло дальше и уходило в сеть с пустым
@@ -34,7 +43,7 @@ class ItemNailsPagingSource (val order : Order, val nichesName : String, val blo
 
             // getOrThrow: см. ItemTopPagingSource — отказ сети должен стать
             // LoadResult.Error, а не пустой лентой без права на повтор.
-            val response = redApi.getNiches(niches = nichesName, page = page, order = order).getOrThrow()
+            val response = redApi.getNiches(niches = cleanNichesName, page = page, order = order).getOrThrow()
 
             val gifs : List<GifsInfo> = response.gifs.sanitizeGifsInfoList()
 

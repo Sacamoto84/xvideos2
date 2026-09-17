@@ -57,6 +57,8 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
     override fun onDispose() {
         super.onDispose()
+        loadJob?.cancel()
+        isLoading = false
         Timber.d("!!! ScreenVideoPlayerSM onDispose")
     }
 
@@ -111,6 +113,11 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     private var loadJob: kotlinx.coroutines.Job? = null
 
     fun loadVideo(forceReload: Boolean = false) {
+        if (url.isBlank()) {
+            isLoading = false
+            isError = true
+            return
+        }
         loadJob?.cancel()
         isLoading = true
         isError = false
@@ -146,7 +153,8 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                     val hls = config?.videoHLS?.takeIf { it.isNotBlank() }
                         ?: config?.videoUrlHigh?.takeIf { it.isNotBlank() }
                         ?: config?.videoUrlLow.orEmpty()
-                    Triple(config, parsedTags, hls)
+                    val streamCandidate = if (hls.isNotBlank()) normalizeXUrl(hls) else ""
+                    Triple(config, parsedTags, streamCandidate)
                 }
 
                 playerConfig = parsedData.first
@@ -173,7 +181,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                     db.cacheUrlStringRam.delete(url)
                 }
             } finally {
-                isLoading = false
+                if (loadJob === coroutineContext[kotlinx.coroutines.Job]) {
+                    isLoading = false
+                }
             }
         }
     }

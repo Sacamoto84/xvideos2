@@ -31,9 +31,10 @@ class ItemTopPagingSource(
             // экран показывал пустоту. Через Result шла только LATEST, поэтому
             // одно и то же приложение вело себя по-разному в зависимости от
             // выбранной сортировки.
-            val response = if (searchText.isNotEmpty()) {
-                Timber.i("!!! ItemTopPagingSource::load()  RedGifs.searchGifs($searchText)")
-                redApi.search.searchGifs(searchText, sort, 100, page)
+            val query = searchText.trim()
+            val response = if (query.isNotBlank()) {
+                Timber.i("!!! ItemTopPagingSource::load()  RedGifs.searchGifs($query)")
+                redApi.search.searchGifs(query, sort, 100, page)
             } else {
                 when (sort) {
                     Order.TOP_WEEK -> redApi.getTopThisWeek(100, page)
