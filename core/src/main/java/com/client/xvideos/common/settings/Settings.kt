@@ -246,6 +246,8 @@ object Settings {
 
     val xvideos_shemale by lazy { SettingElementBoolean(pref, "x_shemale", true) }
 
-
+    //-- web server ---
+    val web_server_port by lazy { SettingElementInt(pref, "web_server_port", 8080) }
+    val web_server_keep_awake by lazy { SettingElementBoolean(pref, "web_server_keep_awake", true) }
 
 }

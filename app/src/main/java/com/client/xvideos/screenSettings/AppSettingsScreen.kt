@@ -6,6 +6,7 @@ import com.client.xvideos.screenSettings.section.DisplaySettingsSection
 import com.client.xvideos.screenSettings.section.LSettingsSection
 import com.client.xvideos.screenSettings.section.NetworkSettingsSection
 import com.client.xvideos.screenSettings.section.P2PSettingsSection
+import com.client.xvideos.screenSettings.section.WebServerSettingsSection
 import com.client.xvideos.screenSettings.section.RSettingsSection
 import com.client.xvideos.screenSettings.section.XSettingsSection
 import com.client.xvideos.screenSettings.backup.BackupSettingsSection
@@ -401,6 +402,7 @@ private fun SettingsDetailPage(params: SettingsDetailParams) {
             onDataChanged = params.onBackupDataChanged
         )
         SettingsPage.P2P -> P2PSettingsSection()
+        SettingsPage.WebServer -> WebServerSettingsSection()
     }
 }
 
@@ -428,6 +430,11 @@ private enum class SettingsPage(
         title = "Сеть и DNS",
         icon = R.drawable.ic_dns_24,
         subtitle = "DNS-over-HTTPS, IPv4/IPv6"
+    ),
+    WebServer(
+        title = "Просмотр на ПК",
+        icon = R.drawable.hard_drive_2_24,
+        subtitle = "Локальный Web-сервер по Wi-Fi"
     ),
     Cache(
         title = "Кэш",
@@ -466,7 +473,7 @@ private enum class SettingsPage(
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Network, Cache, Storage, Backup, P2P)
+        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Network, WebServer, Cache, Storage, Backup, P2P)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages

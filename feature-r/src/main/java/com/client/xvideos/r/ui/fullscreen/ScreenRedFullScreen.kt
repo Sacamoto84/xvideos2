@@ -161,10 +161,13 @@ private fun RedFullScreenFeed(
             }
     }
 
+    var isCurrentPageZoomed by remember { mutableStateOf(false) }
+
     LaunchedEffect(pagerState, host) {
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
             .collect { page ->
+                isCurrentPageZoomed = false
                 feedState.updateCurrentPage(page)
                 // Догреваем то, чего не было в списке на момент входа окна:
                 // на первом кадре экрана пейджинг ещё пуст, и повторного
@@ -185,6 +188,8 @@ private fun RedFullScreenFeed(
         VerticalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
+            // Блокируем свайп пейджера, пока активно увеличение кадра, чтобы жест панорамирования не перелистывал ролик
+            userScrollEnabled = !isCurrentPageZoomed,
             // Плееров теперь ровно столько, сколько в пуле (3): держать в композиции
             // пять страниц незачем — прогрев соседей делает preload-менеджер.
             beyondViewportPageCount = 1
@@ -208,6 +213,11 @@ private fun RedFullScreenFeed(
                         if (isCurrentPage) {
                             isVideoBuffering = buffering
                         }
+                    },
+                    onZoomChanged = { zoomed ->
+                        if (isCurrentPage) {
+                            isCurrentPageZoomed = zoomed
+                        }
                     }
                 )
             } else {
@@ -224,7 +234,10 @@ private fun RedFullScreenFeed(
                             play = vm.play,
                             isCurrentPage = true,
                             showOverlay = true,
-                            onBuffering = { isVideoBuffering = it }
+                            onBuffering = { isVideoBuffering = it },
+                            onZoomChanged = { zoomed ->
+                                isCurrentPageZoomed = zoomed
+                            }
                         )
                     } else {
                         CircularProgressIndicator(color = Color.White)
@@ -333,7 +346,8 @@ private fun RedFullScreenPage(
     play: Boolean,
     isCurrentPage: Boolean,
     showOverlay: Boolean,
-    onBuffering: (Boolean) -> Unit
+    onBuffering: (Boolean) -> Unit,
+    onZoomChanged: (Boolean) -> Unit = {}
 ) {
     val videoUri = remember(item.id, item.userName, downloadedKeys) { redVideoUrl(item, downloadedKeys) }
 
@@ -372,6 +386,7 @@ private fun RedFullScreenPage(
                     onBuffering(buffering)
                 }
             },
+            onZoomChanged = onZoomChanged,
         )
 
         if (showOverlay) {

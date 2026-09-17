@@ -35,7 +35,13 @@ import androidx.media3.ui.compose.lifecycle.rememberPooledPlayer
 import com.client.xvideos.common.videoplayer.feed.FeedPlayerState
 import com.client.xvideos.r.common.video.PlayerControls
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.geometry.Offset
+import com.client.xvideos.common.videoplayer.ui.VideoZoomHud
+import com.client.xvideos.common.videoplayer.ui.isZoomActive
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import kotlin.math.absoluteValue
@@ -103,6 +109,7 @@ fun RedPooledVideoPlayer(
     onPlayerControlsRelease: (PlayerControls) -> Unit,
     onClick: () -> Unit,
     onBufferingChanged: (Boolean) -> Unit,
+    onZoomChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val mediaItem = remember(index, url) { feedState.mediaItemFor(index, url) }
@@ -238,7 +245,20 @@ fun RedPooledVideoPlayer(
         }
     }
 
+    val coroutineScope = rememberCoroutineScope()
     val zoomState = rememberZoomState(maxScale = 3f)
+
+    // При уходе страницы из фокуса сбрасываем зум, чтобы соседние видео не оставались увеличенными
+    LaunchedEffect(isCurrentPage) {
+        if (!isCurrentPage) {
+            zoomState.reset()
+        }
+    }
+
+    val isZoomed = isZoomActive(zoomState.scale)
+    LaunchedEffect(isZoomed) {
+        onZoomChanged(isZoomed)
+    }
 
     // Перемотка горизонтальным драгом по нижней трети экрана — как в прежнем пути ленты
     // (`VideoPlayerWithMenuContent`, seekDragEnabled): размашистый жест (> 400 px) двигает
@@ -272,19 +292,43 @@ fun RedPooledVideoPlayer(
                     zoomState = zoomState,
                     enableOneFingerZoom = false,
                     onTap = { onClick() },
+                    onDoubleTap = { tapOffset ->
+                        coroutineScope.launch {
+                            if (zoomState.scale > 1.05f) {
+                                zoomState.changeScale(1.0f, Offset.Zero)
+                            } else {
+                                zoomState.changeScale(2.5f, tapOffset)
+                            }
+                        }
+                    },
                 ),
             contentScale = ContentScale.Fit,
             keepContentOnReset = true,
         )
 
-        // Нижняя сенсорная зона перемотки — та же треть высоты, что и в прежнем плеере.
-        Box(
+        // Всплывающий индикатор масштаба (HUD)
+        VideoZoomHud(
+            scale = zoomState.scale,
             modifier = Modifier
-                .fillMaxHeight(1 / 3f)
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .then(seekDragModifier)
+                .align(Alignment.TopCenter)
+                .padding(top = 16.dp),
+            onReset = {
+                coroutineScope.launch {
+                    zoomState.changeScale(1.0f, Offset.Zero)
+                }
+            }
         )
+
+        // Нижняя сенсорная зона перемотки — отключается при активном увеличении кадра
+        if (!isZoomed) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight(1 / 3f)
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .then(seekDragModifier)
+            )
+        }
 
         if (isBuffering) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

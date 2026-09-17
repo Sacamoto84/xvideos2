@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Медиатека — Просмотр по Wi-Fi</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <!-- Шапка страницы -->
+  <header class="navbar">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-icon">▶</span>
+        <span class="logo-text">Медиатека</span>
+      </div>
+      <div class="device-badge" id="deviceBadge">
+        <span class="status-dot"></span>
+        <span id="deviceName">Телефон</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Поиск видео по названию, автору..." autocomplete="off">
+        <button id="clearSearchBtn" class="clear-search-btn" title="Очистить" style="display: none;">✕</button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="stats-pill" id="statsPill">0 видео</div>
+      <button class="icon-btn" id="refreshBtn" title="Обновить список">↻</button>
+    </div>
+  </header>
+
+  <!-- Вкладки разделов -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-section="ALL">Все <span class="tab-badge" id="badgeAll">0</span></button>
+    <button class="tab-btn" data-section="X">Xvideos <span class="tab-badge" id="badgeX">0</span></button>
+    <button class="tab-btn" data-section="R">RedGifs <span class="tab-badge" id="badgeR">0</span></button>
+    <button class="tab-btn" data-section="L">Luscious <span class="tab-badge" id="badgeL">0</span></button>
+  </nav>
+
+  <!-- Основной контент -->
+  <main class="main-content">
+    <!-- Скелетон / Загрузка -->
+    <div id="loader" class="loader-container">
+      <div class="spinner"></div>
+      <p>Загрузка медиатеки с телефона...</p>
+    </div>
+
+    <!-- Пустое состояние -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <div class="empty-icon">📂</div>
+      <h3>Нет сохранённых видео</h3>
+      <p id="emptyMessage">В этом разделе пока нет скачанных файлов</p>
+    </div>
+
+    <!-- Сетка карточек -->
+    <div id="mediaGrid" class="media-grid"></div>
+  </main>
+
+  <!-- Модальное окно встроенного плеера -->
+  <div id="playerModal" class="modal" style="display: none;">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="section-tag" id="playerTag">X</span>
+          <h2 class="modal-title" id="playerTitle">Название видео</h2>
+        </div>
+        <div class="modal-actions">
+          <a id="playerDownloadBtn" class="action-btn download-btn" download title="Скачать на ПК">⬇ Скачать</a>
+          <button class="close-btn" id="closePlayerBtn" title="Закрыть (Esc)">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-video-container">
+        <video id="videoPlayer" controls playsinline preload="metadata">
+          Ваш браузер не поддерживает HTML5 видео.
+        </video>
+      </div>
+
+      <div class="modal-footer">
+        <div class="hotkeys-hint">
+          <kbd>Пробел</kbd> Пауза &nbsp;•&nbsp; 
+          <kbd>←</kbd> <kbd>→</kbd> ±5 сек &nbsp;•&nbsp; 
+          <kbd>F</kbd> Во весь экран &nbsp;•&nbsp; 
+          <kbd>M</kbd> Звук &nbsp;•&nbsp; 
+          <kbd>L</kbd> Зациклить
+        </div>
+        <div class="playback-controls">
+          <label for="speedSelect">Скорость:</label>
+          <select id="speedSelect">
+            <option value="0.5">0.5x</option>
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2.0x</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

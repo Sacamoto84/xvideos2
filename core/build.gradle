@@ -116,6 +116,12 @@ dependencies {
     api(libs.ktor.network)
     api(libs.ktor.client.content.negotiation)
     api(libs.ktor.serialization.kotlinx.json)
+    api(libs.ktor.server.core)
+    api(libs.ktor.server.cio)
+    api(libs.ktor.server.content.negotiation)
+    api(libs.ktor.server.partial.content)
+    api(libs.ktor.server.cors)
+    api(libs.zxing.core)
     api libs.kotlinx.serialization.json
     api libs.androidx.work.runtime.ktx
 

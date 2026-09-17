@@ -71,4 +71,12 @@ class RedPooledVideoPlayerTest {
         assertFalse(isValidAB(5f, 1f))
         assertTrue(isValidAB(1f, 5f))
     }
+
+    @Test
+    fun `isZoomActive correctly detects active zoom state for pager and seek lock`() {
+        assertFalse(com.client.xvideos.common.videoplayer.ui.isZoomActive(1.0f))
+        assertFalse(com.client.xvideos.common.videoplayer.ui.isZoomActive(1.01f))
+        assertTrue(com.client.xvideos.common.videoplayer.ui.isZoomActive(1.03f))
+        assertTrue(com.client.xvideos.common.videoplayer.ui.isZoomActive(2.0f))
+    }
 }

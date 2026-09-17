@@ -55,10 +55,10 @@
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="33" />
 
-    <!-- Фоновые загрузки через WorkManager с поддержкой Foreground Service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
 
 
@@ -139,6 +139,12 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+
+        <!-- Сервис локального веб-сервера для трансляции по Wi-Fi -->
+        <service
+            android:name="com.client.xvideos.common.webserver.WebServerService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 

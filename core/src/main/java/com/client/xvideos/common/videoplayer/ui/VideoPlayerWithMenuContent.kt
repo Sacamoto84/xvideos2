@@ -29,6 +29,11 @@ import net.engawapg.lib.zoomable.zoomable
 import timber.log.Timber
 import kotlin.math.absoluteValue
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.geometry.Offset
+import kotlinx.coroutines.launch
+
 @Composable
 fun VideoPlayerWithMenuContent(
     modifier: Modifier,
@@ -46,8 +51,9 @@ fun VideoPlayerWithMenuContent(
 
     if (AppBuildInfo.debug) { SideEffect { Timber.d("@@@ VideoPlayerWithMenuContent()") } }
 
+    val coroutineScope = rememberCoroutineScope()
     val zoomState = rememberZoomState(maxScale = 3f)
-    LaunchedEffect(playerHost.videoFitMode) { zoomState.reset() }
+    LaunchedEffect(playerHost.videoFitMode, playerHost.url) { zoomState.reset() }
 
     var seekDragAmount by remember { mutableFloatStateOf(0f) }
     val seekDragModifier = Modifier.pointerInput(Unit) {
@@ -64,23 +70,60 @@ fun VideoPlayerWithMenuContent(
         )
     }
 
+    val isZoomed = isZoomActive(zoomState.scale)
 
-    Box( modifier = modifier.clipToBounds() ) {
+    Box(modifier = modifier.clipToBounds()) {
 
-        Box(modifier = modifier.zoomable(zoomState = zoomState, zoomEnabled = true, enableOneFingerZoom = false, onTap = { onClick.invoke() })) {
-            StaticPlayer( playerHost, autoRotate )
+        Box(
+            modifier = modifier.zoomable(
+                zoomState = zoomState,
+                zoomEnabled = true,
+                enableOneFingerZoom = false,
+                onTap = { onClick.invoke() },
+                onDoubleTap = { tapOffset ->
+                    coroutineScope.launch {
+                        if (zoomState.scale > 1.05f) {
+                            zoomState.changeScale(1.0f, Offset.Zero)
+                        } else {
+                            zoomState.changeScale(2.5f, tapOffset)
+                        }
+                    }
+                }
+            )
+        ) {
+            StaticPlayer(playerHost, autoRotate)
         }
 
-        //Нижняя сенсорная часть
-        if (seekDragEnabled) {
-            Box(modifier = Modifier.fillMaxHeight(1 / 3f).fillMaxWidth().align(Alignment.BottomCenter).then(seekDragModifier).alpha(0.5f).background(Color.Transparent))
+        // Всплывающий индикатор масштаба (HUD)
+        VideoZoomHud(
+            scale = zoomState.scale,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 16.dp),
+            onReset = {
+                coroutineScope.launch {
+                    zoomState.changeScale(1.0f, Offset.Zero)
+                }
+            }
+        )
+
+        // Нижняя сенсорная часть перемотки (отключается при активном увеличении кадра)
+        if (seekDragEnabled && !isZoomed) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight(1 / 3f)
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .then(seekDragModifier)
+                    .alpha(0.5f)
+                    .background(Color.Transparent)
+            )
         }
 
         if (playerHost.isBuffering) {
-            Box( modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center).size(40.dp), color = Color.LightGray)
             }
         }
     }
-
 }

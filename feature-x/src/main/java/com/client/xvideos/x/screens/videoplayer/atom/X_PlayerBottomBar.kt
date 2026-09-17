@@ -25,7 +25,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
+import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import java.util.Locale
 
@@ -100,6 +104,27 @@ fun X_PlayerBottomBar(
             fontFamily = FontFamily.SansSerif,
             fontSize = 11.sp
         )
+
+        // Переключатель режима масштабирования Fit / Fill
+        if (isFullScreen) {
+            Text(
+                text = if (host.videoFitMode == ScreenResize.FILL) "Fill" else "Fit",
+                color = Color.White,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable {
+                        host.videoFitMode = if (host.videoFitMode == ScreenResize.FIT) {
+                            ScreenResize.FILL
+                        } else {
+                            ScreenResize.FIT
+                        }
+                    }
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            )
+        }
 
         // Полный экран (если поддержан экраном)
         if (onFullScreen != null) {
