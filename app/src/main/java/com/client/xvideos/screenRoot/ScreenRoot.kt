@@ -5,7 +5,7 @@ import com.client.xvideos.common.theme.Theme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -96,7 +96,8 @@ object ScreenRoot : Screen {
             LocalMainNavigator provides mainNavigator
         ) {
             Scaffold(
-                modifier = Modifier.systemBarsPadding(),
+                modifier = Modifier.fillMaxSize(),
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 floatingActionButtonPosition = FabPosition.Start,
                 containerColor = Theme.backgroundAppRoot,
                 snackbarHost = {

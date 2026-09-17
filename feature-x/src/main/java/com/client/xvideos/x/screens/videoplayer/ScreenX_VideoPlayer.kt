@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -105,13 +105,15 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
                 val controller = WindowCompat.getInsetsController(it, it.decorView)
                 controller.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                controller.hide(WindowInsetsCompat.Type.systemBars())
+                controller.hide(WindowInsetsCompat.Type.navigationBars())
+                controller.hide(WindowInsetsCompat.Type.statusBars())
             }
         } else {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             window?.let {
                 val controller = WindowCompat.getInsetsController(it, it.decorView)
-                controller.show(WindowInsetsCompat.Type.systemBars())
+                controller.show(WindowInsetsCompat.Type.navigationBars())
+                controller.hide(WindowInsetsCompat.Type.statusBars())
             }
         }
         onDispose {
@@ -120,20 +122,22 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
                     prevOrientation ?: ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 window?.let {
                     val controller = WindowCompat.getInsetsController(it, it.decorView)
-                    controller.show(WindowInsetsCompat.Type.systemBars())
+                    controller.show(WindowInsetsCompat.Type.navigationBars())
+                    controller.hide(WindowInsetsCompat.Type.statusBars())
                 }
             }
         }
     }
 
-    // При полном уходе с экрана гарантированно возвращаем портретную ориентацию
+    // При полном уходе с экрана гарантированно возвращаем портретную ориентацию и скрытый статус-бар
     DisposableEffect(Unit) {
         onDispose {
             val activity = context.findActivity()
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             activity?.window?.let {
                 val controller = WindowCompat.getInsetsController(it, it.decorView)
-                controller.show(WindowInsetsCompat.Type.systemBars())
+                controller.show(WindowInsetsCompat.Type.navigationBars())
+                controller.hide(WindowInsetsCompat.Type.statusBars())
             }
         }
     }
@@ -236,7 +240,7 @@ private fun VideoPlayerContentView(
                             }
                         },
                         modifier = Modifier
-                            .statusBarsPadding()
+                            .displayCutoutPadding()
                             .padding(8.dp),
                     ) {
                         Icon(

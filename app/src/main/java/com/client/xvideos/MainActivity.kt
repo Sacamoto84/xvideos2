@@ -113,6 +113,11 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         if (!AppLockRepository.shouldShowLock(this)) {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
+        window?.let {
+            val controller = WindowCompat.getInsetsController(it, it.decorView)
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.statusBars())
+        }
     }
 
     /**
