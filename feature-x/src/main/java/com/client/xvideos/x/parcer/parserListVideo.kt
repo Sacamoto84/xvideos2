@@ -20,7 +20,11 @@ fun parseSiteCountryFlag(document: Document): String? {
     return getFlagEmoji("flag-$code")
 }
 
-fun parseSiteCountryFlag(html: String): String? = parseSiteCountryFlag(Jsoup.parse(html))
+fun parseSiteCountryFlag(html: String): String? =
+    if (html.isBlank()) null else parseSiteCountryFlag(Jsoup.parse(html))
+
+fun parserListVideo(html: String): List<ItemsX> =
+    if (html.isBlank()) emptyList() else parserListVideo(Jsoup.parse(html))
 
 fun parserListVideo(document: Document): List<ItemsX> {
     val list = mutableListOf<ItemsX>()

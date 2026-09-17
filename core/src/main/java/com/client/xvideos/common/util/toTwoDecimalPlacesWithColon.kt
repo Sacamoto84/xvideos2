@@ -15,6 +15,7 @@ import java.util.Locale
  * ```
  */
 fun Float.toTwoDecimalPlacesWithColon(): String {
+    if (this.isNaN() || this.isInfinite()) return "0:00"
     // Сначала форматируем с точкой как разделителем
     val formattedWithDot = String.format(Locale.US, "%.2f", this)
     // Затем заменяем точку на двоеточие

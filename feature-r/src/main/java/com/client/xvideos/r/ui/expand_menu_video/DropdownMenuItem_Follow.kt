@@ -16,30 +16,32 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
-fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi:()-> RedApi, savedRed: ()->SavedRed, onDismiss: () -> Unit){
-    val isFollowed = savedRed.invoke().creators.list.any { it.username == item?.userName }
+fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi: () -> RedApi, savedRed: () -> SavedRed, onDismiss: () -> Unit) {
+    val isFollowed = item?.userName?.takeIf { it.isNotBlank() }?.let { name ->
+        savedRed.invoke().creators.list.any { it.username == name }
+    } ?: false
     DropdownMenuItem_FollowContent(
         isFollowed = isFollowed,
         onClick = {
-            if (item == null) return@DropdownMenuItem_FollowContent
+            if (item == null || item.userName.isBlank()) {
+                onDismiss.invoke()
+                return@DropdownMenuItem_FollowContent
+            }
             // см. комментарий в DropdownMenuItem_Like: управляемый scope из
             // SavedRed вместо GlobalScope, переживающий закрытие меню.
             savedRed.invoke().scope.launch {
                 delay(200)
                 if (!isFollowed) {
                     // Раньше здесь было `creators.add(getOrNull()!!)` внутри
-                    // `catch { printStackTrace() }`: при любой сетевой ошибке
-                    // getOrNull() давал null, `!!` кидал NPE, catch его глотал,
-                    // а printStackTrace писал в stderr мимо Timber — подписка
-                    // молча не срабатывала и не оставляла следа в логе.
+                    // `catch { printStackTrace() }` молча проглатывал NPE
+                    // при любой сетевой ошибке: подписка не срабатывала.
                     redApi.invoke().readCreator(item.userName)
                         .onSuccess { savedRed.invoke().creators.add(it) }
                         .onFailure { e ->
                             Timber.e(e, "Follow: не удалось получить профиль ${item.userName}")
                             SnackBar.error("Не удалось подписаться: ${e.message ?: "нет сети"}")
                         }
-                }
-                else {
+                } else {
                     savedRed.invoke().creators.remove(item.userName)
                 }
             }
@@ -49,7 +51,7 @@ fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi:()-> RedApi, savedRed
 }
 
 @Composable
-private fun DropdownMenuItem_FollowContent(
+fun DropdownMenuItem_FollowContent(
     isFollowed: Boolean,
     onClick: () -> Unit
 ) {

@@ -112,6 +112,5 @@
     <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:ZoomModifier.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:shimmerEffect.kt$import androidx.compose.runtime.*</ID>
   </CurrentIssues>
 </SmellBaseline>

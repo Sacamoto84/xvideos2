@@ -159,6 +159,7 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     }
 
     fun loadAlbumList(page: Int) {
+        if (page < 0) return
         screenModelScope.launch {
             val status = bigList[page]?.status
             if (status == StatusAlbumList.DOWNLOADED) {

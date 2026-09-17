@@ -406,4 +406,31 @@ class XParsersTest {
         val htmlWithoutFlag = """<div><span>No localisation</span></div>"""
         assertNull(parseSiteCountryFlag(htmlWithoutFlag))
     }
+
+    @Test
+    fun `пустые и пробельные строки безопасно обрабатываются парсерами`() {
+        assertNull(parserItemVideo(""))
+        assertNull(parserItemVideo("   "))
+
+        assertNull(parseHTML5Player(""))
+        assertNull(parseHTML5Player("   \n\t  "))
+
+        assertNull(parseSiteCountryFlag(""))
+        assertNull(parseSiteCountryFlag("   "))
+
+        assertTrue(parserListVideo("").isEmpty())
+        assertTrue(parserListVideo("   ").isEmpty())
+
+        val defaultScreenTags = parserScreenTags("")
+        assertEquals("?", defaultScreenTags.title0)
+        assertEquals("?", defaultScreenTags.title1)
+        assertEquals(1, defaultScreenTags.lastPage)
+        assertTrue(defaultScreenTags.items.isEmpty())
+
+        val blankScreenTags = parserScreenTags("   \n  ")
+        assertEquals("?", blankScreenTags.title0)
+        assertEquals("?", blankScreenTags.title1)
+        assertEquals(1, blankScreenTags.lastPage)
+        assertTrue(blankScreenTags.items.isEmpty())
+    }
 }

@@ -16,6 +16,8 @@ import java.util.regex.Pattern
  * отсутствовать на законных основаниях и разбор не отменяет.
  */
 fun parseHTML5Player(script: String): HTML5PlayerConfig? {
+    if (script.isBlank()) return null
+
     val videoTitle = extractValue(script, "html5player.setVideoTitle\\('(.*?)'\\)")
     val encodedIdVideo = extractValue(script, "html5player.setEncodedIdVideo\\('(.*?)'\\)")
     val videoUrlLow = extractValue(script, "html5player.setVideoUrlLow\\('(.*?)'\\)")

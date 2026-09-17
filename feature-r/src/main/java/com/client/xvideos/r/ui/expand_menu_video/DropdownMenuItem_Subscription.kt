@@ -16,16 +16,18 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
-fun DropdownMenuItem_Subscribtion(item: GifsInfo? = null, redApi:()-> RedApi , savedRed: ()->SavedRed, onDismiss: () -> Unit){
-
-    val isSubscribed = savedRed.invoke().subscriptions.listCreators.any { it.username == item?.userName }
+fun DropdownMenuItem_Subscription(item: GifsInfo? = null, redApi: () -> RedApi, savedRed: () -> SavedRed, onDismiss: () -> Unit) {
+    val isSubscribed = item?.userName?.takeIf { it.isNotBlank() }?.let { name ->
+        savedRed.invoke().subscriptions.listCreators.any { it.username == name }
+    } ?: false
 
     DropdownMenuItem_SubscriptionContent(
-
-        isSubscribted = isSubscribed,
-
+        isSubscribed = isSubscribed,
         onClick = {
-            if (item == null) return@DropdownMenuItem_SubscriptionContent
+            if (item == null || item.userName.isBlank()) {
+                onDismiss.invoke()
+                return@DropdownMenuItem_SubscriptionContent
+            }
 
             // см. комментарий в DropdownMenuItem_Like: управляемый scope из
             // SavedRed вместо GlobalScope, переживающий закрытие меню.
@@ -42,25 +44,23 @@ fun DropdownMenuItem_Subscribtion(item: GifsInfo? = null, redApi:()-> RedApi , s
                             Timber.e(e, "Subscribe: не удалось получить профиль ${item.userName}")
                             SnackBar.error("Не удалось оформить подписку: ${e.message ?: "нет сети"}")
                         }
-                }
-                else {
+                } else {
                     savedRed.invoke().subscriptions.remove(item.userName)
                 }
             }
             onDismiss.invoke()
         }
     )
-
 }
 
 @Composable
-private fun DropdownMenuItem_SubscriptionContent(
-    isSubscribted: Boolean,
+fun DropdownMenuItem_SubscriptionContent(
+    isSubscribed: Boolean,
     onClick: () -> Unit
 ) {
     ExpandMenuActionItem(
-        icon = if (isSubscribted) Icons.Default.Unsubscribe else Icons.Default.Subscriptions,
-        text = if (isSubscribted) "Unsubscribe" else "Subscribe",
+        icon = if (isSubscribed) Icons.Default.Unsubscribe else Icons.Default.Subscriptions,
+        text = if (isSubscribed) "Unsubscribe" else "Subscribe",
         onClick = onClick
     )
 }
@@ -70,7 +70,7 @@ private fun DropdownMenuItem_SubscriptionContent(
 private fun DropdownMenuItem_SubscriptionPreview() {
     XvideosTheme {
         DropdownMenuItem_SubscriptionContent(
-            isSubscribted = true,
+            isSubscribed = true,
             onClick = {}
         )
     }

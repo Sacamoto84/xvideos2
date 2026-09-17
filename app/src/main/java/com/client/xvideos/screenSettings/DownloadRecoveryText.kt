@@ -1,9 +1,6 @@
 package com.client.xvideos.screenSettings
 
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-
 import com.client.xvideos.l.featured.saved.LDownloadRecoveryReport
 import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 

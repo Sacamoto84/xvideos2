@@ -6,6 +6,9 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 fun parserScreenTags(html: String): ModelScreenTag {
+    if (html.isBlank()) {
+        return ModelScreenTag(title0 = "?", title1 = "?", items = emptyList(), lastPage = 1)
+    }
 
     val listItems = mutableListOf<ItemsX>()
 

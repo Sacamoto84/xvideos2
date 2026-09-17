@@ -46,6 +46,11 @@ private fun Preview() {
     AlbumListPageSelector(1, 199)
 }
 
+fun calculatePrevAlbumPage(page: Int): Int = (page - 1).coerceAtLeast(0)
+
+fun calculateNextAlbumPage(page: Int, pageMax: Int): Int =
+    (page + 1).coerceAtMost((pageMax - 1).coerceAtLeast(0))
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumListPageSelector(
@@ -70,7 +75,7 @@ fun AlbumListPageSelector(
                 .fillMaxHeight()
                 .weight(1f)
                 .background(Theme.L.red)
-                .clickable(onClick = { onChange((page - 1).coerceAtLeast(1)) }),
+                .clickable(onClick = { onChange(calculatePrevAlbumPage(page)) }),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.Default.KeyboardArrowLeft, tint = Color.White, contentDescription = null) }
 
@@ -116,7 +121,7 @@ fun AlbumListPageSelector(
                 .weight(1f)
                 .background(Theme.L.red)
                 .clickable(
-                    onClick = { onChange((page + 1).coerceAtMost(pageMax)) }
+                    onClick = { onChange(calculateNextAlbumPage(page, pageMax)) }
                 ),
             contentAlignment = Alignment.Center
         ) {
