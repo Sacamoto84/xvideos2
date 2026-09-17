@@ -2,7 +2,6 @@ package com.client.xvideos.screenSettings
 
 import com.client.xvideos.R
 import com.client.xvideos.screenSettings.section.CacheSettingsSection
-import com.client.xvideos.screenSettings.section.DiagnosticsSettingsSection
 import com.client.xvideos.screenSettings.section.DisplaySettingsSection
 import com.client.xvideos.screenSettings.section.LSettingsSection
 import com.client.xvideos.screenSettings.section.NetworkSettingsSection
@@ -67,7 +66,6 @@ import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.AppLockSettingsSection
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
-import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsRowTextPrimary
@@ -83,6 +81,7 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
+import com.client.xvideos.screenSettings.components.SettingsDivider2
 import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.Binds
 import dagger.Module
@@ -300,20 +299,25 @@ private fun AppSettingsScreenBody(
     ) {
         if (currentPage == SettingsPage.Main) {
             SettingsSectionTitle("Основное")
+
             SettingsGroup {
                 SettingsPage.primaryPages.forEachIndexed { index, page ->
-                    if (index > 0) SettingsDivider()
+                    if (index > 0) { SettingsDivider2() }
                     SettingsNavigationRow(
                         page = page,
                         onClick = { onOpenPage(page) }
                     )
                 }
             }
+
             Spacer(Modifier.height(16.dp))
             SettingsSectionTitle("Разделы")
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
-                    if (index > 0) SettingsDivider()
+                    if (index > 0) {
+                        //SettingsDivider()
+                        Spacer(Modifier.fillMaxWidth().height(2.dp).background(SettingsScreenBackground))
+                    }
                     SettingsNavigationRow(
                         page = page,
                         onClick = { onOpenPage(page) }
@@ -399,7 +403,6 @@ private fun SettingsDetailPage(params: SettingsDetailParams) {
             onDataChanged = params.onBackupDataChanged
         )
         SettingsPage.P2P -> P2PSettingsSection()
-        SettingsPage.Diagnostics -> DiagnosticsSettingsSection()
     }
 }
 
@@ -462,17 +465,10 @@ private enum class SettingsPage(
         title = "P2P",
         icon = R.drawable.icon_red, // Replace with appropriate icon if available
         subtitle = "Передача файлов рядом"
-    ),
-    Diagnostics(
-        title = "Диагностика",
-        // Было R.drawable.data — <animated-vector>. painterResource такие не
-        // грузит, и экран настроек падал сразу при открытии.
-        icon = R.drawable.diagnostics_24,
-        subtitle = "Журнал ошибок"
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Network, Cache, Storage, Backup, P2P, Diagnostics)
+        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Network, Cache, Storage, Backup, P2P)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages

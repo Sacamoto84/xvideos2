@@ -55,8 +55,8 @@ class GlobalStateTest {
         val positions = order.map { it.second }
         assertEquals(
             "Порядок инициализации в App.onCreate значим и переставлен: " +
-                "${order.map { it.first }}. AppBuildInfo нужен CrashLog для заголовка " +
-                "падения, AppPath — Hilt-синглтонам, которые читают пути в конструкторе, " +
+                "${order.map { it.first }}. AppPath нужен " +
+                "Hilt-синглтонам, которые читают пути в конструкторе, " +
                 "а Settings.init открывает зашифрованное хранилище уже по готовым путям.",
             positions.sorted(),
             positions,
@@ -170,15 +170,13 @@ class GlobalStateTest {
         /**
          * Вызовы `App.onCreate`, чей относительный порядок значим.
          *
-         * `AppBuildInfo` нужен `CrashLog` для заголовка падения, `AppPath` —
-         * Hilt-синглтонам, которые читают пути в конструкторе, а `Settings.init`
-         * открывает зашифрованное хранилище уже по готовым путям.
+         * `AppPath` нужен Hilt-синглтонам, которые читают пути в конструкторе,
+         * а `Settings.init` открывает зашифрованное хранилище уже по готовым путям.
          */
         val REQUIRED_ORDER = listOf(
             "AppBuildInfo.init(",
             "AppContextHolder.init(",
             "AppPath.init(",
-            "CrashLog.install(",
             "Settings.init(",
         )
     }

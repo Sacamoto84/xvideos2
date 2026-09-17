@@ -34,7 +34,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.tags.atom.TagsPaginatedListScreen
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
-import com.client.xvideos.x.urlStart
+import com.client.xvideos.x.normalizeXUrl
 import kotlinx.coroutines.launch
 
 class ScreenTags(private val tag: String) : Screen {
@@ -122,7 +122,7 @@ class ScreenTags(private val tag: String) : Screen {
                     TagsPaginatedListScreen(
                         pageIndex = pageIndex,
                         loadPage = { vm.loadPage(it).items },
-                        onOpenVideo = { navigator.push(ScreenX_VideoPlayer(urlStart + it.href)) },
+                        onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href))) },
                     )
                 }
             }

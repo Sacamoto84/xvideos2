@@ -49,7 +49,7 @@ import kotlin.math.roundToInt
 // Google Material 3 Dark Theme tokens (matching Chrome & Android 14+ Settings)
 internal val SettingsScreenBackground = Color(0xFF1B1B1F)
 internal val SettingsTopBarColor = SettingsScreenBackground
-internal val SettingsCardColor = Color(0xFF2B2930)
+internal val SettingsCardColor = Color(0xFF3A373E)
 internal val SettingsAccentColor = Color(0xFFC4C0FD)
 internal val SettingsOnAccentColor = Color(0xFF2E2961)
 internal val SettingsRowTextPrimary = Color(0xFFE5E2E9)
@@ -95,6 +95,11 @@ fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
             color = SettingsDividerColor
         )
     }
+}
+
+@Composable
+fun SettingsDivider2() {
+    Spacer(Modifier.fillMaxWidth().height(2.dp).background(SettingsScreenBackground))
 }
 
 @Composable

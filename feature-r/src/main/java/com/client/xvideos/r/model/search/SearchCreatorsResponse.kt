@@ -1,8 +1,10 @@
 package com.client.xvideos.r.model.search
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Immutable
 @Serializable
 data class SearchCreatorsResponse(
     @SerialName("items") val items: List<SearchItemCreatorsResponse> = emptyList()
@@ -26,6 +28,7 @@ data class SearchCreatorsResponse(
 //    "studio": false,
 //    "followers": 77
 //},
+@Immutable
 @Serializable
 data class SearchItemCreatorsResponse(
     @SerialName("type") val type: String = "creator",

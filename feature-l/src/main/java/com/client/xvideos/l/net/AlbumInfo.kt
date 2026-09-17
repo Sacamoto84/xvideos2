@@ -11,6 +11,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -28,11 +30,18 @@ class AlbumInfo(
 
     val albumPicsDetails = AlbumPicsDetails(id, repository)
 
+    private val _albumInfo = MutableStateFlow<AlbumDetails?>(null)
     @Suppress("MemberNameEqualsClassName")
-    val albumInfo = MutableStateFlow<AlbumDetails?>(null)
-    val loadError = MutableStateFlow<String?>(null)
-    val isLoading = MutableStateFlow(true)
-    val isRefreshing = MutableStateFlow(false)
+    val albumInfo: StateFlow<AlbumDetails?> = _albumInfo.asStateFlow()
+
+    private val _loadError = MutableStateFlow<String?>(null)
+    val loadError: StateFlow<String?> = _loadError.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private var loadJob: Job? = null
 
@@ -45,13 +54,13 @@ class AlbumInfo(
     }
 
     fun refresh() {
-        if (isRefreshing.value) return
+        if (_isRefreshing.value) return
         loadAlbum(forceNetwork = true)
     }
 
     suspend fun retryFailedPages() {
         albumPicsDetails.retryFailedPages()
-        val details = albumInfo.value
+        val details = _albumInfo.value
         if (details != null && albumPicsDetails.failedPages.isEmpty()) {
             cacheBundleIfComplete(repository, details)
         }
@@ -61,16 +70,16 @@ class AlbumInfo(
         loadJob?.cancel()
         loadJob = scope.launch(Dispatchers.IO) {
             if (forceNetwork) {
-                isRefreshing.value = true
+                _isRefreshing.value = true
                 repository.deleteAlbumBundleCache(id)
             } else {
-                isLoading.value = true
+                _isLoading.value = true
             }
-            loadError.value = null
+            _loadError.value = null
 
             try {
                 if (!forceNetwork && restoreBundleIfFresh(repository)) {
-                    isLoading.value = false
+                    _isLoading.value = false
                     return@launch
                 }
 
@@ -79,8 +88,8 @@ class AlbumInfo(
                 if (result.isFailure) {
                     val err = result.exceptionOrNull()?.message ?: "Network error"
                     Timber.w("!!! getAlbumInfo $id error: $err")
-                    loadError.value = err
-                    isLoading.value = false
+                    _loadError.value = err
+                    _isLoading.value = false
                     return@launch
                 }
                 val parsed = parseAlbumDetails(result.getOrThrow())
@@ -88,14 +97,14 @@ class AlbumInfo(
                 if (parsed.isFailure) {
                     val err = parsed.exceptionOrNull()?.message ?: "Parse error"
                     Timber.w("!!! getAlbumInfo $id parse error: $err")
-                    loadError.value = err
-                    isLoading.value = false
+                    _loadError.value = err
+                    _isLoading.value = false
                     return@launch
                 }
 
                 val albumDetails = parsed.getOrThrow()
-                albumInfo.value = albumDetails
-                isLoading.value = false
+                _albumInfo.value = albumDetails
+                _isLoading.value = false
                 Timber.i(
                     "!!! AlbumInfo [$id] Loaded metadata: title='${albumDetails.title}', " +
                     "pictures=${albumDetails.number_of_pictures}, " +
@@ -106,7 +115,7 @@ class AlbumInfo(
                 cacheBundleIfComplete(repository, albumDetails)
             } finally {
                 if (forceNetwork) {
-                    isRefreshing.value = false
+                    _isRefreshing.value = false
                 }
             }
         }
@@ -127,11 +136,11 @@ class AlbumInfo(
             return false
         }
 
-        albumInfo.value = bundle.album
         albumPicsDetails.restoreFromBundleCache(
             items = bundle.pics,
             cachedTotalPages = bundle.totalPages
         )
+        _albumInfo.value = bundle.album
         Timber.i("!!! L album bundle cache hit id:$id items:${bundle.pics.size}")
         return true
     }

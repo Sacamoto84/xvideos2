@@ -12,11 +12,7 @@
 -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-      Журнал ошибок: filesDir/store/crash.log.
-      FileProvider умеет объявлять только каталоги, поэтому корень store здесь
-      целиком. Сузить дальше можно, лишь переселив журнал в свою подпапку.
-    -->
+    <!-- Файлы, скачанные для отправки из R: filesDir/store/R/Download -->
     <files-path name="app_store" path="store/" />
 
     <!-- Файлы, скачанные для отправки из L: cacheDir/L/Share -->

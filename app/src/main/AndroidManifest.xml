@@ -119,7 +119,8 @@
             android:windowBackground="@color/black"
             android:windowIsTranslucent="false"
             android:fitsSystemWindows="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize">
 
         </activity>
 

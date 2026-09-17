@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +68,9 @@ fun CustomSeekBar(
     var dragStartOffsetX by remember { mutableFloatStateOf(0f) }
     var initialProgress by remember { mutableFloatStateOf(0f) }
 
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
+    val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)
+
     // Animate ripple radius when dragging
     val rippleRadius by animateFloatAsState(
         targetValue = if (isDragging) with(density) { (thumbRadius * 2f).toPx() } else 0f,
@@ -88,8 +92,8 @@ fun CustomSeekBar(
                 detectTapGestures { offset ->
                     val newValue = (offset.x / trackWidth) * maxProgress
                     localProgress = newValue.coerceIn(0f, maxProgress)
-                    onValueChange(localProgress)
-                    onValueChangeFinished()
+                    currentOnValueChange(localProgress)
+                    currentOnValueChangeFinished()
                 }
             }
             .pointerInput(maxProgress) {
@@ -99,19 +103,22 @@ fun CustomSeekBar(
                         dragStartOffsetX = offset.x
                         initialProgress = (dragStartOffsetX / trackWidth) * maxProgress
                         localProgress = initialProgress.coerceIn(0f, maxProgress)
-                        onValueChange(localProgress)
+                        currentOnValueChange(localProgress)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val dragDelta = (dragAmount.x / trackWidth) * maxProgress
                         localProgress = (localProgress + dragDelta).coerceIn(0f, maxProgress)
-                        onValueChange(localProgress)
+                        currentOnValueChange(localProgress)
                     },
                     onDragEnd = {
                         isDragging = false
-                        onValueChangeFinished()
+                        currentOnValueChangeFinished()
                     },
-                    onDragCancel = { isDragging = false }
+                    onDragCancel = {
+                        isDragging = false
+                        currentOnValueChangeFinished()
+                    }
                 )
             }
     ) {

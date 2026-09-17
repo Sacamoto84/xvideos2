@@ -46,7 +46,7 @@ fun AlbumFilterSaveDialog(
 ) {
     val context = LocalContext.current
     val palette = StyleGenresTags.Palette
-    var presetName by remember {
+    var presetName by remember(filter) {
         mutableStateOf(AlbumFilterPresetManager.generateDefaultName(filter))
     }
     val summary = remember(filter) { AlbumFilterPresetManager.formatFilterSummary(filter) }

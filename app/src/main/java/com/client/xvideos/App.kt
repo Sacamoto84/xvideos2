@@ -9,7 +9,6 @@ import coil3.SingletonImageLoader
 import com.client.xvideos.common.AppBuildInfo
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.AppPath
-import com.client.xvideos.common.log.CrashLog
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pSendPreparers
@@ -72,8 +71,7 @@ class App : Application(), SingletonImageLoader.Factory {
         super.onCreate()
 
         // BuildConfig генерируется на модуль, у :core он свой — поля приложения
-        // базовый слой получает отсюда. Ставится до CrashLog: заголовок падения
-        // печатает versionName.
+        // базовый слой получает отсюда.
         AppBuildInfo.init(debug = BuildConfig.DEBUG, versionName = BuildConfig.VERSION_NAME)
         // Контекст для кода в модулях, до которого не дотягивается ни DI, ни
         // Compose: класс приложения им не виден.
@@ -92,12 +90,9 @@ class App : Application(), SingletonImageLoader.Factory {
             .storageCleanupGate()
             .start(scope) { AppPath.cleanupTransientDirs() }
 
-        // В релизе дерево тоже сажается — иначе Timber.e становится пустышкой и
-        // об ошибке у пользователя узнать неоткуда. Релизное пишет ERROR в файл
-        // во внутренней памяти, без сети. Ставится после AppPath.init(): ему
-        // нужен путь.
-        if (BuildConfig.DEBUG) Timber.plant(DebugTree()) else Timber.plant(CrashLog.releaseTree())
-        CrashLog.install()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(DebugTree())
+        }
 
         // Монитор берётся из графа — тем же EntryPoint, что и gate уборки:
         // здесь мы уже после AppPath.init(), синглтоны создавать можно.
@@ -105,10 +100,6 @@ class App : Application(), SingletonImageLoader.Factory {
             .fromApplication(this, NetworkTrafficMonitorEntryPoint::class.java)
             .networkTrafficMonitor()
         networkTrafficMonitor.startMonitoring()
-
-        // Обработчик необработанных исключений ставит CrashLog.install() выше:
-        // он дописывает стектрейс в журнал и передаёт управление прежнему
-        // обработчику, чтобы система отработала падение как обычно.
 
         // Совместимость со старыми корневыми сертификатами обеспечивается через
         // res/xml/network_security_config.xml (доверие к ISRG Root X1), а НЕ через

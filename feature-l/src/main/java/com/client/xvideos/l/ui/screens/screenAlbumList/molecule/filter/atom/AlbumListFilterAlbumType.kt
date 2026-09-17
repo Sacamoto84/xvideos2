@@ -17,19 +17,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.persistentListOf
 
 private val style = Theme.L.Type.rowValue
+private val ALBUM_TYPE_OPTIONS = persistentListOf("All", "Manga", "Pictures")
 
 @Composable
 fun AlbumListFilterAlbumType(start : Int, onChange: (Int) -> Unit) {
 
-    var selectedIndex by remember { mutableIntStateOf(start) }
-
-    val options = listOf("All", "Manga", "Pictures")
+    var selectedIndex by remember(start) { mutableIntStateOf(start) }
     val palette = StyleGenresTags.Palette
 
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(48.dp)) {
-        options.forEachIndexed { index, label ->
+        ALBUM_TYPE_OPTIONS.forEachIndexed { index, label ->
             SegmentedButton(modifier = Modifier.height(48.dp),
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = palette.selected,
@@ -42,7 +42,7 @@ fun AlbumListFilterAlbumType(start : Int, onChange: (Int) -> Unit) {
 
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = options.size,
+                    count = ALBUM_TYPE_OPTIONS.size,
                     baseShape = RoundedCornerShape(4.dp)
                 ),
                 onClick = {

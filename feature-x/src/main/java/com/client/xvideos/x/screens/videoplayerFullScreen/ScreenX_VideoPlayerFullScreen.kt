@@ -54,6 +54,7 @@ import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
  * ([rememberExoPlayerWithLifecycle]) — HLS, lifecycle и release переиспользуются.
  * Позиция возвращается обычному экрану через [EventBus].
  */
+@Deprecated("Используйте ScreenX_VideoPlayer с встроенным полноэкранным режимом на едином плеере")
 class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) : Screen {
 
     override val key: ScreenKey = uniqueScreenKey

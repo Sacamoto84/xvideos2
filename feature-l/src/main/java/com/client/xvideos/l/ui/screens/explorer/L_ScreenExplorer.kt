@@ -16,7 +16,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -47,6 +46,20 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
+
+private val EXPLORER_ICONS = persistentListOf(
+    Icons.AutoMirrored.Outlined.FormatListBulleted,
+    Icons.Outlined.BookmarkBorder,
+    Icons.Outlined.Topic,
+    Icons.Outlined.Search,
+)
+
+private val EXPLORER_TAGS = persistentListOf(
+    "",
+    "",
+    "bBookMark",
+    ""
+)
 
 class L_ScreenExplorer : Screen {
 
@@ -81,25 +94,6 @@ class L_ScreenExplorer : Screen {
 
         val percentDownload = savedL.likes.percentDownload.collectAsStateWithLifecycle().value
 
-        // ПЕРЕНЕСЕНО СЮДА: Теперь эти списки создаются внутри Composable
-        val l = remember {
-            persistentListOf(
-                Icons.AutoMirrored.Outlined.FormatListBulleted,
-                Icons.Outlined.BookmarkBorder,
-                Icons.Outlined.Topic,
-                Icons.Outlined.Search,
-            )
-        }
-
-        val tags = remember {
-            persistentListOf(
-                "",
-                "",
-                "bBookMark",
-                ""
-            )
-        }
-
         val columnR_ScreenGifsTab = Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle().value
 
         Scaffold(bottomBar = {
@@ -107,7 +101,7 @@ class L_ScreenExplorer : Screen {
                 DownloadIndicator(percentDownload)
                 TabRow(
                     containerColor = Theme.tabLevel0,
-                    titlesIcon = l,
+                    titlesIcon = EXPLORER_ICONS,
                     value = vm.screenType,
                     onChangeState = {
                         if (it == vm.screenType) {
@@ -118,7 +112,7 @@ class L_ScreenExplorer : Screen {
                         vm.screenType = it
                     },
                     overlay0 = { TabBarPoints(columnR_ScreenGifsTab, vm.screenType == 0) },
-                    tags = tags
+                    tags = EXPLORER_TAGS
                 )
             }
         }, containerColor = Theme.background) { paddingValues ->

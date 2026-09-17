@@ -38,7 +38,7 @@ import com.client.xvideos.feature.x.R
 import com.client.xvideos.ui.theme.PornHubOrange
 import com.client.xvideos.ui.theme.grayColor
 import com.client.xvideos.x.model.getFlagEmoji
-import com.client.xvideos.x.urlStart
+import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.composables.core.Menu
@@ -141,7 +141,7 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                                 .clickable {
                                     scope.launchCatching(message = "Смена страны не удалась: ${it.name}") {
 
-                                        val s = readHtmlFromURLWebView(urlStart + it.url)
+                                        val s = readHtmlFromURLWebView(normalizeXUrl(it.url))
                                         val flag = parseSiteCountryFlag(s)
 
                                         withContext(Dispatchers.Main) {

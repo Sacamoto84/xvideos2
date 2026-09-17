@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.albumFilterDisplay
 
+private val UNIQUE_PRIMARY_LIST = albumFilterDisplay.map { it.primary }.distinct()
+
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
 @Composable
 fun PreviewAlbumFilterDisplay() {
@@ -41,8 +43,6 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
 
     val list = albumFilterDisplay
     val palette = StyleGenresTags.Palette
-
-    val uniquePrimaryList = remember { albumFilterDisplay.map { it.primary }.distinct() }
 
     var showPrimaryDialog by remember { mutableStateOf(false) }
     var showSecondaryDialog by remember { mutableStateOf(false) }
@@ -125,7 +125,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
     if (showPrimaryDialog) {
         AlbumFilterSelectDialog(
             title = "Sort by",
-            items = uniquePrimaryList,
+            items = UNIQUE_PRIMARY_LIST,
             selectedItem = selected.primary,
             itemTitle = { it },
             onDismiss = { showPrimaryDialog = false },

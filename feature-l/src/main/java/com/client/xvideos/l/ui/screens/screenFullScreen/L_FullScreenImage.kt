@@ -130,7 +130,7 @@ class L_FullScreenImage(
         // ifEmpty: хранилище списков не переживает смерть процесса, а сам экран
         // Parcelable и восстанавливается Voyager'ом. Без запасного варианта
         // indexOf вернёт -1 и coerceIn(0, -1) уронит экран.
-        val filteredPic = remember {
+        val filteredPic = remember(payloadKey, item) {
             LFullScreenPayload.get(payloadKey).ifEmpty { listOf(item) }
         }
 

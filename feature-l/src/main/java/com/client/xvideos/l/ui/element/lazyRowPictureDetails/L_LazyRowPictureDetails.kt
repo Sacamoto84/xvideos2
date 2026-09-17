@@ -123,10 +123,10 @@ fun L_LazyRowPictureDetails(
     val thumbnailsSize = Settings.thumbalistSize.field.collectAsStateWithLifecycle().value
 
     /** Показывать ли кнопку "вверх" */
-    val showScrollToTop by remember { derivedStateOf { host.state.firstVisibleItemIndex > 2 } }
+    val showScrollToTop by remember(host.state) { derivedStateOf { host.state.firstVisibleItemIndex > 2 } }
 
     /** Показывать ли кнопку "вниз" */
-    val showScrollToBottom by remember {
+    val showScrollToBottom by remember(host.state) {
         derivedStateOf {
             val layoutInfo = host.state.layoutInfo
             val totalItems = layoutInfo.totalItemsCount

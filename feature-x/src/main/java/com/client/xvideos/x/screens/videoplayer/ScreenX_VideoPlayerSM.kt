@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.videoplayer
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -11,8 +10,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import cafe.adriel.voyager.navigator.Navigator
-import com.client.xvideos.common.eventBus.Event
-import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.parcer.parseHTML5Player
@@ -21,7 +18,7 @@ import com.client.xvideos.x.parcer.parserItemVideoTags
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.tags.ScreenTags
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
-import com.client.xvideos.x.screens.videoplayerFullScreen.ScreenX_VideoPlayerFullScreen
+import com.client.xvideos.x.normalizeXUrl
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -32,7 +29,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -48,9 +44,11 @@ import timber.log.Timber
  */
 @Stable
 class ScreenX_VideoPlayerSM @AssistedInject constructor(
-    @Assisted val url: String,
+    @Assisted url: String,
     val db: AppFileDatabase
 ) : ScreenModel {
+
+    val url: String = normalizeXUrl(url)
 
     @AssistedFactory
     interface Factory : ScreenModelFactory {
@@ -73,33 +71,40 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         private set
 
     /** Распарсенный конфиг html5-плеера (титул/превью/HLS и пр.). */
-    val a: MutableState<HTML5PlayerConfig?> = mutableStateOf(HTML5PlayerConfig())
+    var playerConfig: HTML5PlayerConfig? by mutableStateOf(null)
+        private set
 
     /** Теги/каналы/порноактрисы для overlay поверх видео. */
     var tags by mutableStateOf(TagsModel(emptyList(), emptyList(), emptyList()))
         private set
 
-    /** Позиция (мс), возвращённая из полноэкранного режима; -1 — нет. */
+    /** Флаг полноэкранного (ландшафтного) режима. */
+    var isFullScreen: Boolean by mutableStateOf(false)
+        private set
+
+    fun toggleFullScreen() {
+        isFullScreen = !isFullScreen
+    }
+
+    fun enterFullScreen() {
+        isFullScreen = true
+    }
+
+    fun exitFullScreen() {
+        isFullScreen = false
+    }
+
+    /** @deprecated Позиция больше не передаётся через EventBus, так как плеер не пересоздаётся. */
+    @Deprecated("Плеер работает на едином экране без передачи позиции")
     var positionFromFullscreen by mutableLongStateOf(-1L)
         private set
 
+    @Deprecated("Плеер работает на едином экране без передачи позиции")
     fun consumePositionFromFullscreen() {
         positionFromFullscreen = -1L
     }
 
     init {
-        // Возврат позиции из полноэкранного экрана. Подписка стояла внутри
-        // блока загрузки, ниже по коду: при отказе сети до неё не доходило.
-        // От сети она не зависит — держим отдельно.
-        screenModelScope.launch {
-            EventBus.events
-                .filterIsInstance<Event.X_FullScreenExitPosition>()
-                .collect { event ->
-                    Timber.i("!!! ~~~ collect Event.X_FullScreenExitPosition ${event.position}")
-                    positionFromFullscreen = event.position
-                }
-        }
-
         loadVideo()
     }
 
@@ -144,11 +149,12 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                     Triple(config, parsedTags, hls)
                 }
 
-                a.value = parsedData.first
+                playerConfig = parsedData.first
                 tags = parsedData.second
                 passedHLS = parsedData.third
                 if (parsedData.third.isBlank()) {
                     isError = true
+                    isFullScreen = false
                     withContext(Dispatchers.IO) {
                         db.cacheUrlStringRam.delete(url)
                     }
@@ -162,6 +168,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
             } catch (e: Exception) {
                 Timber.w(e, "Страница видео не загрузилась: %s", url)
                 isError = true
+                isFullScreen = false
                 withContext(Dispatchers.IO) {
                     db.cacheUrlStringRam.delete(url)
                 }
@@ -174,6 +181,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     fun onPlaybackError() {
         Timber.w("ScreenX_VideoPlayerSM: ошибка воспроизведения для %s, очистка RAM-кэша", url)
         isError = true
+        isFullScreen = false
         screenModelScope.launch(Dispatchers.IO) {
             db.cacheUrlStringRam.delete(url)
         }
@@ -190,10 +198,12 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
     /**
      * ## Открыть плеер в полном окне
-     * @param positionMs текущая позиция воспроизведения (мс), берётся из MediaPlayerHost.
+     * @deprecated Используйте [toggleFullScreen] или [enterFullScreen]: плеер переключается в ландшафт на месте.
      */
-    fun openFullScreen(navigator: Navigator, positionMs: Long) {
-        navigator.push(ScreenX_VideoPlayerFullScreen(url, positionMs))
+    @Suppress("UnusedParameter")
+    @Deprecated("Используйте toggleFullScreen() или enterFullScreen()")
+    fun openFullScreen(navigator: Navigator? = null, positionMs: Long = -1L) {
+        enterFullScreen()
     }
 }
 

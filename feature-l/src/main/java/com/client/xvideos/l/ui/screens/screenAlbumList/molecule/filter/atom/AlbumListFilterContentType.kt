@@ -19,13 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.enum.ContentId
+import kotlinx.collections.immutable.persistentListOf
 
 private val style = Theme.L.Type.rowValue
+private val CONTENT_TYPE_OPTIONS = persistentListOf("All", "Hentai", "NErotic", "RPeople")
 
 @Composable
 fun AlbumListFilterContentType(onStart: ContentId, onChange: (ContentId) -> Unit) {
 
-    var selectedIndex by remember { mutableIntStateOf(
+    var selectedIndex by remember(onStart) { mutableIntStateOf(
         when (onStart) {
             ContentId.All -> 0
             ContentId.Hentai -> 1
@@ -34,11 +36,10 @@ fun AlbumListFilterContentType(onStart: ContentId, onChange: (ContentId) -> Unit
         }
     ) }
 
-    val options = listOf("All", "Hentai", "NErotic", "RPeople")
     val palette = StyleGenresTags.Palette
 
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(48.dp)) {
-        options.forEachIndexed { index, label ->
+        CONTENT_TYPE_OPTIONS.forEachIndexed { index, label ->
             SegmentedButton(
                 modifier = Modifier.height(48.dp),
                 colors = SegmentedButtonDefaults.colors(
@@ -52,7 +53,7 @@ fun AlbumListFilterContentType(onStart: ContentId, onChange: (ContentId) -> Unit
 
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = options.size,
+                    count = CONTENT_TYPE_OPTIONS.size,
                     baseShape = RoundedCornerShape(4.dp)
                 ),
                 onClick = {

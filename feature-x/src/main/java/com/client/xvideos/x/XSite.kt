@@ -7,3 +7,17 @@ package com.client.xvideos.x
  * только X: парсер, поиск, загрузки и список стран.
  */
 const val urlStart = "https://www.xv-ru.com"
+
+/**
+ * Нормализует относительный или абсолютный URL контента раздела X к каноническому виду.
+ *
+ * - Защищает от отсутствующих ведущих слэшей (например, `"video123"` -> `"https://www.xv-ru.com/video123"`).
+ * - Сохраняет уже абсолютные протокольные ссылки (`http://`, `https://`).
+ * - Возвращает пустую строку для пустых/пробельных ссылок.
+ */
+fun normalizeXUrl(href: String): String {
+    val trimmed = href.trim()
+    if (trimmed.isBlank()) return ""
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
+    return "$urlStart/${trimmed.removePrefix("/")}"
+}

@@ -1,11 +1,8 @@
 package com.client.xvideos.screenSettings.components
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -24,23 +21,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.input.VisualTransformation
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.client.xvideos.R
+import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.DisableAppLockAutofill
-import com.client.xvideos.R
-import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.theme.LavenderDialog
+import com.client.xvideos.common.theme.Theme
+import kotlinx.coroutines.launch
 
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
@@ -75,6 +74,13 @@ fun AppLockSettingsSection() {
         )
     }
 
+    if (showCamouflageVerificationDialog) {
+        CamouflageVerificationDialog(
+            onDismiss = { showCamouflageVerificationDialog = false },
+            onSuccess = { showCamouflageVerificationDialog = false }
+        )
+    }
+
     SettingsGroup {
         SettingsListItem(
             icon = R.drawable.key_24,
@@ -90,6 +96,7 @@ fun AppLockSettingsSection() {
         )
 
         if (enabled) {
+            SettingsDivider2()
             SettingsListItem(
                 icon = R.drawable.icon_red,
                 text = "Код доступа",
@@ -101,22 +108,18 @@ fun AppLockSettingsSection() {
                 }
             )
         }
-    }
 
-    CamouflageGroup(
-        passwordSet = passwordSet,
-        onEnableRequested = { showCamouflageVerificationDialog = true }
-    )
+        SettingsDivider2()
 
-    if (showCamouflageVerificationDialog) {
-        CamouflageVerificationDialog(
-            onDismiss = { showCamouflageVerificationDialog = false },
-            onSuccess = { showCamouflageVerificationDialog = false }
+        CamouflageGroup(
+            passwordSet = passwordSet,
+            onEnableRequested = { showCamouflageVerificationDialog = true }
         )
-    }
 
-    val keyboardIncognito = Settings.keyboard_incognito_enabled.field.collectAsStateWithLifecycle().value
-    SettingsGroup {
+        SettingsDivider2()
+
+        val keyboardIncognito = Settings.keyboard_incognito_enabled.field.collectAsStateWithLifecycle().value
+
         SettingsSwitchRow(
             icon = R.drawable.memory_24,
             text = "Инкогнито-клавиатура",
@@ -124,10 +127,11 @@ fun AppLockSettingsSection() {
             value = keyboardIncognito,
             onValueChange = { Settings.keyboard_incognito_enabled.setValue(it) }
         )
-    }
 
-    val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
-    SettingsGroup {
+        SettingsDivider2()
+
+        val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
+
         SettingsSwitchRow(
             icon = R.drawable.ic_blur_24,
             text = "Защита в диспетчере задач",
@@ -154,8 +158,8 @@ private fun CamouflageGroup(
         isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
         else -> "Выключена (стандартная иконка приложения)"
     }
-    SettingsGroup {
-        SettingsSwitchRow(
+
+    SettingsSwitchRow(
             icon = R.drawable.ic_launcher_calculator,
             text = "Маскировка под калькулятор",
             subtitle = camouflageSubtitle,
@@ -173,7 +177,7 @@ private fun CamouflageGroup(
                 }
             }
         )
-    }
+
 }
 
 @Composable

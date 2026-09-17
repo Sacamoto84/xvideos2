@@ -58,7 +58,7 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
-import com.client.xvideos.x.urlStart
+import com.client.xvideos.x.normalizeXUrl
 import com.composables.core.HorizontalSeparator
 
 class ScreenFavorites() : Screen {
@@ -86,7 +86,7 @@ class ScreenFavorites() : Screen {
             onDownload = { vm.download(it) },
             onSaveToGallery = { vm.saveToGallery(it) },
             onPlayLocal = { url -> navigator.push(ScreenX_LocalVideoPlayer(url)) },
-            onOpenVideo = { navigator.push(ScreenX_VideoPlayer(urlStart + it.href)) },
+            onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href))) },
         )
     }
 }

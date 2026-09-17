@@ -1,8 +1,10 @@
 package com.client.xvideos.r.model.search
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Immutable
 @Serializable
 data class SearchNichesShortResponse(
     @SerialName("page") val page: Long = 0L,
@@ -31,6 +33,7 @@ data class SearchNichesShortResponse(
     "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/orgasms.jpg"
 }
 */
+@Immutable
 @Serializable
 data class SearchItemNichesResponse(
     @SerialName("id") val id: String = "",

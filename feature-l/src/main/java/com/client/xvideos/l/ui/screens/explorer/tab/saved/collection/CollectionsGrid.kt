@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
-import com.composeunstyled.Text
+import androidx.compose.material3.Text
 
 /**
  * Сетка коллекций: список + заголовок ([topBar]) + кнопка «+».

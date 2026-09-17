@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -54,26 +54,32 @@ object AlbumFilterPresetManager {
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val cleanName = name.trim().ifBlank { generateDefaultName(filter) }
         val newPreset = SavedAlbumFilter(name = cleanName, filter = filter)
-        _presets.update { current ->
+        val snapshot = _presets.updateAndGet { current ->
             listOf(newPreset) + current.filter { it.name != cleanName }
         }
         scope.launch {
             persistMutex.withLock {
-                persist(prefs, _presets.value)
+                persist(prefs, snapshot)
             }
         }
     }
 
     fun deletePreset(context: Context, id: String) {
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        _presets.update { current ->
+        val snapshot = _presets.updateAndGet { current ->
             current.filter { it.id != id }
         }
         scope.launch {
             persistMutex.withLock {
-                persist(prefs, _presets.value)
+                persist(prefs, snapshot)
             }
         }
+    }
+
+    @androidx.annotation.VisibleForTesting
+    fun resetForTesting(initial: List<SavedAlbumFilter> = emptyList()) {
+        _presets.value = initial
+        isInitialized.set(false)
     }
 
     private fun persist(prefs: SharedPreferences, list: List<SavedAlbumFilter>) {

@@ -45,6 +45,7 @@ import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.urlStart
+import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.feature.country.CountryState
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.model.ItemsX
@@ -211,10 +212,10 @@ fun DashboardsPaginatedListContent(
                     cell,
                     onLongClick = {
                         //Открыть экран плеера
-                        openVideoPlayer(urlStart + cell.href)
+                        openVideoPlayer(normalizeXUrl(cell.href))
                     },
                     onDoubleClick = {
-                        openVideoPlayer(urlStart + cell.href)
+                        openVideoPlayer(normalizeXUrl(cell.href))
                     }
                 )
                 {

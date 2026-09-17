@@ -10,7 +10,7 @@ import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.runCatchingCancellable
-import com.client.xvideos.x.urlStart
+import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parseHTML5Player
@@ -153,7 +153,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
      * [parseHTML5Player]. null, если не удалось.
      */
     suspend fun resolveDirectVideoUrl(item: ItemsX): String? = runCatchingCancellable {
-        val pageUrl = if (item.href.startsWith("http")) item.href else urlStart + item.href
+        val pageUrl = normalizeXUrl(item.href)
         val html = readHtmlFromURLDirect(pageUrl)
         val config = parserItemVideo(html)?.let { parseHTML5Player(it) }
         config?.videoUrlHigh?.takeIf { it.isNotBlank() }

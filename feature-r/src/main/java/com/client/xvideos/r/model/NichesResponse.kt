@@ -1,8 +1,10 @@
 package com.client.xvideos.r.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Immutable
 @Serializable
 data class NichesResponse(
     @SerialName("niches") val niches: List<Niche> = emptyList(),
@@ -34,6 +36,7 @@ data class NichesResponse(
  *             ]
  * ```
  */
+@Immutable
 @Serializable
 data class Niche(
     @SerialName("id") val id: String = "",
@@ -44,6 +47,7 @@ data class Niche(
     @SerialName("previews") val previews: List<Preview>? = null
 )
 
+@Immutable
 @Serializable
 data class Preview(
     @SerialName("id") val id: String = "",

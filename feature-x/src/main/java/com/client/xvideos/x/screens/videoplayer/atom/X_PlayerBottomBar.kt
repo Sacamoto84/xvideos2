@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -41,11 +42,12 @@ import java.util.Locale
 @Composable
 fun X_PlayerBottomBar(
     host: MediaPlayerHost,
+    isFullScreen: Boolean = false,
     onFullScreen: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
-    var sliderValue by remember { mutableFloatStateOf(0f) }
+    var sliderValue by remember(host) { mutableFloatStateOf(0f) }
 
     Row(
         modifier = modifier
@@ -102,8 +104,8 @@ fun X_PlayerBottomBar(
         // Полный экран (если поддержан экраном)
         if (onFullScreen != null) {
             Icon(
-                imageVector = Icons.Filled.Fullscreen,
-                contentDescription = "Fullscreen",
+                imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                contentDescription = if (isFullScreen) "Exit Fullscreen" else "Fullscreen",
                 tint = Color.White,
                 modifier = Modifier
                     .size(28.dp)

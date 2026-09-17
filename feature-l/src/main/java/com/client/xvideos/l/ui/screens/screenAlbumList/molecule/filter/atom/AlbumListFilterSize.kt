@@ -28,16 +28,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.enum.PictureCountRank
+import kotlinx.collections.immutable.persistentListOf
 
 private val style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
+private val SIZE_OPTIONS = persistentListOf("Any", "0..25", "25..50", "50..100", "100..200", "200..800", "800..3200", "3200..12800")
 
 @Composable
 fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -> Unit) {
 
     var showDialog by remember { mutableStateOf(false) }
     val palette = StyleGenresTags.Palette
-
-    val itemS = listOf("Any", "0..25", "25..50", "50..100", "100..200", "200..800", "800..3200", "3200..12800")
 
     val currentLabel = when (value) {
         PictureCountRank.All -> "Any"
@@ -89,7 +89,7 @@ fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -
     if (showDialog) {
         AlbumFilterSelectDialog(
             title = "Album Size",
-            items = itemS,
+            items = SIZE_OPTIONS,
             selectedItem = currentLabel,
             itemTitle = { it },
             onDismiss = { showDialog = false },

@@ -234,7 +234,7 @@ private fun CustomDohUrlDialog(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
-    var tempUrl by remember { mutableStateOf(initialUrl) }
+    var tempUrl by remember(initialUrl) { mutableStateOf(initialUrl) }
     LavenderDialog(
         title = "Пользовательский DoH URL",
         onDismiss = onDismiss,
