@@ -53,7 +53,7 @@ class R_SearchNiches @Inject constructor(
             // Сеть. Отказ — не повод остаться совсем без подсказок: ниже есть
             // локальный кеш, по нему и ищем.
             val remoteResults = redApi.searchNichesShort(query)
-                .onFailure { Timber.w(it, "!!! R_SearchNiches: подсказки ниш не пришли") }
+                .onFailure { Timber.w(it, "R_SearchNiches: подсказки ниш не пришли") }
                 .getOrDefault(emptyList())
                 .map { SuggestionItem(text = it.name, count = it.gifs) }
 
@@ -70,7 +70,7 @@ class R_SearchNiches @Inject constructor(
             // Ввод продолжился — mapLatest отменил эту ветку штатно, ошибки нет.
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "!!! R_SearchNiches suggestions error: ${e.localizedMessage}")
+            Timber.e(e, "R_SearchNiches suggestions error: ${e.localizedMessage}")
             emptyList()
         }
     }

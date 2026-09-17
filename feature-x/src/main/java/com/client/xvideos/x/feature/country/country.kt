@@ -220,14 +220,12 @@ private fun parserCountry(): List<Country> {
         Country(countryName, countryHref, flagClass)
     }
 
-    // Выводим список стран
-    countryList.forEach { country ->
-        Timber.d("Страна: ${country.name}, Ссылка: ${country.url}, Класс флага: ${country.flagClass}")
-    }
+    // Выводим результат разбора
+    Timber.d("parserCountry: parsed ${countryList.size} countries")
     return countryList
 }
 
-private val html = """
+private const val html = """
 <ul class="countries row"><li class="country-au col-xs-12 col-sm-4 col-md-3 col-lg-2">
 	<a href="/change-country/au" class="btn"><span class="flag-small flag-au"></span> Австралия</a>
 </li><li class="country-at col-xs-12 col-sm-4 col-md-3 col-lg-2">

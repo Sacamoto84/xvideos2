@@ -418,7 +418,7 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
     val albumTopHits = MutableStateFlow<Landing_page_albumType?>(null)
 
     init {
-        Timber.i("iii ScreenLAlbumLandingTagSM init")
+        Timber.d("ScreenLAlbumLandingTagSM init")
         screenModelScope.launch {
             try {
                 val res = withContext(Dispatchers.IO) {
@@ -440,7 +440,7 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
 
     override fun onDispose() {
         super.onDispose()
-        Timber.i("iii ScreenLAlbumLandingTagSM onDispose")
+        Timber.d("ScreenLAlbumLandingTagSM onDispose")
     }
 
     //section title

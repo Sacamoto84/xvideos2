@@ -28,7 +28,7 @@ class AlbumTopHitsImpl(
     init {
         scope.launch(Dispatchers.IO) {
             val list = try {
-                Timber.i("!!! getAlbumTopHits")
+                Timber.d("getAlbumTopHits")
                 val query = getAlbumListTopHitsQuery()
                 val res = repository.openURI(query)
                 if (res.isFailure) return@launch
@@ -41,7 +41,7 @@ class AlbumTopHitsImpl(
             } catch (t: CancellationException) {
                 throw t
             } catch (t: Throwable) {
-                Timber.w(t, "!!! getAlbumTopHits error")
+                Timber.w(t, "getAlbumTopHits error")
                 return@launch
             }
 

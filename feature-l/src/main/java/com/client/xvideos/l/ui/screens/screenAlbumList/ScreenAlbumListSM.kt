@@ -95,13 +95,10 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     val stateGrid = mutableStateMapOf<Int, LazyGridState>()
 
     init {
-        Timber.i("iii ScreenLAlbumListSM init")
-
+        Timber.d("ScreenLAlbumListSM init")
 
         screenModelScope.launch {
             try {
-                //_isRefreshing.value = true
-
                 val agr = withContext(Dispatchers.IO) {
                     luscious.getAlbumListAggregations(1, filter.value)
                 }
@@ -117,17 +114,12 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Error loading initial data")
-            } finally {
-                // _isRefreshing.value = false
             }
         }
-        //loadInitialData()
-        //val a = filter.value!!.toString().toMD5()
     }
 
     fun loadInitialData() {
         screenModelScope.launch {
-            //_isRefreshing.value = true
             try {
                 val albumListResult = withContext(Dispatchers.IO) {
                     luscious.getAlbumList(1, filter.value)
@@ -152,40 +144,35 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 filterGenreStateCount.value = agrRes.filterGenreStateCount
                 filterTaggedStateCount.value = agrRes.filterTaggedStateCount
                 filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
-
-                //albumList.value?.getAlbumList(1, filter.value)
-                //albumList.value?.getAlbumListAggregations(1)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Error loading initial data")
                 SnackBar.error(e.message ?: "Error loading initial data")
-            } finally {
-                //_isRefreshing.value = false
             }
         }
     }
 
     override fun onDispose() {
         super.onDispose()
-        Timber.i("iii ScreenLAlbumListSM onDispose")
+        Timber.d("ScreenLAlbumListSM onDispose")
     }
 
     fun loadAlbumList(page: Int) {
         screenModelScope.launch {
             val status = bigList[page]?.status
             if (status == StatusAlbumList.DOWNLOADED) {
-                Timber.i("!!! loadAlbumList DOWNLOADED page:$page")
+                Timber.d("loadAlbumList DOWNLOADED page:$page")
                 return@launch
             }
             if (status == StatusAlbumList.DOWNLOADING) {
-                Timber.i("!!! loadAlbumList DOWNLOADING page:$page")
+                Timber.d("loadAlbumList DOWNLOADING page:$page")
                 return@launch
             }
 
             try {
                 _isRequest.value = true
-                Timber.i("!!! loadAlbumList page:$page")
+                Timber.d("loadAlbumList page:$page")
                 bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING)
 
                 val albumListResult = withContext(Dispatchers.IO) {
@@ -205,7 +192,7 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 // снекбар с текстом отмены корутины уже на предыдущем экране.
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "!!! eee Error loading page $page")
+                Timber.e(e, "Error loading page $page")
                 SnackBar.error(e.message ?: "Error loading page $page")
                 bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
             } finally {

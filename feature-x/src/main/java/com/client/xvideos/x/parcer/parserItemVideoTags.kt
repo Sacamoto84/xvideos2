@@ -4,29 +4,11 @@ import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 
 fun parserItemVideoTags(document: Document): TagsModel {
-    val listMain = mutableListOf<TagsMainUploaderPornstar>()
-    document.select("li.main-uploader").forEach {
-        val href = it.selectFirst("a[href]")?.attr("href")?.trim().orEmpty()
-        val name = it.selectFirst("span.name")?.ownText()?.trim()?.takeIf { s -> s.isNotEmpty() }
-            ?: it.selectFirst("span.name")?.text()?.trim().orEmpty()
-        val count = it.selectFirst("span.count")?.text()?.trim() ?: "0"
-        if (name.isNotEmpty()) {
-            listMain.add(TagsMainUploaderPornstar(href = href, name = name, count = count))
-        }
-    }
-
-    val listPornstar = mutableListOf<TagsMainUploaderPornstar>()
-    document.select("li.model").forEach {
-        val href = it.selectFirst("a[href]")?.attr("href")?.trim().orEmpty()
-        val name = it.selectFirst("span.name")?.ownText()?.trim()?.takeIf { s -> s.isNotEmpty() }
-            ?: it.selectFirst("span.name")?.text()?.trim().orEmpty()
-        val count = it.selectFirst("span.count")?.text()?.trim() ?: "0"
-        if (name.isNotEmpty()) {
-            listPornstar.add(TagsMainUploaderPornstar(href = href, name = name, count = count))
-        }
-    }
+    val listMain = document.select("li.main-uploader").mapNotNull { it.parseUploaderOrModel() }
+    val listPornstar = document.select("li.model").mapNotNull { it.parseUploaderOrModel() }
 
     val tags = document.select("li a.is-keyword")
         .map { it.text().trim() }
@@ -37,6 +19,19 @@ fun parserItemVideoTags(document: Document): TagsModel {
     return TagsModel(listMain, listPornstar, tags)
 }
 
+private fun Element.parseUploaderOrModel(): TagsMainUploaderPornstar? {
+    val href = selectFirst("a[href]")?.attr("href")?.trim().orEmpty()
+    val name = selectFirst("span.name")?.ownText()?.trim()?.takeIf { it.isNotEmpty() }
+        ?: selectFirst("span.name")?.text()?.trim().orEmpty()
+    val count = selectFirst("span.count")?.text()?.trim() ?: "0"
+    return if (name.isNotEmpty()) {
+        TagsMainUploaderPornstar(href = href, name = name, count = count)
+    } else {
+        null
+    }
+}
+
 fun parserItemVideoTags(html: String): TagsModel {
+    if (html.isBlank()) return TagsModel()
     return parserItemVideoTags(Jsoup.parse(html))
 }

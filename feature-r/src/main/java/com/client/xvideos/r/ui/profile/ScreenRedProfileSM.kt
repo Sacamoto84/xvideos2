@@ -146,7 +146,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
     }
 
     suspend fun loadNextPage(userName: String, items: Int = 100, page: Int = 1) {
-        Timber.d("!!! loadNextPage isLoading.value ${isLoading.value}")
+        Timber.d("loadNextPage isLoading.value ${isLoading.value}")
         if (isLoading.value) return
 
         isLoading.value = true
@@ -166,7 +166,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "!!! loadNextPage failed: user=$userName page=$page")
+            Timber.e(e, "loadNextPage failed: user=$userName page=$page")
         } finally {
             loadJob = null
             isLoading.value = false

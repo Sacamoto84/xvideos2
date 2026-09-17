@@ -1,6 +1,5 @@
 package com.client.xvideos.r.network.http
 
-import android.annotation.SuppressLint
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.r.network.json.RJson
 import io.ktor.client.HttpClient
@@ -29,10 +28,9 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    val USER_AGENT: String =
+    const val USER_AGENT: String =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 
-    @SuppressLint("CheckResult")
     val client = HttpClient(OkHttp) {
         engine {
             config {
@@ -114,18 +112,18 @@ object ApiClient {
     /** Выполняет логин. Вызывать только удерживая [tokenMutex]. */
     private suspend fun loginLocked(): Result<Boolean> {
         return try {
-            Timber.i("!!! Red ApiClient login()")
+            Timber.d("Red ApiClient login()")
             val tokenResponse =
                 client.get("https://api.redgifs.com/v2/auth/temporary").body<TokenResponse>()
             bearerToken = tokenResponse.token
-            Timber.i("!!! Red ApiClient login() SUCCESS - token received")
+            Timber.d("Red ApiClient login() SUCCESS - token received")
             Result.success(true)
         } catch (e: CancellationException) {
             // Отмена корутины — не ошибка сети. Без этого catch она превращалась
             // в Result.failure и уезжала вызывающему как настоящий сбой логина.
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "!!! Red ApiClient login() FAILED: ${e.localizedMessage}")
+            Timber.e(e, "Red ApiClient login() FAILED: ${e.localizedMessage}")
             Result.failure(e)
         }
     }
@@ -149,7 +147,7 @@ object ApiClient {
             throw e
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.Unauthorized) {
-                Timber.w("!!! Red ApiClient 401 Unauthorized, retrying login...")
+                Timber.w("Red ApiClient 401 Unauthorized, retrying login...")
                 val previous = bearerToken
                 if (refreshToken(previous).isSuccess) {
                     return try {
@@ -157,15 +155,15 @@ object ApiClient {
                     } catch (e2: CancellationException) {
                         throw e2
                     } catch (e2: Exception) {
-                        Timber.e(e2, "!!! Red ApiClient request FAILED after retry")
+                        Timber.e(e2, "Red ApiClient request FAILED after retry")
                         Result.failure(e2)
                     }
                 }
             }
-            Timber.e(e, "!!! Red ApiClient request FAILED")
+            Timber.e(e, "Red ApiClient request FAILED")
             Result.failure(e)
         } catch (e: Exception) {
-            Timber.e(e, "!!! Red ApiClient request FAILED")
+            Timber.e(e, "Red ApiClient request FAILED")
             Result.failure(e)
         }
     }

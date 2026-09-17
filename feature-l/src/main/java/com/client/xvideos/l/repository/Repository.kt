@@ -100,8 +100,7 @@ class Repository(
         data: String,
         config: RepositoryUriConfig = RepositoryUriConfig.DIRECT
     ): Result<String> {
-        Timber.i("!!! openURI()")
-        //Timber.i("!!! openURI() data:$data type:$type config:$config")
+        Timber.d("openURI()")
 
         try {
             authMutex.withLock {
@@ -124,7 +123,7 @@ class Repository(
             throw e
         }
         catch (e: Exception){
-            Timber.e(e, "!!! openURI() login error")
+            Timber.e(e, "openURI() login error")
             return Result.failure(e)
         }
 
@@ -147,7 +146,7 @@ class Repository(
                         val cached = if (ageMs in 0L..ROM_CACHE_MAX_AGE_MS) {
                             validateJsonResponse(res.content)
                         } else {
-                            Timber.i("!!! openURI() CACHE_ROM stale entry, ageMs:$ageMs")
+                            Timber.d("openURI() CACHE_ROM stale entry, ageMs:$ageMs")
                             Result.failure(IllegalStateException("stale"))
                         }
                         if (cached.isSuccess) {
@@ -165,7 +164,7 @@ class Repository(
                     throw e
                 }
                 catch (e: Exception){
-                    Timber.e(e, "!!! openURI() CACHE_ROM error")
+                    Timber.e(e, "openURI() CACHE_ROM error")
                     return Result.failure(e)
                 }
             }
@@ -180,7 +179,7 @@ class Repository(
                         if (cached.isSuccess) {
                             return cached
                         }
-                        Timber.w("!!! openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
+                        Timber.w("openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
                         deleteRamCache(cacheKey)
                     }
                     val checkedResponse = postJsonValidated(data)
@@ -193,7 +192,7 @@ class Repository(
                     throw e
                 }
                 catch (e: Exception){
-                    Timber.e(e, "!!! openURI() CACHE_RAM error")
+                    Timber.e(e, "openURI() CACHE_RAM error")
                     return Result.failure(e)
                 }
             }
@@ -231,7 +230,7 @@ class Repository(
                 requestHash = requestHash,
                 message = error?.message ?: "Server returned HTML instead of JSON"
             )
-            Timber.w("!!! openURI() HTML challenge response, retry after ${delayMs}ms")
+            Timber.w("openURI() HTML challenge response, retry after ${delayMs}ms")
         }
 
         return lastFailure ?: Result.failure(IllegalStateException("Server returned HTML instead of JSON"))
@@ -294,7 +293,7 @@ class Repository(
             } else {
                 "Server returned non-JSON response: ${normalized.previewForLog()}"
             }
-            Timber.w("!!! openURI() $message")
+            Timber.w("openURI() $message")
             return Result.failure(IllegalStateException(message))
         }
 
@@ -308,7 +307,7 @@ class Repository(
             }
             normalized
         }.onFailure {
-            Timber.w("!!! openURI() malformed JSON response: ${normalized.previewForLog()} (${it.message})")
+            Timber.w("openURI() malformed JSON response: ${normalized.previewForLog()} (${it.message})")
         }
     }
 

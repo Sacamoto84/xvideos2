@@ -27,10 +27,10 @@ object CollectionName {
      * имя папки.
      */
     fun normalizeOrNull(raw: String): String? {
+        if (raw.any { it in FORBIDDEN_CHARS || it < ' ' }) return null
         val name = raw.trim()
         if (name.isBlank()) return null
         if (name.startsWith(HIDDEN_PREFIX)) return null
-        if (name.any { it in FORBIDDEN_CHARS }) return null
         return name
     }
 

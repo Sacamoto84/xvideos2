@@ -66,7 +66,7 @@ class ScreenNicheSM @AssistedInject constructor(
         )
 
     init {
-        Timber.d("!!!  ⚠️ ScreenNicheSM init {...} ")
+        Timber.d("ScreenNicheSM init")
 
         lazyHost.columns = 2
 

@@ -136,18 +136,14 @@ class RedApi @Inject constructor(
             "type" to type.value
         )
 
-        Timber.i("!!! getTopLatest ${route.url}")
-        // Запрос из сети
-
-
+        Timber.d("getTopLatest ${route.url}")
         return api.request<MediaResponse>(route)
     }
 
     //--------------------------- User/Creator methods ---------------------------
 
-    //https://api.redgifs.com/v1/users/drfunkenfootz_md
     suspend fun readCreator(
-        userName: String = "lilijunex",
+        userName: String,
     ): Result<UserInfo> {
         val route = Route(
             method = "GET",
@@ -171,9 +167,16 @@ class RedApi @Inject constructor(
      *  https://api.redgifs.com/v2/users/entakeeke1a/search?order=new&count=40&tags=Amateur%2CArmpit%2CArmpits
      * ```
      */
-    suspend fun searchCreator( userName: String = "lilijunex", page: Int = 1, count: Int = 100, order: Order = Order.LATEST, type: MediaType = MediaType.GIF, tags: List<String> = emptyList() ): Result <CreatorResponse> {
+    suspend fun searchCreator(
+        userName: String,
+        page: Int = 1,
+        count: Int = 100,
+        order: Order = Order.LATEST,
+        type: MediaType = MediaType.GIF,
+        tags: List<String> = emptyList()
+    ): Result<CreatorResponse> {
 
-        val route = if (type == MediaType.ALL){
+        val route = if (type == MediaType.ALL) {
 
             if (tags.isNotEmpty()) Route(
                 method = "GET",
@@ -192,8 +195,7 @@ class RedApi @Inject constructor(
                 "count" to count,
                 "order" to order.value,
             )
-        }
-        else {
+        } else {
             if (tags.isNotEmpty()) Route(
                 method = "GET",
                 path = "/v2/users/{username}/search?order={order}&page={page}&count={count}&type={type}&tags={tags}",
@@ -219,27 +221,15 @@ class RedApi @Inject constructor(
         return res
     }
 
-
-    // Здесь были getTrendingGifs() и getTrendingImages() на /v2/explore/…, а
-    // также searchImage() — поиск по картинкам через type=i. Вызовов ни у
-    // одного не было. Первые два вдобавок ведут на адреса, которых больше нет:
-    // /v2/explore/trending-gifs и /v2/explore/trending-images отвечают 404
-    // (проверено 06.08.2026). Комментарий «⭐ Работает ⭐» над одним из них
-    // устарел вместе с адресом.
-
     //--------------------------- Tag methods ---------------------------
 
-
-    //niches
-
-    suspend fun getNiche(niches: String = "pumped-pussy"): Result<NicheResponse> {
+    suspend fun getNiche(niches: String): Result<NicheResponse> {
         val route = Route(method = "GET", path = "/v2/niches/{niches}", "niches" to niches)
         return api.request<NicheResponse>(route)
     }
 
-    //https://api.redgifs.com/v2/niches/cowgirl-pov/gifs?count=30&page=1&order=new
     suspend fun getNiches(
-        niches: String = "pumped-pussy",
+        niches: String,
         page: Int = 1,
         count: Int = 100,
         order: Order = Order.LATEST
@@ -255,17 +245,12 @@ class RedApi @Inject constructor(
         return cacheMediaResponse(route, this, mediaCache)
     }
 
-    //Похожее
-    //https://api.redgifs.com/v2/niches/pumped-pussy/related
-
-    suspend fun getNichesRelated(niches: String = "pumped-pussy"): Result <NichesResponse> {
+    suspend fun getNichesRelated(niches: String): Result<NichesResponse> {
         val route = Route(method = "GET", path = "/v2/niches/{niches}/related", "niches" to niches)
         return api.request<NichesResponse>(route)
     }
 
-    //https://api.redgifs.com/v2/niches/pumped-pussy/top-creators
-
-    suspend fun getNichesTopCreators(niches: String = "pumped-pussy"): Result<TopCreatorsResponse> {
+    suspend fun getNichesTopCreators(niches: String): Result<TopCreatorsResponse> {
         val route =
             Route(method = "GET", path = "/v2/niches/{niches}/top-creators", "niches" to niches)
         return api.request(route)
@@ -276,9 +261,7 @@ class RedApi @Inject constructor(
         @SerialName("tags") val tags: List<String> = emptyList()
     )
 
-    //https://api.redgifs.com/v2/niches/pumped-pussy/top-tags
-
-    suspend fun getNichesTopTags(niches: String = "pumped-pussy"): List<String> {
+    suspend fun getNichesTopTags(niches: String): List<String> {
         val route = Route(method = "GET", path = "/v2/niches/{niches}/top-tags", "niches" to niches)
         return api.request<TagsContainer>(route).getOrNull()?.tags ?: emptyList()
     }
@@ -354,7 +337,7 @@ private suspend fun cacheMediaResponse(
     val cached = cache.get(route.url)?.let { entry ->
         runCatching { RJson.decodeFromString<MediaResponse>(entry.content) }
             .getOrElse { e ->
-                Timber.e(e, "!!! Битая запись кеша ${route.url}")
+                Timber.w(e, "Corrupted cache entry for ${route.url}")
                 null
             }
             ?: run {
@@ -364,11 +347,11 @@ private suspend fun cacheMediaResponse(
     }
 
     if (cached != null) {
-        Timber.i("!!! Берем данные из кеша ${route.url}")
+        Timber.d("Loading from cache: ${route.url}")
         return Result.success(cached)
     }
 
-    Timber.i("!!! Берем данные из Сети ${route.url}")
+    Timber.d("Fetching from network: ${route.url}")
     return redApi.api.request<MediaResponse>(route)
         .onSuccess {
             runCatching {
@@ -377,7 +360,7 @@ private suspend fun cacheMediaResponse(
                 Timber.w(e, "Не удалось сохранить ответ в кэш: ${route.url}")
             }
         }
-        .onFailure { Timber.e(it, "!!! Ошибка сети при запросе ${route.url}") }
+        .onFailure { Timber.w(it, "Network error during request: ${route.url}") }
 }
 
 

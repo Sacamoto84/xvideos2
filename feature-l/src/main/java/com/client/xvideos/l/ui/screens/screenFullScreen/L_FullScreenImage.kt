@@ -158,7 +158,9 @@ class L_FullScreenImage(
 
         LaunchedEffect(isClosing) {
             if (isClosing) {
-                onClose( if (corruptCancel) pagerState.currentPage else -1 )
+                runCatching {
+                    onClose( if (corruptCancel) pagerState.currentPage else -1 )
+                }
                 navigator.pop()
             }
         }
@@ -355,5 +357,5 @@ internal fun resolveInitialIndex(items: List<PicsDetails>, target: PicsDetails):
     return 0
 }
 
-private fun resolveScrollIndex(currentIndex: Int, maxIndex: Int): Int =
+internal fun resolveScrollIndex(currentIndex: Int, maxIndex: Int): Int =
     (currentIndex - 2).coerceIn(0, maxIndex.coerceAtLeast(0))

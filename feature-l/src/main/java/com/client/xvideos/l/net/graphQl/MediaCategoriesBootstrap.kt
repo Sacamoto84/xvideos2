@@ -11,13 +11,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import timber.log.Timber
 
-private val mediaCategoriesBootstrap =
+private const val mediaCategoriesBootstrap =
     """{"operationName":"MediaCategoriesBootstrap","query":"\n    query MediaCategoriesBootstrap {\n  media_categories {\n    genres {\n      id\n      title\n      slug\n      description\n      uploading_rules\n      poster_url\n      acts_as_warning\n      acts_as_default\n      represents_uncategorized\n      url\n      parent {\n        id\n      }\n      only_allows_model\n      only_content {\n        id\n        title\n        url\n      }\n    }\n    filter_settings {\n      user_id\n      has_custom_filters\n      uses_default_warnings\n      audience_ids\n      genres_blocked_ids\n      genres_subscribed_ids\n      preferred_language_ids\n      default_dashboard_content_id\n    }\n    languages {\n      id\n      title\n      url\n    }\n    content_types {\n      id\n      title\n      url\n    }\n    audiences {\n      id\n      title\n      description\n      poster_url\n      url\n    }\n  }\n}\n    ","variables":{}}"""
 
 var mediaCategoriesFlow = MutableStateFlow<MediaCategories?>(null)
 
 suspend fun refreshMediaCategories(repository: Repository) {
-    Timber.i("!!! refreshMediaCategories")
+    Timber.d("refreshMediaCategories")
 
     val res = repository.openURI(mediaCategoriesBootstrap, config = RepositoryUriConfig.CACHE_ROM)
 
@@ -26,7 +26,10 @@ suspend fun refreshMediaCategories(repository: Repository) {
     val raw = res.getOrNull().orEmpty()
     val response = runCatching {
         LJson.decodeFromString<MediaCategoriesBootstrapResponse>(raw)
-    }.getOrNull() ?: return
+    }.getOrElse { e ->
+        Timber.w(e, "Failed to decode MediaCategoriesBootstrapResponse")
+        return
+    }
 
     withContext(Dispatchers.Main) {
         mediaCategoriesFlow.value = MediaCategories(

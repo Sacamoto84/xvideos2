@@ -88,7 +88,7 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
 
         val onFollowClick: () -> Unit = remember(isFollowed, vm.niche) {
             {
-                Timber.i("!!!!!! onFollowClick isFollowed: $isFollowed ${vm.niche.id}")
+                Timber.d("onFollowClick isFollowed: $isFollowed ${vm.niche.id}")
                 val nicheInfo = vm.niche
                 if (isFollowed)
                     savedRed.niches.remove(nicheInfo)

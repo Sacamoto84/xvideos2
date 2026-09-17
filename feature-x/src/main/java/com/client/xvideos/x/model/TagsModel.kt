@@ -28,7 +28,7 @@ data class TagsMainUploaderPornstar(val href: String, val name: String, val coun
 //</li>
 @Immutable
 data class TagsModel(
-    val mainUploader: List<TagsMainUploaderPornstar>,
-    val pornstars: List<TagsMainUploaderPornstar>,
+    val mainUploader: List<TagsMainUploaderPornstar> = emptyList(),
+    val pornstars: List<TagsMainUploaderPornstar> = emptyList(),
     val tags: List<String> = emptyList()
 )

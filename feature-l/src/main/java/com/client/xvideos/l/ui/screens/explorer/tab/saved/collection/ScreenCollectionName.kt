@@ -126,7 +126,7 @@ fun L_CollectionNameContent(
     }
 
     BackHandler {
-        Timber.i("iii BackHandler SavedCollectionTab")
+        Timber.d("BackHandler SavedCollectionTab")
         onExitCollection?.invoke() ?: run {
             savedL.collection.currentCollectionName = null
         }

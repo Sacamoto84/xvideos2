@@ -3,6 +3,7 @@ package com.client.xvideos.l
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.screens.screenFullScreen.LFullScreenPayload
 import com.client.xvideos.l.ui.screens.screenFullScreen.resolveInitialIndex
+import com.client.xvideos.l.ui.screens.screenFullScreen.resolveScrollIndex
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -74,5 +75,24 @@ class LFullScreenPayloadTest {
         assertEquals(0, resolveInitialIndex(emptyList(), picture("https://cdn/none.jpg")))
         val items = listOf(picture("https://cdn/1.jpg"), picture("https://cdn/2.jpg"))
         assertEquals(0, resolveInitialIndex(items, picture("https://cdn/unknown.jpg")))
+    }
+
+    @Test
+    fun `resolveScrollIndex сдвигает позицию на 2 назад и удерживает в границах списка`() {
+        // При currentIndex = 0 или 1 результат не может быть меньше 0
+        assertEquals(0, resolveScrollIndex(currentIndex = 0, maxIndex = 10))
+        assertEquals(0, resolveScrollIndex(currentIndex = 1, maxIndex = 10))
+        assertEquals(0, resolveScrollIndex(currentIndex = 2, maxIndex = 10))
+
+        // При currentIndex >= 3 сдвигает на 2 назад для центрирования миниатюры
+        assertEquals(3, resolveScrollIndex(currentIndex = 5, maxIndex = 10))
+        assertEquals(8, resolveScrollIndex(currentIndex = 10, maxIndex = 10))
+
+        // Превышение границ удерживается maxIndex
+        assertEquals(10, resolveScrollIndex(currentIndex = 15, maxIndex = 10))
+
+        // Пустой список (maxIndex = 0 или -1) возвращает 0 без сбоя
+        assertEquals(0, resolveScrollIndex(currentIndex = 0, maxIndex = 0))
+        assertEquals(0, resolveScrollIndex(currentIndex = 5, maxIndex = -1))
     }
 }

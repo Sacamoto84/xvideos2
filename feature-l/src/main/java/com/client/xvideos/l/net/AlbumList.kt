@@ -88,13 +88,13 @@ data class getAlbumListAggregationsResult(
         val filter = filterIn ?: AlbumListFilter()
 
         try {
-            Timber.i("!!! getAlbumListAggregations $page")
+            Timber.d("getAlbumListAggregations $page")
 
             val query = getAlbumListWithAggregations(page, filter)
 
             val result = repository.openURI(query)
             if (result.isFailure) {
-                Timber.i("!!! getAlbumListAggregations error ${result.exceptionOrNull()}")
+                Timber.w("getAlbumListAggregations error ${result.exceptionOrNull()}")
                 return Result.failure(result.exceptionOrNull() ?: IllegalStateException("Failed to load album aggregations"))
             }
 
@@ -114,7 +114,7 @@ data class getAlbumListAggregationsResult(
                 }.orEmpty()
 
                 filterGenreStateCount.addAll(list)
-                Timber.i("!!! getAlbumListAggregations list размер : ${list.size}")
+                Timber.d("getAlbumListAggregations list size: ${list.size}")
             }
 
             val indexTagged = aggregations?.indexOfFirst { el ->
@@ -127,7 +127,7 @@ data class getAlbumListAggregationsResult(
                     runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
                 }.orEmpty()
                 filterTaggedStateCount.addAll(list)
-                Timber.i("!!! getAlbumListAggregations list Tagged размер : ${list.size}")
+                Timber.d("getAlbumListAggregations list Tagged size: ${list.size}")
             }
 
             val indexPicture = aggregations?.indexOfFirst { el ->
@@ -141,14 +141,14 @@ data class getAlbumListAggregationsResult(
                 }.orEmpty()
 
                 filterPictureCountStateCount.addAll(list)
-                Timber.i("!!! getAlbumListAggregations list filterPictureCountStateCount размер : ${list.size}")
+                Timber.d("getAlbumListAggregations list filterPictureCountStateCount size: ${list.size}")
             }
         } catch (e: CancellationException) {
             // Отмена корутины не должна превращаться в Result.failure: вызывающий
             // показывает такой failure снекбаром уже на другом экране.
             throw e
         } catch (e: Exception) {
-            Timber.w("!!! getAlbumListAggregations Exception ${e.localizedMessage}")
+            Timber.w("getAlbumListAggregations Exception ${e.localizedMessage}")
             return Result.failure(e)
 
         }
@@ -177,19 +177,19 @@ data class getAlbumListAggregationsResult(
     {
         val items = mutableListOf<Album>()
         try {
-            Timber.i("!!! getAlbumList $page")
+            Timber.d("getAlbumList $page")
             val filter = filterIn ?: AlbumListFilter()
             val query = getAlbumListGraphQL1(page, filter)
 
             val result = repository.openURI(query, config = RepositoryUriConfig.CACHE_RAM )
 
             if (result.isFailure) {
-                Timber.w("!!! getAlbumList error: ${result.exceptionOrNull()?.message}")
+                Timber.w("getAlbumList error: ${result.exceptionOrNull()?.message}")
                 return Result.failure(result.exceptionOrNull() ?: IllegalStateException("getAlbumList unknown error"))
             }
             val parsed = parseAlbumListResponse(result.getOrThrow(), filter, page)
             if (parsed.isFailure) {
-                Timber.w("!!! getAlbumList parse error: ${parsed.exceptionOrNull()?.message}")
+                Timber.w("getAlbumList parse error: ${parsed.exceptionOrNull()?.message}")
                 repository.deleteCache(query, RepositoryUriConfig.CACHE_RAM)
                 repository.deleteCache(query, RepositoryUriConfig.CACHE_ROM)
                 return Result.failure(parsed.exceptionOrNull() ?: IllegalStateException("getAlbumList parse error"))
@@ -198,7 +198,6 @@ data class getAlbumListAggregationsResult(
             val parsedResult = parsed.getOrThrow()
             val info = parsedResult.info
             items.addAll(parsedResult.items)
-            //Timber.i("!!! getAlbumList info ${info.page} ${items.toList()}")
             return Result.success(
                 AlbumListImplInfoAndList(
                     info = info,
@@ -210,7 +209,7 @@ data class getAlbumListAggregationsResult(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w("!!! getAlbumList Exception ${e.localizedMessage}")
+            Timber.w("getAlbumList Exception ${e.localizedMessage}")
             return Result.failure(e)
         }
     }

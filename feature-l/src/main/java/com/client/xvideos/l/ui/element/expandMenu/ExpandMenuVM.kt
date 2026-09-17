@@ -124,7 +124,7 @@ class ExpandMenuViewModel @Inject constructor(
         // Скачиваем и пишем файл на IO (потоково, без буферизации всего файла
         // в RAM), а системный share показываем на Main.
         scope.launch(Dispatchers.IO) {
-            Timber.i("!!! share item = ${item.url_to_original} isAnimated: ${item.is_animated}")
+            Timber.d("share item = ${item.url_to_original} isAnimated: ${item.is_animated}")
             try {
                 val file = lDownloadMediaToShareCache(item)
                 if (file == null) {

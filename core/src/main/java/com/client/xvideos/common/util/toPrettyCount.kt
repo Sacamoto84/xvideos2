@@ -11,7 +11,7 @@ import kotlin.math.abs
  * 900     -> "900"
  */
 fun Long.toPrettyCount(): String {
-    val absValue = abs(this)
+    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
 
     return when {
         absValue < 1_000 -> "$absValue"                             // 0-999
@@ -34,7 +34,7 @@ fun Long.toPrettyCount(): String {
 }
 
 fun Long.toPrettyCount2(): String {
-    val absValue = abs(this)
+    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
 
     return when {
         absValue < 1_000 -> "$absValue"                             // 0-999
@@ -57,7 +57,7 @@ fun Long.toPrettyCount2(): String {
 }
 
 fun Long.toPrettyCount3(): String {
-    val absValue = abs(this)
+    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
 
     return when {
         absValue < 1_000 -> "$absValue"                             // 0-999
@@ -80,7 +80,7 @@ fun Long.toPrettyCount3(): String {
 }
 
 fun Long.toPrettyCountInt(): String {
-    val absValue = abs(this)
+    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
 
     return when {
         absValue < 1_000 -> "$absValue"                             // 0-999

@@ -48,6 +48,15 @@ class CollectionNameTest {
     }
 
     @Test
+    fun `имя с управляющими символами отвергается`() {
+        assertEquals(null, CollectionName.normalizeOrNull("name\nline"))
+        assertEquals(null, CollectionName.normalizeOrNull("name\rline"))
+        assertEquals(null, CollectionName.normalizeOrNull("name\ttab"))
+        assertEquals(null, CollectionName.normalizeOrNull("\u001Ftest"))
+        assertFalse(CollectionName.isValid("name\ninjection"))
+    }
+
+    @Test
     fun `isValid согласован с normalizeOrNull`() {
         assertTrue(CollectionName.isValid("нормальное"))
         assertFalse(CollectionName.isValid("../побег"))

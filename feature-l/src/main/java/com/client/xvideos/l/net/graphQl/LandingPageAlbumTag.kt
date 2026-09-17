@@ -13,7 +13,7 @@ suspend fun LandingPageAlbumTag(
     repository: Repository,
 ): Result<Landing_page_albumType> {
     try {
-        Timber.i("!!! LandingPageAlbumTag init")
+        Timber.d("LandingPageAlbumTag init tag:$tag")
         val query = getLandingPageAlbumTag(tag)
         val res = repository.openURI(query)
         val json = LJson.parseToJsonElement(res.getOrThrow()).jsonObject

@@ -5,9 +5,9 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class DataAlbumFilterDisplay( val primary: String, val secondary : String, val request : String )
 
-val byDate = "By Date"
-val byTopRated = "By Top Rated"
-val byFirstLetter = "First Letter"
+const val byDate = "By Date"
+const val byTopRated = "By Top Rated"
+const val byFirstLetter = "First Letter"
 
 val albumFilterDisplay = listOf(
 

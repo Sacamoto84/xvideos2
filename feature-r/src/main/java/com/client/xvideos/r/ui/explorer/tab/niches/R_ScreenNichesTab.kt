@@ -64,7 +64,7 @@ private data class NicheScrollSnapshot(
     val offset: Int
 )
 
-private fun filterAndSortNiches(
+internal fun filterAndSortNiches(
     niches: List<Niche>,
     query: String,
     order: Order

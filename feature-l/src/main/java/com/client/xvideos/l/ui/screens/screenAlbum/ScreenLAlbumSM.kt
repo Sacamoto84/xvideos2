@@ -111,19 +111,19 @@ class ScreenLAlbumSM @AssistedInject constructor(
     }
 
     init {
-        Timber.d("!!! ScreenLAlbumSM init")
+        Timber.d("ScreenLAlbumSM init")
     }
 
     override fun onDispose() {
         super.onDispose()
-        Timber.d("!!! ScreenLAlbumSM onDispose")
+        Timber.d("ScreenLAlbumSM onDispose")
     }
 
 
     fun share(item: PicsDetails) {
         // Скачивание/запись файла — на IO (потоково), системный share — на Main.
         scope.launch(Dispatchers.IO) {
-            Timber.i("!!! share item = ${item.url_to_original} isAnimated: ${item.is_animated}")
+            Timber.d("share item = ${item.url_to_original} isAnimated: ${item.is_animated}")
             try {
                 val file = lDownloadMediaToShareCache(item)
                 if (file == null) {

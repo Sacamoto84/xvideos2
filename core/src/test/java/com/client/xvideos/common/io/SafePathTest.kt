@@ -77,6 +77,9 @@ class SafePathTest {
         org.junit.Assert.assertTrue(isUnsafeItemName("..\\escape"))
         org.junit.Assert.assertTrue(isUnsafeItemName("file\u0000.txt"))
         org.junit.Assert.assertTrue(isUnsafeItemName("\u0000"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("line\nbreak"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("line\rbreak"))
+        org.junit.Assert.assertTrue(isUnsafeItemName("tab\titem"))
 
         // Безопасные: обычные имена, имена с точками, дефисами, двоеточиями
         org.junit.Assert.assertFalse(isUnsafeItemName("normal_name"))
@@ -84,5 +87,12 @@ class SafePathTest {
         org.junit.Assert.assertFalse(isUnsafeItemName(".hidden_item"))
         org.junit.Assert.assertFalse(isUnsafeItemName("id:456"))
         org.junit.Assert.assertFalse(isUnsafeItemName("item.with.dots"))
+    }
+
+    @Test
+    fun `путь с управляющими символами отвергается`() {
+        assertThrows(IllegalArgumentException::class.java) { normalizeRelativePath("data/\n/file.txt") }
+        assertThrows(IllegalArgumentException::class.java) { normalizeRelativePath("data/\r/file.txt") }
+        assertThrows(IllegalArgumentException::class.java) { normalizeRelativePath("data/\u0007/bell.txt") }
     }
 }

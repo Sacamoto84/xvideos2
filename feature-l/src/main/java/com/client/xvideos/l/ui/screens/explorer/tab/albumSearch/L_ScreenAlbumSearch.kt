@@ -272,7 +272,7 @@ class ScreenLAlbumSearchSM @Inject constructor(
             isLoading.value = true
             result.value = withContext(Dispatchers.IO) {
                 luscious.getLandingPageAlbumSearch(query).getOrElse {
-                    Timber.e(it, "!!! eee ScreenLAlbumSearchSM search")
+                    Timber.e(it, "ScreenLAlbumSearchSM search")
                     null
                 }
             }

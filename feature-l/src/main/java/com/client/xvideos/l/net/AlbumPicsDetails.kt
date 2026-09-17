@@ -133,11 +133,11 @@ class AlbumPicsDetails(
         val pageError = pageResponse.exceptionOrNull()
         recordPageIssue(page, pageError)
         if (pageError.isHtmlChallengeResponse()) {
-            Timber.w(pageError, "!!! AlbumPicsDetails $id page $page HTML challenge response")
+            Timber.w(pageError, "AlbumPicsDetails $id page $page HTML challenge response")
             return Result.failure(pageError ?: IllegalStateException("Server returned HTML instead of JSON"))
         }
 
-        Timber.w(pageError, "!!! AlbumPicsDetails $id page $page load error")
+        Timber.w(pageError, "AlbumPicsDetails $id page $page load error")
         return pageResponse
     }
 
@@ -161,12 +161,7 @@ class AlbumPicsDetails(
         val totalPagesFromInfo = info.readInt("total_pages")
         val totalItems = info.readInt("total_items")
         val itemsPerPage = info.readInt("items_per_page")
-        val calculatedPages = if (totalItems != null && itemsPerPage != null && itemsPerPage > 0) {
-            ((totalItems + itemsPerPage - 1) / itemsPerPage).coerceAtLeast(1)
-        } else {
-            1
-        }
-        val pages = maxOf(totalPagesFromInfo ?: calculatedPages, calculatedPages).coerceAtLeast(1)
+        val pages = calculateAlbumPages(totalPagesFromInfo, totalItems, itemsPerPage)
 
         val itemsArray = get["items"]?.takeIf { it is JsonArray }?.jsonArray
             ?: error("AlbumPicsDetails response missing data.picture.list.items")
@@ -181,16 +176,16 @@ class AlbumPicsDetails(
                     list.add(pic)
                 } else {
                     skippedNoMediaCount++
-                    Timber.w("!!! AlbumPicsDetails $id page $page item $index has no media urls: $element")
+                    Timber.w("AlbumPicsDetails $id page $page item $index has no media urls: $element")
                 }
             }.onFailure {
                 parseErrorCount++
-                Timber.w(it, "!!! AlbumPicsDetails $id page $page item $index parse error: $element")
+                Timber.w(it, "AlbumPicsDetails $id page $page item $index parse error: $element")
             }
         }
 
-        Timber.i(
-            "!!! AlbumPicsDetails [$id] Page $page/$pages chunk parsed: " +
+        Timber.d(
+            "AlbumPicsDetails [$id] Page $page/$pages chunk parsed: " +
             "valid=${list.size}, raw=${itemsArray.size}, " +
             "server info total_items=$totalItems, items_per_page=$itemsPerPage" +
             (if (skippedNoMediaCount > 0 || parseErrorCount > 0) " (skipped: noMedia=$skippedNoMediaCount, parseError=$parseErrorCount)" else "")
@@ -214,9 +209,9 @@ class AlbumPicsDetails(
             }
         }
 
-        Timber.i("!!! AlbumPicsDetails [$id] Starting chunked load (config=$pageCacheConfig)")
+        Timber.d("AlbumPicsDetails [$id] Starting chunked load (config=$pageCacheConfig)")
         val firstPage = loadPage(1, pageCacheConfig).getOrElse {
-            Timber.w(it, "!!! AlbumPicsDetails $id page 1 error")
+            Timber.w(it, "AlbumPicsDetails $id page 1 error")
             recordPageIssue(1, it)
             percentLoad = 1f
             return@withContext
@@ -224,16 +219,16 @@ class AlbumPicsDetails(
 
         val pages = firstPage.totalPages
         appendPage(firstPage, pages)
-        Timber.i("!!! AlbumPicsDetails [$id] Page 1 loaded: +${firstPage.items.size} items. Total pages: $pages, loaded pics so far: ${pics.size}")
+        Timber.d("AlbumPicsDetails [$id] Page 1 loaded: +${firstPage.items.size} items. Total pages: $pages, loaded pics so far: ${pics.size}")
 
         for (page in 2..pages) {
             val pageResult = loadPage(page, pageCacheConfig).getOrElse {
-                Timber.w(it, "!!! AlbumPicsDetails $id page $page error")
+                Timber.w(it, "AlbumPicsDetails $id page $page error")
                 recordPageIssue(page, it)
                 PageLoadResult(page, pages, emptyList())
             }
             appendPage(pageResult, pages)
-            Timber.i("!!! AlbumPicsDetails [$id] Page $page/$pages loaded: +${pageResult.items.size} items. Loaded pics so far: ${pics.size}")
+            Timber.d("AlbumPicsDetails [$id] Page $page/$pages loaded: +${pageResult.items.size} items. Loaded pics so far: ${pics.size}")
             delay(PAGE_REQUEST_DELAY_MS)
         }
 
@@ -242,7 +237,7 @@ class AlbumPicsDetails(
                 percentLoad = 1f
             }
         }
-        Timber.i("!!! AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
+        Timber.d("AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
     }
 
     suspend fun restoreFromBundleCache(
@@ -320,7 +315,7 @@ class AlbumPicsDetails(
             val knownTotalPages = totalPages ?: pagesToRetry.maxOrNull() ?: 1
             pagesToRetry.forEach { page ->
                 val pageResult = loadPage(page).getOrElse {
-                    Timber.w(it, "!!! AlbumPicsDetails $id page $page retry error")
+                    Timber.w(it, "AlbumPicsDetails $id page $page retry error")
                     recordPageIssue(page, it)
                     delay(PAGE_REQUEST_DELAY_MS)
                     return@forEach
@@ -380,28 +375,36 @@ class AlbumPicsDetails(
         val message = this?.message ?: return false
         return message.startsWith("Server returned HTML instead of JSON")
     }
+}
 
-    private fun normalizePictureUrls(l: List<PicsDetails>): List<PicsDetails> {
-        return l.map { item ->
-            val isAnimated = item.isAnimatedMedia()
-            val thumbnailUrl = item.lBestThumbnailImageUrl()
+internal fun normalizePictureUrls(l: List<PicsDetails>): List<PicsDetails> {
+    return l.map { item ->
+        val isAnimated = item.isAnimatedMedia()
+        val thumbnailUrl = item.lBestThumbnailImageUrl()
 
-            val origIsAnimatedMedia = item.url_to_original?.let { orig ->
-                val clean = orig.substringBefore('?').substringBefore('#')
-                clean.endsWith(".gif", ignoreCase = true) || orig.isLVideoFileUrl()
-            } == true
+        val origIsAnimatedMedia = item.url_to_original?.let { orig ->
+            val clean = orig.substringBefore('?').substringBefore('#')
+            clean.endsWith(".gif", ignoreCase = true) || orig.isLVideoFileUrl()
+        } == true
 
-            val normalizedOriginal = when {
-                origIsAnimatedMedia -> item.url_to_original
-                !thumbnailUrl.isNullOrBlank() -> thumbnailUrl
-                else -> item.url_to_original
-            }
-
-            item.copy(
-                is_animated = isAnimated,
-                url_to_original = normalizedOriginal
-            )
+        val normalizedOriginal = when {
+            origIsAnimatedMedia -> item.url_to_original
+            !thumbnailUrl.isNullOrBlank() -> thumbnailUrl
+            else -> item.url_to_original
         }
-    }
 
+        item.copy(
+            is_animated = isAnimated,
+            url_to_original = normalizedOriginal
+        )
+    }
+}
+
+internal fun calculateAlbumPages(totalPagesFromInfo: Int?, totalItems: Int?, itemsPerPage: Int?): Int {
+    val calculatedPages = if (totalItems != null && itemsPerPage != null && itemsPerPage > 0) {
+        ((totalItems + itemsPerPage - 1) / itemsPerPage).coerceAtLeast(1)
+    } else {
+        1
+    }
+    return maxOf(totalPagesFromInfo ?: calculatedPages, calculatedPages).coerceAtLeast(1)
 }

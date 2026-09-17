@@ -57,7 +57,7 @@ fun readLSavedLikeMetadata(file: File): LSavedLikeMetadata? {
     return try {
         AppJson.decodeFromString<LSavedLikeMetadata>(text)
     } catch (e: Exception) {
-        Timber.e(e, "!!! read L like metadata error: ${file.absolutePath}")
+        Timber.e(e, "read L like metadata error: ${file.absolutePath}")
         null
     }
 }

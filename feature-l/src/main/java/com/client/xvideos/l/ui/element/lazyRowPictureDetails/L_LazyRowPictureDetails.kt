@@ -195,7 +195,7 @@ fun L_LazyRowPictureDetails(
                                     item = item,
                                     payloadKey = payloadKey,
                                     onClose = { position ->
-                                        Timber.i("scrollToItem $position")
+                                        Timber.d("scrollToItem $position")
                                         val targetIndex = calculateGridScrollIndex(position, host.filteredPic.size, showInitialLoading)
                                         if (targetIndex != null) {
                                             appScope.launch {
@@ -402,7 +402,7 @@ private fun LInlineAnimationVideo(
             playerHost.videoFitMode = ScreenResize.FILL
             playerHost.onError = {
                 playbackError = true
-                Timber.e("!!! L inline video error: ${it.message}")
+                Timber.e("L inline video error: ${it.message}")
             }
             playerHost.play()
         }

@@ -14,7 +14,7 @@ suspend fun LandingPageAlbumSearch(
     limit: Int = 9,
 ): Result<Landing_page_albumType> {
     try {
-        Timber.i("!!! LandingPageAlbumSearch init search:$search")
+        Timber.d("LandingPageAlbumSearch init search:$search")
         val query = getLandingPageAlbumSearch(search, limit)
         val res = repository.openURI(query)
         val json = LJson.parseToJsonElement(res.getOrThrow()).jsonObject

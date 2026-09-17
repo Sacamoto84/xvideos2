@@ -81,7 +81,7 @@ internal fun LFullScreenVideo(
         playerHost.videoFitMode = ScreenResize.FIT
         playerHost.onError = {
             playbackError = true
-            timber.log.Timber.e("!!! L fullscreen video error: ${it.message}")
+            timber.log.Timber.e("L fullscreen video error: ${it.message}")
         }
     }
 

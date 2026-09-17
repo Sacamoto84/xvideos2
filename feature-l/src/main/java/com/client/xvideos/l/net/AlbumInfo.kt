@@ -87,7 +87,7 @@ class AlbumInfo(
                 val result = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
                 if (result.isFailure) {
                     val err = result.exceptionOrNull()?.message ?: "Network error"
-                    Timber.w("!!! getAlbumInfo $id error: $err")
+                    Timber.w("getAlbumInfo $id error: $err")
                     _loadError.value = err
                     _isLoading.value = false
                     return@launch
@@ -96,7 +96,7 @@ class AlbumInfo(
 
                 if (parsed.isFailure) {
                     val err = parsed.exceptionOrNull()?.message ?: "Parse error"
-                    Timber.w("!!! getAlbumInfo $id parse error: $err")
+                    Timber.w("getAlbumInfo $id parse error: $err")
                     _loadError.value = err
                     _isLoading.value = false
                     return@launch
@@ -105,8 +105,8 @@ class AlbumInfo(
                 val albumDetails = parsed.getOrThrow()
                 _albumInfo.value = albumDetails
                 _isLoading.value = false
-                Timber.i(
-                    "!!! AlbumInfo [$id] Loaded metadata: title='${albumDetails.title}', " +
+                Timber.d(
+                    "AlbumInfo [$id] Loaded metadata: title='${albumDetails.title}', " +
                     "pictures=${albumDetails.number_of_pictures}, " +
                     "animated=${albumDetails.number_of_animated_pictures}, " +
                     "description='${albumDetails.description}'"
@@ -141,7 +141,7 @@ class AlbumInfo(
             cachedTotalPages = bundle.totalPages
         )
         _albumInfo.value = bundle.album
-        Timber.i("!!! L album bundle cache hit id:$id items:${bundle.pics.size}")
+        Timber.d("L album bundle cache hit id:$id items:${bundle.pics.size}")
         return true
     }
 
@@ -159,10 +159,10 @@ class AlbumInfo(
         )
         runCatching {
             repository.putAlbumBundleCache(id, LJson.encodeToString(bundle))
-            Timber.i("!!! L album bundle cache saved id:$id items:${snapshot.pics.size}")
+            Timber.d("L album bundle cache saved id:$id items:${snapshot.pics.size}")
             if (snapshot.pics.size != albumDetails.number_of_pictures) {
                 Timber.w(
-                    "!!! AlbumInfo [$id] Discrepancy: actual loaded pictures count (${snapshot.pics.size}) " +
+                    "AlbumInfo [$id] Discrepancy: actual loaded pictures count (${snapshot.pics.size}) " +
                     "!= metadata number_of_pictures (${albumDetails.number_of_pictures})"
                 )
             }

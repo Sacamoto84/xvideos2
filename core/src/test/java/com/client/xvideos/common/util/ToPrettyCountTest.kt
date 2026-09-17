@@ -41,6 +41,17 @@ class ToPrettyCountTest {
     }
 
     @Test
+    fun `toPrettyCount handles extreme bounds without 2s complement overflow`() {
+        // abs(Long.MIN_VALUE) in 2's complement overflows back to Long.MIN_VALUE if unhandled
+        val minResult = Long.MIN_VALUE.toPrettyCount()
+        val maxResult = Long.MAX_VALUE.toPrettyCount()
+        assertEquals(maxResult, minResult)
+        assertEquals(Long.MAX_VALUE.toPrettyCount2(), Long.MIN_VALUE.toPrettyCount2())
+        assertEquals(Long.MAX_VALUE.toPrettyCount3(), Long.MIN_VALUE.toPrettyCount3())
+        assertEquals(Long.MAX_VALUE.toPrettyCountInt(), Long.MIN_VALUE.toPrettyCountInt())
+    }
+
+    @Test
     fun `toPrettyCount2 formats with 2 decimal places`() {
         assertEquals("0", 0L.toPrettyCount2())
         assertEquals("999", 999L.toPrettyCount2())

@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,10 +62,13 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
 
 
+        val tagsList = remember(tags) { tags.toList() }
+        val tagsSelectList = remember(tagsSelect) { tagsSelect.toList() }
+
         RedProfileScreenContent(
             creator = vm.creator,
-            tags = tags.toList(),
-            tagsSelect = tagsSelect.toList(),
+            tags = tagsList,
+            tagsSelect = tagsSelectList,
             isLoading = isLoading,
             scrollPercent = { scrollPercent.value },
             likedHost = vm.likedHost,

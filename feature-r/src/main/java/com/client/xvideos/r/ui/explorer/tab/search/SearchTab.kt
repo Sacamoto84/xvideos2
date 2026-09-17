@@ -34,7 +34,6 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.common.util.runCatchingCancellable
 import timber.log.Timber
@@ -155,11 +154,10 @@ fun SearchTabPreview() {
 
 @Stable
 class ScreenRedExplorerSearchSM @Inject constructor(
-    connectivityObserver: ConnectivityObserver,
     val redApi: RedApi
 ) : ScreenModel {
 
-    val searchText = MutableStateFlow<String>("Ana")
+    val searchText = MutableStateFlow<String>("")
 
     val creatorsList = mutableStateListOf<SearchItemCreatorsResponse>()
     val nichesList = mutableStateListOf<SearchItemNichesResponse>()
@@ -184,7 +182,7 @@ class ScreenRedExplorerSearchSM @Inject constructor(
                     // приложение целиком.
                     runCatchingCancellable { redApi.search.searchCreatorsShort(text).getOrThrow() }
                         .onSuccess { creatorsList.replaceWith(it.items) }
-                        .onFailure { Timber.w(it, "!!! Поиск авторов не удался: %s", text) }
+                        .onFailure { Timber.w(it, "Поиск авторов не удался: %s", text) }
                 }
         }
 //            val niches = RedGifs.searchNiches("Ana")
