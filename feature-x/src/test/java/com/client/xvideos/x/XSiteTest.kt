@@ -36,4 +36,12 @@ class XSiteTest {
         assertEquals("$urlStart/video123", normalizeXUrl("  /video123  "))
         assertEquals("https://example.com/video", normalizeXUrl("  https://example.com/video  "))
     }
+
+    @Test
+    fun `протокольно-относительные ссылки с двумя слэшами нормализуются в https`() {
+        assertEquals("https://cdn.xv-ru.com/video.mp4", normalizeXUrl("//cdn.xv-ru.com/video.mp4"))
+        assertEquals("https://example.com/stream.m3u8", normalizeXUrl("  //example.com/stream.m3u8  "))
+    }
 }
+
+

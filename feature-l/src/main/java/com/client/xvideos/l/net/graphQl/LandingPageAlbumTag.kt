@@ -12,9 +12,13 @@ suspend fun LandingPageAlbumTag(
     tag: String,
     repository: Repository,
 ): Result<Landing_page_albumType> {
+    val cleanTag = tag.trim()
+    if (cleanTag.isBlank()) {
+        return Result.failure(IllegalArgumentException("Tag cannot be blank"))
+    }
     try {
-        Timber.d("LandingPageAlbumTag init tag:$tag")
-        val query = getLandingPageAlbumTag(tag)
+        Timber.d("LandingPageAlbumTag init tag:$cleanTag")
+        val query = getLandingPageAlbumTag(cleanTag)
         val res = repository.openURI(query)
         val json = LJson.parseToJsonElement(res.getOrThrow()).jsonObject
         val get = json["data"]?.jsonObject?.get("landing_page_album")?.jsonObject?.get("tag")?.jsonObject
@@ -23,7 +27,7 @@ suspend fun LandingPageAlbumTag(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "LandingPageAlbumTag failed for tag: $tag")
+        Timber.e(e, "LandingPageAlbumTag failed for tag: $cleanTag")
         return Result.failure(e)
     }
 }

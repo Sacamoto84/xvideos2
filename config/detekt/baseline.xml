@@ -12,7 +12,7 @@
     <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("is_animated") val is_animated: Boolean = false</ID>
     <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_original") val url_to_original: String? = null</ID>
     <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_video") val url_to_video: String? = null</ID>
-    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val A: Map&lt;String, String&gt;? = null //Хуета</ID>
+    <ID>ConstructorParameterNaming:searchModel.kt$Channel$val A: Map&lt;String, String&gt;? = null // Дополнительные атрибуты</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val CPV: Boolean</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val F: String</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val L: Int</ID>
@@ -92,7 +92,6 @@
     <ID>UnusedParameter:LazyRow123Host.kt$textNiches: String</ID>
     <ID>UnusedParameter:createPlayerListener.kt$sourceUrl: String? = null</ID>
     <ID>UnusedPrivateMember:CMPAudioPlayer.android.kt$private fun PlayerSpeed.toFloat(): Float</ID>
-    <ID>UnusedPrivateProperty:AlbumInfo.kt$AlbumInfo$download: Boolean = false</ID>
     <ID>UnusedPrivateProperty:ExpandMenuVideoTags.kt$private val tintColor = Color(0xFF48454E)</ID>
     <ID>UnusedPrivateProperty:Repository.kt$Repository$context: Context</ID>
     <ID>VariableNaming:AppSettingsScreen.kt$val l_login = Settings.l_login.field.collectAsStateWithLifecycle().value</ID>

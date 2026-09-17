@@ -166,7 +166,7 @@ private fun xPreviewVideoHeaders(): Map<String, String> {
     )
 }
 
-private fun xPreviewVideoCandidates(url: String, fallbackUrls: List<String>): List<String> {
+internal fun xPreviewVideoCandidates(url: String, fallbackUrls: List<String>): List<String> {
     val baseUrls = buildList {
         add(url)
         addAll(fallbackUrls)
@@ -183,13 +183,15 @@ private fun xPreviewVideoCandidates(url: String, fallbackUrls: List<String>): Li
     }.distinct()
 }
 
-private fun String.normalizedPreviewUrlOrNull(): String? {
+internal fun String.normalizedPreviewUrlOrNull(): String? {
     return trim()
         .takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
 }
 
-private fun String.withHost(host: String): String? {
+internal fun String.withHost(host: String): String? {
     val schemeEnd = indexOf("://").takeIf { it >= 0 } ?: return null
-    val pathStart = indexOf('/', startIndex = schemeEnd + 3).takeIf { it >= 0 } ?: return null
-    return substring(0, schemeEnd + 3) + host + substring(pathStart)
+    val pathStart = indexOf('/', startIndex = schemeEnd + 3)
+    val pathAndQuery = if (pathStart >= 0) substring(pathStart) else ""
+    return substring(0, schemeEnd + 3) + host + pathAndQuery
 }
+

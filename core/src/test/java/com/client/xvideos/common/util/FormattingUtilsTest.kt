@@ -54,4 +54,13 @@ class FormattingUtilsTest {
         assertEquals("0:00", Float.NaN.toTwoDecimalPlacesWithColon())
         assertEquals("0:00", Float.POSITIVE_INFINITY.toTwoDecimalPlacesWithColon())
     }
+
+    @Test
+    fun `toMD5 calculates deterministic hex hashes including unicode`() {
+        assertEquals("d41d8cd98f00b204e9800998ecf8427e", "".toMD5())
+        assertEquals("900150983cd24fb0d6963f7d28e17f72", "abc".toMD5())
+        assertEquals("5d41402abc4b2a76b9719d911017c592", "hello".toMD5())
+        assertEquals("ebb5e89e8a94e9dd22abf5d915d112b2", "тест".toMD5())
+    }
 }
+

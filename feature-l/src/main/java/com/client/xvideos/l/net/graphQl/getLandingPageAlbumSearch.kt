@@ -94,7 +94,7 @@ fun getLandingPageAlbumSearch(search: String, limit: Int = 9): String {
         put("query", query)
         putJsonObject("variables") {
             put("id", search)
-            put("limit", limit)
+            put("limit", limit.coerceAtLeast(1))
         }
     }.toString()
 }

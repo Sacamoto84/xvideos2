@@ -33,7 +33,7 @@ data class Channel(
     val L: Int, //0
     val P: String, // Путь к картинке
     val RF: String, //Количество подписчиков
-    val A: Map<String, String>? = null //Хуета
+    val A: Map<String, String>? = null // Дополнительные атрибуты
 )
 
 @Serializable

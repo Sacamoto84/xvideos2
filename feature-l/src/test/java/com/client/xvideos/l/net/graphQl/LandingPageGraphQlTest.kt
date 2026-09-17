@@ -62,4 +62,19 @@ class LandingPageGraphQlTest {
 
         assertEquals(tagWithQuotes, variables?.get("id")?.jsonPrimitive?.content)
     }
+
+    @Test
+    fun `landing page search clamps limit to at least one`() {
+        val jsonString = getLandingPageAlbumSearch(search = "cosplay", limit = 0)
+        val element = LJson.parseToJsonElement(jsonString).jsonObject
+        val variables = element["variables"]?.jsonObject
+
+        assertEquals("cosplay", variables?.get("id")?.jsonPrimitive?.content)
+        assertEquals(1, variables?.get("limit")?.jsonPrimitive?.int)
+
+        val negativeLimitString = getLandingPageAlbumSearch(search = "anime", limit = -10)
+        val negativeElement = LJson.parseToJsonElement(negativeLimitString).jsonObject
+        val negativeVariables = negativeElement["variables"]?.jsonObject
+        assertEquals(1, negativeVariables?.get("limit")?.jsonPrimitive?.int)
+    }
 }

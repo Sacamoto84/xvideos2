@@ -54,20 +54,22 @@ abstract class ISearchTemplate(
     }
 
     fun pushHistory(query: String) {
-        if (query.isBlank()) return
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
         synchronized(stack) {
-            if (stack.lastOrNull() == query) return
+            if (stack.lastOrNull() == trimmed) return
             if (stack.size >= MAX_STACK_SIZE) {
                 stack.removeFirst()
             }
-            stack.addLast(query)
+            stack.addLast(trimmed)
         }
     }
 
     fun popHistory(currentQuery: String): String? {
+        val trimmed = currentQuery.trim()
         synchronized(stack) {
             if (stack.isEmpty()) return null
-            if (stack.lastOrNull() == currentQuery) {
+            if (stack.lastOrNull() == trimmed) {
                 stack.removeLast()
             }
             return if (stack.isNotEmpty()) stack.last() else ""
@@ -76,10 +78,6 @@ abstract class ISearchTemplate(
 
     val focused = MutableStateFlow(false)
 
-
-
-
-
     // Отрисовка переехала в ui/search/RSearchField.kt: класс держит состояние,
     // а composable принимают его параметром. Пока они были членами класса,
     // слой состояния тянул за собой Compose и три content-файла, и вынести те
@@ -87,8 +85,16 @@ abstract class ISearchTemplate(
 
     val history: StateFlow<List<String>> = dao.observeAllTexts().stateIn( scope = scope, started = SharingStarted.WhileSubscribed(5_000), initialValue = emptyList() )
 
-    suspend fun add(text: String ) = dao.insertAndTrim(text)
-    suspend fun delete( text: String ) = dao.deleteByTexts(text)
+    suspend fun add(text: String) {
+        val trimmed = text.trim()
+        if (trimmed.isNotBlank()) dao.insertAndTrim(trimmed)
+    }
+
+    suspend fun delete(text: String) {
+        val trimmed = text.trim()
+        if (trimmed.isNotBlank()) dao.deleteByTexts(trimmed)
+    }
+
     suspend fun clear() = dao.deleteAll()
 
 }

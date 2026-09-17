@@ -43,7 +43,7 @@ class R_SearchExplorer @Inject constructor(
     init {
         scope.launch {
             searchText
-                .map { it.text }
+                .map { it.text.trim() }
                 .distinctUntilChanged()
                 .debounce(SUGGESTIONS_DEBOUNCE_MS)
                 .mapLatest { text -> suggestionsFor(text) }

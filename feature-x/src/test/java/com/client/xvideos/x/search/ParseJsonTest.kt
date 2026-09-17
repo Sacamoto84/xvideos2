@@ -41,4 +41,50 @@ class ParseJsonTest {
         assertEquals("asian", parsed?.keywords?.first()?.N)
         assertEquals("82.887", parsed?.keywords?.first()?.R)
     }
+
+    @Test
+    fun `parseJson корректно разбирает pornstar и channel при отсутствии и наличии поля A`() {
+        val json = """
+            {
+                "result": true,
+                "code": 200,
+                "keywords": [],
+                "pornstar": [
+                    {
+                        "N": "Eva Elfie",
+                        "F": "/profiles/eva-elfie",
+                        "T": "pornstar",
+                        "MV": 100,
+                        "M": 10,
+                        "L": 5,
+                        "P": "https://img.xv-ru.com/eva.jpg",
+                        "RF": "500K"
+                    }
+                ],
+                "channel": [
+                    {
+                        "N": "Brazzers",
+                        "F": "/profiles/brazzers",
+                        "T": "channel",
+                        "CPV": true,
+                        "M": 0,
+                        "L": 0,
+                        "P": "https://img.xv-ru.com/brazzers.jpg",
+                        "RF": "1M",
+                        "A": {"verified": "1"}
+                    }
+                ],
+                "BLACKLISTED": false
+            }
+        """.trimIndent()
+
+        val parsed = parseJson(json)
+        assertNotNull(parsed)
+        assertEquals(1, parsed?.pornstar?.size)
+        assertEquals(null, parsed?.pornstar?.first()?.A)
+        assertEquals(1, parsed?.channel?.size)
+        assertEquals(mapOf("verified" to "1"), parsed?.channel?.first()?.A)
+        assertEquals(false, parsed?.BLACKLISTED)
+    }
 }
+

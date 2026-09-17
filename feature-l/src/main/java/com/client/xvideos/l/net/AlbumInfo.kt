@@ -23,10 +23,16 @@ import timber.log.Timber
 @Stable
 class AlbumInfo(
     val id: Int,
-    download: Boolean = false,
     private val repository: Repository,
     private val scope: CoroutineScope,
 ) {
+
+    constructor(
+        id: Int,
+        @Suppress("UNUSED_PARAMETER") download: Boolean,
+        repository: Repository,
+        scope: CoroutineScope,
+    ) : this(id, repository, scope)
 
     val albumPicsDetails = AlbumPicsDetails(id, repository)
 
@@ -189,36 +195,8 @@ class AlbumInfo(
      */
     val thumbnail: String get() = albumInfo.value?.cover?.url.orEmpty()
 
-    val downloadUrl: String get() = LusciousEndpoints.HOME + albumInfo.value?.download_url.orEmpty()
-
-//    val artists: List<String> by lazy {
-//        tags.filter { it.category == "Artist" }.map { it.name }
-//    }
-//
-//    val characters: List<String> by lazy {
-//        tags.filter { it.category == "Character" }.map { it.name }
-//    }
-//
-//    val parodies: List<String> by lazy {
-//        tags.filter { it.category == "Parody" }.map { it.name }
-//    }
-
-//    val audiences: Map<String, Any> by lazy {
-//        json["audiences"] as Map<String, Any>
-//    }
-////
-////    val ongoing: Boolean by lazy {
-////        tags.any { it.id == "1895669" && it.text == "ongoing" }
-////    }
-//
-//    val isManga: Boolean by lazy {
-//        json["is_manga"] as Boolean
-//    }
-//
-//    val contentType: String by lazy {
-//        (json["content"] as Map<*, *>)["title"] as String
-//    }
-
+    val downloadUrl: String
+        get() = albumInfo.value?.download_url?.takeIf { it.isNotBlank() }?.let { LusciousEndpoints.HOME + it }.orEmpty()
 }
 
 

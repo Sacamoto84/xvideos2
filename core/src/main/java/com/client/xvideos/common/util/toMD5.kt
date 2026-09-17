@@ -8,6 +8,6 @@ import java.security.MessageDigest
  */
 fun String.toMD5(): String {
     val md = MessageDigest.getInstance("MD5")
-    val digest = md.digest(this.toByteArray())
+    val digest = md.digest(this.toByteArray(Charsets.UTF_8))
     return digest.joinToString("") { "%02x".format(it) }
 }

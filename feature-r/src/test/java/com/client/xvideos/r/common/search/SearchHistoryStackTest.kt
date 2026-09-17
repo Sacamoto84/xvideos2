@@ -29,9 +29,10 @@ class SearchHistoryStackTest {
 
         search.pushHistory("apple")
         search.pushHistory("apple") // дубликат не должен добавиться
+        search.pushHistory("apple ") // дубликат с пробелом на конце тоже не должен добавиться
         search.pushHistory("")      // пустой запрос игнорируется
         search.pushHistory("   ")   // пробелы игнорируются
-        search.pushHistory("banana")
+        search.pushHistory("banana ")
 
         assertEquals(listOf("apple", "banana"), search.stack.toList())
     }
@@ -43,8 +44,8 @@ class SearchHistoryStackTest {
         search.pushHistory("first")
         search.pushHistory("second")
 
-        // Текущий поисковый запрос "second" -> отмена должна вернуть "first"
-        val prev1 = search.popHistory("second")
+        // Текущий поисковый запрос "second " с пробелом -> отмена должна вернуть "first"
+        val prev1 = search.popHistory("second ")
         assertEquals("first", prev1)
 
         // Текущий стал "first" -> следующая отмена должна вернуть пустую строку (очистка)

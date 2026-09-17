@@ -85,4 +85,29 @@ class AlbumInfoRefreshTest {
         val cachedAfterRefresh = repository.getAlbumBundleCache(albumId, L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS)
         assertNull("Кэш альбома в БД должен быть удален при refresh()", cachedAfterRefresh)
     }
+
+    @Test
+    fun `downloadUrl returns empty string when download_url is missing and prepends home when present`() = runBlocking {
+        val fileDb = AppFileDatabase()
+        val repository = Repository(fileDb)
+        val albumId = 112233
+
+        val bundleWithoutDownload = LAlbumBundleCache(
+            schemaVersion = L_ALBUM_BUNDLE_CACHE_SCHEMA_VERSION,
+            cachedAtMs = System.currentTimeMillis(),
+            album = AlbumDetails(id = albumId.toString(), title = "No Download", download_url = ""),
+            totalPages = 1,
+            pics = listOf(PicsDetails(url_to_original = "https://example.com/pic.jpg"))
+        )
+        repository.putAlbumBundleCache(albumId, LJson.encodeToString(bundleWithoutDownload))
+
+        val albumInfo = AlbumInfo(id = albumId, repository = repository, scope = this)
+        withTimeout(5000) {
+            while (albumInfo.albumInfo.value == null) {
+                delay(20)
+            }
+        }
+
+        assertEquals("", albumInfo.downloadUrl)
+    }
 }
