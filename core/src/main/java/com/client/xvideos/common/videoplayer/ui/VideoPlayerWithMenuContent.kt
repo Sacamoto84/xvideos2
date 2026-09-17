@@ -1,6 +1,5 @@
 package com.client.xvideos.common.videoplayer.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,8 +29,6 @@ import net.engawapg.lib.zoomable.zoomable
 import timber.log.Timber
 import kotlin.math.absoluteValue
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun VideoPlayerWithMenuContent(
     modifier: Modifier,
@@ -48,7 +44,7 @@ fun VideoPlayerWithMenuContent(
     seekDragEnabled: Boolean = true
 ) {
 
-    if (AppBuildInfo.debug) { SideEffect { Timber.i("@@@ VideoPlayerWithMenuContent()") } }
+    if (AppBuildInfo.debug) { SideEffect { Timber.d("@@@ VideoPlayerWithMenuContent()") } }
 
     val zoomState = rememberZoomState(maxScale = 3f)
     LaunchedEffect(playerHost.videoFitMode) { zoomState.reset() }
@@ -85,13 +81,6 @@ fun VideoPlayerWithMenuContent(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center).size(40.dp), color = Color.LightGray)
             }
         }
-
-        if (playerHost.poster) {
-//            Box( modifier = Modifier.fillMaxSize().background(Color.Magenta), contentAlignment = Alignment.Center ) {
-//
-//            }
-        }
-
     }
 
 }

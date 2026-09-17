@@ -2,9 +2,9 @@ package com.client.xvideos.screenRoot
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
@@ -74,7 +74,6 @@ object ScreenRoot : Screen {
      * экрана без разрушения навигационного стека.
      */
     @OptIn(ExperimentalZoomableApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
         val haptic = LocalHapticFeedback.current
@@ -97,26 +96,29 @@ object ScreenRoot : Screen {
             LocalMainNavigator provides mainNavigator
         ) {
             Scaffold(
-
-                modifier = Modifier.systemBarsPadding()
-                ,
+                modifier = Modifier.systemBarsPadding(),
                 floatingActionButtonPosition = FabPosition.Start,
                 containerColor = Theme.backgroundAppRoot,
                 snackbarHost = {
                     RootSnackbarHost(snackBarHostState)
                 }
             ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    Navigator(screen = MenuScreen) { nav ->
+                        mainNavigator = nav
+                        nav.lastItem.Content()
+                    }
 
-                Navigator(screen = MenuScreen) { nav ->
-                    mainNavigator = nav
-                    nav.lastItem.Content()
-                }
+                    LCollectionDialogs(vm.savedL)
 
-                LCollectionDialogs(vm.savedL)
-
-                vm.overlayContent.value?.let { content ->
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        content()
+                    vm.overlayContent.value?.let { content ->
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            content()
+                        }
                     }
                 }
             }

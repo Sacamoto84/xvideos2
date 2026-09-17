@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab.collection
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,7 +49,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
 
 class ScreenCollectionName(
@@ -60,8 +58,6 @@ class ScreenCollectionName(
 
     override val key: ScreenKey = "RCollection:$collectionName:$popOnBack"
 
-    @OptIn(DelicateCoroutinesApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -72,7 +68,7 @@ class ScreenCollectionName(
         val selectedCollection = savedRed.collections.selectedCollection.collectAsStateWithLifecycle().value
 
         BackHandler {
-            Timber.i("iii BackHandler SavedCollectionTab")
+            Timber.d("BackHandler SavedCollectionTab")
             savedRed.collections.selectedCollection.value = null
             if (popOnBack) {
                 navigator.pop()
@@ -83,7 +79,7 @@ class ScreenCollectionName(
             Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
         )
 
-        //Изменение количества отображаемых елементов
+        //Изменение количества отображаемых элементов
         LaunchedEffect(columnSelect) { vm.likedHost.columns = columnSelect }
 
         Scaffold(topBar = {

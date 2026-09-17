@@ -222,7 +222,7 @@ private fun parserCountry(): List<Country> {
 
     // Выводим список стран
     countryList.forEach { country ->
-        Timber.i("Страна: ${country.name}, Ссылка: ${country.url}, Класс флага: ${country.flagClass}")
+        Timber.d("Страна: ${country.name}, Ссылка: ${country.url}, Класс флага: ${country.flagClass}")
     }
     return countryList
 }

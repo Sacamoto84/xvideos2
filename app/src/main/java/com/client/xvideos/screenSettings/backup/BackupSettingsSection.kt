@@ -45,6 +45,7 @@ import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.screenSettings.SettingsDataHolders
+import com.client.xvideos.screenSettings.components.SettingsDivider2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -238,12 +239,14 @@ internal fun BackupSettingsSection(
 
         when (screen) {
             BackupFlowScreen.CREATE -> {
+                SettingsDivider2()
                 SettingsValueRow(
                     icon = R.drawable.hard_drive_2_24,
                     text = "Выбрано для архива",
                     value = if (isWorking) "Идет операция" else selectionSummaryText(backupReport)
                 )
-                SettingsDivider()
+                SettingsDivider2()
+
                 BackupContentModeSelector(
                     title = "L backup",
                     value = lBackupMode,
@@ -251,7 +254,9 @@ internal fun BackupSettingsSection(
                     description = "Мини: Likes/Collection без медиа, только metadata",
                     onValueChange = { lBackupMode = it }
                 )
-                SettingsDivider()
+
+                SettingsDivider2()
+
                 BackupContentModeSelector(
                     title = "R backup",
                     value = rBackupMode,
@@ -259,7 +264,9 @@ internal fun BackupSettingsSection(
                     description = "Мини: Download без mp4/jpg, только .info",
                     onValueChange = { rBackupMode = it }
                 )
-                SettingsDivider()
+
+                SettingsDivider2()
+
                 BackupSelectionActions(
                     enabled = !isWorking,
                     onSelectAll = { selectedBackupPaths = initialSectionSelection(backupItems) },

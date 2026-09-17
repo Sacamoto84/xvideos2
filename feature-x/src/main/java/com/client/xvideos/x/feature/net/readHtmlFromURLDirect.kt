@@ -49,7 +49,7 @@ private val htmlClient: HttpClient by lazy {
 suspend fun readHtmlFromURLDirect(url: String = "https://www.xvideos.com"): String {
     if (url.isBlank()) return ""
 
-    Timber.i("!!!..readHtmlFromURLDirect $url ")
+    Timber.d("readHtmlFromURLDirect %s", url)
 
     return try {
         val response = htmlClient.get(url)

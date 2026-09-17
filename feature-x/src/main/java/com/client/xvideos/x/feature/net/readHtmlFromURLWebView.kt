@@ -48,7 +48,7 @@ suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): Str
 private suspend fun loadHtmlInWebView(url: String): String =
     suspendCancellableCoroutine { continuation ->
 
-        Timber.i("!!!..readHtmlFromURL $url ")
+        Timber.d("readHtmlFromURL %s", url)
 
         val context = AppContextHolder.applicationContext
 
@@ -134,7 +134,7 @@ private suspend fun loadHtmlInWebView(url: String): String =
                     "(function() { return document.documentElement.outerHTML; })();"
                 ) { html ->
 
-                    Timber.i("!!!..readHtmlFromURL end $url")
+                    Timber.d("readHtmlFromURL end %s", url)
 
                     val result = html.trim('"')
                         .replace("\\u003C", "<")

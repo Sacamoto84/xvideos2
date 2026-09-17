@@ -124,13 +124,13 @@ class ScreenLSavedAlbumsSM @Inject constructor(
         get() = saved.albums.list.filter { it.id.toLongOrNull() != null }
 
     init {
-        Timber.i("iii ScreenLSavedAlbumsSM init")
+        Timber.d("ScreenLSavedAlbumsSM init")
         if (albums.isEmpty()) saved.albums.refresh()
     }
 
     override fun onDispose() {
         super.onDispose()
-        Timber.i("iii ScreenLSavedAlbumsSM onDispose")
+        Timber.d("ScreenLSavedAlbumsSM onDispose")
     }
 
 }

@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -21,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -122,7 +120,6 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
     }
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SubscriptionsTabContent(
     host: LazyRow123Host?,
@@ -131,37 +128,33 @@ fun SubscriptionsTabContent(
     onSelectCreator: (String) -> Unit,
     onLongClick : (String) -> Unit = {}
 ) {
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = Theme.background
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-
-                if (host != null) {
-                    LazyRow123(
-                        host = host,
-                        modifier = Modifier.fillMaxSize(),
-                        onClickOpenProfile = onOpenProfile,
-                        contentPadding = PaddingValues(0.dp),
-                        contentBeforeList = {
-                            CreatorsHeader(
-                                listCreators = listCreatorSelectedCreator,
-                                onCreatorClick = onSelectCreator,
-                                onLongClick = onLongClick
-                            )
-                        },
-                        isRunLike = true
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Theme.background)
+    ) {
+        if (host != null) {
+            LazyRow123(
+                host = host,
+                modifier = Modifier.fillMaxSize(),
+                onClickOpenProfile = onOpenProfile,
+                contentPadding = PaddingValues(0.dp),
+                contentBeforeList = {
+                    CreatorsHeader(
+                        listCreators = listCreatorSelectedCreator,
+                        onCreatorClick = onSelectCreator,
+                        onLongClick = onLongClick
                     )
-                } else {
-                    // Fallback for Preview
-                    CreatorsHeader( listCreators = listCreatorSelectedCreator, onCreatorClick = onSelectCreator, onLongClick = onLongClick )
-                }
-
+                },
+                isRunLike = true
+            )
+        } else {
+            // Fallback for Preview
+            CreatorsHeader(
+                listCreators = listCreatorSelectedCreator,
+                onCreatorClick = onSelectCreator,
+                onLongClick = onLongClick
+            )
         }
     }
 }

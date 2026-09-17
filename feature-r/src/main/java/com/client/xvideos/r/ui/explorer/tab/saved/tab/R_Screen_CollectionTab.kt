@@ -20,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 
-import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -73,7 +72,6 @@ object R_Screen_CollectionTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 
@@ -86,7 +84,7 @@ object R_Screen_CollectionTab : Screen {
         val selectedCollection = savedRed.collections.selectedCollection.collectAsStateWithLifecycle().value
 
         BackHandler(enabled = selectedCollection != null) {
-            Timber.i("iii BackHandler SavedCollectionTab")
+            Timber.d("BackHandler SavedCollectionTab")
             savedRed.collections.selectedCollection.value = null
         }
 

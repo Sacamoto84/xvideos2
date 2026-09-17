@@ -59,10 +59,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> {
+internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
-    val url = urlStart + if (currentNumberScreen == 0) "" else "/new/${currentNumberScreen}"
-    Timber.i("openNew numberScreen:$numberScreen url:$url")
+    val raw = urlStart + if (currentNumberScreen == 0) "" else "/new/$currentNumberScreen"
+    return normalizeXUrl(raw)
+}
+
+private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> {
+    val url = buildDashboardUrl(numberScreen)
+    Timber.d("openNew numberScreen:$numberScreen url:$url")
     val html = readHtmlFromURLWebView(url)
     return withContext(Dispatchers.Default) {
         val document = org.jsoup.Jsoup.parse(html)

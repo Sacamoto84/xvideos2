@@ -2,7 +2,6 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,7 +53,6 @@ object L_SavedTab : Screen {
         //Icons.Outlined.LockOpen,
     )
 
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
 

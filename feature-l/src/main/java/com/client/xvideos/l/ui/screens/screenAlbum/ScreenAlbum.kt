@@ -1,6 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbum
 
-import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -79,7 +78,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
     @OptIn(ExperimentalZoomableApi::class, ExperimentalMaterial3Api::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     @Composable
     override fun Content() {
@@ -175,7 +173,9 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     vm.refresh()
                 },
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = padding.calculateBottomPadding()),
                 state = pullToRefreshState,
                 indicator = {
                     Indicator(
@@ -338,7 +338,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun ScreenLAlbumPreviewBody(
     title: String,

@@ -15,8 +15,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,6 +45,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
@@ -172,7 +179,7 @@ private fun VideoPlayerLoadingView() {
 @Composable
 private fun VideoPlayerContentView(
     vm: ScreenX_VideoPlayerSM,
-    navigator: cafe.adriel.voyager.navigator.Navigator,
+    navigator: Navigator,
 ) {
     // Единый Compose-плеер (общий с R/L). Хост сам освобождает ExoPlayer
     // при выходе из композиции (RememberObserver).
@@ -213,6 +220,33 @@ private fun VideoPlayerContentView(
                 }
             },
             overlay = {
+                // Кнопка возврата (в ландшафтном режиме скрывается вместе с контролами)
+                AnimatedVisibility(
+                    visible = !vm.isFullScreen || areControlsVisible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    IconButton(
+                        onClick = {
+                            if (vm.isFullScreen) {
+                                vm.exitFullScreen()
+                            } else {
+                                navigator.pop()
+                            }
+                        },
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .padding(8.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад",
+                            tint = Color.White,
+                        )
+                    }
+                }
+
                 // Теги/каналы поверх видео (только в портретном режиме)
                 if (!vm.isFullScreen) {
                     Box(modifier = Modifier.align(Alignment.TopCenter)) {

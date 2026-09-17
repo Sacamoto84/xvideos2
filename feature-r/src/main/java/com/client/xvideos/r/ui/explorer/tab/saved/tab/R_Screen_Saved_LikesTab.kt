@@ -2,7 +2,6 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import com.client.xvideos.common.theme.Theme
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -51,10 +50,6 @@ object R_Screen_Saved_LikesTab : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
-    //@Transient
-    //val columnSelect = ColumnSelect(Settings.l_likesTab_column_current_count)
-
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -83,10 +78,8 @@ object R_Screen_Saved_LikesTab : Screen {
                 host = vm.likedHost,
                 modifier = Modifier.fillMaxSize(),
                 onClickOpenProfile = {
-                    //vm.likedHost.currentIndexGoto = vm.likedHost.currentIndex
                     navigator.push(ScreenRedProfile(it))
                 },
-                //gotoPosition = vm.likedHost.currentIndexGoto,
                 contentPadding = PaddingValues(0.dp),
                 contentBeforeList = {
                     Box(modifier = Modifier.displayCutoutPadding()){}

@@ -59,7 +59,7 @@ fun UrlVideoImageAndLongClickX(
                     val nextIsVideo = !isVideo
                     isVideo = nextIsVideo
                     if (nextIsVideo) {
-                        Timber.i(
+                        Timber.d(
                             """
                             !!! X preview item click
                             id: ${item.id}
