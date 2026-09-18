@@ -10,6 +10,7 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_AddCo
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Delete
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveToGallery
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_ServerLike
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SetCover
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -23,6 +24,7 @@ fun SavedLikesItemExpandMenu(
     item: PicsDetails? = null,
     onClick: () -> Unit = {},
     onDelete: (PicsDetails) -> Unit = {},
+    onServerLike: (PicsDetails) -> Unit = {},
     onAddCollection: (PicsDetails) -> Unit = {},
     onRemoveFromCollection: (PicsDetails) -> Unit = {},
     onShare: (PicsDetails) -> Unit = {},
@@ -34,6 +36,8 @@ fun SavedLikesItemExpandMenu(
         menuWidth = IntrinsicSize.Min,
         onOpen = onClick
     ) { dismiss ->
+
+        DropdownMenuItem_ServerLike(item, onClick = { onServerLike(it) }) { dismiss() }
 
         DropdownMenuItem_Share(item, onClick = { onShare(it) }) { dismiss() }
 

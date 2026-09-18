@@ -43,4 +43,29 @@ interface LusciousServerFavoritesRepository {
      * @param page Номер страницы (начиная с 1).
      */
     suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>>
+
+    /**
+     * Добавить лайк/избранное на сервер Luscious (мутация FavoriteAdd).
+     *
+     * @param anchorId ID объекта (картинки, альбома).
+     * @param anchorType Тип объекта ("picture", "album"). По умолчанию "picture".
+     * @param favoriteType Тип действия ("like", "favorite"). По умолчанию "like".
+     */
+    suspend fun addFavorite(
+        anchorId: String,
+        anchorType: String = "picture",
+        favoriteType: String = "like"
+    ): Result<Unit>
+
+    /**
+     * Поставить лайк картинке на сервере Luscious.
+     */
+    suspend fun likePicture(pictureId: String): Result<Unit> =
+        addFavorite(anchorId = pictureId, anchorType = "picture", favoriteType = "like")
+
+    /**
+     * Добавить альбом в избранное/лайкнуть на сервере Luscious.
+     */
+    suspend fun likeAlbum(albumId: String): Result<Unit> =
+        addFavorite(anchorId = albumId, anchorType = "album", favoriteType = "like")
 }

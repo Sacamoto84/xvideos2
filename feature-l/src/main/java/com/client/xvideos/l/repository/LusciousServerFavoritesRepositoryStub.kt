@@ -2,6 +2,7 @@ package com.client.xvideos.l.repository
 
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.net.graphQl.FavoriteAdd
 import com.client.xvideos.l.net.graphQl.FavoritesByDatePicture
 import com.client.xvideos.l.net.graphQl.FavoritesByDatePictureSet
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
@@ -181,6 +182,55 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             }
         }.onFailure { e ->
             Timber.e(e, "Failed to parse server liked pictures response")
+        }
+    }
+
+    override suspend fun addFavorite(
+        anchorId: String,
+        anchorType: String,
+        favoriteType: String
+    ): Result<Unit> {
+        val cleanAnchorId = anchorId.trim()
+        if (cleanAnchorId.isBlank()) {
+            return Result.failure(IllegalArgumentException("anchor_id cannot be blank"))
+        }
+
+        val rawResult = FavoriteAdd(
+            repository = repository,
+            anchorId = cleanAnchorId,
+            anchorType = anchorType,
+            favoriteType = favoriteType
+        )
+        if (rawResult.isFailure) {
+            return Result.failure(rawResult.exceptionOrNull() ?: IllegalStateException("Request failed"))
+        }
+
+        return runCatching {
+            val raw = rawResult.getOrThrow()
+            val json = LJson.parseToJsonElement(raw).jsonObject
+
+            val rootErrors = json["errors"]?.jsonArray
+            if (!rootErrors.isNullOrEmpty()) {
+                val msg = rootErrors.joinToString {
+                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "GraphQL error"
+                }
+                throw IllegalStateException(msg)
+            }
+
+            val addFavoriteObj = json["data"]?.jsonObject
+                ?.get("favorite")?.jsonObject
+                ?.get("add_favorite")?.jsonObject
+
+            val mutationErrors = addFavoriteObj?.get("errors")?.jsonArray
+            if (!mutationErrors.isNullOrEmpty()) {
+                val msg = mutationErrors.joinToString {
+                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "Mutation error"
+                }
+                throw IllegalStateException(msg)
+            }
+            Unit
+        }.onFailure { e ->
+            Timber.e(e, "Failed to parse FavoriteAdd response")
         }
     }
 }

@@ -28,6 +28,8 @@ import com.client.xvideos.l.featured.saved.lFindLikeFolder
 import com.client.xvideos.l.featured.saved.lP2pSendSource
 import com.client.xvideos.l.featured.saved.readLSavedLikeMetadata
 import java.io.File
+import com.client.xvideos.l.model.extractAnchorId
+import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -53,6 +55,7 @@ enum class ExpandMenuType {
 class ExpandMenuViewModel @Inject constructor(
     val luscious: Luscious,
     val saved: SavedL,
+    val serverFavorites: LusciousServerFavoritesRepository,
     @ApplicationScope val scope: CoroutineScope,
     @ApplicationContext val context: Context
 ) : ViewModel() {
@@ -79,7 +82,9 @@ class ExpandMenuViewModel @Inject constructor(
         val album = idAlbum.toLongOrNull() ?: 0L
 
         AlbumItemExpandMenu(
-            item = item, onDownload = { it1 -> downloadLike(it1, album) },
+            item = item,
+            onDownload = { it1 -> downloadLike(it1, album) },
+            onServerLike = { it1 -> likeOnServer(it1) },
             onShare = { it1 -> onShareClicked(it1) },
             onSaveToGallery = { it1 -> saveToGallery(it1) },
             isCollection = isCollection,
@@ -89,6 +94,24 @@ class ExpandMenuViewModel @Inject constructor(
             },
             idAlbum = idAlbum
         )
+    }
+
+    fun likeOnServer(item: PicsDetails) {
+        val anchorId = item.extractAnchorId()
+        if (anchorId.isNullOrBlank()) {
+            SnackBar.error("ID картинки не найден")
+            return
+        }
+        scope.launch {
+            serverFavorites.likePicture(anchorId)
+                .onSuccess {
+                    SnackBar.success("Лайк добавлен на сервере")
+                }
+                .onFailure { e ->
+                    Timber.e(e, "Failed to like picture on server")
+                    SnackBar.error(e.message ?: "Не удалось поставить лайк")
+                }
+        }
     }
 
 
@@ -102,6 +125,7 @@ class ExpandMenuViewModel @Inject constructor(
                 url?.let { saved.likes.remove(it) }
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
+            onServerLike = { it1 -> likeOnServer(it1) },
             onShare = { it -> onShareClicked(it) },
             onSaveToGallery = { it -> saveToGallery(it) },
             isCollection = isCollection,

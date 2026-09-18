@@ -2,6 +2,7 @@ package com.client.xvideos.l.repository
 
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.extractAnchorId
 import com.client.xvideos.l.net.graphQl.getFavoritesByDatePictureSet
 import kotlinx.serialization.json.decodeFromJsonElement
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.ScreenLServerLikesSM
@@ -77,6 +78,12 @@ class LusciousServerFavoritesTest {
 
             override suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>> =
                 Result.success(emptyList())
+
+            override suspend fun addFavorite(
+                anchorId: String,
+                anchorType: String,
+                favoriteType: String
+            ): Result<Unit> = Result.success(Unit)
         }
 
         val sm = ScreenLSubscribedAlbumsSM(fakeRepo)
@@ -129,6 +136,12 @@ class LusciousServerFavoritesTest {
                     Result.success(emptyList())
                 }
             }
+
+            override suspend fun addFavorite(
+                anchorId: String,
+                anchorType: String,
+                favoriteType: String
+            ): Result<Unit> = Result.success(Unit)
         }
 
         val sm = ScreenLServerLikesSM(fakeRepo)
@@ -169,6 +182,11 @@ class LusciousServerFavoritesTest {
                     Result.success(listOf(PicsDetails(url_to_original = "https://cdn/pic1.jpg")))
                 }
             }
+            override suspend fun addFavorite(
+                anchorId: String,
+                anchorType: String,
+                favoriteType: String
+            ): Result<Unit> = Result.success(Unit)
         }
 
         val sm = ScreenLServerLikesSM(fakeRepo)
@@ -308,5 +326,88 @@ class LusciousServerFavoritesTest {
         assertEquals(2803, item.height)
         assertEquals("https://cdni.luscious.net/test_xmax.jpg", item.url_to_original)
         assertFalse(item.is_animated)
+    }
+
+    @Test
+    fun `getFavoriteAdd generates valid GraphQL payload for picture like`() {
+        val payload = com.client.xvideos.l.net.graphQl.getFavoriteAdd(
+            anchorId = "62276966",
+            anchorType = "picture",
+            favoriteType = "like"
+        )
+        assertTrue(payload.contains("\"id\":\"51\""))
+        assertTrue(payload.contains("\"operationName\":\"FavoriteAdd\""))
+        assertTrue(payload.contains("mutation FavoriteAdd(\$input: FavoriteInput!)"))
+        assertTrue(payload.contains("\"anchor_id\":\"62276966\""))
+        assertTrue(payload.contains("\"anchor_type\":\"picture\""))
+        assertTrue(payload.contains("\"favorite_type\":\"like\""))
+    }
+
+    @Test
+    fun `FavoriteAdd success response parses without errors`() {
+        val successResponse = """
+        {
+          "data": {
+            "favorite": {
+              "add_favorite": {
+                "errors": []
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val json = com.client.xvideos.l.net.json.LJson.parseToJsonElement(successResponse) as kotlinx.serialization.json.JsonObject
+        val rootErrors = json["errors"] as? kotlinx.serialization.json.JsonArray
+        assertNull(rootErrors)
+
+        val addFavoriteObj = json["data"]?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("add_favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+
+        val mutationErrors = addFavoriteObj?.get("errors") as? kotlinx.serialization.json.JsonArray
+        assertTrue(mutationErrors?.isEmpty() == true)
+    }
+
+    @Test
+    fun `FavoriteAdd mutation error response contains error messages`() {
+        val errorResponse = """
+        {
+          "data": {
+            "favorite": {
+              "add_favorite": {
+                "errors": [
+                  {
+                    "code": "ALREADY_LIKED",
+                    "message": "You have already liked this picture"
+                  }
+                ]
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val json = com.client.xvideos.l.net.json.LJson.parseToJsonElement(errorResponse) as kotlinx.serialization.json.JsonObject
+        val addFavoriteObj = json["data"]?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("add_favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+
+        val mutationErrors = addFavoriteObj?.get("errors") as? kotlinx.serialization.json.JsonArray
+        assertEquals(1, mutationErrors?.size)
+        val firstError = mutationErrors?.first() as kotlinx.serialization.json.JsonObject
+        assertEquals("You have already liked this picture", (firstError["message"] as kotlinx.serialization.json.JsonPrimitive).content)
+    }
+
+    @Test
+    fun `extractAnchorId extracts ID from id property and from URL fallback`() {
+        val picWithId = PicsDetails(id = "62276966")
+        assertEquals("62276966", picWithId.extractAnchorId())
+
+        val picWithUrl = PicsDetails(url_to_original = "/pictures/album/test/id/12345678/@name")
+        assertEquals("12345678", picWithUrl.extractAnchorId())
+
+        val picEmpty = PicsDetails()
+        assertNull(picEmpty.extractAnchorId())
     }
 }
