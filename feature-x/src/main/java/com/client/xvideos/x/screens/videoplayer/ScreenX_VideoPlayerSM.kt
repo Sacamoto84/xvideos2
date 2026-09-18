@@ -12,11 +12,11 @@ import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.x.extractXVideoId
 import com.client.xvideos.x.feature.saved.SavedX
-import com.client.xvideos.x.feature.saved.SavedX_History
 import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.model.XHistoryItem
+import com.client.xvideos.x.parseDurationToMs
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
 import com.client.xvideos.x.parcer.parserItemVideoTags
@@ -144,10 +144,12 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     }
 
     fun saveProgress(positionSeconds: Float, durationSeconds: Int) {
-        val durationMs = durationSeconds * 1000L
-        val positionMs = (positionSeconds * 1000f).toLong()
+        val playerDurationMs = durationSeconds * 1000L
+        val parsedDurationMs = parseDurationToMs(currentItem.duration)
+        val durationMs = if (playerDurationMs > 0L) playerDurationMs else parsedDurationMs
+        val positionMs = (positionSeconds * 1000f).toLong().coerceAtLeast(0L)
         val videoId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
-        if (videoId > 0L && durationMs >= SavedX_History.MIN_DURATION_FOR_HISTORY_MS) {
+        if (videoId > 0L) {
             val itemToSave = if (currentItem.id > 0L) currentItem else currentItem.copy(id = videoId)
             saved.history.updateProgress(itemToSave, positionMs, durationMs)
         }
@@ -193,34 +195,29 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 }
 
                 val parsedData = withContext(Dispatchers.Default) {
-                    val document = org.jsoup.Jsoup.parse(htmlContent)
-                    val script = parserItemVideo(document)
-                    val config = script?.let { parseHTML5Player(it) }
-                    val parsedTags = parserItemVideoTags(document)
-                    val hls = config?.videoHLS?.takeIf { it.isNotBlank() }
-                        ?: config?.videoUrlHigh?.takeIf { it.isNotBlank() }
-                        ?: config?.videoUrlLow.orEmpty()
-                    val streamCandidate = if (hls.isNotBlank()) normalizeXUrl(hls) else ""
-                    Triple(config, parsedTags, streamCandidate)
+                    parseVideoPageData(htmlContent)
                 }
 
-                playerConfig = parsedData.first
-                tags = parsedData.second
-                passedHLS = parsedData.third
+                playerConfig = parsedData.config
+                tags = parsedData.tags
+                passedHLS = parsedData.streamCandidate
 
-                val parsedConfig = parsedData.first
-                val resolvedId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
-                if (parsedConfig != null) {
+                val parsedConfig = parsedData.config
+                val resolvedId = currentItem.id.takeIf { it > 0L }
+                    ?: parsedData.pageVideoId
+                    ?: (extractXVideoId(url) ?: 0L)
+                if (parsedConfig != null || resolvedId > 0L) {
                     currentItem = currentItem.copy(
                         id = resolvedId,
-                        title = currentItem.title.ifBlank { parsedConfig.videoTitle },
+                        title = currentItem.title.ifBlank { parsedConfig?.videoTitle.orEmpty() },
+                        duration = currentItem.duration.ifBlank { parsedData.pageDuration },
                         previewImage = currentItem.previewImage.ifBlank {
-                            parsedConfig.thumbUrl169.ifBlank { parsedConfig.thumbUrl }
+                            parsedConfig?.thumbUrl169?.ifBlank { parsedConfig.thumbUrl }.orEmpty()
                         },
                         href = url
                     )
                 }
-                if (parsedData.third.isBlank()) {
+                if (parsedData.streamCandidate.isBlank()) {
                     isError = true
                     isFullScreen = false
                     withContext(Dispatchers.IO) {
@@ -288,3 +285,27 @@ abstract class ScreenModuleItem {
         hiltDetailsScreenModelFactory: ScreenX_VideoPlayerSM.Factory,
     ): ScreenModelFactory
 }
+
+private data class ParsedVideoData(
+    val config: HTML5PlayerConfig?,
+    val tags: TagsModel,
+    val streamCandidate: String,
+    val pageVideoId: Long?,
+    val pageDuration: String,
+)
+
+private fun parseVideoPageData(htmlContent: String): ParsedVideoData {
+    val document = org.jsoup.Jsoup.parse(htmlContent)
+    val script = parserItemVideo(document)
+    val config = script?.let { parseHTML5Player(it) }
+    val parsedTags = parserItemVideoTags(document)
+    val hls = config?.videoHLS?.takeIf { it.isNotBlank() }
+        ?: config?.videoUrlHigh?.takeIf { it.isNotBlank() }
+        ?: config?.videoUrlLow.orEmpty()
+    val streamCandidate = if (hls.isNotBlank()) normalizeXUrl(hls) else ""
+    val pageId = document.selectFirst("#video-player-bg")?.attr("data-id")?.toLongOrNull()
+        ?: document.selectFirst("[data-id]")?.attr("data-id")?.toLongOrNull()
+    val pageDuration = document.selectFirst("span.duration")?.text().orEmpty()
+    return ParsedVideoData(config, parsedTags, streamCandidate, pageId, pageDuration)
+}
+

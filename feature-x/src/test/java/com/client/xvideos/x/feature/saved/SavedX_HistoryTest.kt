@@ -46,7 +46,7 @@ class SavedX_HistoryTest {
     }
 
     @Test
-    fun `ролики короче 2 минут не сохраняются в историю`() = runTest(testDispatcher) {
+    fun `ролики короче 2 минут сохраняются в историю со сброшенной позицией 0L`() = runTest(testDispatcher) {
         val history = SavedX_History(testScope, testDispatcher)
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -54,17 +54,19 @@ class SavedX_HistoryTest {
         history.updateProgress(shortVideo, positionMs = 30_000L, totalDurationMs = 119_000L)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertNull(history.get(100L))
-        assertEquals(0, history.list.size)
+        val entry = history.get(100L)
+        assertNotNull(entry)
+        assertEquals(0L, entry?.lastPositionMs) // Короткие ролики не возобновляются
+        assertEquals(1, history.list.size)
     }
 
     @Test
-    fun `случайные открытия менее 5 секунд не создают новую запись`() = runTest(testDispatcher) {
+    fun `случайные открытия менее 1 секунды не создают новую запись`() = runTest(testDispatcher) {
         val history = SavedX_History(testScope, testDispatcher)
         testDispatcher.scheduler.advanceUntilIdle()
 
         val video = ItemsX(id = 200L, title = "Long Video", duration = "10 мин.")
-        history.updateProgress(video, positionMs = 3_000L, totalDurationMs = 600_000L)
+        history.updateProgress(video, positionMs = 500L, totalDurationMs = 600_000L)
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertNull(history.get(200L))
@@ -139,5 +141,65 @@ class SavedX_HistoryTest {
         assertEquals(0, history.list.size)
         assertNull(history.get(601L))
         assertNull(history.get(602L))
+    }
+
+    @Test
+    fun `deleteBatchByIds удаляет только выбранные записи`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val video1 = ItemsX(id = 701L, title = "Video 1")
+        val video2 = ItemsX(id = 702L, title = "Video 2")
+        val video3 = ItemsX(id = 703L, title = "Video 3")
+        history.updateProgress(video1, positionMs = 10_000L, totalDurationMs = 200_000L)
+        history.updateProgress(video2, positionMs = 20_000L, totalDurationMs = 200_000L)
+        history.updateProgress(video3, positionMs = 30_000L, totalDurationMs = 200_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(3, history.list.size)
+
+        history.deleteBatchByIds(listOf(701L, 703L))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, history.list.size)
+        assertNull(history.get(701L))
+        assertNotNull(history.get(702L))
+        assertNull(history.get(703L))
+    }
+
+    @Test
+    fun `deleteBatch удаляет переданные ItemsX`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val video1 = ItemsX(id = 801L, title = "Batch 1")
+        val video2 = ItemsX(id = 802L, title = "Batch 2")
+        history.updateProgress(video1, positionMs = 10_000L, totalDurationMs = 200_000L)
+        history.updateProgress(video2, positionMs = 20_000L, totalDurationMs = 200_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        history.deleteBatch(listOf(video1))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, history.list.size)
+        assertNull(history.get(801L))
+        assertNotNull(history.get(802L))
+    }
+
+    @Test
+    fun `deleteBatch игнорирует пустой список и невалидные ID`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val video = ItemsX(id = 901L, title = "Valid")
+        history.updateProgress(video, positionMs = 10_000L, totalDurationMs = 200_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        history.deleteBatchByIds(listOf(0L, -1L))
+        history.deleteBatch(emptyList())
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, history.list.size)
+        assertNotNull(history.get(901L))
     }
 }

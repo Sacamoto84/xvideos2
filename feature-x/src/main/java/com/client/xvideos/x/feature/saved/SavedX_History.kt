@@ -55,21 +55,30 @@ class SavedX_History(
     }
 
     /**
-     * Обновляет прогресс воспроизведения ролика.
+     * Обновляет прогресс воспроизведения ролика в истории.
      *
-     * Игнорирует ролики короче 2 минут (120 000 мс) и случайные открытия (< 5 сек).
-     * При достижении >= 95% длительности позиция сбрасывается на 0 мс (досмотрено).
+     * - Ролик фиксируется в истории, если воспроизведение длилось более 1 секунды.
+     * - Позиция возобновления сохраняется только для роликов длительностью >= 2 минут (120 000 мс)
+     *   и если просмотрено не менее 5 секунд. Для коротких (< 2 мин) или досмотренных (>= 95%)
+     *   позиция сбрасывается на 0L (ролик начнётся сначала).
      */
     fun updateProgress(item: ItemsX, positionMs: Long, totalDurationMs: Long) {
         if (item.id <= 0L) return
-        if (totalDurationMs < MIN_DURATION_FOR_HISTORY_MS) return
 
-        val isFinished = positionMs >= (totalDurationMs * COMPLETION_THRESHOLD)
-        val targetPosition = if (isFinished) 0L else positionMs
+        val isFinished = totalDurationMs > 0L && positionMs >= (totalDurationMs * COMPLETION_THRESHOLD)
+        val isEligibleForResume = totalDurationMs >= MIN_DURATION_FOR_HISTORY_MS && !isFinished
 
-        // Защита от случайных открытий: не создаём новую запись, если просмотрено меньше 5 секунд
-        if (!isFinished && targetPosition < MIN_PLAYBACK_FOR_SAVE_MS && !historyMap.containsKey(item.id)) {
+        // Защита от случайных мисскликов: если просмотр длился менее 1 секунды и ролик ещё не в истории
+        if (positionMs < MIN_PLAYBACK_START_MS && !historyMap.containsKey(item.id)) {
             return
+        }
+
+        // Позиция возобновления сохраняется только для длинных роликов (>= 2 мин) при просмотре от 5 секунд
+        val targetPosition = when {
+            isFinished -> 0L
+            !isEligibleForResume -> 0L
+            positionMs < MIN_PLAYBACK_FOR_SAVE_MS -> 0L
+            else -> positionMs
         }
 
         val entry = XHistoryItem(
@@ -114,6 +123,39 @@ class SavedX_History(
                     SnackBar.error("Ошибка удаления: ${e.message}")
                 }
         }
+    }
+
+    /**
+     * Пакетное удаление записей из истории по ID роликов.
+     */
+    fun deleteBatchByIds(ids: Collection<Long>) {
+        val validIds = ids.filter { it > 0L }
+        if (validIds.isEmpty()) return
+        scope.launch(ioDispatcher) {
+            val deletedIds = mutableListOf<Long>()
+            validIds.forEach { id ->
+                historyDb.delete(id.toString())
+                    .onSuccess { deletedIds.add(id) }
+                    .onFailure { e ->
+                        Timber.e(e, "SavedX_History: не удалось удалить %d", id)
+                    }
+            }
+            if (deletedIds.isNotEmpty()) {
+                val set = deletedIds.toSet()
+                withContext(Dispatchers.Main) {
+                    deletedIds.forEach { historyMap.remove(it) }
+                    list.removeAll { it.item.id in set }
+                }
+                SnackBar.info("Удалено ${deletedIds.size} из истории")
+            }
+        }
+    }
+
+    /**
+     * Пакетное удаление записей из истории по списку элементов.
+     */
+    fun deleteBatch(items: Collection<ItemsX>) {
+        deleteBatchByIds(items.map { it.id })
     }
 
     /**
@@ -166,7 +208,8 @@ class SavedX_History(
         private const val EXTENSION = "XHistoryItem"
         const val MAX_HISTORY_ITEMS = 200
         const val MIN_DURATION_FOR_HISTORY_MS = 120_000L // 2 минуты
-        const val MIN_PLAYBACK_FOR_SAVE_MS = 5_000L      // 5 секунд
+        const val MIN_PLAYBACK_FOR_SAVE_MS = 5_000L      // 5 секунд (порог возобновления)
+        const val MIN_PLAYBACK_START_MS = 1_000L         // 1 секунда (порог фиксации в истории)
         const val COMPLETION_THRESHOLD = 0.95f           // 95% длительности
     }
 }

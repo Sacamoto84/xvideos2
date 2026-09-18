@@ -86,7 +86,7 @@ class ScreenFavorites : Screen {
             onDownload = { vm.download(it) },
             onSaveToGallery = { vm.saveToGallery(it) },
             onPlayLocal = { url -> navigator.push(ScreenX_LocalVideoPlayer(url)) },
-            onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href))) },
+            onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) },
         )
     }
 }

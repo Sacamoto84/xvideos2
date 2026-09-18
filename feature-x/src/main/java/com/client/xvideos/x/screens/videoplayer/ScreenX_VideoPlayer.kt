@@ -318,11 +318,12 @@ private fun RememberHistoryProgressSync(
     vm: ScreenX_VideoPlayerSM,
     host: MediaPlayerHost,
 ) {
-    // Периодическое сохранение прогресса раз в 5 секунд во время активного воспроизведения
+    // Периодическое сохранение прогресса во время активного воспроизведения
     LaunchedEffect(host.isPaused) {
         if (!host.isPaused) {
+            vm.saveProgress(host.currentTime, host.totalTime)
             while (isActive) {
-                delay(5000)
+                delay(3000)
                 vm.saveProgress(host.currentTime, host.totalTime)
             }
         }

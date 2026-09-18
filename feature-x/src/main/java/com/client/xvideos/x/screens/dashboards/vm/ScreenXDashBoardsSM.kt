@@ -10,6 +10,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import dagger.Binds
@@ -33,7 +34,13 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
     /** Текущий под-таб раздела Savable: 0 — Favorites (пока единственный). */
     var savedTab by mutableIntStateOf(0)
 
-    fun openVideoPlayer(url: String, navigator: Navigator) { navigator.push(ScreenX_VideoPlayer(url)) }
+    fun openVideoPlayer(item: ItemsX, navigator: Navigator) {
+        navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item))
+    }
+
+    fun openVideoPlayer(url: String, navigator: Navigator) {
+        navigator.push(ScreenX_VideoPlayer(url))
+    }
 
     /** Скачать (сохранить) видео в раздел «Сохранённое». */
     fun download(item: ItemsX) = saved.downloads.download(item)

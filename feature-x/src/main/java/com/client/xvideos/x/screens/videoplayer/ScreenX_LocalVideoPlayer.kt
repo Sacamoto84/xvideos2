@@ -34,7 +34,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
-import com.client.xvideos.x.feature.saved.SavedX_History
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
 import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
@@ -178,9 +177,11 @@ class ScreenX_LocalVideoPlayer(
         currentTimeSeconds: Float,
         totalTimeSeconds: Int,
     ) {
-        val durationMs = totalTimeSeconds * 1000L
-        val positionMs = (currentTimeSeconds * 1000f).toLong()
-        if (item.id > 0L && durationMs >= SavedX_History.MIN_DURATION_FOR_HISTORY_MS) {
+        val playerDurationMs = totalTimeSeconds * 1000L
+        val parsedDurationMs = com.client.xvideos.x.parseDurationToMs(item.duration)
+        val durationMs = if (playerDurationMs > 0L) playerDurationMs else parsedDurationMs
+        val positionMs = (currentTimeSeconds * 1000f).toLong().coerceAtLeast(0L)
+        if (item.id > 0L) {
             sm.saved.history.updateProgress(item, positionMs, durationMs)
         }
     }

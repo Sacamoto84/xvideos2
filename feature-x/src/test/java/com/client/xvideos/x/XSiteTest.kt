@@ -42,6 +42,31 @@ class XSiteTest {
         assertEquals("https://cdn.xv-ru.com/video.mp4", normalizeXUrl("//cdn.xv-ru.com/video.mp4"))
         assertEquals("https://example.com/stream.m3u8", normalizeXUrl("  //example.com/stream.m3u8  "))
     }
+
+    @Test
+    fun `extractXVideoId корректно извлекает числовые и буквенные id`() {
+        assertEquals(12345L, extractXVideoId("/video12345/test"))
+        assertEquals(789L, extractXVideoId("https://www.xv-ru.com/video.789/title"))
+
+        // Буквенно-цифровые токены дают стабильный положительный ID
+        val id1 = extractXVideoId("https://www.xv-ru.com/video.uicfdab07bd/_")
+        val id2 = extractXVideoId("/video.uicfdab07bd/other_title")
+        org.junit.Assert.assertNotNull(id1)
+        org.junit.Assert.assertTrue(id1!! > 0L)
+        assertEquals(id1, id2) // Детерминированность
+    }
+
+    @Test
+    fun `parseDurationToMs корректно парсит различные форматы длительности`() {
+        assertEquals(600_000L, parseDurationToMs("10 мин."))
+        assertEquals(720_000L, parseDurationToMs("12 min"))
+        assertEquals(4_500_000L, parseDurationToMs("1 hr 15 min"))
+        assertEquals(45_000L, parseDurationToMs("45 sec"))
+        assertEquals(754_000L, parseDurationToMs("12:34"))
+        assertEquals(3_665_000L, parseDurationToMs("01:01:05"))
+        assertEquals(0L, parseDurationToMs(""))
+        assertEquals(0L, parseDurationToMs("No duration"))
+    }
 }
 
 

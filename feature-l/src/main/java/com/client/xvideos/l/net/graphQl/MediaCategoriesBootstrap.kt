@@ -16,10 +16,11 @@ private const val mediaCategoriesBootstrap =
 
 var mediaCategoriesFlow = MutableStateFlow<MediaCategories?>(null)
 
-suspend fun refreshMediaCategories(repository: Repository) {
-    Timber.d("refreshMediaCategories")
+suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean = false) {
+    Timber.d("refreshMediaCategories (forceRefresh=$forceRefresh)")
 
-    val res = repository.openURI(mediaCategoriesBootstrap, config = RepositoryUriConfig.CACHE_ROM)
+    val config = if (forceRefresh) RepositoryUriConfig.DIRECT else RepositoryUriConfig.CACHE_ROM
+    val res = repository.openURI(mediaCategoriesBootstrap, config = config)
 
     if (res.isFailure) return
 

@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -29,6 +31,8 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.L_ScreenSavedAl
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.L_Screen_CollectionTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab_AddColumn
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.L_ScreenServerLikesTab
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.L_ScreenSubscribedAlbumsTab
 import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.ui.atom.TabBarPoints
 import dagger.Binds
@@ -46,11 +50,11 @@ object L_SavedTab : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
     private val SAVED_TAB_ICONS = persistentListOf(
-        //Icons.Outlined.FavoriteBorder,
         Icons.Outlined.Save,
         Icons.Outlined.Folder,
         Icons.Outlined.Apps,
-        //Icons.Outlined.LockOpen,
+        Icons.Outlined.Subscriptions,
+        Icons.Outlined.FavoriteBorder,
     )
 
     @Composable
@@ -77,12 +81,14 @@ object L_SavedTab : Screen {
                                 when (it) {
                                     0 -> L_ScreenSavedLikesTab_AddColumn()
                                     2 -> { ColumnSelect_AddColumn(Settings.l_collectionTab_column_current_count, Settings.l_collectionTab_G_0_4) }
+                                    4 -> L_ScreenSavedLikesTab_AddColumn()
                                 }
                             }
                             vm.screenType = it
                         },
                         overlay0 = { TabBarPoints(columnLikes, screenType == 0) },
-                        overlay2 = { TabBarPoints(columnCollection, screenType == 2) }
+                        overlay2 = { TabBarPoints(columnCollection, screenType == 2) },
+                        overlay4 = { TabBarPoints(columnLikes, screenType == 4) }
                     )
                 }
             },
@@ -96,6 +102,8 @@ object L_SavedTab : Screen {
                     0 -> L_ScreenSavedLikesTab.Content()
                     1 -> L_ScreenSavedAlbumsTab.Content()
                     2 -> L_Screen_CollectionTab.Content()
+                    3 -> L_ScreenSubscribedAlbumsTab.Content()
+                    4 -> L_ScreenServerLikesTab.Content()
                     else -> {}
                 }
             }

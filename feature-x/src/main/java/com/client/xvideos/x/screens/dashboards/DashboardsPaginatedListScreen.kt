@@ -86,7 +86,7 @@ private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> 
 @Composable
 fun DashboardsPaginatedListScreen(
     pageIndex: Int,
-    openVideoPlayer: (String) -> Unit,
+    openVideoPlayer: (ItemsX) -> Unit,
 
     isFavorite: (Long) -> Boolean,
     onFavoriteAdd: (ItemsX) -> Unit,
@@ -189,7 +189,7 @@ fun DashboardsPaginatedListContent(
     onFavoriteAdd: (ItemsX) -> Unit,
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
-    openVideoPlayer: (String) -> Unit,
+    openVideoPlayer: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
     LazyVerticalGrid(
@@ -214,10 +214,10 @@ fun DashboardsPaginatedListContent(
                     cell,
                     onLongClick = {
                         //Открыть экран плеера
-                        openVideoPlayer(normalizeXUrl(cell.href))
+                        openVideoPlayer(cell)
                     },
                     onDoubleClick = {
-                        openVideoPlayer(normalizeXUrl(cell.href))
+                        openVideoPlayer(cell)
                     }
                 )
                 {

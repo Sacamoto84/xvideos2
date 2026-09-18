@@ -122,7 +122,7 @@ class ScreenTags(private val tag: String) : Screen {
                     TagsPaginatedListScreen(
                         pageIndex = pageIndex,
                         loadPage = { vm.loadPage(it).items },
-                        onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href))) },
+                        onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) },
                     )
                 }
             }
