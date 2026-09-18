@@ -11,7 +11,6 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Delet
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveToGallery
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_ServerLike
-import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_ServerUnlike
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SetCover
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -26,7 +25,6 @@ fun SavedLikesItemExpandMenu(
     onClick: () -> Unit = {},
     onDelete: (PicsDetails) -> Unit = {},
     onServerLike: (PicsDetails) -> Unit = {},
-    onServerUnlike: (PicsDetails) -> Unit = {},
     onAddCollection: (PicsDetails) -> Unit = {},
     onRemoveFromCollection: (PicsDetails) -> Unit = {},
     onShare: (PicsDetails) -> Unit = {},
@@ -40,8 +38,6 @@ fun SavedLikesItemExpandMenu(
     ) { dismiss ->
 
         DropdownMenuItem_ServerLike(item, onClick = { onServerLike(it) }) { dismiss() }
-
-        DropdownMenuItem_ServerUnlike(item, onClick = { onServerUnlike(it) }) { dismiss() }
 
         DropdownMenuItem_Share(item, onClick = { onShare(it) }) { dismiss() }
 

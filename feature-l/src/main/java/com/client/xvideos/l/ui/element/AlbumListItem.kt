@@ -21,10 +21,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 
 //.aspectRatio(640f/935)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlbumListItem(
     title: String,
@@ -32,8 +35,15 @@ fun AlbumListItem(
     numberOfAnimatedPictures: Int,
     numberOfPictures: Int,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit = {}
 ) {
+
+    val clickModifier = if (onLongClick != null) {
+        Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)
+    } else {
+        Modifier.clickable(onClick = onClick)
+    }
 
     Box(
         modifier = Modifier
@@ -42,7 +52,7 @@ fun AlbumListItem(
             .border(1.dp, Theme.tabLevel3, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
             .background(Theme.tabLevel1)
-            .clickable(onClick = onClick)
+            .then(clickModifier)
     ) {
 
         UrlImage(

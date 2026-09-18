@@ -17,12 +17,14 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -30,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -49,6 +53,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.ui.element.AlbumListItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 
@@ -94,6 +99,30 @@ object L_ScreenSubscribedAlbumsTab : Screen {
             if (shouldLoadMore && vm.hasMore && !isLoading && errorMessage == null) {
                 vm.loadNextPage()
             }
+        }
+
+        var itemPendingServerUnlike by remember { mutableStateOf<AlbumDetails?>(null) }
+
+        itemPendingServerUnlike?.let { pending ->
+            AlertDialog(
+                onDismissRequest = { itemPendingServerUnlike = null },
+                title = { Text("Удалить альбом с сервера?") },
+                text = { Text("Удалить «${pending.title}» из подписок на сервере Luscious?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        vm.unlikeAlbum(pending)
+                        itemPendingServerUnlike = null
+                    }) {
+                        Text("Удалить", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { itemPendingServerUnlike = null }) {
+                        Text("Отмена")
+                    }
+                }
+            )
         }
 
         PullToRefreshBox(
@@ -209,7 +238,11 @@ object L_ScreenSubscribedAlbumsTab : Screen {
                                 coverUrl = item.cover?.url.orEmpty(),
                                 numberOfAnimatedPictures = item.number_of_animated_pictures,
                                 numberOfPictures = item.number_of_pictures,
-                                modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    itemPendingServerUnlike = item
+                                }
                             ) {
                                 if (albumId != null) {
                                     navigator.push(ScreenLAlbum(albumId))

@@ -37,6 +37,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -45,7 +46,8 @@ import javax.inject.Inject
 enum class ExpandMenuType {
     NONE,
     ALBUM,
-    LIKES
+    LIKES,
+    SERVER_LIKES
 }
 
 
@@ -63,11 +65,18 @@ class ExpandMenuViewModel @Inject constructor(
 
 
     @Composable
-    fun ExpandMenu(type: ExpandMenuType, item: PicsDetails, idAlbum: String, isCollection: Boolean = false) {
+    fun ExpandMenu(
+        type: ExpandMenuType,
+        item: PicsDetails,
+        idAlbum: String,
+        isCollection: Boolean = false,
+        host: LazyRowPictureDetailsHost? = null
+    ) {
         when (type) {
             ExpandMenuType.NONE -> {}
             ExpandMenuType.ALBUM -> ExpandMenuAlbum(item, idAlbum, isCollection)
             ExpandMenuType.LIKES -> ExpandMenuLikes(item, isCollection)
+            ExpandMenuType.SERVER_LIKES -> ExpandMenuServerLikes(item, idAlbum, host)
         }
     }
 
@@ -86,7 +95,6 @@ class ExpandMenuViewModel @Inject constructor(
             item = item,
             onDownload = { it1 -> downloadLike(it1, album) },
             onServerLike = { it1 -> likeOnServer(it1) },
-            onServerUnlike = { it1 -> unlikeOnServer(it1) },
             onShare = { it1 -> onShareClicked(it1) },
             onSaveToGallery = { it1 -> saveToGallery(it1) },
             isCollection = isCollection,
@@ -110,15 +118,15 @@ class ExpandMenuViewModel @Inject constructor(
         }
     }
 
-    fun unlikeOnServer(item: PicsDetails) {
+    fun unlikeOnServer(item: PicsDetails, onSuccess: (() -> Unit)? = null) {
         val anchorId = item.extractAnchorId()
         if (!anchorId.isNullOrBlank()) {
-            sendServerUnlike(anchorId)
+            sendServerUnlike(anchorId, onSuccess)
             return
         }
 
         resolveAndPerformServerAction(item) { resolvedId ->
-            sendServerUnlike(resolvedId)
+            sendServerUnlike(resolvedId, onSuccess)
         }
     }
 
@@ -203,11 +211,14 @@ class ExpandMenuViewModel @Inject constructor(
         }
     }
 
-    private fun sendServerUnlike(anchorId: String) {
+    private fun sendServerUnlike(anchorId: String, onSuccess: (() -> Unit)? = null) {
         scope.launch {
             serverFavorites.unlikePicture(anchorId)
                 .onSuccess {
                     SnackBar.info("Лайк удалён на сервере")
+                    withContext(Dispatchers.Main) {
+                        onSuccess?.invoke()
+                    }
                 }
                 .onFailure { e ->
                     Timber.e(e, "Failed to unlike picture on server")
@@ -227,7 +238,6 @@ class ExpandMenuViewModel @Inject constructor(
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
             onServerLike = { it1 -> likeOnServer(it1) },
-            onServerUnlike = { it1 -> unlikeOnServer(it1) },
             onShare = { it -> onShareClicked(it) },
             onSaveToGallery = { it -> saveToGallery(it) },
             isCollection = isCollection,
@@ -235,6 +245,37 @@ class ExpandMenuViewModel @Inject constructor(
             onRemoveFromCollection = { it ->
                 // Refresh will be handled by the collection screen
             }
+        )
+    }
+
+    @Composable
+    fun ExpandMenuServerLikes(
+        item: PicsDetails,
+        idAlbum: String = "",
+        host: LazyRowPictureDetailsHost? = null
+    ) {
+        ServerLikesItemExpandMenu(
+            item = item,
+            onDownload = { it1 ->
+                val album = idAlbum.toLongOrNull() ?: it1.album?.toLongOrNull() ?: 0L
+                downloadLike(it1, album)
+            },
+            onServerUnlike = { it1 ->
+                unlikeOnServer(it1) {
+                    host?.let { h ->
+                        val index = h.filteredPic.indexOfFirst {
+                            it.id == it1.id || (it.url_to_original != null && it.url_to_original == it1.url_to_original)
+                        }
+                        if (index >= 0) {
+                            h.filteredPic.removeAt(index)
+                        }
+                    }
+                }
+            },
+            onShare = { it1 -> onShareClicked(it1) },
+            onSaveToGallery = { it1 -> saveToGallery(it1) },
+            savedL = saved,
+            idAlbum = idAlbum
         )
     }
 

@@ -23,6 +23,7 @@ import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.AlbumInfo
 import com.client.xvideos.l.net.Luscious
+import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import dagger.Binds
 import dagger.Module
@@ -46,6 +47,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
     @Assisted val idAlbum: Long,
     val luscious: Luscious,
     val saved: SavedL,
+    val serverFavorites: LusciousServerFavoritesRepository,
     @ApplicationScope val scope: CoroutineScope,
     @ApplicationContext val context: Context
 ) : ScreenModel {
@@ -65,6 +67,51 @@ class ScreenLAlbumSM @AssistedInject constructor(
      * Показ только анимированных картинок
      */
     var showOnlyAnimated by mutableStateOf(false)
+
+    /**
+     * Статус избранного на сервере Luscious
+     */
+    var isServerFavorite by mutableStateOf<Boolean?>(null)
+    var isServerFavoriteLoading by mutableStateOf(false)
+
+    fun syncServerFavoriteStatus(likeStatus: String?) {
+        if (isServerFavorite == null && likeStatus != null) {
+            isServerFavorite = likeStatus.isNotBlank() && likeStatus != "none" && likeStatus != "dislike"
+        }
+    }
+
+    fun toggleServerFavorite(album: AlbumDetails) {
+        if (isServerFavoriteLoading) return
+        val albumId = album.id.ifBlank { idAlbum.toString() }
+        val currentlyFavorite = isServerFavorite
+            ?: (album.likeStatus.orEmpty().isNotBlank() && album.likeStatus != "none" && album.likeStatus != "dislike")
+
+        scope.launch {
+            isServerFavoriteLoading = true
+            if (currentlyFavorite) {
+                serverFavorites.unlikeAlbum(albumId)
+                    .onSuccess {
+                        isServerFavorite = false
+                        SnackBar.info("Альбом удалён с сервера")
+                    }
+                    .onFailure { e ->
+                        Timber.e(e, "Failed to unlike album on server")
+                        SnackBar.error(e.message ?: "Не удалось удалить альбом с сервера")
+                    }
+            } else {
+                serverFavorites.likeAlbum(albumId)
+                    .onSuccess {
+                        isServerFavorite = true
+                        SnackBar.success("Альбом добавлен на сервер")
+                    }
+                    .onFailure { e ->
+                        Timber.e(e, "Failed to like album on server")
+                        SnackBar.error(e.message ?: "Не удалось добавить альбом на сервер")
+                    }
+            }
+            isServerFavoriteLoading = false
+        }
+    }
 
     /**
      * Сохранить альбом

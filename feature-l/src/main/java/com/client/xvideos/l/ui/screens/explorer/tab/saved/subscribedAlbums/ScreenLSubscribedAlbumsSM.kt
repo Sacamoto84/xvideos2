@@ -5,6 +5,7 @@ import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
 import dagger.Binds
@@ -101,6 +102,19 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
                 _errorMessage.value = error.message ?: "Ошибка обновления подписок"
             }
             _isRefreshing.value = false
+        }
+    }
+
+    fun unlikeAlbum(album: AlbumDetails) {
+        screenModelScope.launch {
+            val result = repository.unlikeAlbum(album.id)
+            result.onSuccess {
+                _albums.value = _albums.value.filter { it.id != album.id }
+                SnackBar.info("Альбом удалён из подписок")
+            }.onFailure { error ->
+                Timber.e(error, "Failed to unsubscribe album ${album.id} on server")
+                SnackBar.error(error.message ?: "Не удалось удалить альбом из подписок")
+            }
         }
     }
 }

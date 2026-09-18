@@ -31,8 +31,10 @@ fun getFavoriteAdd(
     }
     """.trimIndent()
 
+    val id = if (anchorType == "album") "32" else "51"
+
     return buildJsonObject {
-        put("id", "51")
+        put("id", id)
         put("operationName", "FavoriteAdd")
         put("query", query)
         putJsonObject("variables") {

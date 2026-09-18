@@ -581,4 +581,77 @@ class LusciousServerFavoritesTest {
         val firstError = mutationErrors?.first() as kotlinx.serialization.json.JsonObject
         assertEquals("Item is not in favorites", (firstError["message"] as kotlinx.serialization.json.JsonPrimitive).content)
     }
+
+    @Test
+    fun `getFavoriteAdd generates valid GraphQL payload for album like with id 32 and anchor_type album`() {
+        val payload = com.client.xvideos.l.net.graphQl.getFavoriteAdd(
+            anchorId = "587656",
+            anchorType = "album",
+            favoriteType = "like"
+        )
+
+        val json = com.client.xvideos.l.net.json.LJson.parseToJsonElement(payload) as kotlinx.serialization.json.JsonObject
+        assertEquals("32", (json["id"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("FavoriteAdd", (json["operationName"] as kotlinx.serialization.json.JsonPrimitive).content)
+
+        val variables = json["variables"] as kotlinx.serialization.json.JsonObject
+        val input = variables["input"] as kotlinx.serialization.json.JsonObject
+        assertEquals("587656", (input["anchor_id"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("album", (input["anchor_type"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("like", (input["favorite_type"] as kotlinx.serialization.json.JsonPrimitive).content)
+    }
+
+    @Test
+    fun `getFavoriteRemove generates valid GraphQL payload for album unlike`() {
+        val payload = com.client.xvideos.l.net.graphQl.getFavoriteRemove(
+            anchorId = "587656",
+            anchorType = "album",
+            favoriteType = "like"
+        )
+
+        val json = com.client.xvideos.l.net.json.LJson.parseToJsonElement(payload) as kotlinx.serialization.json.JsonObject
+        assertEquals("9", (json["id"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("FavoriteRemove", (json["operationName"] as kotlinx.serialization.json.JsonPrimitive).content)
+
+        val variables = json["variables"] as kotlinx.serialization.json.JsonObject
+        val input = variables["input"] as kotlinx.serialization.json.JsonObject
+        assertEquals("587656", (input["anchor_id"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("album", (input["anchor_type"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("like", (input["favorite_type"] as kotlinx.serialization.json.JsonPrimitive).content)
+    }
+
+    @Test
+    fun `ScreenLSubscribedAlbumsSM unlikeAlbum removes album from list and calls repository`() = runTest {
+        var unlikedId: String? = null
+        val fakeRepo = object : LusciousServerFavoritesRepository {
+            override suspend fun getSessionUserId(): Result<String> = Result.success("123")
+            override suspend fun getSubscribedAlbumsRaw(userId: String?, page: Int): Result<String> =
+                Result.success("{}")
+            override suspend fun getSubscribedAlbums(page: Int): Result<List<AlbumDetails>> =
+                Result.success(listOf(AlbumDetails(id = "100", title = "To Remove"), AlbumDetails(id = "200", title = "Keep")))
+            override suspend fun getServerLikedPicturesRaw(userId: String?, page: Int): Result<String> =
+                Result.success("{}")
+            override suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>> =
+                Result.success(emptyList())
+            override suspend fun addFavorite(anchorId: String, anchorType: String, favoriteType: String): Result<Unit> =
+                Result.success(Unit)
+            override suspend fun removeFavorite(anchorId: String, anchorType: String, favoriteType: String): Result<Unit> {
+                unlikedId = anchorId
+                return Result.success(Unit)
+            }
+            override suspend fun resolvePictureId(albumId: String, mediaUrlOrFileName: String): Result<String> =
+                Result.success("123")
+        }
+
+        val sm = ScreenLSubscribedAlbumsSM(fakeRepo)
+        advanceUntilIdle()
+
+        assertEquals(2, sm.albums.value.size)
+        sm.unlikeAlbum(AlbumDetails(id = "100", title = "To Remove"))
+        advanceUntilIdle()
+
+        assertEquals("100", unlikedId)
+        assertEquals(1, sm.albums.value.size)
+        assertEquals("200", sm.albums.value.first().id)
+    }
 }

@@ -60,6 +60,7 @@ import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDet
 import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum
+import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonServerFavorite
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonShareAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
@@ -129,6 +130,10 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                 vm.host.replaceFilteredPictures(allPics)
             }
 
+        }
+
+        LaunchedEffect(parsed?.likeStatus) {
+            vm.syncServerFavoriteStatus(parsed?.likeStatus)
         }
 
         /**  ➜ сюда запоминаем элемент, который пользователь хочет удалить  */
@@ -271,6 +276,11 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                     parsed.tags.reversed().filter { it.count > 0 }
                                 }) { navigator.push(ScreenLAlbumLandingTag(it)) }
                                 AlbumInfoButtonSaveAlbum(saved, onClick = { if (!saved) { vm.saveAlbum() } else { itemPendingDelete = parsed } })
+                                AlbumInfoButtonServerFavorite(
+                                    isFavorite = vm.isServerFavorite ?: (parsed.likeStatus.orEmpty().isNotBlank() && parsed.likeStatus != "none" && parsed.likeStatus != "dislike"),
+                                    isLoading = vm.isServerFavoriteLoading,
+                                    onClick = { vm.toggleServerFavorite(parsed) }
+                                )
                                 AlbumInfoButtonShareAlbum(onClick = { vm.shareAlbumP2p(parsed) })
                                 AlbumInfoFilterButton(
                                     parsed = parsed,

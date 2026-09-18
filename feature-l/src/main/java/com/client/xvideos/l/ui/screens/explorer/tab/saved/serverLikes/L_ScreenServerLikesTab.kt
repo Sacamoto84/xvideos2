@@ -188,7 +188,7 @@ object L_ScreenServerLikesTab : Screen {
                 } else {
                     L_LazyRowPictureDetails(
                         host = vm.host,
-                        expandMenu = ExpandMenuType.LIKES,
+                        expandMenu = ExpandMenuType.SERVER_LIKES,
                         tag = "l_server_likes",
                         itemBefore = {
                             Box(modifier = Modifier.fillMaxWidth().height(topInset))
