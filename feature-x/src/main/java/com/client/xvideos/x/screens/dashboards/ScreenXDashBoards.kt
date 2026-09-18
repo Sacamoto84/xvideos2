@@ -35,9 +35,11 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import com.client.xvideos.x.screens.dashboards.bottomBar.DashboardControlsRow
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
-import com.client.xvideos.x.screens.favorites.ScreenFavorites
-import com.client.xvideos.x.screens.saved.X_SavedContent
+import androidx.compose.material.icons.outlined.History
 import com.client.xvideos.common.ui.atom.DownloadIndicator
+import com.client.xvideos.x.screens.favorites.ScreenFavorites
+import com.client.xvideos.x.screens.history.ScreenXHistory
+import com.client.xvideos.x.screens.saved.X_SavedContent
 
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
@@ -109,7 +111,9 @@ class ScreenXDashBoards : Screen {
             ) {
                 when (vm.mainTab) {
                     SAVABLE -> when (vm.savedTab) {
+                        SAVED_FAVORITES -> favoritesScreen.Content()
                         SAVED_DOWNLOADS -> X_SavedContent(vm.saved)
+                        SAVED_HISTORY -> ScreenXHistory(vm.saved)
                         else -> favoritesScreen.Content()
                     }
                     else -> HorizontalPager(
@@ -144,7 +148,9 @@ class ScreenXDashBoards : Screen {
         private const val SAVABLE = 1
 
         // Под-табы раздела Savable.
+        private const val SAVED_FAVORITES = 0
         private const val SAVED_DOWNLOADS = 1
+        private const val SAVED_HISTORY = 2
 
         /** Иконки главного таб-ряда: дашборды + сохранённое. */
         // persistentListOf, а не listOf: обычный List для Compose нестабилен,
@@ -154,10 +160,11 @@ class ScreenXDashBoards : Screen {
             Icons.Outlined.BookmarkBorder,
         )
 
-        /** Под-табы раздела Savable: «Избранное» + «Сохранённое». */
+        /** Под-табы раздела Savable: «Избранное» + «Сохранённое» + «История». */
         private val savedTabs: ImmutableList<ImageVector> = persistentListOf(
             Icons.Outlined.FavoriteBorder,
             Icons.Outlined.Save,
+            Icons.Outlined.History,
         )
     }
 }

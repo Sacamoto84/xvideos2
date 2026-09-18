@@ -25,7 +25,8 @@ data class PlayerPlaybackConfig(
     val headers: Map<String, String>? = null,
     val drmConfig: DrmConfig? = null,
     val selectedQuality: VideoQuality? = null,
-    val autoRotate: Boolean = false
+    val autoRotate: Boolean = false,
+    val playFromTime: Float? = null,
 )
 
 /**
@@ -50,6 +51,7 @@ fun MediaPlayerHost.toPlaybackConfig(autoRotate: Boolean = false): PlayerPlaybac
         isPause = isPaused,
         isSliding = isSliding,
         seekToTime = seekToTime,
+        playFromTime = playFromTime,
         speed = speed,
         size = videoFitMode,
         loop = isLooping,

@@ -127,9 +127,6 @@ class MediaPlayerHost(
         }
     }
 
-//    fun setSpeed(speed: PlayerSpeed) {
-//        this.speed = speed
-//    }
 
     @Deprecated(
         message = "Use seekTo(seconds: Float?) instead for better precision.",

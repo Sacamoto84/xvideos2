@@ -16,6 +16,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.common.video.PlayerControls
+import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -36,6 +37,7 @@ class ScreenRedFullScreenSM @Inject constructor(
     var play by mutableStateOf(true)
     var mute by mutableStateOf(true)
     var autoRotate by mutableStateOf(false)
+    var speed by mutableStateOf(PlayerSpeed.DEFAULT)
 
     var enableAB by mutableStateOf(false)
     var timeA by mutableFloatStateOf(3f)
@@ -87,6 +89,10 @@ class ScreenRedFullScreenSM @Inject constructor(
 
     fun toggleMute() {
         mute = !mute
+    }
+
+    fun resetSpeed() {
+        speed = PlayerSpeed.DEFAULT
     }
 }
 

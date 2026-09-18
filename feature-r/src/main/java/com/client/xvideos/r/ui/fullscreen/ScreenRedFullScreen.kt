@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -181,6 +182,7 @@ private fun RedFullScreenFeed(
                 vm.currentPlayerTime = 0f
                 vm.currentPlayerDuration = 0
                 vm.enableAB = false
+                vm.resetSpeed()
             }
     }
 
@@ -271,6 +273,10 @@ private fun RedFullScreenSingle(
     // Без этого statusControl.currentPlayingIndex остаётся C.INDEX_UNSET, политика
     // всегда отдаёт CACHED_ONLY, и preload-менеджер на этом экране не делает ничего.
     LaunchedEffect(feedState) { feedState.updateCurrentPage(0) }
+
+    DisposableEffect(item.id) {
+        onDispose { vm.resetSpeed() }
+    }
 
     RedFullScreenScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
         RedFullScreenPage(
@@ -364,6 +370,7 @@ private fun RedFullScreenPage(
             timeA = vm.timeA,
             timeB = vm.timeB,
             enableAB = vm.enableAB,
+            speed = vm.speed,
             onTimeChanged = { position, duration ->
                 if (isCurrentPage) {
                     vm.currentPlayerTime = position

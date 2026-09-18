@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.toTwoDecimalPlacesWithColon
+import com.client.xvideos.common.videoplayer.model.PlayerSpeed
+import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import com.client.xvideos.feature.r.R
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
 
@@ -46,6 +48,7 @@ data class FeedPlaybackState(
     val enableAB: Boolean,
     val play: Boolean,
     val mute: Boolean,
+    val speed: PlayerSpeed = PlayerSpeed.DEFAULT,
 )
 
 @Immutable
@@ -57,6 +60,7 @@ data class FeedPlaybackActions(
     val onRewind: () -> Unit,
     val onForward: () -> Unit,
     val onToggleMute: () -> Unit,
+    val onSpeedChange: (PlayerSpeed) -> Unit,
 )
 
 @Composable
@@ -232,6 +236,28 @@ fun FeedControls_Container_Line0(
             mute = state.mute,
             onClick = actions.onToggleMute
         )
+        Divider()
+        PlaybackSpeedMenu(
+            currentSpeed = state.speed,
+            onSpeedSelected = actions.onSpeedChange,
+            trigger = { onClick ->
+                Box(
+                    modifier = Modifier
+                        .height(46.dp)
+                        .width(46.dp)
+                        .clickable(onClick = onClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.speed.displayName,
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        )
     }
 }
 
@@ -249,6 +275,7 @@ fun FeedControls_Container_Line0(
             onRewind = { vm.rewind() },
             onForward = { vm.forward() },
             onToggleMute = vm::toggleMute,
+            onSpeedChange = { vm.speed = it },
         )
     }
 
@@ -259,6 +286,7 @@ fun FeedControls_Container_Line0(
             enableAB = vm.enableAB,
             play = vm.play,
             mute = vm.mute,
+            speed = vm.speed,
         ),
         actions = actions,
         modifier = modifier,

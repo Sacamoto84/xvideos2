@@ -1,15 +1,17 @@
 package com.client.xvideos.x.model
 
 import androidx.compose.runtime.Immutable
-import kotlinx.serialization.Serializable
+import java.io.Serializable
 
 /**
  * Значения по умолчанию обязаны быть **у всех** полей, и это не косметика.
  *
  * Избранное хранится файлами и читается через kotlinx.serialization.
+ * `Serializable` обязателен: модель передаётся в экраны Voyager (`ScreenX_VideoPlayer`,
+ * `ScreenX_LocalVideoPlayer`), которые уходят в saved state через Java-сериализацию.
  */
 @Immutable
-@Serializable
+@kotlinx.serialization.Serializable
 data class ItemsX(
     val id : Long = 0L,               //   Номер 234234233 берется из сайта
     val title : String = "",          // - Название видео(Зависит от выбранного языка)
@@ -21,4 +23,4 @@ data class ItemsX(
     val href: String = "",            // * Путь до страницы видео (Для открытия в экране плеера) Только оно и нужно для этого
     val nameProfile: String = "",     // - Отображаемое название профиля (TODO)
     val linkProfile: String = "",     // * Путь до профиля путь к каналу (/old4k)
-)
+) : Serializable

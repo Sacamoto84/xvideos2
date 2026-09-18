@@ -29,4 +29,29 @@ class ScreenRedFullScreenSMTest {
         assertEquals(12.5f, sanitizePointTime(12.5f, 0))
         assertEquals(30f, sanitizePointTime(30f, -1))
     }
+
+    @Test
+    fun `FeedPlaybackState defaults to DEFAULT player speed`() {
+        val state = com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedPlaybackState(
+            timeA = 0f,
+            timeB = 0f,
+            enableAB = false,
+            play = true,
+            mute = false
+        )
+        assertEquals(com.client.xvideos.common.videoplayer.model.PlayerSpeed.DEFAULT, state.speed)
+    }
+
+    @Test
+    fun `FeedPlaybackState accepts custom player speed`() {
+        val state = com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedPlaybackState(
+            timeA = 0f,
+            timeB = 0f,
+            enableAB = false,
+            play = true,
+            mute = false,
+            speed = com.client.xvideos.common.videoplayer.model.PlayerSpeed.X1_5
+        )
+        assertEquals(com.client.xvideos.common.videoplayer.model.PlayerSpeed.X1_5, state.speed)
+    }
 }

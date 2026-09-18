@@ -55,6 +55,7 @@ fun CMPPlayer2(
         maxBufferMs = maxBufferMs,
         bufferForPlaybackMs = 50,
         bufferForPlaybackAfterRebufferM = 100,
+        playFromTime = config.playFromTime,
     )
 
     val currentCallbacks by rememberUpdatedState(callbacks)
@@ -184,11 +185,4 @@ private object KeepScreenOnCounter {
     }
 }
 
-private fun PlayerSpeed.toFloat(): Float {
-    return when (this) {
-        PlayerSpeed.X0_5 -> 0.5f
-        PlayerSpeed.X1 -> 1f
-        PlayerSpeed.X1_5 -> 1.5f
-        PlayerSpeed.X2 -> 2f
-    }
-}
+private fun PlayerSpeed.toFloat(): Float = this.speed

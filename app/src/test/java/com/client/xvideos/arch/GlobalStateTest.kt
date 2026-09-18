@@ -127,6 +127,8 @@ class GlobalStateTest {
             "common/AppBuildInfo.kt::versionName",
             // Application-контекст для базового слоя, до которого не дотягивается DI.
             "common/AppContextHolder.kt::context",
+            // Монотонное время ухода приложения в фон для автоблокировки по таймеру.
+            "common/applock/AppLockSession.kt::lastBackgroundElapsedMs",
             // Сессионный признак разблокировки приложения (биометрия/пин-код).
             "common/applock/AppLockSession.kt::unlocked",
             // Временный cache для шаринга Luscious (в cacheDir, вне бэкапа).

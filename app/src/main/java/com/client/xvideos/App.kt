@@ -12,6 +12,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pSendPreparers
+import com.client.xvideos.common.applock.AppLockLifecycleObserver
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor
@@ -109,6 +110,7 @@ class App : Application(), SingletonImageLoader.Factory {
         // Контекст нужен, чтобы Settings открыл зашифрованное хранилище для
         // учётных данных Luscious и перенёс туда старые открытые значения.
         Settings.init(prefs, this)
+        AppLockLifecycleObserver.install(this)
 
         // P2P знает про разделы только отсюда: базовый слой умеет передавать
         // байты, но не знает, куда их класть и как скачать несохранённый item.

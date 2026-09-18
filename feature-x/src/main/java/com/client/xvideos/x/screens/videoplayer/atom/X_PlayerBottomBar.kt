@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
+import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import java.util.Locale
 
 /**
@@ -103,6 +104,12 @@ fun X_PlayerBottomBar(
             color = Color.White,
             fontFamily = FontFamily.SansSerif,
             fontSize = 11.sp
+        )
+
+        // Меню выбора скорости воспроизведения
+        PlaybackSpeedMenu(
+            currentSpeed = host.speed,
+            onSpeedSelected = { host.speed = it }
         )
 
         // Переключатель режима масштабирования Fit / Fill

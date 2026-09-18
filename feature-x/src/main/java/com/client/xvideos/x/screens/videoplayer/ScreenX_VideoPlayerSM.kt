@@ -2,7 +2,6 @@ package com.client.xvideos.x.screens.videoplayer
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -11,11 +10,16 @@ import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.x.extractXVideoId
+import com.client.xvideos.x.feature.saved.SavedX
+import com.client.xvideos.x.feature.saved.SavedX_History
 import com.client.xvideos.x.model.HTML5PlayerConfig
+import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.model.TagsModel
+import com.client.xvideos.x.model.XHistoryItem
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
 import com.client.xvideos.x.parcer.parserItemVideoTags
-import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.tags.ScreenTags
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.normalizeXUrl
@@ -28,6 +32,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,19 +45,31 @@ import timber.log.Timber
  * модель больше НЕ держит `ExoPlayer` и не управляет дорожками/скоростью напрямую —
  * этим занимается `MediaPlayerHost`, создаваемый в `Content()`. Здесь остаётся
  * только X-специфика: загрузка HTML страницы видео, извлечение HLS-ссылки и тегов,
- * навигация на теги/полный экран и приём позиции, возвращаемой из fullscreen.
+ * навигация на теги/полный экран, а также сохранение прогресса и возобновление («Продолжить просмотр»).
  */
 @Stable
 class ScreenX_VideoPlayerSM @AssistedInject constructor(
-    @Assisted url: String,
-    val db: AppFileDatabase
+    @Assisted("url") url: String,
+    @Assisted("initialItem") val initialItem: ItemsX?,
+    val db: AppFileDatabase,
+    val saved: SavedX,
 ) : ScreenModel {
+
+    constructor(url: String, db: AppFileDatabase) : this(
+        url = url,
+        initialItem = null,
+        db = db,
+        saved = SavedX(CoroutineScope(Dispatchers.Unconfined))
+    )
 
     val url: String = normalizeXUrl(url)
 
     @AssistedFactory
     interface Factory : ScreenModelFactory {
-        fun create(url: String): ScreenX_VideoPlayerSM
+        fun create(
+            @Assisted("url") url: String,
+            @Assisted("initialItem") initialItem: ItemsX? = null,
+        ): ScreenX_VideoPlayerSM
     }
 
     override fun onDispose() {
@@ -96,14 +113,44 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         isFullScreen = false
     }
 
-    /** @deprecated Позиция больше не передаётся через EventBus, так как плеер не пересоздаётся. */
-    @Deprecated("Плеер работает на едином экране без передачи позиции")
-    var positionFromFullscreen by mutableLongStateOf(-1L)
+    var currentItem: ItemsX by mutableStateOf(
+        initialItem ?: ItemsX(id = extractXVideoId(url) ?: 0L, href = url)
+    )
         private set
 
-    @Deprecated("Плеер работает на едином экране без передачи позиции")
-    fun consumePositionFromFullscreen() {
-        positionFromFullscreen = -1L
+    /** Сохранённый элемент истории для данного видео (если был). */
+    val historyItem: XHistoryItem? = saved.history.get(
+        currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
+    )
+
+    /** Стартовая позиция в секундах, если видео подходит для возобновления. */
+    val resumePositionSeconds: Float? = historyItem?.takeIf { it.isEligibleForResume }?.let {
+        it.lastPositionMs / 1000f
+    }
+
+    /** Текст уведомления о возобновлении (например, "Возобновлено с 04:12"). */
+    var resumeNoticeText: String? by mutableStateOf(
+        resumePositionSeconds?.let { sec ->
+            val totalSec = sec.toInt()
+            val minutes = totalSec / 60
+            val seconds = totalSec % 60
+            String.format(java.util.Locale.US, "Возобновлено с %02d:%02d", minutes, seconds)
+        }
+    )
+        private set
+
+    fun dismissResumeNotice() {
+        resumeNoticeText = null
+    }
+
+    fun saveProgress(positionSeconds: Float, durationSeconds: Int) {
+        val durationMs = durationSeconds * 1000L
+        val positionMs = (positionSeconds * 1000f).toLong()
+        val videoId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
+        if (videoId > 0L && durationMs >= SavedX_History.MIN_DURATION_FOR_HISTORY_MS) {
+            val itemToSave = if (currentItem.id > 0L) currentItem else currentItem.copy(id = videoId)
+            saved.history.updateProgress(itemToSave, positionMs, durationMs)
+        }
     }
 
     init {
@@ -160,6 +207,19 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 playerConfig = parsedData.first
                 tags = parsedData.second
                 passedHLS = parsedData.third
+
+                val parsedConfig = parsedData.first
+                val resolvedId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
+                if (parsedConfig != null) {
+                    currentItem = currentItem.copy(
+                        id = resolvedId,
+                        title = currentItem.title.ifBlank { parsedConfig.videoTitle },
+                        previewImage = currentItem.previewImage.ifBlank {
+                            parsedConfig.thumbUrl169.ifBlank { parsedConfig.thumbUrl }
+                        },
+                        href = url
+                    )
+                }
                 if (parsedData.third.isBlank()) {
                     isError = true
                     isFullScreen = false

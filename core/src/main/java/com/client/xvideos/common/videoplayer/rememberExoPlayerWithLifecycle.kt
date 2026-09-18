@@ -49,6 +49,7 @@ fun rememberExoPlayerWithLifecycle(
     bufferForPlaybackAfterRebufferM: Int = 1000,
     seekBackIncrementMs: Long = 1000L,
     seekForwardIncrementMs: Long = 1000L,
+    playFromTime: Float? = null,
 ): ExoPlayer {
     val lifecycleOwner = LocalLifecycleOwner.current
     val trackSelector = remember { DefaultTrackSelector(context) }
@@ -121,12 +122,13 @@ fun rememberExoPlayerWithLifecycle(
                 else -> createProgressiveMediaSource(mediaItem, context, headers)
             }
 
+            val initialSeekMs = (playFromTime?.times(1000f)?.toLong() ?: 0L).coerceAtLeast(0L)
             exoPlayer.apply {
                 stop()
                 clearMediaItems()
                 setMediaSource(mediaSource)
                 prepare()
-                seekTo(0, 0)
+                seekTo(0, initialSeekMs)
             }
 
         } catch (e: CancellationException) {

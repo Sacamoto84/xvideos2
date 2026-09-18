@@ -24,3 +24,12 @@ fun normalizeXUrl(href: String): String {
     return "$urlStart/${trimmed.removePrefix("/")}"
 }
 
+/**
+ * Извлекает числовой ID видео из URL xvideos (например, `"/video12345/title"`).
+ * Возвращает null, если в адресе нет числа после "/video".
+ */
+fun extractXVideoId(href: String): Long? {
+    val regex = Regex("""/video\.?(\d+)""")
+    return regex.find(href)?.groupValues?.get(1)?.toLongOrNull()
+}
+

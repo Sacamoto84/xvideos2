@@ -49,11 +49,17 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
+import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.videoplayer.atom.ComposeTags
+import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
 import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
-class ScreenX_VideoPlayer(val url: String) : Screen {
+class ScreenX_VideoPlayer(
+    val url: String,
+    val item: ItemsX? = null,
+) : Screen {
 
     override val key: ScreenKey = uniqueScreenKey
 
@@ -63,7 +69,7 @@ class ScreenX_VideoPlayer(val url: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
 
         val vm = getScreenModel<ScreenX_VideoPlayerSM, ScreenX_VideoPlayerSM.Factory> { factory ->
-            factory.create(url)
+            factory.create(url, item)
         }
 
         OrientationAndSystemBarsEffect(vm.isFullScreen)
@@ -192,6 +198,7 @@ private fun VideoPlayerContentView(
             mediaUrl = vm.passedHLS,
             isMuted = true, // видео X всегда без звука
             isLooping = false,
+            startTimeInSeconds = vm.resumePositionSeconds,
         ).apply {
             onError = {
                 vm.onPlaybackError()
@@ -211,6 +218,8 @@ private fun VideoPlayerContentView(
             areControlsVisible = false
         }
     }
+
+    RememberHistoryProgressSync(vm = vm, host = host)
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
         ComposeVideoPlayer(
@@ -263,6 +272,27 @@ private fun VideoPlayerContentView(
                         )
                     }
                 }
+
+                // Всплывающее уведомление о возобновлении с кнопкой «С начала»
+                AnimatedVisibility(
+                    visible = vm.resumeNoticeText != null && (!vm.isFullScreen || areControlsVisible),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (vm.isFullScreen) 68.dp else 84.dp)
+                ) {
+                    vm.resumeNoticeText?.let { notice ->
+                        ResumePlaybackPill(
+                            text = notice,
+                            onRestart = {
+                                host.seekTo(0f)
+                                vm.dismissResumeNotice()
+                            }
+                        )
+                    }
+                }
+
                 // Панель управления снизу с автоскрытием в полноэкранном режиме
                 AnimatedVisibility(
                     visible = !vm.isFullScreen || areControlsVisible,
@@ -280,5 +310,36 @@ private fun VideoPlayerContentView(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun RememberHistoryProgressSync(
+    vm: ScreenX_VideoPlayerSM,
+    host: MediaPlayerHost,
+) {
+    // Периодическое сохранение прогресса раз в 5 секунд во время активного воспроизведения
+    LaunchedEffect(host.isPaused) {
+        if (!host.isPaused) {
+            while (isActive) {
+                delay(5000)
+                vm.saveProgress(host.currentTime, host.totalTime)
+            }
+        }
+    }
+
+    // Финальное сохранение текущей позиции при закрытии экрана
+    DisposableEffect(Unit) {
+        onDispose {
+            vm.saveProgress(host.currentTime, host.totalTime)
+        }
+    }
+
+    // Автоматическое скрытие плашки о возобновлении через 4 секунды
+    LaunchedEffect(vm.resumeNoticeText) {
+        if (vm.resumeNoticeText != null) {
+            delay(4000)
+            vm.dismissResumeNotice()
+        }
     }
 }

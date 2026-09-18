@@ -8,6 +8,7 @@ import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
 import com.client.xvideos.common.settings.element.SettingElementSecureString
 import com.client.xvideos.common.settings.element.SettingElementString
+import com.client.xvideos.common.applock.AppLockTimeout
 import com.client.xvideos.common.net.doh.DohProvider
 import timber.log.Timber
 
@@ -89,6 +90,14 @@ object Settings {
     val image_cache_disk_size_mb by lazy { SettingElementInt(pref, "image_cache_disk_size_mb", 500) }
 
     val app_lock_enabled by lazy { SettingElementBoolean(pref, "app_lock_enabled", false) }
+
+    /**
+     * Время нахождения в фоне (в секундах) до автоматической блокировки приложения.
+     * Значения: 0 — сразу, 30, 60, 300, -1 — никогда. По умолчанию 60 сек (1 минута).
+     */
+    val app_lock_timeout_seconds by lazy {
+        SettingElementInt(pref, "app_lock_timeout_seconds", AppLockTimeout.DEFAULT.seconds)
+    }
 
     /**
      * Инкогнито для клавиатуры: отключает персонализированное обучение IME,

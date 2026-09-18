@@ -1,8 +1,20 @@
 package com.client.xvideos.screenSettings.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import com.client.xvideos.common.applock.AppLockTimeout
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -52,6 +64,7 @@ fun AppLockSettingsSection() {
     val enabled = appLockEnabled && passwordSet
     val scope = rememberCoroutineScope()
     var showCamouflageVerificationDialog by remember { mutableStateOf(false) }
+    var showTimeoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(appLockEnabled, passwordSet) {
         if (appLockEnabled && !passwordSet) {
@@ -81,6 +94,19 @@ fun AppLockSettingsSection() {
         )
     }
 
+    if (showTimeoutDialog) {
+        val timeoutSeconds = Settings.app_lock_timeout_seconds.field.collectAsStateWithLifecycle().value
+        val currentTimeout = AppLockTimeout.fromSeconds(timeoutSeconds)
+        AppLockTimeoutDialog(
+            currentTimeout = currentTimeout,
+            onDismiss = { showTimeoutDialog = false },
+            onSelect = { timeout ->
+                Settings.app_lock_timeout_seconds.setValue(timeout.seconds)
+                showTimeoutDialog = false
+            }
+        )
+    }
+
     SettingsGroup {
         SettingsListItem(
             icon = R.drawable.key_24,
@@ -96,6 +122,21 @@ fun AppLockSettingsSection() {
         )
 
         if (enabled) {
+            SettingsDivider2()
+            val timeoutSeconds = Settings.app_lock_timeout_seconds.field.collectAsStateWithLifecycle().value
+            val currentTimeout = AppLockTimeout.fromSeconds(timeoutSeconds)
+            val timeoutSubtitle = when (currentTimeout) {
+                AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
+                AppLockTimeout.NEVER -> "Выключена (только при перезапуске)"
+                else -> "Через ${currentTimeout.displayName.lowercase()} в фоне"
+            }
+            SettingsListItem(
+                icon = R.drawable.key_24,
+                text = "Автоблокировка",
+                subtitle = timeoutSubtitle,
+                onClick = { showTimeoutDialog = true }
+            )
+
             SettingsDivider2()
             SettingsListItem(
                 icon = R.drawable.key_24,
@@ -490,3 +531,67 @@ private fun PasswordSettingFieldPreview() = SettingsPreview {
         onDone = {}
     )
 }
+
+@Composable
+internal fun AppLockTimeoutDialog(
+    currentTimeout: AppLockTimeout,
+    onDismiss: () -> Unit,
+    onSelect: (AppLockTimeout) -> Unit
+) {
+    LavenderDialog(
+        title = "Автоблокировка",
+        onDismiss = onDismiss,
+        dismissText = "Отмена",
+        content = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                AppLockTimeout.entries.forEach { timeout ->
+                    val isSelected = timeout == currentTimeout
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onSelect(timeout) }
+                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = null,
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = SettingsAccentColor,
+                                unselectedColor = Color(0xFF938F99)
+                            )
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        val label = when (timeout) {
+                            AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
+                            AppLockTimeout.NEVER -> "Никогда (только при перезапуске)"
+                            else -> timeout.displayName
+                        }
+                        Text(
+                            text = label,
+                            style = Theme.L.Type.dialogBody.copy(
+                                color = if (isSelected) SettingsAccentColor else Theme.DialogLavande.bodyColor,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF353535)
+@Composable
+private fun AppLockTimeoutDialogPreview() = SettingsPreview {
+    AppLockTimeoutDialog(
+        currentTimeout = AppLockTimeout.MINUTES_1,
+        onDismiss = {},
+        onSelect = {}
+    )
+}
+

@@ -33,6 +33,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.ContentFrame
 import androidx.media3.ui.compose.lifecycle.rememberPooledPlayer
 import com.client.xvideos.common.videoplayer.feed.FeedPlayerState
+import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.r.common.video.PlayerControls
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.padding
@@ -110,6 +111,7 @@ fun RedPooledVideoPlayer(
     onClick: () -> Unit,
     onBufferingChanged: (Boolean) -> Unit,
     onZoomChanged: (Boolean) -> Unit = {},
+    speed: PlayerSpeed = PlayerSpeed.DEFAULT,
     modifier: Modifier = Modifier,
 ) {
     val mediaItem = remember(index, url) { feedState.mediaItemFor(index, url) }
@@ -140,6 +142,10 @@ fun RedPooledVideoPlayer(
 
     LaunchedEffect(player, isMute) {
         player?.volume = if (isMute) 0f else 1f
+    }
+
+    LaunchedEffect(player, speed) {
+        player?.setPlaybackSpeed(speed.speed)
     }
 
     LaunchedEffect(player, autoRotate) {
