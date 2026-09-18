@@ -79,7 +79,8 @@ data class PicsDetails(
     @SerialName("url_to_video") val url_to_video: String? = null,
     @SerialName("album") val album: String? = "null",
     @SerialName("thumbnails") val thumbnails: List<Thumbnails>? = emptyList(),
-    @SerialName("id") val id: String? = null
+    @SerialName("id") val id: String? = null,
+    @SerialName("url") val url: String? = null
 ) : Parcelable
 
 @Immutable

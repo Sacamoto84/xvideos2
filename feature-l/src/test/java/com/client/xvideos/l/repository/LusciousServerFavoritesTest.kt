@@ -84,6 +84,17 @@ class LusciousServerFavoritesTest {
                 anchorType: String,
                 favoriteType: String
             ): Result<Unit> = Result.success(Unit)
+
+            override suspend fun removeFavorite(
+                anchorId: String,
+                anchorType: String,
+                favoriteType: String
+            ): Result<Unit> = Result.success(Unit)
+
+            override suspend fun resolvePictureId(
+                albumId: String,
+                mediaUrlOrFileName: String
+            ): Result<String> = Result.success("123")
         }
 
         val sm = ScreenLSubscribedAlbumsSM(fakeRepo)
@@ -142,6 +153,17 @@ class LusciousServerFavoritesTest {
                 anchorType: String,
                 favoriteType: String
             ): Result<Unit> = Result.success(Unit)
+
+            override suspend fun removeFavorite(
+                anchorId: String,
+                anchorType: String,
+                favoriteType: String
+            ): Result<Unit> = Result.success(Unit)
+
+            override suspend fun resolvePictureId(
+                albumId: String,
+                mediaUrlOrFileName: String
+            ): Result<String> = Result.success("123")
         }
 
         val sm = ScreenLServerLikesSM(fakeRepo)
@@ -187,6 +209,17 @@ class LusciousServerFavoritesTest {
                 anchorType: String,
                 favoriteType: String
             ): Result<Unit> = Result.success(Unit)
+
+            override suspend fun removeFavorite(
+                anchorId: String,
+                anchorType: String,
+                favoriteType: String
+            ): Result<Unit> = Result.success(Unit)
+
+            override suspend fun resolvePictureId(
+                albumId: String,
+                mediaUrlOrFileName: String
+            ): Result<String> = Result.success("123")
         }
 
         val sm = ScreenLServerLikesSM(fakeRepo)
@@ -400,14 +433,152 @@ class LusciousServerFavoritesTest {
     }
 
     @Test
-    fun `extractAnchorId extracts ID from id property and from URL fallback`() {
+    fun `extractAnchorId extracts ID from id property, url, and fallback`() {
         val picWithId = PicsDetails(id = "62276966")
         assertEquals("62276966", picWithId.extractAnchorId())
 
-        val picWithUrl = PicsDetails(url_to_original = "/pictures/album/test/id/12345678/@name")
-        assertEquals("12345678", picWithUrl.extractAnchorId())
+        val picWithUrlField = PicsDetails(url = "/pictures/album/test/id/88888888/@name")
+        assertEquals("88888888", picWithUrlField.extractAnchorId())
+
+        val picWithOriginalUrl = PicsDetails(url_to_original = "/pictures/album/test/id/12345678/@name")
+        assertEquals("12345678", picWithOriginalUrl.extractAnchorId())
 
         val picEmpty = PicsDetails()
         assertNull(picEmpty.extractAnchorId())
+    }
+
+    @Test
+    fun `LSavedLikeMetadata preserves pictureId and pictureUrl through AppJson serialization`() {
+        val metadata = com.client.xvideos.l.featured.saved.LSavedLikeMetadata(
+            albumId = "603323",
+            pictureId = "59362744",
+            pictureUrl = "/pictures/album/test/id/59362744/@test",
+            picture = PicsDetails(id = "59362744", width = 100, height = 200)
+        )
+
+        val jsonString = com.client.xvideos.common.json.AppJson.encodeToString(
+            com.client.xvideos.l.featured.saved.LSavedLikeMetadata.serializer(),
+            metadata
+        )
+
+        assertTrue(jsonString.contains("\"pictureId\": \"59362744\"") || jsonString.contains("\"pictureId\":\"59362744\""))
+
+        val decoded = com.client.xvideos.common.json.AppJson.decodeFromString<com.client.xvideos.l.featured.saved.LSavedLikeMetadata>(jsonString)
+        assertEquals("59362744", decoded.pictureId)
+        assertEquals("/pictures/album/test/id/59362744/@test", decoded.pictureUrl)
+        assertEquals("59362744", decoded.picture.id)
+    }
+
+    @Test
+    fun `LSavedLikeMetadata backward compatibility with old JSON missing pictureId`() {
+        val oldJson = """
+        {
+          "schemaVersion": 1,
+          "savedAt": 1726000000000,
+          "site": "luscious",
+          "folderName": "603323_hash_slug",
+          "mediaFileName": "media.jpg",
+          "albumId": "603323",
+          "picture": {
+            "height": 2803,
+            "width": 1920,
+            "album": "603323"
+          }
+        }
+        """.trimIndent()
+
+        val decoded = com.client.xvideos.common.json.AppJson.decodeFromString<com.client.xvideos.l.featured.saved.LSavedLikeMetadata>(oldJson)
+        assertNull(decoded.pictureId)
+        assertNull(decoded.pictureUrl)
+        assertNull(decoded.picture.id)
+        assertEquals("603323", decoded.albumId)
+    }
+
+    @Test
+    fun `extractSlugCandidate extracts ULID or slug from media URL or folder name`() {
+        val url = "https://cdni.luscious.net/user/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.1680x0.jpg?md5=xxx"
+        assertEquals("01KHBSB2THB9YFJCQT22P9NGCS", extractSlugCandidate(url))
+
+        val folder = "603323_3a8b4c5d6e7f_millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS"
+        assertEquals("01KHBSB2THB9YFJCQT22P9NGCS", extractSlugCandidate(folder))
+
+        val simpleName = "https://cdni.luscious.net/user/603323/simple_image_name.jpg"
+        assertEquals("name", extractSlugCandidate(simpleName))
+    }
+
+    @Test
+    fun `getFavoriteRemove generates valid GraphQL mutation and variables`() {
+        val queryJson = com.client.xvideos.l.net.graphQl.getFavoriteRemove(
+            anchorId = "53066694",
+            anchorType = "picture",
+            favoriteType = "like"
+        )
+
+        val json = com.client.xvideos.l.net.json.LJson.parseToJsonElement(queryJson) as kotlinx.serialization.json.JsonObject
+        assertEquals("9", (json["id"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("FavoriteRemove", (json["operationName"] as kotlinx.serialization.json.JsonPrimitive).content)
+
+        val queryStr = (json["query"] as kotlinx.serialization.json.JsonPrimitive).content
+        assertTrue(queryStr.contains("mutation FavoriteRemove"))
+        assertTrue(queryStr.contains("remove_favorite(input: ${'$'}input)"))
+
+        val variables = json["variables"] as kotlinx.serialization.json.JsonObject
+        val input = variables["input"] as kotlinx.serialization.json.JsonObject
+        assertEquals("53066694", (input["anchor_id"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("picture", (input["anchor_type"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals("like", (input["favorite_type"] as kotlinx.serialization.json.JsonPrimitive).content)
+    }
+
+    @Test
+    fun `FavoriteRemove success response parses with empty errors`() {
+        val successResponse = """
+        {
+          "data": {
+            "favorite": {
+              "remove_favorite": {
+                "errors": []
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val json = com.client.xvideos.l.net.json.LJson.parseToJsonElement(successResponse) as kotlinx.serialization.json.JsonObject
+        val removeFavoriteObj = json["data"]?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("remove_favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+
+        val mutationErrors = removeFavoriteObj?.get("errors") as? kotlinx.serialization.json.JsonArray
+        assertTrue(mutationErrors?.isEmpty() == true)
+    }
+
+    @Test
+    fun `FavoriteRemove mutation error response contains error messages`() {
+        val errorResponse = """
+        {
+          "data": {
+            "favorite": {
+              "remove_favorite": {
+                "errors": [
+                  {
+                    "code": "NOT_FAVORITED",
+                    "message": "Item is not in favorites"
+                  }
+                ]
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val json = com.client.xvideos.l.net.json.LJson.parseToJsonElement(errorResponse) as kotlinx.serialization.json.JsonObject
+        val removeFavoriteObj = json["data"]?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+            ?.get("remove_favorite")?.let { it as kotlinx.serialization.json.JsonObject }
+
+        val mutationErrors = removeFavoriteObj?.get("errors") as? kotlinx.serialization.json.JsonArray
+        assertEquals(1, mutationErrors?.size)
+        val firstError = mutationErrors?.first() as kotlinx.serialization.json.JsonObject
+        assertEquals("Item is not in favorites", (firstError["message"] as kotlinx.serialization.json.JsonPrimitive).content)
     }
 }

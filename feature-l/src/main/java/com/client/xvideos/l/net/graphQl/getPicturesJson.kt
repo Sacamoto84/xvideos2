@@ -26,6 +26,7 @@ fun getPicturesJson(albumId: Int, page: Int = 1): String {
         
         fragment PicUrls on Picture {
            id
+           url
            height
            width
            is_animated

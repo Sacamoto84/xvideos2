@@ -157,7 +157,7 @@ private const val L_MEDIA_USER_AGENT =
  */
 fun PicsDetails.extractAnchorId(): String? {
     if (!id.isNullOrBlank()) return id.trim()
-    val allUrls = listOfNotNull(url_to_original, url_to_video) + thumbnails.orEmpty().mapNotNull { it.url }
+    val allUrls = listOfNotNull(url, url_to_original, url_to_video) + thumbnails.orEmpty().mapNotNull { it.url }
     for (candidate in allUrls) {
         val match = Regex("""/id/(\d+)""").find(candidate)
         if (match != null) {

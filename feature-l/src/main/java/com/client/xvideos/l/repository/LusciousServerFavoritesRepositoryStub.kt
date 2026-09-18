@@ -3,8 +3,10 @@ package com.client.xvideos.l.repository
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.graphQl.FavoriteAdd
+import com.client.xvideos.l.net.graphQl.FavoriteRemove
 import com.client.xvideos.l.net.graphQl.FavoritesByDatePicture
 import com.client.xvideos.l.net.graphQl.FavoritesByDatePictureSet
+import com.client.xvideos.l.net.graphQl.GraphQlRequest
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 import com.client.xvideos.l.net.graphQl.refreshMediaCategories
 import com.client.xvideos.l.net.json.LJson
@@ -233,6 +235,126 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             Timber.e(e, "Failed to parse FavoriteAdd response")
         }
     }
+
+    override suspend fun resolvePictureId(
+        albumId: String,
+        mediaUrlOrFileName: String
+    ): Result<String> {
+        val cleanAlbumId = albumId.trim()
+        val albumInt = cleanAlbumId.toIntOrNull()
+            ?: return Result.failure(IllegalArgumentException("Invalid album id: $albumId"))
+
+        val targetSlug = extractSlugCandidate(mediaUrlOrFileName)
+        Timber.d("resolvePictureId: albumId=$cleanAlbumId, targetSlug='$targetSlug' from '$mediaUrlOrFileName'")
+
+        var page = 1
+        var totalPages = 1
+        while (page <= totalPages && page <= 10) {
+            val query = GraphQlRequest.pictureListInsideAlbum(albumInt, page)
+            val responseResult = repository.openURI(query, config = RepositoryUriConfig.CACHE_RAM)
+            if (responseResult.isFailure) {
+                return Result.failure(
+                    responseResult.exceptionOrNull() ?: IllegalStateException("Failed to load album page $page")
+                )
+            }
+
+            val raw = responseResult.getOrThrow()
+            val json = runCatching { LJson.parseToJsonElement(raw).jsonObject }.getOrNull()
+                ?: return Result.failure(IllegalStateException("Malformed album JSON"))
+
+            val pictureList = json["data"]?.jsonObject
+                ?.get("picture")?.jsonObject
+                ?.get("list")?.jsonObject
+                ?: return Result.failure(IllegalStateException("Missing picture list"))
+
+            val info = pictureList["info"]?.jsonObject
+            totalPages = info?.get("total_pages")?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: totalPages
+
+            val items = pictureList["items"]?.jsonArray.orEmpty()
+            for (element in items) {
+                val picObj = element.jsonObject
+                val picId = picObj["id"]?.jsonPrimitive?.contentOrNull?.trim()
+                if (picId.isNullOrBlank()) continue
+
+                val picUrl = picObj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
+                val picOrig = picObj["url_to_original"]?.jsonPrimitive?.contentOrNull.orEmpty()
+                val picVideo = picObj["url_to_video"]?.jsonPrimitive?.contentOrNull.orEmpty()
+                val thumbUrls = picObj["thumbnails"]?.jsonArray.orEmpty().mapNotNull {
+                    it.jsonObject["url"]?.jsonPrimitive?.contentOrNull
+                }
+
+                val allPicUrls = listOf(picUrl, picOrig, picVideo) + thumbUrls
+                if (targetSlug.isNotBlank() && allPicUrls.any { it.contains(targetSlug, ignoreCase = true) }) {
+                    Timber.d("resolvePictureId: matched slug '$targetSlug' with picture id: $picId")
+                    return Result.success(picId)
+                }
+            }
+            page++
+        }
+        return Result.failure(IllegalStateException("Picture ID not found in album $albumId"))
+    }
+
+    override suspend fun removeFavorite(
+        anchorId: String,
+        anchorType: String,
+        favoriteType: String
+    ): Result<Unit> {
+        val cleanAnchorId = anchorId.trim()
+        if (cleanAnchorId.isBlank()) {
+            return Result.failure(IllegalArgumentException("anchor_id cannot be blank"))
+        }
+
+        val rawResult = FavoriteRemove(repository).removeFavorite(
+            anchorId = cleanAnchorId,
+            anchorType = anchorType,
+            favoriteType = favoriteType
+        )
+        if (rawResult.isFailure) {
+            return Result.failure(rawResult.exceptionOrNull() ?: IllegalStateException("Request failed"))
+        }
+
+        return runCatching {
+            val raw = rawResult.getOrThrow()
+            val json = LJson.parseToJsonElement(raw).jsonObject
+
+            val rootErrors = json["errors"]?.jsonArray
+            if (!rootErrors.isNullOrEmpty()) {
+                val msg = rootErrors.joinToString {
+                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "GraphQL error"
+                }
+                throw IllegalStateException(msg)
+            }
+
+            val removeFavoriteObj = json["data"]?.jsonObject
+                ?.get("favorite")?.jsonObject
+                ?.get("remove_favorite")?.jsonObject
+
+            val mutationErrors = removeFavoriteObj?.get("errors")?.jsonArray
+            if (!mutationErrors.isNullOrEmpty()) {
+                val msg = mutationErrors.joinToString {
+                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "Mutation error"
+                }
+                throw IllegalStateException(msg)
+            }
+            Unit
+        }.onFailure { e ->
+            Timber.e(e, "Failed to parse FavoriteRemove response")
+        }
+    }
+}
+
+internal fun extractSlugCandidate(input: String): String {
+    val clean = input.substringBefore('?').substringBefore('#').trim()
+    val ulidMatch = Regex("""[0-9A-HJKMNP-TV-Z]{26}""").find(clean)
+    if (ulidMatch != null) return ulidMatch.value
+
+    val fileName = clean.substringAfterLast('/').substringAfterLast('\\')
+    val withoutExt = fileName
+        .replace(Regex("""\.\d+x\d+\.[a-zA-Z0-9]+$"""), "")
+        .replace(Regex("""\.[a-zA-Z0-9]+$"""), "")
+
+    val slug = withoutExt.substringAfterLast('_')
+    return if (slug.length >= 4) slug else withoutExt
 }
 
 @Module

@@ -4,6 +4,7 @@ import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.extractAnchorId
 import com.client.xvideos.l.model.Thumbnails
 import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lDownloadUrl
@@ -383,6 +384,7 @@ internal suspend fun lPersistPicsDetailsToFolder(
                 error("Missing downloaded media and previews")
             }
 
+            val pictureId = item.id?.takeIf { it.isNotBlank() } ?: item.extractAnchorId()
             val metadata = LSavedLikeMetadata(
                 folderName = folder.name,
                 mediaFileName = mediaFile.name,
@@ -398,7 +400,9 @@ internal suspend fun lPersistPicsDetailsToFolder(
                 albumUrl = albumDetails?.url?.let { LusciousEndpoints.HOME + it },
                 albumDownloadUrl = albumDetails?.download_url?.let { LusciousEndpoints.HOME + it },
                 albumDetails = albumDetails,
-                picture = item
+                pictureId = pictureId,
+                pictureUrl = item.url,
+                picture = if (item.id.isNullOrBlank() && !pictureId.isNullOrBlank()) item.copy(id = pictureId) else item
             )
             writeLSavedLikeMetadata(File(folder, L_METADATA_FILE_NAME), metadata)
 

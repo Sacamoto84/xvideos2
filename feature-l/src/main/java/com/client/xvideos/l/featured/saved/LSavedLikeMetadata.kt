@@ -4,6 +4,7 @@ import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.extractAnchorId
 import com.client.xvideos.l.model.Thumbnails
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -39,6 +40,8 @@ data class LSavedLikeMetadata(
     val albumUrl: String? = null,
     val albumDownloadUrl: String? = null,
     val albumDetails: AlbumDetails? = null,
+    val pictureId: String? = null,
+    val pictureUrl: String? = null,
     val picture: PicsDetails = PicsDetails()
 )
 
@@ -112,7 +115,13 @@ fun LSavedLikeMetadata.toPicsDetails(folder: File): PicsDetails? {
         }
     }
 
+    val effectiveId = pictureId?.takeIf { it.isNotBlank() }
+        ?: picture.id?.takeIf { it.isNotBlank() }
+        ?: picture.extractAnchorId()
+
     return picture.copy(
+        id = effectiveId,
+        url = pictureUrl ?: picture.url,
         url_to_original = displayMediaFile.absolutePath,
         url_to_video = if (picture.is_animated) mediaFile?.absolutePath else null,
         album = albumId ?: picture.album,
