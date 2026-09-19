@@ -13,6 +13,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -42,6 +43,7 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
         private set
 
     private var currentPage: Int = 1
+    private var loadJob: Job? = null
 
     init {
         loadInitial()
@@ -49,7 +51,8 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
 
     fun loadInitial() {
         if (_isLoading.value) return
-        screenModelScope.launch {
+        loadJob?.cancel()
+        loadJob = screenModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             currentPage = 1
@@ -68,8 +71,8 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
     }
 
     fun loadNextPage() {
-        if (_isLoading.value || !hasMore) return
-        screenModelScope.launch {
+        if (_isLoading.value || !hasMore || _errorMessage.value != null) return
+        loadJob = screenModelScope.launch {
             _isLoading.value = true
             val nextPage = currentPage + 1
             val result = repository.getSubscribedAlbums(nextPage)
@@ -89,6 +92,8 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
 
     fun refresh() {
         if (_isRefreshing.value) return
+        loadJob?.cancel()
+        _isLoading.value = false
         screenModelScope.launch {
             _isRefreshing.value = true
             currentPage = 1

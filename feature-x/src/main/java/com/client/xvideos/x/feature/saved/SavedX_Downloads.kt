@@ -228,7 +228,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
                 .onFailure { Timber.e(it, "X saved: битый .info ${f.absolutePath}") }
                 .getOrNull()
-        }
+        }.filter { it.id in videoIds }
         _downloadedVideoIds.value = videoIds
         _downloadedPosterIds.value = posterIds
         _list.value = result

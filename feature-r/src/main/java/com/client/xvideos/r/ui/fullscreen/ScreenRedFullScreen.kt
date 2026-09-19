@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -163,6 +165,12 @@ private fun RedFullScreenFeed(
     }
 
     var isCurrentPageZoomed by remember { mutableStateOf(false) }
+    var resetZoomTrigger by remember { mutableIntStateOf(0) }
+
+    // Нажатие кнопки «Назад» при активном увеличении кадра плавно сбрасывает зум до 1.0x
+    BackHandler(enabled = isCurrentPageZoomed) {
+        resetZoomTrigger++
+    }
 
     LaunchedEffect(pagerState, host) {
         snapshotFlow { pagerState.currentPage }
@@ -220,7 +228,8 @@ private fun RedFullScreenFeed(
                         if (isCurrentPage) {
                             isCurrentPageZoomed = zoomed
                         }
-                    }
+                    },
+                    resetZoomTrigger = if (isCurrentPage) resetZoomTrigger else 0
                 )
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -239,7 +248,8 @@ private fun RedFullScreenFeed(
                             onBuffering = { isVideoBuffering = it },
                             onZoomChanged = { zoomed ->
                                 isCurrentPageZoomed = zoomed
-                            }
+                            },
+                            resetZoomTrigger = resetZoomTrigger
                         )
                     } else {
                         CircularProgressIndicator(color = Color.White)
@@ -266,7 +276,14 @@ private fun RedFullScreenSingle(
     navigator: Navigator
 ) {
     var isVideoBuffering by remember { mutableStateOf(false) }
+    var isZoomed by remember { mutableStateOf(false) }
+    var resetZoomTrigger by remember { mutableIntStateOf(0) }
     val downloadedKeys by vm.downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
+
+    // Нажатие кнопки «Назад» при активном увеличении кадра плавно сбрасывает зум до 1.0x
+    BackHandler(enabled = isZoomed) {
+        resetZoomTrigger++
+    }
 
     val feedState = rememberFeedPlayerState(poolCapacity = 1)
 
@@ -290,7 +307,9 @@ private fun RedFullScreenSingle(
             play = vm.play,
             isCurrentPage = true,
             showOverlay = true,
-            onBuffering = { isVideoBuffering = it }
+            onBuffering = { isVideoBuffering = it },
+            onZoomChanged = { isZoomed = it },
+            resetZoomTrigger = resetZoomTrigger,
         )
     }
 }
@@ -353,7 +372,8 @@ private fun RedFullScreenPage(
     isCurrentPage: Boolean,
     showOverlay: Boolean,
     onBuffering: (Boolean) -> Unit,
-    onZoomChanged: (Boolean) -> Unit = {}
+    onZoomChanged: (Boolean) -> Unit = {},
+    resetZoomTrigger: Int = 0,
 ) {
     val videoUri = remember(item.id, item.userName, downloadedKeys) { redVideoUrl(item, downloadedKeys) }
 
@@ -394,6 +414,7 @@ private fun RedFullScreenPage(
                 }
             },
             onZoomChanged = onZoomChanged,
+            resetZoomTrigger = resetZoomTrigger,
         )
 
         if (showOverlay) {

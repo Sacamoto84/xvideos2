@@ -111,6 +111,7 @@ fun RedPooledVideoPlayer(
     onClick: () -> Unit,
     onBufferingChanged: (Boolean) -> Unit,
     onZoomChanged: (Boolean) -> Unit = {},
+    resetZoomTrigger: Int = 0,
     speed: PlayerSpeed = PlayerSpeed.DEFAULT,
     modifier: Modifier = Modifier,
 ) {
@@ -264,6 +265,14 @@ fun RedPooledVideoPlayer(
     val isZoomed = isZoomActive(zoomState.scale)
     LaunchedEffect(isZoomed) {
         onZoomChanged(isZoomed)
+    }
+
+    LaunchedEffect(resetZoomTrigger) {
+        if (resetZoomTrigger > 0) {
+            coroutineScope.launch {
+                zoomState.changeScale(1.0f, Offset.Zero)
+            }
+        }
     }
 
     // Перемотка горизонтальным драгом по нижней трети экрана — как в прежнем пути ленты

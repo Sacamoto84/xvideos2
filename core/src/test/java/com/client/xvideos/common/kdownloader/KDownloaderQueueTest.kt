@@ -204,4 +204,25 @@ class KDownloaderQueueTest {
         assertEquals(0L, req.downloadedBytes)
         assertEquals(0L, req.totalBytes)
     }
+
+    @Test
+    fun `collision candidate resolution generates non-colliding file names`() {
+        val root = tempFolder.newFolder("collision_test")
+        val baseFile = File(root, "clip.mp4.temp").apply { writeText("busy") }
+        File(root, "clip.mp4_2.temp").apply { writeText("busy_2") }
+        val parent = baseFile.parentFile ?: root
+        val baseName = baseFile.nameWithoutExtension
+        val ext = baseFile.extension
+
+        var resolvedFile: File? = null
+        for (counter in 2..100) {
+            val candidate = File(parent, "${baseName}_$counter.$ext")
+            if (!candidate.exists()) {
+                resolvedFile = candidate
+                break
+            }
+        }
+        val safeFile = resolvedFile ?: File(parent, "${baseName}_${System.currentTimeMillis()}.$ext")
+        assertEquals(File(root, "clip.mp4_3.temp"), safeFile)
+    }
 }

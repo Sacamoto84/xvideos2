@@ -104,8 +104,20 @@ class DownloadTask(
                     if (model == null && file.exists() && dbHelper is AppDbHelper) {
                         if (!deleteTempFile()) {
                             val parent = file.parentFile ?: File(req.dirPath)
-                            file = File(parent, "${file.nameWithoutExtension}_2.${file.extension}")
-                            tempPath = file.absolutePath
+                            val baseName = file.nameWithoutExtension
+                            val ext = file.extension
+                            var resolvedFile: File? = null
+                            for (counter in 2..100) {
+                                val candidate = File(parent, "${baseName}_$counter.$ext")
+                                if (!candidate.exists() || candidate.delete()) {
+                                    resolvedFile = candidate
+                                    break
+                                }
+                            }
+                            val safeFile = resolvedFile
+                                ?: File(parent, "${baseName}_${System.currentTimeMillis()}.$ext")
+                            file = safeFile
+                            tempPath = safeFile.absolutePath
                         }
                     }
 

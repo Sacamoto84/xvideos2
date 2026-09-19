@@ -147,13 +147,13 @@ internal fun WebServerSettingsSection() {
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 private fun WebServerConnectionCard(
     serverUrl: String,
     networkName: String,
     qrBitmap: androidx.compose.ui.graphics.ImageBitmap?,
 ) {
-    val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
     Column(
@@ -251,6 +251,7 @@ private fun WebServerConnectionCard(
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 private fun WebServerActionButtons(serverUrl: String) {
     val context = LocalContext.current

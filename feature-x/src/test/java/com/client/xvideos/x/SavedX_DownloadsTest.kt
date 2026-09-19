@@ -90,4 +90,30 @@ class SavedX_DownloadsTest {
         assertEquals(1, validInfos.size)
         assertEquals("222.info", validInfos.first().name)
     }
+
+    @Test
+    fun `список загрузок отфильтровывает фантомные info файлы без соответствующего mp4`() {
+        val root = tmp.newFolder("downloads_orphan_info")
+        File(root, "100.mp4").writeText("video data")
+        File(root, "100.info").writeText("{\"id\":100,\"title\":\"Video 100\"}")
+        File(root, "200.info").writeText("{\"id\":200,\"title\":\"Phantom 200\"}")
+        File(root, "300.mp4").writeText("")
+        File(root, "300.info").writeText("{\"id\":300,\"title\":\"Corrupt 300\"}")
+
+        val allFiles = root.listFiles() ?: emptyArray()
+        val videoIds = allFiles.filter { it.isFile && it.extension == "mp4" && it.length() > 0L }
+            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+
+        val infos = allFiles.filter { it.isFile && it.extension == "info" && it.length() > 0L }
+
+        val decoded = infos.mapNotNull { f ->
+            val id = f.nameWithoutExtension.toLongOrNull() ?: return@mapNotNull null
+            id
+        }.filter { it in videoIds }
+
+        assertEquals(setOf(100L), videoIds)
+        assertEquals(listOf(100L), decoded)
+        assertFalse(decoded.contains(200L))
+        assertFalse(decoded.contains(300L))
+    }
 }

@@ -13,6 +13,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -42,6 +43,7 @@ class ScreenLServerLikesSM @Inject constructor(
         private set
 
     private var currentPage: Int = 1
+    private var loadJob: Job? = null
 
     init {
         host.onItemRemoved = { removedPic ->
@@ -60,7 +62,8 @@ class ScreenLServerLikesSM @Inject constructor(
 
     fun loadInitial() {
         if (_isLoading.value) return
-        screenModelScope.launch {
+        loadJob?.cancel()
+        loadJob = screenModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             currentPage = 1
@@ -80,7 +83,7 @@ class ScreenLServerLikesSM @Inject constructor(
 
     fun loadNextPage() {
         if (_isLoading.value || !hasMore || _errorMessage.value != null) return
-        screenModelScope.launch {
+        loadJob = screenModelScope.launch {
             _isLoading.value = true
             val nextPage = currentPage + 1
             val result = repository.getServerLikedPictures(nextPage)
@@ -102,6 +105,8 @@ class ScreenLServerLikesSM @Inject constructor(
 
     fun refresh() {
         if (_isRefreshing.value) return
+        loadJob?.cancel()
+        _isLoading.value = false
         screenModelScope.launch {
             _isRefreshing.value = true
             currentPage = 1
