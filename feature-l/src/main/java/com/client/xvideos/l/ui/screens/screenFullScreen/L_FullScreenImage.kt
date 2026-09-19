@@ -28,7 +28,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
@@ -107,7 +106,6 @@ class L_FullScreenImage(
 
     @OptIn(
         ExperimentalFoundationApi::class,
-        ExperimentalMaterialApi::class,
         DelicateCoroutinesApi::class
     )
     @Suppress("LongMethod", "CyclomaticComplexMethod")

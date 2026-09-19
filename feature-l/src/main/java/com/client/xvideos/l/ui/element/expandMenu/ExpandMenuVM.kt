@@ -24,6 +24,7 @@ import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.featured.saved.L_METADATA_FILE_NAME
+import com.client.xvideos.l.featured.saved.LSavedLikeMetadata
 import com.client.xvideos.l.featured.saved.lFindLikeFolder
 import com.client.xvideos.l.featured.saved.lP2pSendSource
 import com.client.xvideos.l.featured.saved.readLSavedLikeMetadata
@@ -137,26 +138,17 @@ class ExpandMenuViewModel @Inject constructor(
         // Если ID не найден в объекте (например, старый локальный лайк),
         // пробуем найти его в папке сохранённого элемента или разрешить через сервер
         scope.launch(Dispatchers.IO) {
-            val targetUrl = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl().orEmpty()
-            val folder = targetUrl.takeIf { it.isNotBlank() }?.let {
-                lFindLikeFolder(File(AppPath.l_likes), it)
-                    ?: lFindLikeFolder(File(AppPath.l_collection), it)
-            }
-
-            val metadata = folder?.let { readLSavedLikeMetadata(File(it, L_METADATA_FILE_NAME)) }
-
-            val metaPictureId = metadata?.pictureId?.takeIf { it.isNotBlank() }
-                ?: metadata?.picture?.id?.takeIf { it.isNotBlank() }
-                ?: metadata?.picture?.extractAnchorId()
-
-            if (!metaPictureId.isNullOrBlank()) {
-                onResolved(metaPictureId)
+            val (folder, localPictureId) = findLocalFolderAndPictureId(item)
+            if (!localPictureId.isNullOrBlank()) {
+                onResolved(localPictureId)
                 return@launch
             }
 
+            val metadata = folder?.let { readLSavedLikeMetadata(File(it, L_METADATA_FILE_NAME)) }
             val albumId = metadata?.albumId?.takeIf { it.isNotBlank() && it != "null" }
                 ?: item.album?.takeIf { it.isNotBlank() && it != "null" }
 
+            val targetUrl = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl().orEmpty()
             val slugCandidate = metadata?.sourceMediaUrl?.takeIf { it.isNotBlank() }
                 ?: metadata?.sourcePreviewUrl?.takeIf { it.isNotBlank() }
                 ?: folder?.name
@@ -173,9 +165,7 @@ class ExpandMenuViewModel @Inject constructor(
                 SnackBar.info("Поиск ID на сервере…")
             }
 
-            val resolveResult = serverFavorites.resolvePictureId(albumId, slugCandidate)
-            val resolvedId = resolveResult.getOrNull()
-
+            val resolvedId = serverFavorites.resolvePictureId(albumId, slugCandidate).getOrNull()
             if (resolvedId.isNullOrBlank()) {
                 withContext(Dispatchers.Main) {
                     SnackBar.error("ID картинки не найден на сервере")
@@ -183,18 +173,33 @@ class ExpandMenuViewModel @Inject constructor(
                 return@launch
             }
 
-            // Кэшируем найденный ID в metadata.json, чтобы в следующий раз запрос был локальным и мгновенным
-            if (folder != null && metadata != null) {
-                runCatching {
-                    val updated = metadata.copy(
-                        pictureId = resolvedId,
-                        picture = metadata.picture.copy(id = resolvedId)
-                    )
-                    writeLSavedLikeMetadata(File(folder, L_METADATA_FILE_NAME), updated)
-                }
-            }
-
+            cacheResolvedPictureId(folder, metadata, resolvedId)
             onResolved(resolvedId)
+        }
+    }
+
+    private fun findLocalFolderAndPictureId(item: PicsDetails): Pair<File?, String?> {
+        val targetUrl = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl().orEmpty()
+        val folder = targetUrl.takeIf { it.isNotBlank() }?.let {
+            lFindLikeFolder(File(AppPath.l_likes), it)
+                ?: lFindLikeFolder(File(AppPath.l_collection), it)
+        }
+        val metadata = folder?.let { readLSavedLikeMetadata(File(it, L_METADATA_FILE_NAME)) }
+        val metaPictureId = metadata?.pictureId?.takeIf { it.isNotBlank() }
+            ?: metadata?.picture?.id?.takeIf { it.isNotBlank() }
+            ?: metadata?.picture?.extractAnchorId()
+        return folder to metaPictureId
+    }
+
+    private fun cacheResolvedPictureId(folder: File?, metadata: LSavedLikeMetadata?, resolvedId: String) {
+        if (folder != null && metadata != null) {
+            runCatching {
+                val updated = metadata.copy(
+                    pictureId = resolvedId,
+                    picture = metadata.picture.copy(id = resolvedId)
+                )
+                writeLSavedLikeMetadata(File(folder, L_METADATA_FILE_NAME), updated)
+            }
         }
     }
 
@@ -262,14 +267,7 @@ class ExpandMenuViewModel @Inject constructor(
             },
             onServerUnlike = { it1 ->
                 unlikeOnServer(it1) {
-                    host?.let { h ->
-                        val index = h.filteredPic.indexOfFirst {
-                            it.id == it1.id || (it.url_to_original != null && it.url_to_original == it1.url_to_original)
-                        }
-                        if (index >= 0) {
-                            h.filteredPic.removeAt(index)
-                        }
-                    }
+                    host?.removePicture(it1)
                 }
             },
             onShare = { it1 -> onShareClicked(it1) },

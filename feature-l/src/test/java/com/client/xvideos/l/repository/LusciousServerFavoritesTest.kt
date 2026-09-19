@@ -654,4 +654,57 @@ class LusciousServerFavoritesTest {
         assertEquals(1, sm.albums.value.size)
         assertEquals("200", sm.albums.value.first().id)
     }
+
+    @Test
+    fun `ScreenLServerLikesSM unliking item removes it from host and pictures state, pagination does not restore it`() = runTest {
+        val pic1 = PicsDetails(id = "101", url_to_original = "https://cdn/pic1.jpg")
+        val pic2 = PicsDetails(id = "102", url_to_original = "https://cdn/pic2.jpg")
+        val pic3 = PicsDetails(id = "103", url_to_original = "https://cdn/pic3.jpg")
+
+        val fakeRepo = object : LusciousServerFavoritesRepository {
+            override suspend fun getSessionUserId(): Result<String> = Result.success("123")
+            override suspend fun getSubscribedAlbumsRaw(userId: String?, page: Int): Result<String> = Result.success("{}")
+            override suspend fun getSubscribedAlbums(page: Int): Result<List<AlbumDetails>> = Result.success(emptyList())
+            override suspend fun getServerLikedPicturesRaw(userId: String?, page: Int): Result<String> = Result.success("{}")
+            override suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>> {
+                return if (page == 1) {
+                    Result.success(listOf(pic1, pic2))
+                } else if (page == 2) {
+                    Result.success(listOf(pic3))
+                } else {
+                    Result.success(emptyList())
+                }
+            }
+            override suspend fun addFavorite(anchorId: String, anchorType: String, favoriteType: String): Result<Unit> = Result.success(Unit)
+            override suspend fun removeFavorite(anchorId: String, anchorType: String, favoriteType: String): Result<Unit> = Result.success(Unit)
+            override suspend fun resolvePictureId(albumId: String, mediaUrlOrFileName: String): Result<String> = Result.success("123")
+        }
+
+        val sm = ScreenLServerLikesSM(fakeRepo)
+        advanceUntilIdle()
+
+        assertEquals(2, sm.pictures.value.size)
+        assertEquals(2, sm.host.filteredPic.size)
+
+        // Select the picture in host to ensure unliking clears selectedImage as well
+        sm.host.selectedImage = pic1
+        assertEquals(pic1, sm.host.selectedImage)
+
+        // Unlike pic1
+        sm.unlikePicture(pic1)
+
+        assertEquals(1, sm.pictures.value.size)
+        assertEquals("102", sm.pictures.value.first().id)
+        assertEquals(1, sm.host.filteredPic.size)
+        assertEquals("102", sm.host.filteredPic.first().id)
+        assertNull(sm.host.selectedImage)
+
+        // Now load next page - pic1 must not reappear!
+        sm.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(2, sm.pictures.value.size)
+        assertEquals(listOf("102", "103"), sm.pictures.value.map { it.id })
+        assertEquals(listOf("102", "103"), sm.host.filteredPic.map { it.id })
+    }
 }

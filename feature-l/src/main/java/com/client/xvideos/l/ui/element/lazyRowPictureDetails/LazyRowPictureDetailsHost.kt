@@ -39,6 +39,25 @@ class LazyRowPictureDetailsHost(
 
     var collectionDuplicateDialogVisible by mutableStateOf(false)
 
+    var onItemRemoved: ((PicsDetails) -> Unit)? = null
+
+    fun removePicture(picture: PicsDetails): Boolean {
+        val targetKey = picture.selectionKey()
+        val index = filteredPic.indexOfFirst {
+            (!it.id.isNullOrBlank() && it.id == picture.id) ||
+                it.selectionKey() == targetKey
+        }
+        if (index >= 0) {
+            val removed = filteredPic.removeAt(index)
+            if (selectedImage?.selectionKey() == targetKey) {
+                selectedImage = null
+            }
+            onItemRemoved?.invoke(removed)
+            return true
+        }
+        return false
+    }
+
     fun replaceFilteredPictures(items: List<PicsDetails>) {
         if (filteredPic.hasSameItems(items)) return
 

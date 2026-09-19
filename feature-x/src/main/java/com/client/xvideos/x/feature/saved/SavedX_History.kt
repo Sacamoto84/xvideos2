@@ -13,7 +13,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -73,9 +72,12 @@ class SavedX_History(
             return
         }
 
+        val previouslyCompleted = historyMap[item.id]?.isCompleted == true
+        val markCompleted = isFinished || (previouslyCompleted && positionMs < MIN_PLAYBACK_FOR_SAVE_MS)
+
         // Позиция возобновления сохраняется только для длинных роликов (>= 2 мин) при просмотре от 5 секунд
         val targetPosition = when {
-            isFinished -> 0L
+            markCompleted -> 0L
             !isEligibleForResume -> 0L
             positionMs < MIN_PLAYBACK_FOR_SAVE_MS -> 0L
             else -> positionMs
@@ -85,7 +87,8 @@ class SavedX_History(
             item = item,
             lastPositionMs = targetPosition,
             totalDurationMs = totalDurationMs,
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
+            isCompleted = markCompleted
         )
 
         historyMap[item.id] = entry
@@ -163,15 +166,17 @@ class SavedX_History(
      */
     fun clearAll() {
         scope.launch(ioDispatcher) {
-            val dir = File(AppPath.x_history)
-            if (dir.exists() && dir.isDirectory) {
-                dir.listFiles { file -> file.extension == EXTENSION }?.forEach { it.delete() }
-            }
-            withContext(Dispatchers.Main) {
-                historyMap.clear()
-                list.clear()
-            }
-            SnackBar.info("История очищена")
+            historyDb.clear()
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        historyMap.clear()
+                    }
+                    SnackBar.info("История очищена")
+                }
+                .onFailure { e ->
+                    Timber.e(e, "SavedX_History: ошибка при очистке истории")
+                    SnackBar.error("Ошибка очистки истории: ${e.message}")
+                }
         }
     }
 

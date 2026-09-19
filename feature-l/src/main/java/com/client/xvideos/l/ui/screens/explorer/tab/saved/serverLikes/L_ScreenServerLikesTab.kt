@@ -84,8 +84,9 @@ object L_ScreenServerLikesTab : Screen {
             }
         }
 
-        LaunchedEffect(shouldLoadMore) {
-            if (shouldLoadMore && vm.hasMore && !isLoading && errorMessage == null) {
+        val canLoadMore = vm.hasMore && !isLoading && errorMessage == null
+        LaunchedEffect(shouldLoadMore, canLoadMore) {
+            if (shouldLoadMore && canLoadMore) {
                 vm.loadNextPage()
             }
         }
@@ -114,77 +115,12 @@ object L_ScreenServerLikesTab : Screen {
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (pictures.isEmpty() && !isLoading && !isRefreshing) {
-                    if (errorMessage != null) {
-                        // Состояние ошибки (например, не авторизован)
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(top = topInset, start = 24.dp, end = 24.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.ErrorOutline,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier
-                                    .width(64.dp)
-                                    .height(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Не удалось загрузить лайки",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = errorMessage.orEmpty(),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedButton(onClick = { vm.loadInitial() }) {
-                                Text("Повторить")
-                            }
-                        }
-                    } else {
-                        // Пустое состояние
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(top = topInset, start = 24.dp, end = 24.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.FavoriteBorder,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                modifier = Modifier
-                                    .width(64.dp)
-                                    .height(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Нет лайкнутых картинок",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Здесь будут отображаться картинки, которые вы лайкнули на сервере Luscious",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedButton(onClick = { vm.refresh() }) {
-                                Text("Обновить")
-                            }
-                        }
-                    }
+                    ServerLikesEmptyOrErrorState(
+                        topInset = topInset,
+                        errorMessage = errorMessage,
+                        onRetry = { vm.loadInitial() },
+                        onRefresh = { vm.refresh() }
+                    )
                 } else {
                     L_LazyRowPictureDetails(
                         host = vm.host,
@@ -202,6 +138,84 @@ object L_ScreenServerLikesTab : Screen {
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ServerLikesEmptyOrErrorState(
+    topInset: androidx.compose.ui.unit.Dp,
+    errorMessage: String?,
+    onRetry: () -> Unit,
+    onRefresh: () -> Unit
+) {
+    if (errorMessage != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = topInset, start = 24.dp, end = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ErrorOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Не удалось загрузить лайки",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(onClick = onRetry) {
+                Text("Повторить")
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = topInset, start = 24.dp, end = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.FavoriteBorder,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Нет лайкнутых картинок",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Здесь будут отображаться картинки, которые вы лайкнули на сервере Luscious",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(onClick = onRefresh) {
+                Text("Обновить")
             }
         }
     }

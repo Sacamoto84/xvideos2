@@ -287,7 +287,7 @@ private fun VideoPlayerContentView(
                             text = notice,
                             onRestart = {
                                 host.seekTo(0f)
-                                vm.dismissResumeNotice()
+                                vm.restartFromBeginning()
                             }
                         )
                     }

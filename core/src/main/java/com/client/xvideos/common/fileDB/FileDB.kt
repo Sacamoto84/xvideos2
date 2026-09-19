@@ -123,6 +123,31 @@ class FileDB<T>(
         }
     }
 
+    fun clear(): Result<Boolean> {
+        return try {
+            val seq = synchronized(lock) {
+                val dir = File(dirPath)
+                if (dir.exists() && dir.isDirectory) {
+                    dir.listFiles { file -> file.extension == extension || file.name.endsWith(".tmp") }
+                        ?.forEach { it.delete() }
+                }
+                loadSeq.incrementAndGet()
+            }
+
+            synchronized(publishLock) {
+                if (seq > publishedSeq) {
+                    publishedSeq = seq
+                    list.clear()
+                }
+            }
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Timber.e(e, "!!! Ошибка при очистке FileDB $dirPath")
+            Result.failure(e)
+        }
+    }
+
 
     fun read(nameFile: String): Result<T> {
         if (isUnsafeItemName(nameFile)) return unsafeName(nameFile)

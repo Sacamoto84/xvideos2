@@ -36,7 +36,7 @@ object AppLockRepository {
     }
 
     fun isEnabled(context: Context): Boolean {
-        return Settings.app_lock_enabled.field.value && isPasswordSet(context)
+        return Settings.isInitialized && Settings.app_lock_enabled.field.value && isPasswordSet(context)
     }
 
     fun shouldShowLock(context: Context): Boolean {

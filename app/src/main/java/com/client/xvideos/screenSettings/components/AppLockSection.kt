@@ -31,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -228,13 +227,19 @@ private fun CamouflageVerificationDialog(
 ) {
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
-    var pinInput by rememberSaveable { mutableStateOf("") }
-    var pinError by rememberSaveable { mutableStateOf<String?>(null) }
+    var pinInput by remember { mutableStateOf("") }
+    var pinError by remember { mutableStateOf<String?>(null) }
     var isVerifyingPin by remember { mutableStateOf(false) }
+
+    val handleDismiss = {
+        pinInput = ""
+        pinError = null
+        onDismiss()
+    }
 
     LavenderDialog(
         title = "Включение маскировки",
-        onDismiss = onDismiss,
+        onDismiss = handleDismiss,
         content = {
             DisableAppLockAutofill()
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -273,6 +278,7 @@ private fun CamouflageVerificationDialog(
                     if (ok) {
                         Settings.camouflage_calculator_enabled.setValue(true)
                         LauncherAliasManager.setCalculatorAliasEnabled(context, true)
+                        pinInput = ""
                         onSuccess()
                         SnackBar.success("Маскировка под калькулятор включена")
                     } else {
@@ -481,7 +487,7 @@ fun PasswordSettingField(
 ) {
     DisableAppLockAutofill()
 
-    var showPassword by rememberSaveable { mutableStateOf(false) }
+    var showPassword by remember { mutableStateOf(false) }
     val dialogTheme = Theme.DialogLavande
 
     OutlinedTextField(

@@ -20,10 +20,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowCircleDown
 import androidx.compose.material.icons.filled.Delete
@@ -123,7 +123,7 @@ private fun FavoritesContent(
         )
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize(), backgroundColor = Theme.L.grey6, topBar = {
+    Scaffold(modifier = Modifier.fillMaxSize(), containerColor = Theme.L.grey6, topBar = {
         Column {
             Row(
                 modifier = Modifier

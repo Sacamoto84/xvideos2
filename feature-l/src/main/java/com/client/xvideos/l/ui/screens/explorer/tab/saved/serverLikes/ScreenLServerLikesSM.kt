@@ -7,6 +7,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -43,7 +44,18 @@ class ScreenLServerLikesSM @Inject constructor(
     private var currentPage: Int = 1
 
     init {
+        host.onItemRemoved = { removedPic ->
+            val targetKey = removedPic.selectionKey()
+            _pictures.value = _pictures.value.filterNot {
+                (!it.id.isNullOrBlank() && it.id == removedPic.id) ||
+                    it.selectionKey() == targetKey
+            }
+        }
         loadInitial()
+    }
+
+    fun unlikePicture(pic: PicsDetails) {
+        host.removePicture(pic)
     }
 
     fun loadInitial() {

@@ -80,7 +80,7 @@ internal fun BackupSettingsSection(
     var rBackupMode by rememberSaveable { mutableStateOf(XlrBackupContentMode.MINI) }
     var backupItems by remember { mutableStateOf<List<XlrBackupItem>>(emptyList()) }
     var selectedBackupPaths by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var restoreUri by remember { mutableStateOf<Uri?>(null) }
+    var restoreUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var restoreItems by remember { mutableStateOf<List<XlrBackupItem>>(emptyList()) }
     var selectedRestorePaths by remember { mutableStateOf<Set<String>>(emptySet()) }
     val backupConsole = remember { mutableStateListOf<String>() }
@@ -93,9 +93,9 @@ internal fun BackupSettingsSection(
     var createPassword by remember { mutableStateOf<CharArray?>(null) }
 
     var showRestorePasswordDialog by rememberSaveable { mutableStateOf(false) }
-    var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingRestoreUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var restorePassword by remember { mutableStateOf<CharArray?>(null) }
-    var restorePasswordError by remember { mutableStateOf<String?>(null) }
+    var restorePasswordError by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun appendBackupLog(message: String) {
         if (backupConsole.size >= BACKUP_CONSOLE_MAX_LINES) {
@@ -142,25 +142,28 @@ internal fun BackupSettingsSection(
         }
         scope.launch(Dispatchers.Main) {
             isWorking = true
-            appendBackupLog(
-                "Создание зашифрованного backup: L=${backupContentModeTitle(backupOptions.lMode)}, R=${backupContentModeTitle(backupOptions.rMode)}"
-            )
-            val result = withContext(Dispatchers.IO) {
-                XlrBackupManager.createBackup(context, uri, selectedBackupPaths, backupOptions, password)
+            try {
+                appendBackupLog(
+                    "Создание зашифрованного backup: L=${backupContentModeTitle(backupOptions.lMode)}, R=${backupContentModeTitle(backupOptions.rMode)}"
+                )
+                val result = withContext(Dispatchers.IO) {
+                    XlrBackupManager.createBackup(context, uri, selectedBackupPaths, backupOptions, password)
+                }
+                result
+                    .onSuccess { report ->
+                        appendBackupLog("Backup создан и зашифрован: ${report.files} файлов, ${formatBytes(report.bytes)}")
+                        SnackBar.success("Backup создан: ${report.files} файлов, ${formatBytes(report.bytes)}")
+                        refreshBackupItems()
+                    }
+                    .onFailure { error ->
+                        appendBackupLog("Ошибка создания backup: ${error.message ?: error::class.java.simpleName}")
+                        SnackBar.error(error.message ?: "Ошибка создания backup")
+                    }
+            } finally {
+                password?.fill('\u0000')
+                createPassword = null
+                isWorking = false
             }
-            password?.fill('\u0000')
-            createPassword = null
-            result
-                .onSuccess { report ->
-                    appendBackupLog("Backup создан и зашифрован: ${report.files} файлов, ${formatBytes(report.bytes)}")
-                    SnackBar.success("Backup создан: ${report.files} файлов, ${formatBytes(report.bytes)}")
-                    refreshBackupItems()
-                }
-                .onFailure { error ->
-                    appendBackupLog("Ошибка создания backup: ${error.message ?: error::class.java.simpleName}")
-                    SnackBar.error(error.message ?: "Ошибка создания backup")
-                }
-            isWorking = false
         }
     }
 
@@ -170,49 +173,50 @@ internal fun BackupSettingsSection(
         if (uri == null || isWorking) return@rememberLauncherForActivityResult
         scope.launch(Dispatchers.Main) {
             isWorking = true
-            val type = withContext(Dispatchers.IO) {
-                XlrBackupManager.detectBackupType(context, uri)
-            }
-            when (type) {
-                XlrBackupType.ENCRYPTED_XLR -> {
-                    isWorking = false
-                    pendingRestoreUri = uri
-                    restorePasswordError = null
-                    showRestorePasswordDialog = true
+            try {
+                val type = withContext(Dispatchers.IO) {
+                    XlrBackupManager.detectBackupType(context, uri)
                 }
-                XlrBackupType.LEGACY_ZIP -> {
-                    appendBackupLog("Обнаружен незашифрованный архив (legacy ZIP)")
-                    val result = withContext(Dispatchers.IO) {
-                        XlrBackupManager.inspectBackup(context, uri, password = null)
+                when (type) {
+                    XlrBackupType.ENCRYPTED_XLR -> {
+                        pendingRestoreUri = uri
+                        restorePasswordError = null
+                        showRestorePasswordDialog = true
                     }
-                    result
-                        .onSuccess { items ->
-                            restoreUri = uri
-                            restorePassword?.fill('\u0000')
-                            restorePassword = null
-                            restoreItems = items
-                            selectedRestorePaths = initialSectionSelection(items)
-                            SnackBar.success("Backup открыт: ${items.size} папок")
+                    XlrBackupType.LEGACY_ZIP -> {
+                        appendBackupLog("Обнаружен незашифрованный архив (legacy ZIP)")
+                        val result = withContext(Dispatchers.IO) {
+                            XlrBackupManager.inspectBackup(context, uri, password = null)
                         }
-                        .onFailure { error ->
-                            restoreUri = null
-                            restorePassword?.fill('\u0000')
-                            restorePassword = null
-                            restoreItems = emptyList()
-                            selectedRestorePaths = emptySet()
-                            SnackBar.error(error.message ?: "Ошибка чтения backup")
-                        }
-                    isWorking = false
+                        result
+                            .onSuccess { items ->
+                                restoreUri = uri
+                                restorePassword?.fill('\u0000')
+                                restorePassword = null
+                                restoreItems = items
+                                selectedRestorePaths = initialSectionSelection(items)
+                                SnackBar.success("Backup открыт: ${items.size} папок")
+                            }
+                            .onFailure { error ->
+                                restoreUri = null
+                                restorePassword?.fill('\u0000')
+                                restorePassword = null
+                                restoreItems = emptyList()
+                                selectedRestorePaths = emptySet()
+                                SnackBar.error(error.message ?: "Ошибка чтения backup")
+                            }
+                    }
+                    XlrBackupType.UNSUPPORTED -> {
+                        restoreUri = null
+                        restorePassword?.fill('\u0000')
+                        restorePassword = null
+                        restoreItems = emptyList()
+                        selectedRestorePaths = emptySet()
+                        SnackBar.error("Неподдерживаемый формат файла: не является бэкапом XLR или ZIP")
+                    }
                 }
-                XlrBackupType.UNSUPPORTED -> {
-                    isWorking = false
-                    restoreUri = null
-                    restorePassword?.fill('\u0000')
-                    restorePassword = null
-                    restoreItems = emptyList()
-                    selectedRestorePaths = emptySet()
-                    SnackBar.error("Неподдерживаемый формат файла: не является бэкапом XLR или ZIP")
-                }
+            } finally {
+                isWorking = false
             }
         }
     }
@@ -369,68 +373,71 @@ internal fun BackupSettingsSection(
                             if (!isWorking) {
                                 scope.launch(Dispatchers.Main) {
                                     isWorking = true
-                                    appendBackupLog("Восстановление backup: ${selectionSummaryText(restoreReport)}")
-                                    val autoRecoverL = shouldAutoRecoverL(selectedRestorePaths)
-                                    val autoRecoverRedDownload = shouldAutoRecoverRedDownload(selectedRestorePaths)
-                                    val result = withContext(Dispatchers.IO) {
-                                        XlrBackupManager.restoreBackup(context, uri, selectedRestorePaths, restorePassword)
+                                    try {
+                                        appendBackupLog("Восстановление backup: ${selectionSummaryText(restoreReport)}")
+                                        val autoRecoverL = shouldAutoRecoverL(selectedRestorePaths)
+                                        val autoRecoverRedDownload = shouldAutoRecoverRedDownload(selectedRestorePaths)
+                                        val result = withContext(Dispatchers.IO) {
+                                            XlrBackupManager.restoreBackup(context, uri, selectedRestorePaths, restorePassword)
+                                        }
+                                        result
+                                            .onSuccess { report ->
+                                                refreshBackupItems()
+                                                onDataChanged()
+                                                // Восстановление меняет файлы мимо приложения, а
+                                                // SavedRed и BlockRed — синглтоны со списками в
+                                                // памяти: их читают один раз на старте. Без этого
+                                                // раздел R оставался пустым до перезапуска, тогда
+                                                // как X и L перечитывают свои экраны при входе.
+                                                withContext(Dispatchers.IO) {
+                                                    data.savedRed?.refreshAll()
+                                                    data.blockRed?.refresh()
+                                                    data.downloadRed?.refreshDownloadList()
+                                                }
+                                                SnackBar.success("Backup восстановлен: ${report.files} файлов")
+                                                appendBackupLog("Backup восстановлен: ${report.files} файлов, ${formatBytes(report.bytes)}")
+                                                if (autoRecoverL) {
+                                                    val lSaved = savedL
+                                                    if (lSaved == null) {
+                                                        SnackBar.error("L Likes/Collection восстановлены, но L-загрузчик недоступен")
+                                                    } else {
+                                                        appendBackupLog("L Likes/Collection: сканирую metadata")
+                                                        lSaved.recoverIncompleteSavedMedia(
+                                                            onEvent = { message ->
+                                                                scope.launch(Dispatchers.Main) { appendBackupLog(message) }
+                                                            },
+                                                            onComplete = { recoveryReport ->
+                                                                scope.launch(Dispatchers.Main) { appendBackupLog(lDownloadRecoveryConsoleText(recoveryReport)) }
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                                if (autoRecoverRedDownload) {
+                                                    val redDownloader = downloadRed
+                                                    if (redDownloader == null) {
+                                                        SnackBar.error("R Download восстановлен, но загрузчик недоступен")
+                                                    } else {
+                                                        appendBackupLog("R Download: сканирую .info")
+                                                        redDownloader.recoverIncompleteDownloads(
+                                                            onEvent = { message ->
+                                                                scope.launch(Dispatchers.Main) { appendBackupLog(message) }
+                                                            },
+                                                            onComplete = { recoveryReport ->
+                                                                scope.launch(Dispatchers.Main) { appendBackupLog(redDownloadRecoveryConsoleText(recoveryReport)) }
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            .onFailure { error ->
+                                                appendBackupLog("Ошибка восстановления backup: ${error.message ?: error::class.java.simpleName}")
+                                                SnackBar.error(error.message ?: "Ошибка восстановления backup")
+                                            }
+                                    } finally {
+                                        restorePassword?.fill('\u0000')
+                                        restorePassword = null
+                                        isWorking = false
                                     }
-                                    restorePassword?.fill('\u0000')
-                                    restorePassword = null
-                                    result
-                                        .onSuccess { report ->
-                                            refreshBackupItems()
-                                            onDataChanged()
-                                            // Восстановление меняет файлы мимо приложения, а
-                                            // SavedRed и BlockRed — синглтоны со списками в
-                                            // памяти: их читают один раз на старте. Без этого
-                                            // раздел R оставался пустым до перезапуска, тогда
-                                            // как X и L перечитывают свои экраны при входе.
-                                            withContext(Dispatchers.IO) {
-                                                data.savedRed?.refreshAll()
-                                                data.blockRed?.refresh()
-                                                data.downloadRed?.refreshDownloadList()
-                                            }
-                                            SnackBar.success("Backup восстановлен: ${report.files} файлов")
-                                            appendBackupLog("Backup восстановлен: ${report.files} файлов, ${formatBytes(report.bytes)}")
-                                            if (autoRecoverL) {
-                                                val lSaved = savedL
-                                                if (lSaved == null) {
-                                                    SnackBar.error("L Likes/Collection восстановлены, но L-загрузчик недоступен")
-                                                } else {
-                                                    appendBackupLog("L Likes/Collection: сканирую metadata")
-                                                    lSaved.recoverIncompleteSavedMedia(
-                                                        onEvent = { message ->
-                                                            scope.launch(Dispatchers.Main) { appendBackupLog(message) }
-                                                        },
-                                                        onComplete = { recoveryReport ->
-                                                            scope.launch(Dispatchers.Main) { appendBackupLog(lDownloadRecoveryConsoleText(recoveryReport)) }
-                                                        }
-                                                    )
-                                                }
-                                            }
-                                            if (autoRecoverRedDownload) {
-                                                val redDownloader = downloadRed
-                                                if (redDownloader == null) {
-                                                    SnackBar.error("R Download восстановлен, но загрузчик недоступен")
-                                                } else {
-                                                    appendBackupLog("R Download: сканирую .info")
-                                                    redDownloader.recoverIncompleteDownloads(
-                                                        onEvent = { message ->
-                                                            scope.launch(Dispatchers.Main) { appendBackupLog(message) }
-                                                        },
-                                                        onComplete = { recoveryReport ->
-                                                            scope.launch(Dispatchers.Main) { appendBackupLog(redDownloadRecoveryConsoleText(recoveryReport)) }
-                                                        }
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        .onFailure { error ->
-                                            appendBackupLog("Ошибка восстановления backup: ${error.message ?: error::class.java.simpleName}")
-                                            SnackBar.error(error.message ?: "Ошибка восстановления backup")
-                                        }
-                                    isWorking = false
                                 }
                             }
                         }
@@ -473,31 +480,34 @@ internal fun BackupSettingsSection(
                 }
                 scope.launch(Dispatchers.Main) {
                     isWorking = true
-                    val result = withContext(Dispatchers.IO) {
-                        XlrBackupManager.inspectBackup(context, uri, password)
-                    }
-                    result
-                        .onSuccess { items ->
-                            showRestorePasswordDialog = false
-                            restorePasswordError = null
-                            restoreUri = uri
-                            restorePassword?.fill('\u0000')
-                            restorePassword = password
-                            restoreItems = items
-                            selectedRestorePaths = initialSectionSelection(items)
-                            SnackBar.success("Архив успешно расшифрован: ${items.size} папок")
+                    try {
+                        val result = withContext(Dispatchers.IO) {
+                            XlrBackupManager.inspectBackup(context, uri, password)
                         }
-                        .onFailure { error ->
-                            password.fill('\u0000')
-                            val message = if (error is XlrInvalidPasswordException || error.cause is XlrInvalidPasswordException) {
-                                "Неверный пароль для расшифровки бэкапа"
-                            } else {
-                                error.message ?: "Ошибка расшифровки бэкапа"
+                        result
+                            .onSuccess { items ->
+                                showRestorePasswordDialog = false
+                                restorePasswordError = null
+                                restoreUri = uri
+                                restorePassword?.fill('\u0000')
+                                restorePassword = password
+                                restoreItems = items
+                                selectedRestorePaths = initialSectionSelection(items)
+                                SnackBar.success("Архив успешно расшифрован: ${items.size} папок")
                             }
-                            restorePasswordError = message
-                            SnackBar.error(message)
-                        }
-                    isWorking = false
+                            .onFailure { error ->
+                                password.fill('\u0000')
+                                val message = if (error is XlrInvalidPasswordException || error.cause is XlrInvalidPasswordException) {
+                                    "Неверный пароль для расшифровки бэкапа"
+                                } else {
+                                    error.message ?: "Ошибка расшифровки бэкапа"
+                                }
+                                restorePasswordError = message
+                                SnackBar.error(message)
+                            }
+                    } finally {
+                        isWorking = false
+                    }
                 }
             }
         )

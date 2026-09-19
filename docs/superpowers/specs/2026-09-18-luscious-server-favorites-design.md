@@ -46,12 +46,11 @@
       suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>>
   }
   ```
-- `LusciousServerFavoritesRepositoryStub.kt`:
+- `LusciousServerFavoritesRepositoryImpl.kt`:
   ```kotlin
   @Singleton
-  class LusciousServerFavoritesRepositoryStub @Inject constructor() : LusciousServerFavoritesRepository {
-      override suspend fun getSubscribedAlbums(page: Int): Result<List<AlbumDetails>> = Result.success(emptyList())
-      override suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>> = Result.success(emptyList())
+  class LusciousServerFavoritesRepositoryImpl @Inject constructor(...) : LusciousServerFavoritesRepository {
+      ...
   }
   ```
 - Регистрация в DI (`LusciousModule.kt` или отдельный модуль).

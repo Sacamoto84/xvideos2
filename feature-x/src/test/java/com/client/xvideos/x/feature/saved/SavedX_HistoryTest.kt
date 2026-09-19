@@ -57,6 +57,7 @@ class SavedX_HistoryTest {
         val entry = history.get(100L)
         assertNotNull(entry)
         assertEquals(0L, entry?.lastPositionMs) // Короткие ролики не возобновляются
+        assertEquals(false, entry?.isCompleted) // Не завершён
         assertEquals(1, history.list.size)
     }
 
@@ -85,6 +86,7 @@ class SavedX_HistoryTest {
         val entry = history.get(300L)
         assertNotNull(entry)
         assertEquals(120_000L, entry?.lastPositionMs)
+        assertEquals(false, entry?.isCompleted)
         assertEquals(300_000L, entry?.totalDurationMs)
         assertEquals("Watched Video", entry?.item?.title)
     }
@@ -102,7 +104,36 @@ class SavedX_HistoryTest {
         val entry = history.get(400L)
         assertNotNull(entry)
         assertEquals(0L, entry?.lastPositionMs) // Сброшено на начало
+        assertEquals(true, entry?.isCompleted) // Отмечено как завершённое
         assertEquals(240_000L, entry?.totalDurationMs)
+    }
+
+    @Test
+    fun `повторное открытие завершенного ролика на короткое время не сбрасывает isCompleted`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val video = ItemsX(id = 450L, title = "Finished Video", duration = "10 мин.")
+        // Завершаем просмотр (96%)
+        history.updateProgress(video, positionMs = 580_000L, totalDurationMs = 600_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(true, history.get(450L)?.isCompleted)
+
+        // Случайно открыли и закрыли через 2 секунды
+        history.updateProgress(video, positionMs = 2_000L, totalDurationMs = 600_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val entry = history.get(450L)
+        assertEquals(true, entry?.isCompleted)
+        assertEquals(0L, entry?.lastPositionMs)
+
+        // Начали полноценно пересматривать (20 секунд)
+        history.updateProgress(video, positionMs = 20_000L, totalDurationMs = 600_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val entryRewatching = history.get(450L)
+        assertEquals(false, entryRewatching?.isCompleted)
+        assertEquals(20_000L, entryRewatching?.lastPositionMs)
     }
 
     @Test

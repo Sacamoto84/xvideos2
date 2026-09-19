@@ -95,8 +95,9 @@ object L_ScreenSubscribedAlbumsTab : Screen {
             }
         }
 
-        LaunchedEffect(shouldLoadMore) {
-            if (shouldLoadMore && vm.hasMore && !isLoading && errorMessage == null) {
+        val canLoadMore = vm.hasMore && !isLoading && errorMessage == null
+        LaunchedEffect(shouldLoadMore, canLoadMore) {
+            if (shouldLoadMore && canLoadMore) {
                 vm.loadNextPage()
             }
         }
@@ -104,24 +105,14 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         var itemPendingServerUnlike by remember { mutableStateOf<AlbumDetails?>(null) }
 
         itemPendingServerUnlike?.let { pending ->
-            AlertDialog(
-                onDismissRequest = { itemPendingServerUnlike = null },
-                title = { Text("Удалить альбом с сервера?") },
-                text = { Text("Удалить «${pending.title}» из подписок на сервере Luscious?") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        vm.unlikeAlbum(pending)
-                        itemPendingServerUnlike = null
-                    }) {
-                        Text("Удалить", color = MaterialTheme.colorScheme.error)
-                    }
+            SubscribedAlbumUnlikeDialog(
+                album = pending,
+                onConfirm = {
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    vm.unlikeAlbum(pending)
+                    itemPendingServerUnlike = null
                 },
-                dismissButton = {
-                    TextButton(onClick = { itemPendingServerUnlike = null }) {
-                        Text("Отмена")
-                    }
-                }
+                onDismiss = { itemPendingServerUnlike = null }
             )
         }
 
@@ -149,122 +140,30 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (albums.isEmpty() && !isLoading && !isRefreshing) {
-                    if (errorMessage != null) {
-                        // Экран ошибки / неавторизованного пользователя
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(top = topInset, start = 24.dp, end = 24.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.ErrorOutline,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier
-                                    .width(64.dp)
-                                    .height(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Не удалось загрузить подписки",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = errorMessage.orEmpty(),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedButton(onClick = { vm.loadInitial() }) {
-                                Text("Повторить")
-                            }
-                        }
-                    } else {
-                        // Пустое состояние
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(top = topInset, start = 24.dp, end = 24.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Subscriptions,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                modifier = Modifier
-                                    .width(64.dp)
-                                    .height(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Нет подписанных альбомов",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Здесь отображаются альбомы, на которые вы подписаны в Luscious",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedButton(onClick = { vm.refresh() }) {
-                                Text("Обновить")
-                            }
-                        }
-                    }
+                    SubscribedAlbumsEmptyOrErrorState(
+                        topInset = topInset,
+                        errorMessage = errorMessage,
+                        onRetry = { vm.loadInitial() },
+                        onRefresh = { vm.refresh() }
+                    )
                 } else {
-                    LazyVerticalGrid(
+                    SubscribedAlbumsGrid(
                         state = state,
-                        columns = GridCells.Fixed(2),
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Box(modifier = Modifier.height(topInset))
-                        }
-
-                        itemsIndexed(albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
-                            val albumId = item.id.toLongOrNull()
-                            AlbumListItem(
-                                title = item.title,
-                                coverUrl = item.cover?.url.orEmpty(),
-                                numberOfAnimatedPictures = item.number_of_animated_pictures,
-                                numberOfPictures = item.number_of_pictures,
-                                modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
-                                onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    itemPendingServerUnlike = item
-                                }
-                            ) {
-                                if (albumId != null) {
-                                    navigator.push(ScreenLAlbum(albumId))
-                                } else {
-                                    SnackBar.error("Не удалось открыть альбом: пустой id")
-                                }
+                        albums = albums,
+                        topInset = topInset,
+                        isLoading = isLoading,
+                        onAlbumClick = { albumId ->
+                            if (albumId != null) {
+                                navigator.push(ScreenLAlbum(albumId))
+                            } else {
+                                SnackBar.error("Не удалось открыть альбом: пустой id")
                             }
+                        },
+                        onAlbumLongClick = { item ->
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            itemPendingServerUnlike = item
                         }
-
-                        if (isLoading && albums.isNotEmpty()) {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = Theme.L.red)
-                                }
-                            }
-                        }
-                    }
+                    )
 
                     // Скроллбар
                     Box(
@@ -282,6 +181,155 @@ object L_ScreenSubscribedAlbumsTab : Screen {
                         color = Theme.L.red,
                         modifier = Modifier.align(Alignment.Center)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubscribedAlbumUnlikeDialog(
+    album: AlbumDetails,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Удалить альбом с сервера?") },
+        text = { Text("Удалить «${album.title}» из подписок на сервере Luscious?") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Удалить", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Отмена")
+            }
+        }
+    )
+}
+
+@Composable
+private fun SubscribedAlbumsEmptyOrErrorState(
+    topInset: androidx.compose.ui.unit.Dp,
+    errorMessage: String?,
+    onRetry: () -> Unit,
+    onRefresh: () -> Unit
+) {
+    if (errorMessage != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = topInset, start = 24.dp, end = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ErrorOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Не удалось загрузить подписки",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(onClick = onRetry) {
+                Text("Повторить")
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = topInset, start = 24.dp, end = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Subscriptions,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Нет подписанных альбомов",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Здесь отображаются альбомы, на которые вы подписаны в Luscious",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(onClick = onRefresh) {
+                Text("Обновить")
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubscribedAlbumsGrid(
+    state: androidx.compose.foundation.lazy.grid.LazyGridState,
+    albums: List<AlbumDetails>,
+    topInset: androidx.compose.ui.unit.Dp,
+    isLoading: Boolean,
+    onAlbumClick: (Long?) -> Unit,
+    onAlbumLongClick: (AlbumDetails) -> Unit
+) {
+    LazyVerticalGrid(
+        state = state,
+        columns = GridCells.Fixed(2),
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Box(modifier = Modifier.height(topInset))
+        }
+
+        itemsIndexed(albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
+            val albumId = item.id.toLongOrNull()
+            AlbumListItem(
+                title = item.title,
+                coverUrl = item.cover?.url.orEmpty(),
+                numberOfAnimatedPictures = item.number_of_animated_pictures,
+                numberOfPictures = item.number_of_pictures,
+                modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
+                onLongClick = { onAlbumLongClick(item) }
+            ) {
+                onAlbumClick(albumId)
+            }
+        }
+
+        if (isLoading && albums.isNotEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Theme.L.red)
                 }
             }
         }

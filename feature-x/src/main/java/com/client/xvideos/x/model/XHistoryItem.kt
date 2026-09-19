@@ -21,15 +21,18 @@ data class XHistoryItem(
     val lastPositionMs: Long = 0L,
     val totalDurationMs: Long = 0L,
     val updatedAt: Long = 0L,
+    val isCompleted: Boolean = false,
 ) : Serializable {
     /**
      * Подходит ли ролик для возобновления просмотра:
+     * - ролик ещё не досмотрен до конца (isCompleted == false);
      * - общая длина не менее 2 минут (120 000 мс);
      * - просмотрено более 5 секунд (5 000 мс);
      * - просмотрено менее 95% от общей длительности (не досмотрен до конца).
      */
     val isEligibleForResume: Boolean
-        get() = totalDurationMs >= 120_000L &&
+        get() = !isCompleted &&
+            totalDurationMs >= 120_000L &&
             lastPositionMs > 5_000L &&
             lastPositionMs < (totalDurationMs * 0.95)
 
@@ -37,5 +40,9 @@ data class XHistoryItem(
      * Доля просмотренного видео в диапазоне 0.0 .. 1.0 для отображения индикатора прогресса.
      */
     val progressFraction: Float
-        get() = if (totalDurationMs > 0L) (lastPositionMs.toFloat() / totalDurationMs).coerceIn(0f, 1f) else 0f
+        get() = when {
+            isCompleted -> 1f
+            totalDurationMs > 0L -> (lastPositionMs.toFloat() / totalDurationMs).coerceIn(0f, 1f)
+            else -> 0f
+        }
 }

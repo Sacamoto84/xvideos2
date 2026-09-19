@@ -95,4 +95,24 @@ class FileDBTest {
         assertTrue(db.update("../evil", Row("1", "val")).isFailure)
         assertTrue(db.delete("../evil").isFailure)
     }
+
+    @Test
+    fun `clear удаляет все файлы расширения и очищает список`() {
+        val root = tmp.newFolder("db_clear")
+        val db = db(root)
+        db.insert("a", Row("a", "one"))
+        db.insert("b", Row("b", "two"))
+        File(root, "temp.tmp").writeText("temp")
+        File(root, "keep.other").writeText("keep")
+
+        assertTrue(db.refresh().isSuccess)
+        assertEquals(2, db.list.size)
+
+        assertTrue(db.clear().isSuccess)
+        assertEquals(0, db.list.size)
+        assertEquals(false, File(root, "a.row").exists())
+        assertEquals(false, File(root, "b.row").exists())
+        assertEquals(false, File(root, "temp.tmp").exists())
+        assertEquals(true, File(root, "keep.other").exists())
+    }
 }

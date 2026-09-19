@@ -119,28 +119,38 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         private set
 
     /** Сохранённый элемент истории для данного видео (если был). */
-    val historyItem: XHistoryItem? = saved.history.get(
-        currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
-    )
+    var historyItem: XHistoryItem? by mutableStateOf(null)
+        private set
 
     /** Стартовая позиция в секундах, если видео подходит для возобновления. */
-    val resumePositionSeconds: Float? = historyItem?.takeIf { it.isEligibleForResume }?.let {
-        it.lastPositionMs / 1000f
-    }
+    var resumePositionSeconds: Float? by mutableStateOf(null)
+        private set
 
     /** Текст уведомления о возобновлении (например, "Возобновлено с 04:12"). */
-    var resumeNoticeText: String? by mutableStateOf(
-        resumePositionSeconds?.let { sec ->
+    var resumeNoticeText: String? by mutableStateOf(null)
+        private set
+
+    private fun checkAndInitResume(videoId: Long) {
+        if (videoId <= 0L || resumePositionSeconds != null) return
+        val item = saved.history.get(videoId) ?: return
+        if (item.isEligibleForResume) {
+            historyItem = item
+            val sec = item.lastPositionMs / 1000f
+            resumePositionSeconds = sec
             val totalSec = sec.toInt()
             val minutes = totalSec / 60
             val seconds = totalSec % 60
-            String.format(java.util.Locale.US, "Возобновлено с %02d:%02d", minutes, seconds)
+            resumeNoticeText = String.format(java.util.Locale.US, "Возобновлено с %02d:%02d", minutes, seconds)
         }
-    )
-        private set
+    }
 
     fun dismissResumeNotice() {
         resumeNoticeText = null
+    }
+
+    fun restartFromBeginning() {
+        resumeNoticeText = null
+        resumePositionSeconds = 0f
     }
 
     fun saveProgress(positionSeconds: Float, durationSeconds: Int) {
@@ -156,6 +166,10 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     }
 
     init {
+        val initialId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
+        if (initialId > 0L) {
+            checkAndInitResume(initialId)
+        }
         loadVideo()
     }
 
@@ -216,6 +230,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                         },
                         href = url
                     )
+                    if (resolvedId > 0L) {
+                        checkAndInitResume(resolvedId)
+                    }
                 }
                 if (parsedData.streamCandidate.isBlank()) {
                     isError = true

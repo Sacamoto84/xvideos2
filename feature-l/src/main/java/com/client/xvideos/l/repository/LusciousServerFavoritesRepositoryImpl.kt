@@ -343,15 +343,19 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
     }
 }
 
+private val ULID_REGEX = Regex("""[0-9A-HJKMNP-TV-Z]{26}""")
+private val DIMENSIONS_EXT_REGEX = Regex("""\.\d+x\d+\.[a-zA-Z0-9]+$""")
+private val EXT_REGEX = Regex("""\.[a-zA-Z0-9]+$""")
+
 internal fun extractSlugCandidate(input: String): String {
     val clean = input.substringBefore('?').substringBefore('#').trim()
-    val ulidMatch = Regex("""[0-9A-HJKMNP-TV-Z]{26}""").find(clean)
+    val ulidMatch = ULID_REGEX.find(clean)
     if (ulidMatch != null) return ulidMatch.value
 
     val fileName = clean.substringAfterLast('/').substringAfterLast('\\')
     val withoutExt = fileName
-        .replace(Regex("""\.\d+x\d+\.[a-zA-Z0-9]+$"""), "")
-        .replace(Regex("""\.[a-zA-Z0-9]+$"""), "")
+        .replace(DIMENSIONS_EXT_REGEX, "")
+        .replace(EXT_REGEX, "")
 
     val slug = withoutExt.substringAfterLast('_')
     return if (slug.length >= 4) slug else withoutExt

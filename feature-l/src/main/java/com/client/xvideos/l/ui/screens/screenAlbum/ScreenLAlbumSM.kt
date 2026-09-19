@@ -86,30 +86,41 @@ class ScreenLAlbumSM @AssistedInject constructor(
         val currentlyFavorite = isServerFavorite
             ?: (album.likeStatus.orEmpty().isNotBlank() && album.likeStatus != "none" && album.likeStatus != "dislike")
 
+        isServerFavoriteLoading = true
         scope.launch {
-            isServerFavoriteLoading = true
-            if (currentlyFavorite) {
-                serverFavorites.unlikeAlbum(albumId)
-                    .onSuccess {
-                        isServerFavorite = false
-                        SnackBar.info("Альбом удалён с сервера")
+            try {
+                if (currentlyFavorite) {
+                    val result = serverFavorites.unlikeAlbum(albumId)
+                    withContext(Dispatchers.Main) {
+                        result
+                            .onSuccess {
+                                isServerFavorite = false
+                                SnackBar.info("Альбом удалён с сервера")
+                            }
+                            .onFailure { e ->
+                                Timber.e(e, "Failed to unlike album on server")
+                                SnackBar.error(e.message ?: "Не удалось удалить альбом с сервера")
+                            }
                     }
-                    .onFailure { e ->
-                        Timber.e(e, "Failed to unlike album on server")
-                        SnackBar.error(e.message ?: "Не удалось удалить альбом с сервера")
+                } else {
+                    val result = serverFavorites.likeAlbum(albumId)
+                    withContext(Dispatchers.Main) {
+                        result
+                            .onSuccess {
+                                isServerFavorite = true
+                                SnackBar.success("Альбом добавлен на сервер")
+                            }
+                            .onFailure { e ->
+                                Timber.e(e, "Failed to like album on server")
+                                SnackBar.error(e.message ?: "Не удалось добавить альбом на сервер")
+                            }
                     }
-            } else {
-                serverFavorites.likeAlbum(albumId)
-                    .onSuccess {
-                        isServerFavorite = true
-                        SnackBar.success("Альбом добавлен на сервер")
-                    }
-                    .onFailure { e ->
-                        Timber.e(e, "Failed to like album on server")
-                        SnackBar.error(e.message ?: "Не удалось добавить альбом на сервер")
-                    }
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    isServerFavoriteLoading = false
+                }
             }
-            isServerFavoriteLoading = false
         }
     }
 

@@ -6,8 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Icon
-import androidx.compose.material.TabRowDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Group
@@ -75,7 +75,7 @@ fun TabRow(
         containerColor = containerColor,
         contentColor = Color.White,
         indicator = {
-            TabRowDefaults.Indicator(
+            TabRowDefaults.SecondaryIndicator(
                 Modifier.tabIndicatorOffset(state, matchContentSize = false),
                 height = 4.dp,
                 color = Theme.R.colorRed

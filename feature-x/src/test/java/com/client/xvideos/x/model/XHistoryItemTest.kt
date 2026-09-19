@@ -86,5 +86,25 @@ class XHistoryItemTest {
 
         val zeroDuration = XHistoryItem(lastPositionMs = 100L, totalDurationMs = 0L)
         assertEquals(0f, zeroDuration.progressFraction, 0.001f)
+
+        val completedItem = XHistoryItem(isCompleted = true, lastPositionMs = 0L, totalDurationMs = 300_000L)
+        assertEquals(1f, completedItem.progressFraction, 0.001f)
+    }
+
+    @Test
+    fun `isEligibleForResume возвращает false если ролик помечен как isCompleted`() {
+        val completed = XHistoryItem(
+            isCompleted = true,
+            lastPositionMs = 60_000L,
+            totalDurationMs = 300_000L
+        )
+        assertFalse(completed.isEligibleForResume)
+    }
+
+    @Test
+    fun `десериализация старого JSON без isCompleted выставляет false по умолчанию`() {
+        val oldJson = """{"lastPositionMs":0,"totalDurationMs":300000}"""
+        val decoded = AppJson.decodeFromString(XHistoryItem.serializer(), oldJson)
+        assertFalse(decoded.isCompleted)
     }
 }

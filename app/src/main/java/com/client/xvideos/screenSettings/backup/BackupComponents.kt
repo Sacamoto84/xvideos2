@@ -386,10 +386,10 @@ internal fun BackupCreatePasswordDialog(
     onDismiss: () -> Unit,
     onConfirm: (password: CharArray) -> Unit
 ) {
-    var password by rememberSaveable { mutableStateOf("") }
-    var passwordConfirm by rememberSaveable { mutableStateOf("") }
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
-    var passwordConfirmVisible by rememberSaveable { mutableStateOf(false) }
+    var password by remember { mutableStateOf("") }
+    var passwordConfirm by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var passwordConfirmVisible by remember { mutableStateOf(false) }
 
     val isLengthValid = password.length >= 4
     val isMatching = password == passwordConfirm
@@ -397,12 +397,19 @@ internal fun BackupCreatePasswordDialog(
 
     LavenderDialog(
         title = "Шифрование бэкапа",
-        onDismiss = onDismiss,
+        onDismiss = {
+            password = ""
+            passwordConfirm = ""
+            onDismiss()
+        },
         confirmText = "Создать",
         confirmEnabled = isValid,
         onConfirm = {
             if (isValid) {
-                onConfirm(password.toCharArray())
+                val chars = password.toCharArray()
+                password = ""
+                passwordConfirm = ""
+                onConfirm(chars)
             }
         },
         content = {
@@ -488,19 +495,24 @@ internal fun BackupRestorePasswordDialog(
     onDismiss: () -> Unit,
     onConfirm: (password: CharArray) -> Unit
 ) {
-    var password by rememberSaveable { mutableStateOf("") }
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val isValid = password.isNotEmpty()
 
     LavenderDialog(
         title = "Ввод пароля бэкапа",
-        onDismiss = onDismiss,
+        onDismiss = {
+            password = ""
+            onDismiss()
+        },
         confirmText = "Открыть",
         confirmEnabled = isValid,
         onConfirm = {
             if (isValid) {
-                onConfirm(password.toCharArray())
+                val chars = password.toCharArray()
+                password = ""
+                onConfirm(chars)
             }
         },
         content = {
@@ -535,7 +547,11 @@ internal fun BackupRestorePasswordDialog(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = {
-                    if (isValid) onConfirm(password.toCharArray())
+                    if (isValid) {
+                        val chars = password.toCharArray()
+                        password = ""
+                        onConfirm(chars)
+                    }
                 })
             )
 

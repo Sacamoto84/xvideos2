@@ -13,14 +13,19 @@ import com.client.xvideos.common.settings.Settings
  * на передний план) на уровне [ProcessLifecycleOwner].
  */
 class AppLockLifecycleObserver(
-    private val context: Context
+    private val context: Context,
+    private val elapsedRealtimeProvider: () -> Long = { android.os.SystemClock.elapsedRealtime() }
 ) : DefaultLifecycleObserver {
 
     override fun onStop(owner: LifecycleOwner) {
         if (!AppLockRepository.isEnabled(context)) return
 
-        AppLockSession.onAppBackgrounded()
-        val timeoutSeconds = Settings.app_lock_timeout_seconds.field.value
+        AppLockSession.onAppBackgrounded(elapsedNow = elapsedRealtimeProvider())
+        val timeoutSeconds = if (Settings.isInitialized) {
+            Settings.app_lock_timeout_seconds.field.value
+        } else {
+            AppLockTimeout.DEFAULT.seconds
+        }
         if (timeoutSeconds == AppLockTimeout.IMMEDIATELY.seconds) {
             AppLockSession.lock()
         }
@@ -28,10 +33,15 @@ class AppLockLifecycleObserver(
 
     override fun onStart(owner: LifecycleOwner) {
         val isEnabled = AppLockRepository.isEnabled(context)
-        val timeoutSeconds = Settings.app_lock_timeout_seconds.field.value
+        val timeoutSeconds = if (Settings.isInitialized) {
+            Settings.app_lock_timeout_seconds.field.value
+        } else {
+            AppLockTimeout.DEFAULT.seconds
+        }
         AppLockSession.onAppForegrounded(
             timeoutSeconds = timeoutSeconds,
-            isLockConfigured = isEnabled
+            isLockConfigured = isEnabled,
+            elapsedNow = elapsedRealtimeProvider()
         )
     }
 
