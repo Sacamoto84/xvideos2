@@ -34,7 +34,8 @@ class WebServerService : Service() {
         val action = intent?.action ?: ACTION_START
         when (action) {
             ACTION_START -> {
-                val port = intent?.getIntExtra(EXTRA_PORT, Settings.web_server_port.field.value) ?: 8080
+                val defaultPort = if (Settings.isInitialized) Settings.web_server_port.field.value else 8080
+                val port = intent?.getIntExtra(EXTRA_PORT, defaultPort) ?: defaultPort
                 startWebServer(port)
             }
             ACTION_STOP -> {
@@ -79,7 +80,7 @@ class WebServerService : Service() {
     }
 
     private fun acquireLocks() {
-        val keepAwake = Settings.web_server_keep_awake.field.value
+        val keepAwake = if (Settings.isInitialized) Settings.web_server_keep_awake.field.value else true
         if (!keepAwake) return
 
         runCatching {

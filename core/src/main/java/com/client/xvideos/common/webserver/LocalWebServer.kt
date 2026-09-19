@@ -1,6 +1,7 @@
 package com.client.xvideos.common.webserver
 
 import android.content.Context
+import com.client.xvideos.common.io.normalizeRelativePath
 import com.client.xvideos.common.json.AppJson
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -26,6 +27,7 @@ import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import timber.log.Timber
+import java.net.BindException
 import java.util.concurrent.atomic.AtomicReference
 
 object LocalWebServer {
@@ -56,6 +58,9 @@ object LocalWebServer {
                     allowHeader(HttpHeaders.ContentType)
                     allowHeader(HttpHeaders.Range)
                     allowHeader(HttpHeaders.Authorization)
+                    exposeHeader(HttpHeaders.ContentRange)
+                    exposeHeader(HttpHeaders.AcceptRanges)
+                    exposeHeader(HttpHeaders.ContentLength)
                     allowMethod(HttpMethod.Get)
                     allowMethod(HttpMethod.Options)
                     allowMethod(HttpMethod.Head)
@@ -83,8 +88,14 @@ object LocalWebServer {
             serverUrl
         }.onFailure { err ->
             Timber.e(err, "LocalWebServer: сбой запуска сервера на порту $port")
-            serverRef.set(null)
-            WebServerState.setError(err.message ?: "Ошибка запуска сервера")
+            val current = serverRef.getAndSet(null)
+            runCatching { current?.stop(gracePeriodMillis = 100, timeoutMillis = 500) }
+            val errorMessage = if (err is BindException || err.message?.contains("Address already in use", ignoreCase = true) == true) {
+                "Порт $port уже занят другим приложением"
+            } else {
+                err.message ?: "Ошибка запуска сервера"
+            }
+            WebServerState.setError(errorMessage)
             WebServerState.updateRunning(false)
         }
     }
@@ -106,14 +117,15 @@ object LocalWebServer {
         }
 
         get("/assets/{path...}") {
-            val path = call.parameters.getAll("path")?.joinToString("/") ?: ""
-            if (path.isBlank() || path.contains("..")) {
+            val rawPath = call.parameters.getAll("path")?.joinToString("/") ?: ""
+            val safePath = runCatching { normalizeRelativePath(rawPath) }.getOrNull()
+            if (safePath.isNullOrBlank()) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
 
             val bytes = runCatching {
-                appContext.assets.open("web/$path").use { it.readBytes() }
+                appContext.assets.open("web/$safePath").use { it.readBytes() }
             }.getOrNull()
 
             if (bytes == null) {
@@ -121,7 +133,7 @@ object LocalWebServer {
                 return@get
             }
 
-            val contentType = determineAssetContentType(path)
+            val contentType = determineAssetContentType(safePath)
             call.respondBytes(bytes, contentType)
         }
     }
@@ -138,9 +150,10 @@ object LocalWebServer {
         }
     }
 
-    private fun Routing.configureApiRoutes(ip: String, port: Int) {
+    private fun Routing.configureApiRoutes(defaultIp: String, port: Int) {
         get("/api/status") {
-            val status = LocalLibraryProvider.getStatus(ip, port)
+            val currentIp = WebServerState.ipAddress.value ?: defaultIp
+            val status = LocalLibraryProvider.getStatus(currentIp, port)
             call.respond(status)
         }
 

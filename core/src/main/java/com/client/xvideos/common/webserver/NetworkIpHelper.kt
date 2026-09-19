@@ -2,6 +2,7 @@ package com.client.xvideos.common.webserver
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import timber.log.Timber
 import java.net.Inet4Address
@@ -11,52 +12,71 @@ import java.util.Collections
 object NetworkIpHelper {
 
     /**
-     * Возвращает локальный IPv4-адрес устройства в текущей сети Wi-Fi или в режиме точки доступа.
+     * Возвращает локальный IPv4-адрес устройства в текущей сети Wi-Fi или в режиме точки доступа (Hotspot).
      * Приоритет:
-     * 1. Активное сетевое соединение через ConnectivityManager (Android 10+).
-     * 2. Перебор сетевых интерфейсов (wlan, ap, rndis, eth) для поддержки Hotspot / USB-тетеринга.
+     * 1. Активное локальное соединение (Wi-Fi или Ethernet) через ConnectivityManager.
+     * 2. Перебор сетевых интерфейсов с приоритетом точек доступа (ap, softap, swlan, wlan) для Hotspot/USB-тетеринга,
+     *    игнорируя сотовые интерфейсы (rmnet, ccmni, pdp, tun).
      */
     fun getLocalIpAddress(context: Context): String? {
         return runCatching {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-            val activeNetwork = cm?.activeNetwork
-            val linkProps = activeNetwork?.let { cm.getLinkProperties(it) }
-
-            val ipFromActiveNetwork = linkProps?.linkAddresses
-                ?.map { it.address }
-                ?.filterIsInstance<Inet4Address>()
-                ?.firstOrNull { !it.isLoopbackAddress && it.isSiteLocalAddress }
-                ?.hostAddress
-
-            if (!ipFromActiveNetwork.isNullOrBlank()) {
-                return@runCatching ipFromActiveNetwork
-            }
-
-            // Fallback: сканирование интерфейсов (для режима Wi-Fi Hotspot / раздачи с телефона)
-            val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
-            val prioritizedInterfaces = interfaces.sortedByDescending { nif ->
-                val name = nif.name.lowercase()
-                when {
-                    name.startsWith("wlan") -> 3
-                    name.startsWith("ap") -> 2
-                    name.startsWith("rndis") || name.startsWith("eth") -> 1
-                    else -> 0
-                }
-            }
-
-            for (nif in prioritizedInterfaces) {
-                if (!nif.isUp || nif.isLoopback) continue
-                for (addr in Collections.list(nif.inetAddresses)) {
-                    if (addr is Inet4Address && !addr.isLoopbackAddress && !addr.isLinkLocalAddress) {
-                        val host = addr.hostAddress
-                        if (!host.isNullOrBlank()) return@runCatching host
-                    }
-                }
-            }
-            null
+            findActiveLocalIp(context) ?: findInterfaceIp()
         }.onFailure {
             Timber.e(it, "NetworkIpHelper: ошибка определения IP адреса")
         }.getOrNull()
+    }
+
+    private fun findActiveLocalIp(context: Context): String? {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return null
+        val activeNetwork = cm.activeNetwork ?: return null
+        val caps = cm.getNetworkCapabilities(activeNetwork) ?: return null
+        val isLocalTransport = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+        if (!isLocalTransport) return null
+
+        val linkProps = cm.getLinkProperties(activeNetwork)
+        return linkProps?.linkAddresses
+            ?.map { it.address }
+            ?.filterIsInstance<Inet4Address>()
+            ?.firstOrNull { !it.isLoopbackAddress && it.isSiteLocalAddress }
+            ?.hostAddress
+    }
+
+    private fun findInterfaceIp(): String? {
+        val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
+        val prioritized = interfaces.sortedByDescending { getInterfacePriority(it.name.lowercase()) }
+
+        for (nif in prioritized) {
+            val name = nif.name.lowercase()
+            if (isIgnoredInterface(name) || !nif.isUp || nif.isLoopback) continue
+            for (addr in Collections.list(nif.inetAddresses)) {
+                if (addr is Inet4Address && !addr.isLoopbackAddress && !addr.isLinkLocalAddress) {
+                    val host = addr.hostAddress
+                    if (!host.isNullOrBlank()) return host
+                }
+            }
+        }
+        return null
+    }
+
+    private fun getInterfacePriority(name: String): Int {
+        return when {
+            name.startsWith("ap") || name.startsWith("softap") || name.startsWith("swlan") -> 4
+            name.startsWith("wlan") -> 3
+            name.startsWith("rndis") || name.startsWith("eth") -> 2
+            isIgnoredInterface(name) -> -1
+            else -> 0
+        }
+    }
+
+    private fun isIgnoredInterface(name: String): Boolean {
+        return name.startsWith("rmnet") ||
+            name.startsWith("ccmni") ||
+            name.startsWith("pdp") ||
+            name.startsWith("wwan") ||
+            name.startsWith("clat") ||
+            name.startsWith("tun") ||
+            name.startsWith("dummy")
     }
 
     /**

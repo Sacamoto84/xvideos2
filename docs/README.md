@@ -126,6 +126,7 @@
 | [Проход 119 (Поддержка //cdn в плеере X, защита ItemProfilePagingSource 404, buildJsonObject в L, Material 3 Surface, тесты)](CODE_REVIEW_2026-09-17_v98.md) | 17.09.2026 | `4904bd0` + рабочее дерево | закрыт полностью |
 | [Проход 120 (Гейты Detekt в L, синхронизация лайков L, точность истории X, безопасность бэкапа, FileDB clear, M3, тесты)](CODE_REVIEW_2026-09-19_v99.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 121 (Безопасность PIN AppLock, возобновление X, защита Settings в ProcessLifecycleOwner, кэш Regex L, M3)](CODE_REVIEW_2026-09-19_v100.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 122 (Сброс ошибок WebServerState, Hotspot IP при LTE, Path Traversal и точки папок L, async QR)](CODE_REVIEW_2026-09-19_v101.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

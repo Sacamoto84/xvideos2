@@ -26,11 +26,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -55,6 +56,8 @@ import com.client.xvideos.screenSettings.components.SettingsRowTextPrimary
 import com.client.xvideos.screenSettings.components.SettingsRowTextSecondary
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Suppress("DEPRECATION")
 @Composable
@@ -70,15 +73,17 @@ internal fun WebServerSettingsSection() {
     val keepAwake = Settings.web_server_keep_awake.field.collectAsStateWithLifecycle().value
     val port = Settings.web_server_port.field.collectAsStateWithLifecycle().value
 
-    val qrBitmap = remember(serverUrl) {
-        serverUrl?.let { url ->
-            QrCodeGenerator.generateImageBitmap(
-                content = url,
-                sizePx = 480,
-                darkColor = android.graphics.Color.BLACK,
-                lightColor = android.graphics.Color.WHITE,
-                margin = 1
-            )
+    val qrBitmap by produceState<ImageBitmap?>(initialValue = null, serverUrl) {
+        value = serverUrl?.let { url ->
+            withContext(Dispatchers.Default) {
+                QrCodeGenerator.generateImageBitmap(
+                    content = url,
+                    sizePx = 480,
+                    darkColor = android.graphics.Color.BLACK,
+                    lightColor = android.graphics.Color.WHITE,
+                    margin = 1
+                )
+            }
         }
     }
 

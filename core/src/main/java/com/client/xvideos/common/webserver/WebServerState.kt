@@ -40,9 +40,13 @@ object WebServerState {
         _ipAddress.value = ip
         _port.value = port
         _networkName.value = netName
-        if (!running) {
+        if (running) {
             _lastError.value = null
         }
+    }
+
+    fun clearError() {
+        _lastError.value = null
     }
 
     fun setError(error: String?) {
