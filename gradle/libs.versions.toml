@@ -1,7 +1,7 @@
 [versions]
 accompanistSystemuicontroller = "0.36.0"
 activityKtx = "1.13.0"
-agp = "9.4.0"
+agp = "9.4.1"
 
 coil = "3.6.2"
 componentsResources = "1.12.0"
