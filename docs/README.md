@@ -128,6 +128,13 @@
 | [Проход 121 (Безопасность PIN AppLock, возобновление X, защита Settings в ProcessLifecycleOwner, кэш Regex L, M3)](CODE_REVIEW_2026-09-19_v100.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 122 (Сброс ошибок WebServerState, Hotspot IP при LTE, Path Traversal и точки папок L, async QR)](CODE_REVIEW_2026-09-19_v101.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 123 (Коллизии KDownloader, фантомные загрузки X, Zoom BackHandler R, гонки пагинации L, тесты)](CODE_REVIEW_2026-09-19_v102.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 124 (Сброс зума по Back в X/L, гонки и статус ScreenLAlbumListSM, GraphQL L, Case-insensitive ниши, тесты)](CODE_REVIEW_2026-09-19_v103.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 125 (UX поиска авторов и профили R, иерархия Back в L, сохранение альбома, deep links Splash, тесты)](CODE_REVIEW_2026-09-19_v104.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 126 (Бейдж верификации R, верхняя панель и BackHandler в ScreenRedProfile/ScreenLAlbumLandingTag/ScreenAlbumList, тесты)](CODE_REVIEW_2026-09-19_v105.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 127 (Скрытие меню стран и fallback флага X, навигация Назад в видеоплеерах X/R/L, заглушка поиска и сетка 3x3 L, тесты)](CODE_REVIEW_2026-09-19_v106.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 128 (Возврат из под-табов X, BackHandler и ключи ScreenTags/Favorites, очистка поиска R, Back в Settings/Haptic, тесты)](CODE_REVIEW_2026-09-19_v107.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 129 (Ключ и кнопка Назад ScreenAlbum, иконки закладки AlbumInfoButtonSaveAlbum, ошибка воспроизведения L, тесты)](CODE_REVIEW_2026-09-19_v108.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 130 (Аудит ScreenKey Voyager, навигация Назад в табах R/L и плеерах X, ScreenRedManageBlock UX, тесты)](CODE_REVIEW_2026-09-19_v109.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

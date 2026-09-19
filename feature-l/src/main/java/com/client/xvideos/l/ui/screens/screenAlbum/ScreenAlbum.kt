@@ -13,10 +13,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
@@ -45,7 +49,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -76,7 +79,7 @@ import java.time.format.DateTimeFormatter
 
 class ScreenLAlbum(val idAlbum: Long) : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "LAlbum:$idAlbum"
 
     @OptIn(ExperimentalZoomableApi::class, ExperimentalMaterial3Api::class)
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -210,12 +213,20 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
                             if (parsed != null && parsed.id.isNotBlank()) {
 
-                                Row {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { navigator.pop() }) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Back",
+                                            tint = Theme.L.textColor
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     UrlImage( parsed.cover?.url.orEmpty(), modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
                                         .size(72.dp) )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Column {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f, fill = false)) {
                                         Text(parsed.title, color = Theme.L.textColor, style = Theme.L.Type.rowTitle)
                                         Text( "${parsed.number_of_animated_pictures} gifs / ${parsed.number_of_pictures} pictures", color = Theme.L.textColor )
                                     }
@@ -328,6 +339,18 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                     }
                                 }
                             } else if (isLoading) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(onClick = { navigator.pop() }) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Back",
+                                            tint = Theme.L.textColor
+                                        )
+                                    }
+                                }
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()

@@ -42,6 +42,7 @@ fun ComposeVideoPlayer(
     onTap: () -> Unit = {},
     autoRotate: Boolean = false,
     zoomEnabled: Boolean = true,
+    resetZoomTrigger: Int = 0,
     onZoomChanged: ((Boolean) -> Unit)? = null,
     overlay: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -55,6 +56,14 @@ fun ComposeVideoPlayer(
 
     LaunchedEffect(zoomState.scale) {
         onZoomChanged?.invoke(isZoomActive(zoomState.scale))
+    }
+
+    LaunchedEffect(resetZoomTrigger) {
+        if (resetZoomTrigger > 0) {
+            coroutineScope.launch {
+                zoomState.changeScale(1.0f, Offset.Zero)
+            }
+        }
     }
 
     Box(modifier = modifier.clipToBounds()) {

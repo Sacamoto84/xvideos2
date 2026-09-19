@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.videoplayer.ui.isZoomActive
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lAnimationVideoUrl
 import com.client.xvideos.l.model.lFullScreenImageUrls
@@ -51,6 +52,8 @@ internal fun LFullScreenPage(
     autoPlay: Boolean,
     videoMuted: Boolean,
     seekDragEnabled: Boolean,
+    resetZoomTrigger: Int = 0,
+    onZoomChanged: (Boolean) -> Unit = {},
     onToggleFullScreen: () -> Unit
 ) {
     val zoomState = rememberZoomState()
@@ -70,6 +73,21 @@ internal fun LFullScreenPage(
     // Ключ именно settled, а не current: currentPage флипается на середине свайпа,
     // и reset() (это snapTo, не анимация) схлопывал картинку прямо на глазах.
     LaunchedEffect(isSettledPage) { if (!isSettledPage) zoomState.reset() }
+
+    val isZoomed = isZoomActive(zoomState.scale)
+    LaunchedEffect(isZoomed, isCurrentPage) {
+        if (isCurrentPage) {
+            onZoomChanged(isZoomed)
+        }
+    }
+
+    LaunchedEffect(resetZoomTrigger) {
+        if (resetZoomTrigger > 0 && isCurrentPage) {
+            coroutineScope.launch {
+                zoomState.changeScale(1.0f, Offset.Zero)
+            }
+        }
+    }
 
     // clipToBounds по границам страницы: зум и поворот (rotationZ + scale в
     // UrlImage) рисуют за пределами layout-границ, из-за чего соседние страницы
@@ -104,6 +122,12 @@ internal fun LFullScreenPage(
                     isMuted = videoMuted,
                     seekDragEnabled = seekDragEnabled,
                     rotate = rotate,
+                    resetZoomTrigger = resetZoomTrigger,
+                    onZoomChanged = { videoZoomed ->
+                        if (isCurrentPage) {
+                            onZoomChanged(videoZoomed)
+                        }
+                    },
                     modifier = Modifier.fillMaxSize(),
                     onTap = onToggleFullScreen
                 )

@@ -6,10 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,8 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.noRippleClickable
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
@@ -45,6 +51,8 @@ internal fun LFullScreenVideo(
     isMuted: Boolean,
     seekDragEnabled: Boolean,
     rotate: Boolean,
+    resetZoomTrigger: Int = 0,
+    onZoomChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
     onTap: () -> Unit
 ) {
@@ -99,7 +107,9 @@ internal fun LFullScreenVideo(
             playerHost = playerHost,
             onClick = onTap,
             autoRotate = rotate,
-            seekDragEnabled = seekDragEnabled
+            seekDragEnabled = seekDragEnabled,
+            resetZoomTrigger = resetZoomTrigger,
+            onZoomChanged = onZoomChanged
         )
 
         AnimatedVisibility(
@@ -119,6 +129,23 @@ internal fun LFullScreenVideo(
                 modifier = Modifier.align(Alignment.Center),
                 color = Color.LightGray
             )
+        }
+
+        if (playbackError) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.75f))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Ошибка воспроизведения",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }

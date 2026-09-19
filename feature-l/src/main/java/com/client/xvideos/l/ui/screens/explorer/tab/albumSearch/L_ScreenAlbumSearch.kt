@@ -40,11 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardActions
 import com.client.xvideos.common.ui.IncognitoKeyboard
+import androidx.activity.compose.BackHandler
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -74,7 +74,7 @@ import javax.inject.Inject
 
 object L_ScreenAlbumSearch : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_ScreenAlbumSearch"
 
     private fun readResolve(): Any = L_ScreenAlbumSearch
 
@@ -85,6 +85,7 @@ object L_ScreenAlbumSearch : Screen {
         val vm: ScreenLAlbumSearchSM = getScreenModel()
 
         val searchText = vm.searchText.collectAsStateWithLifecycle().value
+        BackHandler(enabled = searchText.isNotEmpty()) { vm.searchText.value = "" }
         val result = vm.result.collectAsStateWithLifecycle().value
         val isLoading = vm.isLoading.collectAsStateWithLifecycle().value
         val sections = result?.sections
@@ -127,6 +128,24 @@ object L_ScreenAlbumSearch : Screen {
                                 .padding(top = 32.dp),
                             contentAlignment = Alignment.Center
                         ) { CircularProgressIndicator() }
+                    }
+                }
+
+                if (!isLoading && hasNoSearchResults(result)) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Ничего не найдено",
+                                color = Theme.L.textColor,
+                                fontSize = 18.sp,
+                                fontFamily = Theme.L.fontFamilyKarla
+                            )
+                        }
                     }
                 }
 
@@ -314,6 +333,12 @@ internal fun createAlbumSearchFilter(section: Landing_page_albumSection, query: 
         content_id = ContentId.All,
         searchQuery = query.trim()
     )
+}
+
+internal fun hasNoSearchResults(result: Landing_page_albumType?): Boolean {
+    if (result == null) return false
+    val sections = result.sections
+    return sections.isNullOrEmpty() || sections.all { it.items.isEmpty() }
 }
 
 

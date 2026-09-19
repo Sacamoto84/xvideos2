@@ -33,7 +33,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -65,7 +64,7 @@ import javax.inject.Inject
 
 object L_ScreenAlbumTopHits : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_ScreenAlbumTopHits"
 
     private fun readResolve(): Any = L_ScreenAlbumTopHits
 
@@ -108,7 +107,7 @@ object L_ScreenAlbumTopHits : Screen {
 
                         val itemWidth = (screenWidth - 8.dp) / 3
 
-                        item.items.dropLast(1).forEach { album ->
+                        item.items.take(9).forEach { album ->
                             Box(
                                 modifier = Modifier.width(itemWidth).padding(vertical = 2.dp)
                             ) {

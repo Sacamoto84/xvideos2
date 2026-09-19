@@ -29,6 +29,7 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,6 +59,8 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     interface Factory : ScreenModelFactory {
         fun create(filter: AlbumListFilter?): ScreenLAlbumListSM
     }
+
+    private var loadJob: Job? = null
 
     //Глобальный фильтр
     private val _filter = MutableStateFlow(inFilter ?: AlbumListFilter())
@@ -119,18 +122,26 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     }
 
     fun loadInitialData() {
-        screenModelScope.launch {
+        loadJob?.cancel()
+        loadJob = screenModelScope.launch {
             try {
+                _isRequest.value = true
+                bigList.clear()
+                bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING)
+
                 val albumListResult = withContext(Dispatchers.IO) {
                     luscious.getAlbumList(1, filter.value)
                 }
                 if (albumListResult.isFailure) {
+                    bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
+                    val errorMsg = albumListResult.exceptionOrNull()?.message ?: "Error loading initial data"
+                    Timber.w("loadInitialData failure: $errorMsg")
+                    SnackBar.error(errorMsg)
                     return@launch
                 }
 
                 val res = albumListResult.getOrThrow()
                 info.value = res.info
-                bigList.clear()
                 bigList[0] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
 
                 val agr = withContext(Dispatchers.IO) {
@@ -149,12 +160,17 @@ class ScreenLAlbumListSM @AssistedInject constructor(
             } catch (e: Exception) {
                 Timber.e(e, "Error loading initial data")
                 SnackBar.error(e.message ?: "Error loading initial data")
+                bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
+            } finally {
+                _isRequest.value = false
             }
         }
     }
 
     override fun onDispose() {
         super.onDispose()
+        loadJob?.cancel()
+        loadJob = null
         Timber.d("ScreenLAlbumListSM onDispose")
     }
 

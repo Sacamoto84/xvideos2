@@ -22,7 +22,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,7 +51,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -90,6 +95,8 @@ object L_ScreenAlbumList : Screen {
 
     private fun readResolve(): Any = L_ScreenAlbumList
 
+    override val key: ScreenKey = "L_ScreenAlbumList"
+
     fun create(filter: LAlbumListFilter?, title: String = ""): Screen = ScreenLAlbumList(filter, title)
 
     @Composable
@@ -102,7 +109,7 @@ private class ScreenLAlbumList(
     private val initialFilter: LAlbumListFilter?,
     private val title: String
 ) : Screen {
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenLAlbumList:${initialFilter?.hashCode() ?: 0}:$title"
 
     @Composable
     override fun Content() {
@@ -118,6 +125,9 @@ private fun Screen.ScreenAlbumListContent(
 )
 {
         val navigator = LocalNavigator.currentOrThrow
+        BackHandler(enabled = navigator.canPop) {
+            navigator.pop()
+        }
         val vm = getScreenModel<ScreenLAlbumListSM, ScreenLAlbumListSM.Factory> { factory ->
             factory.create(initialFilter)
         }
@@ -203,7 +213,8 @@ private fun Screen.ScreenAlbumListContent(
                         title = title,
                         topInset = topInset,
                         haptic = haptic,
-                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) }
+                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
+                        onBackClick = if (navigator.canPop && title.isNotEmpty()) { { navigator.pop() } } else null
                     )
 
                     val status = vm.bigList[page]?.status
@@ -240,7 +251,8 @@ private fun AlbumListPageGrid(
     title: String,
     topInset: Dp,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    onAlbumClick: (Long) -> Unit
+    onAlbumClick: (Long) -> Unit,
+    onBackClick: (() -> Unit)? = null
 ) {
     LazyVerticalGridScrollbar(
         state = stateGrid,
@@ -260,9 +272,23 @@ private fun AlbumListPageGrid(
                             if (title.isNotEmpty()) Modifier.height(topInset + 40.dp) else Modifier.height(topInset)
                         )
                         .background(Theme.L.red)
-                        .padding(start = 24.dp), contentAlignment = Alignment.CenterStart
+                        .padding(start = if (onBackClick != null) 4.dp else 24.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
+                    if (title.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (onBackClick != null) {
+                                IconButton(onClick = onBackClick) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Назад",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                            Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
+                        }
+                    }
                 }
             }
 

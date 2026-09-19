@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.videoplayer
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -56,7 +57,7 @@ class ScreenX_LocalVideoPlayer(
     val item: ItemsX? = null,
 ) : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenX_LocalVideoPlayer:$fileUrl"
 
     @OptIn(UnstableApi::class)
     @Composable
@@ -122,10 +123,24 @@ class ScreenX_LocalVideoPlayer(
             }
         }
 
+        var isZoomed by remember { mutableStateOf(false) }
+        var resetZoomTrigger by remember { mutableIntStateOf(0) }
+
+        // Нажатие кнопки «Назад» при зуме сбрасывает масштаб, иначе выходит из плеера
+        BackHandler {
+            if (isZoomed) {
+                resetZoomTrigger++
+            } else {
+                navigator.pop()
+            }
+        }
+
         Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
             ComposeVideoPlayer(
                 playerHost = host,
                 modifier = Modifier.fillMaxSize(),
+                resetZoomTrigger = resetZoomTrigger,
+                onZoomChanged = { isZoomed = it },
                 onTap = { host.togglePlayPause() },
                 overlay = {
                     IconButton(

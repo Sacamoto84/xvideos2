@@ -86,6 +86,7 @@ object CountryState {
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 fun ComposeCountry(modifier: Modifier = Modifier) {
 
@@ -139,13 +140,14 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                                 .fillMaxWidth().padding(vertical = 3.dp)
                                 .padding(start = 8.dp)
                                 .clickable {
+                                    state.expanded = false
                                     scope.launchCatching(message = "Смена страны не удалась: ${it.name}") {
 
                                         val htmlContent = readHtmlFromURLWebView(normalizeXUrl(it.url))
-                                        val flag = parseSiteCountryFlag(htmlContent)
+                                        val flag = parseSiteCountryFlag(htmlContent) ?: getFlagEmoji(it.flagClass)
 
                                         withContext(Dispatchers.Main) {
-                                            flag?.let { selectedFlag -> CountryState.onCountrySelected(selectedFlag) }
+                                            CountryState.onCountrySelected(flag)
                                             Toast.makeText(
                                                 AppContextHolder.applicationContext,
                                                 "${getFlagEmoji(it.flagClass)} ${it.name}",

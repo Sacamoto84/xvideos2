@@ -54,4 +54,20 @@ class NichesFilterAndSortTest {
         val desc = filterAndSortNiches(sampleNiches, query = "", order = Order.NICHES_NAME_Z_A)
         assertEquals(listOf("Blowjob", "Babe", "Anal", "Amateurs"), desc.map { it.name })
     }
+
+    @Test
+    fun `sorts by name case-insensitively with mixed casing`() {
+        val mixedNiches = listOf(
+            Niche(id = "1", name = "babe", subscribers = 10L, gifs = 5L),
+            Niche(id = "2", name = "Amateurs", subscribers = 20L, gifs = 10L),
+            Niche(id = "3", name = "anal", subscribers = 30L, gifs = 15L),
+            Niche(id = "4", name = "Blowjob", subscribers = 40L, gifs = 20L)
+        )
+
+        val asc = filterAndSortNiches(mixedNiches, query = "", order = Order.NICHES_NAME_A_Z)
+        assertEquals(listOf("Amateurs", "anal", "babe", "Blowjob"), asc.map { it.name })
+
+        val desc = filterAndSortNiches(mixedNiches, query = "", order = Order.NICHES_NAME_Z_A)
+        assertEquals(listOf("Blowjob", "babe", "anal", "Amateurs"), desc.map { it.name })
+    }
 }

@@ -19,7 +19,6 @@ import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
@@ -37,7 +36,6 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import timber.log.Timber
 import javax.inject.Inject
 
 import androidx.compose.runtime.CompositionLocalProvider
@@ -46,7 +44,7 @@ import com.client.xvideos.r.ui.explorer.RNavigationState
 
 class R_Screen_Root : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "R_Screen_Root"
 
     @OptIn(ExperimentalVoyagerApi::class)
     @Composable
@@ -59,7 +57,15 @@ class R_Screen_Root : Screen {
 
             val percentDownload = vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value
 
-            BackHandler { Timber.i("iii BackHandler Root") }
+            val isAnyDialogOpen = savedRed.collections.visibleDialog ||
+                savedRed.collections.visibleDialogCreateNew ||
+                vm.block.blockVisibleDialog
+
+            BackHandler(enabled = isAnyDialogOpen) {
+                if (savedRed.collections.visibleDialog) savedRed.collections.visibleDialog = false
+                if (savedRed.collections.visibleDialogCreateNew) savedRed.collections.visibleDialogCreateNew = false
+                if (vm.block.blockVisibleDialog) vm.block.blockVisibleDialog = false
+            }
 
             //Диалог коллекции
             if (savedRed.collections.visibleDialog) { R_DialogCollection(savedRed = {savedRed}) }

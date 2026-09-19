@@ -4,8 +4,14 @@ import com.client.xvideos.common.theme.Theme
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,7 +46,7 @@ import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
-import com.composeunstyled.Text
+import androidx.compose.material3.Text
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -67,12 +73,16 @@ class ScreenCollectionName(
 
         val selectedCollection = savedRed.collections.selectedCollection.collectAsStateWithLifecycle().value
 
-        BackHandler {
+        val closeCollection = {
             Timber.d("BackHandler SavedCollectionTab")
             savedRed.collections.selectedCollection.value = null
             if (popOnBack) {
                 navigator.pop()
             }
+        }
+
+        BackHandler {
+            closeCollection()
         }
 
         val columnSelect = normalizeRColumnCount(
@@ -83,13 +93,25 @@ class ScreenCollectionName(
         LaunchedEffect(columnSelect) { vm.likedHost.columns = columnSelect }
 
         Scaffold(topBar = {
-            Text(
-                ">Коллекция>${selectedCollection ?: collectionName}",
-                modifier = Modifier.padding(start = 8.dp),
-                color = Theme.R.colorYellow,
-                fontSize = 18.sp,
-                fontFamily = Theme.R.fontFamilyPopinsRegular
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = closeCollection) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = Theme.R.colorYellow
+                    )
+                }
+                Text(
+                    ">Коллекция>${selectedCollection ?: collectionName}",
+                    modifier = Modifier.padding(start = 4.dp),
+                    color = Theme.R.colorYellow,
+                    fontSize = 18.sp,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular
+                )
+            }
         }) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){
                 LazyRow123(

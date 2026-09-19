@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -56,7 +57,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
@@ -102,7 +102,7 @@ class L_FullScreenImage(
     ) : Screen, Parcelable {
 
     @IgnoredOnParcel
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_FullScreenImage:$albumName:${item.id}:$payloadKey"
 
     @OptIn(
         ExperimentalFoundationApi::class,
@@ -137,6 +137,8 @@ class L_FullScreenImage(
         val navigator = LocalNavigator.currentOrThrow
 
         var isClosing by remember { mutableStateOf(false) }
+        var isCurrentPageZoomed by remember { mutableStateOf(false) }
+        var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
         var corruptCancel by remember { mutableStateOf(false) }
         val coroutineScope = rememberCoroutineScope()
@@ -163,13 +165,29 @@ class L_FullScreenImage(
             }
         }
 
-        BackHandler { isClosing = true }
+        // Нажатие кнопки «Назад» при активном зуме плавно сбрасывает масштаб до 1.0x
+        BackHandler(enabled = isCurrentPageZoomed) {
+            resetZoomTrigger++
+        }
+
+        // В полноэкранном режиме (контролы скрыты) первый жест «Назад» возвращает контролы
+        BackHandler(enabled = !isCurrentPageZoomed && isFullScreen) {
+            isFullScreen = false
+        }
+
+        // Выход из экрана просмотра
+        BackHandler(enabled = !isCurrentPageZoomed && !isFullScreen) {
+            isClosing = true
+        }
 
 
         // Текущий индекс из pagerState
         val currentIndex = pagerState.currentPage
 
-        LaunchedEffect(currentIndex) { if (currentIndex != initialIndex) { corruptCancel = true } }
+        LaunchedEffect(currentIndex) {
+            isCurrentPageZoomed = false
+            if (currentIndex != initialIndex) { corruptCancel = true }
+        }
 
 
         // Автоматическая прокрутка LazyRow к текущему элементу.
@@ -214,6 +232,7 @@ class L_FullScreenImage(
                 VerticalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
+                    userScrollEnabled = !isCurrentPageZoomed,
                     pageSpacing = 0.dp,
                     beyondViewportPageCount = 1,
                     // url_to_original не уникален (см. L_LazyRowPictureDetails): дубль
@@ -231,6 +250,8 @@ class L_FullScreenImage(
                         videoMuted = videoMuted,
                         // Пейджер листается вертикально — горизонтальная перемотка не мешает.
                         seekDragEnabled = true,
+                        resetZoomTrigger = resetZoomTrigger,
+                        onZoomChanged = { zoomed -> isCurrentPageZoomed = zoomed },
                         onToggleFullScreen = { isFullScreen = isFullScreen.not() }
                     )
                 }
@@ -238,6 +259,7 @@ class L_FullScreenImage(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
+                userScrollEnabled = !isCurrentPageZoomed,
                 pageSpacing = 0.dp,
                 beyondViewportPageCount = 1,
                 reverseLayout = false,
@@ -256,6 +278,8 @@ class L_FullScreenImage(
                     // Зона перемотки в нижней трети плеера перехватывала
                     // горизонтальный свайп и страницы не листались.
                     seekDragEnabled = false,
+                    resetZoomTrigger = resetZoomTrigger,
+                    onZoomChanged = { zoomed -> isCurrentPageZoomed = zoomed },
                     onToggleFullScreen = { isFullScreen = isFullScreen.not() }
                 )
             }

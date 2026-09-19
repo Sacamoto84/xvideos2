@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -125,11 +126,15 @@ fun L_CollectionNameContent(
         )
     }
 
-    BackHandler {
+    val handleExit = {
         Timber.d("BackHandler SavedCollectionTab")
         onExitCollection?.invoke() ?: run {
             savedL.collection.currentCollectionName = null
         }
+    }
+
+    BackHandler {
+        handleExit()
     }
 
     val columnSelect = Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
@@ -143,7 +148,8 @@ fun L_CollectionNameContent(
             searchQuery = searchQuery,
             onSearchChange = { host.collectionSearchQuery = it },
             duplicateCount = duplicateGroups.sumOf { it.items.size - 1 },
-            onDuplicatesClick = { host.collectionDuplicateDialogVisible = true }
+            onDuplicatesClick = { host.collectionDuplicateDialogVisible = true },
+            onExitCollection = handleExit
         )
     }) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){
@@ -163,7 +169,8 @@ private fun LCollectionDetailTopBar(
     searchQuery: String,
     onSearchChange: (String) -> Unit,
     duplicateCount: Int,
-    onDuplicatesClick: () -> Unit
+    onDuplicatesClick: () -> Unit,
+    onExitCollection: (() -> Unit)? = null
 ) {
     var searchVisible by rememberSaveable(collectionName) { mutableStateOf(false) }
     var menuExpanded by remember { mutableStateOf(false) }
@@ -173,6 +180,15 @@ private fun LCollectionDetailTopBar(
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onExitCollection != null) {
+                IconButton(onClick = onExitCollection) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = Theme.L.primaryColor
+                    )
+                }
+            }
             Text(
                 ">$collectionName",
                 modifier = Modifier.weight(1f),

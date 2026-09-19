@@ -182,6 +182,7 @@ fun DashboardsPaginatedListScreen(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
+@Suppress("DEPRECATION")
 @Composable
 fun DashboardsPaginatedListContent(
     items: ImmutableList<ItemsX>,

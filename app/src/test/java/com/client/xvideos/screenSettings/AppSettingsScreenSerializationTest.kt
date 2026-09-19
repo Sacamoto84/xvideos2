@@ -1,0 +1,44 @@
+package com.client.xvideos.screenSettings
+
+import com.client.xvideos.HapticDemoScreen
+import com.client.xvideos.screenRoot.MenuScreen
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+
+class AppSettingsScreenSerializationTest {
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> roundTrip(value: T): T {
+        val bytes = ByteArrayOutputStream().use { baos ->
+            ObjectOutputStream(baos).use { oos -> oos.writeObject(value) }
+            baos.toByteArray()
+        }
+        return ByteArrayInputStream(bytes).use { bais ->
+            ObjectInputStream(bais).use { ois -> ois.readObject() as T }
+        }
+    }
+
+    @Test
+    fun `AppSettingsScreen serializes and deserializes properly with stable key`() {
+        val restored = roundTrip(AppSettingsScreen)
+        assertEquals("AppSettingsScreen", restored.key)
+        assertEquals(AppSettingsScreen, restored)
+    }
+
+    @Test
+    fun `HapticDemoScreen serializes and deserializes properly with stable key`() {
+        val restored = roundTrip(HapticDemoScreen)
+        assertEquals("HapticDemoScreen", restored.key)
+        assertEquals(HapticDemoScreen, restored)
+    }
+
+    @Test
+    fun `MenuScreen serializes and deserializes properly`() {
+        val restored = roundTrip(MenuScreen)
+        assertEquals(MenuScreen, restored)
+    }
+}

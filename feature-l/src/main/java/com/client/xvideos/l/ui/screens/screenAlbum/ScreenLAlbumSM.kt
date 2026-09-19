@@ -132,6 +132,13 @@ class ScreenLAlbumSM @AssistedInject constructor(
             val details = albumInfo.value?.albumInfo?.value
             if (details != null && details.id.isNotBlank()) {
                 saved.albums.add(details)
+                withContext(Dispatchers.Main) {
+                    SnackBar.success("Альбом сохранён")
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    SnackBar.error("Информация об альбоме ещё не загружена")
+                }
             }
         }
     }

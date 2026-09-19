@@ -46,7 +46,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.Navigator
@@ -75,7 +74,7 @@ class ScreenRedFullScreen(
     private val startIndex: Int = 0
 ) : Screen, ScreenTransition {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "RedFullScreen:${item.id}:$startIndex"
 
     @Composable
     override fun Content() {

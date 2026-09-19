@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
@@ -50,7 +49,7 @@ import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDet
  */
 object L_ScreenServerLikesTab : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_ScreenServerLikesTab"
 
     private fun readResolve(): Any = L_ScreenServerLikesTab
 

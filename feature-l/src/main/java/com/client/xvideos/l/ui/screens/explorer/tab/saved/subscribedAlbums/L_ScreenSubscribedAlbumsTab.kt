@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -64,7 +63,7 @@ import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
  */
 object L_ScreenSubscribedAlbumsTab : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_ScreenSubscribedAlbumsTab"
 
     private fun readResolve(): Any = L_ScreenSubscribedAlbumsTab
 

@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,7 +43,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -61,7 +61,7 @@ class ScreenX_VideoPlayer(
     val item: ItemsX? = null,
 ) : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenX_VideoPlayer:$url"
 
     @OptIn(UnstableApi::class)
     @Composable
@@ -79,6 +79,10 @@ class ScreenX_VideoPlayer(
             vm.exitFullScreen()
         }
 
+        BackHandler(enabled = !vm.isFullScreen && (vm.isError || vm.isLoading || vm.passedHLS.isBlank())) {
+            navigator.pop()
+        }
+
         when {
             vm.isError -> {
                 VideoPlayerErrorView(
@@ -87,7 +91,7 @@ class ScreenX_VideoPlayer(
                 )
             }
             vm.isLoading || vm.passedHLS.isBlank() -> {
-                VideoPlayerLoadingView()
+                VideoPlayerLoadingView(onBack = { navigator.pop() })
             }
             else -> {
                 VideoPlayerContentView(vm = vm, navigator = navigator)
@@ -174,14 +178,31 @@ private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
 }
 
 @Composable
-private fun VideoPlayerLoadingView() {
+private fun VideoPlayerLoadingView(onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
-        contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = Color.White)
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .displayCutoutPadding()
+                .padding(8.dp)
+                .align(Alignment.TopStart),
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Назад",
+                tint = Color.White,
+            )
+        }
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color.White)
+        }
     }
 }
 
@@ -207,6 +228,13 @@ private fun VideoPlayerContentView(
     }
 
     var areControlsVisible by remember { mutableStateOf(true) }
+    var isZoomed by remember { mutableStateOf(false) }
+    var resetZoomTrigger by remember { mutableIntStateOf(0) }
+
+    // Нажатие кнопки «Назад» при активном зуме сбрасывает масштаб до 1.0x
+    BackHandler(enabled = isZoomed) {
+        resetZoomTrigger++
+    }
 
     LaunchedEffect(vm.isFullScreen) {
         areControlsVisible = true
@@ -225,6 +253,8 @@ private fun VideoPlayerContentView(
         ComposeVideoPlayer(
             playerHost = host,
             modifier = Modifier.fillMaxSize(),
+            resetZoomTrigger = resetZoomTrigger,
+            onZoomChanged = { isZoomed = it },
             onTap = {
                 if (vm.isFullScreen) {
                     areControlsVisible = !areControlsVisible

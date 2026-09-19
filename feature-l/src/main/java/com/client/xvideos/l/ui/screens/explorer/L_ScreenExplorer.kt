@@ -17,10 +17,10 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.compose.BackHandler
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -62,7 +62,7 @@ private val EXPLORER_TAGS = persistentListOf(
 
 class L_ScreenExplorer : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_ScreenExplorer"
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -70,6 +70,10 @@ class L_ScreenExplorer : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<L_ScreenExplorerSM>()
+
+        BackHandler(enabled = vm.screenType != 0) {
+            vm.screenType = 0
+        }
 
         val savedL = vm.savedL
         val navigationDepth = rememberNavigationDepth()

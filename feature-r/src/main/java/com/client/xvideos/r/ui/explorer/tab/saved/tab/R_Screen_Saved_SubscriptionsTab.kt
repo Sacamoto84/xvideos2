@@ -39,7 +39,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -68,7 +67,7 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
 
     private fun readResolve(): Any = R_Screen_Saved_SubscriptionsTab
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "R_Screen_Saved_SubscriptionsTab"
 
     @Composable
     override fun Content() {

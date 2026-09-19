@@ -1,5 +1,6 @@
 package com.client.xvideos
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
@@ -49,6 +51,8 @@ object HapticDemoScreen : Screen {
 
     private fun readResolve(): Any = HapticDemoScreen
 
+    override val key: ScreenKey = "HapticDemoScreen"
+
     private data class HapticItem(
         val name: String,
         val desc: String,
@@ -60,6 +64,8 @@ object HapticDemoScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val haptic = LocalHapticFeedback.current
         val context = LocalContext.current
+
+        BackHandler { navigator.pop() }
 
         // Порядок — от самых «полезных» к специфичным.
         val items = remember {

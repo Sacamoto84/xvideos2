@@ -29,7 +29,7 @@ data class LRepositoryProtectionUiState(
     }
 }
 
-class Repository(
+open class Repository(
     fileDb: AppFileDatabase,
 ) {
 
@@ -96,13 +96,8 @@ class Repository(
         clearHtmlChallengeUiState()
     }
 
-    suspend fun openURI(
-        data: String,
-        config: RepositoryUriConfig = RepositoryUriConfig.DIRECT
-    ): Result<String> {
-        Timber.d("openURI()")
-
-        try {
+    private suspend fun ensureAuthenticated(): Result<Unit> {
+        return try {
             authMutex.withLock {
                 val username = Settings.l_login.field.value.trim()
                 val password = Settings.l_pass.field.value
@@ -117,85 +112,86 @@ class Repository(
                         }
                     }
                 }
+                Result.success(Unit)
             }
-        }
-        catch (e: CancellationException){
+        } catch (e: CancellationException) {
             throw e
-        }
-        catch (e: Exception){
+        } catch (e: Exception) {
             Timber.e(e, "openURI() login error")
-            return Result.failure(e)
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun getFromCacheRom(data: String): Result<String> {
+        return try {
+            val cacheKey = data.toMD5()
+            val res = cacheUrlStringRomDao.get(cacheKey)
+            if (res != null) {
+                val ageMs = System.currentTimeMillis() - res.timeCreate
+                val cached = if (ageMs in 0L..ROM_CACHE_MAX_AGE_MS) {
+                    validateJsonResponse(res.content)
+                } else {
+                    Timber.d("openURI() CACHE_ROM stale entry, ageMs:$ageMs")
+                    Result.failure(IllegalStateException("stale"))
+                }
+                if (cached.isSuccess) {
+                    return cached
+                }
+                cacheUrlStringRomDao.delete(cacheKey)
+            }
+            val checkedResponse = postJsonValidated(data)
+            if (checkedResponse.isFailure) return checkedResponse
+
+            cacheUrlStringRomDao.put(cacheKey, checkedResponse.getOrThrow())
+            checkedResponse
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "openURI() CACHE_ROM error")
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun getFromCacheRam(data: String): Result<String> {
+        return try {
+            val cacheKey = data.toMD5()
+            val res = getRamCache(cacheKey)
+            if (res != null) {
+                val cached = validateJsonResponse(res)
+                if (cached.isSuccess) {
+                    return cached
+                }
+                Timber.w("openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
+                deleteRamCache(cacheKey)
+            }
+            val checkedResponse = postJsonValidated(data)
+            if (checkedResponse.isFailure) return checkedResponse
+
+            putRamCache(cacheKey, checkedResponse.getOrThrow())
+            checkedResponse
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "openURI() CACHE_RAM error")
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun openURI(
+        data: String,
+        config: RepositoryUriConfig = RepositoryUriConfig.DIRECT
+    ): Result<String> {
+        Timber.d("openURI()")
+
+        val authResult = ensureAuthenticated()
+        if (authResult.isFailure) {
+            return Result.failure(authResult.exceptionOrNull() ?: IllegalStateException("Auth failed"))
         }
 
-        // Проверки на "{\"errors\":" здесь больше нет: validateJsonResponse уже
-        // отбраковывает ответ с полем errors, до кэша такой ответ не доходит.
-        when (config) {
-
-            //Запрос без кеширования
-            RepositoryUriConfig.DIRECT -> {
-                return postJsonValidated(data)
-            }
-
-            // Read from persistent file cache, or request and store it.
-            RepositoryUriConfig.CACHE_ROM -> {
-                try {
-                    val cacheKey = data.toMD5()
-                    val res = cacheUrlStringRomDao.get(cacheKey)
-                    if (res != null) {
-                        val ageMs = System.currentTimeMillis() - res.timeCreate
-                        val cached = if (ageMs in 0L..ROM_CACHE_MAX_AGE_MS) {
-                            validateJsonResponse(res.content)
-                        } else {
-                            Timber.d("openURI() CACHE_ROM stale entry, ageMs:$ageMs")
-                            Result.failure(IllegalStateException("stale"))
-                        }
-                        if (cached.isSuccess) {
-                            return cached
-                        }
-                        cacheUrlStringRomDao.delete(cacheKey)
-                    }
-                    val checkedResponse = postJsonValidated(data)
-                    if (checkedResponse.isFailure) return checkedResponse
-
-                    cacheUrlStringRomDao.put(cacheKey, checkedResponse.getOrThrow())
-                    return checkedResponse
-                }
-                catch (e: CancellationException){
-                    throw e
-                }
-                catch (e: Exception){
-                    Timber.e(e, "openURI() CACHE_ROM error")
-                    return Result.failure(e)
-                }
-            }
-
-            // Read from temporary in-memory LRU cache, or request and store it in RAM only.
-            RepositoryUriConfig.CACHE_RAM -> {
-                try {
-                    val cacheKey = data.toMD5()
-                    val res = getRamCache(cacheKey)
-                    if (res != null) {
-                        val cached = validateJsonResponse(res)
-                        if (cached.isSuccess) {
-                            return cached
-                        }
-                        Timber.w("openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
-                        deleteRamCache(cacheKey)
-                    }
-                    val checkedResponse = postJsonValidated(data)
-                    if (checkedResponse.isFailure) return checkedResponse
-
-                    putRamCache(cacheKey, checkedResponse.getOrThrow())
-                    return checkedResponse
-                }
-                catch (e: CancellationException){
-                    throw e
-                }
-                catch (e: Exception){
-                    Timber.e(e, "openURI() CACHE_RAM error")
-                    return Result.failure(e)
-                }
-            }
+        return when (config) {
+            RepositoryUriConfig.DIRECT -> postJsonValidated(data)
+            RepositoryUriConfig.CACHE_ROM -> getFromCacheRom(data)
+            RepositoryUriConfig.CACHE_RAM -> getFromCacheRam(data)
         }
     }
 

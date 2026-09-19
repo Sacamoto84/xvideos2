@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -80,8 +79,8 @@ internal fun filterAndSortNiches(
         Order.NICHES_POST_D -> filtered.sortedByDescending { it.gifs }
         Order.NICHES_SUBSCRIBERS_A -> filtered.sortedBy { it.subscribers }
         Order.NICHES_POST_A -> filtered.sortedBy { it.gifs }
-        Order.NICHES_NAME_A_Z -> filtered.sortedBy { it.name }
-        Order.NICHES_NAME_Z_A -> filtered.sortedByDescending { it.name }
+        Order.NICHES_NAME_A_Z -> filtered.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+        Order.NICHES_NAME_Z_A -> filtered.sortedWith(compareByDescending(String.CASE_INSENSITIVE_ORDER) { it.name })
         else -> filtered.sortedBy { it.subscribers }
     }
 }
@@ -90,7 +89,7 @@ object R_ScreenNichesTab : Screen {
 
     private fun readResolve(): Any = R_ScreenNichesTab
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "R_ScreenNichesTab"
 
     @Composable
     override fun Content() {

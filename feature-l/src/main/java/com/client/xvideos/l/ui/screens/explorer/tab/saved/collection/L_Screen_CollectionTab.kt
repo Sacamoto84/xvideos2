@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -55,7 +54,7 @@ object L_Screen_CollectionTab : Screen {
 
     private fun readResolve(): Any = L_Screen_CollectionTab
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_Screen_CollectionTab"
 
     @Composable
     override fun Content() {

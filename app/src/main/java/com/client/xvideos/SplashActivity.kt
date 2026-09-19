@@ -96,8 +96,13 @@ class SplashActivity : ComponentActivity() {
             // Extra про необходимость замка сюда больше не кладём: MainActivity
             // сознательно определяет это сама через AppLockRepository.shouldShowLock,
             // чтобы прямой запуск Activity (напр. через adb) не обходил замок.
-            val intent = Intent(this@SplashActivity, MainActivity::class.java)
+            val intent = Intent(this@SplashActivity, MainActivity::class.java).apply {
+                this@SplashActivity.intent.action?.let { action = it }
+                this@SplashActivity.intent.data?.let { data = it }
+                this@SplashActivity.intent.extras?.let { putExtras(it) }
+            }
             startActivity(intent)
+            @Suppress("DEPRECATION")
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()
         }

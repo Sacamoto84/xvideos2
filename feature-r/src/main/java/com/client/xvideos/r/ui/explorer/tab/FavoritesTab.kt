@@ -8,13 +8,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 
-object  FavoritesTab : Screen {
+object FavoritesTab : Screen {
 
     private fun readResolve(): Any = FavoritesTab
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "RedFavoritesTab"
 
     @Composable
     override fun Content() {

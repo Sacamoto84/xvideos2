@@ -17,11 +17,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.r.ui.explorer.tab.FavoritesTab
@@ -51,7 +51,7 @@ object R_ScreenSavedTab : Screen {
 
     private fun readResolve(): Any = R_ScreenSavedTab
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "R_ScreenSavedTab"
 
     private val SAVED_TAB_ICONS = persistentListOf(
         Icons.Outlined.FavoriteBorder,
@@ -68,6 +68,10 @@ object R_ScreenSavedTab : Screen {
     @Composable
     override fun Content() {
         val vm = getScreenModel<R_SavedTabSM>()
+
+        BackHandler(enabled = vm.screenType != 0) {
+            vm.screenType = 0
+        }
 
         val overlay0 = normalizeRColumnCount(
             Settings.r_likesTab_column_current_count.field.collectAsStateWithLifecycle().value

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
@@ -56,68 +57,24 @@ internal fun RedFullScreenOverlay(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .clickable(onClick = { navigator.push(ScreenRedProfile(item.userName)) }),
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 4.dp)
         ) {
-            val user = UsersRed.listAllUsers.firstOrNull { it.username == item.userName }
-            if (user?.profileImageUrl != null) {
-                UrlImage(
-                    user.profileImageUrl,
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .size(40.dp)
-                        .background(Color.DarkGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                }
-            }
-
-            if (vm.savedRed.collections.collectionList.any { collection -> collection.items.any { it.id == item.id } }) {
+            IconButton(onClick = { navigator.pop() }) {
                 Icon(
-                    painter = painterResource(R.drawable.collection_multi_input_svgrepo_com),
-                    contentDescription = null,
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Назад",
                     tint = Color.White,
-                    modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(18.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            if (vm.savedRed.creators.list.any { it.username == item.userName }) {
-                Icon(
-                    Icons.Outlined.Person,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(22.dp)
-                )
-            }
-
-            if (vm.savedRed.likes.list.any { it.id == item.id }) {
-                Icon(
-                    Icons.Filled.FavoriteBorder,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(22.dp)
-                )
-            }
-
-            if (downloadList.any { it.id == item.id }) {
-                Icon(
-                    Icons.Default.Save,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(20.dp)
-                )
-            }
+            UserAvatarWithBadges(
+                item = item,
+                vm = vm,
+                navigator = navigator,
+                downloadList = downloadList,
+            )
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -162,3 +119,77 @@ internal fun RedFullScreenOverlay(
         }
     }
 }
+
+@Composable
+private fun UserAvatarWithBadges(
+    item: GifsInfo,
+    vm: ScreenRedFullScreenSM,
+    navigator: Navigator,
+    downloadList: List<GifsInfo>,
+) {
+    Row(
+        modifier = Modifier
+            .padding(start = 4.dp)
+            .clickable(onClick = { navigator.push(ScreenRedProfile(item.userName)) }),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val user = UsersRed.listAllUsers.firstOrNull { it.username == item.userName }
+        if (user?.profileImageUrl != null) {
+            UrlImage(
+                user.profileImageUrl,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .size(40.dp)
+                    .background(Color.DarkGray),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            }
+        }
+
+        if (vm.savedRed.collections.collectionList.any { collection -> collection.items.any { it.id == item.id } }) {
+            Icon(
+                painter = painterResource(R.drawable.collection_multi_input_svgrepo_com),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(18.dp)
+            )
+        }
+
+        if (vm.savedRed.creators.list.any { it.username == item.userName }) {
+            Icon(
+                Icons.Outlined.Person,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(22.dp)
+            )
+        }
+
+        if (vm.savedRed.likes.list.any { it.id == item.id }) {
+            Icon(
+                Icons.Filled.FavoriteBorder,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(22.dp)
+            )
+        }
+
+        if (downloadList.any { it.id == item.id }) {
+            Icon(
+                Icons.Default.Save,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.padding(bottom = 6.dp, end = 6.dp).size(20.dp)
+            )
+        }
+    }
+}
+

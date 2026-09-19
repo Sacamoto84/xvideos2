@@ -15,10 +15,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +44,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import cafe.adriel.voyager.hilt.getScreenModel
@@ -79,121 +87,159 @@ import timber.log.Timber
 
 class ScreenLAlbumLandingTag(val tag: String) : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenLAlbumLandingTag:$tag"
 
     @OptIn(ExperimentalZoomableApi::class)
     @Composable
     override fun Content() {
-
         val navigator = LocalNavigator.currentOrThrow
-        val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory ->  factory.create(tag) }
-        // Одна подписка на оба поля: два collectAsState по одному и тому же Flow
-        // заводили два независимых коллектора.
+        BackHandler {
+            navigator.pop()
+        }
+        val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
         val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
-        Box(
-            modifier = Modifier.fillMaxSize().background(Theme.background)
-        ) {
-
-            LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize() ) {
-
-                item{
-                    if (title != null){
-
-                        Text(
-                            "Tag: $title",
-                            color = Theme.L.textColor,
-                            fontSize = 32.sp,
-                            fontFamily = Theme.L.fontFamilyKarla,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.displayCutoutPadding().padding(start = 4.dp)
-                        )
-
-                    }
-                }
-
-                items(items?.size ?: 0, key = { items?.get(it)?.title ?: it }) { index ->
-                    val item = items?.get(index)
-                    if (item == null) return@items
-
-                    Text(
-                        item.title,
-                        color = Theme.L.textColor,
-                        fontSize = 24.sp,
-                        fontFamily = Theme.L.fontFamilyKarla,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 4.dp, top = 16.dp)
-                    )
-
-                    FlowRow(
-                        maxItemsInEachRow = 3,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        val itemWidth = (screenWidth - 8.dp) / 3  // учитываем padding
-                        item.items.take(9).forEach { item ->
-                            Box(
-                                modifier = Modifier
-                                    .width(itemWidth)
-                                    .padding(vertical = 2.dp)
-                            ) {
-                                AlbumListItem(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    title = item.title,
-                                    coverUrl = item.cover?.url.orEmpty(),
-                                    numberOfAnimatedPictures = item.numberOfAnimatedPictures,
-                                    numberOfPictures = item.numberOfPictures,
-                                    onClick = { navigator.push(ScreenLAlbum(item.id.toLong())) }
-                                )
-                            }
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 4.dp)
-                            .padding(horizontal = 4.dp)
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
-                            .clickable(onClick = {
-
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Theme.background,
+            topBar = {
+                LandingTagTopBar(
+                    title = "Tag: ${title ?: tag}",
+                    onBack = { navigator.pop() }
+                )
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Theme.background)
+            ) {
+                LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize()) {
+                    items(items?.size ?: 0, key = { items?.get(it)?.title ?: it }) { index ->
+                        val item = items?.get(index) ?: return@items
+                        LandingTagSectionItem(
+                            item = item,
+                            screenWidth = screenWidth,
+                            onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
+                            onSeeAllClick = {
                                 val filter = vm.createFilter(item)
-
                                 navigator.push(
                                     L_ScreenAlbumList.create(
                                         filter = filter,
                                         title = "Tag: ${title ?: tag}"
                                     )
                                 )
-
-
-                            })
-                        ,
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "See All >",
-                            color = Theme.L.textColor,
-                            modifier = Modifier,
-                            textAlign = TextAlign.Center,
-                            fontSize = 22.sp,
-                            fontFamily = Theme.L.fontFamilyKarla,
-                            fontWeight = FontWeight.Medium,
+                            }
                         )
                     }
-                }
 
-                item{
-                    Spacer(Modifier.height(64.dp))
+                    item {
+                        Spacer(Modifier.height(64.dp))
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LandingTagTopBar(
+    title: String,
+    onBack: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Theme.background)
+            .statusBarsPadding()
+            .displayCutoutPadding()
+            .padding(horizontal = 4.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Назад",
+                tint = Theme.L.textColor
+            )
+        }
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = title,
+            color = Theme.L.textColor,
+            fontSize = 24.sp,
+            fontFamily = Theme.L.fontFamilyKarla,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun LandingTagSectionItem(
+    item: Landing_page_albumSection,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    onAlbumClick: (Long) -> Unit,
+    onSeeAllClick: () -> Unit
+) {
+    Text(
+        item.title,
+        color = Theme.L.textColor,
+        fontSize = 24.sp,
+        fontFamily = Theme.L.fontFamilyKarla,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 4.dp, top = 16.dp)
+    )
+
+    FlowRow(
+        maxItemsInEachRow = 3,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val itemWidth = (screenWidth - 8.dp) / 3
+        item.items.take(9).forEach { album ->
+            Box(
+                modifier = Modifier
+                    .width(itemWidth)
+                    .padding(vertical = 2.dp)
+            ) {
+                AlbumListItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = album.title,
+                    coverUrl = album.cover?.url.orEmpty(),
+                    numberOfAnimatedPictures = album.numberOfAnimatedPictures,
+                    numberOfPictures = album.numberOfPictures,
+                    onClick = { onAlbumClick(album.id.toLong()) }
+                )
+            }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .padding(horizontal = 4.dp)
+            .fillMaxWidth()
+            .height(40.dp)
+            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
+            .clickable(onClick = onSeeAllClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "See All >",
+            color = Theme.L.textColor,
+            textAlign = TextAlign.Center,
+            fontSize = 22.sp,
+            fontFamily = Theme.L.fontFamilyKarla,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 

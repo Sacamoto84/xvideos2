@@ -18,10 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.compose.BackHandler
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.settings.Settings
@@ -47,7 +47,7 @@ object L_SavedTab : Screen {
 
     private fun readResolve(): Any = L_SavedTab
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "L_SavedTab"
 
     private val SAVED_TAB_ICONS = persistentListOf(
         Icons.Outlined.Save,
@@ -62,6 +62,10 @@ object L_SavedTab : Screen {
 
         val vm = getScreenModel<L_SavedTabSM>()
         val screenType = vm.screenType
+
+        BackHandler(enabled = vm.screenType != 0) {
+            vm.screenType = 0
+        }
 
         val columnLikes = Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
 

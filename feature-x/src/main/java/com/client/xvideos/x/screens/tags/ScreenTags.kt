@@ -22,11 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -37,9 +37,9 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.normalizeXUrl
 import kotlinx.coroutines.launch
 
-class ScreenTags(private val tag: String) : Screen {
+class ScreenTags(val tag: String) : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenTags:$tag"
 
     @Composable
     override fun Content() {
@@ -47,6 +47,8 @@ class ScreenTags(private val tag: String) : Screen {
         val vm = getScreenModel<ScreenTagsViewModel, ScreenTagsViewModel.Factory> { factory -> factory.create(tag) }
         val navigator = LocalNavigator.currentOrThrow
         val job = rememberCoroutineScope()
+
+        BackHandler { navigator.pop() }
 
         // Число страниц приходит с нулевой страницей; до её разбора пейджер
         // держит одну. pageCount читается лениво, поэтому рост с 1 до 149

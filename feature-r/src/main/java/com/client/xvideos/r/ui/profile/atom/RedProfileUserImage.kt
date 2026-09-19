@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,7 +38,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.ui.theme.XvideosTheme
-import com.composeunstyled.Text
+import androidx.compose.material3.Text
 
 @Composable
 fun RedProfileCreaterInfo(item: UserInfo, savedRed: () -> SavedRed) {
@@ -60,7 +59,7 @@ fun RedProfileCreaterInfo(
     onFollowClick: () -> Unit
 ) {
 
-    Column( modifier = Modifier.systemBarsPadding().displayCutoutPadding().padding(horizontal = 4.dp).fillMaxWidth() )
+    Column( modifier = Modifier.displayCutoutPadding().padding(horizontal = 4.dp).fillMaxWidth() )
     {
 
         //Top info
@@ -94,12 +93,14 @@ fun RedProfileCreaterInfo(
                 ) {
                     Spacer(Modifier.width(8.dp))
                     Text( item.username, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium, fontSize = 28.sp, modifier = Modifier )
-                    Spacer(Modifier.width(8.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.verificed),
-                        contentDescription = null,
-                        modifier = Modifier.size(26.dp).offset(y = 8.dp)
-                    )
+                    if (item.verified) {
+                        Spacer(Modifier.width(8.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.verificed),
+                            contentDescription = "Verified Creator",
+                            modifier = Modifier.size(26.dp).offset(y = 8.dp)
+                        )
+                    }
                 }
 
                 Box(
@@ -144,7 +145,7 @@ fun RedProfileCreaterInfo(
 
             Column( horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().weight(1f) )
             {
-                Text( item.followers.toPrettyCount().toString(), color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium )
+                Text( item.followers.toPrettyCount(), color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium )
                 Text( "Подписчиков", color = Color(0xFF9E9DA9), fontFamily = Theme.R.fontFamilyPopinsRegular )
             }
 
@@ -209,7 +210,7 @@ fun RedProfileCreaterInfo(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                item.description.toString().trimMargin(),
+                item.description.trimMargin(),
                 color = Color.White,
                 fontSize = 14.sp, fontFamily = Theme.R.fontFamilyPopinsRegular
             )

@@ -57,7 +57,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -117,7 +116,7 @@ object AppSettingsScreen : Screen {
 
     private fun readResolve(): Any = AppSettingsScreen
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "AppSettingsScreen"
 
     @Composable
     override fun Content() {
@@ -216,8 +215,8 @@ private fun AppSettingsScreenContent(
         }
     }
 
-    BackHandler(enabled = currentPage != SettingsPage.Main) {
-        currentPage = SettingsPage.Main
+    BackHandler {
+        closeCurrentPage()
     }
 
     LaunchedEffect(currentPage) {

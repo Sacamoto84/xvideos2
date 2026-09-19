@@ -12,12 +12,12 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.ui.TabRow
 import kotlinx.collections.immutable.persistentListOf
@@ -51,12 +51,16 @@ private val EXPLORER_TAB_ICONS = persistentListOf(
 
 class ScreenRedExplorer : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenRedExplorer"
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val vm = getScreenModel<ScreenRedExplorerSM>()
+
+        BackHandler(enabled = vm.screenType != 0) {
+            vm.screenType = 0
+        }
 
         val overlay0 = normalizeRColumnCount(
             Settings.r_explorerGifsTab_column_current_count.field.collectAsStateWithLifecycle().value

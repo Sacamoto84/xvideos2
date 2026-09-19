@@ -54,13 +54,15 @@ data class AlbumListImplInfoAndList(
 )
 
 
-data class getAlbumListAggregationsResult(
+data class GetAlbumListAggregationsResult(
     val filterGenreStateCount: List<AlbumListFilterGenreCountResponse>,
     val filterTaggedStateCount: List<AlbumListFilterGenreCountResponse>,
     val filterPictureCountStateCount: List<AlbumListFilterGenreCountResponse>,
     val id: Int,
     val filter: AlbumListFilter?
 )
+
+typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
 
 
 

@@ -31,7 +31,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -53,9 +52,10 @@ import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
  * Позиция возвращается обычному экрану через [EventBus].
  */
 @Deprecated("Используйте ScreenX_VideoPlayer с встроенным полноэкранным режимом на едином плеере")
+@Suppress("DEPRECATION")
 class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenX_VideoPlayerFullScreen:$url"
 
     @OptIn(UnstableApi::class)
     @Composable
@@ -95,7 +95,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             navigator.pop()
         }
 
-        BackHandler(enabled = vm.isError || vm.isLoading) { exit() }
+        BackHandler(enabled = vm.isError || vm.isLoading || vm.passedString.isBlank()) { exit() }
 
         if (vm.isError) {
             Box(
@@ -181,7 +181,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             exit(pos)
         }
 
-        BackHandler(enabled = !vm.isError && !vm.isLoading) { exitWithExo() }
+        BackHandler(enabled = !vm.isError && !vm.isLoading && vm.passedString.isNotBlank()) { exitWithExo() }
 
         AndroidView(
             factory = { ctx ->

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -22,11 +21,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.AppBuildInfo
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
-import timber.log.Timber
 import kotlin.math.absoluteValue
 
 import androidx.compose.foundation.layout.padding
@@ -46,14 +43,26 @@ fun VideoPlayerWithMenuContent(
      * по горизонтали: зона перемотки — дочерний элемент, она получает жест
      * первой и полностью блокирует листание.
      */
-    seekDragEnabled: Boolean = true
+    seekDragEnabled: Boolean = true,
+    resetZoomTrigger: Int = 0,
+    onZoomChanged: (Boolean) -> Unit = {}
 ) {
-
-    if (AppBuildInfo.debug) { SideEffect { Timber.d("@@@ VideoPlayerWithMenuContent()") } }
-
     val coroutineScope = rememberCoroutineScope()
     val zoomState = rememberZoomState(maxScale = 3f)
     LaunchedEffect(playerHost.videoFitMode, playerHost.url) { zoomState.reset() }
+
+    val isZoomed = isZoomActive(zoomState.scale)
+    LaunchedEffect(isZoomed) {
+        onZoomChanged(isZoomed)
+    }
+
+    LaunchedEffect(resetZoomTrigger) {
+        if (resetZoomTrigger > 0) {
+            coroutineScope.launch {
+                zoomState.changeScale(1.0f, Offset.Zero)
+            }
+        }
+    }
 
     var seekDragAmount by remember { mutableFloatStateOf(0f) }
     val seekDragModifier = Modifier.pointerInput(Unit) {
@@ -69,8 +78,6 @@ fun VideoPlayerWithMenuContent(
             onHorizontalDrag = { _, dragAmount -> seekDragAmount += dragAmount }
         )
     }
-
-    val isZoomed = isZoomActive(zoomState.scale)
 
     Box(modifier = modifier.clipToBounds()) {
 

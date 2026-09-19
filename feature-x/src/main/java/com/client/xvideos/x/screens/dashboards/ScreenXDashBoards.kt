@@ -2,6 +2,7 @@ package com.client.xvideos.x.screens.dashboards
 
 import com.client.xvideos.common.theme.Theme
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
@@ -26,7 +27,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -44,9 +44,9 @@ import com.client.xvideos.x.screens.saved.X_SavedContent
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
  *
- * - Главный таб-ряд снизу (общий компонент [TabRow], уровень [Theme.tabLevel0]):
- *   `Dashboards` и `Savable`.
- * - Второй ряд над ним зависит от выбранного таба:
+ * Нижняя панель (bottomBar у Scaffold) содержит:
+ * - Разделитель;
+ * - Контекстный ряд (зависит от выбранного главного таба):
  *     - `Dashboards` → [DashboardControlsRow]: кнопка страны + выбор текущей страницы;
  *     - `Savable`    → под-[TabRow] (уровень [Theme.tabLevel1]) с под-вкладками
  *                      `Favorites` и `Сохранённое`.
@@ -55,12 +55,17 @@ import com.client.xvideos.x.screens.saved.X_SavedContent
  */
 class ScreenXDashBoards : Screen {
 
-    override val key: ScreenKey = uniqueScreenKey
+    override val key: ScreenKey = "ScreenXDashBoards"
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenXDashBoardsScreenModel = getScreenModel()
+
+        // При нажатии «Назад» в табе сохраненного возвращаемся в ленту дашбордов
+        BackHandler(enabled = vm.mainTab != 0) {
+            vm.mainTab = 0
+        }
 
         // Стабильный экземпляр «Избранного» для инлайн-рендера (как object-табы saved в R/L).
         val favoritesScreen = remember { ScreenFavorites() }

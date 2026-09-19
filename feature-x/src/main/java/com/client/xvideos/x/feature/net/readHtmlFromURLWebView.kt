@@ -83,7 +83,6 @@ private suspend fun loadHtmlInWebView(url: String): String =
         with(webView.settings) {
             javaScriptEnabled = true
             domStorageEnabled = true
-            databaseEnabled = true
             allowFileAccess = false
             // Закрывает странице доступ к content://-провайдерам. По умолчанию
             // это разрешено, а у приложения есть FileProvider — пусть даже
@@ -99,7 +98,7 @@ private suspend fun loadHtmlInWebView(url: String): String =
 
         webView.webViewClient = object : WebViewClient() {
 
-            @Deprecated("Deprecated in Java")
+            @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
             override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
                 super.onReceivedError(view, errorCode, description, failingUrl)
                 Timber.w("readHtmlFromURLWebView: onReceivedError $errorCode: $description for $failingUrl")
