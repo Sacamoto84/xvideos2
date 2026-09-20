@@ -3,6 +3,7 @@ package com.client.xvideos.x.screens.saved
 import com.client.xvideos.common.theme.Theme
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -76,7 +77,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     BackHandler(enabled = pendingDelete != null) {
         pendingDelete = null
     }
-    BackHandler(enabled = pendingDelete == null && listState.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = pendingDelete == null && listState.isScrolled) {
         scope.launch { listState.animateScrollToItem(0) }
     }
 

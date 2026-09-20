@@ -4,6 +4,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -121,7 +122,7 @@ private fun FavoritesContent(
     BackHandler(enabled = pendingDelete != null) {
         pendingDelete = null
     }
-    BackHandler(enabled = pendingDelete == null && gridState.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = pendingDelete == null && gridState.isScrolled) {
         scope.launch { gridState.animateScrollToItem(0) }
     }
 

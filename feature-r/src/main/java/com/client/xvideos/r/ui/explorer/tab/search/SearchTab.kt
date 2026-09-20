@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.search
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,7 +112,7 @@ fun SearchTabContent(
     BackHandler(enabled = searchText.isNotEmpty()) {
         onSearchTextChange("")
     }
-    BackHandler(enabled = searchText.isEmpty() && listState.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = searchText.isEmpty() && listState.isScrolled) {
         coroutineScope.launch { listState.animateScrollToItem(0) }
     }
 
