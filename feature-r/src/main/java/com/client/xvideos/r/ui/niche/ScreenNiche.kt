@@ -66,8 +66,13 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        BackHandler { navigator.pop() }
         val vm = getScreenModel<ScreenNicheSM, ScreenNicheSM.Factory> { factory -> factory.create(nicheName) }
+        BackHandler(enabled = vm.lazyHost.state.firstVisibleItemIndex > 0) {
+            vm.lazyHost.gotoUp()
+        }
+        BackHandler(enabled = vm.lazyHost.state.firstVisibleItemIndex == 0) {
+            navigator.pop()
+        }
         val columnSelect by Settings.r_current_count_niches.field.collectAsStateWithLifecycle()
         val sort by vm.lazyHost.sortType.collectAsStateWithLifecycle()
         val savedRed = vm.savedRed

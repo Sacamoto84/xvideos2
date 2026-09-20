@@ -251,7 +251,7 @@ private fun AlbumSearchSectionBlock(
                     coverUrl = album.cover?.url.orEmpty(),
                     numberOfAnimatedPictures = album.numberOfAnimatedPictures,
                     numberOfPictures = album.numberOfPictures,
-                    onClick = { onAlbumClick(album.id.toLong()) }
+                    onClick = { album.id.toLongOrNull()?.let { onAlbumClick(it) } }
                 )
             }
         }

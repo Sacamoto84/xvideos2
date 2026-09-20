@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,10 +94,14 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        BackHandler {
+        val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
+        val coroutineScope = rememberCoroutineScope()
+        BackHandler(enabled = vm.state.firstVisibleItemIndex > 0) {
+            coroutineScope.launch { vm.state.animateScrollToItem(0) }
+        }
+        BackHandler(enabled = vm.state.firstVisibleItemIndex == 0) {
             navigator.pop()
         }
-        val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
         val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
@@ -108,7 +113,13 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
             topBar = {
                 LandingTagTopBar(
                     title = "Tag: ${title ?: tag}",
-                    onBack = { navigator.pop() }
+                    onBack = {
+                        if (vm.state.firstVisibleItemIndex > 0) {
+                            coroutineScope.launch { vm.state.animateScrollToItem(0) }
+                        } else {
+                            navigator.pop()
+                        }
+                    }
                 )
             }
         ) { padding ->
@@ -216,7 +227,7 @@ private fun LandingTagSectionItem(
                     coverUrl = album.cover?.url.orEmpty(),
                     numberOfAnimatedPictures = album.numberOfAnimatedPictures,
                     numberOfPictures = album.numberOfPictures,
-                    onClick = { onAlbumClick(album.id.toLong()) }
+                    onClick = { album.id.toLongOrNull()?.let { onAlbumClick(it) } }
                 )
             }
         }

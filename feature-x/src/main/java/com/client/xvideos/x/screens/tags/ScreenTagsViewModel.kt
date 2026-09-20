@@ -99,6 +99,9 @@ abstract class ScreenModuleTags {
 
 }
 
+private val SANITIZE_TAG_CHARS_REGEX = Regex("[#?&/\\\\\\s\\u00A0]+")
+private val REPEATED_HYPHENS_REGEX = Regex("-+")
+
 /**
  * Преобразует название тега в валидный URL-сегмент для XVideos:
  * - Заменяет пробельные символы (включая неразрывные \u00A0) и спецсимволы путей/запросов (#, ?, &, /, \) на дефисы.
@@ -106,7 +109,7 @@ abstract class ScreenModuleTags {
  */
 internal fun sanitizeTagForUrl(tag: String): String {
     return tag.trim()
-        .replace(Regex("[#?&/\\\\\\s\\u00A0]+"), "-")
-        .replace(Regex("-+"), "-")
+        .replace(SANITIZE_TAG_CHARS_REGEX, "-")
+        .replace(REPEATED_HYPHENS_REGEX, "-")
         .trim('-')
 }
