@@ -38,8 +38,9 @@ import kotlin.math.roundToInt
 fun formatZoomLabel(scale: Float, fillScale: Float = 1.0f): String {
     if (!scale.isFinite() || scale <= 0f) return "100%"
     if (abs(scale - 1.0f) <= 0.02f) return "100%"
-    if (fillScale > 1.05f && abs(scale - fillScale) <= 0.04f) return "Во весь экран"
-    return "${(scale * 100f).roundToInt()}%"
+    if (fillScale.isFinite() && fillScale > 1.05f && abs(scale - fillScale) <= 0.04f) return "Во весь экран"
+    val safeScale = scale.coerceIn(0.1f, 10f)
+    return "${(safeScale * 100f).roundToInt()}%"
 }
 
 /**

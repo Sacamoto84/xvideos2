@@ -81,12 +81,6 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
     val safeMax = max.coerceAtLeast(1)
     val maxPageIndex = safeMax - 1
 
-    // remember с ключом: на экране тега число страниц становится известно только
-    // после разбора первой, то есть max меняется с 1 на настоящее значение. Без
-    // ключа ряд навсегда оставался бы с одной кнопкой. В ленте раздела max —
-    // константа, там поведение прежнее.
-    val list = remember(safeMax) { List(safeMax) { it + 1 } }
-
     val state = rememberLazyListState()
     LaunchedEffect(value, safeMax) {
         val indexToScroll = value.coerceIn(0, maxPageIndex)
@@ -129,7 +123,8 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
                 .weight(1f), state = state
         ) {
 
-            items(list, key = { it }) {
+            items(count = safeMax, key = { it }) { index ->
+                val pageNumber = index + 1
                 Box(
                     modifier = Modifier
                         .padding(horizontal = (0.5).dp)
@@ -137,14 +132,14 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
                         .height(height)
                         .border(
                             2.dp,
-                            Color(if (value == it - 1) 0xFFFF9900 else 0x000000)
+                            Color(if (value == index) 0xFFFF9900 else 0x000000)
                         )
                         .background(colorBlackBackground)
                         .clickable {
-                            onChange.invoke((it - 1).coerceIn(0, maxPageIndex))
+                            onChange.invoke(index.coerceIn(0, maxPageIndex))
                         }, contentAlignment = Alignment.Center
                 ) {
-                    Text("$it", color = colorTextWhite)
+                    Text("$pageNumber", color = colorTextWhite)
                 }
             }
 

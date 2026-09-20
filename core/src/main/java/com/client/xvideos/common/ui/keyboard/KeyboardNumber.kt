@@ -102,9 +102,10 @@ fun KeyboardNumber(
 
             }
 
+            val safeMax = max.coerceAtLeast(1)
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "($max)",
+                    "($safeMax)",
                     color = theme.colorText,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -194,7 +195,7 @@ fun KeyboardNumber(
                         val enteredNumber = textFieldValue.text.toIntOrNull()
                         if (enteredNumber != null) {
                             try {
-                                val clampedValue = enteredNumber.coerceIn(1, max)
+                                val clampedValue = clampPageNumber(enteredNumber, max)
                                 onClick.invoke(clampedValue)
                             } catch (e: Exception) {
                                 Timber.e(e.localizedMessage)
@@ -217,7 +218,12 @@ fun KeyboardNumber(
 
 }
 
-private fun addCharToTextField(textFieldValue: TextFieldValue, char: String): TextFieldValue {
+internal fun clampPageNumber(entered: Int, max: Int): Int {
+    val safeMax = max.coerceAtLeast(1)
+    return entered.coerceIn(1, safeMax)
+}
+
+internal fun addCharToTextField(textFieldValue: TextFieldValue, char: String): TextFieldValue {
     val newText = textFieldValue.text + char
     val newCursorPosition = newText.length  // Курсор перемещаем в конец текста
     return TextFieldValue(newText, TextRange(newCursorPosition))

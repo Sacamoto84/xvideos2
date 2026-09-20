@@ -31,6 +31,18 @@ class VideoZoomHudTest {
     }
 
     @Test
+    fun `formatZoomLabel handles non-finite fillScale gracefully`() {
+        assertEquals("150%", formatZoomLabel(1.5f, Float.NaN))
+        assertEquals("150%", formatZoomLabel(1.5f, Float.POSITIVE_INFINITY))
+    }
+
+    @Test
+    fun `formatZoomLabel clamps extreme scale bounds`() {
+        assertEquals("1000%", formatZoomLabel(50.0f))
+        assertEquals("10%", formatZoomLabel(0.01f))
+    }
+
+    @Test
     fun `formatZoomLabel formats arbitrary percentage correctly`() {
         assertEquals("150%", formatZoomLabel(1.5f))
         assertEquals("200%", formatZoomLabel(2.0f))

@@ -32,5 +32,6 @@ class AlbumListPageSelectorTest {
     fun `calculateNextAlbumPage handles single page and zero page gracefully`() {
         assertEquals(0, calculateNextAlbumPage(0, 1))
         assertEquals(0, calculateNextAlbumPage(0, 0))
+        assertEquals(0, calculateNextAlbumPage(0, -5))
     }
 }

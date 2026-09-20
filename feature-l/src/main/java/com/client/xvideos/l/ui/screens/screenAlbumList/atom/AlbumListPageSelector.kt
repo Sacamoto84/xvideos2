@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -77,7 +77,7 @@ fun AlbumListPageSelector(
                 .background(Theme.L.red)
                 .clickable(onClick = { onChange(calculatePrevAlbumPage(page)) }),
             contentAlignment = Alignment.Center
-        ) { Icon(Icons.Default.KeyboardArrowLeft, tint = Color.White, contentDescription = null) }
+        ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, tint = Color.White, contentDescription = null) }
 
         Box(
             modifier = Modifier
@@ -108,8 +108,9 @@ fun AlbumListPageSelector(
                 }),
             contentAlignment = Alignment.Center
         ) {
+            val safePageMax = pageMax.coerceAtLeast(1)
             Text(
-                "Page ${page + 1} of $pageMax",
+                "Page ${page + 1} of $safePageMax",
                 color = Theme.L.textColor,
                 style = Theme.L.Type.rowTitle.copy(textAlign = TextAlign.Center)
             )
@@ -126,7 +127,7 @@ fun AlbumListPageSelector(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                Icons.Default.KeyboardArrowRight,
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 tint = Color.White,
                 contentDescription = null
             )
