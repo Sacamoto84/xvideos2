@@ -37,8 +37,6 @@ class LazyRowPictureDetailsHost(
 
     var collectionSearchQuery by mutableStateOf("")
 
-    var collectionDuplicateDialogVisible by mutableStateOf(false)
-
     var onItemRemoved: ((PicsDetails) -> Unit)? = null
 
     fun removePicture(picture: PicsDetails): Boolean {

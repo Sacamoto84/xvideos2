@@ -140,6 +140,7 @@
 | [Проход 133 (Иерархия Back в BackupSettingsSection, пошаговый Backspace/AC в калькуляторе, fast-path подсказок R, бесконечность в toMinSec)](CODE_REVIEW_2026-09-20_v112.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 134 (Иерархия Back для диалогов в R/L/Settings, formatBytes в RSettingsSection, тесты)](CODE_REVIEW_2026-09-20_v113.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 135 (Приоритет диалога LPictureInfo, скролл в L_ScreenAlbumSearch, паритет зума в RedFullScreenOverlay и ScreenX_VideoPlayer, тесты)](CODE_REVIEW_2026-09-20_v114.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 136 (Поиск в коллекциях L, холостые расчеты дубликатов, приоритет зума в ScreenX_VideoPlayer, оптимизация Regex)](CODE_REVIEW_2026-09-20_v115.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -101,6 +103,8 @@ fun L_CollectionNameContent(
         host.replaceFilteredPictures(filtered)
     }
 
+    var searchVisible by rememberSaveable(collectionName) { mutableStateOf(false) }
+
     val selectedCollection = savedL.collection.currentCollectionName
 
     val handleExit = {
@@ -110,11 +114,17 @@ fun L_CollectionNameContent(
         }
     }
 
-    // Иерархия «Назад»: сначала сбросить поиск, затем выйти из коллекции
+    // Иерархия «Назад»:
+    // 1. Очистить текст поискового запроса, если введен
+    // 2. Скрыть поле поиска, если панель открыта
+    // 3. Выйти из коллекции
     BackHandler(enabled = searchQuery.isNotEmpty()) {
         host.collectionSearchQuery = ""
     }
-    BackHandler(enabled = searchQuery.isEmpty()) {
+    BackHandler(enabled = searchQuery.isEmpty() && searchVisible) {
+        searchVisible = false
+    }
+    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible) {
         handleExit()
     }
 
@@ -127,8 +137,25 @@ fun L_CollectionNameContent(
         LCollectionDetailTopBar(
             collectionName = selectedCollection ?: collectionName,
             searchQuery = searchQuery,
+            searchVisible = searchVisible,
             onSearchChange = { host.collectionSearchQuery = it },
-            onExitCollection = handleExit
+            onToggleSearch = {
+                if (searchVisible) {
+                    host.collectionSearchQuery = ""
+                    searchVisible = false
+                } else {
+                    searchVisible = true
+                }
+            },
+            onExitCollection = {
+                if (searchQuery.isNotEmpty()) {
+                    host.collectionSearchQuery = ""
+                } else if (searchVisible) {
+                    searchVisible = false
+                } else {
+                    handleExit()
+                }
+            }
         )
     }) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){
@@ -146,24 +173,18 @@ fun L_CollectionNameContent(
 private fun LCollectionDetailTopBar(
     collectionName: String,
     searchQuery: String,
+    searchVisible: Boolean,
     onSearchChange: (String) -> Unit,
+    onToggleSearch: () -> Unit,
     onExitCollection: (() -> Unit)? = null
 ) {
-    var searchVisible by rememberSaveable(collectionName) { mutableStateOf(false) }
-
     Column(
         modifier = Modifier.fillMaxWidth().background(Theme.background)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (onExitCollection != null) {
-                IconButton(onClick = {
-                    if (searchQuery.isNotEmpty()) {
-                        onSearchChange("")
-                    } else {
-                        onExitCollection()
-                    }
-                }) {
+                IconButton(onClick = onExitCollection) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Назад",
@@ -178,6 +199,13 @@ private fun LCollectionDetailTopBar(
                 fontSize = 18.sp,
                 fontFamily = Theme.L.fontFamilyPopinsRegular
             )
+            IconButton(onClick = onToggleSearch) {
+                Icon(
+                    imageVector = if (searchVisible) Icons.Default.Close else Icons.Default.Search,
+                    contentDescription = if (searchVisible) "Закрыть поиск" else "Поиск в коллекции",
+                    tint = Theme.L.primaryColor
+                )
+            }
         }
 
         AnimatedVisibility(searchVisible) {
@@ -193,6 +221,8 @@ private fun LCollectionDetailTopBar(
     }
 }
 
+private val WHITESPACE_REGEX = Regex("\\s+")
+
 private fun PicsDetails.matchesCollectionSearch(query: String): Boolean {
     val normalized = query.trim()
     if (normalized.isBlank()) return true
@@ -206,7 +236,7 @@ private fun PicsDetails.matchesCollectionSearch(query: String): Boolean {
 
     return normalized
         .lowercase()
-        .split(Regex("\\s+"))
+        .split(WHITESPACE_REGEX)
         .all { it in haystack }
 }
 

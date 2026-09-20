@@ -273,8 +273,6 @@ class SavedL_Collection(
         listUrl.replaceWith(cached ?: emptyList())
         if (cached == null) {
             refresh()
-        } else {
-            refreshDuplicates(safeName)
         }
     }
 
@@ -291,7 +289,6 @@ class SavedL_Collection(
         }
         val flow = collectionCache.getOrPut(collectionName) { MutableStateFlow(null) }
         reloadCollectionItems(collectionName, flow)
-        refreshDuplicates(collectionName)
     }
 
     fun refreshDuplicates(collectionName: String? = currentCollectionName) {

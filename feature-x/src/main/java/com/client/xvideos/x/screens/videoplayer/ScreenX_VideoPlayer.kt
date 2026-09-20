@@ -74,12 +74,8 @@ class ScreenX_VideoPlayer(
 
         OrientationAndSystemBarsEffect(vm.isFullScreen)
 
-        // Нажатие кнопки «Назад» в ландшафтном режиме возвращает в портретный режим
-        BackHandler(enabled = vm.isFullScreen) {
-            vm.exitFullScreen()
-        }
-
-        BackHandler(enabled = !vm.isFullScreen && (vm.isError || vm.isLoading || vm.passedHLS.isBlank())) {
+        // Нажатие кнопки «Назад» при ошибке или загрузке закрывает экран
+        BackHandler(enabled = vm.isError || vm.isLoading || vm.passedHLS.isBlank()) {
             navigator.pop()
         }
 
@@ -232,9 +228,16 @@ private fun VideoPlayerContentView(
     var isZoomed by remember { mutableStateOf(false) }
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
-    // Нажатие кнопки «Назад» при активном зуме сбрасывает масштаб как в обычном, так и в полноэкранном режиме
+    // Иерархия «Назад»:
+    // 1. При активном зуме сбрасывает масштаб до 1.0x (как в обычном, так и в ландшафтном режиме)
+    // 2. В ландшафтном полноэкранном режиме возвращает в портретный режим
+    // 3. Выходит из экрана плеера
     BackHandler(enabled = isZoomed) {
         resetZoomTrigger++
+    }
+
+    BackHandler(enabled = !isZoomed && vm.isFullScreen) {
+        vm.exitFullScreen()
     }
 
     BackHandler(enabled = !isZoomed && !vm.isFullScreen) {
