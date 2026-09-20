@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -117,7 +117,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
             }
         } else {
             LazyColumn(state = listState) {
-                items(list, key = { it.id }) { item ->
+                itemsIndexed(list, key = { index, item -> "${item.id}#$index" }) { _, item ->
                     val posterUrl = remember(item.id) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
                     }

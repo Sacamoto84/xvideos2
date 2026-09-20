@@ -66,4 +66,18 @@ class SavedX_FavoritesTest {
         val ids = items.map { it.id }.toSet()
         assertEquals(setOf(10L, 20L, 30L), ids)
     }
+
+    @Test
+    fun `составной ключ с индексом гарантирует уникальность даже при дублирующихся id`() {
+        val itemsWithDuplicates = listOf(
+            ItemsX(id = 100L, title = "First"),
+            ItemsX(id = 100L, title = "Duplicate"),
+            ItemsX(id = 200L, title = "Second")
+        )
+        val keys = itemsWithDuplicates.mapIndexed { index, item -> "${item.id}#$index" }
+        assertEquals(3, keys.distinct().size)
+        assertEquals("100#0", keys[0])
+        assertEquals("100#1", keys[1])
+        assertEquals("200#2", keys[2])
+    }
 }

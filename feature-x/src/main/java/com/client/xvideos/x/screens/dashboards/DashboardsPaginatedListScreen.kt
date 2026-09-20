@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -214,7 +214,7 @@ fun DashboardsPaginatedListContent(
         state = gridState,
     )
     {
-        items(items, key = { it.id }) { cell ->
+        itemsIndexed(items, key = { index, cell -> "${cell.id}#$index" }) { _, cell ->
 
             Box(
                 modifier = Modifier

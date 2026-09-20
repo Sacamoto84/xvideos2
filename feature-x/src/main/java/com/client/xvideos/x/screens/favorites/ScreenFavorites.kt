@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -175,7 +175,7 @@ private fun FavoritesContent(
                 // уезжала под заголовок «Избранное».
                 modifier = Modifier.padding(padding)
             ) {
-                items(favorites, key = { it.id }) { item ->
+                itemsIndexed(favorites, key = { index, item -> "${item.id}#$index" }) { _, item ->
                     FavoriteRow(
                         item = item,
                         localUrl = localUrlOf(item),

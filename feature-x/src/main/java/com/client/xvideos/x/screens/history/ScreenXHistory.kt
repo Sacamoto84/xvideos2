@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -231,7 +231,7 @@ fun HistoryContent(
                 state = gridState,
                 modifier = Modifier.padding(padding),
             ) {
-                items(history, key = { it.item.id }) { historyItem ->
+                itemsIndexed(history, key = { index, historyItem -> "${historyItem.item.id}#$index" }) { _, historyItem ->
                     val isSelected = historyItem.item.id in selectedIds
                     val selectionState = HistorySelectionState(
                         isSelectionMode = isSelectionMode,
