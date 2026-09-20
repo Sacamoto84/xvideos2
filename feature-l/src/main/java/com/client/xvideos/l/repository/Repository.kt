@@ -348,7 +348,7 @@ open class Repository(
     }
 
     private fun String.previewForLog(): String {
-        return replace(Regex("\\s+"), " ").take(200)
+        return replace(LOG_PREVIEW_WHITESPACE_REGEX, " ").take(200)
     }
 
     private fun Throwable?.isHtmlChallengeResponse(): Boolean {
@@ -358,6 +358,7 @@ open class Repository(
 
 
     private companion object {
+        val LOG_PREVIEW_WHITESPACE_REGEX = Regex("\\s+")
         const val MIN_NETWORK_REQUEST_INTERVAL_MS = 300L
         const val HTML_CHALLENGE_RETRY_ATTEMPTS = 3
         const val RAM_CACHE_MAX_ENTRIES = 256

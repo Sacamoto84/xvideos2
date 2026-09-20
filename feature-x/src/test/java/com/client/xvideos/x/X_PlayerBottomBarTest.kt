@@ -44,4 +44,11 @@ class X_PlayerBottomBarTest {
         val longResume = "Возобновлено с ${formatTime(3665)}"
         assertEquals("Возобновлено с 1:01:05", longResume)
     }
+
+    @Test
+    fun `formatTime ограничивает экстремально большие значения временем 7 дней`() {
+        // 86400 * 7 = 604800 секунд = 168:00:00
+        assertEquals("168:00:00", formatTime(86400 * 7))
+        assertEquals("168:00:00", formatTime(Int.MAX_VALUE))
+    }
 }

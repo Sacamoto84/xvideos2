@@ -151,6 +151,8 @@ private fun String.isLocalImagePath(): Boolean {
 private const val L_MEDIA_USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36"
 
+private val ANCHOR_ID_REGEX = Regex("""/id/(\d+)""")
+
 /**
  * Извлекает ID картинки для серверных мутаций (например, FavoriteAdd).
  * Сначала проверяет поле [PicsDetails.id], затем пытается извлечь числовой ID из URL.
@@ -159,7 +161,7 @@ fun PicsDetails.extractAnchorId(): String? {
     if (!id.isNullOrBlank()) return id.trim()
     val allUrls = listOfNotNull(url, url_to_original, url_to_video) + thumbnails.orEmpty().mapNotNull { it.url }
     for (candidate in allUrls) {
-        val match = Regex("""/id/(\d+)""").find(candidate)
+        val match = ANCHOR_ID_REGEX.find(candidate)
         if (match != null) {
             return match.groupValues[1]
         }

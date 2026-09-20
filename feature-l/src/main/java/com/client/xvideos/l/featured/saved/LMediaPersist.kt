@@ -131,8 +131,11 @@ internal fun String.videoExtension(): String =
         .takeIf { it in setOf("mp4", "webm", "m4v", "mov") }
         ?: "mp4"
 
+private val PREVIEW_SIZE_MARKER_REGEX = Regex("\\.(\\d+x\\d+)\\.[^.]+$")
+private val SANITIZE_FILE_PART_REGEX = Regex("[^A-Za-z0-9._-]")
+
 private fun String.previewSizeMarker(width: Int, height: Int): String {
-    return Regex("\\.(\\d+x\\d+)\\.[^.]+$")
+    return PREVIEW_SIZE_MARKER_REGEX
         .find(lUrlFileName())
         ?.groupValues
         ?.getOrNull(1)
@@ -140,7 +143,7 @@ private fun String.previewSizeMarker(width: Int, height: Int): String {
 }
 
 internal fun String.sanitizeFilePart(): String =
-    replace(Regex("[^A-Za-z0-9._-]"), "_").trim('_')
+    replace(SANITIZE_FILE_PART_REGEX, "_").trim('_')
 
 internal fun String.sha256(): String {
     val bytes = MessageDigest.getInstance("SHA-256").digest(toByteArray(Charsets.UTF_8))

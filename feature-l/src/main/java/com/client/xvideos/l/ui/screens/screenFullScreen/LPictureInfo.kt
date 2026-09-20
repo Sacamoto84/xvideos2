@@ -110,11 +110,12 @@ private fun LPictureInfoText(
     )
 }
 
+private val HTTPS_URL_REGEX = Regex("""https://\S+""")
+
 private fun String.withClickableHttpsLinks() = buildAnnotatedString {
-    val urlRegex = Regex("""https://\S+""")
     var lastIndex = 0
 
-    urlRegex.findAll(this@withClickableHttpsLinks).forEach { match ->
+    HTTPS_URL_REGEX.findAll(this@withClickableHttpsLinks).forEach { match ->
         val rawUrl = match.value
         val url = rawUrl.trimEnd('.', ',', ';', ')', ']', '}')
         val start = match.range.first

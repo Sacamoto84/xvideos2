@@ -136,7 +136,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         val item = saved.history.get(videoId) ?: return
         if (item.isEligibleForResume) {
             historyItem = item
-            val sec = item.lastPositionMs / 1000f
+            val sec = (item.lastPositionMs / 1000f).takeIf { it.isFinite() && it >= 0f } ?: return
             resumePositionSeconds = sec
             val totalSec = sec.toInt()
             resumeNoticeText = "Возобновлено с ${formatTime(totalSec)}"
@@ -153,10 +153,12 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     }
 
     fun saveProgress(positionSeconds: Float, durationSeconds: Int) {
-        val playerDurationMs = durationSeconds * 1000L
+        val playerDurationMs = durationSeconds.coerceAtLeast(0) * 1000L
         val parsedDurationMs = parseDurationToMs(currentItem.duration)
         val durationMs = if (playerDurationMs > 0L) playerDurationMs else parsedDurationMs
-        val positionMs = (positionSeconds * 1000f).toLong().coerceAtLeast(0L)
+        val safeSeconds = positionSeconds.takeIf { it.isFinite() && it >= 0f } ?: 0f
+        val maxPos = if (durationMs > 0L) durationMs else Long.MAX_VALUE
+        val positionMs = (safeSeconds * 1000f).toLong().coerceIn(0L, maxPos)
         val videoId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
         if (videoId > 0L) {
             val itemToSave = if (currentItem.id > 0L) currentItem else currentItem.copy(id = videoId)

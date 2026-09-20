@@ -120,8 +120,10 @@ fun AlbumListFilterAudiences(
     }
 }
 
+private val AUDIENCE_ID_REGEX = Regex("""\+([^+-]+)""")
+
 internal fun parseAudienceIds(value: String): Set<String> {
-    return Regex("""\+([^+-]+)""")
+    return AUDIENCE_ID_REGEX
         .findAll(value)
         .map { it.groupValues[1] }
         .toSet()

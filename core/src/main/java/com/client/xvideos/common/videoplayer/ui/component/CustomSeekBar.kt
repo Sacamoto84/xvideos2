@@ -90,8 +90,8 @@ fun CustomSeekBar(
             .onSizeChanged { newSize -> trackWidth = newSize.width.toFloat() }
             .pointerInput(maxProgress) {
                 detectTapGestures { offset ->
-                    val newValue = (offset.x / trackWidth) * maxProgress
-                    localProgress = newValue.coerceIn(0f, maxProgress)
+                    val newValue = calculateCustomSeekBarSeekPosition(offset.x, trackWidth, maxProgress)
+                    localProgress = newValue
                     currentOnValueChange(localProgress)
                     currentOnValueChangeFinished()
                 }
@@ -101,14 +101,13 @@ fun CustomSeekBar(
                     onDragStart = { offset ->
                         isDragging = true
                         dragStartOffsetX = offset.x
-                        initialProgress = (dragStartOffsetX / trackWidth) * maxProgress
-                        localProgress = initialProgress.coerceIn(0f, maxProgress)
+                        initialProgress = calculateCustomSeekBarSeekPosition(dragStartOffsetX, trackWidth, maxProgress)
+                        localProgress = initialProgress
                         currentOnValueChange(localProgress)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val dragDelta = (dragAmount.x / trackWidth) * maxProgress
-                        localProgress = (localProgress + dragDelta).coerceIn(0f, maxProgress)
+                        localProgress = calculateCustomSeekBarDragDelta(dragAmount.x, trackWidth, maxProgress, localProgress)
                         currentOnValueChange(localProgress)
                     },
                     onDragEnd = {
@@ -130,7 +129,7 @@ fun CustomSeekBar(
         ) {
             val trackWidthPx = size.width
             val thumbPx = with(density) { thumbRadius.toPx() }
-            val progressX = (localProgress / maxProgress) * trackWidthPx
+            val progressX = calculateCustomSeekBarProgressX(localProgress, maxProgress, trackWidthPx)
 
             // Inactive track
             drawLine(
@@ -167,6 +166,42 @@ fun CustomSeekBar(
             }
         }
     }
+}
+
+internal fun calculateCustomSeekBarProgressX(
+    localProgress: Float,
+    maxProgress: Float,
+    trackWidthPx: Float
+): Float {
+    if (trackWidthPx <= 0f || maxProgress <= 0f) return 0f
+    if (!localProgress.isFinite() || !maxProgress.isFinite() || !trackWidthPx.isFinite()) return 0f
+    val ratio = (localProgress / maxProgress).coerceIn(0f, 1f)
+    return (ratio * trackWidthPx).coerceIn(0f, trackWidthPx)
+}
+
+internal fun calculateCustomSeekBarSeekPosition(
+    offsetX: Float,
+    trackWidthPx: Float,
+    maxProgress: Float
+): Float {
+    if (trackWidthPx <= 0f || maxProgress <= 0f) return 0f
+    if (!offsetX.isFinite() || !maxProgress.isFinite() || !trackWidthPx.isFinite()) return 0f
+    val ratio = (offsetX / trackWidthPx).coerceIn(0f, 1f)
+    return (ratio * maxProgress).coerceIn(0f, maxProgress)
+}
+
+internal fun calculateCustomSeekBarDragDelta(
+    dragAmountX: Float,
+    trackWidthPx: Float,
+    maxProgress: Float,
+    currentProgress: Float
+): Float {
+    if (!currentProgress.isFinite()) return 0f
+    if (trackWidthPx <= 0f || maxProgress <= 0f || !dragAmountX.isFinite()) {
+        return currentProgress.coerceIn(0f, maxProgress.coerceAtLeast(0f))
+    }
+    val delta = (dragAmountX / trackWidthPx) * maxProgress
+    return (currentProgress + delta).coerceIn(0f, maxProgress)
 }
 
 

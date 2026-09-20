@@ -41,7 +41,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.icons.IconFavorite18
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -113,7 +112,6 @@ fun DashboardsPaginatedListScreen(
             flag?.let { CountryState.updateCurrent(it) }
             if (items.isEmpty()) {
                 hasError = true
-                SnackBar.error("Не удалось загрузить видео")
             } else {
                 videoItems.replaceWith(items)
             }
@@ -122,7 +120,6 @@ fun DashboardsPaginatedListScreen(
         } catch (e: Exception) {
             Timber.e(e, "DashboardsPaginatedListScreen: ошибка загрузки pageIndex=$pageIndex")
             hasError = true
-            SnackBar.error("Ошибка загрузки видео")
         }
     }
 
@@ -131,7 +128,7 @@ fun DashboardsPaginatedListScreen(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hasError) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Ошибка загрузки видео", color = Color.Gray)
+                    Text("Не удалось загрузить страницу", color = Color.Gray)
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(onClick = { retryTrigger++ }) {
                         Text("Повторить")

@@ -74,18 +74,29 @@ fun X_PlayerBottomBar(
         )
 
         // Текущее время
+        val safeCurrentTimeSec = host.currentTime
+            .takeIf { it.isFinite() && it >= 0f }
+            ?.toInt()
+            ?: 0
         Text(
-            text = formatTime(host.currentTime.toInt()),
+            text = formatTime(safeCurrentTimeSec),
             color = Color.White,
             fontFamily = FontFamily.SansSerif,
             fontSize = 11.sp
         )
 
         // Прогресс-бар
+        val safeTotalTime = host.totalTime.coerceAtLeast(0).toFloat()
+        val safeCurrentTime = host.currentTime
+            .takeIf { it.isFinite() }
+            ?.coerceIn(0f, safeTotalTime)
+            ?: 0f
+        val safeMaxProgress = if (safeTotalTime > 0f) safeTotalTime else 0.1f
+
         CustomSeekBar(
             modifier = Modifier.weight(1f),
-            progress = host.currentTime.coerceIn(0f, host.totalTime.toFloat()),
-            maxProgress = host.totalTime.toFloat().coerceAtLeast(0.1f),
+            progress = safeCurrentTime,
+            maxProgress = safeMaxProgress,
             onValueChange = { v ->
                 sliderValue = v
                 host.isSliding = true
@@ -147,9 +158,11 @@ fun X_PlayerBottomBar(
     }
 }
 
+private const val MAX_FORMATTED_SECONDS = 86400 * 7
+
 /** Секунды → `M:SS` (или `H:MM:SS` для длинных видео). */
 internal fun formatTime(totalSeconds: Int): String {
-    val validSeconds = totalSeconds.coerceAtLeast(0)
+    val validSeconds = totalSeconds.coerceIn(0, MAX_FORMATTED_SECONDS)
     val hours = validSeconds / 3600
     val minutes = (validSeconds % 3600) / 60
     val seconds = validSeconds % 60

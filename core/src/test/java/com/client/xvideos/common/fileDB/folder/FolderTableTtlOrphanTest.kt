@@ -48,4 +48,20 @@ class FolderTableTtlOrphanTest {
         // orphan без timeCreate удалён
         assertNull(table.get("orphan"))
     }
+
+    @Test
+    fun `upsert and get work with special characters in field names`() = runTest {
+        val tableDir = tmp.newFolder("field_sanitize_test")
+        val table = FolderTable(tableDir.absolutePath)
+
+        table.upsert("key1", mapOf(
+            "unsafe:field/name*" to "sanitized-value",
+            "normal_field" to "normal-value"
+        ))
+
+        val row = table.get("key1")
+        assertNotNull(row)
+        assertEquals("sanitized-value", row?.fields?.get("unsafe_field_name_"))
+        assertEquals("normal-value", row?.fields?.get("normal_field"))
+    }
 }

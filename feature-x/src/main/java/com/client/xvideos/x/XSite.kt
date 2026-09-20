@@ -24,6 +24,12 @@ fun normalizeXUrl(href: String): String {
     return "$urlStart/${trimmed.removePrefix("/")}"
 }
 
+private val NUMERIC_VIDEO_ID_REGEX = Regex("""/video\.?(\d+)""")
+private val SLUG_VIDEO_ID_REGEX = Regex("""/video[._-]?([a-zA-Z0-9]+)""")
+private val HOURS_REGEX = Regex("""(\d+)\s*(?:hr|ч|hour)""")
+private val MINUTES_REGEX = Regex("""(\d+)\s*(?:min|мин|m)""")
+private val SECONDS_REGEX = Regex("""(\d+)\s*(?:sec|сек|s)""")
+
 /**
  * Извлекает числовой или буквенно-цифровой идентификатор видео из URL xvideos.
  *
@@ -35,13 +41,11 @@ fun normalizeXUrl(href: String): String {
 fun extractXVideoId(href: String): Long? {
     if (href.isBlank()) return null
     // 1. Числовой id: /video12345/ или /video.12345/
-    val numericRegex = Regex("""/video\.?(\d+)""")
-    val numericMatch = numericRegex.find(href)?.groupValues?.get(1)?.toLongOrNull()
+    val numericMatch = NUMERIC_VIDEO_ID_REGEX.find(href)?.groupValues?.get(1)?.toLongOrNull()
     if (numericMatch != null && numericMatch > 0L) return numericMatch
 
     // 2. Буквенно-цифровой id (современные ссылки X: /video.uicfdab07bd/_ или /video_uicfdab07bd/):
-    val slugRegex = Regex("""/video[._-]?([a-zA-Z0-9]+)""")
-    val slugMatch = slugRegex.find(href)?.groupValues?.get(1)
+    val slugMatch = SLUG_VIDEO_ID_REGEX.find(href)?.groupValues?.get(1)
     if (!slugMatch.isNullOrBlank()) {
         val bits = java.util.UUID.nameUUIDFromBytes(slugMatch.toByteArray(Charsets.UTF_8)).mostSignificantBits
         val positive = bits and Long.MAX_VALUE
@@ -68,17 +72,13 @@ fun parseDurationToMs(raw: String): Long {
     }
 
     var totalMs = 0L
-    val hoursRegex = Regex("""(\d+)\s*(?:hr|ч|hour)""")
-    val minutesRegex = Regex("""(\d+)\s*(?:min|мин|m)""")
-    val secondsRegex = Regex("""(\d+)\s*(?:sec|сек|s)""")
-
-    hoursRegex.find(text)?.groupValues?.get(1)?.toLongOrNull()?.let {
+    HOURS_REGEX.find(text)?.groupValues?.get(1)?.toLongOrNull()?.let {
         totalMs += it * 3600_000L
     }
-    minutesRegex.find(text)?.groupValues?.get(1)?.toLongOrNull()?.let {
+    MINUTES_REGEX.find(text)?.groupValues?.get(1)?.toLongOrNull()?.let {
         totalMs += it * 60_000L
     }
-    secondsRegex.find(text)?.groupValues?.get(1)?.toLongOrNull()?.let {
+    SECONDS_REGEX.find(text)?.groupValues?.get(1)?.toLongOrNull()?.let {
         totalMs += it * 1000L
     }
 

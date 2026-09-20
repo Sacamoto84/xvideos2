@@ -101,4 +101,26 @@ class ScreenX_VideoPlayerSMTest {
         val sm3 = ScreenX_VideoPlayerSM("https://example.com/stream", AppFileDatabase())
         assertEquals("https://example.com/stream", sm3.url)
     }
+
+    @Test
+    fun `saveProgress устойчив к нечисловым и отрицательным значениям времени`() {
+        val sm = ScreenX_VideoPlayerSM("/video99999", AppFileDatabase())
+        // Проверяем, что вызов с NaN, Infinity, отрицательными секундами не приводит к крашу
+        sm.saveProgress(Float.NaN, -10)
+        sm.saveProgress(Float.POSITIVE_INFINITY, 300)
+        sm.saveProgress(-5f, 300)
+        sm.saveProgress(50f, 300)
+
+        val savedItem = sm.saved.history.get(99999L)
+        // 50s * 1000 = 50000ms
+        assertEquals(50_000L, savedItem?.lastPositionMs)
+        assertEquals(300_000L, savedItem?.totalDurationMs)
+    }
+
+    @Test
+    fun `dismissResumeNotice сбрасывает текст уведомления`() {
+        val sm = ScreenX_VideoPlayerSM("/video123", AppFileDatabase())
+        sm.dismissResumeNotice()
+        assertEquals(null, sm.resumeNoticeText)
+    }
 }

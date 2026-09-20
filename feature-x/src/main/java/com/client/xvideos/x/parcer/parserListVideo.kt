@@ -7,6 +7,9 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import timber.log.Timber
 
+private val FLAG_CODE_REGEX = Regex("""\bflag-([a-z]{2})\b""")
+private val VIEWS_TOKEN_REGEX = Regex("""\d[\d., \s]*[KkMmGgКкМмБб]?""")
+
 /**
  * X4: извлечение флага текущей страны вынесено в отдельную чистую функцию.
  * Раньше [parserListVideo] как побочный эффект писал глобальную `currentCountries`.
@@ -14,7 +17,7 @@ import timber.log.Timber
  * @return emoji-флаг (напр. "🇸🇪") или null, если не удалось определить.
  */
 fun parseSiteCountryFlag(document: Document): String? {
-    val code = Regex("""\bflag-([a-z]{2})\b""")
+    val code = FLAG_CODE_REGEX
         .find(document.select("#site-localisation").toString())
         ?.groupValues?.get(1) ?: return null
     return getFlagEmoji("flag-$code")
@@ -83,7 +86,7 @@ fun parserListVideo(document: Document): List<ItemsX> {
  */
 private fun extractViews(metadata: String?): String {
     if (metadata.isNullOrBlank()) return "No views"
-    val token = Regex("""\d[\d., \s]*[KkMmGgКкМмБб]?""")
+    val token = VIEWS_TOKEN_REGEX
         .findAll(metadata)
         .map { it.value.trim() }
         .lastOrNull { it.isNotBlank() }

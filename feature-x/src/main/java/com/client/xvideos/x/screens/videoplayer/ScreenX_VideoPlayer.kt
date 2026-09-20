@@ -255,6 +255,14 @@ private fun VideoPlayerContentView(
         }
     }
 
+    // Авто-скрытие плашки о возобновлении через 4 секунды
+    LaunchedEffect(vm.resumeNoticeText) {
+        if (vm.resumeNoticeText != null) {
+            delay(4000)
+            vm.dismissResumeNotice()
+        }
+    }
+
     RememberHistoryProgressSync(vm = vm, host = host)
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
@@ -302,7 +310,12 @@ private fun VideoPlayerContentView(
 
                 // Теги/каналы поверх видео (только в портретном режиме)
                 if (!vm.isFullScreen) {
-                    Box(modifier = Modifier.align(Alignment.TopCenter)) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .displayCutoutPadding()
+                            .padding(start = 56.dp, end = 12.dp, top = 8.dp)
+                    ) {
                         ComposeTags(
                             vm.tags,
                             onClick = {

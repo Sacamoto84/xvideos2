@@ -3,6 +3,8 @@ package com.client.xvideos.x.parcer
 //https://cdn77-pic.xvideos-cdn.com/videos/thumbs169ll/6a/4f/6b/6a4f6bafe3abb03b5ea6108ab18ff1ad/6a4f6bafe3abb03b5ea6108ab18ff1ad.30.jpg
 //https://cdn77-pic.xvideos-cdn.com/videos/videopreview/6a/4f/6b/6a4f6bafe3abb03b5ea6108ab18ff1ad_169.mp4
 
+private val TRAILING_INDEX_REGEX = Regex("-\\d+$")
+
 /**
  * Собирает адрес видео-превью из адреса картинки-превью. `null` — не получилось.
  *
@@ -40,7 +42,7 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
     val fileName = parts.lastOrNull().orEmpty()
     val hash = fileName
         .substringBefore('.')
-        .replace(Regex("-\\d+$"), "")
+        .replace(TRAILING_INDEX_REGEX, "")
         .takeIf { it.isNotBlank() }
         ?: return null
 

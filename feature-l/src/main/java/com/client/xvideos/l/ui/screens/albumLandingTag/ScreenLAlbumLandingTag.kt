@@ -78,7 +78,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import timber.log.Timber
 
 
@@ -89,7 +88,6 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
 
     override val key: ScreenKey = "ScreenLAlbumLandingTag:$tag"
 
-    @OptIn(ExperimentalZoomableApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow

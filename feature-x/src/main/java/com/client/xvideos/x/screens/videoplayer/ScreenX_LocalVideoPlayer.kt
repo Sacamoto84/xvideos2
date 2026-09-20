@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -75,7 +76,7 @@ class ScreenX_LocalVideoPlayer(
 
         val historyItem = if (videoId > 0L) sm.saved.history.get(videoId) else null
         val resumePosition = historyItem?.takeIf { it.isEligibleForResume }?.let {
-            it.lastPositionMs / 1000f
+            (it.lastPositionMs / 1000f).takeIf { sec -> sec.isFinite() && sec >= 0f }
         }
 
         var resumeNoticeText by remember(fileUrl) {
@@ -150,6 +151,7 @@ class ScreenX_LocalVideoPlayer(
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .statusBarsPadding()
+                            .displayCutoutPadding()
                             .padding(8.dp),
                     ) {
                         Icon(
@@ -194,10 +196,12 @@ class ScreenX_LocalVideoPlayer(
         currentTimeSeconds: Float,
         totalTimeSeconds: Int,
     ) {
-        val playerDurationMs = totalTimeSeconds * 1000L
+        val playerDurationMs = totalTimeSeconds.coerceAtLeast(0) * 1000L
         val parsedDurationMs = com.client.xvideos.x.parseDurationToMs(item.duration)
         val durationMs = if (playerDurationMs > 0L) playerDurationMs else parsedDurationMs
-        val positionMs = (currentTimeSeconds * 1000f).toLong().coerceAtLeast(0L)
+        val safeSeconds = currentTimeSeconds.takeIf { it.isFinite() && it >= 0f } ?: 0f
+        val maxPos = if (durationMs > 0L) durationMs else Long.MAX_VALUE
+        val positionMs = (safeSeconds * 1000f).toLong().coerceIn(0L, maxPos)
         if (item.id > 0L) {
             sm.saved.history.updateProgress(item, positionMs, durationMs)
         }

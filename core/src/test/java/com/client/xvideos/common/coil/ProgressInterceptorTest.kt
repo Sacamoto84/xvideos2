@@ -9,9 +9,22 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.concurrent.TimeUnit
+import java.lang.reflect.Proxy
 
 class ProgressInterceptorTest {
+
+    private fun mockChain(request: Request, response: Response): Interceptor.Chain {
+        return Proxy.newProxyInstance(
+            Interceptor.Chain::class.java.classLoader,
+            arrayOf(Interceptor.Chain::class.java)
+        ) { _, method, _ ->
+            when (method.name) {
+                "request" -> request
+                "proceed" -> response
+                else -> null
+            }
+        } as Interceptor.Chain
+    }
 
     @Test
     fun `ответ с кодом 304 Not Modified не оборачивается в ProgressResponseBody`() {
@@ -31,18 +44,7 @@ class ProgressInterceptorTest {
             .message("Not Modified")
             .build()
 
-        val chain = object : Interceptor.Chain {
-            override fun request(): Request = request
-            override fun proceed(request: Request): Response = responseWithoutBody
-            override fun connection() = null
-            override fun call() = throw UnsupportedOperationException()
-            override fun connectTimeoutMillis() = 0
-            override fun withConnectTimeout(timeout: Int, unit: TimeUnit) = this
-            override fun readTimeoutMillis() = 0
-            override fun withReadTimeout(timeout: Int, unit: TimeUnit) = this
-            override fun writeTimeoutMillis() = 0
-            override fun withWriteTimeout(timeout: Int, unit: TimeUnit) = this
-        }
+        val chain = mockChain(request, responseWithoutBody)
 
         val result = interceptor.intercept(chain)
         assertEquals(304, result.code)
@@ -69,18 +71,7 @@ class ProgressInterceptorTest {
             .body("hello world".toResponseBody("text/plain".toMediaType()))
             .build()
 
-        val chain = object : Interceptor.Chain {
-            override fun request(): Request = request
-            override fun proceed(request: Request): Response = responseWithBody
-            override fun connection() = null
-            override fun call() = throw UnsupportedOperationException()
-            override fun connectTimeoutMillis() = 0
-            override fun withConnectTimeout(timeout: Int, unit: TimeUnit) = this
-            override fun readTimeoutMillis() = 0
-            override fun withReadTimeout(timeout: Int, unit: TimeUnit) = this
-            override fun writeTimeoutMillis() = 0
-            override fun withWriteTimeout(timeout: Int, unit: TimeUnit) = this
-        }
+        val chain = mockChain(request, responseWithBody)
 
         val result = interceptor.intercept(chain)
         assertEquals(200, result.code)

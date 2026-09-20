@@ -117,10 +117,11 @@ class FolderTable(
     }
 
     private fun fieldFileName(field: String): String {
-        return field.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".txt"
+        return field.replace(SAFE_FIELD_NAME_REGEX, "_") + ".txt"
     }
 
     companion object {
+        private val SAFE_FIELD_NAME_REGEX = Regex("[^A-Za-z0-9._-]")
         const val FIELD_KEY = "key"
         const val FIELD_CONTENT = "content"
         const val FIELD_TIME_CREATE = "timeCreate"
