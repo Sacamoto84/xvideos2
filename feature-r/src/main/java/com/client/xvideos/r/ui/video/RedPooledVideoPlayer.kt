@@ -197,8 +197,8 @@ fun RedPooledVideoPlayer(
         var lastDuration = -1
         while (isActive) {
             val position = (exo.currentPosition / 1000f).coerceAtLeast(0f)
-            val durationMs = exo.duration.takeIf { it != C.TIME_UNSET } ?: 0L
-            val duration = (durationMs / 1000).toInt()
+            val durationMs = exo.duration.takeIf { it != C.TIME_UNSET && it > 0L } ?: 0L
+            val duration = (durationMs / 1000).toInt().coerceAtLeast(0)
             if (position != lastPosition || duration != lastDuration) {
                 lastPosition = position
                 lastDuration = duration

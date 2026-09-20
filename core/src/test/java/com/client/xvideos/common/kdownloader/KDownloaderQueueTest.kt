@@ -225,4 +225,19 @@ class KDownloaderQueueTest {
         val safeFile = resolvedFile ?: File(parent, "${baseName}_${System.currentTimeMillis()}.$ext")
         assertEquals(File(root, "clip.mp4_3.temp"), safeFile)
     }
+
+    @Test
+    fun `progress calculation handles overflow and clamps to 0 to 100`() {
+        fun calcProgress(downloaded: Long, total: Long): Int {
+            return if (total > 0) ((downloaded * 100L) / total).toInt().coerceIn(0, 100) else 0
+        }
+
+        assertEquals(0, calcProgress(0L, 1000L))
+        assertEquals(50, calcProgress(500L, 1000L))
+        assertEquals(100, calcProgress(1000L, 1000L))
+        assertEquals(100, calcProgress(1200L, 1000L))
+        assertEquals(0, calcProgress(-10L, 1000L))
+        assertEquals(0, calcProgress(500L, 0L))
+        assertEquals(0, calcProgress(500L, -1L))
+    }
 }

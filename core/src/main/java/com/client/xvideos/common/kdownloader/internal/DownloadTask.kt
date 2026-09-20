@@ -303,7 +303,7 @@ class DownloadTask(
 
                         var progress = 0
                         if (totalBytes > 0) {
-                            progress = ((req.downloadedBytes * 100) / totalBytes).toInt()
+                            progress = ((req.downloadedBytes * 100L) / totalBytes).toInt().coerceIn(0, 100)
                         }
                         if (progress != lastProgress) {
                             lastProgress = progress
