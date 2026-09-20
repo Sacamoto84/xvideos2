@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -84,8 +85,12 @@ object L_ScreenAlbumSearch : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLAlbumSearchSM = getScreenModel()
 
+        val coroutineScope = rememberCoroutineScope()
         val searchText = vm.searchText.collectAsStateWithLifecycle().value
         BackHandler(enabled = searchText.isNotEmpty()) { vm.searchText.value = "" }
+        BackHandler(enabled = searchText.isEmpty() && vm.state.firstVisibleItemIndex > 0) {
+            coroutineScope.launch { vm.state.animateScrollToItem(0) }
+        }
         val result = vm.result.collectAsStateWithLifecycle().value
         val isLoading = vm.isLoading.collectAsStateWithLifecycle().value
         val sections = result?.sections

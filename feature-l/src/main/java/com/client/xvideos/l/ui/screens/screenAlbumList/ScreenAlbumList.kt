@@ -118,6 +118,7 @@ private class ScreenLAlbumList(
 }
 
 @OptIn(ExperimentalZoomableApi::class)
+@Suppress("LongMethod")
 @Composable
 private fun Screen.ScreenAlbumListContent(
     initialFilter: LAlbumListFilter?,
@@ -125,9 +126,6 @@ private fun Screen.ScreenAlbumListContent(
 )
 {
         val navigator = LocalNavigator.currentOrThrow
-        BackHandler(enabled = navigator.canPop) {
-            navigator.pop()
-        }
         val vm = getScreenModel<ScreenLAlbumListSM, ScreenLAlbumListSM.Factory> { factory ->
             factory.create(initialFilter)
         }
@@ -143,6 +141,17 @@ private fun Screen.ScreenAlbumListContent(
 
         // ✅ Состояние для диалога
         var showFilterDialog by remember { mutableStateOf(false) }
+
+        // Иерархия «Назад»: сначала закрыть диалог фильтра, затем вернуться на страницу 0, затем выйти
+        BackHandler(enabled = showFilterDialog) {
+            showFilterDialog = false
+        }
+        BackHandler(enabled = !showFilterDialog && vm.statePager.currentPage > 0) {
+            scope.launch { vm.statePager.animateScrollToPage(0) }
+        }
+        BackHandler(enabled = !showFilterDialog && vm.statePager.currentPage == 0 && navigator.canPop) {
+            navigator.pop()
+        }
 
         val topInset = getTopInsetDp()
 
@@ -214,7 +223,17 @@ private fun Screen.ScreenAlbumListContent(
                         topInset = topInset,
                         haptic = haptic,
                         onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
-                        onBackClick = if (navigator.canPop && title.isNotEmpty()) { { navigator.pop() } } else null
+                        onBackClick = if (navigator.canPop && title.isNotEmpty()) {
+                            {
+                                if (showFilterDialog) {
+                                    showFilterDialog = false
+                                } else if (vm.statePager.currentPage > 0) {
+                                    scope.launch { vm.statePager.animateScrollToPage(0) }
+                                } else {
+                                    navigator.pop()
+                                }
+                            }
+                        } else null
                     )
 
                     val status = vm.bigList[page]?.status

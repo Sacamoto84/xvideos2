@@ -207,6 +207,7 @@ private fun VideoPlayerLoadingView(onBack: () -> Unit) {
 }
 
 @OptIn(UnstableApi::class)
+@Suppress("LongMethod")
 @Composable
 private fun VideoPlayerContentView(
     vm: ScreenX_VideoPlayerSM,
@@ -231,9 +232,13 @@ private fun VideoPlayerContentView(
     var isZoomed by remember { mutableStateOf(false) }
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
-    // Нажатие кнопки «Назад» при активном зуме сбрасывает масштаб до 1.0x
+    // Нажатие кнопки «Назад» при активном зуме сбрасывает масштаб как в обычном, так и в полноэкранном режиме
     BackHandler(enabled = isZoomed) {
         resetZoomTrigger++
+    }
+
+    BackHandler(enabled = !isZoomed && !vm.isFullScreen) {
+        navigator.pop()
     }
 
     LaunchedEffect(vm.isFullScreen) {
@@ -272,7 +277,9 @@ private fun VideoPlayerContentView(
                 ) {
                     IconButton(
                         onClick = {
-                            if (vm.isFullScreen) {
+                            if (isZoomed) {
+                                resetZoomTrigger++
+                            } else if (vm.isFullScreen) {
                                 vm.exitFullScreen()
                             } else {
                                 navigator.pop()

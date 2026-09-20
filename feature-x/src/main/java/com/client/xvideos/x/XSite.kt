@@ -43,7 +43,7 @@ fun extractXVideoId(href: String): Long? {
     val slugRegex = Regex("""/video[._-]?([a-zA-Z0-9]+)""")
     val slugMatch = slugRegex.find(href)?.groupValues?.get(1)
     if (!slugMatch.isNullOrBlank()) {
-        val bits = java.util.UUID.nameUUIDFromBytes(slugMatch.toByteArray()).mostSignificantBits
+        val bits = java.util.UUID.nameUUIDFromBytes(slugMatch.toByteArray(Charsets.UTF_8)).mostSignificantBits
         val positive = bits and Long.MAX_VALUE
         if (positive > 0L) return positive
     }

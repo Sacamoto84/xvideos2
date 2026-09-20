@@ -71,6 +71,7 @@ object R_Screen_CollectionTab : Screen {
 
     override val key: ScreenKey = "R_Screen_CollectionTab"
 
+    @Suppress("LongMethod")
     @Composable
     override fun Content() {
 
@@ -93,6 +94,15 @@ object R_Screen_CollectionTab : Screen {
         var itemPendingRename by rememberSaveable { mutableStateOf<String?>(null) }
         var renameValue by rememberSaveable { mutableStateOf("") }
         var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
+
+        BackHandler(
+            enabled = selectedCollection == null &&
+                (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null)
+        ) {
+            itemPendingAction = null
+            itemPendingRename = null
+            itemPendingDelete = null
+        }
 
         fun coverOf(name: String): String? =
             savedRed.collections.collectionList

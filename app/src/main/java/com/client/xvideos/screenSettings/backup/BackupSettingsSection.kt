@@ -8,6 +8,7 @@ import com.client.xvideos.screenSettings.shouldAutoRecoverRedDownload
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Button
@@ -63,6 +64,7 @@ import kotlinx.coroutines.withContext
  */
 private const val BACKUP_CONSOLE_MAX_LINES = 2000
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun BackupSettingsSection(
     context: Context,
@@ -96,6 +98,19 @@ internal fun BackupSettingsSection(
     var pendingRestoreUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var restorePassword by remember { mutableStateOf<CharArray?>(null) }
     var restorePasswordError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    BackHandler(enabled = isWorking || showCreatePasswordDialog || showRestorePasswordDialog || screen == BackupFlowScreen.RESTORE) {
+        when {
+            isWorking -> SnackBar.info("Пожалуйста, дождитесь окончания операции")
+            showCreatePasswordDialog -> showCreatePasswordDialog = false
+            showRestorePasswordDialog -> {
+                showRestorePasswordDialog = false
+                pendingRestoreUri = null
+                restorePasswordError = null
+            }
+            screen == BackupFlowScreen.RESTORE -> screen = BackupFlowScreen.CREATE
+        }
+    }
 
     fun appendBackupLog(message: String) {
         if (backupConsole.size >= BACKUP_CONSOLE_MAX_LINES) {

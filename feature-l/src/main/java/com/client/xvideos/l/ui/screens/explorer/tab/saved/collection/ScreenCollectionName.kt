@@ -1,7 +1,6 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.theme.LavenderDialog
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -9,22 +8,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -33,10 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,9 +40,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.l.featured.saved.LCollectionDuplicateGroup
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.featured.saved.lPicsDetailsIdentityKey
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
@@ -64,7 +53,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
 
 class ScreenCollectionName(
@@ -85,7 +73,7 @@ class ScreenCollectionName(
             savedL = vm.savedL,
             host = vm.host,
             onExitCollection = {
-                vm.savedL.collection.currentCollectionName = null
+                vm.savedL.collection.exitCollection()
                 if (popOnBack) {
                     navigator.pop()
                 }
@@ -99,47 +87,40 @@ class ScreenCollectionName(
 fun L_CollectionNameContent(
     collectionName: String,
     savedL: SavedL,
-    host: LazyRowPictureDetailsHost,
+    host: LazyRowPictureDetailsHost = remember(collectionName) { LazyRowPictureDetailsHost(collectionName) },
     onExitCollection: (() -> Unit)? = null
 ) {
     val searchQuery = host.collectionSearchQuery
-    val duplicateDialogVisible = host.collectionDuplicateDialogVisible
 
-    LaunchedEffect(host, searchQuery) {
-        snapshotFlow { savedL.collection.listUrl.toList() }
-            .collectLatest { items ->
-                host.replaceFilteredPictures(items.filter { it.matchesCollectionSearch(searchQuery) })
-            }
+    val collectionItemsState = savedL.collection.getCollectionItems(collectionName)
+        .collectAsStateWithLifecycle()
+    val collectionItems = collectionItemsState.value
+
+    LaunchedEffect(host, searchQuery, collectionItems) {
+        val filtered = (collectionItems ?: emptyList()).filter { it.matchesCollectionSearch(searchQuery) }
+        host.replaceFilteredPictures(filtered)
     }
 
     val selectedCollection = savedL.collection.currentCollectionName
-    val duplicateGroups = savedL.collection.duplicateGroups.toList()
-
-    if (duplicateDialogVisible) {
-        LCollectionDuplicatesDialog(
-            groups = duplicateGroups,
-            onDismiss = { host.collectionDuplicateDialogVisible = false },
-            onRemoveDuplicates = {
-                savedL.collection.removeDuplicateItems(collectionName)
-                host.collectionDuplicateDialogVisible = false
-            }
-        )
-    }
 
     val handleExit = {
         Timber.d("BackHandler SavedCollectionTab")
         onExitCollection?.invoke() ?: run {
-            savedL.collection.currentCollectionName = null
+            savedL.collection.exitCollection()
         }
     }
 
-    BackHandler {
+    // Иерархия «Назад»: сначала сбросить поиск, затем выйти из коллекции
+    BackHandler(enabled = searchQuery.isNotEmpty()) {
+        host.collectionSearchQuery = ""
+    }
+    BackHandler(enabled = searchQuery.isEmpty()) {
         handleExit()
     }
 
     val columnSelect = Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
 
-    //Изменение количества отображаемых элементов
+    // Изменение количества отображаемых элементов
     LaunchedEffect(columnSelect) { host.columns = columnSelect }
 
     Scaffold(topBar = {
@@ -147,8 +128,6 @@ fun L_CollectionNameContent(
             collectionName = selectedCollection ?: collectionName,
             searchQuery = searchQuery,
             onSearchChange = { host.collectionSearchQuery = it },
-            duplicateCount = duplicateGroups.sumOf { it.items.size - 1 },
-            onDuplicatesClick = { host.collectionDuplicateDialogVisible = true },
             onExitCollection = handleExit
         )
     }) { padding ->
@@ -168,12 +147,9 @@ private fun LCollectionDetailTopBar(
     collectionName: String,
     searchQuery: String,
     onSearchChange: (String) -> Unit,
-    duplicateCount: Int,
-    onDuplicatesClick: () -> Unit,
     onExitCollection: (() -> Unit)? = null
 ) {
     var searchVisible by rememberSaveable(collectionName) { mutableStateOf(false) }
-    var menuExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth().background(Theme.background)
@@ -181,7 +157,13 @@ private fun LCollectionDetailTopBar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (onExitCollection != null) {
-                IconButton(onClick = onExitCollection) {
+                IconButton(onClick = {
+                    if (searchQuery.isNotEmpty()) {
+                        onSearchChange("")
+                    } else {
+                        onExitCollection()
+                    }
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Назад",
@@ -196,40 +178,6 @@ private fun LCollectionDetailTopBar(
                 fontSize = 18.sp,
                 fontFamily = Theme.L.fontFamilyPopinsRegular
             )
-            if (duplicateCount > 0) {
-                TextButton(onClick = onDuplicatesClick) {
-                    Text("Дубли: $duplicateCount", color = Theme.L.primaryColor, style = Theme.L.Type.button)
-                }
-            }
-
-//            IconButton(onClick = { searchVisible = !searchVisible }) {
-//                Icon(
-//                    imageVector = if (searchVisible) Icons.Default.Close else Icons.Default.Search,
-//                    contentDescription = null,
-//                    tint = Theme.L.textColor
-//                )
-//            }
-
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Меню коллекции", tint = Theme.L.textColor)
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                    containerColor = Theme.L.grey5
-                ) {
-
-                    DropdownMenuItem(
-                        text = { Text("Проверить дубли", color = Theme.L.textColor, style = Theme.L.Type.menuItem) },
-                        onClick = {
-                            onDuplicatesClick()
-                            menuExpanded = false
-                        }
-                    )
-
-                }
-            }
         }
 
         AnimatedVisibility(searchVisible) {
@@ -243,43 +191,6 @@ private fun LCollectionDetailTopBar(
             )
         }
     }
-}
-
-@Composable
-private fun LCollectionDuplicatesDialog(
-    groups: List<LCollectionDuplicateGroup>,
-    onDismiss: () -> Unit,
-    onRemoveDuplicates: () -> Unit
-) {
-    LavenderDialog(
-        title = "Детектор дублей",
-        onDismiss = onDismiss,
-        content = {
-            if (groups.isEmpty()) {
-                Text("Дубли не найдены", color = Theme.DialogLavande.bodyColor, style = Theme.L.Type.body)
-            } else {
-                Column {
-                    Text(
-                        "Найдено групп: ${groups.size}. При очистке останется самый новый элемент в каждой группе.",
-                        color = Theme.DialogLavande.bodyColor,
-                        style = Theme.L.Type.body
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    groups.take(6).forEach { group ->
-                        Text(
-                            "• ${group.items.size} элемента: ${lPicsDetailsIdentityKey(group.items.first())}",
-                            color = Color.White,
-                            style = Theme.L.Type.rowSubtitle
-                        )
-                    }
-                }
-            }
-        },
-        confirmText = if (groups.isNotEmpty()) "Удалить дубли" else null,
-        onConfirm = onRemoveDuplicates,
-        destructive = true,
-        dismissText = "Закрыть",
-    )
 }
 
 private fun PicsDetails.matchesCollectionSearch(query: String): Boolean {
@@ -318,19 +229,11 @@ class ScreenLCollectionNameSM @AssistedInject constructor(
     }
 
     fun ensureCollectionLoaded() {
-        if (savedL.collection.currentCollectionName != collectionName || savedL.collection.listUrl.isEmpty()) {
-            savedL.collection.setCollection(collectionName)
-        }
-        syncItems(savedL.collection.listUrl.toList())
-    }
-
-    fun syncItems(items: List<PicsDetails>) {
-        host.replaceFilteredPictures(items)
+        savedL.collection.getCollectionItems(collectionName)
     }
 
     fun delete(item: PicsDetails) {
         savedL.collection.remove(item, collectionName)
-        syncItems(savedL.collection.listUrl.toList())
     }
 
 }

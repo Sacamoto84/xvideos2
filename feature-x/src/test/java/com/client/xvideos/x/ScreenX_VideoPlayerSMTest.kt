@@ -71,6 +71,7 @@ class ScreenX_VideoPlayerSMTest {
         assertFalse(sm.isFullScreen)
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `openFullScreen переключает в полный экран на месте`() {
         val sm = ScreenX_VideoPlayerSM("https://example.com/video1", AppFileDatabase())

@@ -3,6 +3,7 @@ package com.client.xvideos.x.screens.favorites
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -110,6 +111,12 @@ private fun FavoritesContent(
 ) {
     // Подтверждение удаления из избранного (диалог).
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
+
+    // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
+    BackHandler(enabled = pendingDelete != null) {
+        pendingDelete = null
+    }
+
     pendingDelete?.let { item ->
         ConfirmDeleteFavoriteDialog(
             item = item,

@@ -18,7 +18,10 @@ class FormattingUtilsTest {
     fun `toMinSec handles edge cases gracefully`() {
         assertEquals("00:00", (-5.0).toMinSec())
         assertEquals("00:00", Double.NaN.toMinSec())
+        assertEquals("00:00", Double.POSITIVE_INFINITY.toMinSec())
+        assertEquals("00:00", Double.NEGATIVE_INFINITY.toMinSec())
         assertEquals("00:00", (-1.0f).toMinSec())
+        assertEquals("00:00", Float.POSITIVE_INFINITY.toMinSec())
         assertEquals("01:00", 60.0f.toMinSec())
     }
 

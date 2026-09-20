@@ -52,11 +52,21 @@ fun CalculatorScreen(
     onUnlockFailed: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
-    BackHandler(onBack = onBack)
-
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val state = rememberSaveable(saver = CalculatorState.Saver) { CalculatorState() }
+
+    BackHandler {
+        when {
+            state.displayValue == CalculatorState.ERROR_TEXT || (!state.isNewEntry && state.displayValue != "0") -> {
+                state.onBackspace(haptic)
+            }
+            !state.isAllClear -> {
+                state.onClear(haptic)
+            }
+            else -> onBack()
+        }
+    }
 
     Column(
         modifier = Modifier

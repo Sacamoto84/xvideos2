@@ -1,5 +1,6 @@
 package com.client.xvideos.screenSettings.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ import kotlinx.coroutines.launch
 
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun AppLockSettingsSection() {
     val context = LocalContext.current.applicationContext
@@ -73,6 +75,12 @@ fun AppLockSettingsSection() {
             Settings.camouflage_calculator_enabled.setValue(false)
             LauncherAliasManager.setCalculatorAliasEnabled(context, false)
         }
+    }
+
+    BackHandler(enabled = dialogMode != null || showCamouflageVerificationDialog || showTimeoutDialog) {
+        dialogMode = null
+        showCamouflageVerificationDialog = false
+        showTimeoutDialog = false
     }
 
     dialogMode?.let { mode ->

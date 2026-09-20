@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
+import androidx.activity.compose.BackHandler
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -99,6 +101,10 @@ object R_Screen_CreatorsTab : Screen {
         val savedRed = vm.savedRed
 
         var itemPendingDelete by remember { mutableStateOf<UserInfo?>(null) }
+
+        BackHandler(enabled = itemPendingDelete != null) {
+            itemPendingDelete = null
+        }
 
         val onCreatorClick = remember(navigator) {
             { username: String -> navigator.push(ScreenRedProfile(username)) }

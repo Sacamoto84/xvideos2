@@ -109,6 +109,7 @@ class ScreenRedFullScreen(
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
+@Suppress("LongMethod")
 @Composable
 private fun RedFullScreenFeed(
     host: LazyRow123Host,
@@ -166,9 +167,13 @@ private fun RedFullScreenFeed(
     var isCurrentPageZoomed by remember { mutableStateOf(false) }
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
-    // Нажатие кнопки «Назад» при активном увеличении кадра плавно сбрасывает зум до 1.0x
-    BackHandler(enabled = isCurrentPageZoomed) {
-        resetZoomTrigger++
+    // Нажатие кнопки «Назад» при активном увеличении кадра сбрасывает зум, иначе закрывает плеер
+    BackHandler {
+        if (isCurrentPageZoomed) {
+            resetZoomTrigger++
+        } else {
+            navigator.pop()
+        }
     }
 
     LaunchedEffect(pagerState, host) {
@@ -228,7 +233,14 @@ private fun RedFullScreenFeed(
                             isCurrentPageZoomed = zoomed
                         }
                     },
-                    resetZoomTrigger = if (isCurrentPage) resetZoomTrigger else 0
+                    resetZoomTrigger = if (isCurrentPage) resetZoomTrigger else 0,
+                    onBack = {
+                        if (isCurrentPageZoomed) {
+                            resetZoomTrigger++
+                        } else {
+                            navigator.pop()
+                        }
+                    }
                 )
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -248,7 +260,14 @@ private fun RedFullScreenFeed(
                             onZoomChanged = { zoomed ->
                                 isCurrentPageZoomed = zoomed
                             },
-                            resetZoomTrigger = resetZoomTrigger
+                            resetZoomTrigger = resetZoomTrigger,
+                            onBack = {
+                                if (isCurrentPageZoomed) {
+                                    resetZoomTrigger++
+                                } else {
+                                    navigator.pop()
+                                }
+                            }
                         )
                     } else {
                         CircularProgressIndicator(color = Color.White)
@@ -279,9 +298,13 @@ private fun RedFullScreenSingle(
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
     val downloadedKeys by vm.downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
 
-    // Нажатие кнопки «Назад» при активном увеличении кадра плавно сбрасывает зум до 1.0x
-    BackHandler(enabled = isZoomed) {
-        resetZoomTrigger++
+    // Нажатие кнопки «Назад» при активном увеличении кадра сбрасывает зум, иначе закрывает плеер
+    BackHandler {
+        if (isZoomed) {
+            resetZoomTrigger++
+        } else {
+            navigator.pop()
+        }
     }
 
     val feedState = rememberFeedPlayerState(poolCapacity = 1)
@@ -309,6 +332,13 @@ private fun RedFullScreenSingle(
             onBuffering = { isVideoBuffering = it },
             onZoomChanged = { isZoomed = it },
             resetZoomTrigger = resetZoomTrigger,
+            onBack = {
+                if (isZoomed) {
+                    resetZoomTrigger++
+                } else {
+                    navigator.pop()
+                }
+            },
         )
     }
 }
@@ -373,6 +403,7 @@ private fun RedFullScreenPage(
     onBuffering: (Boolean) -> Unit,
     onZoomChanged: (Boolean) -> Unit = {},
     resetZoomTrigger: Int = 0,
+    onBack: () -> Unit = { navigator.pop() },
 ) {
     val videoUri = remember(item.id, item.userName, downloadedKeys) { redVideoUrl(item, downloadedKeys) }
 
@@ -424,7 +455,8 @@ private fun RedFullScreenPage(
                 vm = vm,
                 navigator = navigator,
                 downloadList = downloadList,
-                haptic = { haptic.performHapticFeedback(HapticFeedbackType.Confirm) }
+                haptic = { haptic.performHapticFeedback(HapticFeedbackType.Confirm) },
+                onBack = onBack
             )
         }
     }

@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.p2p.ui.ScreenP2pReceive
@@ -50,6 +51,8 @@ import com.client.xvideos.x.screens.dashboards.ScreenXDashBoards
 object MenuScreen : Screen {
 
     private fun readResolve(): Any = MenuScreen
+
+    override val key: ScreenKey = "MenuScreen"
 
     @Composable
     override fun Content() {

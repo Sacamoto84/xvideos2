@@ -48,12 +48,18 @@ class ScreenTags(val tag: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val job = rememberCoroutineScope()
 
-        BackHandler { navigator.pop() }
-
         // Число страниц приходит с нулевой страницей; до её разбора пейджер
         // держит одну. pageCount читается лениво, поэтому рост с 1 до 149
         // пейджер подхватывает без пересоздания состояния.
         val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
+
+        // Если открыта не первая страница, первый «Назад» плавно возвращает на нулевую страницу
+        BackHandler(enabled = pagerState.currentPage > 0) {
+            job.launch { pagerState.animateScrollToPage(0) }
+        }
+        BackHandler(enabled = pagerState.currentPage == 0) {
+            navigator.pop()
+        }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -66,7 +72,13 @@ class ScreenTags(val tag: String) : Screen {
                         .padding(horizontal = 4.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = { navigator.pop() }) {
+                    IconButton(onClick = {
+                        if (pagerState.currentPage > 0) {
+                            job.launch { pagerState.animateScrollToPage(0) }
+                        } else {
+                            navigator.pop()
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад",

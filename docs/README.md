@@ -135,6 +135,11 @@
 | [Проход 128 (Возврат из под-табов X, BackHandler и ключи ScreenTags/Favorites, очистка поиска R, Back в Settings/Haptic, тесты)](CODE_REVIEW_2026-09-19_v107.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 129 (Ключ и кнопка Назад ScreenAlbum, иконки закладки AlbumInfoButtonSaveAlbum, ошибка воспроизведения L, тесты)](CODE_REVIEW_2026-09-19_v108.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 130 (Аудит ScreenKey Voyager, навигация Назад в табах R/L и плеерах X, ScreenRedManageBlock UX, тесты)](CODE_REVIEW_2026-09-19_v109.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 131 (Детерминированный ключ MenuScreen, системный BackHandler в ScreenRedFullScreen/ScreenX_VideoPlayer, иерархия табов X, UTF-8 UUID, тесты)](CODE_REVIEW_2026-09-19_v110.md) | 19.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 132 (Санитизация seek плеера и тесты MediaPlayerHost, зум в плеерах X, фильтры RedProfile/Album, постраничный Back, диалоги)](CODE_REVIEW_2026-09-20_v111.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 133 (Иерархия Back в BackupSettingsSection, пошаговый Backspace/AC в калькуляторе, fast-path подсказок R, бесконечность в toMinSec)](CODE_REVIEW_2026-09-20_v112.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 134 (Иерархия Back для диалогов в R/L/Settings, formatBytes в RSettingsSection, тесты)](CODE_REVIEW_2026-09-20_v113.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 135 (Приоритет диалога LPictureInfo, скролл в L_ScreenAlbumSearch, паритет зума в RedFullScreenOverlay и ScreenX_VideoPlayer, тесты)](CODE_REVIEW_2026-09-20_v114.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 

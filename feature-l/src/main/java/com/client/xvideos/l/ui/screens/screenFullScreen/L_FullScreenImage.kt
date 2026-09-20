@@ -165,18 +165,23 @@ class L_FullScreenImage(
             }
         }
 
+        // Диалог информации об элементе: первый жест «Назад» закрывает диалог
+        BackHandler(enabled = showInfoDialog) {
+            showInfoDialog = false
+        }
+
         // Нажатие кнопки «Назад» при активном зуме плавно сбрасывает масштаб до 1.0x
-        BackHandler(enabled = isCurrentPageZoomed) {
+        BackHandler(enabled = !showInfoDialog && isCurrentPageZoomed) {
             resetZoomTrigger++
         }
 
         // В полноэкранном режиме (контролы скрыты) первый жест «Назад» возвращает контролы
-        BackHandler(enabled = !isCurrentPageZoomed && isFullScreen) {
+        BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && isFullScreen) {
             isFullScreen = false
         }
 
         // Выход из экрана просмотра
-        BackHandler(enabled = !isCurrentPageZoomed && !isFullScreen) {
+        BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && !isFullScreen) {
             isClosing = true
         }
 

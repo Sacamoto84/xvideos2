@@ -3,9 +3,9 @@
 Карта навигации приложения: корневой `Navigator`, секции X / L / R, табы
 L-раздела, вложенный навигатор коллекции и fullscreen-оверлей.
 
-- **Оранжевым** — вложенный `Navigator(ScreenCollectionName)` внутри
-  collection-таба (открытая коллекция остаётся в области таба, нижние навбары
-  видны).
+- **Оранжевым** — декларативный переход `AnimatedContent` (`L_CollectionNameContent`)
+  внутри collection-таба (открытая коллекция остаётся в области таба, нижние
+  навбары видны, без оверхеда вложенного Navigator).
 - **Зелёным** — `L_FullScreenImage`: глобальный оверлей, пушится на
   **корневой** навигатор (`LocalMainNavigator`), поэтому кроет весь экран из
   любого вложенного контекста.
@@ -64,8 +64,7 @@ flowchart LR
   Album -->|"push"| P2pSend
   Tag -->|"push"| Album
 
-  Coll -->|"вложенный Navigator, остаётся в табе"| CollNav
-  CollNav --> CollName
+  Coll -->|"AnimatedContent, остаётся в табе"| CollName
   Coll -->|"push"| P2pSend
 
   Likes -->|"открыть фото — push на корневой Navigator"| Full
@@ -75,7 +74,7 @@ flowchart LR
 
   classDef nested fill:#FFE0B2,stroke:#E65100,color:#000
   classDef overlay fill:#C8E6C9,stroke:#2E7D32,color:#000
-  class CollNav,CollName nested
+  class CollName nested
   class Full overlay
 ```
 
@@ -84,9 +83,9 @@ flowchart LR
 - L-табы (`AlbumList / SavedTab / TopHits / Search`) — это свап контента
   (`when(screenType) { ... .Content() }`) в **одном** навигаторе, не вложенные
   навигаторы. Поэтому push из них (например `ScreenLAlbum`) кроет весь экран.
-- Единственный вложенный навигатор в L-потоке — `Navigator(ScreenCollectionName)`
-  в collection-табе. Любой `push` из него (включая fullscreen, до фикса)
-  замыкается в области таба — поэтому fullscreen роутится на корневой навигатор
-  через `LocalMainNavigator`.
+- В collection-табе навигация между сеткой и содержимым переведена на декларативный
+  `AnimatedContent` с плавным fading-переходом (плавное растворение/появление)
+  и сессионным кэшем данных. Это устранило оверхед вложенного Navigator и баг
+  промигивания элементов ранее открытой коллекции.
 - FigJam-версия (онлайн, редактируемая):
   https://www.figma.com/board/QVsa8oJOkWrFfdCP7FGNi1

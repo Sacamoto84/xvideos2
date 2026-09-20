@@ -37,8 +37,9 @@ class AppSettingsScreenSerializationTest {
     }
 
     @Test
-    fun `MenuScreen serializes and deserializes properly`() {
+    fun `MenuScreen serializes and deserializes properly with stable key`() {
         val restored = roundTrip(MenuScreen)
+        assertEquals("MenuScreen", restored.key)
         assertEquals(MenuScreen, restored)
     }
 }

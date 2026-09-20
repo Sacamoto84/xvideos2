@@ -421,4 +421,57 @@ class CalculatorStateTest {
         state.onDigit("0", noOpHaptic)
         assertEquals("-0", state.displayValue)
     }
+
+    @Test
+    fun `пошаговый onBackspace при вводе цифр переводит состояние в isAllClear`() {
+        val state = CalculatorState()
+        state.onDigit("1", noOpHaptic)
+        state.onDigit("2", noOpHaptic)
+        state.onDigit("3", noOpHaptic)
+        assertEquals("123", state.displayValue)
+        assertFalse(state.isAllClear)
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("12", state.displayValue)
+        assertFalse(state.isAllClear)
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("1", state.displayValue)
+        assertFalse(state.isAllClear)
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("0", state.displayValue)
+        assertTrue(state.isAllClear)
+    }
+
+    @Test
+    fun `onBackspace при ошибке вычислений сбрасывает в ноль и isAllClear`() {
+        val state = CalculatorState()
+        state.displayValue = CalculatorState.ERROR_TEXT
+        assertFalse(state.isAllClear)
+
+        state.onBackspace(noOpHaptic)
+        assertEquals("0", state.displayValue)
+        assertTrue(state.isAllClear)
+    }
+
+    @Test
+    fun `onClear при незавершённой бинарной операции сбрасывает состояние в isAllClear`() {
+        val state = CalculatorState()
+        state.onDigit("5", noOpHaptic)
+        state.onOperator("+", noOpHaptic)
+        assertFalse(state.isAllClear)
+        assertEquals("+", state.pendingOperation)
+
+        // Первый onClear сбрасывает текущее значение в 0 (режим C)
+        state.onClear(noOpHaptic)
+        assertEquals("0", state.displayValue)
+        assertFalse(state.isAllClear)
+
+        // Второй onClear сбрасывает операцию и возвращает полное состояние All Clear (режим AC)
+        state.onClear(noOpHaptic)
+        assertEquals("0", state.displayValue)
+        assertTrue(state.isAllClear)
+        org.junit.Assert.assertNull(state.pendingOperation)
+    }
 }

@@ -170,6 +170,7 @@ class SavedX_History(
                 .onSuccess {
                     withContext(Dispatchers.Main) {
                         historyMap.clear()
+                        list.clear()
                     }
                     SnackBar.info("История очищена")
                 }

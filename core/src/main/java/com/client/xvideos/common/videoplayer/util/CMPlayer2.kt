@@ -95,8 +95,10 @@ fun CMPPlayer2(
     LaunchedEffect(exoPlayer, config.speed) { exoPlayer.setPlaybackSpeed(config.speed.toFloat()) }
     LaunchedEffect(exoPlayer, config.seekToTime) {
         config.seekToTime?.let {
-            exoPlayer.seekTo((it * 1000).toLong())
-            currentCallbacks.currentTime(it)
+            if (it.isFinite() && it >= 0f) {
+                exoPlayer.seekTo((it * 1000).toLong())
+                currentCallbacks.currentTime(it)
+            }
         }
     }
 

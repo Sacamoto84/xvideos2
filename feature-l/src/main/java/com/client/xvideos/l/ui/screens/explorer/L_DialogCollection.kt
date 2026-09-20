@@ -1,5 +1,6 @@
 package com.client.xvideos.l.ui.screens.explorer
 
+import androidx.activity.compose.BackHandler
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
@@ -36,6 +37,12 @@ import com.client.xvideos.l.featured.saved.SavedL
 
 @Composable
 fun LCollectionDialogs(savedL: SavedL) {
+    val isAnyDialogOpen = savedL.collection.visibleDialogCreateNew || savedL.collection.visibleDialog
+    BackHandler(enabled = isAnyDialogOpen) {
+        if (savedL.collection.visibleDialogCreateNew) savedL.collection.visibleDialogCreateNew = false
+        if (savedL.collection.visibleDialog) savedL.collection.visibleDialog = false
+    }
+
     if (savedL.collection.visibleDialogCreateNew) {
         DaialogNewCollection(
             visible = savedL.collection.visibleDialogCreateNew,

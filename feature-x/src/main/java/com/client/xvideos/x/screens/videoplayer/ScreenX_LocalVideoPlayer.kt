@@ -144,7 +144,13 @@ class ScreenX_LocalVideoPlayer(
                 onTap = { host.togglePlayPause() },
                 overlay = {
                     IconButton(
-                        onClick = { navigator.pop() },
+                        onClick = {
+                            if (isZoomed) {
+                                resetZoomTrigger++
+                            } else {
+                                navigator.pop()
+                            }
+                        },
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .statusBarsPadding()

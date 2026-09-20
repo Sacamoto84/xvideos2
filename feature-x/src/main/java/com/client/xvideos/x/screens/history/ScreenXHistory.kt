@@ -147,7 +147,14 @@ fun HistoryContent(
     var showClearAllConfirm by remember { mutableStateOf(false) }
     var showBatchDeleteConfirm by remember { mutableStateOf(false) }
 
-    BackHandler(enabled = isSelectionMode) {
+    val isAnyDialogOpen = pendingDelete != null || showClearAllConfirm || showBatchDeleteConfirm
+    BackHandler(enabled = isAnyDialogOpen) {
+        pendingDelete = null
+        showClearAllConfirm = false
+        showBatchDeleteConfirm = false
+    }
+
+    BackHandler(enabled = !isAnyDialogOpen && isSelectionMode) {
         isSelectionMode = false
         selectedIds.clear()
     }

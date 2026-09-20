@@ -2,6 +2,8 @@ package com.client.xvideos.r.network.api
 
 import com.client.xvideos.r.model.search.SearchCreatorsResponse
 import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
+import com.client.xvideos.r.network.http.ApiClient
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -76,5 +78,17 @@ class RedSearchCreatorsTest {
         val itemEmptyText = SearchItemCreatorsResponse(text = "@", name = "FallbackName")
         val handle3 = itemEmptyText.text.removePrefix("@").ifBlank { itemEmptyText.name }
         assertEquals("FallbackName", handle3)
+    }
+
+    @Test
+    fun `searchCreatorsShort returns empty response immediately for blank or empty text`() = runTest {
+        val searchApi = RedApi_Search(ApiClient)
+        val emptyResult = searchApi.searchCreatorsShort("")
+        assertTrue(emptyResult.isSuccess)
+        assertTrue(emptyResult.getOrThrow().items.isEmpty())
+
+        val whitespaceResult = searchApi.searchCreatorsShort("   ")
+        assertTrue(whitespaceResult.isSuccess)
+        assertTrue(whitespaceResult.getOrThrow().items.isEmpty())
     }
 }

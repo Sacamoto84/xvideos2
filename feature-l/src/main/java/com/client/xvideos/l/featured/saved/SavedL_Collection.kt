@@ -15,11 +15,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Тонкий holder состояния для раздела «Collection» в L.
@@ -129,6 +131,7 @@ class SavedL_Collection(
             val deleted = File(AppPath.l_collection, safeName).deleteRecursively()
             withContext(Dispatchers.Main) {
                 if (deleted) {
+                    collectionCache.remove(safeName)
                     if (currentCollectionName == safeName) {
                         currentCollectionName = null
                         listUrl.clear()
@@ -196,6 +199,10 @@ class SavedL_Collection(
 
             withContext(Dispatchers.Main) {
                 if (renamed) {
+                    collectionCache.remove(safeOldName)?.let { oldFlow ->
+                        collectionCache[trimmedNewName] = oldFlow
+                        reloadCollectionItems(trimmedNewName, oldFlow)
+                    }
                     if (currentCollectionName == safeOldName) {
                         currentCollectionName = trimmedNewName
                         refresh()
@@ -209,9 +216,50 @@ class SavedL_Collection(
         }
     }
 
-    /* ---------- Текущая коллекция ---------- */
+    /* ---------- Текущая коллекция и кэш сессии ---------- */
 
-    private var refreshItemsJob: Job? = null
+    private val collectionCache = ConcurrentHashMap<String, MutableStateFlow<List<PicsDetails>?>>()
+
+    fun getCollectionItems(collectionName: String): StateFlow<List<PicsDetails>?> {
+        val safeName = CollectionName.normalizeOrNull(collectionName)
+            ?: return MutableStateFlow(emptyList())
+        return collectionCache.getOrPut(safeName) {
+            MutableStateFlow<List<PicsDetails>?>(null).also { flow ->
+                reloadCollectionItems(safeName, flow)
+            }
+        }
+    }
+
+    fun invalidateCollection(collectionName: String) {
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: return
+        collectionCache[safeName]?.let { flow ->
+            reloadCollectionItems(safeName, flow)
+        }
+    }
+
+    private fun reloadCollectionItems(
+        safeName: String,
+        flow: MutableStateFlow<List<PicsDetails>?>
+    ) {
+        scope.launch(Dispatchers.IO) {
+            Timber.i("SavedL_Collection reloadCollectionItems() collection:$safeName")
+            val items = try {
+                lReadCollectionItems(File(AppPath.l_collection, safeName))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "SavedL_Collection reloadCollectionItems() Ошибка получения списка коллекции")
+                emptyList()
+            }
+            flow.value = items
+            withContext(Dispatchers.Main) {
+                if (currentCollectionName == safeName) {
+                    listUrl.replaceWith(items)
+                }
+            }
+        }
+    }
+
     private var refreshDuplicatesJob: Job? = null
     private var mutationJob: Job? = null
 
@@ -221,7 +269,18 @@ class SavedL_Collection(
             return
         }
         currentCollectionName = safeName
-        refresh()
+        val cached = collectionCache[safeName]?.value
+        listUrl.replaceWith(cached ?: emptyList())
+        if (cached == null) {
+            refresh()
+        } else {
+            refreshDuplicates(safeName)
+        }
+    }
+
+    fun exitCollection() {
+        currentCollectionName = null
+        listUrl.clear()
     }
 
     fun refresh() {
@@ -230,23 +289,8 @@ class SavedL_Collection(
             SnackBar.error("Недопустимое название коллекции")
             return
         }
-        refreshItemsJob?.cancel()
-        refreshItemsJob = scope.launch(Dispatchers.IO) {
-            Timber.i("SavedL_Collection refresh() collection:$collectionName")
-            val items = try {
-                lReadCollectionItems(File(AppPath.l_collection, collectionName))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "SavedL_Collection refresh() Ошибка получения списка коллекции")
-                SnackBar.error("Ошибка получения списка коллекции")
-                return@launch
-            }
-            withContext(Dispatchers.Main) {
-                listUrl.replaceWith(items)
-                Timber.i("SavedL_Collection refresh() files:${items.size}")
-            }
-        }
+        val flow = collectionCache.getOrPut(collectionName) { MutableStateFlow(null) }
+        reloadCollectionItems(collectionName, flow)
         refreshDuplicates(collectionName)
     }
 
@@ -330,6 +374,7 @@ class SavedL_Collection(
                 }
 
                 refreshCollectionList()
+                invalidateCollection(safeName)
                 if (currentCollectionName == safeName) {
                     refresh()
                 }
@@ -371,6 +416,7 @@ class SavedL_Collection(
             if (removedCount > 0) {
                 SnackBar.info("Удалено из коллекции: $removedCount")
                 refreshCollectionList()
+                invalidateCollection(safeName)
                 if (currentCollectionName == safeName) {
                     refresh()
                 }
@@ -444,6 +490,7 @@ class SavedL_Collection(
 
             SnackBar.info("Удалено дублей: $removedCount")
             refreshCollectionList()
+            invalidateCollection(name)
             if (currentCollectionName == name) {
                 refresh()
             }
@@ -472,6 +519,7 @@ class SavedL_Collection(
             if (removed) {
                 SnackBar.info("Удалено из коллекции")
                 refreshCollectionList()
+                invalidateCollection(safeName)
             } else {
                 SnackBar.error("Файл не найден")
             }

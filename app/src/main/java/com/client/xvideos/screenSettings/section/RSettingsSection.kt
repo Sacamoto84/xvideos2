@@ -29,7 +29,7 @@ import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.screenSettings.components.WhatsAppGreen
 import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.common.util.toPrettyCount3
+import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 import com.client.xvideos.r.common.saved.SavedRed
@@ -55,14 +55,14 @@ internal fun RSettingsSection(
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = "Размер всех папок Red",
-            value = sizeRedTotal.toPrettyCount3()
+            value = formatBytes(sizeRedTotal)
         )
         SettingsDivider()
 
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = "Размер папки Download",
-            value = sizeRedDownload.toPrettyCount3()
+            value = formatBytes(sizeRedDownload)
         )
         SettingsDivider()
 
@@ -71,7 +71,7 @@ internal fun RSettingsSection(
             text = "Очистить папку Download",
             value = "Очистить",
             textDialogTitle = "Очистка папки Download",
-            textDialogBody = "Подтвердить очистку: ${sizeRedDownload.toPrettyCount3()}",
+            textDialogBody = "Подтвердить очистку: ${formatBytes(sizeRedDownload)}",
             textDialogButton = "Очистить",
             onClick = onClearDownload
         )

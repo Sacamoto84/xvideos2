@@ -47,7 +47,8 @@ internal fun RedFullScreenOverlay(
     vm: ScreenRedFullScreenSM,
     navigator: Navigator,
     downloadList: List<GifsInfo>,
-    haptic: () -> Unit
+    haptic: () -> Unit,
+    onBack: () -> Unit = { navigator.pop() }
 ) {
     val navigationState = LocalRNavigationState.current
 
@@ -60,7 +61,7 @@ internal fun RedFullScreenOverlay(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(start = 4.dp)
         ) {
-            IconButton(onClick = { navigator.pop() }) {
+            IconButton(onClick = onBack) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Назад",

@@ -71,7 +71,7 @@ class RouteTest {
     }
 
     @Test
-    fun `пробел кодируется как %20, а не плюсом`() {
+    fun `пробел кодируется через hex 20, а не плюсом`() {
         assertEquals(
             "https://api.redgifs.com/s?q=big%20cat",
             urlOf("/s?q={q}", "q" to "big cat")

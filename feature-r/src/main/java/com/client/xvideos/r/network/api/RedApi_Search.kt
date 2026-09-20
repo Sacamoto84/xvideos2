@@ -12,8 +12,12 @@ class RedApi_Search(val api: ApiClient) {
     //https://api.redgifs.com/v2/creators/suggest?query=Ana
     //Возвращает 5 элементов
     suspend fun searchCreatorsShort(text: String): Result<SearchCreatorsResponse> {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) {
+            return Result.success(SearchCreatorsResponse())
+        }
         val route =
-            Route(method = "GET", path = "/v2/creators/suggest?query={text}", "text" to text)
+            Route(method = "GET", path = "/v2/creators/suggest?query={text}", "text" to trimmed)
         return api.request<SearchCreatorsResponse>(route)
     }
 

@@ -1,5 +1,7 @@
 package com.client.xvideos.screenSettings.section
 
+import androidx.activity.compose.BackHandler
+
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +48,10 @@ internal fun NetworkSettingsSection() {
 
     val currentProvider = DohProvider.fromNameOrDefault(providerName)
     var showCustomUrlDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = showCustomUrlDialog) {
+        showCustomUrlDialog = false
+    }
 
     SettingsSectionTitle("DNS-over-HTTPS (DoH)")
     SettingsGroup {

@@ -41,7 +41,7 @@ class CalculatorState(
      * Показывать ли «AC» (All Clear) вместо «C» (Clear).
      */
     val isAllClear: Boolean
-        get() = (displayValue == "0" || isNewEntry) && previousValue == null
+        get() = displayValue != ERROR_TEXT && (displayValue == "0" || isNewEntry) && previousValue == null
 
     private val symbols = DecimalFormatSymbols(Locale.US).apply {
         groupingSeparator = ' '

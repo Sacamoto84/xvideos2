@@ -56,11 +56,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-
-        BackHandler {
-            navigator.pop()
-        }
-
         val vm = getScreenModel<ScreenRedProfileSM, ScreenRedProfileSM.Factory> { factory ->
             factory.create(profileName)
         }
@@ -70,6 +65,14 @@ class ScreenRedProfile(val profileName: String) : Screen {
         val tags by vm.tags.collectAsStateWithLifecycle()
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
+
+        // При активной фильтрации по тегам первый шаг «Назад» сбрасывает фильтр, второй — выходит из профиля
+        BackHandler(enabled = tagsSelect.isNotEmpty()) {
+            vm.tagsSelect.value = emptySet()
+        }
+        BackHandler(enabled = tagsSelect.isEmpty()) {
+            navigator.pop()
+        }
 
         // Расчет процентов для скролл.
         // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
@@ -96,7 +99,13 @@ class ScreenRedProfile(val profileName: String) : Screen {
                 }
             },
             savedRedProvider = { vm.savedRed },
-            onBack = { navigator.pop() }
+            onBack = {
+                if (tagsSelect.isNotEmpty()) {
+                    vm.tagsSelect.value = emptySet()
+                } else {
+                    navigator.pop()
+                }
+            }
         )
     }
 

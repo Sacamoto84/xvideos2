@@ -1,11 +1,43 @@
 package com.client.xvideos.l.featured.saved
 
+import android.content.ContextWrapper
+import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.net.Luscious
+import com.client.xvideos.l.repository.Repository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import java.io.File
+import java.nio.file.Files
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SavedL_CollectionTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     @Test
     fun `LCollectionSortOrder RECENT сортирует по убыванию lastModifiedAt`() {
@@ -64,5 +96,53 @@ class SavedL_CollectionTest {
 
         assertEquals(1, parsed.schemaVersion)
         assertEquals("pic_cover_1", parsed.coverFolderName)
+    }
+
+    @Test
+    fun `getCollectionItems returns distinct StateFlow for different collections and caches instance`() = runTest {
+        val tempDir = Files.createTempDirectory("app_path_test_saved_l_collection").toFile()
+        val context = object : ContextWrapper(null) {
+            override fun getFilesDir(): File = File(tempDir, "files").apply { mkdirs() }
+            override fun getCacheDir(): File = File(tempDir, "cache").apply { mkdirs() }
+        }
+        AppPath.init(context)
+
+        val fileDb = AppFileDatabase()
+        val repository = Repository(fileDb)
+        val luscious = Luscious(this, repository)
+        val savedCollection = SavedL_Collection(this, luscious)
+
+        val flowA1 = savedCollection.getCollectionItems("CollectionA")
+        val flowA2 = savedCollection.getCollectionItems("CollectionA")
+        val flowB = savedCollection.getCollectionItems("CollectionB")
+
+        // Сессионный кэш возвращает тот же самый инстанс StateFlow для одной коллекции
+        assertSame(flowA1, flowA2)
+
+        // Для разных коллекций возвращаются независимые инстансы StateFlow
+        assertNotSame(flowA1, flowB)
+    }
+
+    @Test
+    fun `exitCollection resets currentCollectionName and clears listUrl`() = runTest {
+        val tempDir = Files.createTempDirectory("app_path_test_exit_collection").toFile()
+        val context = object : ContextWrapper(null) {
+            override fun getFilesDir(): File = File(tempDir, "files").apply { mkdirs() }
+            override fun getCacheDir(): File = File(tempDir, "cache").apply { mkdirs() }
+        }
+        AppPath.init(context)
+
+        val fileDb = AppFileDatabase()
+        val repository = Repository(fileDb)
+        val luscious = Luscious(this, repository)
+        val savedCollection = SavedL_Collection(this, luscious)
+
+        savedCollection.currentCollectionName = "TestCollection"
+        savedCollection.listUrl.add(PicsDetails(url_to_original = "some_url"))
+
+        savedCollection.exitCollection()
+
+        assertNull(savedCollection.currentCollectionName)
+        assertTrue(savedCollection.listUrl.isEmpty())
     }
 }

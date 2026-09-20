@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
+import androidx.activity.compose.BackHandler
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
@@ -74,6 +75,10 @@ object SavedNichesTab : Screen {
         )
 
         var itemPendingDelete by remember { mutableStateOf<NichesInfo?>(null) }
+
+        BackHandler(enabled = itemPendingDelete != null) {
+            itemPendingDelete = null
+        }
 
         DialogNicheDelete(
             item = itemPendingDelete,

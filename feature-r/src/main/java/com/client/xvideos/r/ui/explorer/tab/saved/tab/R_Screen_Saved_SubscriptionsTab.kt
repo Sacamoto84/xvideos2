@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
+import androidx.activity.compose.BackHandler
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
@@ -79,6 +80,10 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
         var selectCreatorName by remember { mutableStateOf<String?>(null) }
 
         var userToDelete by remember { mutableStateOf<SelectedCreator?>(null) }
+
+        BackHandler(enabled = userToDelete != null) {
+            userToDelete = null
+        }
 
         // Используем SnapshotStateList напрямую для реактивности UI
         val selectedListCreator = vm.savedRed.subscriptions.selectedListCreator

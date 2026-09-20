@@ -1,5 +1,11 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,7 +45,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.p2p.P2pSendSource
@@ -76,6 +81,15 @@ object L_Screen_CollectionTab : Screen {
         var itemPendingRename by rememberSaveable { mutableStateOf<String?>(null) }
         var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
         var renameValue by rememberSaveable { mutableStateOf("") }
+
+        BackHandler(
+            enabled = selectedCollection == null &&
+                (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null)
+        ) {
+            itemPendingAction = null
+            itemPendingRename = null
+            itemPendingDelete = null
+        }
 
         itemPendingAction?.let { pending ->
             val cover = savedL.collection.collectionList
@@ -122,23 +136,33 @@ object L_Screen_CollectionTab : Screen {
             )
         }
 
-        // Таб показывает ЛИБО список коллекций, ЛИБО одну открытую коллекцию.
-        // Раньше открытая коллекция рендерилась ВНУТРИ Scaffold-а грида
-        // (вложенные Scaffold + двойной topBar + мигание). Теперь это сосед.
-        if (selectedCollection == null) {
-            L_SavedCollectionTabContent(
-                collectionList = savedL.collection.collectionList,
-                sortOrder = savedL.collection.sortOrder,
-                gridState = vm.gridState,
-                onSortOrderClick = { savedL.collection.applySortOrder(it) },
-                onCollectionClick = { savedL.collection.setCollection(it) },
-                onCollectionLongClick = { itemPendingAction = it },
-                onCreateNewCollectionClick = { savedL.collection.visibleDialogCreateNew = true }
-            )
-        } else {
-            // Открытая коллекция — отдельный Screen (свой ScreenModel/host/lifecycle)
-            // во вложенном Navigator. Back внутри сбрасывает currentCollectionName.
-            Navigator(ScreenCollectionName(selectedCollection))
+        // Декларативная навигация таба: список коллекций <-> открытая коллекция.
+        // Переключение через AnimatedContent с плавным fading переходом.
+        AnimatedContent(
+            targetState = selectedCollection,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(220))
+                    .togetherWith(fadeOut(animationSpec = tween(180)))
+            },
+            label = "LCollectionTabNavigation"
+        ) { collectionName ->
+            if (collectionName == null) {
+                L_SavedCollectionTabContent(
+                    collectionList = savedL.collection.collectionList,
+                    sortOrder = savedL.collection.sortOrder,
+                    gridState = vm.gridState,
+                    onSortOrderClick = { savedL.collection.applySortOrder(it) },
+                    onCollectionClick = { savedL.collection.setCollection(it) },
+                    onCollectionLongClick = { itemPendingAction = it },
+                    onCreateNewCollectionClick = { savedL.collection.visibleDialogCreateNew = true }
+                )
+            } else {
+                L_CollectionNameContent(
+                    collectionName = collectionName,
+                    savedL = savedL,
+                    onExitCollection = { savedL.collection.exitCollection() }
+                )
+            }
         }
 
     }

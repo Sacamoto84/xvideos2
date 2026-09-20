@@ -133,16 +133,18 @@ class MediaPlayerHost(
         replaceWith = ReplaceWith("seekTo(seconds.toFloat())")
     )
     fun seekTo(seconds: Int?) {
+        val validSeconds = seconds?.takeIf { it >= 0 }?.toFloat()
         isSliding = true
-        seekToTime = seconds?.toFloat()
-        seconds?.let { currentTime = it.toFloat() }
+        seekToTime = validSeconds
+        validSeconds?.let { currentTime = it }
         isSliding = false
     }
 
     fun seekTo(seconds: Float?) {
+        val validSeconds = seconds?.takeIf { it.isFinite() && it >= 0f }
         isSliding = true
-        seekToTime = seconds
-        seconds?.let { currentTime = it }
+        seekToTime = validSeconds
+        validSeconds?.let { currentTime = it }
         isSliding = false
     }
 
@@ -205,15 +207,17 @@ class MediaPlayerHost(
 
     // Internal-only setters for time values
     fun updateTotalTime(time: Int) {
-        if (totalTime != time) {
-            totalTime = time
+        val validTime = if (time >= 0) time else 0
+        if (totalTime != validTime) {
+            totalTime = validTime
             onEvent?.invoke(MediaPlayerEvent.TotalTimeChange(totalTime))
         }
     }
 
     fun updateCurrentTime(time: Float) {
-        if(currentTime != time) {
-            currentTime = time
+        val validTime = if (time.isFinite() && time >= 0f) time else 0f
+        if (currentTime != validTime) {
+            currentTime = validTime
             onEvent?.invoke(MediaPlayerEvent.CurrentTimeChange(currentTime))
         }
     }

@@ -2,6 +2,7 @@ package com.client.xvideos.x.screens.saved
 
 import com.client.xvideos.common.theme.Theme
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -67,6 +68,12 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     val list = saved.downloads.list.collectAsStateWithLifecycle().value
 
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
+
+    // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
+    BackHandler(enabled = pendingDelete != null) {
+        pendingDelete = null
+    }
+
     pendingDelete?.let { item ->
         ConfirmDeleteVideoDialog(
             title = "Удалить из сохранённого?",

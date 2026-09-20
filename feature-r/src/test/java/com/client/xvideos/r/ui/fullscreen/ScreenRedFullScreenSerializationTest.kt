@@ -3,7 +3,10 @@ package com.client.xvideos.r.ui.fullscreen
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import org.junit.Test
+import org.junit.Assert.assertEquals
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
 /**
@@ -32,21 +35,33 @@ class ScreenRedFullScreenSerializationTest {
         ObjectOutputStream(ByteArrayOutputStream()).use { it.writeObject(value) }
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> roundTrip(value: T): T {
+        val bytes = ByteArrayOutputStream().use { baos ->
+            ObjectOutputStream(baos).use { oos -> oos.writeObject(value) }
+            baos.toByteArray()
+        }
+        return ByteArrayInputStream(bytes).use { bais ->
+            ObjectInputStream(bais).use { ois -> ois.readObject() as T }
+        }
+    }
+
     @Test
     fun `экран полноэкранной ленты переживает запись в saved state`() {
-        serialize(
-            ScreenRedFullScreen(
-                item = GifsInfo(
-                    id = "abc123",
-                    userName = "creator",
-                    tags = listOf("tag1", "tag2"),
-                    urls = URL1(sd = "https://example/sd.mp4", hd = "https://example/hd.mp4"),
-                    niches = listOf("niche"),
-                ),
-                feedKey = "RFeed:Home::1",
-                startIndex = 7,
-            )
+        val screen = ScreenRedFullScreen(
+            item = GifsInfo(
+                id = "abc123",
+                userName = "creator",
+                tags = listOf("tag1", "tag2"),
+                urls = URL1(sd = "https://example/sd.mp4", hd = "https://example/hd.mp4"),
+                niches = listOf("niche"),
+            ),
+            feedKey = "RFeed:Home::1",
+            startIndex = 7,
         )
+        val restored = roundTrip(screen)
+        assertEquals("RedFullScreen:abc123:7", restored.key)
+        assertEquals("abc123", restored.item.id)
     }
 
     @Test

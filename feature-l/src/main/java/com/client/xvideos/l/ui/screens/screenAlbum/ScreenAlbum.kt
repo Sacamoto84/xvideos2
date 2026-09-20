@@ -92,9 +92,18 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
         val vm = getScreenModel<ScreenLAlbumSM, ScreenLAlbumSM.Factory> { factory -> factory.create(idAlbum) }
 
+        /**  ➜ сюда запоминаем элемент, который пользователь хочет удалить  */
+        var itemPendingDelete by remember { mutableStateOf<AlbumDetails?>(null) }
+
         // Активен только когда НЕ открыта полноэкранная картинка — в этом случае
         // back перехватывает L_FullScreenImage (закрывает картинку), и выход из альбома не происходит.
-        BackHandler(enabled = vm.host.selectedImage == null) {
+        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete != null) {
+            itemPendingDelete = null
+        }
+        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && vm.showOnlyAnimated) {
+            vm.showOnlyAnimated = false
+        }
+        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && !vm.showOnlyAnimated) {
             navigator.pop()
         }
 
@@ -139,8 +148,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
             vm.syncServerFavoriteStatus(parsed?.likeStatus)
         }
 
-        /**  ➜ сюда запоминаем элемент, который пользователь хочет удалить  */
-        var itemPendingDelete by remember { mutableStateOf<AlbumDetails?>(null) }
 
         /* ---------- Диалог подтверждения ---------- */
         itemPendingDelete?.let { pending ->
@@ -214,7 +221,15 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                             if (parsed != null && parsed.id.isNotBlank()) {
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = { navigator.pop() }) {
+                                    IconButton(onClick = {
+                                        if (itemPendingDelete != null) {
+                                            itemPendingDelete = null
+                                        } else if (vm.showOnlyAnimated) {
+                                            vm.showOnlyAnimated = false
+                                        } else {
+                                            navigator.pop()
+                                        }
+                                    }) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                             contentDescription = "Back",
