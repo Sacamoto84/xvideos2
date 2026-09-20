@@ -207,16 +207,33 @@ private fun AppSettingsScreenContent(
     onRefreshFileStats: () -> Unit
 ) {
     var currentPage by rememberSaveable { mutableStateOf(SettingsPage.Main) }
-    val closeCurrentPage = {
-        if (currentPage == SettingsPage.Main) {
-            onBack()
-        } else {
-            currentPage = SettingsPage.Main
-        }
+    val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(currentPage) {
+        scrollState.scrollTo(0)
     }
 
-    BackHandler {
-        closeCurrentPage()
+    val isScrolled = scrollState.value > 0
+
+    BackHandler(enabled = isScrolled) {
+        scope.launch { scrollState.animateScrollTo(0) }
+    }
+    BackHandler(enabled = !isScrolled && currentPage != SettingsPage.Main) {
+        currentPage = SettingsPage.Main
+    }
+    BackHandler(enabled = !isScrolled && currentPage == SettingsPage.Main) {
+        onBack()
+    }
+
+    val handleBack: () -> Unit = {
+        if (scrollState.value > 0) {
+            scope.launch { scrollState.animateScrollTo(0) }
+        } else if (currentPage != SettingsPage.Main) {
+            currentPage = SettingsPage.Main
+        } else {
+            onBack()
+        }
     }
 
     LaunchedEffect(currentPage) {
@@ -236,7 +253,7 @@ private fun AppSettingsScreenContent(
                     .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = closeCurrentPage) {
+                IconButton(onClick = handleBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Назад",
@@ -260,7 +277,9 @@ private fun AppSettingsScreenContent(
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
         AppSettingsScreenBody(
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier
+                .padding(paddingValues)
+                .verticalScroll(scrollState),
             currentPage = currentPage,
             onOpenPage = { currentPage = it },
             imageCacheSizeBytes = imageCacheSizeBytes,
@@ -295,7 +314,6 @@ private fun AppSettingsScreenBody(
         modifier = modifier
             .background(SettingsScreenBackground)
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
             .padding(bottom = 24.dp)
     ) {
         if (currentPage == SettingsPage.Main) {
@@ -405,7 +423,7 @@ private fun SettingsDetailPage(params: SettingsDetailParams) {
     }
 }
 
-private enum class SettingsPage(
+internal enum class SettingsPage(
     val title: String,
     @DrawableRes val icon: Int,
     val subtitle: String
@@ -539,6 +557,7 @@ private fun AppSettingsScreenPreview() {
                 )
             }
             AppSettingsScreenBody(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
                 imageCacheSizeBytes = 128_000_000L,
                 storageStats = EmptyStorageStats,
                 sizeRedTotal = 512_000_000L,

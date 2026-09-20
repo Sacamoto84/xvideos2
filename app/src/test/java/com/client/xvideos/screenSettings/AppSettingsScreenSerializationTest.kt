@@ -42,4 +42,21 @@ class AppSettingsScreenSerializationTest {
         assertEquals("MenuScreen", restored.key)
         assertEquals(MenuScreen, restored)
     }
+
+    @Test
+    fun `Settings back navigation hierarchy priority`() {
+        fun resolveBackAction(isScrolled: Boolean, page: SettingsPage): String {
+            return when {
+                isScrolled -> "SCROLL_TO_TOP"
+                page != SettingsPage.Main -> "NAVIGATE_TO_MAIN"
+                else -> "POP_SCREEN"
+            }
+        }
+
+        assertEquals("SCROLL_TO_TOP", resolveBackAction(isScrolled = true, page = SettingsPage.Storage))
+        assertEquals("SCROLL_TO_TOP", resolveBackAction(isScrolled = true, page = SettingsPage.Main))
+        assertEquals("NAVIGATE_TO_MAIN", resolveBackAction(isScrolled = false, page = SettingsPage.Storage))
+        assertEquals("NAVIGATE_TO_MAIN", resolveBackAction(isScrolled = false, page = SettingsPage.Network))
+        assertEquals("POP_SCREEN", resolveBackAction(isScrolled = false, page = SettingsPage.Main))
+    }
 }

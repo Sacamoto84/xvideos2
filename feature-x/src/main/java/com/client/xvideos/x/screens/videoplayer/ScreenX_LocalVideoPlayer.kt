@@ -127,12 +127,11 @@ class ScreenX_LocalVideoPlayer(
         var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
         // Нажатие кнопки «Назад» при зуме сбрасывает масштаб, иначе выходит из плеера
-        BackHandler {
-            if (isZoomed) {
-                resetZoomTrigger++
-            } else {
-                navigator.pop()
-            }
+        BackHandler(enabled = isZoomed) {
+            resetZoomTrigger++
+        }
+        BackHandler(enabled = !isZoomed) {
+            navigator.pop()
         }
 
         Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {

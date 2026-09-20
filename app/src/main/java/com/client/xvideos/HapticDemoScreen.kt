@@ -24,6 +24,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,7 +67,16 @@ object HapticDemoScreen : Screen {
         val haptic = LocalHapticFeedback.current
         val context = LocalContext.current
 
-        BackHandler { navigator.pop() }
+        val scrollState = rememberScrollState()
+        val scope = rememberCoroutineScope()
+        val isScrolled = scrollState.value > 0
+
+        BackHandler(enabled = isScrolled) {
+            scope.launch { scrollState.animateScrollTo(0) }
+        }
+        BackHandler(enabled = !isScrolled) {
+            navigator.pop()
+        }
 
         // Порядок — от самых «полезных» к специфичным.
         val items = remember {
@@ -94,7 +105,13 @@ object HapticDemoScreen : Screen {
                         .background(Color(0xFF1B1B1B))
                 ) {
                     IconButton(
-                        onClick = { navigator.pop() },
+                        onClick = {
+                            if (isScrolled) {
+                                scope.launch { scrollState.animateScrollTo(0) }
+                            } else {
+                                navigator.pop()
+                            }
+                        },
                         modifier = Modifier
                             .displayCutoutPadding()
                             .padding(start = 4.dp, top = 4.dp)
@@ -126,7 +143,7 @@ object HapticDemoScreen : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {

@@ -24,7 +24,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.ui.TabRow
-import com.client.xvideos.r.ui.explorer.tab.FavoritesTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_CollectionTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_CreatorsTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_DownloadTab
@@ -117,7 +116,7 @@ object R_ScreenSavedTab : Screen {
                     2 -> SavedNichesTab.Content()
                     4 -> R_Screen_CollectionTab.Content()
                     5 -> R_Screen_Saved_SubscriptionsTab.Content()
-                    else -> FavoritesTab.Content()
+                    else -> R_Screen_Saved_LikesTab.Content()
                 }
             }
         }
