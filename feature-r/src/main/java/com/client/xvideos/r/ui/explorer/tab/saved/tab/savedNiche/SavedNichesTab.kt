@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
@@ -82,7 +83,7 @@ object SavedNichesTab : Screen {
         BackHandler(enabled = itemPendingDelete != null) {
             itemPendingDelete = null
         }
-        BackHandler(enabled = itemPendingDelete == null && state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = itemPendingDelete == null && state.isScrolled) {
             scope.launch { state.animateScrollToItem(0) }
         }
 

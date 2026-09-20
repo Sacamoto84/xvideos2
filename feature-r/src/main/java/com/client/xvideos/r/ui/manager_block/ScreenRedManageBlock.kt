@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.manager_block
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -53,7 +54,7 @@ class ScreenRedManageBlock : Screen {
         val blockList = vm.blockList.collectAsStateWithLifecycle().value
         val listState = rememberLazyListState()
         val scope = rememberCoroutineScope()
-        val isScrolled = blockList.isNotEmpty() && listState.firstVisibleItemIndex > 0
+        val isScrolled = blockList.isNotEmpty() && listState.isScrolled
 
         BackHandler(enabled = isScrolled) {
             scope.launch { listState.animateScrollToItem(0) }

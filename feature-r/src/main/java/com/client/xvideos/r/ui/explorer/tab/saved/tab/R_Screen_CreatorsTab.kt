@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -108,7 +109,7 @@ object R_Screen_CreatorsTab : Screen {
         BackHandler(enabled = itemPendingDelete != null) {
             itemPendingDelete = null
         }
-        BackHandler(enabled = itemPendingDelete == null && state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = itemPendingDelete == null && state.isScrolled) {
             scope.launch { state.animateScrollToItem(0) }
         }
 

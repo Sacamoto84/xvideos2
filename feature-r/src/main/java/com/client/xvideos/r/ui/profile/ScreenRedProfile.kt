@@ -3,6 +3,7 @@ package com.client.xvideos.r.ui.profile
 import com.client.xvideos.common.theme.Theme
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,10 +74,10 @@ class ScreenRedProfile(val profileName: String) : Screen {
         BackHandler(enabled = tagsSelect.isNotEmpty()) {
             vm.tagsSelect.value = emptySet()
         }
-        BackHandler(enabled = tagsSelect.isEmpty() && vm.likedHost.state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = tagsSelect.isEmpty() && vm.likedHost.state.isScrolled) {
             vm.likedHost.gotoUp()
         }
-        BackHandler(enabled = tagsSelect.isEmpty() && vm.likedHost.state.firstVisibleItemIndex == 0) {
+        BackHandler(enabled = tagsSelect.isEmpty() && !vm.likedHost.state.isScrolled) {
             navigator.pop()
         }
 
@@ -108,7 +109,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
             onBack = {
                 if (tagsSelect.isNotEmpty()) {
                     vm.tagsSelect.value = emptySet()
-                } else if (vm.likedHost.state.firstVisibleItemIndex > 0) {
+                } else if (vm.likedHost.state.isScrolled) {
                     vm.likedHost.gotoUp()
                 } else {
                     navigator.pop()

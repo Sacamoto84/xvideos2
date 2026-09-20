@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
@@ -108,7 +109,7 @@ object R_Screen_CollectionTab : Screen {
         BackHandler(
             enabled = selectedCollection == null &&
                 itemPendingAction == null && itemPendingRename == null && itemPendingDelete == null &&
-                vm.gridState.firstVisibleItemIndex > 0
+                vm.gridState.isScrolled
         ) {
             scope.launch { vm.gridState.animateScrollToItem(0) }
         }

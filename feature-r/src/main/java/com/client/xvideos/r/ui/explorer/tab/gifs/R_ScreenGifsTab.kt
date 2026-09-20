@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.gifs
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.animation.AnimatedVisibility
@@ -100,7 +101,7 @@ object R_ScreenGifsTab : Screen {
 private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
     val navigator = LocalNavigator.current
 
-    BackHandler(enabled = vm.lazyHost.state.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = vm.lazyHost.state.isScrolled) {
         vm.lazyHost.gotoUp()
     }
 

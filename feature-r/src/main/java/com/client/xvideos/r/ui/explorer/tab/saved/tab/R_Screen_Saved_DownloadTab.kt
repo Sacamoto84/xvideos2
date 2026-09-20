@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -109,7 +110,7 @@ object R_Screen_Saved_DownloadTab : Screen {
         BackHandler(enabled = chooserItem != null) {
             chooserItem = null
         }
-        BackHandler(enabled = chooserItem == null && state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = chooserItem == null && state.isScrolled) {
             scope.launch { state.animateScrollToItem(0) }
         }
 
