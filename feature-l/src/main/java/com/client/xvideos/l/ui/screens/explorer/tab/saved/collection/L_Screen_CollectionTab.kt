@@ -26,10 +26,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,6 +84,8 @@ object L_Screen_CollectionTab : Screen {
         var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
         var renameValue by rememberSaveable { mutableStateOf("") }
 
+        val scope = rememberCoroutineScope()
+
         BackHandler(
             enabled = selectedCollection == null &&
                 (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null)
@@ -89,6 +93,14 @@ object L_Screen_CollectionTab : Screen {
             itemPendingAction = null
             itemPendingRename = null
             itemPendingDelete = null
+        }
+
+        BackHandler(
+            enabled = selectedCollection == null &&
+                itemPendingAction == null && itemPendingRename == null && itemPendingDelete == null &&
+                vm.gridState.firstVisibleItemIndex > 0
+        ) {
+            scope.launch { vm.gridState.animateScrollToItem(0) }
         }
 
         itemPendingAction?.let { pending ->

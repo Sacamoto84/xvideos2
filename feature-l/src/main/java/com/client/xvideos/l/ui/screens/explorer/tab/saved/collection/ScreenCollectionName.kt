@@ -24,10 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -114,17 +116,23 @@ fun L_CollectionNameContent(
         }
     }
 
+    val scope = rememberCoroutineScope()
+
     // Иерархия «Назад»:
     // 1. Очистить текст поискового запроса, если введен
     // 2. Скрыть поле поиска, если панель открыта
-    // 3. Выйти из коллекции
+    // 3. Прокрутить сетку коллекции к началу, если прокручена вниз
+    // 4. Выйти из коллекции
     BackHandler(enabled = searchQuery.isNotEmpty()) {
         host.collectionSearchQuery = ""
     }
     BackHandler(enabled = searchQuery.isEmpty() && searchVisible) {
         searchVisible = false
     }
-    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible) {
+    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible && host.state.firstVisibleItemIndex > 0) {
+        scope.launch { host.state.animateScrollToItem(0) }
+    }
+    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible && host.state.firstVisibleItemIndex == 0) {
         handleExit()
     }
 
@@ -152,6 +160,8 @@ fun L_CollectionNameContent(
                     host.collectionSearchQuery = ""
                 } else if (searchVisible) {
                     searchVisible = false
+                } else if (host.state.firstVisibleItemIndex > 0) {
+                    scope.launch { host.state.animateScrollToItem(0) }
                 } else {
                     handleExit()
                 }

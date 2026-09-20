@@ -142,14 +142,20 @@ private fun Screen.ScreenAlbumListContent(
         // ✅ Состояние для диалога
         var showFilterDialog by remember { mutableStateOf(false) }
 
-        // Иерархия «Назад»: сначала закрыть диалог фильтра, затем вернуться на страницу 0, затем выйти
+        // Иерархия «Назад»: сначала закрыть диалог фильтра, затем прокрутить текущую страницу к началу, затем вернуться на страницу 0, затем выйти
+        val currentGridState = vm.stateGrid[vm.statePager.currentPage]
+        val isGridScrolled = currentGridState != null && currentGridState.firstVisibleItemIndex > 0
+
         BackHandler(enabled = showFilterDialog) {
             showFilterDialog = false
         }
-        BackHandler(enabled = !showFilterDialog && vm.statePager.currentPage > 0) {
+        BackHandler(enabled = !showFilterDialog && isGridScrolled) {
+            scope.launch { currentGridState?.animateScrollToItem(0) }
+        }
+        BackHandler(enabled = !showFilterDialog && !isGridScrolled && vm.statePager.currentPage > 0) {
             scope.launch { vm.statePager.animateScrollToPage(0) }
         }
-        BackHandler(enabled = !showFilterDialog && vm.statePager.currentPage == 0 && navigator.canPop) {
+        BackHandler(enabled = !showFilterDialog && !isGridScrolled && vm.statePager.currentPage == 0 && navigator.canPop) {
             navigator.pop()
         }
 
