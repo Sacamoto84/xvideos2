@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.albums
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
@@ -58,7 +59,7 @@ object L_ScreenSavedAlbumsTab : Screen {
         val state = vm.state
         val scope = rememberCoroutineScope()
 
-        BackHandler(enabled = state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = state.isScrolled) {
             scope.launch { state.animateScrollToItem(0) }
         }
 

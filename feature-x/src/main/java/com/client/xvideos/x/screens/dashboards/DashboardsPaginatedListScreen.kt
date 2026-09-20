@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.dashboards
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.ExperimentalFoundationApi
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -108,7 +109,7 @@ fun DashboardsPaginatedListScreen(
     val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
     val scope = rememberCoroutineScope()
 
-    BackHandler(enabled = isCurrentPage && videoItems.isNotEmpty() && gridState.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = isCurrentPage && videoItems.isNotEmpty() && gridState.isScrolled) {
         scope.launch { gridState.animateScrollToItem(0) }
     }
 

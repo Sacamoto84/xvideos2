@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -96,10 +97,10 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
         val coroutineScope = rememberCoroutineScope()
-        BackHandler(enabled = vm.state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = vm.state.isScrolled) {
             coroutineScope.launch { vm.state.animateScrollToItem(0) }
         }
-        BackHandler(enabled = vm.state.firstVisibleItemIndex == 0) {
+        BackHandler(enabled = !vm.state.isScrolled) {
             navigator.pop()
         }
         val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
@@ -114,7 +115,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                 LandingTagTopBar(
                     title = "Tag: ${title ?: tag}",
                     onBack = {
-                        if (vm.state.firstVisibleItemIndex > 0) {
+                        if (vm.state.isScrolled) {
                             coroutineScope.launch { vm.state.animateScrollToItem(0) }
                         } else {
                             navigator.pop()

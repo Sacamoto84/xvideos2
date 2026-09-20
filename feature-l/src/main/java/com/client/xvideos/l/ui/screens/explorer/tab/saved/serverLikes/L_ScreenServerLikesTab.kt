@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
@@ -78,7 +79,7 @@ object L_ScreenServerLikesTab : Screen {
         val pullToRefreshState = rememberPullToRefreshState()
         val scope = rememberCoroutineScope()
 
-        BackHandler(enabled = vm.host.state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = vm.host.state.isScrolled) {
             scope.launch { vm.host.state.animateScrollToItem(0) }
         }
 

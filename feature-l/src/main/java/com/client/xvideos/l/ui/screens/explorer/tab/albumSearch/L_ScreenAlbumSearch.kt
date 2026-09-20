@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardActions
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
@@ -88,7 +89,7 @@ object L_ScreenAlbumSearch : Screen {
         val coroutineScope = rememberCoroutineScope()
         val searchText = vm.searchText.collectAsStateWithLifecycle().value
         BackHandler(enabled = searchText.isNotEmpty()) { vm.searchText.value = "" }
-        BackHandler(enabled = searchText.isEmpty() && vm.state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = searchText.isEmpty() && vm.state.isScrolled) {
             coroutineScope.launch { vm.state.animateScrollToItem(0) }
         }
         val result = vm.result.collectAsStateWithLifecycle().value

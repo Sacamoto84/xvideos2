@@ -43,4 +43,28 @@ class LazyScrollExtensionsTest {
         val state = LazyGridState(firstVisibleItemIndex = 4, firstVisibleItemScrollOffset = 0)
         assertTrue(state.isScrolled)
     }
+
+    @Test
+    fun `LazyStaggeredGridState isScrolled возвращает false когда ступенчатая сетка в начале`() {
+        val state = androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState(
+            initialFirstVisibleItemIndex = 0,
+            initialFirstVisibleItemOffset = 0
+        )
+        assertFalse(state.isScrolled)
+    }
+
+    @Test
+    fun `LazyStaggeredGridState isScrolled возвращает true при смещении или индексе больше нуля`() {
+        val stateOffset = androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState(
+            initialFirstVisibleItemIndex = 0,
+            initialFirstVisibleItemOffset = 30
+        )
+        assertTrue(stateOffset.isScrolled)
+
+        val stateIndex = androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState(
+            initialFirstVisibleItemIndex = 3,
+            initialFirstVisibleItemOffset = 0
+        )
+        assertTrue(stateIndex.isScrolled)
+    }
 }

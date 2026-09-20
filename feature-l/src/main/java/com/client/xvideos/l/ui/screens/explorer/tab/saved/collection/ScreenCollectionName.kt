@@ -3,6 +3,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 import com.client.xvideos.common.theme.Theme
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -129,10 +130,10 @@ fun L_CollectionNameContent(
     BackHandler(enabled = searchQuery.isEmpty() && searchVisible) {
         searchVisible = false
     }
-    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible && host.state.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible && host.state.isScrolled) {
         scope.launch { host.state.animateScrollToItem(0) }
     }
-    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible && host.state.firstVisibleItemIndex == 0) {
+    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible && !host.state.isScrolled) {
         handleExit()
     }
 
@@ -160,7 +161,7 @@ fun L_CollectionNameContent(
                     host.collectionSearchQuery = ""
                 } else if (searchVisible) {
                     searchVisible = false
-                } else if (host.state.firstVisibleItemIndex > 0) {
+                } else if (host.state.isScrolled) {
                     scope.launch { host.state.animateScrollToItem(0) }
                 } else {
                     handleExit()

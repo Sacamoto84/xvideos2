@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.history
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -165,7 +166,7 @@ fun HistoryContent(
         selectedIds.clear()
     }
 
-    BackHandler(enabled = !isAnyDialogOpen && !isSelectionMode && gridState.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = !isAnyDialogOpen && !isSelectionMode && gridState.isScrolled) {
         scope.launch { gridState.animateScrollToItem(0) }
     }
 

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,7 +78,7 @@ object L_ScreenAlbumTopHits : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLAlbumTopHitsSM = getScreenModel()
         val coroutineScope = rememberCoroutineScope()
-        BackHandler(enabled = vm.state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = vm.state.isScrolled) {
             coroutineScope.launch { vm.state.animateScrollToItem(0) }
         }
         val items = vm.albumTopHits.collectAsStateWithLifecycle().value?.items

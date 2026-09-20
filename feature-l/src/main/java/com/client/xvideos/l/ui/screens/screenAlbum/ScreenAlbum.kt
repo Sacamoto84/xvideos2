@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbum
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -112,7 +113,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         var itemPendingDelete by remember { mutableStateOf<AlbumDetails?>(null) }
 
         val scope = rememberCoroutineScope()
-        val isGridScrolled = vm.host.state.firstVisibleItemIndex > 0
+        val isGridScrolled = vm.host.state.isScrolled
 
         // Активен только когда НЕ открыта полноэкранная картинка — в этом случае
         // back перехватывает L_FullScreenImage (закрывает картинку), и выход из альбома не происходит.
@@ -248,7 +249,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                             itemPendingDelete = null
                                         } else if (vm.showOnlyAnimated) {
                                             vm.showOnlyAnimated = false
-                                        } else if (vm.host.state.firstVisibleItemIndex > 0) {
+                                        } else if (vm.host.state.isScrolled) {
                                             scope.launch { vm.host.state.animateScrollToItem(0) }
                                         } else {
                                             navigator.pop()

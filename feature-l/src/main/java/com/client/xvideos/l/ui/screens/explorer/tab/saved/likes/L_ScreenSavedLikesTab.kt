@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.likes
 
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -96,7 +97,7 @@ object L_ScreenSavedLikesTab : Screen {
             selectedIndex = 0
             vm.filterSelect(0)
         }
-        BackHandler(enabled = selectedIndex == 0 && vm.host.state.firstVisibleItemIndex > 0) {
+        BackHandler(enabled = selectedIndex == 0 && vm.host.state.isScrolled) {
             scope.launch { vm.host.state.animateScrollToItem(0) }
         }
 

@@ -23,6 +23,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -144,7 +145,7 @@ private fun Screen.ScreenAlbumListContent(
 
         // Иерархия «Назад»: сначала закрыть диалог фильтра, затем прокрутить текущую страницу к началу, затем вернуться на страницу 0, затем выйти
         val currentGridState = vm.stateGrid[vm.statePager.currentPage]
-        val isGridScrolled = currentGridState != null && currentGridState.firstVisibleItemIndex > 0
+        val isGridScrolled = currentGridState?.isScrolled == true
 
         BackHandler(enabled = showFilterDialog) {
             showFilterDialog = false

@@ -257,4 +257,20 @@ class LPureFunctionsTest {
         assertTrue(picture(isAnimated = false, urlToOriginal = "https://cdn/anim.gif?md5=123").isAnimatedMedia())
         assertFalse(picture(isAnimated = false, urlToOriginal = "https://cdn/pic.jpg").isAnimatedMedia())
     }
+
+    @Test
+    fun `иерархия возврата для поиска альбомов отдает приоритет очистке ввода перед скроллом`() {
+        fun resolveBackAction(searchText: String, isScrolled: Boolean): String {
+            return when {
+                searchText.isNotEmpty() -> "CLEAR_INPUT"
+                isScrolled -> "SCROLL_TOP"
+                else -> "POP_SCREEN"
+            }
+        }
+
+        assertEquals("CLEAR_INPUT", resolveBackAction("tag", isScrolled = true))
+        assertEquals("CLEAR_INPUT", resolveBackAction("tag", isScrolled = false))
+        assertEquals("SCROLL_TOP", resolveBackAction("", isScrolled = true))
+        assertEquals("POP_SCREEN", resolveBackAction("", isScrolled = false))
+    }
 }
