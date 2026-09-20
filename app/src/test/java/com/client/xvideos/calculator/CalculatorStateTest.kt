@@ -474,4 +474,31 @@ class CalculatorStateTest {
         assertTrue(state.isAllClear)
         org.junit.Assert.assertNull(state.pendingOperation)
     }
+
+    @Test
+    fun `иерархия условий BackHandler в калькуляторе корректно определяет canBackspace canClear и выход`() {
+        val state = CalculatorState()
+        fun canBackspace(s: CalculatorState) =
+            s.displayValue == CalculatorState.ERROR_TEXT || (!s.isNewEntry && s.displayValue != "0")
+        fun canClear(s: CalculatorState) = !canBackspace(s) && !s.isAllClear
+
+        // 1. Начальное состояние: чистый экран, доступен системный выход
+        assertFalse(canBackspace(state))
+        assertFalse(canClear(state))
+
+        // 2. Ввели цифры: активен Backspace
+        state.onDigit("5", noOpHaptic)
+        assertTrue(canBackspace(state))
+        assertFalse(canClear(state))
+
+        // 3. Выбрали оператор: isNewEntry=true, backspace не применим, но активен Clear
+        state.onOperator("+", noOpHaptic)
+        assertFalse(canBackspace(state))
+        assertTrue(canClear(state))
+
+        // 4. Ошибка: активен Backspace для сброса ошибки
+        state.displayValue = CalculatorState.ERROR_TEXT
+        assertTrue(canBackspace(state))
+        assertFalse(canClear(state))
+    }
 }

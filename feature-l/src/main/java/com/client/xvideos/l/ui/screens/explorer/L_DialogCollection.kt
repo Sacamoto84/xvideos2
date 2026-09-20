@@ -101,7 +101,7 @@ fun L_DialogCollection(savedL: SavedL) {
                 ) {
                     items(
                         count = savedL.collection.collectionList.size,
-                        key = { index -> savedL.collection.collectionList[index].collection },
+                        key = { index -> "${savedL.collection.collectionList[index].collection}#$index" },
                     ) { index ->
                         val collectionItem = savedL.collection.collectionList[index]
                         Row(

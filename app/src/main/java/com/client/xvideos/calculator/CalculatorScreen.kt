@@ -56,16 +56,17 @@ fun CalculatorScreen(
     val haptic = LocalHapticFeedback.current
     val state = rememberSaveable(saver = CalculatorState.Saver) { CalculatorState() }
 
-    BackHandler {
-        when {
-            state.displayValue == CalculatorState.ERROR_TEXT || (!state.isNewEntry && state.displayValue != "0") -> {
-                state.onBackspace(haptic)
-            }
-            !state.isAllClear -> {
-                state.onClear(haptic)
-            }
-            else -> onBack()
-        }
+    val canBackspace = state.displayValue == CalculatorState.ERROR_TEXT || (!state.isNewEntry && state.displayValue != "0")
+    val canClear = !canBackspace && !state.isAllClear
+
+    BackHandler(enabled = canBackspace) {
+        state.onBackspace(haptic)
+    }
+    BackHandler(enabled = canClear) {
+        state.onClear(haptic)
+    }
+    BackHandler(enabled = !canBackspace && !canClear) {
+        onBack()
     }
 
     Column(

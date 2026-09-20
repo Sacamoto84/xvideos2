@@ -31,7 +31,7 @@ object FavoritesTab : Screen {
             Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.KeyboardTap)}) { Text("KeyboardTap") }
             Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)}) { Text("GestureThresholdActivate") }
 
-            Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)}) { Text("SegmentTicktivate") }
+            Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)}) { Text("SegmentTick") }
             Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress)}) { Text("LongPress") }
             Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.ToggleOff)}) { Text("ToggleOff") }
 

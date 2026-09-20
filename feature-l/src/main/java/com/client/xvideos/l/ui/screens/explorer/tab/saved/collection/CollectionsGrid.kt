@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -64,7 +64,7 @@ fun CollectionsGrid(
             state = gridState,
             columns = GridCells.Fixed(2)
         ) {
-            items(collections, key = { it.name }) { collection ->
+            itemsIndexed(collections, key = { index, item -> "${item.name}#$index" }) { _, collection ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -111,7 +111,7 @@ fun CollectionsGrid(
                 }
             }
 
-            items(listOf(Unit)) {
+            item {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Box(
                         modifier = Modifier
