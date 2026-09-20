@@ -27,7 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -42,7 +41,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardActions
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
@@ -86,12 +84,8 @@ object L_ScreenAlbumSearch : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLAlbumSearchSM = getScreenModel()
 
-        val coroutineScope = rememberCoroutineScope()
         val searchText = vm.searchText.collectAsStateWithLifecycle().value
         BackHandler(enabled = searchText.isNotEmpty()) { vm.searchText.value = "" }
-        BackHandler(enabled = searchText.isEmpty() && vm.state.isScrolled) {
-            coroutineScope.launch { vm.state.animateScrollToItem(0) }
-        }
         val result = vm.result.collectAsStateWithLifecycle().value
         val isLoading = vm.isLoading.collectAsStateWithLifecycle().value
         val sections = result?.sections

@@ -141,5 +141,18 @@ class XlrRestoreApplyTest {
         assertFalse("служебная папка отката не должна быть в списке: $lPaths", lPaths.any { it.contains(".xlr_old_") })
         assertFalse("скрытые элементы не должны быть в списке: $lPaths", lPaths.any { it.contains("/.") })
     }
+
+    @Test
+    fun `normalizeSelectedPaths отфильтровывает скрытые сегменты и служебные каталоги`() {
+        val input = setOf(
+            "L/valid",
+            "L/.xlr_old_recovery",
+            "R/Download/.temp",
+            "X/.nomedia",
+            "R/valid_folder"
+        )
+        val normalized = XlrBackupManager.normalizeSelectedPaths(input)
+        assertEquals(listOf("L/valid", "R/valid_folder"), normalized)
+    }
 }
 

@@ -1,7 +1,6 @@
 package com.client.xvideos.l.ui.screens.screenAlbum
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,9 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -112,9 +109,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         /**  ➜ сюда запоминаем элемент, который пользователь хочет удалить  */
         var itemPendingDelete by remember { mutableStateOf<AlbumDetails?>(null) }
 
-        val scope = rememberCoroutineScope()
-        val isGridScrolled = vm.host.state.isScrolled
-
         // Активен только когда НЕ открыта полноэкранная картинка — в этом случае
         // back перехватывает L_FullScreenImage (закрывает картинку), и выход из альбома не происходит.
         BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete != null) {
@@ -123,10 +117,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && vm.showOnlyAnimated) {
             vm.showOnlyAnimated = false
         }
-        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && !vm.showOnlyAnimated && isGridScrolled) {
-            scope.launch { vm.host.state.animateScrollToItem(0) }
-        }
-        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && !vm.showOnlyAnimated && !isGridScrolled) {
+        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && !vm.showOnlyAnimated) {
             navigator.pop()
         }
 
@@ -249,8 +240,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                             itemPendingDelete = null
                                         } else if (vm.showOnlyAnimated) {
                                             vm.showOnlyAnimated = false
-                                        } else if (vm.host.state.isScrolled) {
-                                            scope.launch { vm.host.state.animateScrollToItem(0) }
                                         } else {
                                             navigator.pop()
                                         }

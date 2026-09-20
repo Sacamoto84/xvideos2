@@ -21,11 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,7 +95,6 @@ object R_Screen_CollectionTab : Screen {
         var renameValue by rememberSaveable { mutableStateOf("") }
         var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
 
-        val scope = rememberCoroutineScope()
         BackHandler(
             enabled = selectedCollection == null &&
                 (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null)
@@ -105,13 +102,6 @@ object R_Screen_CollectionTab : Screen {
             itemPendingAction = null
             itemPendingRename = null
             itemPendingDelete = null
-        }
-        BackHandler(
-            enabled = selectedCollection == null &&
-                itemPendingAction == null && itemPendingRename == null && itemPendingDelete == null &&
-                vm.gridState.isScrolled
-        ) {
-            scope.launch { vm.gridState.animateScrollToItem(0) }
         }
 
         fun coverOf(name: String): String? =

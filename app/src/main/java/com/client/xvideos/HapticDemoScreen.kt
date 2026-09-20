@@ -24,8 +24,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -68,13 +66,8 @@ object HapticDemoScreen : Screen {
         val context = LocalContext.current
 
         val scrollState = rememberScrollState()
-        val scope = rememberCoroutineScope()
-        val isScrolled = scrollState.value > 0
 
-        BackHandler(enabled = isScrolled) {
-            scope.launch { scrollState.animateScrollTo(0) }
-        }
-        BackHandler(enabled = !isScrolled) {
+        BackHandler {
             navigator.pop()
         }
 
@@ -105,13 +98,7 @@ object HapticDemoScreen : Screen {
                         .background(Color(0xFF1B1B1B))
                 ) {
                     IconButton(
-                        onClick = {
-                            if (isScrolled) {
-                                scope.launch { scrollState.animateScrollTo(0) }
-                            } else {
-                                navigator.pop()
-                            }
-                        },
+                        onClick = { navigator.pop() },
                         modifier = Modifier
                             .displayCutoutPadding()
                             .padding(start = 4.dp, top = 4.dp)

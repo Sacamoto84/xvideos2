@@ -65,7 +65,7 @@ internal fun calculateDragDeltaMs(seekDragAmount: Float): Long {
 }
 
 internal fun isValidABRange(enableAB: Boolean, timeA: Float, timeB: Float): Boolean {
-    return enableAB && timeA.isFinite() && timeB.isFinite() && timeB > timeA
+    return enableAB && timeA.isFinite() && timeB.isFinite() && timeA >= 0f && timeB > timeA
 }
 
 private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long =

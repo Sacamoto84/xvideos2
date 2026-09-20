@@ -54,8 +54,12 @@ class FormattingUtilsTest {
         assertEquals("2:98", 2.984f.toTwoDecimalPlacesWithColon())
         assertEquals("10:00", 10.0f.toTwoDecimalPlacesWithColon())
         assertEquals("123:46", 123.456f.toTwoDecimalPlacesWithColon())
+        assertEquals("0:00", 0.0f.toTwoDecimalPlacesWithColon())
+        assertEquals("0:00", (-1.5f).toTwoDecimalPlacesWithColon())
+        assertEquals("0:00", (-0.01f).toTwoDecimalPlacesWithColon())
         assertEquals("0:00", Float.NaN.toTwoDecimalPlacesWithColon())
         assertEquals("0:00", Float.POSITIVE_INFINITY.toTwoDecimalPlacesWithColon())
+        assertEquals("0:00", Float.NEGATIVE_INFINITY.toTwoDecimalPlacesWithColon())
     }
 
     @Test

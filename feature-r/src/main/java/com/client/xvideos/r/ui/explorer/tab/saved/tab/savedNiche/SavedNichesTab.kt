@@ -1,7 +1,6 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
@@ -28,9 +27,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,14 +74,10 @@ object SavedNichesTab : Screen {
             gridState = state, itemsToIgnore = 0
         )
 
-        val scope = rememberCoroutineScope()
         var itemPendingDelete by remember { mutableStateOf<NichesInfo?>(null) }
 
         BackHandler(enabled = itemPendingDelete != null) {
             itemPendingDelete = null
-        }
-        BackHandler(enabled = itemPendingDelete == null && state.isScrolled) {
-            scope.launch { state.animateScrollToItem(0) }
         }
 
         DialogNicheDelete(

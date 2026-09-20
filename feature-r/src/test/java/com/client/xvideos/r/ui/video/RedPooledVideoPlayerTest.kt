@@ -60,16 +60,18 @@ class RedPooledVideoPlayerTest {
     }
 
     @Test
-    fun `isFinite checks reject NaN and infinite points for AB loop`() {
-        fun isValidAB(timeA: Float, timeB: Float) =
-            timeA.isFinite() && timeB.isFinite() && timeB > timeA
-
-        assertFalse(isValidAB(Float.NaN, 5f))
-        assertFalse(isValidAB(1f, Float.NaN))
-        assertFalse(isValidAB(Float.NEGATIVE_INFINITY, 5f))
-        assertFalse(isValidAB(1f, Float.POSITIVE_INFINITY))
-        assertFalse(isValidAB(5f, 1f))
-        assertTrue(isValidAB(1f, 5f))
+    fun `isValidABRange rejects NaN, infinite points, negative timeA, and inverted range`() {
+        assertFalse(isValidABRange(enableAB = false, 1f, 5f))
+        assertFalse(isValidABRange(enableAB = true, Float.NaN, 5f))
+        assertFalse(isValidABRange(enableAB = true, 1f, Float.NaN))
+        assertFalse(isValidABRange(enableAB = true, Float.NEGATIVE_INFINITY, 5f))
+        assertFalse(isValidABRange(enableAB = true, 1f, Float.POSITIVE_INFINITY))
+        assertFalse(isValidABRange(enableAB = true, -1f, 5f))
+        assertFalse(isValidABRange(enableAB = true, -0.001f, 5f))
+        assertFalse(isValidABRange(enableAB = true, 5f, 1f))
+        assertFalse(isValidABRange(enableAB = true, 3f, 3f))
+        assertTrue(isValidABRange(enableAB = true, 0f, 5f))
+        assertTrue(isValidABRange(enableAB = true, 1f, 5f))
     }
 
     @Test

@@ -23,7 +23,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -143,21 +142,8 @@ private fun Screen.ScreenAlbumListContent(
         // ✅ Состояние для диалога
         var showFilterDialog by remember { mutableStateOf(false) }
 
-        // Иерархия «Назад»: сначала закрыть диалог фильтра, затем прокрутить текущую страницу к началу, затем вернуться на страницу 0, затем выйти
-        val currentGridState = vm.stateGrid[vm.statePager.currentPage]
-        val isGridScrolled = currentGridState?.isScrolled == true
-
         BackHandler(enabled = showFilterDialog) {
             showFilterDialog = false
-        }
-        BackHandler(enabled = !showFilterDialog && isGridScrolled) {
-            scope.launch { currentGridState?.animateScrollToItem(0) }
-        }
-        BackHandler(enabled = !showFilterDialog && !isGridScrolled && vm.statePager.currentPage > 0) {
-            scope.launch { vm.statePager.animateScrollToPage(0) }
-        }
-        BackHandler(enabled = !showFilterDialog && !isGridScrolled && vm.statePager.currentPage == 0 && navigator.canPop) {
-            navigator.pop()
         }
 
         val topInset = getTopInsetDp()
@@ -232,10 +218,8 @@ private fun Screen.ScreenAlbumListContent(
                         onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
                         onBackClick = if (navigator.canPop && title.isNotEmpty()) {
                             {
-                                when (resolveAlbumListBackAction(showFilterDialog, stateGrid.isScrolled, vm.statePager.currentPage)) {
+                                when (resolveAlbumListBackAction(showFilterDialog)) {
                                     AlbumListBackAction.DISMISS_FILTER -> showFilterDialog = false
-                                    AlbumListBackAction.SCROLL_GRID_TOP -> scope.launch { stateGrid.animateScrollToItem(0) }
-                                    AlbumListBackAction.SCROLL_PAGE_ZERO -> scope.launch { vm.statePager.animateScrollToPage(0) }
                                     AlbumListBackAction.POP -> navigator.pop()
                                 }
                             }
@@ -393,21 +377,12 @@ private fun AlbumListFilterOverlay(
 
 internal enum class AlbumListBackAction {
     DISMISS_FILTER,
-    SCROLL_GRID_TOP,
-    SCROLL_PAGE_ZERO,
     POP
 }
 
 internal fun resolveAlbumListBackAction(
-    showFilterDialog: Boolean,
-    isGridScrolled: Boolean,
-    currentPage: Int
+    showFilterDialog: Boolean
 ): AlbumListBackAction {
-    return when {
-        showFilterDialog -> AlbumListBackAction.DISMISS_FILTER
-        isGridScrolled -> AlbumListBackAction.SCROLL_GRID_TOP
-        currentPage > 0 -> AlbumListBackAction.SCROLL_PAGE_ZERO
-        else -> AlbumListBackAction.POP
-    }
+    return if (showFilterDialog) AlbumListBackAction.DISMISS_FILTER else AlbumListBackAction.POP
 }
 

@@ -1,7 +1,5 @@
 package com.client.xvideos.x.screens.dashboards
 
-import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.ExperimentalFoundationApi
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -35,8 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -107,11 +103,6 @@ fun DashboardsPaginatedListScreen(
     var hasError by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
     val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
-    val scope = rememberCoroutineScope()
-
-    BackHandler(enabled = isCurrentPage && videoItems.isNotEmpty() && gridState.isScrolled) {
-        scope.launch { gridState.animateScrollToItem(0) }
-    }
 
     LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch, key3 = retryTrigger) {
         // Список очищаем только когда новая страница уже загружена: раньше

@@ -1,9 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -106,13 +104,9 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         }
 
         var itemPendingServerUnlike by remember { mutableStateOf<AlbumDetails?>(null) }
-        val scope = rememberCoroutineScope()
 
         BackHandler(enabled = itemPendingServerUnlike != null) {
             itemPendingServerUnlike = null
-        }
-        BackHandler(enabled = itemPendingServerUnlike == null && state.isScrolled) {
-            scope.launch { state.animateScrollToItem(0) }
         }
 
         itemPendingServerUnlike?.let { pending ->

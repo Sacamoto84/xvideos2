@@ -62,9 +62,16 @@ class R_Screen_Root : Screen {
                 vm.block.blockVisibleDialog
 
             BackHandler(enabled = isAnyDialogOpen) {
-                if (savedRed.collections.visibleDialog) savedRed.collections.visibleDialog = false
-                if (savedRed.collections.visibleDialogCreateNew) savedRed.collections.visibleDialogCreateNew = false
-                if (vm.block.blockVisibleDialog) vm.block.blockVisibleDialog = false
+                when (resolveRedRootDialogBackAction(
+                    visibleDialogCreateNew = savedRed.collections.visibleDialogCreateNew,
+                    visibleDialog = savedRed.collections.visibleDialog,
+                    blockVisibleDialog = vm.block.blockVisibleDialog
+                )) {
+                    RedRootDialogBackAction.DISMISS_NEW_COLLECTION -> savedRed.collections.visibleDialogCreateNew = false
+                    RedRootDialogBackAction.DISMISS_COLLECTION_PICKER -> savedRed.collections.visibleDialog = false
+                    RedRootDialogBackAction.DISMISS_BLOCK -> vm.block.blockVisibleDialog = false
+                    RedRootDialogBackAction.NONE -> Unit
+                }
             }
 
             //Диалог коллекции
@@ -181,4 +188,22 @@ abstract class ScreenModuleRedRootBlock {
     @IntoMap
     @ScreenModelKey(ScreenRedRootSM::class)
     abstract fun bindScreenRedRootScreenModel(hiltListScreenModel: ScreenRedRootSM): ScreenModel
+}
+
+internal enum class RedRootDialogBackAction {
+    DISMISS_NEW_COLLECTION,
+    DISMISS_COLLECTION_PICKER,
+    DISMISS_BLOCK,
+    NONE
+}
+
+internal fun resolveRedRootDialogBackAction(
+    visibleDialogCreateNew: Boolean,
+    visibleDialog: Boolean,
+    blockVisibleDialog: Boolean
+): RedRootDialogBackAction = when {
+    visibleDialogCreateNew -> RedRootDialogBackAction.DISMISS_NEW_COLLECTION
+    visibleDialog -> RedRootDialogBackAction.DISMISS_COLLECTION_PICKER
+    blockVisibleDialog -> RedRootDialogBackAction.DISMISS_BLOCK
+    else -> RedRootDialogBackAction.NONE
 }

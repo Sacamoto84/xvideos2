@@ -3,7 +3,6 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab.collection
 import com.client.xvideos.common.theme.Theme
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -83,17 +82,10 @@ class ScreenCollectionName(
         }
 
         val handleBack = {
-            if (vm.likedHost.state.isScrolled) {
-                vm.likedHost.gotoUp()
-            } else {
-                closeCollection()
-            }
+            closeCollection()
         }
 
-        BackHandler(enabled = vm.likedHost.state.isScrolled) {
-            vm.likedHost.gotoUp()
-        }
-        BackHandler(enabled = !vm.likedHost.state.isScrolled) {
+        BackHandler {
             closeCollection()
         }
 

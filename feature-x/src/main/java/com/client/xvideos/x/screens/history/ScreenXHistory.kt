@@ -1,7 +1,6 @@
 package com.client.xvideos.x.screens.history
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,9 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -152,7 +149,6 @@ fun HistoryContent(
     var showBatchDeleteConfirm by remember { mutableStateOf(false) }
 
     val gridState = rememberLazyGridState()
-    val scope = rememberCoroutineScope()
 
     val isAnyDialogOpen = pendingDelete != null || showClearAllConfirm || showBatchDeleteConfirm
     BackHandler(enabled = isAnyDialogOpen) {
@@ -164,10 +160,6 @@ fun HistoryContent(
     BackHandler(enabled = !isAnyDialogOpen && isSelectionMode) {
         isSelectionMode = false
         selectedIds.clear()
-    }
-
-    BackHandler(enabled = !isAnyDialogOpen && !isSelectionMode && gridState.isScrolled) {
-        scope.launch { gridState.animateScrollToItem(0) }
     }
 
     LaunchedEffect(history.isEmpty()) {

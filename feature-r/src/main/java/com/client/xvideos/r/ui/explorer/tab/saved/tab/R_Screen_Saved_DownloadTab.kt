@@ -1,10 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -105,13 +102,9 @@ object R_Screen_Saved_DownloadTab : Screen {
         }
 
         var chooserItem by remember { mutableStateOf<GifsInfo?>(null) }
-        val scope = rememberCoroutineScope()
 
         BackHandler(enabled = chooserItem != null) {
             chooserItem = null
-        }
-        BackHandler(enabled = chooserItem == null && state.isScrolled) {
-            scope.launch { state.animateScrollToItem(0) }
         }
 
         val onShareClickHandler = remember(context) {

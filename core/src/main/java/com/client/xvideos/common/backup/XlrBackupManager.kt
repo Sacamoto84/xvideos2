@@ -172,7 +172,7 @@ object XlrBackupManager {
                             val report = writePath(zip, source, path, options)
                             files += report.files
                             bytes += report.bytes
-                        } else {
+                        } else if (shouldIncludeBackupEntry(path, options)) {
                             zip.putNextEntry(ZipEntry("$path/"))
                             zip.closeEntry()
                         }
@@ -301,12 +301,11 @@ object XlrBackupManager {
         entryRoot: String,
         options: XlrBackupOptions
     ): XlrBackupReport {
+        if (!shouldIncludeBackupEntry(entryRoot, options)) {
+            return XlrBackupReport(files = 0, bytes = 0L)
+        }
         if (source.isFile) {
-            return if (shouldIncludeBackupEntry(entryRoot, options)) {
-                writeFile(zip, source, entryRoot)
-            } else {
-                XlrBackupReport(files = 0, bytes = 0L)
-            }
+            return writeFile(zip, source, entryRoot)
         }
         return writeDirectory(zip, source, entryRoot, options)
     }
@@ -317,6 +316,9 @@ object XlrBackupManager {
         entryRoot: String,
         options: XlrBackupOptions
     ): XlrBackupReport {
+        if (!shouldIncludeBackupEntry(entryRoot, options)) {
+            return XlrBackupReport(files = 0, bytes = 0L)
+        }
         var files = 0
         var bytes = 0L
         zip.putNextEntry(ZipEntry("$entryRoot/"))
@@ -403,6 +405,10 @@ object XlrBackupManager {
                 val entry = zip.nextEntry ?: break
                 val name = normalizeRelativePath(entry.name)
                 if (name == MANIFEST_ENTRY) {
+                    zip.closeEntry()
+                    continue
+                }
+                if (name.split('/').any { it.startsWith(".") }) {
                     zip.closeEntry()
                     continue
                 }
@@ -527,12 +533,12 @@ object XlrBackupManager {
         return this == path || startsWith("$path/")
     }
 
-    private fun normalizeSelectedPaths(paths: Set<String>): List<String> {
+    internal fun normalizeSelectedPaths(paths: Set<String>): List<String> {
         val sorted = paths
             .map { normalizeRelativePath(it) }
             .filter { path ->
                 val top = path.substringBefore("/")
-                top in sections
+                top in sections && !path.split('/').any { it.startsWith(".") }
             }
             .distinct()
             .sorted()

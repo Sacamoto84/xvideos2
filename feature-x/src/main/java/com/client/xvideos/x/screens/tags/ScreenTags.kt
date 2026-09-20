@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
@@ -58,11 +57,7 @@ class ScreenTags(val tag: String) : Screen {
         val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
         val listStates = remember { mutableStateMapOf<Int, LazyListState>() }
 
-        // Если открыта не первая страница, первый «Назад» плавно возвращает на нулевую страницу
-        BackHandler(enabled = pagerState.currentPage > 0) {
-            job.launch { pagerState.animateScrollToPage(0) }
-        }
-        BackHandler(enabled = pagerState.currentPage == 0) {
+        BackHandler {
             navigator.pop()
         }
 
@@ -77,14 +72,7 @@ class ScreenTags(val tag: String) : Screen {
                         .padding(horizontal = 4.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = {
-                        val currentListState = listStates[pagerState.currentPage]
-                        when (resolveTagsBackAction(currentListState?.isScrolled == true, pagerState.currentPage)) {
-                            TagsBackAction.SCROLL_LIST_TOP -> job.launch { currentListState?.animateScrollToItem(0) }
-                            TagsBackAction.SCROLL_PAGE_ZERO -> job.launch { pagerState.animateScrollToPage(0) }
-                            TagsBackAction.POP -> navigator.pop()
-                        }
-                    }) {
+                    IconButton(onClick = { navigator.pop() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад",
@@ -154,19 +142,10 @@ class ScreenTags(val tag: String) : Screen {
 }
 
 internal enum class TagsBackAction {
-    SCROLL_LIST_TOP,
-    SCROLL_PAGE_ZERO,
     POP
 }
 
-internal fun resolveTagsBackAction(
-    isListScrolled: Boolean,
-    currentPage: Int
-): TagsBackAction {
-    return when {
-        isListScrolled -> TagsBackAction.SCROLL_LIST_TOP
-        currentPage > 0 -> TagsBackAction.SCROLL_PAGE_ZERO
-        else -> TagsBackAction.POP
-    }
+internal fun resolveTagsBackAction(): TagsBackAction {
+    return TagsBackAction.POP
 }
 

@@ -79,16 +79,13 @@ class SubscriptionsAndSavedLikesTest {
     }
 
     @Test
-    fun `profile back hierarchy prioritizes clearing tags then scrolling then pop`() {
-        fun resolveBackStep(hasTags: Boolean, isScrolled: Boolean): String = when {
+    fun `profile back hierarchy prioritizes clearing tags then pop`() {
+        fun resolveBackStep(hasTags: Boolean): String = when {
             hasTags -> "CLEAR_TAGS"
-            isScrolled -> "SCROLL_TOP"
             else -> "POP"
         }
 
-        assertEquals("CLEAR_TAGS", resolveBackStep(hasTags = true, isScrolled = true))
-        assertEquals("CLEAR_TAGS", resolveBackStep(hasTags = true, isScrolled = false))
-        assertEquals("SCROLL_TOP", resolveBackStep(hasTags = false, isScrolled = true))
-        assertEquals("POP", resolveBackStep(hasTags = false, isScrolled = false))
+        assertEquals("CLEAR_TAGS", resolveBackStep(hasTags = true))
+        assertEquals("POP", resolveBackStep(hasTags = false))
     }
 }

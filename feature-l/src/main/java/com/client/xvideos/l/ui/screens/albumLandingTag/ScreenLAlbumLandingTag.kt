@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,13 +94,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
-        val coroutineScope = rememberCoroutineScope()
-        BackHandler(enabled = vm.state.isScrolled) {
-            coroutineScope.launch { vm.state.animateScrollToItem(0) }
-        }
-        BackHandler(enabled = !vm.state.isScrolled) {
-            navigator.pop()
-        }
+        BackHandler { navigator.pop() }
         val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
@@ -114,13 +106,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
             topBar = {
                 LandingTagTopBar(
                     title = "Tag: ${title ?: tag}",
-                    onBack = {
-                        if (vm.state.isScrolled) {
-                            coroutineScope.launch { vm.state.animateScrollToItem(0) }
-                        } else {
-                            navigator.pop()
-                        }
-                    }
+                    onBack = { navigator.pop() }
                 )
             }
         ) { padding ->

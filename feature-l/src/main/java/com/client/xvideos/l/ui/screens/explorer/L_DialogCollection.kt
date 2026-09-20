@@ -39,8 +39,14 @@ import com.client.xvideos.l.featured.saved.SavedL
 fun LCollectionDialogs(savedL: SavedL) {
     val isAnyDialogOpen = savedL.collection.visibleDialogCreateNew || savedL.collection.visibleDialog
     BackHandler(enabled = isAnyDialogOpen) {
-        if (savedL.collection.visibleDialogCreateNew) savedL.collection.visibleDialogCreateNew = false
-        if (savedL.collection.visibleDialog) savedL.collection.visibleDialog = false
+        when (resolveLCollectionDialogBackAction(
+            visibleDialogCreateNew = savedL.collection.visibleDialogCreateNew,
+            visibleDialog = savedL.collection.visibleDialog
+        )) {
+            LCollectionDialogBackAction.DISMISS_NEW_COLLECTION -> savedL.collection.visibleDialogCreateNew = false
+            LCollectionDialogBackAction.DISMISS_COLLECTION_PICKER -> savedL.collection.visibleDialog = false
+            LCollectionDialogBackAction.NONE -> Unit
+        }
     }
 
     if (savedL.collection.visibleDialogCreateNew) {
@@ -156,4 +162,19 @@ fun L_DialogCollection(savedL: SavedL) {
             savedL.collection.visibleDialogCreateNew = true
         },
     )
+}
+
+internal enum class LCollectionDialogBackAction {
+    DISMISS_NEW_COLLECTION,
+    DISMISS_COLLECTION_PICKER,
+    NONE
+}
+
+internal fun resolveLCollectionDialogBackAction(
+    visibleDialogCreateNew: Boolean,
+    visibleDialog: Boolean
+): LCollectionDialogBackAction = when {
+    visibleDialogCreateNew -> LCollectionDialogBackAction.DISMISS_NEW_COLLECTION
+    visibleDialog -> LCollectionDialogBackAction.DISMISS_COLLECTION_PICKER
+    else -> LCollectionDialogBackAction.NONE
 }

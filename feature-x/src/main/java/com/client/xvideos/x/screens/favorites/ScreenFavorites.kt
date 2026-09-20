@@ -4,7 +4,6 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,8 +22,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -116,14 +113,10 @@ private fun FavoritesContent(
     // Подтверждение удаления из избранного (диалог).
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
     val gridState = rememberLazyGridState()
-    val scope = rememberCoroutineScope()
 
     // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
     BackHandler(enabled = pendingDelete != null) {
         pendingDelete = null
-    }
-    BackHandler(enabled = pendingDelete == null && gridState.isScrolled) {
-        scope.launch { gridState.animateScrollToItem(0) }
     }
 
     pendingDelete?.let { item ->

@@ -261,53 +261,27 @@ class LPureFunctionsTest {
     }
 
     @Test
-    fun `иерархия возврата для поиска альбомов отдает приоритет очистке ввода перед скроллом`() {
-        fun resolveBackAction(searchText: String, isScrolled: Boolean): String {
-            return when {
-                searchText.isNotEmpty() -> "CLEAR_INPUT"
-                isScrolled -> "SCROLL_TOP"
-                else -> "POP_SCREEN"
-            }
+    fun `иерархия возврата для поиска альбомов отдает приоритет очистке ввода перед выходом`() {
+        fun resolveBackAction(searchText: String): String {
+            return if (searchText.isNotEmpty()) "CLEAR_INPUT" else "POP_SCREEN"
         }
 
-        assertEquals("CLEAR_INPUT", resolveBackAction("tag", isScrolled = true))
-        assertEquals("CLEAR_INPUT", resolveBackAction("tag", isScrolled = false))
-        assertEquals("SCROLL_TOP", resolveBackAction("", isScrolled = true))
-        assertEquals("POP_SCREEN", resolveBackAction("", isScrolled = false))
+        assertEquals("CLEAR_INPUT", resolveBackAction("tag"))
+        assertEquals("POP_SCREEN", resolveBackAction(""))
     }
 
     @Test
-    fun `иерархия возврата в ScreenAlbumList корректно расставляет приоритеты диалога, скролла, страницы 0 и выхода`() {
-        // 1. Диалог фильтра открыт -> закрыть диалог вне зависимости от скролла и страницы
+    fun `иерархия возврата в ScreenAlbumList закрывает фильтр либо выполняет выход без задержек`() {
+        // 1. Диалог фильтра открыт -> закрыть диалог
         assertEquals(
             AlbumListBackAction.DISMISS_FILTER,
-            resolveAlbumListBackAction(showFilterDialog = true, isGridScrolled = true, currentPage = 3)
-        )
-        assertEquals(
-            AlbumListBackAction.DISMISS_FILTER,
-            resolveAlbumListBackAction(showFilterDialog = true, isGridScrolled = false, currentPage = 0)
+            resolveAlbumListBackAction(showFilterDialog = true)
         )
 
-        // 2. Диалог закрыт, но сетка прокручена -> прокрутить сетку к началу
-        assertEquals(
-            AlbumListBackAction.SCROLL_GRID_TOP,
-            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = true, currentPage = 2)
-        )
-        assertEquals(
-            AlbumListBackAction.SCROLL_GRID_TOP,
-            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = true, currentPage = 0)
-        )
-
-        // 3. Диалог закрыт, сетка вверху, но страница > 0 -> вернуться на страницу 0
-        assertEquals(
-            AlbumListBackAction.SCROLL_PAGE_ZERO,
-            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = false, currentPage = 1)
-        )
-
-        // 4. Диалог закрыт, сетка вверху, страница 0 -> закрыть экран (pop)
+        // 2. Диалог закрыт -> немедленный выход (pop)
         assertEquals(
             AlbumListBackAction.POP,
-            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = false, currentPage = 0)
+            resolveAlbumListBackAction(showFilterDialog = false)
         )
     }
 }

@@ -21,7 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,7 +40,6 @@ import com.client.xvideos.common.ui.atom.DownloadIndicator
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.history.ScreenXHistory
 import com.client.xvideos.x.screens.saved.X_SavedContent
-import kotlinx.coroutines.launch
 
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
@@ -63,20 +61,9 @@ class ScreenXDashBoards : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenXDashBoardsScreenModel = getScreenModel()
-        val scope = rememberCoroutineScope()
-
-        // При нажатии «Назад» во вторичных табах сохраненного возвращаемся к первому табу или в ленту дашбордов
+        // При нажатии «Назад» во вторичных табах сохраненного возвращаемся в ленту дашбордов
         BackHandler(enabled = vm.mainTab != 0) {
-            if (vm.savedTab != 0) {
-                vm.savedTab = 0
-            } else {
-                vm.mainTab = 0
-            }
-        }
-
-        // В ленте дашбордов при номере страницы > 0 возврат сначала на 0 страницу
-        BackHandler(enabled = vm.mainTab == 0 && vm.pagerState.currentPage > 0) {
-            scope.launch { vm.pagerState.animateScrollToPage(0) }
+            vm.mainTab = 0
         }
 
         // Стабильный экземпляр «Избранного» для инлайн-рендера (как object-табы saved в R/L).

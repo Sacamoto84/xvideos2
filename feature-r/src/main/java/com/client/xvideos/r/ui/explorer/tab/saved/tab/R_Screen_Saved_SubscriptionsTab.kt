@@ -1,7 +1,6 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
@@ -100,9 +99,6 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
                 }
             }
             pager.refresh()
-        }
-        BackHandler(enabled = userToDelete == null && !hasSelectedCreators && vm.likedHost.state.isScrolled) {
-            vm.likedHost.gotoUp()
         }
 
         // Обработка нажатия: переключаем флаг и обновляем пейджер

@@ -208,28 +208,20 @@ private fun AppSettingsScreenContent(
 ) {
     var currentPage by rememberSaveable { mutableStateOf(SettingsPage.Main) }
     val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(currentPage) {
         scrollState.scrollTo(0)
     }
 
-    val isScrolled = scrollState.value > 0
-
-    BackHandler(enabled = isScrolled) {
-        scope.launch { scrollState.animateScrollTo(0) }
-    }
-    BackHandler(enabled = !isScrolled && currentPage != SettingsPage.Main) {
+    BackHandler(enabled = currentPage != SettingsPage.Main) {
         currentPage = SettingsPage.Main
     }
-    BackHandler(enabled = !isScrolled && currentPage == SettingsPage.Main) {
+    BackHandler(enabled = currentPage == SettingsPage.Main) {
         onBack()
     }
 
     val handleBack: () -> Unit = {
-        if (scrollState.value > 0) {
-            scope.launch { scrollState.animateScrollTo(0) }
-        } else if (currentPage != SettingsPage.Main) {
+        if (currentPage != SettingsPage.Main) {
             currentPage = SettingsPage.Main
         } else {
             onBack()

@@ -3,7 +3,6 @@ package com.client.xvideos.r.ui.profile
 import com.client.xvideos.common.theme.Theme
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,18 +66,11 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
 
-        // 3-уровневая навигация «Назад»:
+        // Навигация «Назад»:
         // 1. Сброс выбранных тегов фильтрации (если есть).
-        // 2. Возврат к началу ленты профиля (если прокручено вниз).
-        // 3. Выход из профиля.
+        // 2. Выход из профиля.
         BackHandler(enabled = tagsSelect.isNotEmpty()) {
             vm.tagsSelect.value = emptySet()
-        }
-        BackHandler(enabled = tagsSelect.isEmpty() && vm.likedHost.state.isScrolled) {
-            vm.likedHost.gotoUp()
-        }
-        BackHandler(enabled = tagsSelect.isEmpty() && !vm.likedHost.state.isScrolled) {
-            navigator.pop()
         }
 
         // Расчет процентов для скролл.
@@ -109,8 +101,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
             onBack = {
                 if (tagsSelect.isNotEmpty()) {
                     vm.tagsSelect.value = emptySet()
-                } else if (vm.likedHost.state.isScrolled) {
-                    vm.likedHost.gotoUp()
                 } else {
                     navigator.pop()
                 }

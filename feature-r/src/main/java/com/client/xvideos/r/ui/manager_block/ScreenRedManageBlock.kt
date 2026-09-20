@@ -1,7 +1,6 @@
 package com.client.xvideos.r.ui.manager_block
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -25,8 +24,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -53,13 +50,8 @@ class ScreenRedManageBlock : Screen {
         val vm: ScreenRedManageBlockSM = getScreenModel()
         val blockList = vm.blockList.collectAsStateWithLifecycle().value
         val listState = rememberLazyListState()
-        val scope = rememberCoroutineScope()
-        val isScrolled = blockList.isNotEmpty() && listState.isScrolled
 
-        BackHandler(enabled = isScrolled) {
-            scope.launch { listState.animateScrollToItem(0) }
-        }
-        BackHandler(enabled = !isScrolled) {
+        BackHandler {
             navigator.pop()
         }
 
@@ -73,13 +65,7 @@ class ScreenRedManageBlock : Screen {
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {
-                        if (isScrolled) {
-                            scope.launch { listState.animateScrollToItem(0) }
-                        } else {
-                            navigator.pop()
-                        }
-                    }) {
+                    IconButton(onClick = { navigator.pop() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад",

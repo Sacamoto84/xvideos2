@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,10 +67,7 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenNicheSM, ScreenNicheSM.Factory> { factory -> factory.create(nicheName) }
-        BackHandler(enabled = vm.lazyHost.state.isScrolled) {
-            vm.lazyHost.gotoUp()
-        }
-        BackHandler(enabled = !vm.lazyHost.state.isScrolled) {
+        BackHandler {
             navigator.pop()
         }
         val columnSelect by Settings.r_current_count_niches.field.collectAsStateWithLifecycle()

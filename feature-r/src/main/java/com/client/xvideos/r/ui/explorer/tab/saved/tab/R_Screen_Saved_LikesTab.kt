@@ -1,7 +1,5 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
-import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.ui.lazy.isScrolled
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.background
@@ -61,10 +59,6 @@ object R_Screen_Saved_LikesTab : Screen {
         )
 
         val pager = vm.likedHost.pager.collectAsLazyPagingItems()
-
-        BackHandler(enabled = vm.likedHost.state.isScrolled) {
-            vm.likedHost.gotoUp()
-        }
 
         //Изменение количества отображаемых элементов
         LaunchedEffect(columnSelect) { vm.likedHost.columns = columnSelect }
