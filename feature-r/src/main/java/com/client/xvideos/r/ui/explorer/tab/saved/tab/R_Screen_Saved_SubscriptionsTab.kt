@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,14 +80,29 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
 
         var selectCreatorName by remember { mutableStateOf<String?>(null) }
 
+        // Используем SnapshotStateList напрямую для реактивности UI
+        val selectedListCreator = vm.savedRed.subscriptions.selectedListCreator
+
+        val hasSelectedCreators by remember {
+            derivedStateOf { selectedListCreator.any { it.select } }
+        }
+
         var userToDelete by remember { mutableStateOf<SelectedCreator?>(null) }
 
         BackHandler(enabled = userToDelete != null) {
             userToDelete = null
         }
-
-        // Используем SnapshotStateList напрямую для реактивности UI
-        val selectedListCreator = vm.savedRed.subscriptions.selectedListCreator
+        BackHandler(enabled = userToDelete == null && hasSelectedCreators) {
+            for (i in selectedListCreator.indices) {
+                if (selectedListCreator[i].select) {
+                    selectedListCreator[i] = selectedListCreator[i].copy(select = false)
+                }
+            }
+            pager.refresh()
+        }
+        BackHandler(enabled = userToDelete == null && !hasSelectedCreators && vm.likedHost.state.firstVisibleItemIndex > 0) {
+            vm.likedHost.gotoUp()
+        }
 
         // Обработка нажатия: переключаем флаг и обновляем пейджер
         if (selectCreatorName != null) {

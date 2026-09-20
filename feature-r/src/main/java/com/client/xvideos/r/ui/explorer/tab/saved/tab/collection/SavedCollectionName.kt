@@ -81,7 +81,18 @@ class ScreenCollectionName(
             }
         }
 
-        BackHandler {
+        val handleBack = {
+            if (vm.likedHost.state.firstVisibleItemIndex > 0) {
+                vm.likedHost.gotoUp()
+            } else {
+                closeCollection()
+            }
+        }
+
+        BackHandler(enabled = vm.likedHost.state.firstVisibleItemIndex > 0) {
+            vm.likedHost.gotoUp()
+        }
+        BackHandler(enabled = vm.likedHost.state.firstVisibleItemIndex == 0) {
             closeCollection()
         }
 
@@ -97,7 +108,7 @@ class ScreenCollectionName(
                 modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = closeCollection) {
+                IconButton(onClick = handleBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Назад",
@@ -168,19 +179,6 @@ abstract class ScreenModuleRedSavedCollectionName {
     @ScreenModelFactoryKey(ScreenRedCollectionNameSM.Factory::class)
     abstract fun bindScreenRedSavedCollectionNameScreenModel(hiltDetailsScreenModelFactory: ScreenRedCollectionNameSM.Factory): ScreenModelFactory
 }
-
-//@Module
-//@InstallIn(SingletonComponent::class)
-//abstract class ScreenModuleRedProfile {
-//
-//    @Binds
-//    @IntoMap
-//    @ScreenModelFactoryKey(ScreenRedProfileSM.Factory::class)
-//    abstract fun bindHiltProfilesScreenModelFactory(
-//        hiltDetailsScreenModelFactory: ScreenRedProfileSM.Factory
-//    ): ScreenModelFactory
-//
-//}
 
 
 

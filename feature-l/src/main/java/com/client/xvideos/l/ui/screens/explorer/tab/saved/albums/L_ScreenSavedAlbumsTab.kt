@@ -1,5 +1,8 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.albums
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +56,11 @@ object L_ScreenSavedAlbumsTab : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLSavedAlbumsSM = getScreenModel()
         val state = vm.state
+        val scope = rememberCoroutineScope()
+
+        BackHandler(enabled = state.firstVisibleItemIndex > 0) {
+            scope.launch { state.animateScrollToItem(0) }
+        }
 
         // itemsToIgnore = 1: нулевой item грида — full-span спейсер под вырез,
         // без него индикатор считает спейсер контентом и врёт по позиции и длине.

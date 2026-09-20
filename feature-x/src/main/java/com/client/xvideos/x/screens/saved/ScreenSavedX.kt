@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -68,10 +69,15 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     val list = saved.downloads.list.collectAsStateWithLifecycle().value
 
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
     BackHandler(enabled = pendingDelete != null) {
         pendingDelete = null
+    }
+    BackHandler(enabled = pendingDelete == null && listState.firstVisibleItemIndex > 0) {
+        scope.launch { listState.animateScrollToItem(0) }
     }
 
     pendingDelete?.let { item ->
@@ -110,7 +116,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 Text("Пусто", color = Color.Gray, fontSize = 16.sp)
             }
         } else {
-            LazyColumn {
+            LazyColumn(state = listState) {
                 items(list, key = { it.id }) { item ->
                     val posterUrl = remember(item.id) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage

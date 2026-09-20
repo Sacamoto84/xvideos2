@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -111,10 +114,15 @@ private fun FavoritesContent(
 ) {
     // Подтверждение удаления из избранного (диалог).
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
+    val gridState = rememberLazyGridState()
+    val scope = rememberCoroutineScope()
 
     // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
     BackHandler(enabled = pendingDelete != null) {
         pendingDelete = null
+    }
+    BackHandler(enabled = pendingDelete == null && gridState.firstVisibleItemIndex > 0) {
+        scope.launch { gridState.animateScrollToItem(0) }
     }
 
     pendingDelete?.let { item ->
@@ -162,6 +170,7 @@ private fun FavoritesContent(
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
+                state = gridState,
                 // padding от Scaffold — высота topBar. Без него первая строка сетки
                 // уезжала под заголовок «Избранное».
                 modifier = Modifier.padding(padding)
