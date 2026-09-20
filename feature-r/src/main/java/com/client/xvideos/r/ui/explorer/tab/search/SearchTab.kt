@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonOutline
@@ -17,6 +18,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
@@ -102,8 +105,14 @@ fun SearchTabContent(
     creatorsList: List<SearchItemCreatorsResponse>,
     onCreatorClick: (String) -> Unit
 ) {
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
     BackHandler(enabled = searchText.isNotEmpty()) {
         onSearchTextChange("")
+    }
+    BackHandler(enabled = searchText.isEmpty() && listState.firstVisibleItemIndex > 0) {
+        coroutineScope.launch { listState.animateScrollToItem(0) }
     }
 
     Scaffold(
@@ -149,6 +158,7 @@ fun SearchTabContent(
             }
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentPadding = PaddingValues(vertical = 4.dp)
             ) {

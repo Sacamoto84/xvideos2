@@ -327,7 +327,7 @@ private fun AlbumListPageGrid(
                         numberOfPictures = item.numberOfPictures,
                     ) {
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        onAlbumClick(item.id.toLong())
+                        item.id.toLongOrNull()?.let { onAlbumClick(it) }
                     }
                 }
             }

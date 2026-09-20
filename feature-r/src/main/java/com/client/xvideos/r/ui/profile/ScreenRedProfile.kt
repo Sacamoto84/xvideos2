@@ -66,11 +66,17 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
 
-        // При активной фильтрации по тегам первый шаг «Назад» сбрасывает фильтр, второй — выходит из профиля
+        // 3-уровневая навигация «Назад»:
+        // 1. Сброс выбранных тегов фильтрации (если есть).
+        // 2. Возврат к началу ленты профиля (если прокручено вниз).
+        // 3. Выход из профиля.
         BackHandler(enabled = tagsSelect.isNotEmpty()) {
             vm.tagsSelect.value = emptySet()
         }
-        BackHandler(enabled = tagsSelect.isEmpty()) {
+        BackHandler(enabled = tagsSelect.isEmpty() && vm.likedHost.state.firstVisibleItemIndex > 0) {
+            vm.likedHost.gotoUp()
+        }
+        BackHandler(enabled = tagsSelect.isEmpty() && vm.likedHost.state.firstVisibleItemIndex == 0) {
             navigator.pop()
         }
 
@@ -102,6 +108,8 @@ class ScreenRedProfile(val profileName: String) : Screen {
             onBack = {
                 if (tagsSelect.isNotEmpty()) {
                     vm.tagsSelect.value = emptySet()
+                } else if (vm.likedHost.state.firstVisibleItemIndex > 0) {
+                    vm.likedHost.gotoUp()
                 } else {
                     navigator.pop()
                 }

@@ -73,9 +73,23 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 import com.client.xvideos.common.navigation.rememberNavigationDepth
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import timber.log.Timber
+import java.time.DateTimeException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+
+private val ALBUM_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+
+internal fun formatEpochSeconds(seconds: Double, zoneId: ZoneId = ZoneId.systemDefault()): String? {
+    if (!seconds.isFinite() || seconds <= 0.0) return null
+    return try {
+        Instant.ofEpochSecond(seconds.toLong())
+            .atZone(zoneId)
+            .format(ALBUM_DATE_FORMATTER)
+    } catch (_: DateTimeException) {
+        null
+    }
+}
 
 class ScreenLAlbum(val idAlbum: Long) : Screen {
 
@@ -257,32 +271,22 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
                                 Spacer(modifier = Modifier.height(4.dp))
 
-                                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+                                val textCreated = remember(parsed.created) { formatEpochSeconds(parsed.created) }
+                                val textModified = remember(parsed.modified) { formatEpochSeconds(parsed.modified) }
 
-                                val textCreated =
-                                    Instant.ofEpochSecond(parsed.created.toLong()) // или ofEpochMilli
-                                        .atZone(ZoneId.systemDefault()).format(formatter)
-
-                                val textModified =
-                                    Instant.ofEpochSecond(parsed.modified.toLong()) // или ofEpochMilli
-                                        .atZone(ZoneId.systemDefault()).format(formatter)
-
-
-                                val str = buildAnnotatedString {
-                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Created: ") }
-                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textCreated) }
-                                }
-
-                                if (parsed.created != 0.0) {
+                                if (textCreated != null) {
+                                    val str = buildAnnotatedString {
+                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Created: ") }
+                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textCreated) }
+                                    }
                                     Text(str, color = Theme.L.textColor)
                                 }
 
-                                val str1 = buildAnnotatedString {
-                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Modified: ") }
-                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textModified) }
-                                }
-
-                                if (parsed.modified != 0.0) {
+                                if (textModified != null) {
+                                    val str1 = buildAnnotatedString {
+                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Modified: ") }
+                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textModified) }
+                                    }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text( str1, color = Theme.L.textColor)
                                 }

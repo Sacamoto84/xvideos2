@@ -142,6 +142,7 @@
 | [Проход 135 (Приоритет диалога LPictureInfo, скролл в L_ScreenAlbumSearch, паритет зума в RedFullScreenOverlay и ScreenX_VideoPlayer, тесты)](CODE_REVIEW_2026-09-20_v114.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 136 (Поиск в коллекциях L, холостые расчеты дубликатов, приоритет зума в ScreenX_VideoPlayer, оптимизация Regex)](CODE_REVIEW_2026-09-20_v115.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
 | [Проход 137 (Защита от NumberFormatException в L, иерархия Back в L/R, Regex-санитизация тегов X)](CODE_REVIEW_2026-09-20_v116.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
+| [Проход 138 (Защита от NumberFormatException в ScreenAlbumList, DateTimeException и GC в ScreenAlbum, 3-этапный Back в Profile и Search)](CODE_REVIEW_2026-09-20_v117.md) | 20.09.2026 | `master` + рабочее дерево | закрыт полностью |
 
 Отдельные пояснения к статусам:
 
