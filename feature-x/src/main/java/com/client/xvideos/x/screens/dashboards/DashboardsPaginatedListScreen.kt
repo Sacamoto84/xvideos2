@@ -1,7 +1,9 @@
 package com.client.xvideos.x.screens.dashboards
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -83,6 +87,8 @@ private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> 
 /**
  * Экран страницы пагинированного списка видео дашборда (Best, Top Rated, Newest).
  */
+@OptIn(ExperimentalFoundationApi::class)
+@Suppress("DEPRECATION")
 @Composable
 fun DashboardsPaginatedListScreen(
     pageIndex: Int,
@@ -98,6 +104,12 @@ fun DashboardsPaginatedListScreen(
     val videoItems = remember(pageIndex) { mutableStateListOf<ItemsX>() }
     var hasError by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
+    val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
+    val scope = rememberCoroutineScope()
+
+    BackHandler(enabled = videoItems.isNotEmpty() && gridState.firstVisibleItemIndex > 0) {
+        scope.launch { gridState.animateScrollToItem(0) }
+    }
 
     LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch, key3 = retryTrigger) {
         // Список очищаем только когда новая страница уже загружена: раньше
@@ -145,7 +157,8 @@ fun DashboardsPaginatedListScreen(
                 onFavoriteRemove = onFavoriteRemove,
                 onDownload = onDownload,
                 onSaveToGallery = onSaveToGallery,
-                openVideoPlayer = openVideoPlayer
+                openVideoPlayer = openVideoPlayer,
+                gridState = gridState,
             )
             if (hasError) {
                 Box(
@@ -163,9 +176,10 @@ fun DashboardsPaginatedListScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Не удалось обновить видео",
+                            text = "Не удалось обновить страницу",
                             color = Color.White,
-                            fontSize = 13.sp
+                            fontSize = 12.sp,
+                            modifier = Modifier.weight(1f)
                         )
                         Button(
                             onClick = { retryTrigger++ },
@@ -192,12 +206,11 @@ fun DashboardsPaginatedListContent(
     onDownload: (ItemsX) -> Unit,
     openVideoPlayer: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
+    gridState: LazyGridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
-        // Окно предзагрузки долей вьюпорта: каждая карточка — живое видео-превью,
-        // и заднее окно не даёт пересоздавать плееры при прокрутке вверх.
-        state = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
+        state = gridState,
     )
     {
         items(items, key = { it.id }) { cell ->

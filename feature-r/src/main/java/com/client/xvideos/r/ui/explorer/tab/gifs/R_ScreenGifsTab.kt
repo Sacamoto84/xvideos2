@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.explorer.tab.gifs
 
+import androidx.activity.compose.BackHandler
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.animation.AnimatedVisibility
@@ -98,6 +99,10 @@ object R_ScreenGifsTab : Screen {
 @Composable
 private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
     val navigator = LocalNavigator.current
+
+    BackHandler(enabled = vm.lazyHost.state.firstVisibleItemIndex > 0) {
+        vm.lazyHost.gotoUp()
+    }
 
     val haptic = LocalHapticFeedback.current
 

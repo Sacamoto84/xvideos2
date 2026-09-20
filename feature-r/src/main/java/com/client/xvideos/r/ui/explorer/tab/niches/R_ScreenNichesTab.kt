@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.explorer.tab.niches
 
+import androidx.activity.compose.BackHandler
 import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.animation.AnimatedVisibility
@@ -158,6 +159,13 @@ object R_ScreenNichesTab : Screen {
                 navigationState.resetNichesScrollPosition()
             }
         } }
+
+        BackHandler(enabled = listState.firstVisibleItemIndex > 0) {
+            coroutineScope.launch {
+                listState.scrollToItem(0)
+                navigationState.resetNichesScrollPosition()
+            }
+        }
 
         val onNicheClick: (String) -> Unit = remember(navigator) { { id -> navigator.push(R_ScreenNiche(id)) } }
 

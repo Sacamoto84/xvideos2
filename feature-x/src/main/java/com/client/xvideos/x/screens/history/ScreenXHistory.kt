@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -54,7 +55,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -147,6 +150,9 @@ fun HistoryContent(
     var showClearAllConfirm by remember { mutableStateOf(false) }
     var showBatchDeleteConfirm by remember { mutableStateOf(false) }
 
+    val gridState = rememberLazyGridState()
+    val scope = rememberCoroutineScope()
+
     val isAnyDialogOpen = pendingDelete != null || showClearAllConfirm || showBatchDeleteConfirm
     BackHandler(enabled = isAnyDialogOpen) {
         pendingDelete = null
@@ -157,6 +163,10 @@ fun HistoryContent(
     BackHandler(enabled = !isAnyDialogOpen && isSelectionMode) {
         isSelectionMode = false
         selectedIds.clear()
+    }
+
+    BackHandler(enabled = !isAnyDialogOpen && !isSelectionMode && gridState.firstVisibleItemIndex > 0) {
+        scope.launch { gridState.animateScrollToItem(0) }
     }
 
     LaunchedEffect(history.isEmpty()) {
@@ -218,6 +228,7 @@ fun HistoryContent(
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
+                state = gridState,
                 modifier = Modifier.padding(padding),
             ) {
                 items(history, key = { it.item.id }) { historyItem ->

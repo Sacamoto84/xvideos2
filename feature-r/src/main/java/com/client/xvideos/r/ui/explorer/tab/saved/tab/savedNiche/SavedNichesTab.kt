@@ -27,7 +27,9 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,10 +76,14 @@ object SavedNichesTab : Screen {
             gridState = state, itemsToIgnore = 0
         )
 
+        val scope = rememberCoroutineScope()
         var itemPendingDelete by remember { mutableStateOf<NichesInfo?>(null) }
 
         BackHandler(enabled = itemPendingDelete != null) {
             itemPendingDelete = null
+        }
+        BackHandler(enabled = itemPendingDelete == null && state.firstVisibleItemIndex > 0) {
+            scope.launch { state.animateScrollToItem(0) }
         }
 
         DialogNicheDelete(
