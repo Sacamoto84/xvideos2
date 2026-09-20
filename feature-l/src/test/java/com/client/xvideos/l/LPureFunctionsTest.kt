@@ -189,6 +189,13 @@ class LPureFunctionsTest {
     }
 
     @Test
+    fun `extractIdFromUrl корректно извлекает id из относительного пути и ссылок с параметрами`() {
+        assertEquals("374481", extractIdFromUrl("albums/animated-gifs_374481/"))
+        assertEquals("374481", extractIdFromUrl("albums/374481"))
+        assertEquals("555666", extractIdFromUrl("https://www.luscious.net/albums/555666/?sort=date&view=grid"))
+    }
+
+    @Test
     fun `lDownloadUrl fallback возвращает video url когда url_to_original равен null`() {
         val animatedItem = picture(
             urlToOriginal = null,

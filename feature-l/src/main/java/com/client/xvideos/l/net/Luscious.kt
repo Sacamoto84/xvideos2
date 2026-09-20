@@ -70,9 +70,9 @@ class Luscious(
     }
 }
 
+private val ALBUM_ID_REGEX = Regex("(?:^|/)albums/(?:[^/]*_)?(\\d+)")
+
 // Вспомогательная функция для извлечения ID из URL
 internal fun extractIdFromUrl(url: String): String? {
-    val regex = Regex("/albums/(?:[^/]*_)?(\\d+)")
-    val matchResult = regex.find(url)
-    return matchResult?.groupValues?.get(1)
+    return ALBUM_ID_REGEX.find(url.trim())?.groupValues?.get(1)
 }
