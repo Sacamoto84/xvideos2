@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,9 +58,9 @@ fun TagsPaginatedListScreen(
     loadPage: suspend (Int) -> List<ItemsX>,
     onOpenVideo: (ItemsX) -> Unit,
     isCurrentPage: Boolean = true,
+    listState: LazyListState = rememberLazyListState(),
 ) {
 
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var items by remember(pageIndex) { mutableStateOf<List<ItemsX>?>(null) }
     var failed by remember(pageIndex) { mutableStateOf(false) }

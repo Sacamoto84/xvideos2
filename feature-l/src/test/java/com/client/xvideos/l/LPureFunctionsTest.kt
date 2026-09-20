@@ -14,6 +14,8 @@ import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.net.extractIdFromUrl
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.calculateGridScrollIndex
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
+import com.client.xvideos.l.ui.screens.screenAlbumList.AlbumListBackAction
+import com.client.xvideos.l.ui.screens.screenAlbumList.resolveAlbumListBackAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -273,4 +275,40 @@ class LPureFunctionsTest {
         assertEquals("SCROLL_TOP", resolveBackAction("", isScrolled = true))
         assertEquals("POP_SCREEN", resolveBackAction("", isScrolled = false))
     }
+
+    @Test
+    fun `иерархия возврата в ScreenAlbumList корректно расставляет приоритеты диалога, скролла, страницы 0 и выхода`() {
+        // 1. Диалог фильтра открыт -> закрыть диалог вне зависимости от скролла и страницы
+        assertEquals(
+            AlbumListBackAction.DISMISS_FILTER,
+            resolveAlbumListBackAction(showFilterDialog = true, isGridScrolled = true, currentPage = 3)
+        )
+        assertEquals(
+            AlbumListBackAction.DISMISS_FILTER,
+            resolveAlbumListBackAction(showFilterDialog = true, isGridScrolled = false, currentPage = 0)
+        )
+
+        // 2. Диалог закрыт, но сетка прокручена -> прокрутить сетку к началу
+        assertEquals(
+            AlbumListBackAction.SCROLL_GRID_TOP,
+            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = true, currentPage = 2)
+        )
+        assertEquals(
+            AlbumListBackAction.SCROLL_GRID_TOP,
+            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = true, currentPage = 0)
+        )
+
+        // 3. Диалог закрыт, сетка вверху, но страница > 0 -> вернуться на страницу 0
+        assertEquals(
+            AlbumListBackAction.SCROLL_PAGE_ZERO,
+            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = false, currentPage = 1)
+        )
+
+        // 4. Диалог закрыт, сетка вверху, страница 0 -> закрыть экран (pop)
+        assertEquals(
+            AlbumListBackAction.POP,
+            resolveAlbumListBackAction(showFilterDialog = false, isGridScrolled = false, currentPage = 0)
+        )
+    }
 }
+

@@ -1,5 +1,6 @@
 package com.client.xvideos.common.backup
 
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -111,4 +112,34 @@ class XlrRestoreApplyTest {
         assertTrue(target.isDirectory)
         assertEquals(0, target.listFiles()?.size ?: -1)
     }
+
+    @Test
+    fun `shouldIncludeBackupEntry исключает скрытые файлы и служебные папки с точкой`() {
+        val options = XlrBackupOptions()
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry("L/likes/metadata.json", options))
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry("R/downloads/video.mp4", options))
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry("X/history.json", options))
+
+        // Служебные папки откатов и скрытые файлы
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("L/.xlr_old_12345/data.txt", options))
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("R/.xlr_old_67890", options))
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("X/.nomedia", options))
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("L/sub/.cache/temp.bin", options))
+    }
+
+    @Test
+    fun `currentBackupItems исключает служебные папки с точкой из списка`() = runBlocking {
+        val base = tmp.newFolder("backup_base")
+        base.writeFile("L/visible_folder/data.txt", "123")
+        base.writeFile("L/.xlr_old_failed_rollback/stale.txt", "456")
+        base.writeFile("L/.nomedia", "")
+
+        val items = XlrBackupManager.currentBackupItems(baseDir = base)
+        val lPaths = items.filter { it.section == "L" }.map { it.path }
+
+        assertTrue("видимая папка должна быть в списке: $lPaths", lPaths.contains("L/visible_folder"))
+        assertFalse("служебная папка отката не должна быть в списке: $lPaths", lPaths.any { it.contains(".xlr_old_") })
+        assertFalse("скрытые элементы не должны быть в списке: $lPaths", lPaths.any { it.contains("/.") })
+    }
 }
+

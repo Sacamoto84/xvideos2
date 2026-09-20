@@ -59,10 +59,11 @@ object XlrBackupManager {
     }
 
     suspend fun currentBackupItems(
-        options: XlrBackupOptions = XlrBackupOptions()
+        options: XlrBackupOptions = XlrBackupOptions(),
+        baseDir: File = File(AppPath.main)
     ): List<XlrBackupItem> = withContext(Dispatchers.IO) {
         sections.flatMap { section ->
-            val root = File(AppPath.main, section)
+            val root = File(baseDir, section)
             val rootReport = measurePath(root, section, options)
             val rootItem = XlrBackupItem(
                 path = section,
@@ -73,7 +74,7 @@ object XlrBackupManager {
                 bytes = rootReport.bytes
             )
             val children = root.listFiles()
-                ?.filter { it.isDirectory }
+                ?.filter { it.isDirectory && !it.name.startsWith(".") }
                 ?.sortedBy { it.name.lowercase(Locale.US) }
                 ?.map { child ->
                     val childPath = "$section/${child.name}"
@@ -329,12 +330,12 @@ object XlrBackupManager {
             if (relativePath.isBlank()) return@forEach
 
             val entryName = "$entryRoot/$relativePath"
+            if (!shouldIncludeBackupEntry(entryName, options)) return@forEach
             if (file.isDirectory) {
                 zip.putNextEntry(ZipEntry("$entryName/"))
                 zip.closeEntry()
                 return@forEach
             }
-            if (!shouldIncludeBackupEntry(entryName, options)) return@forEach
 
             val entry = ZipEntry(entryName).apply {
                 time = file.lastModified().takeIf { it > 0L } ?: System.currentTimeMillis()
@@ -501,8 +502,11 @@ object XlrBackupManager {
         return XlrBackupReport(files = files, bytes = bytes)
     }
 
-    private fun shouldIncludeBackupEntry(entryName: String, options: XlrBackupOptions): Boolean {
+    internal fun shouldIncludeBackupEntry(entryName: String, options: XlrBackupOptions): Boolean {
         val normalized = entryName.replace('\\', '/').trim('/')
+        if (normalized.split('/').any { it.startsWith(".") }) {
+            return false
+        }
         if (options.rMode == XlrBackupContentMode.MINI && normalized.isInsideBackupPath(R_DOWNLOAD_PATH)) {
             return normalized == R_DOWNLOAD_PATH || normalized.endsWith(".info", ignoreCase = true)
         }

@@ -232,12 +232,11 @@ private fun Screen.ScreenAlbumListContent(
                         onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
                         onBackClick = if (navigator.canPop && title.isNotEmpty()) {
                             {
-                                if (showFilterDialog) {
-                                    showFilterDialog = false
-                                } else if (vm.statePager.currentPage > 0) {
-                                    scope.launch { vm.statePager.animateScrollToPage(0) }
-                                } else {
-                                    navigator.pop()
+                                when (resolveAlbumListBackAction(showFilterDialog, stateGrid.isScrolled, vm.statePager.currentPage)) {
+                                    AlbumListBackAction.DISMISS_FILTER -> showFilterDialog = false
+                                    AlbumListBackAction.SCROLL_GRID_TOP -> scope.launch { stateGrid.animateScrollToItem(0) }
+                                    AlbumListBackAction.SCROLL_PAGE_ZERO -> scope.launch { vm.statePager.animateScrollToPage(0) }
+                                    AlbumListBackAction.POP -> navigator.pop()
                                 }
                             }
                         } else null
@@ -389,6 +388,26 @@ private fun AlbumListFilterOverlay(
                 )
             }
         }
+    }
+}
+
+internal enum class AlbumListBackAction {
+    DISMISS_FILTER,
+    SCROLL_GRID_TOP,
+    SCROLL_PAGE_ZERO,
+    POP
+}
+
+internal fun resolveAlbumListBackAction(
+    showFilterDialog: Boolean,
+    isGridScrolled: Boolean,
+    currentPage: Int
+): AlbumListBackAction {
+    return when {
+        showFilterDialog -> AlbumListBackAction.DISMISS_FILTER
+        isGridScrolled -> AlbumListBackAction.SCROLL_GRID_TOP
+        currentPage > 0 -> AlbumListBackAction.SCROLL_PAGE_ZERO
+        else -> AlbumListBackAction.POP
     }
 }
 

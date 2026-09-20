@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -16,6 +17,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.activity.compose.BackHandler
+import com.client.xvideos.common.ui.lazy.isScrolled
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
@@ -52,6 +56,7 @@ class ScreenTags(val tag: String) : Screen {
         // держит одну. pageCount читается лениво, поэтому рост с 1 до 149
         // пейджер подхватывает без пересоздания состояния.
         val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
+        val listStates = remember { mutableStateMapOf<Int, LazyListState>() }
 
         // Если открыта не первая страница, первый «Назад» плавно возвращает на нулевую страницу
         BackHandler(enabled = pagerState.currentPage > 0) {
@@ -73,10 +78,11 @@ class ScreenTags(val tag: String) : Screen {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = {
-                        if (pagerState.currentPage > 0) {
-                            job.launch { pagerState.animateScrollToPage(0) }
-                        } else {
-                            navigator.pop()
+                        val currentListState = listStates[pagerState.currentPage]
+                        when (resolveTagsBackAction(currentListState?.isScrolled == true, pagerState.currentPage)) {
+                            TagsBackAction.SCROLL_LIST_TOP -> job.launch { currentListState?.animateScrollToItem(0) }
+                            TagsBackAction.SCROLL_PAGE_ZERO -> job.launch { pagerState.animateScrollToPage(0) }
+                            TagsBackAction.POP -> navigator.pop()
                         }
                     }) {
                         Icon(
@@ -138,6 +144,7 @@ class ScreenTags(val tag: String) : Screen {
                         loadPage = { vm.loadPage(it).items },
                         onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) },
                         isCurrentPage = pagerState.currentPage == pageIndex,
+                        listState = listStates.getOrPut(pageIndex) { LazyListState() },
                     )
                 }
             }
@@ -145,3 +152,21 @@ class ScreenTags(val tag: String) : Screen {
     }
 
 }
+
+internal enum class TagsBackAction {
+    SCROLL_LIST_TOP,
+    SCROLL_PAGE_ZERO,
+    POP
+}
+
+internal fun resolveTagsBackAction(
+    isListScrolled: Boolean,
+    currentPage: Int
+): TagsBackAction {
+    return when {
+        isListScrolled -> TagsBackAction.SCROLL_LIST_TOP
+        currentPage > 0 -> TagsBackAction.SCROLL_PAGE_ZERO
+        else -> TagsBackAction.POP
+    }
+}
+
