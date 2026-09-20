@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import com.client.xvideos.x.screens.videoplayer.atom.formatTime
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
@@ -40,7 +41,6 @@ import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
 import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.util.Locale
 
 /**
  * Плеер локального (скачанного) файла X.
@@ -81,10 +81,7 @@ class ScreenX_LocalVideoPlayer(
         var resumeNoticeText by remember(fileUrl) {
             mutableStateOf(
                 resumePosition?.let { sec ->
-                    val totalSec = sec.toInt()
-                    val minutes = totalSec / 60
-                    val seconds = totalSec % 60
-                    String.format(Locale.US, "Возобновлено с %02d:%02d", minutes, seconds)
+                    "Возобновлено с ${formatTime(sec.toInt())}"
                 }
             )
         }

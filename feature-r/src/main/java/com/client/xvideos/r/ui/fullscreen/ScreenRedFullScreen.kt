@@ -168,12 +168,11 @@ private fun RedFullScreenFeed(
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
     // Нажатие кнопки «Назад» при активном увеличении кадра сбрасывает зум, иначе закрывает плеер
-    BackHandler {
-        if (isCurrentPageZoomed) {
-            resetZoomTrigger++
-        } else {
-            navigator.pop()
-        }
+    BackHandler(enabled = isCurrentPageZoomed) {
+        resetZoomTrigger++
+    }
+    BackHandler(enabled = !isCurrentPageZoomed) {
+        navigator.pop()
     }
 
     LaunchedEffect(pagerState, host) {
@@ -299,12 +298,11 @@ private fun RedFullScreenSingle(
     val downloadedKeys by vm.downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
 
     // Нажатие кнопки «Назад» при активном увеличении кадра сбрасывает зум, иначе закрывает плеер
-    BackHandler {
-        if (isZoomed) {
-            resetZoomTrigger++
-        } else {
-            navigator.pop()
-        }
+    BackHandler(enabled = isZoomed) {
+        resetZoomTrigger++
+    }
+    BackHandler(enabled = !isZoomed) {
+        navigator.pop()
     }
 
     val feedState = rememberFeedPlayerState(poolCapacity = 1)

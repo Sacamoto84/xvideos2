@@ -23,6 +23,7 @@ import com.client.xvideos.x.parcer.parserItemVideoTags
 import com.client.xvideos.x.screens.tags.ScreenTags
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.normalizeXUrl
+import com.client.xvideos.x.screens.videoplayer.atom.formatTime
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -138,9 +139,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
             val sec = item.lastPositionMs / 1000f
             resumePositionSeconds = sec
             val totalSec = sec.toInt()
-            val minutes = totalSec / 60
-            val seconds = totalSec % 60
-            resumeNoticeText = String.format(java.util.Locale.US, "Возобновлено с %02d:%02d", minutes, seconds)
+            resumeNoticeText = "Возобновлено с ${formatTime(totalSec)}"
         }
     }
 

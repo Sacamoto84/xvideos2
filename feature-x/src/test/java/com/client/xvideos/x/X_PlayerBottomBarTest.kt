@@ -35,4 +35,13 @@ class X_PlayerBottomBarTest {
         assertEquals("1:01:01", formatTime(3661))
         assertEquals("10:00:00", formatTime(36000))
     }
+
+    @Test
+    fun `formatTime корректно формирует текст возобновления воспроизведения`() {
+        val shortResume = "Возобновлено с ${formatTime(125)}"
+        assertEquals("Возобновлено с 2:05", shortResume)
+
+        val longResume = "Возобновлено с ${formatTime(3665)}"
+        assertEquals("Возобновлено с 1:01:05", longResume)
+    }
 }
