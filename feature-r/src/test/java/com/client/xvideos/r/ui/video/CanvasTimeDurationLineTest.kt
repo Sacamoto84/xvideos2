@@ -35,4 +35,24 @@ class CanvasTimeDurationLineTest {
         val seekTime = calculateSeekTime(x = 50f, width = 100, duration = 60)
         assertEquals(30f, seekTime ?: -1f, 0.001f)
     }
+
+    @Test
+    fun `calculateTimelineProgressWidth handles normal, out of bounds, and invalid values safely`() {
+        assertEquals(500f, calculateTimelineProgressWidth(currentTime = 30f, duration = 60, canvasWidth = 1000f), 0.001f)
+        assertEquals(0f, calculateTimelineProgressWidth(currentTime = -5f, duration = 60, canvasWidth = 1000f), 0.001f)
+        assertEquals(1000f, calculateTimelineProgressWidth(currentTime = 120f, duration = 60, canvasWidth = 1000f), 0.001f)
+        assertEquals(0f, calculateTimelineProgressWidth(currentTime = Float.NaN, duration = 60, canvasWidth = 1000f), 0.001f)
+        assertEquals(0f, calculateTimelineProgressWidth(currentTime = Float.POSITIVE_INFINITY, duration = 60, canvasWidth = 1000f), 0.001f)
+        assertEquals(0f, calculateTimelineProgressWidth(currentTime = 30f, duration = 0, canvasWidth = 1000f), 0.001f)
+        assertEquals(0f, calculateTimelineProgressWidth(currentTime = 30f, duration = 60, canvasWidth = 0f), 0.001f)
+    }
+
+    @Test
+    fun `calculateTimelinePointX handles normal, fallback on NaN and edge cases`() {
+        assertEquals(250f, calculateTimelinePointX(pointTime = 15f, duration = 60, canvasWidth = 1000f), 0.001f)
+        assertEquals(0f, calculateTimelinePointX(pointTime = Float.NaN, duration = 60, canvasWidth = 1000f, defaultRatio = 0f), 0.001f)
+        assertEquals(1000f, calculateTimelinePointX(pointTime = Float.NaN, duration = 60, canvasWidth = 1000f, defaultRatio = 1f), 0.001f)
+        assertEquals(0f, calculateTimelinePointX(pointTime = 15f, duration = -1, canvasWidth = 1000f), 0.001f)
+        assertEquals(0f, calculateTimelinePointX(pointTime = 15f, duration = 60, canvasWidth = -10f), 0.001f)
+    }
 }

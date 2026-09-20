@@ -117,7 +117,7 @@ fun CanvasTimeDurationLine1(
             val baseLineColor = if (isBuffering) bufferingColor else Color(0xff909090)
             val stepColor = if (isBuffering) bufferingColor else Color.Gray
 
-            if ((duration > 0) && (isVisibleStep)) {
+            if ((duration > 0) && (isVisibleStep) && canvasWidth > 0f) {
                 val pxPerSec = canvasWidth / duration
                 val minStepPx = 6.dp.toPx()
                 val stepSec = when {
@@ -129,7 +129,7 @@ fun CanvasTimeDurationLine1(
                     else -> 300
                 }
                 for (i in 0..duration step stepSec) {
-                    val x = i * pxPerSec
+                    val x = (i * pxPerSec).coerceIn(0f, canvasWidth)
                     drawLine(
                         color = stepColor,
                         start = Offset(x = x, y = canvasHeight / 2),
@@ -149,13 +149,11 @@ fun CanvasTimeDurationLine1(
                 cap = StrokeCap.Square
             )
 
-            if (duration > 0) {
+            if (duration > 0 && canvasWidth > 0f) {
 
-                val progressRatio = currentTime / duration
-
-                val progressRatioA = canvasWidth * (timeA / duration).coerceIn(0f, 1f)
-                val progressRatioB = canvasWidth * (timeB / duration).coerceIn(0f, 1f)
-                val progressWidth = canvasWidth * progressRatio.coerceIn(0f, 1f)
+                val progressRatioA = calculateTimelinePointX(timeA, duration, canvasWidth, defaultRatio = 0f)
+                val progressRatioB = calculateTimelinePointX(timeB, duration, canvasWidth, defaultRatio = 1f)
+                val progressWidth = calculateTimelineProgressWidth(currentTime, duration, canvasWidth)
 
                 if (!timeABEnable) {
                     drawLine(
@@ -227,6 +225,25 @@ internal fun calculateSeekTime(x: Float, width: Int, duration: Int): Float? {
     } else {
         null
     }
+}
+
+internal fun calculateTimelineProgressWidth(currentTime: Float, duration: Int, canvasWidth: Float): Float {
+    if (duration <= 0 || canvasWidth <= 0f) return 0f
+    if (currentTime.isNaN() || currentTime.isInfinite()) return 0f
+    return (canvasWidth * (currentTime / duration)).coerceIn(0f, canvasWidth)
+}
+
+internal fun calculateTimelinePointX(
+    pointTime: Float,
+    duration: Int,
+    canvasWidth: Float,
+    defaultRatio: Float = 0f
+): Float {
+    if (duration <= 0 || canvasWidth <= 0f) return 0f
+    if (pointTime.isNaN() || pointTime.isInfinite()) {
+        return (canvasWidth * defaultRatio).coerceIn(0f, canvasWidth)
+    }
+    return (canvasWidth * (pointTime / duration)).coerceIn(0f, canvasWidth)
 }
 
 private fun Modifier.timelineSeekGestures(
