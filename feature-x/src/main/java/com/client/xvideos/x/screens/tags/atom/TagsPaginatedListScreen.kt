@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.tags.atom
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -24,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -51,11 +55,21 @@ fun TagsPaginatedListScreen(
     pageIndex: Int,
     loadPage: suspend (Int) -> List<ItemsX>,
     onOpenVideo: (ItemsX) -> Unit,
+    isCurrentPage: Boolean = true,
 ) {
 
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     var items by remember(pageIndex) { mutableStateOf<List<ItemsX>?>(null) }
     var failed by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
+
+    val loaded = items
+    val isScrolled = isCurrentPage && loaded != null && loaded.isNotEmpty() && listState.firstVisibleItemIndex > 0
+
+    BackHandler(enabled = isScrolled) {
+        scope.launch { listState.animateScrollToItem(0) }
+    }
 
     LaunchedEffect(pageIndex, retryTrigger) {
         // Отказ сети обязан оставаться на этом экране. Непойманное исключение в
@@ -72,7 +86,6 @@ fun TagsPaginatedListScreen(
         }
     }
 
-    val loaded = items
     if (loaded == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (failed) {
@@ -106,6 +119,7 @@ fun TagsPaginatedListScreen(
     val itemsPerRow = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
 
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

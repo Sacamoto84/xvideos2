@@ -24,6 +24,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,10 +49,18 @@ class ScreenRedManageBlock : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        BackHandler { navigator.pop() }
-
         val vm: ScreenRedManageBlockSM = getScreenModel()
         val blockList = vm.blockList.collectAsStateWithLifecycle().value
+        val listState = rememberLazyListState()
+        val scope = rememberCoroutineScope()
+        val isScrolled = blockList.isNotEmpty() && listState.firstVisibleItemIndex > 0
+
+        BackHandler(enabled = isScrolled) {
+            scope.launch { listState.animateScrollToItem(0) }
+        }
+        BackHandler(enabled = !isScrolled) {
+            navigator.pop()
+        }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -62,7 +72,13 @@ class ScreenRedManageBlock : Screen {
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { navigator.pop() }) {
+                    IconButton(onClick = {
+                        if (isScrolled) {
+                            scope.launch { listState.animateScrollToItem(0) }
+                        } else {
+                            navigator.pop()
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад",
@@ -94,9 +110,8 @@ class ScreenRedManageBlock : Screen {
                     )
                 }
             } else {
-                val state = rememberLazyListState()
                 LazyColumn(
-                    state = state,
+                    state = listState,
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize()

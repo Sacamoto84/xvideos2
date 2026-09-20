@@ -130,7 +130,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                     .background(Theme.background)
             ) {
                 LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize()) {
-                    items(items?.size ?: 0, key = { items?.get(it)?.title ?: it }) { index ->
+                    items(items?.size ?: 0, key = { index -> "${index}_${items?.get(index)?.title.orEmpty()}" }) { index ->
                         val item = items?.get(index) ?: return@items
                         LandingTagSectionItem(
                             item = item,
@@ -276,7 +276,7 @@ private fun ScreenLAlbumLandingTagPreview() {
                 )
             }
 
-            items(data.sections.size, key = { data.sections[it].title }) { index ->
+            items(data.sections.size, key = { index -> "${index}_${data.sections.getOrNull(index)?.title.orEmpty()}" }) { index ->
                 val section = data.sections[index]
 
                 Text(

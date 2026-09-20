@@ -137,6 +137,7 @@ class ScreenTags(val tag: String) : Screen {
                         pageIndex = pageIndex,
                         loadPage = { vm.loadPage(it).items },
                         onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) },
+                        isCurrentPage = pagerState.currentPage == pageIndex,
                     )
                 }
             }

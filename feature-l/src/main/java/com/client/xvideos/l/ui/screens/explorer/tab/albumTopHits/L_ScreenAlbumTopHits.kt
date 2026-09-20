@@ -89,7 +89,7 @@ object L_ScreenAlbumTopHits : Screen {
 
             LazyColumn(state = vm.state) {
 
-                items(items?.size ?: 0, key = { items?.get(it)?.title ?: it }) { index ->
+                items(items?.size ?: 0, key = { index -> "${index}_${items?.get(index)?.title.orEmpty()}" }) { index ->
 
                     val item = items?.get(index) ?: return@items
 

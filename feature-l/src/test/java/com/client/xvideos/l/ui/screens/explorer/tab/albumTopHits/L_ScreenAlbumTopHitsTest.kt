@@ -49,4 +49,16 @@ class L_ScreenAlbumTopHitsTest {
 
         assertEquals("date_trending", filter.display)
     }
+
+    @Test
+    fun `композитные ключи секций уникальны при одинаковых или пустых заголовках`() {
+        val titles = listOf("Trending", "Trending", null, "")
+        val keys = titles.mapIndexed { index, title -> "${index}_${title.orEmpty()}" }
+
+        assertEquals(4, keys.distinct().size)
+        assertEquals("0_Trending", keys[0])
+        assertEquals("1_Trending", keys[1])
+        assertEquals("2_", keys[2])
+        assertEquals("3_", keys[3])
+    }
 }

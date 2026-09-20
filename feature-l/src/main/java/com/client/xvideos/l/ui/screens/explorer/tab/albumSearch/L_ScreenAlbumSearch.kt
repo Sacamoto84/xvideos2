@@ -156,7 +156,7 @@ object L_ScreenAlbumSearch : Screen {
 
                 items(
                     count = sections?.size ?: 0,
-                    key = { sections?.get(it)?.title ?: it }
+                    key = { index -> "${index}_${sections?.get(index)?.title.orEmpty()}" }
                 ) { index ->
                     val section = sections?.get(index) ?: return@items
                     AlbumSearchSectionBlock(

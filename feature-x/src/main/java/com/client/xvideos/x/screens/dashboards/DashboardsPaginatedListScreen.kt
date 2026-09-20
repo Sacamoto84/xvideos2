@@ -99,6 +99,7 @@ fun DashboardsPaginatedListScreen(
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
+    isCurrentPage: Boolean = true,
 ) {
 
     val videoItems = remember(pageIndex) { mutableStateListOf<ItemsX>() }
@@ -107,7 +108,7 @@ fun DashboardsPaginatedListScreen(
     val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
     val scope = rememberCoroutineScope()
 
-    BackHandler(enabled = videoItems.isNotEmpty() && gridState.firstVisibleItemIndex > 0) {
+    BackHandler(enabled = isCurrentPage && videoItems.isNotEmpty() && gridState.firstVisibleItemIndex > 0) {
         scope.launch { gridState.animateScrollToItem(0) }
     }
 
