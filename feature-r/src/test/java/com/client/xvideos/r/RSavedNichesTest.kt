@@ -75,4 +75,18 @@ class RSavedNichesTest {
         val resultEmpty = searchNiches("nonexistent")
         assertTrue(resultEmpty.isEmpty())
     }
+
+    @Test
+    fun `составные ключи с индексом предотвращают коллизии при дублировании ниш в ответе сервера`() {
+        val serverNiches = listOf(
+            NichesInfo(id = "1", name = "Niche 1"),
+            NichesInfo(id = "1", name = "Niche 1 Duplicate"),
+            NichesInfo(id = "2", name = "Niche 2")
+        )
+        val keys = serverNiches.mapIndexed { index, item -> "${item.id}#$index" }
+        assertEquals(3, keys.distinct().size)
+        assertEquals("1#0", keys[0])
+        assertEquals("1#1", keys[1])
+        assertEquals("2#2", keys[2])
+    }
 }

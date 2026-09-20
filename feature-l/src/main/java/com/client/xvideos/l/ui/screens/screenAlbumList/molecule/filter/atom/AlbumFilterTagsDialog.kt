@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -140,7 +140,7 @@ fun AlbumFilterTagsDialog(
                         }
                     }
 
-                    items(selectableTags, key = { it }) { item ->
+                    itemsIndexed(selectableTags, key = { index, item -> "${item}#$index" }) { _, item ->
                         SelectableTagRow(
                             item = item,
                             count = tagCountByTerm[item],
@@ -166,7 +166,7 @@ private fun TagsSelectedChipsBar(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        items(tagsPlus, key = { "plus_$it" }) { tag ->
+        itemsIndexed(tagsPlus, key = { index, tag -> "plus_${tag}#$index" }) { _, tag ->
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -190,7 +190,7 @@ private fun TagsSelectedChipsBar(
                 )
             }
         }
-        items(tagsMinus, key = { "minus_$it" }) { tag ->
+        itemsIndexed(tagsMinus, key = { index, tag -> "minus_${tag}#$index" }) { _, tag ->
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))

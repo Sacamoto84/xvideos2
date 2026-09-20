@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
@@ -265,11 +265,11 @@ private fun NicheHeaderContent(
                     .fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                items(
+                itemsIndexed(
                     items = related,
-                    key = { it.id },
-                    contentType = { "niche_preview" }
-                ) { item ->
+                    key = { index, item -> "${item.id}#$index" },
+                    contentType = { _, _ -> "niche_preview" }
+                ) { _, item ->
                     NichePreview({ item }, onClick = { onNicheClick(item.id) })
                 }
             }
@@ -287,11 +287,11 @@ private fun NicheHeaderContent(
                 modifier = Modifier.padding(vertical = 4.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                items(
+                itemsIndexed(
                     items = creators,
-                    key = { it.username },
-                    contentType = { "top_creator" }
-                ) { creator ->
+                    key = { index, item -> "${item.username}#$index" },
+                    contentType = { _, _ -> "top_creator" }
+                ) { _, creator ->
                     NicheTopCreator(creator, onClick = { onCreatorClick(creator.username) })
                 }
             }
