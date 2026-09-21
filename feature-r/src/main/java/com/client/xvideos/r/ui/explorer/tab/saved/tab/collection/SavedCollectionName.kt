@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.collection
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
@@ -98,7 +99,10 @@ class ScreenCollectionName(
 
         Scaffold(topBar = {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = getTopInsetDp())
+                    .padding(start = 4.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = handleBack) {

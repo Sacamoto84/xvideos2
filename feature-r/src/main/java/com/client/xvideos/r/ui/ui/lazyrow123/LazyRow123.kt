@@ -102,7 +102,9 @@ fun LazyRow123(
         state = pullToRefreshState,
         indicator = {
             Indicator(
-                modifier = Modifier.align(Alignment.TopCenter),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = contentPadding.calculateTopPadding()),
                 isRefreshing = isRefreshing,
                 containerColor = Color.White,
                 color = Color.Black,

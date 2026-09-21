@@ -55,6 +55,7 @@ fun TagsPaginatedListScreen(
     onOpenVideo: (ItemsX) -> Unit,
     isCurrentPage: Boolean = true,
     listState: LazyListState = rememberLazyListState(),
+    header: (@Composable () -> Unit)? = null,
 ) {
 
     var items by remember(pageIndex) { mutableStateOf<List<ItemsX>?>(null) }
@@ -79,29 +80,35 @@ fun TagsPaginatedListScreen(
     }
 
     if (loaded == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            if (failed) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Страница не загрузилась", color = Color.Gray)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = { retryTrigger++ }) {
-                        Text("Повторить")
+        Column(modifier = Modifier.fillMaxSize()) {
+            header?.invoke()
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                if (failed) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Страница не загрузилась", color = Color.Gray)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(onClick = { retryTrigger++ }) {
+                            Text("Повторить")
+                        }
                     }
+                } else {
+                    CircularProgressIndicator(modifier = Modifier.size(40.dp))
                 }
-            } else {
-                CircularProgressIndicator(modifier = Modifier.size(40.dp))
             }
         }
         return
     }
 
     if (loaded.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Видео не найдены", color = Color.Gray)
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = { retryTrigger++ }) {
-                    Text("Повторить")
+        Column(modifier = Modifier.fillMaxSize()) {
+            header?.invoke()
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Видео не найдены", color = Color.Gray)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = { retryTrigger++ }) {
+                        Text("Повторить")
+                    }
                 }
             }
         }
@@ -115,6 +122,11 @@ fun TagsPaginatedListScreen(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (header != null) {
+            item(key = "tag_header") {
+                header()
+            }
+        }
         // Ключ с индексом, а не голый id: страницы тегов парсятся из HTML и один
         // и тот же ролик может встретиться на нескольких страницах — дублирующийся
         // ключ уронил бы список.

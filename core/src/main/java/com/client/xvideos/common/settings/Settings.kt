@@ -145,15 +145,6 @@ object Settings {
     val p2p_background_receive by lazy { SettingElementBoolean(pref, "p2p_background_receive", false) }
 
 
-    /**
-     * Используем смещение экрана сверху, область моноброви и камеры
-     *
-     * ```kotlin
-     * val usePadding = Settings.useCutoutPadding.field.collectAsStateWithLifecycle().value
-     * ```
-     */
-    val useCutoutPadding by lazy { SettingElementBoolean(pref, "use_cutout_padding", true) }
-
     //-- red ---
 
 

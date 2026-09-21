@@ -9,8 +9,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -60,8 +64,13 @@ object MenuScreen : Screen {
 
         Scaffold(
             topBar = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
-                    IconButton(onClick = { navigator.push(AppSettingsScreen) }, modifier = Modifier.displayCutoutPadding().size(48.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top)),
+                    contentAlignment = Alignment.TopStart
+                ) {
+                    IconButton(onClick = { navigator.push(AppSettingsScreen) }, modifier = Modifier.size(48.dp)) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = "Настройки",
@@ -73,7 +82,6 @@ object MenuScreen : Screen {
                         onClick = { navigator.push(HapticDemoScreen) },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .displayCutoutPadding()
                             .size(48.dp)
                     ) {
                         Icon(
@@ -88,7 +96,6 @@ object MenuScreen : Screen {
                         onClick = { navigator.push(ScreenP2pReceive()) },
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .displayCutoutPadding()
                             .size(48.dp)
                     ) {
                         Icon(

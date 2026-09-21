@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -178,8 +179,12 @@ private fun LCollectionDetailTopBar(
     onToggleSearch: () -> Unit,
     onExitCollection: (() -> Unit)? = null
 ) {
+    val topInset = getTopInsetDp()
     Column(
-        modifier = Modifier.fillMaxWidth().background(Theme.background)
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Theme.background)
+            .padding(top = topInset)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

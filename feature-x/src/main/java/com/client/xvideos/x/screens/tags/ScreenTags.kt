@@ -1,33 +1,26 @@
 package com.client.xvideos.x.screens.tags
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import com.client.xvideos.common.util.getTopInsetDp
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.activity.compose.BackHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
@@ -63,56 +56,11 @@ class ScreenTags(val tag: String) : Screen {
             navigator.pop()
         }
 
+        val topCutout = getTopInsetDp()
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Theme.L.grey6,
-            topBar = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Theme.L.grey6)
-                        .statusBarsPadding()
-                        .displayCutoutPadding()
-                        .padding(horizontal = 4.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(onClick = { navigator.pop() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = Color.White,
-                        )
-                    }
-                    Column(modifier = Modifier.padding(start = 4.dp)) {
-                        Text(
-                            text = tag,
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        if (vm.screen.title0.isNotBlank() || vm.screen.title1.isNotBlank()) {
-                            Row {
-                                if (vm.screen.title0.isNotBlank()) {
-                                    Text(
-                                        text = vm.screen.title0 + " ",
-                                        color = Color(0xFFB0B0B0),
-                                        fontSize = 12.sp,
-                                    )
-                                }
-                                if (vm.screen.title1.isNotBlank()) {
-                                    Text(
-                                        text = vm.screen.title1,
-                                        color = Color(0xFF787878),
-                                        fontSize = 12.sp,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             bottomBar = {
                 // Без кнопки страны, в отличие от ленты раздела: адрес
                 // /tags/<тег>/N от страны не зависит.
@@ -123,9 +71,11 @@ class ScreenTags(val tag: String) : Screen {
                 )
             },
         ) { padding ->
-            // Раньше padding игнорировался (`{ _ -> }`) — список рисовался под
-            // topBar'ом, и его первые строки оказывались перекрыты заголовком.
-            Box(modifier = Modifier.padding(padding)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = padding.calculateBottomPadding())
+            ) {
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
@@ -137,6 +87,40 @@ class ScreenTags(val tag: String) : Screen {
                         onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) },
                         isCurrentPage = pagerState.currentPage == pageIndex,
                         listState = listStates.getOrPut(pageIndex) { LazyListState() },
+                        header = {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = topCutout + 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                if (vm.screen.title0.isNotBlank() || vm.screen.title1.isNotBlank()) {
+                                    Row {
+                                        if (vm.screen.title0.isNotBlank()) {
+                                            Text(
+                                                text = vm.screen.title0 + " ",
+                                                color = Color(0xFFB0B0B0),
+                                                fontSize = 12.sp,
+                                            )
+                                        }
+                                        if (vm.screen.title1.isNotBlank()) {
+                                            Text(
+                                                text = vm.screen.title1,
+                                                color = Color(0xFF787878),
+                                                fontSize = 12.sp,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     )
                 }
             }

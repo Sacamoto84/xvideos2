@@ -2,8 +2,9 @@ package com.client.xvideos.screenSettings
 
 import com.client.xvideos.R
 import com.client.xvideos.screenSettings.section.CacheSettingsSection
-import com.client.xvideos.screenSettings.section.DisplaySettingsSection
 import com.client.xvideos.screenSettings.section.LSettingsSection
+import com.client.xvideos.common.util.getTopInsetDp
+import androidx.compose.foundation.layout.fillMaxSize
 import com.client.xvideos.screenSettings.section.NetworkSettingsSection
 import com.client.xvideos.screenSettings.section.P2PSettingsSection
 import com.client.xvideos.screenSettings.section.WebServerSettingsSection
@@ -17,19 +18,12 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 
@@ -44,13 +38,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,7 +66,6 @@ import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsRowTextPrimary
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
-import com.client.xvideos.screenSettings.components.SettingsTopBarColor
 import com.client.xvideos.screenSettings.components.StorageStatisticsSection
 import com.client.xvideos.screenSettings.components.StorageStat
 import com.client.xvideos.screenSettings.components.loadStorageStats
@@ -220,58 +213,23 @@ private fun AppSettingsScreenContent(
         onBack()
     }
 
-    val handleBack: () -> Unit = {
-        if (currentPage != SettingsPage.Main) {
-            currentPage = SettingsPage.Main
-        } else {
-            onBack()
-        }
-    }
-
     LaunchedEffect(currentPage) {
         if (currentPage == SettingsPage.Storage) {
             onRefreshFileStats()
         }
     }
 
+    val topCutout = getTopInsetDp()
+
     Scaffold(
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .displayCutoutPadding()
-                    .height(64.dp)
-                    .fillMaxWidth()
-                    .background(SettingsTopBarColor)
-                    .padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = handleBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Назад",
-                        tint = SettingsRowTextPrimary
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    currentPage.title,
-                    modifier = Modifier.weight(1f),
-                    color = SettingsRowTextPrimary,
-                    style = Theme.L.Type.screenTitle.copy(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = SettingsRowTextPrimary,
-                        textAlign = TextAlign.Start
-                    )
-                )
-            }
-        },
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
         AppSettingsScreenBody(
             modifier = Modifier
-                .padding(paddingValues)
+                .fillMaxSize()
+                .padding(bottom = paddingValues.calculateBottomPadding())
                 .verticalScroll(scrollState),
+            topCutout = topCutout,
             currentPage = currentPage,
             onOpenPage = { currentPage = it },
             imageCacheSizeBytes = imageCacheSizeBytes,
@@ -290,6 +248,7 @@ private fun AppSettingsScreenContent(
 @Composable
 private fun AppSettingsScreenBody(
     modifier: Modifier = Modifier,
+    topCutout: Dp = 0.dp,
     currentPage: SettingsPage = SettingsPage.Main,
     onOpenPage: (SettingsPage) -> Unit = {},
     imageCacheSizeBytes: Long,
@@ -308,6 +267,20 @@ private fun AppSettingsScreenBody(
             .fillMaxWidth()
             .padding(bottom = 24.dp)
     ) {
+        Text(
+            text = currentPage.title,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = topCutout + 12.dp, bottom = 12.dp, start = 16.dp, end = 16.dp),
+            color = SettingsRowTextPrimary,
+            style = Theme.L.Type.screenTitle.copy(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = SettingsRowTextPrimary,
+                textAlign = TextAlign.Start
+            )
+        )
+
         if (currentPage == SettingsPage.Main) {
             SettingsSectionTitle("Основное")
 
@@ -381,7 +354,6 @@ private fun SettingsDetailPage(params: SettingsDetailParams) {
     when (params.currentPage) {
         SettingsPage.Main -> Unit
         SettingsPage.Privacy -> AppLockSettingsSection()
-        SettingsPage.Display -> DisplaySettingsSection()
         SettingsPage.Network -> NetworkSettingsSection()
         SettingsPage.Cache -> CacheSettingsSection(
             ramCachePercent = ramCachePercent,
@@ -430,11 +402,6 @@ internal enum class SettingsPage(
         icon = R.drawable.key_24,
         subtitle = "Пароль и блокировка приложения"
     ),
-    Display(
-        title = "Отображение",
-        icon = R.drawable.crop_free,
-        subtitle = "Вырез экрана и отступы"
-    ),
     Network(
         title = "Сеть и DNS",
         icon = R.drawable.ic_dns_24,
@@ -482,7 +449,7 @@ internal enum class SettingsPage(
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Display, Network, WebServer, Cache, Storage, Backup, P2P)
+        val primaryPages: List<SettingsPage> = listOf(Privacy, Network, WebServer, Cache, Storage, Backup, P2P)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
@@ -506,7 +473,7 @@ private fun SettingsNavigationRow(
 @Composable
 private fun SettingsNavigationRowPreview() = SettingsPreview {
     SettingsNavigationRow(
-        page = SettingsPage.Display,
+        page = SettingsPage.Privacy,
         onClick = {}
     )
 }
@@ -519,47 +486,17 @@ private fun AppSettingsScreenPreview() {
     val context = LocalContext.current
     Settings.init(context.getSharedPreferences("preview_prefs", 0))
     XvideosTheme {
-        Column {
-            Row(
-                modifier = Modifier
-                    .height(64.dp)
-                    .fillMaxWidth()
-                    .background(SettingsTopBarColor)
-                    .padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Назад",
-                        tint = SettingsRowTextPrimary
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "Настройки",
-                    modifier = Modifier.weight(1f),
-                    color = SettingsRowTextPrimary,
-                    style = Theme.L.Type.screenTitle.copy(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = SettingsRowTextPrimary,
-                        textAlign = TextAlign.Start
-                    )
-                )
-            }
-            AppSettingsScreenBody(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                imageCacheSizeBytes = 128_000_000L,
-                storageStats = EmptyStorageStats,
-                sizeRedTotal = 512_000_000L,
-                sizeRedDownload = 64_000_000L,
-                onClearImageCache = {},
-                onClearDownload = {},
-                data = SettingsDataHolders(),
-                context = context.applicationContext,
-                onBackupDataChanged = {}
-            )
-        }
+        AppSettingsScreenBody(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            imageCacheSizeBytes = 128_000_000L,
+            storageStats = EmptyStorageStats,
+            sizeRedTotal = 512_000_000L,
+            sizeRedDownload = 64_000_000L,
+            onClearImageCache = {},
+            onClearDownload = {},
+            data = SettingsDataHolders(),
+            context = context.applicationContext,
+            onBackupDataChanged = {}
+        )
     }
 }

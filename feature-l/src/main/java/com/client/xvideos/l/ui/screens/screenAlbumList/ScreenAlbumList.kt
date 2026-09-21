@@ -21,14 +21,10 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,7 +42,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
@@ -66,7 +65,6 @@ import my.nanihadesuka.compose.ScrollbarSettings
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
-import androidx.compose.ui.unit.Dp
 import com.client.xvideos.l.model.AlbumListFilter as LAlbumListFilter
 
 
@@ -215,15 +213,7 @@ private fun Screen.ScreenAlbumListContent(
                         title = title,
                         topInset = topInset,
                         haptic = haptic,
-                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
-                        onBackClick = if (navigator.canPop && title.isNotEmpty()) {
-                            {
-                                when (resolveAlbumListBackAction(showFilterDialog)) {
-                                    AlbumListBackAction.DISMISS_FILTER -> showFilterDialog = false
-                                    AlbumListBackAction.POP -> navigator.pop()
-                                }
-                            }
-                        } else null
+                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) }
                     )
 
                     val status = vm.bigList[page]?.status
@@ -260,8 +250,7 @@ private fun AlbumListPageGrid(
     title: String,
     topInset: Dp,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    onAlbumClick: (Long) -> Unit,
-    onBackClick: (() -> Unit)? = null
+    onAlbumClick: (Long) -> Unit
 ) {
     LazyVerticalGridScrollbar(
         state = stateGrid,
@@ -275,29 +264,26 @@ private fun AlbumListPageGrid(
     ) {
         LazyVerticalGrid(state = stateGrid, modifier = Modifier.fillMaxSize(), columns = GridCells.Fixed(2)) {
             item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
-                Box(
-                    Modifier
-                        .then(
-                            if (title.isNotEmpty()) Modifier.height(topInset + 40.dp) else Modifier.height(topInset)
+                if (title.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Theme.L.red)
+                            .padding(top = topInset)
+                            .height(44.dp)
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = title,
+                            color = Color.White,
+                            fontFamily = Theme.L.fontFamilyKarla,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
-                        .background(Theme.L.red)
-                        .padding(start = if (onBackClick != null) 4.dp else 24.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    if (title.isNotEmpty()) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (onBackClick != null) {
-                                IconButton(onClick = onBackClick) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Назад",
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                            Text(text = title, color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
-                        }
                     }
+                } else if (topInset > 0.dp) {
+                    Spacer(Modifier.height(topInset))
                 }
             }
 

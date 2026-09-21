@@ -3,6 +3,7 @@ package com.client.xvideos.x.screens.dashboards
 import androidx.compose.foundation.ExperimentalFoundationApi
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -150,11 +151,12 @@ fun DashboardsPaginatedListScreen(
                 openVideoPlayer = openVideoPlayer,
                 gridState = gridState,
             )
+            val topCutout = getTopInsetDp()
             if (hasError) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
+                        .padding(top = topCutout + 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
                         .align(Alignment.TopCenter)
                 ) {
                     Row(
@@ -198,9 +200,12 @@ fun DashboardsPaginatedListContent(
     onSaveToGallery: (ItemsX) -> Unit = {},
     gridState: LazyGridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
 ) {
+    val topCutout = getTopInsetDp()
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(),
+        columns = GridCells.Fixed(2),
+        modifier = Modifier.fillMaxSize(),
         state = gridState,
+        contentPadding = PaddingValues(top = topCutout),
     )
     {
         itemsIndexed(items, key = { index, cell -> "${cell.id}#$index" }) { _, cell ->

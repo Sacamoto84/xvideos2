@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.gifs
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -142,7 +143,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
                         vm.lazyHost.currentIndexGoto = vm.lazyHost.currentIndex
                         navigator?.push(ScreenRedProfile(name))
                     },
-                    contentPadding = PaddingValues(top = 0.dp),
+                    contentPadding = PaddingValues(top = getTopInsetDp()),
                 )
         }
     }

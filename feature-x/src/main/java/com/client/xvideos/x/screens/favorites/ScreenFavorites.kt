@@ -6,7 +6,6 @@ import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,9 +18,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.ui.text.font.FontWeight
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -131,44 +133,55 @@ private fun FavoritesContent(
         )
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize(), containerColor = Theme.L.grey6, topBar = {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Theme.L.grey6),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Избранное",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
+    val topCutout = getTopInsetDp()
 
-            }
-            HorizontalSeparator(color = Color(0xFF9E9E9E))
-        }
-    }) { padding ->
+    Scaffold(modifier = Modifier.fillMaxSize(), containerColor = Theme.L.grey6) { padding ->
 
         if (favorites.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
+                    .padding(bottom = padding.calculateBottomPadding()),
+                contentAlignment = Alignment.TopCenter
             ) {
-                Text("Пусто", color = Color.Gray, fontSize = 16.sp)
+                Column(modifier = Modifier.fillMaxWidth().padding(top = topCutout)) {
+                    Text(
+                        "Избранное",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                    )
+                    HorizontalSeparator(color = Color(0xFF9E9E9E))
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Пусто", color = Color.Gray, fontSize = 16.sp)
+                    }
+                }
             }
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 state = gridState,
-                // padding от Scaffold — высота topBar. Без него первая строка сетки
-                // уезжала под заголовок «Избранное».
-                modifier = Modifier.padding(padding)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = padding.calculateBottomPadding())
             ) {
+                item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = topCutout)
+                    ) {
+                        Text(
+                            "Избранное",
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                        )
+                        HorizontalSeparator(color = Color(0xFF9E9E9E))
+                    }
+                }
                 itemsIndexed(favorites, key = { index, item -> "${item.id}#$index" }) { _, item ->
                     FavoriteRow(
                         item = item,
