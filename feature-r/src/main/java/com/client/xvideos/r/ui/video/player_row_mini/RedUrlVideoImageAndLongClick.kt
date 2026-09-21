@@ -67,14 +67,14 @@ fun RedUrlVideoImageAndLongClick(
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
-    var isVideo by remember { mutableStateOf(false) }
+    var isVideo by remember(item.id) { mutableStateOf(false) }
 
     val interactionSource = remember { MutableInteractionSource() }
 
     LaunchedEffect(isVideo) { onVideo(isVideo) }
     LaunchedEffect(item.id, play) { isVideo = play }
 
-    var poster by remember { mutableStateOf(true) }
+    var poster by remember(item.id) { mutableStateOf(true) }
     val shouldPlayVideo = isVideo && (play || !preload)
 
     // Сбрасываем состояние видео при смене ID

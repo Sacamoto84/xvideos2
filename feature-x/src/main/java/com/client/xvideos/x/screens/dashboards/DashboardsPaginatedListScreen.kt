@@ -32,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +41,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.icons.IconFavorite18
-import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.urlStart
@@ -54,6 +52,7 @@ import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -99,7 +98,7 @@ fun DashboardsPaginatedListScreen(
     isCurrentPage: Boolean = true,
 ) {
 
-    val videoItems = remember(pageIndex) { mutableStateListOf<ItemsX>() }
+    var videoItems by remember(pageIndex) { mutableStateOf<ImmutableList<ItemsX>>(persistentListOf()) }
     var hasError by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
     val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
@@ -114,7 +113,7 @@ fun DashboardsPaginatedListScreen(
             if (items.isEmpty()) {
                 hasError = true
             } else {
-                videoItems.replaceWith(items)
+                videoItems = items.toImmutableList()
             }
         } catch (e: CancellationException) {
             throw e
@@ -142,7 +141,7 @@ fun DashboardsPaginatedListScreen(
     } else {
         Box(modifier = Modifier.fillMaxSize()) {
             DashboardsPaginatedListContent(
-                items = videoItems.toImmutableList(),
+                items = videoItems,
                 isFavorite = isFavorite,
                 onFavoriteAdd = onFavoriteAdd,
                 onFavoriteRemove = onFavoriteRemove,

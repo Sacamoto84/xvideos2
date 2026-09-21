@@ -67,7 +67,7 @@ fun RedUrlVideoImageAndLongClickTikTok(
 
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
-    var isVideo by remember { mutableStateOf(true) }
+    var isVideo by remember(item.id) { mutableStateOf(true) }
 
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -75,7 +75,7 @@ fun RedUrlVideoImageAndLongClickTikTok(
 
     LaunchedEffect(play) { isVideo = play }
 
-    var poster by remember { mutableStateOf(true) }
+    var poster by remember(item.id) { mutableStateOf(true) }
 
     val videoUri: String = remember(item.id, item.userName) {
         //Timber.tag("???").i("Перерачсет videoItem.id = ${item.id}")

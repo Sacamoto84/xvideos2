@@ -12,6 +12,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -262,7 +263,9 @@ fun RedPooledVideoPlayer(
         }
     }
 
-    val isZoomed = isZoomActive(zoomState.scale)
+    val isZoomed by remember(zoomState) {
+        derivedStateOf { isZoomActive(zoomState.scale) }
+    }
     LaunchedEffect(isZoomed) {
         onZoomChanged(isZoomed)
     }

@@ -150,7 +150,7 @@ object R_ScreenNichesTab : Screen {
 
         val isSearchFocused by vm.search.focused.collectAsStateWithLifecycle()
 
-        val onSortTypeChange: (Order) -> Unit = remember { { vm.changeSortType(it) } }
+        val onSortTypeChange: (Order) -> Unit = remember(vm) { { vm.changeSortType(it) } }
 
         val onUpClick: () -> Unit = remember(listState, coroutineScope, navigationState) { {
             coroutineScope.launch {
@@ -160,6 +160,8 @@ object R_ScreenNichesTab : Screen {
         } }
 
         val onNicheClick: (String) -> Unit = remember(navigator) { { id -> navigator.push(R_ScreenNiche(id)) } }
+        val onRefreshNichesCacheClick: () -> Unit = remember(vm.savedRed) { { vm.savedRed.nichesCache.refresh() } }
+        val getSavedRed: () -> SavedRed = remember(vm.savedRed) { { vm.savedRed } }
 
         /**
          * Количество элементов в кэше
@@ -174,13 +176,11 @@ object R_ScreenNichesTab : Screen {
             isSearchFocused = isSearchFocused,
             onUpClick = onUpClick,
             onNicheClick = onNicheClick,
-            savedRed = { vm.savedRed },
+            savedRed = getSavedRed,
             searchWidget = { modifier ->
                 RSearchTextField(vm.search, modifier = modifier)
             },
-            onRefreshNichesCacheClick = {
-                vm.savedRed.nichesCache.refresh()
-            },
+            onRefreshNichesCacheClick = onRefreshNichesCacheClick,
             nichesCacheProgress = vm.savedRed.nichesCache.progress,
             countNichesInCache = countNichesInCache,
             cacheHour = vm.savedRed.nichesCache.lastModifiedHour

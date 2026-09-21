@@ -233,6 +233,9 @@ class L_FullScreenImage(
                 )
             }
 
+            val onZoomChanged = remember { { zoomed: Boolean -> isCurrentPageZoomed = zoomed } }
+            val onToggleFullScreen = remember { { isFullScreen = isFullScreen.not() } }
+
             if (verticalPager) {
                 VerticalPager(
                     state = pagerState,
@@ -256,8 +259,8 @@ class L_FullScreenImage(
                         // Пейджер листается вертикально — горизонтальная перемотка не мешает.
                         seekDragEnabled = true,
                         resetZoomTrigger = resetZoomTrigger,
-                        onZoomChanged = { zoomed -> isCurrentPageZoomed = zoomed },
-                        onToggleFullScreen = { isFullScreen = isFullScreen.not() }
+                        onZoomChanged = onZoomChanged,
+                        onToggleFullScreen = onToggleFullScreen
                     )
                 }
             } else {
@@ -284,8 +287,8 @@ class L_FullScreenImage(
                     // горизонтальный свайп и страницы не листались.
                     seekDragEnabled = false,
                     resetZoomTrigger = resetZoomTrigger,
-                    onZoomChanged = { zoomed -> isCurrentPageZoomed = zoomed },
-                    onToggleFullScreen = { isFullScreen = isFullScreen.not() }
+                    onZoomChanged = onZoomChanged,
+                    onToggleFullScreen = onToggleFullScreen
                 )
             }
             }

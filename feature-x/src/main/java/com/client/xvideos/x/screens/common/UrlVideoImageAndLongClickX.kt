@@ -40,6 +40,7 @@ fun UrlVideoImageAndLongClickX(
         parserVideoPreviewFromImageUrl(item.previewImage)
             ?: item.previewVideo.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
     }
+    val fallbackUrls = remember(item.previewVideo) { listOf(item.previewVideo) }
 
     Box(
         modifier = Modifier
@@ -84,7 +85,7 @@ fun UrlVideoImageAndLongClickX(
                 url = previewVideoUrl.orEmpty(),
                 posterUrl = item.previewImage,
                 modifier = Modifier.fillMaxSize(),
-                fallbackUrls = listOf(item.previewVideo),
+                fallbackUrls = fallbackUrls,
                 onClick = {
                     isVideo = !isVideo
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)

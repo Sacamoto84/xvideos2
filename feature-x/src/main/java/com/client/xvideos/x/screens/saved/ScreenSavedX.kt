@@ -68,10 +68,32 @@ import java.io.File
 fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 
     val navigator = LocalNavigator.currentOrThrow
+    val coroutineScope = rememberCoroutineScope()
     val list = saved.downloads.list.collectAsStateWithLifecycle().value
 
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
     val listState = rememberLazyListState()
+
+    val onPlayItem: (ItemsX) -> Unit = remember(navigator, saved.downloads) {
+        { item -> navigator.push(ScreenX_LocalVideoPlayer(saved.downloads.localUrl(item.id))) }
+    }
+    val onDeleteItem: (ItemsX) -> Unit = remember {
+        { item -> pendingDelete = item }
+    }
+    val onShareP2pItem: (ItemsX) -> Unit = remember(navigator, coroutineScope) {
+        { item ->
+            coroutineScope.launch {
+                val bundle = withContext(Dispatchers.IO) {
+                    XExporter.export(File(AppPath.x_cache_download), item.id)
+                }
+                if (bundle == null) {
+                    SnackBar.error("Нет скачанного видео для P2P")
+                } else {
+                    navigator.push(ScreenP2pSend(P2pSendSource.Ready(bundle)))
+                }
+            }
+        }
+    }
 
     // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
     BackHandler(enabled = pendingDelete != null) {
@@ -153,8 +175,9 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                     SavedRow(
                         item = item,
                         posterUrl = posterUrl,
-                        onPlay = { navigator.push(ScreenX_LocalVideoPlayer(saved.downloads.localUrl(item.id))) },
-                        onDelete = { pendingDelete = item },
+                        onPlay = onPlayItem,
+                        onDelete = onDeleteItem,
+                        onShareP2p = onShareP2pItem,
                     )
                 }
             }
@@ -163,9 +186,13 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDelete: () -> Unit) {
-    val navigator = LocalNavigator.currentOrThrow
-    val coroutineScope = rememberCoroutineScope()
+private fun SavedRow(
+    item: ItemsX,
+    posterUrl: String,
+    onPlay: (ItemsX) -> Unit,
+    onDelete: (ItemsX) -> Unit,
+    onShareP2p: (ItemsX) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -176,7 +203,7 @@ private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDele
                 .fillMaxWidth()
                 .aspectRatio(352f / 198f)
                 .background(Color.DarkGray)
-                .clickable { onPlay() }
+                .clickable { onPlay(item) }
         ) {
             UrlImage(url = posterUrl, modifier = Modifier.fillMaxSize())
 
@@ -206,18 +233,7 @@ private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDele
                 modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
             )
 
-            IconButton(onClick = {
-                coroutineScope.launch {
-                    val bundle = withContext(Dispatchers.IO) {
-                        XExporter.export(File(AppPath.x_cache_download), item.id)
-                    }
-                    if (bundle == null) {
-                        SnackBar.error("Нет скачанного видео для P2P")
-                    } else {
-                        navigator.push(ScreenP2pSend(P2pSendSource.Ready(bundle)))
-                    }
-                }
-            }) {
+            IconButton(onClick = { onShareP2p(item) }) {
                 Icon(
                     imageVector = Icons.Filled.Share,
                     contentDescription = "P2P",
@@ -226,7 +242,7 @@ private fun SavedRow(item: ItemsX, posterUrl: String, onPlay: () -> Unit, onDele
                 )
             }
 
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = { onDelete(item) }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "Удалить",

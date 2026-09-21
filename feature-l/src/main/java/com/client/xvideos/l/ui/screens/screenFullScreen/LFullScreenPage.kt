@@ -74,7 +74,9 @@ internal fun LFullScreenPage(
     // и reset() (это snapTo, не анимация) схлопывал картинку прямо на глазах.
     LaunchedEffect(isSettledPage) { if (!isSettledPage) zoomState.reset() }
 
-    val isZoomed = isZoomActive(zoomState.scale)
+    val isZoomed by remember(zoomState) {
+        derivedStateOf { isZoomActive(zoomState.scale) }
+    }
     LaunchedEffect(isZoomed, isCurrentPage) {
         if (isCurrentPage) {
             onZoomChanged(isZoomed)

@@ -91,11 +91,14 @@ object L_ScreenServerLikesTab : Screen {
             }
         }
 
+        val onRetry = remember(vm) { { vm.loadInitial() } }
+        val onRefresh = remember(vm) { { vm.refresh() } }
+
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                vm.refresh()
+                onRefresh()
             },
             modifier = Modifier
                 .fillMaxSize()
@@ -118,8 +121,8 @@ object L_ScreenServerLikesTab : Screen {
                     ServerLikesEmptyOrErrorState(
                         topInset = topInset,
                         errorMessage = errorMessage,
-                        onRetry = { vm.loadInitial() },
-                        onRefresh = { vm.refresh() }
+                        onRetry = onRetry,
+                        onRefresh = onRefresh
                     )
                 } else {
                     L_LazyRowPictureDetails(

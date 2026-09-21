@@ -116,6 +116,7 @@ fun TagsPaginatedListScreen(
     }
 
     val itemsPerRow = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
+    val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
     LazyColumn(
         state = listState,
@@ -130,7 +131,7 @@ fun TagsPaginatedListScreen(
         // Ключ с индексом, а не голый id: страницы тегов парсятся из HTML и один
         // и тот же ролик может встретиться на нескольких страницах — дублирующийся
         // ключ уронил бы список.
-        itemsIndexed(loaded.chunked(itemsPerRow), key = { index, row -> "${index}_${row.first().id}" })
+        itemsIndexed(chunkedRows, key = { index, row -> "${index}_${row.first().id}" })
         { _, row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEachIndexed { index, cell ->

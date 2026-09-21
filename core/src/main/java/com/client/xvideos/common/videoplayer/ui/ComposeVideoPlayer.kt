@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -54,8 +57,12 @@ fun ComposeVideoPlayer(
         zoomState.reset()
     }
 
-    LaunchedEffect(zoomState.scale) {
-        onZoomChanged?.invoke(isZoomActive(zoomState.scale))
+    val isZoomed by remember(zoomState) {
+        derivedStateOf { isZoomActive(zoomState.scale) }
+    }
+
+    LaunchedEffect(isZoomed) {
+        onZoomChanged?.invoke(isZoomed)
     }
 
     LaunchedEffect(resetZoomTrigger) {

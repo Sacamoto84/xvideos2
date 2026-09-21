@@ -79,8 +79,6 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
 
         val pager = vm.likedHost.pager.collectAsLazyPagingItems()
 
-        var selectCreatorName by remember { mutableStateOf<String?>(null) }
-
         // Используем SnapshotStateList напрямую для реактивности UI
         val selectedListCreator = vm.savedRed.subscriptions.selectedListCreator
 
@@ -102,28 +100,31 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
             pager.refresh()
         }
 
-        // Обработка нажатия: переключаем флаг и обновляем пейджер
-        if (selectCreatorName != null) {
-            val index = selectedListCreator.indexOfFirst { it.name == selectCreatorName }
-            if (index != -1) {
-                val item = selectedListCreator[index]
-                // Обновляем элемент в SnapshotStateList для триггера Compose
-                selectedListCreator[index] = item.copy(select = !item.select)
-                // Сбрасываем имя, чтобы не зациклиться
-                selectCreatorName = null
-                // Обновляем данные из сети
-                pager.refresh()
+        val onOpenProfile = remember(navigator) {
+            { username: String -> navigator.push(ScreenRedProfile(username)) }
+        }
+        val onSelectCreator = remember(selectedListCreator, pager) {
+            { name: String ->
+                val index = selectedListCreator.indexOfFirst { it.name == name }
+                if (index != -1) {
+                    val item = selectedListCreator[index]
+                    selectedListCreator[index] = item.copy(select = !item.select)
+                    pager.refresh()
+                }
+            }
+        }
+        val onLongClick = remember(selectedListCreator) {
+            { name: String ->
+                userToDelete = selectedListCreator.firstOrNull { it.name == name }
             }
         }
 
         SubscriptionsTabContent(
             host = vm.likedHost,
             listCreatorSelectedCreator = selectedListCreator,
-            onOpenProfile = { navigator.push(ScreenRedProfile(it)) },
-            onSelectCreator = { selectCreatorName = it },
-            onLongClick = { name ->
-                userToDelete = selectedListCreator.toList().firstOrNull { it.name == name }
-            }
+            onOpenProfile = onOpenProfile,
+            onSelectCreator = onSelectCreator,
+            onLongClick = onLongClick
         )
 
         DialogSubscriptionDelete(

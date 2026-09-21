@@ -121,6 +121,24 @@ object L_ScreenSubscribedAlbumsTab : Screen {
             )
         }
 
+        val onAlbumClick = remember(navigator) {
+            { albumId: Long? ->
+                if (albumId != null) {
+                    navigator.push(ScreenLAlbum(albumId))
+                } else {
+                    SnackBar.error("Не удалось открыть альбом: пустой id")
+                }
+            }
+        }
+        val onAlbumLongClick = remember(haptic) {
+            { item: AlbumDetails ->
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                itemPendingServerUnlike = item
+            }
+        }
+        val onRetry = remember(vm) { { vm.loadInitial() } }
+        val onRefresh = remember(vm) { { vm.refresh() } }
+
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = {
@@ -148,8 +166,8 @@ object L_ScreenSubscribedAlbumsTab : Screen {
                     SubscribedAlbumsEmptyOrErrorState(
                         topInset = topInset,
                         errorMessage = errorMessage,
-                        onRetry = { vm.loadInitial() },
-                        onRefresh = { vm.refresh() }
+                        onRetry = onRetry,
+                        onRefresh = onRefresh
                     )
                 } else {
                     SubscribedAlbumsGrid(
@@ -157,17 +175,8 @@ object L_ScreenSubscribedAlbumsTab : Screen {
                         albums = albums,
                         topInset = topInset,
                         isLoading = isLoading,
-                        onAlbumClick = { albumId ->
-                            if (albumId != null) {
-                                navigator.push(ScreenLAlbum(albumId))
-                            } else {
-                                SnackBar.error("Не удалось открыть альбом: пустой id")
-                            }
-                        },
-                        onAlbumLongClick = { item ->
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            itemPendingServerUnlike = item
-                        }
+                        onAlbumClick = onAlbumClick,
+                        onAlbumLongClick = onAlbumLongClick
                     )
 
                     // Скроллбар
@@ -313,7 +322,7 @@ private fun SubscribedAlbumsGrid(
         }
 
         itemsIndexed(albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
-            val albumId = item.id.toLongOrNull()
+            val albumId = remember(item.id) { item.id.toLongOrNull() }
             AlbumListItem(
                 title = item.title,
                 coverUrl = item.cover?.url.orEmpty(),

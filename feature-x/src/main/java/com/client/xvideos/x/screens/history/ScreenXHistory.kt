@@ -102,32 +102,38 @@ fun ScreenXHistory(
 
     HistoryContent(
         history = saved.history.list,
-        isFavorite = { saved.favorites.contains(it.id) },
-        onToggleFavorite = { item ->
-            if (saved.favorites.contains(item.id)) {
-                saved.favorites.remove(item)
-            } else {
-                saved.favorites.add(item)
+        isFavorite = remember(saved.favorites) { { item -> saved.favorites.contains(item.id) } },
+        onToggleFavorite = remember(saved.favorites) {
+            { item ->
+                if (saved.favorites.contains(item.id)) {
+                    saved.favorites.remove(item)
+                } else {
+                    saved.favorites.add(item)
+                }
             }
         },
-        localUrlOf = { item ->
-            if (item.id in downloadedIds) saved.downloads.localUrl(item.id) else null
-        },
-        posterUrlOf = { item ->
-            if (item.id in downloadedIds) {
-                saved.downloads.localPosterPath(item.id) ?: item.previewImage
-            } else {
-                item.previewImage
+        localUrlOf = remember(downloadedIds, saved.downloads) {
+            { item ->
+                if (item.id in downloadedIds) saved.downloads.localUrl(item.id) else null
             }
         },
-        onDelete = { saved.history.delete(it) },
-        onClearAll = { saved.history.clearAll() },
-        onDownload = { saved.downloads.download(it) },
-        onSaveToGallery = { saved.downloads.saveToGallery(it) },
-        onPlayLocal = { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) },
-        onOpenVideo = { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) },
+        posterUrlOf = remember(downloadedIds, saved.downloads) {
+            { item ->
+                if (item.id in downloadedIds) {
+                    saved.downloads.localPosterPath(item.id) ?: item.previewImage
+                } else {
+                    item.previewImage
+                }
+            }
+        },
+        onDelete = remember(saved.history) { { saved.history.delete(it) } },
+        onClearAll = remember(saved.history) { { saved.history.clearAll() } },
+        onDownload = remember(saved.downloads) { { saved.downloads.download(it) } },
+        onSaveToGallery = remember(saved.downloads) { { saved.downloads.saveToGallery(it) } },
+        onPlayLocal = remember(navigator) { { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) } },
+        onOpenVideo = remember(navigator) { { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) } },
         modifier = modifier,
-        onDeleteBatch = { items -> saved.history.deleteBatch(items) },
+        onDeleteBatch = remember(saved.history) { { items -> saved.history.deleteBatch(items) } },
     )
 }
 

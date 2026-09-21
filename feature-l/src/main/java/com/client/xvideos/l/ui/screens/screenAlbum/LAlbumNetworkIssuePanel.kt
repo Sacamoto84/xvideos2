@@ -74,9 +74,12 @@ private fun LAlbumNetworkIssuePanel(
     val retryAfterSeconds = ceil(protectionState.remainingMs(nowMs) / 1000.0)
         .toInt()
         .coerceAtLeast(0)
-    val htmlChallenge = protectionState.active || failedPages.any { it.htmlChallenge }
-    val failedPagesText = failedPages.joinToString(", ") { it.page.toString() }
-        .ifBlank { "нет" }
+    val htmlChallenge = remember(protectionState.active, failedPages) {
+        protectionState.active || failedPages.any { it.htmlChallenge }
+    }
+    val failedPagesText = remember(failedPages) {
+        failedPages.joinToString(", ") { it.page.toString() }.ifBlank { "нет" }
+    }
 
     Column(
         modifier = Modifier

@@ -287,9 +287,9 @@ private fun VideoPlayerContentView(
                 }
             },
             overlay = {
-                // Кнопка возврата (в ландшафтном режиме скрывается вместе с контролами)
+                // Кнопка возврата (только в обычном режиме; в полном экране используются системные жесты/кнопки Android)
                 AnimatedVisibility(
-                    visible = !vm.isFullScreen || areControlsVisible,
+                    visible = !vm.isFullScreen,
                     enter = fadeIn(),
                     exit = fadeOut(),
                     modifier = Modifier.align(Alignment.TopStart)
@@ -298,8 +298,6 @@ private fun VideoPlayerContentView(
                         onClick = {
                             if (isZoomed) {
                                 resetZoomTrigger++
-                            } else if (vm.isFullScreen) {
-                                vm.exitFullScreen()
                             } else {
                                 navigator.pop()
                             }

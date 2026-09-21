@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -51,7 +52,9 @@ fun VideoPlayerWithMenuContent(
     val zoomState = rememberZoomState(maxScale = 3f)
     LaunchedEffect(playerHost.videoFitMode, playerHost.url) { zoomState.reset() }
 
-    val isZoomed = isZoomActive(zoomState.scale)
+    val isZoomed by remember(zoomState) {
+        derivedStateOf { isZoomActive(zoomState.scale) }
+    }
     LaunchedEffect(isZoomed) {
         onZoomChanged(isZoomed)
     }
