@@ -37,6 +37,13 @@ class CanvasTimeDurationLineTest {
     }
 
     @Test
+    fun `calculateSeekTime returns null when x is NaN or infinite`() {
+        assertNull(calculateSeekTime(x = Float.NaN, width = 100, duration = 60))
+        assertNull(calculateSeekTime(x = Float.POSITIVE_INFINITY, width = 100, duration = 60))
+        assertNull(calculateSeekTime(x = Float.NEGATIVE_INFINITY, width = 100, duration = 60))
+    }
+
+    @Test
     fun `calculateTimelineProgressWidth handles normal, out of bounds, and invalid values safely`() {
         assertEquals(500f, calculateTimelineProgressWidth(currentTime = 30f, duration = 60, canvasWidth = 1000f), 0.001f)
         assertEquals(0f, calculateTimelineProgressWidth(currentTime = -5f, duration = 60, canvasWidth = 1000f), 0.001f)

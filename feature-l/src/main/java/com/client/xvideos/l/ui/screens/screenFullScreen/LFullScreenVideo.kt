@@ -93,7 +93,7 @@ internal fun LFullScreenVideo(
         }
     }
 
-    LaunchedEffect(autoPlay, isCurrentPage) {
+    LaunchedEffect(playerHost, autoPlay, isCurrentPage) {
         if (autoPlay && isCurrentPage) {
             playerHost.play()
         } else {

@@ -258,23 +258,24 @@ private fun Modifier.timelineSeekGestures(
                 val down = awaitFirstDown()
                 calculateSeekTime(down.position.x, size.width, duration)?.let(onSeek)
 
-                var drag: PointerInputChange? = null
                 try {
-                    drag = awaitTouchSlopOrCancellation(down.id) { change, _ ->
-                        onDraggingChange(true)
-                        change.consume()
+                    var drag: PointerInputChange? = null
+                    try {
+                        drag = awaitTouchSlopOrCancellation(down.id) { change, _ ->
+                            onDraggingChange(true)
+                            change.consume()
+                        }
+                    } catch (_: CancellationException) {
                     }
-                } catch (_: CancellationException) {
-                }
 
-                if (drag != null) {
-                    horizontalDrag(drag.id) { change ->
-                        calculateSeekTime(change.position.x, size.width, duration)?.let(onSeek)
-                        change.consume()
+                    if (drag != null) {
+                        horizontalDrag(drag.id) { change ->
+                            calculateSeekTime(change.position.x, size.width, duration)?.let(onSeek)
+                            change.consume()
+                        }
                     }
+                } finally {
                     onDraggingChange(false)
-                    onSeekFinished?.invoke()
-                } else {
                     onSeekFinished?.invoke()
                 }
             }

@@ -91,7 +91,8 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
         }
 
         fun exit(currentExoPosition: Long = position) {
-            EventBus.postEvent(Event.X_FullScreenExitPosition(currentExoPosition))
+            val safePos = currentExoPosition.coerceAtLeast(0L)
+            EventBus.postEvent(Event.X_FullScreenExitPosition(safePos))
             navigator.pop()
         }
 
@@ -176,7 +177,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
         }
 
         fun exitWithExo() {
-            val pos = exo.currentPosition
+            val pos = exo.currentPosition.coerceAtLeast(0L)
             exo.pause()
             exit(pos)
         }

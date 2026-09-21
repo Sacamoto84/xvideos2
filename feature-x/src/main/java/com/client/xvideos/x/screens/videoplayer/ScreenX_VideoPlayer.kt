@@ -388,12 +388,4 @@ private fun RememberHistoryProgressSync(
             vm.saveProgress(host.currentTime, host.totalTime)
         }
     }
-
-    // Автоматическое скрытие плашки о возобновлении через 4 секунды
-    LaunchedEffect(vm.resumeNoticeText) {
-        if (vm.resumeNoticeText != null) {
-            delay(4000)
-            vm.dismissResumeNotice()
-        }
-    }
 }
