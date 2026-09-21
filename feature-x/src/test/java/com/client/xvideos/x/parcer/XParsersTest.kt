@@ -443,4 +443,72 @@ class XParsersTest {
         assertEquals(1, blankScreenTags.lastPage)
         assertTrue(blankScreenTags.items.isEmpty())
     }
+
+    @Test
+    fun `parserScreenTags extracts correct video attributes and positive IDs`() {
+        val html = """
+            <h2 class="page-title">Tag Title <span class="sub">123 videos</span></h2>
+            <div class="pagination">
+                <a href="/tags/test/1">1</a>
+                <a href="/tags/test/2">2</a>
+                <a href="/tags/test/5" class="last-page">5</a>
+            </div>
+            <div id="content">
+              <div class="mozaique cust-nb-cols">
+                <div class="frame-block thumb-block" data-id="555123">
+                  <p class="title"><a href="/video555123/cool_video" title="Cool Video"><span class="duration">15 min</span></a></p>
+                  <p class="metadata"><span class="name">StarChannel</span><span class="bg"><span><span>1.2M</span></span></span><a href="/profiles/star"></a></p>
+                  <img data-src="https://img.xv/poster.jpg" />
+                </div>
+                <div class="frame-block thumb-block">
+                  <p class="title"><a href="/video777999/fallback_video" title="Fallback Video"><span class="duration">10 min</span></a></p>
+                  <p class="metadata"><span class="name">OtherChannel</span></p>
+                </div>
+                <div class="frame-block thumb-block">
+                  <p class="title"><a href="Нет ссылки" title="No Link Video"></a></p>
+                </div>
+              </div>
+            </div>
+        """.trimIndent()
+
+        val result = parserScreenTags(html)
+        assertEquals("Tag Title", result.title0)
+        assertEquals("123 videos", result.title1)
+        assertEquals(5, result.lastPage)
+        assertEquals(2, result.items.size)
+
+        val first = result.items[0]
+        assertEquals(555123L, first.id)
+        assertEquals("Cool Video", first.title)
+        assertEquals("/video555123/cool_video", first.href)
+        assertEquals("15 min", first.duration)
+        assertEquals("StarChannel", first.channel)
+        assertEquals("1.2M", first.views)
+        assertEquals("https://img.xv/poster.jpg", first.previewImage)
+
+        val second = result.items[1]
+        assertEquals(777999L, second.id)
+        assertTrue(second.id > 0L)
+        assertEquals("Fallback Video", second.title)
+    }
+
+    @Test
+    fun `parserScreenTags skips malformed cards without dropping valid cards`() {
+        val html = """
+            <div id="content">
+              <div class="mozaique cust-nb-cols">
+                <div class="frame-block thumb-block">
+                  <!-- Broken card with no link element -->
+                </div>
+                <div class="frame-block thumb-block" data-id="101">
+                  <p class="title"><a href="/video101/valid" title="Valid"></a></p>
+                </div>
+              </div>
+            </div>
+        """.trimIndent()
+
+        val result = parserScreenTags(html)
+        assertEquals(1, result.items.size)
+        assertEquals(101L, result.items[0].id)
+    }
 }

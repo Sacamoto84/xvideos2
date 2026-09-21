@@ -219,7 +219,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
                 val parsedConfig = parsedData.config
                 val resolvedId = currentItem.id.takeIf { it > 0L }
-                    ?: parsedData.pageVideoId
+                    ?: parsedData.pageVideoId?.takeIf { it > 0L }
                     ?: (extractXVideoId(url) ?: 0L)
                 if (parsedConfig != null || resolvedId > 0L) {
                     currentItem = currentItem.copy(
@@ -321,8 +321,8 @@ private fun parseVideoPageData(htmlContent: String): ParsedVideoData {
         ?: config?.videoUrlHigh?.takeIf { it.isNotBlank() }
         ?: config?.videoUrlLow.orEmpty()
     val streamCandidate = if (hls.isNotBlank()) normalizeXUrl(hls) else ""
-    val pageId = document.selectFirst("#video-player-bg")?.attr("data-id")?.toLongOrNull()
-        ?: document.selectFirst("[data-id]")?.attr("data-id")?.toLongOrNull()
+    val pageId = document.selectFirst("#video-player-bg")?.attr("data-id")?.toLongOrNull()?.takeIf { it > 0L }
+        ?: document.selectFirst("[data-id]")?.attr("data-id")?.toLongOrNull()?.takeIf { it > 0L }
     val pageDuration = document.selectFirst("span.duration")?.text().orEmpty()
     return ParsedVideoData(config, parsedTags, streamCandidate, pageId, pageDuration)
 }

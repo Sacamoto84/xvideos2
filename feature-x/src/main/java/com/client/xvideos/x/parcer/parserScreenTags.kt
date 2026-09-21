@@ -1,9 +1,12 @@
 package com.client.xvideos.x.parcer
 
+import com.client.xvideos.x.extractXVideoId
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ModelScreenTag
+import kotlin.math.abs
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import timber.log.Timber
 
 fun parserScreenTags(html: String): ModelScreenTag {
     if (html.isBlank()) {
@@ -31,37 +34,40 @@ fun parserScreenTags(html: String): ModelScreenTag {
     val videos = container?.select("div.frame-block.thumb-block")
 
     videos?.forEach { video ->
-        val titleElement = video.selectFirst("p.title a")
-        val title = titleElement?.attr("title") ?: "Без названия"
-        val href = titleElement?.attr("href") ?: "Нет ссылки"
-        val duration = video.selectFirst("p.title .duration")?.text() ?: "Нет информации"
+        try {
+            val titleElement = video.selectFirst("p.title a")
+            val title = titleElement?.attr("title") ?: "Без названия"
+            val href = titleElement?.attr("href")?.trim().orEmpty()
+            if (href.isBlank() || href == "Нет ссылки") return@forEach
+            val duration = video.selectFirst("p.title .duration")?.text() ?: "Нет информации"
 
-        val channelName = video.selectFirst("p.metadata .name")?.text() ?: "Нет имени канала"
-        val views = video.selectFirst("p.metadata .bg > span > span")?.ownText()?.trim() ?: "-"
-        val profileLink = video.selectFirst("p.metadata a")?.attr("href") ?: ""
+            val channelName = video.selectFirst("p.metadata .name")?.text() ?: "Нет имени канала"
+            val views = video.selectFirst("p.metadata .bg > span > span")?.ownText()?.trim() ?: "-"
+            val profileLink = video.selectFirst("p.metadata a")?.attr("href") ?: ""
 
-        // Реальный id из data-id; иначе — стабильный id из href.
-        // Раньше всем карточкам присваивался id = 0 и литералы "TODO()", из-за чего
-        // ключи списка и идентификация «избранного» схлопывались в один элемент.
-        val id = video.attr("data-id").toLongOrNull() ?: href.hashCode().toLong()
-        // Пусто, а не "null": ItemsX.previewImage — non-null String со значением
-        // по умолчанию "", и строка-заглушка отсюда уезжала в модель и на экран.
-        val dataSrc = video.selectFirst("img[data-src]")?.attr("data-src").orEmpty()
+            // Реальный id из data-id; иначе — извлекаем id из href, и только потом abs(hash)
+            val id = video.attr("data-id").toLongOrNull()
+                ?: extractXVideoId(href)
+                ?: abs(href.hashCode().toLong()).coerceAtLeast(1L)
+            val dataSrc = video.selectFirst("img[data-src]")?.attr("data-src").orEmpty()
 
-        listItems.add(
-            ItemsX(
-                id = id,
-                title = title,
-                href = href,
-                duration = duration,
-                views = views,
-                channel = channelName,
-                previewImage = dataSrc,
-                previewVideo = parserVideoPreviewFromImageUrl(dataSrc).orEmpty(),
-                nameProfile = channelName,
-                linkProfile = profileLink
+            listItems.add(
+                ItemsX(
+                    id = id,
+                    title = title,
+                    href = href,
+                    duration = duration,
+                    views = views,
+                    channel = channelName,
+                    previewImage = dataSrc,
+                    previewVideo = parserVideoPreviewFromImageUrl(dataSrc).orEmpty(),
+                    nameProfile = channelName,
+                    linkProfile = profileLink
+                )
             )
-        )
+        } catch (e: Exception) {
+            Timber.w(e, "parserScreenTags: карточка пропущена из-за ошибки парсинга")
+        }
     }
 
     return ModelScreenTag(title0 = title0, title1 = title1, items = listItems, lastPage = lastPage)

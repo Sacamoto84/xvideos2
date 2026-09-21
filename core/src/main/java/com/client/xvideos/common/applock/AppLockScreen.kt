@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -273,7 +272,6 @@ private fun AppLockScreenContent(
                 )
                 .background(MaterialTheme.colorScheme.background)
                 .displayCutoutPadding()
-                .statusBarsPadding()
                 .imePadding()
                 .padding(horizontal = 28.dp),
             contentAlignment = Alignment.TopCenter

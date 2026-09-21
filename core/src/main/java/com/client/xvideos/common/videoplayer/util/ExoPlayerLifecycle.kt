@@ -4,27 +4,58 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.exoplayer.ExoPlayer
 
+/**
+ * Создает наблюдатель жизненного цикла для управления паузой/возобновлением ExoPlayer.
+ * Внутреннее состояние [wasAppInBackground] инкапсулировано внутри экземпляра наблюдателя,
+ * что исключает лишние рекомпозиции и переподписки в Compose при смене фона.
+ */
+fun getExoPlayerLifecycleObserver(
+    exoPlayer: ExoPlayer,
+    isPause: () -> Boolean,
+): LifecycleEventObserver {
+    var wasAppInBackground = false
+    return LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                if (wasAppInBackground) {
+                    exoPlayer.playWhenReady = !isPause()
+                }
+                wasAppInBackground = false
+            }
+            Lifecycle.Event.ON_PAUSE,
+            Lifecycle.Event.ON_STOP -> {
+                exoPlayer.playWhenReady = false
+                wasAppInBackground = true
+            }
+            else -> { /* No-op */ }
+        }
+    }
+}
+
 fun getExoPlayerLifecycleObserver(
     exoPlayer: ExoPlayer,
     isPause: () -> Boolean,
     wasAppInBackground: Boolean,
     setWasAppInBackground: (Boolean) -> Unit
 ): LifecycleEventObserver {
+    var inBg = wasAppInBackground
     return LifecycleEventObserver { _, event ->
         when (event) {
-            Lifecycle.Event.ON_RESUME -> handleOnResume(
-                exoPlayer,
-                isPause(),
-                wasAppInBackground,
-                setWasAppInBackground
-            )
-
-            Lifecycle.Event.ON_PAUSE -> handleOnPause(exoPlayer, setWasAppInBackground)
-            Lifecycle.Event.ON_STOP -> handleOnStop(exoPlayer, setWasAppInBackground)
-            // P3: release() сюда НЕ относится — освобождением владеет создатель плеера
-            // (DisposableEffect в rememberExoPlayerWithLifecycle). Иначе двойной владелец.
-            else -> { /* No-op */
+            Lifecycle.Event.ON_RESUME -> {
+                if (inBg) {
+                    exoPlayer.playWhenReady = !isPause()
+                }
+                inBg = false
+                setWasAppInBackground(false)
             }
+
+            Lifecycle.Event.ON_PAUSE,
+            Lifecycle.Event.ON_STOP -> {
+                exoPlayer.playWhenReady = false
+                inBg = true
+                setWasAppInBackground(true)
+            }
+            else -> { /* No-op */ }
         }
     }
 }
@@ -40,31 +71,3 @@ fun getExoPlayerLifecycleObserver(
     wasAppInBackground = wasAppInBackground,
     setWasAppInBackground = setWasAppInBackground
 )
-
-private fun handleOnResume(
-    exoPlayer: ExoPlayer,
-    isPause: Boolean,
-    wasAppInBackground: Boolean,
-    setWasAppInBackground: (Boolean) -> Unit
-) {
-    if (wasAppInBackground) {
-        exoPlayer.playWhenReady = !isPause
-    }
-    setWasAppInBackground(false)
-}
-
-private fun handleOnPause(
-    exoPlayer: ExoPlayer,
-    setWasAppInBackground: (Boolean) -> Unit
-) {
-    exoPlayer.playWhenReady = false
-    setWasAppInBackground(true)
-}
-
-private fun handleOnStop(
-    exoPlayer: ExoPlayer,
-    setWasAppInBackground: (Boolean) -> Unit
-) {
-    exoPlayer.playWhenReady = false
-    setWasAppInBackground(true)
-}
