@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -50,7 +51,6 @@ import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
-import com.composeunstyled.Text
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -110,7 +110,7 @@ object SavedNichesTab : Screen {
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
                     Text(
-                        ">Группы",
+                        "Группы",
                         color = Theme.R.colorYellow,
                         fontSize = 18.sp,
                         fontFamily = Theme.R.fontFamilyPopinsRegular

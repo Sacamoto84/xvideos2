@@ -1,9 +1,16 @@
 package com.client.xvideos.r.ui.ui.lazyrow123
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,7 +26,12 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -28,6 +40,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +83,7 @@ fun LazyRow123(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     contentBeforeList: (@Composable () -> Unit)? = null,
     isRunLike: Boolean = false,
+    showScrollButtons: Boolean = true,
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
 ) {
 
@@ -87,6 +101,26 @@ fun LazyRow123(
         itemsToIgnore = if (contentBeforeList != null) 1 else 0,
         numberOfColumns = host.columns
     )
+
+    /** Показывать ли кнопку "вверх" */
+    val showScrollToTop by remember(host.state) {
+        derivedStateOf { host.state.firstVisibleItemIndex > 2 }
+    }
+
+    /** Показывать ли кнопку "вниз" */
+    val showScrollToBottom by remember(host.state) {
+        derivedStateOf {
+            val layoutInfo = host.state.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val visible = layoutInfo.visibleItemsInfo
+            if (totalItems <= 4 || visible.isEmpty()) {
+                false
+            } else {
+                val lastVisibleIndex = visible.maxOf { it.index }
+                lastVisibleIndex < totalItems - 1
+            }
+        }
+    }
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -131,6 +165,58 @@ fun LazyRow123(
                 .align(Alignment.CenterEnd)
                 .width(2.dp)
         ) { VerticalScrollbar { scrollPercent.value } }
+
+        //---- Floating Buttons "Вверх" и "Вниз" ----
+        if (showScrollButtons) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                AnimatedVisibility(
+                    visible = showScrollToTop,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            scope.launch { host.state.scrollToItem(0) }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = "Scroll to top"
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = showScrollToBottom,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            scope.launch {
+                                val totalItems = host.state.layoutInfo.totalItemsCount
+                                if (totalItems > 0) {
+                                    host.state.scrollToItem(totalItems - 1)
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Scroll to bottom"
+                        )
+                    }
+                }
+            }
+        }
     }
 
 }
@@ -194,7 +280,7 @@ fun LazyRow123Content(
         state = state,
         itemCount = listGifs.itemCount,
         loadState = loadState,
-        itemKey = { index -> if (index < listGifs.itemCount) pagingItemKey(index) else index },
+        itemKey = { index -> if (index < listGifs.itemCount) "${pagingItemKey(index)}#$index" else index },
         modifier = modifier,
         contentPadding = contentPadding,
         contentBeforeList = contentBeforeList,

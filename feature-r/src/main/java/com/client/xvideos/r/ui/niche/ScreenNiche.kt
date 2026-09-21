@@ -1,7 +1,6 @@
 package com.client.xvideos.r.ui.niche
 
-import com.client.xvideos.common.theme.Theme
-
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,18 +12,11 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
-import androidx.compose.material3.FloatingToolbarExitDirection.Companion.Bottom
-import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,11 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.activity.compose.BackHandler
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -47,6 +36,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.NichesResponse
@@ -88,7 +78,7 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
         LaunchedEffect(columnSelect) {
             vm.lazyHost.columns = columnSelect
         }
-        
+
         val onNicheClick: (String) -> Unit = remember(navigator) { { id -> navigator.push(R_ScreenNiche(id)) } }
         val onCreatorClick: (String) -> Unit = remember(navigator) { { username -> navigator.push(ScreenRedProfile(username)) } }
 
@@ -107,7 +97,6 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
         val relatedNichesProvider: () -> NichesResponse = remember(vm) { { vm.related } }
         val topCreatorsProvider: () -> TopCreatorsResponse = remember(vm) { { vm.topCreator } }
         val onSortChange: (Order) -> Unit = remember(vm) { { vm.lazyHost.changeSortType(it) } }
-        val onUpClick: () -> Unit = remember(vm) { { vm.lazyHost.gotoUp() } }
 
         ScreenNicheContent(
             niche = vm.niche,
@@ -118,7 +107,6 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
             onSortChange = onSortChange,
             onNicheClick = onNicheClick,
             onCreatorClick = onCreatorClick,
-            onUpClick = onUpClick,
             isFollowed = isFollowed,
             onFollowClick = onFollowClick
         )
@@ -135,7 +123,6 @@ fun ScreenNicheContent(
     onSortChange: (Order) -> Unit,
     onNicheClick: (String) -> Unit,
     onCreatorClick: (String) -> Unit,
-    onUpClick: () -> Unit,
     isFollowed: Boolean,
     onFollowClick: () -> Unit
 ) {
@@ -144,11 +131,10 @@ fun ScreenNicheContent(
         currentSort = currentSort,
         onSortChange = onSortChange,
         columns = lazyHost.columns,
-        onUpClick = onUpClick,
         content = { padding ->
             Box(
                 modifier = Modifier
-                    .background(Color(0xFF303030))
+                    .background(Theme.background)
                     .fillMaxSize()
             ) {
                 LazyRow123(
@@ -167,7 +153,6 @@ fun ScreenNicheContent(
                             currentSort = currentSort,
                             onSortChange = onSortChange,
                             columns = lazyHost.columns,
-                            onUpClick = onUpClick,
                         )
                     }
                 )
@@ -176,52 +161,23 @@ fun ScreenNicheContent(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 private fun StatelessScreenNicheContent(
     niche: NichesInfo,
     currentSort: Order,
     onSortChange: (Order) -> Unit,
     columns: Int,
-    onUpClick: () -> Unit,
     content: @Composable (PaddingValues) -> Unit
 ) {
-
-
-    val exitAlwaysScrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = Bottom)
-
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(exitAlwaysScrollBehavior),
+        modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        containerColor = Color(0xFF0F0F0F)
+        containerColor = Theme.background
     ) { padding ->
-
         Box(Modifier.padding(padding)) {
-
             content(padding)
-
-            HorizontalFloatingToolbar(
-                colors = FloatingToolbarDefaults.standardFloatingToolbarColors( toolbarContainerColor = Color(0xFF505050) ),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset(y = -ScreenOffset)
-                    .zIndex(9f),
-                expanded = true,
-                leadingContent = {},
-                trailingContent = {},
-                content = {
-                    NicheBottomBar(niche = niche, currentSort = currentSort, onSortChange = onSortChange, columns = columns, onUpClick = onUpClick )
-                },
-                scrollBehavior = exitAlwaysScrollBehavior,
-            )
-
         }
-
-
-
-
     }
 }
 
@@ -237,13 +193,12 @@ private fun NicheHeaderContent(
     currentSort: Order,
     onSortChange: (Order) -> Unit,
     columns: Int,
-    onUpClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
             .fillMaxWidth()
-            .background(Color(0xFF303030))
+            .background(Theme.background)
     ) {
 
         NicheProfileContent(
@@ -300,7 +255,7 @@ private fun NicheHeaderContent(
 
         Spacer(Modifier.height(2.dp))
 
-        NicheBottomBar(niche = niche, currentSort = currentSort, onSortChange = onSortChange, columns = columns, onUpClick = onUpClick )
+        NicheBottomBar(niche = niche, currentSort = currentSort, onSortChange = onSortChange, columns = columns)
     }
 }
 
@@ -313,7 +268,6 @@ private fun ScreenNicheContentPreview() {
             currentSort = Order.LATEST,
             onSortChange = {},
             columns = 2,
-            onUpClick = {},
             content = { padding ->
                 Column(
                     modifier = Modifier
@@ -331,7 +285,6 @@ private fun ScreenNicheContentPreview() {
                         currentSort = Order.NICHES_NAME_A_Z,
                         onSortChange = {},
                         columns = 2,
-                        onUpClick = { },
                     )
                     Box(
                         modifier = Modifier
@@ -362,7 +315,6 @@ private fun NicheHeaderContentPreview() {
             currentSort = Order.NICHES_NAME_A_Z,
             onSortChange = {},
             columns = 2,
-            onUpClick = {},
         )
     }
 }

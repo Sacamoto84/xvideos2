@@ -23,7 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.Order
-import com.client.xvideos.r.ui.ui.atom.ButtonUpCircle
 import com.client.xvideos.common.ui.atom.TabBarPoints
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -34,7 +33,6 @@ fun NicheBottomBar(
     currentSort: Order,
     onSortChange: (Order) -> Unit,
     columns: Int,
-    onUpClick: () -> Unit
 ) {
     Column {
         //HorizontalDivider(color = Theme.R.colorBorderGray)
@@ -92,8 +90,6 @@ fun NicheBottomBar(
                     TabBarPoints(columns, true)
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
-                ButtonUpCircle(44.dp, onUpClick)
                 Spacer(modifier = Modifier.width(2.dp))
             }
         }
@@ -110,7 +106,6 @@ fun NicheBottomBarPreview() {
             currentSort = Order.TRENDING,
             onSortChange = {},
             columns = 2,
-            onUpClick = {}
         )
     }
 }

@@ -30,6 +30,7 @@ import com.client.xvideos.common.theme.LavenderDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -76,7 +77,6 @@ import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFi
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import com.client.xvideos.ui.theme.XvideosTheme
-import com.composeunstyled.Text
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -131,7 +131,7 @@ object R_Screen_CreatorsTab : Screen {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = getTopInsetDp())
-                        .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                        .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(

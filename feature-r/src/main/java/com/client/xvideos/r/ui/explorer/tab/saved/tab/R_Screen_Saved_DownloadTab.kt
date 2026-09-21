@@ -143,7 +143,7 @@ object R_Screen_Saved_DownloadTab : Screen {
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
                     Text(
-                        ">Загрузки",
+                        "Загрузки",
                         color = Theme.R.colorYellow,
                         fontSize = 18.sp,
                         fontFamily = Theme.R.fontFamilyPopinsRegular
