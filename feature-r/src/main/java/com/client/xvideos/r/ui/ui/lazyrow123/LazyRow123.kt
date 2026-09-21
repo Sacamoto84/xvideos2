@@ -68,7 +68,7 @@ fun LazyRow123(
     modifier: Modifier = Modifier,
     onClickOpenProfile: (String) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    contentBeforeList: @Composable (() -> Unit) = {},
+    contentBeforeList: (@Composable () -> Unit)? = null,
     isRunLike: Boolean = false,
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
 ) {
@@ -84,7 +84,7 @@ fun LazyRow123(
     // перекомпоновывало бы весь экран на каждом кадре.
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
         gridState = host.state,
-        itemsToIgnore = 0,
+        itemsToIgnore = if (contentBeforeList != null) 1 else 0,
         numberOfColumns = host.columns
     )
 
@@ -143,7 +143,7 @@ fun LazyRow123Content(
     modifier: Modifier = Modifier,
     onClickOpenProfile: (String) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    contentBeforeList: @Composable (() -> Unit) = {},
+    contentBeforeList: (@Composable () -> Unit)? = null,
     isRunLike: Boolean = false,
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
 ) {
@@ -178,7 +178,8 @@ fun LazyRow123Content(
     LaunchedEffect(host.returnToIndex, listGifs.itemCount, host.columns) {
         val targetIndex = host.returnToIndex
         if (targetIndex >= 0 && listGifs.itemCount > targetIndex) {
-            state.scrollToItem(targetIndex + 1)
+            val offset = if (contentBeforeList != null) 1 else 0
+            state.scrollToItem(targetIndex + offset)
             host.returnToIndex = -1
         }
     }
@@ -249,7 +250,7 @@ private fun LazyRow123ContentStateless(
     itemKey: ((Int) -> Any)?,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    contentBeforeList: @Composable (() -> Unit) = {},
+    contentBeforeList: (@Composable () -> Unit)? = null,
     itemContent: @Composable (Int) -> Unit
 ) {
     val isAnyLoading = loadState.refresh is LoadState.Loading ||
@@ -263,7 +264,9 @@ private fun LazyRow123ContentStateless(
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
         ) {
-            item(key = "before", span = { GridItemSpan(maxLineSpan) }) { contentBeforeList() }
+            if (contentBeforeList != null) {
+                item(key = "before", span = { GridItemSpan(maxLineSpan) }) { contentBeforeList() }
+            }
 
             items(
                 count = itemCount,

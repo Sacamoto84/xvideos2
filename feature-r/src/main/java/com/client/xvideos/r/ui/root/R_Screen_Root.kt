@@ -6,6 +6,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -105,8 +106,9 @@ class R_Screen_Root : Screen {
             // дереву; глубину навигации разделы берут из Hilt-графа.
             Scaffold(
                 modifier = Modifier.imePadding(),
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 bottomBar = { DownloadIndicator(percentDownload) }) { padding ->
-                Box(modifier = Modifier.padding(padding)) {
+                Box(modifier = Modifier.padding(bottom = padding.calculateBottomPadding())) {
                     Navigator(ScreenRedExplorer()) { navigator ->
                         //SlideTransition(navigator)
 

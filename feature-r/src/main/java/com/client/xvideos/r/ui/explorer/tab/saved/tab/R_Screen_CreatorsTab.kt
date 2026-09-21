@@ -11,15 +11,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsTopHeight
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -124,16 +122,15 @@ object R_Screen_CreatorsTab : Screen {
 
         Scaffold(
             containerColor = Theme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
-                Box(
+                Row(
                     modifier = Modifier
-                        .padding(start = 16.dp)
-                        // Высота = вырез камеры, минимум 16dp (union = max).
-                        // statusBars не годится: бары спрятаны, их инсет всегда 0.
-                        .windowInsetsTopHeight(WindowInsets.displayCutout.union(WindowInsets(top = 16.dp))),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(top = getTopInsetDp())
+                        .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Text(
                         "Авторы",
                         modifier = Modifier,
@@ -143,7 +140,8 @@ object R_Screen_CreatorsTab : Screen {
                         textAlign = TextAlign.Center
                     )
                 }
-        }) { padding ->
+            }
+        ) { padding ->
             Box(
                 modifier = Modifier
                     .padding(top = padding.calculateTopPadding())

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -89,15 +91,24 @@ object SavedNichesTab : Screen {
             }
         )
 
-        Scaffold(topBar = {
-            Text(
-                ">Группы",
-                modifier = Modifier.padding(start = 8.dp),
-                color = Theme.R.colorYellow,
-                fontSize = 18.sp,
-                fontFamily = Theme.R.fontFamilyPopinsRegular
-            )
-        },
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = getTopInsetDp())
+                        .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Text(
+                        ">Группы",
+                        color = Theme.R.colorYellow,
+                        fontSize = 18.sp,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular
+                    )
+                }
+            },
             containerColor = Theme.background
         ) { padding ->
 

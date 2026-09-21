@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -155,7 +156,7 @@ fun SubscriptionsTabContent(
                 host = host,
                 modifier = Modifier.fillMaxSize(),
                 onClickOpenProfile = onOpenProfile,
-                contentPadding = PaddingValues(0.dp),
+                contentPadding = PaddingValues(top = getTopInsetDp()),
                 contentBeforeList = {
                     CreatorsHeader(
                         listCreators = listCreatorSelectedCreator,
@@ -167,11 +168,13 @@ fun SubscriptionsTabContent(
             )
         } else {
             // Fallback for Preview
-            CreatorsHeader(
-                listCreators = listCreatorSelectedCreator,
-                onCreatorClick = onSelectCreator,
-                onLongClick = onLongClick
-            )
+            Box(modifier = Modifier.padding(top = getTopInsetDp())) {
+                CreatorsHeader(
+                    listCreators = listCreatorSelectedCreator,
+                    onCreatorClick = onSelectCreator,
+                    onLongClick = onLongClick
+                )
+            }
         }
     }
 }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -59,7 +58,7 @@ fun RedProfileCreaterInfo(
     onFollowClick: () -> Unit
 ) {
 
-    Column( modifier = Modifier.displayCutoutPadding().padding(horizontal = 4.dp).fillMaxWidth() )
+    Column( modifier = Modifier.padding(horizontal = 4.dp).fillMaxWidth() )
     {
 
         //Top info

@@ -5,13 +5,12 @@ import com.client.xvideos.common.theme.Theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -79,10 +78,7 @@ object R_Screen_Saved_LikesTab : Screen {
                 onClickOpenProfile = {
                     navigator.push(ScreenRedProfile(it))
                 },
-                contentPadding = PaddingValues(0.dp),
-                contentBeforeList = {
-                    Box(modifier = Modifier.displayCutoutPadding()){}
-                },
+                contentPadding = PaddingValues(top = getTopInsetDp()),
                 isRunLike = true
             )
 

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -128,15 +130,25 @@ object R_Screen_Saved_DownloadTab : Screen {
             { item: GifsInfo -> vm.delete(item) }
         }
 
-        Scaffold(topBar = {
-            Text(
-                ">Загрузки",
-                modifier = Modifier.padding(start = 8.dp),
-                color = Theme.R.colorYellow,
-                fontSize = 18.sp,
-                fontFamily = Theme.R.fontFamilyPopinsRegular
-            )
-        }) { padding ->
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = getTopInsetDp())
+                        .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Text(
+                        ">Загрузки",
+                        color = Theme.R.colorYellow,
+                        fontSize = 18.sp,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular
+                    )
+                }
+            }
+        ) { padding ->
             Box(
                 modifier = Modifier
                     .padding(top = padding.calculateTopPadding())

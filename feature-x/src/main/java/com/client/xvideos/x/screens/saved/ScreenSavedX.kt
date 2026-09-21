@@ -38,11 +38,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
+import com.client.xvideos.common.util.getTopInsetDp
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.x.feature.saved.SavedX
@@ -88,31 +90,62 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
         )
     }
 
+    val topCutout = getTopInsetDp()
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Theme.L.grey6)
     ) {
-
-        Row(
-            modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Сохранённое",
-                color = Color.White,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-            )
-        }
-        HorizontalDivider(color = Color(0xFF9E9E9E))
-
         if (list.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Пусто", color = Color.Gray, fontSize = 16.sp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = topCutout)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Сохранённое",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                    )
+                }
+                HorizontalDivider(color = Color(0xFF9E9E9E))
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Пусто", color = Color.Gray, fontSize = 16.sp)
+                }
             }
         } else {
-            LazyColumn(state = listState) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item(key = "header") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = topCutout)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Сохранённое",
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                            )
+                        }
+                        HorizontalDivider(color = Color(0xFF9E9E9E))
+                    }
+                }
                 itemsIndexed(list, key = { index, item -> "${item.id}#$index" }) { _, item ->
                     val posterUrl = remember(item.id) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
