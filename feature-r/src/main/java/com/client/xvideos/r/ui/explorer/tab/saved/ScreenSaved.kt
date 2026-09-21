@@ -16,16 +16,23 @@ import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.ui.TabRow
+import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_CollectionTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_CreatorsTab
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_DownloadTab
@@ -34,6 +41,7 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.SavedNichesTab
 import com.client.xvideos.r.ui.explorer.tab.gifs.ColumnSelect_AddRColumn
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.R_Screen_Saved_SubscriptionsTab
 import com.client.xvideos.common.ui.atom.TabBarPoints
+import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
 import kotlinx.collections.immutable.persistentListOf
 
@@ -69,9 +77,21 @@ object R_ScreenSavedTab : Screen {
     @Composable
     override fun Content() {
         val vm = getScreenModel<R_SavedTabSM>()
+        val scope = rememberCoroutineScope()
+        val pagerState = rememberPagerState(
+            initialPage = vm.screenType.coerceIn(0, 5),
+            pageCount = { 6 }
+        )
 
-        BackHandler(enabled = vm.screenType != 0) {
-            vm.screenType = 0
+        LaunchedEffect(pagerState.currentPage) {
+            vm.screenType = pagerState.currentPage
+        }
+
+        val selectedCollection by vm.savedRed.collections.selectedCollection.collectAsStateWithLifecycle()
+        val isInsideCollection = pagerState.currentPage == 4 && selectedCollection != null
+
+        BackHandler(enabled = pagerState.currentPage != 0) {
+            scope.launch { pagerState.scrollToPage(0) }
         }
 
         val overlay0 = normalizeRColumnCount(
@@ -82,15 +102,16 @@ object R_ScreenSavedTab : Screen {
             Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
         )
 
-        val onTabChange: (Int) -> Unit = remember(vm) {
+        val onTabChange: (Int) -> Unit = remember(pagerState, scope) {
             { tab ->
-                if (tab == vm.screenType) {
+                if (tab == pagerState.currentPage) {
                     when (tab) {
                         0 -> { ColumnSelect_AddRColumn(Settings.r_likesTab_column_current_count) }
                         4 -> { ColumnSelect_AddRColumn(Settings.r_collectionTab_column_current_count) }
                     }
+                } else {
+                    scope.launch { pagerState.scrollToPage(tab) }
                 }
-                vm.screenType = tab
             }
         }
 
@@ -100,13 +121,13 @@ object R_ScreenSavedTab : Screen {
                 Column {
                     HorizontalDivider()
                     TabRow(
-                        value = vm.screenType,
+                        value = pagerState.currentPage,
                         containerColor = Theme.tabLevel1,
                         //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = SAVED_TAB_ICONS,
                         onChangeState = onTabChange,
-                        overlay0 = { TabBarPoints( overlay0, vm.screenType == 0 ) },
-                        overlay4 = { TabBarPoints( overlay4, vm.screenType == 4 ) },
+                        overlay0 = { TabBarPoints( overlay0, pagerState.currentPage == 0 ) },
+                        overlay4 = { TabBarPoints( overlay4, pagerState.currentPage == 4 ) },
                     )
                 }
             },
@@ -116,14 +137,22 @@ object R_ScreenSavedTab : Screen {
         ) { paddingValues ->
 
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-                when (vm.screenType) {
-                    0 -> R_Screen_Saved_LikesTab.Content()
-                    1 -> R_Screen_CreatorsTab.Content()
-                    3 -> R_Screen_Saved_DownloadTab.Content()
-                    2 -> SavedNichesTab.Content()
-                    4 -> R_Screen_CollectionTab.Content()
-                    5 -> R_Screen_Saved_SubscriptionsTab.Content()
-                    else -> R_Screen_Saved_LikesTab.Content()
+                ProvidePagerScrollbarAlpha(pagerState = pagerState) {
+                    HorizontalPager(
+                        state = pagerState,
+                        userScrollEnabled = !isInsideCollection,
+                        beyondViewportPageCount = 0,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        when (page) {
+                            0 -> R_Screen_Saved_LikesTab.Content()
+                            1 -> R_Screen_CreatorsTab.Content()
+                            2 -> SavedNichesTab.Content()
+                            3 -> R_Screen_Saved_DownloadTab.Content()
+                            4 -> R_Screen_CollectionTab.Content()
+                            5 -> R_Screen_Saved_SubscriptionsTab.Content()
+                        }
+                    }
                 }
             }
         }
@@ -132,7 +161,8 @@ object R_ScreenSavedTab : Screen {
 
 @Stable
 class R_SavedTabSM @Inject constructor(
-    private val navigationState: RNavigationState
+    private val navigationState: RNavigationState,
+    val savedRed: SavedRed
 ) : ScreenModel {
     var screenType: Int
         get() = navigationState.savedTab
