@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -110,14 +109,18 @@ object R_Screen_CreatorsTab : Screen {
         val onDeleteRequest = remember {
             { user: UserInfo -> itemPendingDelete = user }
         }
-
-        DeleteCreatorDialog(
-            item = itemPendingDelete,
-            onDismiss = { itemPendingDelete = null },
-            onConfirm = { pending ->
+        val onConfirmDelete = remember(savedRed) {
+            { pending: UserInfo ->
                 savedRed.creators.remove(pending.username)
                 itemPendingDelete = null
             }
+        }
+        val onDismissDelete = remember { { itemPendingDelete = null } }
+
+        DeleteCreatorDialog(
+            item = itemPendingDelete,
+            onDismiss = onDismissDelete,
+            onConfirm = onConfirmDelete
         )
 
         Scaffold(
@@ -171,13 +174,14 @@ private fun BoxScope.CreatorsScrollbar(state: LazyListState) {
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
         gridState = state, itemsToIgnore = 0
     )
+    val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
     Box(
         modifier = Modifier
             .fillMaxHeight()
             .align(Alignment.CenterEnd)
             .width(2.dp)
     ) {
-        VerticalScrollbar { scrollPercent.value }
+        VerticalScrollbar(scrollPercentProvider)
     }
 }
 
@@ -188,6 +192,8 @@ private fun CreatorListItem(
     onDelete: (UserInfo) -> Unit
 ) {
     val displayName = item.name.ifBlank { item.username }
+    val handleItemClick = remember(item.username, onClick) { { onClick(item.username) } }
+    val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
 
     Row(
         modifier = Modifier
@@ -195,7 +201,7 @@ private fun CreatorListItem(
             .clip(RoundedCornerShape(8.dp))
             .fillMaxWidth()
             .background(Theme.tabLevel3)
-            .clickable { onClick(item.username) },
+            .clickable(onClick = handleItemClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -221,12 +227,10 @@ private fun CreatorListItem(
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-        
         Column(
             modifier = Modifier
-                .weight(1f)
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp, horizontal = 8.dp)
+                .weight(1f),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
@@ -272,7 +276,7 @@ private fun CreatorListItem(
         }
 
         IconButton(
-            onClick = { onDelete(item) },
+            onClick = handleDeleteClick,
             modifier = Modifier
                 .padding(horizontal = 4.dp)
                 .size(48.dp)

@@ -18,6 +18,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,6 +82,18 @@ object R_ScreenSavedTab : Screen {
             Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
         )
 
+        val onTabChange: (Int) -> Unit = remember(vm) {
+            { tab ->
+                if (tab == vm.screenType) {
+                    when (tab) {
+                        0 -> { ColumnSelect_AddRColumn(Settings.r_likesTab_column_current_count) }
+                        4 -> { ColumnSelect_AddRColumn(Settings.r_collectionTab_column_current_count) }
+                    }
+                }
+                vm.screenType = tab
+            }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -91,15 +104,7 @@ object R_ScreenSavedTab : Screen {
                         containerColor = Theme.tabLevel1,
                         //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = SAVED_TAB_ICONS,
-                        onChangeState = {
-                            if (it == vm.screenType) {
-                                when (it) {
-                                    0 -> { ColumnSelect_AddRColumn(Settings.r_likesTab_column_current_count) }
-                                    4 -> { ColumnSelect_AddRColumn(Settings.r_collectionTab_column_current_count) }
-                                }
-                            }
-                            vm.screenType = it
-                        },
+                        onChangeState = onTabChange,
                         overlay0 = { TabBarPoints( overlay0, vm.screenType == 0 ) },
                         overlay4 = { TabBarPoints( overlay4, vm.screenType == 4 ) },
                     )

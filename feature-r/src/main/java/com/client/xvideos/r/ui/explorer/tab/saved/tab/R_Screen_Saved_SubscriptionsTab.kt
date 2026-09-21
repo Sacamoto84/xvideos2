@@ -127,14 +127,20 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
             onLongClick = onLongClick
         )
 
-        DialogSubscriptionDelete(
-            user = { userToDelete },
-            onDismiss = { userToDelete = null },
-            onConfirm = {
-                vm.savedRed.subscriptions.remove(it)
+        val onConfirmDelete = remember(vm.savedRed, pager) {
+            { creatorName: String ->
+                vm.savedRed.subscriptions.remove(creatorName)
                 userToDelete = null
                 pager.refresh()
             }
+        }
+        val onDismissDelete = remember { { userToDelete = null } }
+        val userToDeleteProvider = remember(userToDelete) { { userToDelete } }
+
+        DialogSubscriptionDelete(
+            user = userToDeleteProvider,
+            onDismiss = onDismissDelete,
+            onConfirm = onConfirmDelete
         )
     }
 }
@@ -192,15 +198,30 @@ fun CreatorsHeader(
             .padding(4.dp)
     ) {
         listCreators.forEach { creator ->
-            CreatorChip(
-                creator = creator.name,
-                url = creator.urlProfile,
-                isSelected = creator.select,
-                onClick = { onCreatorClick(creator.name) },
-                onLongClick = { onLongClick(creator.name) }
+            CreatorChipItem(
+                creator = creator,
+                onCreatorClick = onCreatorClick,
+                onLongClick = onLongClick
             )
         }
     }
+}
+
+@Composable
+private fun CreatorChipItem(
+    creator: SelectedCreator,
+    onCreatorClick: (String) -> Unit,
+    onLongClick: (String) -> Unit
+) {
+    val onClick = remember(creator.name, onCreatorClick) { { onCreatorClick(creator.name) } }
+    val onLong = remember(creator.name, onLongClick) { { onLongClick(creator.name) } }
+    CreatorChip(
+        creator = creator.name,
+        url = creator.urlProfile,
+        isSelected = creator.select,
+        onClick = onClick,
+        onLongClick = onLong
+    )
 }
 
 @Composable

@@ -116,7 +116,7 @@ class ScreenCollectionName(
                     )
                 }
                 Text(
-                    ">Коллекция>${selectedCollection ?: collectionName}",
+                    selectedCollection ?: collectionName,
                     modifier = Modifier.padding(start = 4.dp),
                     color = Theme.R.colorYellow,
                     fontSize = 18.sp,

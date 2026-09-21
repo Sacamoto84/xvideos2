@@ -116,6 +116,19 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
 
     LaunchedEffect(columnSelect) { vm.lazyHost.columns = columnSelect }
 
+    val onSortSelect: (Order) -> Unit = remember(vm) { { vm.lazyHost.changeSortType(it) } }
+    val onUpClick: () -> Unit = remember(vm, haptic) {
+        {
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            vm.lazyHost.gotoUp()
+        }
+    }
+    val onClickOpenProfile: (String) -> Unit = remember(vm, navigator) {
+        { name ->
+            vm.lazyHost.currentIndexGoto = vm.lazyHost.currentIndex
+            navigator?.push(ScreenRedProfile(name))
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -125,11 +138,8 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
                 searchQuery = searchQuery,
                 isFocused = isFocused,
                 sortType = sortType,
-                onSortSelect = { vm.lazyHost.changeSortType(it) },
-                onUpClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    vm.lazyHost.gotoUp()
-                }
+                onSortSelect = onSortSelect,
+                onUpClick = onUpClick
             )
         },
         containerColor = Theme.background
@@ -141,10 +151,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
                 LazyRow123(
                     host = vm.lazyHost,
                     modifier = Modifier.fillMaxSize(),
-                    onClickOpenProfile = { name ->
-                        vm.lazyHost.currentIndexGoto = vm.lazyHost.currentIndex
-                        navigator?.push(ScreenRedProfile(name))
-                    },
+                    onClickOpenProfile = onClickOpenProfile,
                     contentPadding = PaddingValues(top = getTopInsetDp()),
                 )
         }

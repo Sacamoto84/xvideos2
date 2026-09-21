@@ -91,6 +91,14 @@ object SavedNichesTab : Screen {
             }
         )
 
+        val onNicheClick: (NichesInfo) -> Unit = remember(navigator) {
+            { item -> navigator.push(R_ScreenNiche(item.id)) }
+        }
+        val onDeleteClick: (NichesInfo) -> Unit = remember {
+            { item -> itemPendingDelete = item }
+        }
+        val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
@@ -124,52 +132,11 @@ object SavedNichesTab : Screen {
                 )
                 {
                     items(vm.savedRed.niches.list, key = { it.id }) { item ->
-
-                        Row(
-                            modifier = Modifier
-                                .padding(vertical = 2.dp, horizontal = 6.dp)
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Theme.tabLevel3)
-                                .clickable(onClick = {
-                                    navigator.push( R_ScreenNiche(item.id) )
-                                }),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            UrlImage(item.thumbnail, modifier = Modifier.size(96.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                item.name,
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontFamily = Theme.R.fontFamilyDMsanss,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .width(96.dp)
-                                    .height(48.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .border(1.dp, Color.White, RoundedCornerShape(8.dp))
-                                    .background(Color.Black)
-                                    .clickable { itemPendingDelete = item },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "Выйти",
-                                    fontFamily = Theme.R.fontFamilyDMsanss,
-                                    fontSize = 18.sp,
-                                    color = Color.White
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                        }
+                        SavedNicheRow(
+                            item = item,
+                            onClick = onNicheClick,
+                            onDeleteClick = onDeleteClick
+                        )
                     }
                 }
 
@@ -179,10 +146,63 @@ object SavedNichesTab : Screen {
                         .align(Alignment.CenterEnd)
                         .width(2.dp)
                 ) {
-                    VerticalScrollbar { scrollPercent.value }
+                    VerticalScrollbar(scrollPercentProvider)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SavedNicheRow(
+    item: NichesInfo,
+    onClick: (NichesInfo) -> Unit,
+    onDeleteClick: (NichesInfo) -> Unit
+) {
+    val onRowClick = remember(item, onClick) { { onClick(item) } }
+    val onRowDelete = remember(item, onDeleteClick) { { onDeleteClick(item) } }
+
+    Row(
+        modifier = Modifier
+            .padding(vertical = 2.dp, horizontal = 6.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Theme.tabLevel3)
+            .clickable(onClick = onRowClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        UrlImage(item.thumbnail, modifier = Modifier.size(96.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            item.name,
+            color = Color.White,
+            fontSize = 20.sp,
+            fontFamily = Theme.R.fontFamilyDMsanss,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+
+        Box(
+            modifier = Modifier
+                .width(96.dp)
+                .height(48.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .border(1.dp, Color.White, RoundedCornerShape(8.dp))
+                .background(Color.Black)
+                .clickable(onClick = onRowDelete),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "Выйти",
+                fontFamily = Theme.R.fontFamilyDMsanss,
+                fontSize = 18.sp,
+                color = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
     }
 }
 

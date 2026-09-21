@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.BackHandler
@@ -99,6 +100,17 @@ class L_ScreenExplorer : Screen {
 
         val columnR_ScreenGifsTab = Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle().value
 
+        val onTabChange: (Int) -> Unit = remember(vm) {
+            { tab ->
+                if (tab == vm.screenType) {
+                    when (tab) {
+                        0 -> { ColumnSelect_AddColumn(Settings.l_gifsTab_column_current_count, Settings.l_gifsTab_G_0_4) }
+                    }
+                }
+                vm.screenType = tab
+            }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -108,14 +120,7 @@ class L_ScreenExplorer : Screen {
                     containerColor = Theme.tabLevel0,
                     titlesIcon = EXPLORER_ICONS,
                     value = vm.screenType,
-                    onChangeState = {
-                        if (it == vm.screenType) {
-                            when (it) {
-                                0 -> { ColumnSelect_AddColumn(Settings.l_gifsTab_column_current_count, Settings.l_gifsTab_G_0_4) }
-                            }
-                        }
-                        vm.screenType = it
-                    },
+                    onChangeState = onTabChange,
                     overlay0 = { TabBarPoints(columnR_ScreenGifsTab, vm.screenType == 0) },
                     tags = EXPLORER_TAGS
                 )

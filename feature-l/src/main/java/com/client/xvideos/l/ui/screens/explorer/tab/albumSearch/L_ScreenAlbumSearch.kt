@@ -32,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -95,6 +96,22 @@ object L_ScreenAlbumSearch : Screen {
         val sections = result?.sections
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
+        val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.searchText.value = it } }
+        val onSearch: () -> Unit = remember(vm) { { vm.search() } }
+        val onAlbumClick: (Long) -> Unit = remember(navigator) {
+            { albumId -> navigator.push(ScreenLAlbum(albumId)) }
+        }
+        val onSeeAllClick: (Landing_page_albumSection) -> Unit = remember(vm, navigator) {
+            { section ->
+                navigator.push(
+                    L_ScreenAlbumList.create(
+                        filter = vm.createFilter(section),
+                        title = "Search: ${vm.searchText.value}"
+                    )
+                )
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -106,8 +123,8 @@ object L_ScreenAlbumSearch : Screen {
                 item {
                     AlbumSearchInputField(
                         searchText = searchText,
-                        onSearchTextChange = { vm.searchText.value = it },
-                        onSearch = { vm.search() }
+                        onSearchTextChange = onSearchTextChange,
+                        onSearch = onSearch
                     )
                 }
 
@@ -161,15 +178,8 @@ object L_ScreenAlbumSearch : Screen {
                     AlbumSearchSectionBlock(
                         section = section,
                         screenWidth = screenWidth,
-                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
-                        onSeeAllClick = {
-                            navigator.push(
-                                L_ScreenAlbumList.create(
-                                    filter = vm.createFilter(section),
-                                    title = "Search: ${vm.searchText.value}"
-                                )
-                            )
-                        }
+                        onAlbumClick = onAlbumClick,
+                        onSeeAllClick = { onSeeAllClick(section) }
                     )
                 }
 

@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
@@ -88,14 +89,17 @@ object SearchTab : Screen {
         val searchText = vm.searchText.collectAsStateWithLifecycle().value
         val isLoading = vm.isLoading.collectAsStateWithLifecycle().value
 
+        val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.searchText.value = it } }
+        val onCreatorClick: (String) -> Unit = remember(navigator) {
+            { handle -> navigator.push(ScreenRedProfile(handle)) }
+        }
+
         SearchTabContent(
             searchText = searchText,
             isLoading = isLoading,
-            onSearchTextChange = { vm.searchText.value = it },
+            onSearchTextChange = onSearchTextChange,
             creatorsList = vm.creatorsList,
-            onCreatorClick = { handle ->
-                navigator.push(ScreenRedProfile(handle))
-            }
+            onCreatorClick = onCreatorClick
         )
     }
 

@@ -86,34 +86,43 @@ class ScreenRedProfile(val profileName: String) : Screen {
         val tagsList = remember(tags) { tags.toList() }
         val tagsSelectList = remember(tagsSelect) { tagsSelect.toList() }
 
+        val onTagClick: (String) -> Unit = remember(vm) { { vm.toggleSelectTag(it) } }
+        val onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit = remember(vm) {
+            { pager ->
+                pager.itemSnapshotList.items.forEach { gifItem ->
+                    vm.tagsAdd(gifItem.tags)
+                }
+            }
+        }
+        val savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed = remember(vm) { { vm.savedRed } }
+        val onBack: () -> Unit = remember(vm, navigator) {
+            {
+                if (vm.tagsSelect.value.isNotEmpty()) {
+                    vm.tagsSelect.value = emptySet()
+                } else {
+                    navigator.pop()
+                }
+            }
+        }
+        val scrollPercentProvider: () -> Pair<Float, Float> = remember(scrollPercent) { { scrollPercent.value } }
+
         RedProfileScreenContent(
             profileName = profileName,
             creator = vm.creator,
             tags = tagsList,
             tagsSelect = tagsSelectList,
             isLoading = isLoading,
-            scrollPercent = { scrollPercent.value },
+            scrollPercent = scrollPercentProvider,
             likedHost = vm.likedHost,
-            onTagClick = { vm.toggleSelectTag(it) },
-            onAppendLoaded = { pager ->
-                pager.itemSnapshotList.items.forEach { gifItem ->
-                    vm.tagsAdd(gifItem.tags)
-                }
-            },
-            savedRedProvider = { vm.savedRed },
-            onBack = {
-                if (tagsSelect.isNotEmpty()) {
-                    vm.tagsSelect.value = emptySet()
-                } else {
-                    navigator.pop()
-                }
-            }
+            onTagClick = onTagClick,
+            onAppendLoaded = onAppendLoaded,
+            savedRedProvider = savedRedProvider,
+            onBack = onBack
         )
     }
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RedProfileScreenContent(
     profileName: String = "",
@@ -139,14 +148,6 @@ fun RedProfileScreenContent(
                     .padding(horizontal = 4.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Назад",
-                        tint = Color.White
-                    )
-                }
-                Spacer(Modifier.width(4.dp))
                 Text(
                     text = creator?.name?.ifBlank { creator.username } ?: profileName,
                     color = Color.White,

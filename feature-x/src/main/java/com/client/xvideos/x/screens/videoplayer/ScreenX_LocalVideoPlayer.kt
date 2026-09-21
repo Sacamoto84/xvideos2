@@ -73,9 +73,11 @@ class ScreenX_LocalVideoPlayer(
             ?: Uri.parse(fileUrl).lastPathSegment?.substringBefore('.')?.toLongOrNull()
             ?: 0L
 
-        val resolvedItem = item
-            ?: sm.saved.downloads.list.value.find { it.id == videoId }
-            ?: ItemsX(id = videoId)
+        val resolvedItem = remember(item, videoId, sm.saved.downloads.list.value) {
+            item
+                ?: sm.saved.downloads.list.value.find { it.id == videoId }
+                ?: ItemsX(id = videoId)
+        }
 
         val historyItem = if (videoId > 0L) sm.saved.history.get(videoId) else null
         val resumePosition = historyItem?.takeIf { it.isEligibleForResume }?.let {
@@ -135,38 +137,26 @@ class ScreenX_LocalVideoPlayer(
             navigator.pop()
         }
 
+        val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
+        val onTap: () -> Unit = remember(host) { { host.togglePlayPause() } }
+        val onBackClick: () -> Unit = remember(navigator) {
+            {
+                if (isZoomed) {
+                    resetZoomTrigger++
+                } else {
+                    navigator.pop()
+                }
+            }
+        }
+
         Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
             ComposeVideoPlayer(
                 playerHost = host,
                 modifier = Modifier.fillMaxSize(),
                 resetZoomTrigger = resetZoomTrigger,
-                onZoomChanged = { isZoomed = it },
-                onTap = { host.togglePlayPause() },
+                onZoomChanged = onZoomChanged,
+                onTap = onTap,
                 overlay = {
-                    IconButton(
-                        onClick = {
-                            if (isZoomed) {
-                                resetZoomTrigger++
-                            } else {
-                                navigator.pop()
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .windowInsetsPadding(
-                                WindowInsets.displayCutout.only(
-                                    WindowInsetsSides.Top + WindowInsetsSides.Start
-                                )
-                            )
-                            .padding(8.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = Color.White,
-                        )
-                    }
-
                     // Плашка возобновления
                     AnimatedVisibility(
                         visible = resumeNoticeText != null,

@@ -100,15 +100,20 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
         pendingDelete = null
     }
 
+    val onConfirmDelete = remember(saved.downloads) {
+        { item: ItemsX ->
+            saved.downloads.delete(item)
+            pendingDelete = null
+        }
+    }
+    val onDismissDelete = remember { { pendingDelete = null } }
+
     pendingDelete?.let { item ->
         ConfirmDeleteVideoDialog(
             title = "Удалить из сохранённого?",
             imageUrl = saved.downloads.localPosterPath(item.id) ?: item.previewImage,
-            onConfirm = {
-                saved.downloads.delete(item)
-                pendingDelete = null
-            },
-            onDismiss = { pendingDelete = null },
+            onConfirm = { onConfirmDelete(item) },
+            onDismiss = onDismissDelete,
         )
     }
 
@@ -193,6 +198,10 @@ private fun SavedRow(
     onDelete: (ItemsX) -> Unit,
     onShareP2p: (ItemsX) -> Unit
 ) {
+    val handlePlay = remember(item, onPlay) { { onPlay(item) } }
+    val handleShareP2p = remember(item, onShareP2p) { { onShareP2p(item) } }
+    val handleDelete = remember(item, onDelete) { { onDelete(item) } }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -203,7 +212,7 @@ private fun SavedRow(
                 .fillMaxWidth()
                 .aspectRatio(352f / 198f)
                 .background(Color.DarkGray)
-                .clickable { onPlay(item) }
+                .clickable(onClick = handlePlay)
         ) {
             UrlImage(url = posterUrl, modifier = Modifier.fillMaxSize())
 
@@ -233,7 +242,7 @@ private fun SavedRow(
                 modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
             )
 
-            IconButton(onClick = { onShareP2p(item) }) {
+            IconButton(onClick = handleShareP2p) {
                 Icon(
                     imageVector = Icons.Filled.Share,
                     contentDescription = "P2P",
@@ -242,7 +251,7 @@ private fun SavedRow(
                 )
             }
 
-            IconButton(onClick = { onDelete(item) }) {
+            IconButton(onClick = handleDelete) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "Удалить",

@@ -119,6 +119,7 @@ private fun FavoritesContent(
 ) {
     // Подтверждение удаления из избранного (диалог).
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
+    val onDeleteItem: (ItemsX) -> Unit = remember { { item -> pendingDelete = item } }
     val gridState = rememberLazyGridState()
 
     // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
@@ -191,16 +192,17 @@ private fun FavoritesContent(
                         HorizontalSeparator(color = Color(0xFF9E9E9E))
                     }
                 }
+
                 itemsIndexed(favorites, key = { index, item -> "${item.id}#$index" }) { _, item ->
                     FavoriteRow(
                         item = item,
                         localUrl = localUrlOf(item),
                         posterUrl = posterUrlOf(item),
-                        onDelete = { pendingDelete = item },
-                        onDownload = { onDownload(item) },
-                        onSaveToGallery = { onSaveToGallery(item) },
+                        onDelete = onDeleteItem,
+                        onDownload = onDownload,
+                        onSaveToGallery = onSaveToGallery,
                         onPlayLocal = onPlayLocal,
-                        onOpenVideo = { onOpenVideo(item) },
+                        onOpenVideo = onOpenVideo,
                     )
                 }
             }
@@ -213,12 +215,17 @@ private fun FavoriteRow(
     item: ItemsX,
     localUrl: String?,
     posterUrl: String,
-    onDelete: () -> Unit,
-    onDownload: () -> Unit,
+    onDelete: (ItemsX) -> Unit,
+    onDownload: (ItemsX) -> Unit,
     onPlayLocal: (String) -> Unit,
-    onOpenVideo: () -> Unit,
-    onSaveToGallery: () -> Unit = {},
+    onOpenVideo: (ItemsX) -> Unit,
+    onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
+    val onOpenThisVideo = remember(item, onOpenVideo) { { onOpenVideo(item) } }
+    val onDeleteThis = remember(item, onDelete) { { onDelete(item) } }
+    val onDownloadThis = remember(item, onDownload) { { onDownload(item) } }
+    val onSaveToGalleryThis = remember(item, onSaveToGallery) { { onSaveToGallery(item) } }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -262,17 +269,17 @@ private fun FavoriteRow(
                 // и на экране тега.
                 else -> UrlVideoImageAndLongClickX(
                     item,
-                    onLongClick = onOpenVideo,
-                    onDoubleClick = onOpenVideo,
+                    onLongClick = onOpenThisVideo,
+                    onDoubleClick = onOpenThisVideo,
                 )
             }
 
 
         Row(Modifier.align(Alignment.TopEnd)) {
             FavoriteActionsExpandMenu(
-                onDelete = onDelete,
-                onDownload = onDownload,
-                onSaveToGallery = onSaveToGallery,
+                onDelete = onDeleteThis,
+                onDownload = onDownloadThis,
+                onSaveToGallery = onSaveToGalleryThis,
             )
         }
 

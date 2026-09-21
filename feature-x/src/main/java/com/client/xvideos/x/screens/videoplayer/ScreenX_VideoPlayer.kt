@@ -273,19 +273,24 @@ private fun VideoPlayerContentView(
 
     RememberHistoryProgressSync(vm = vm, host = host)
 
+    val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
+    val onTap: () -> Unit = remember(vm, host) {
+        {
+            if (vm.isFullScreen) {
+                areControlsVisible = !areControlsVisible
+            } else {
+                host.togglePlayPause()
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
         ComposeVideoPlayer(
             playerHost = host,
             modifier = Modifier.fillMaxSize(),
             resetZoomTrigger = resetZoomTrigger,
-            onZoomChanged = { isZoomed = it },
-            onTap = {
-                if (vm.isFullScreen) {
-                    areControlsVisible = !areControlsVisible
-                } else {
-                    host.togglePlayPause()
-                }
-            },
+            onZoomChanged = onZoomChanged,
+            onTap = onTap,
             overlay = {
                 // Кнопка возврата (только в обычном режиме; в полном экране используются системные жесты/кнопки Android)
                 AnimatedVisibility(

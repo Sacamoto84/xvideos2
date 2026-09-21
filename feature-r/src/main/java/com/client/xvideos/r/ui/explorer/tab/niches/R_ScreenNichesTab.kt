@@ -168,6 +168,10 @@ object R_ScreenNichesTab : Screen {
          */
         val countNichesInCache = vm.savedRed.nichesCache.list.size
 
+        val searchWidget: @Composable (Modifier) -> Unit = remember(vm.search) {
+            { modifier -> RSearchTextField(vm.search, modifier = modifier) }
+        }
+
         NichesTabContent(
             listState = listState,
             niches = nicheItems,
@@ -177,9 +181,7 @@ object R_ScreenNichesTab : Screen {
             onUpClick = onUpClick,
             onNicheClick = onNicheClick,
             savedRed = getSavedRed,
-            searchWidget = { modifier ->
-                RSearchTextField(vm.search, modifier = modifier)
-            },
+            searchWidget = searchWidget,
             onRefreshNichesCacheClick = onRefreshNichesCacheClick,
             nichesCacheProgress = vm.savedRed.nichesCache.progress,
             countNichesInCache = countNichesInCache,
@@ -209,6 +211,7 @@ fun NichesTabContent(
     // Без `by`: позиция скролла меняется каждый кадр, чтение здесь
     // перекомпоновывало бы весь экран. См. VerticalScrollbar.
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(gridState = listState)
+    val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
     if (countNichesInCache == 0) {
         Refresh(
@@ -265,26 +268,31 @@ fun NichesTabContent(
                         }
                     } else {
                         itemsIndexed(items = niches, key = { index, item -> "${item.id}#$index" }, contentType = { _, _ -> "niche" }) { _, item ->
-                            Box(modifier = Modifier.padding(vertical = 2.dp)) {
-                                // Одно чтение вместо проверки одного вызова и
-                                // `!!` на результате второго.
-                                val red = savedRed()
-                                if (red != null) {
-                                    NichePreview2( niches = { item }, onClick = { onNicheClick(item.id) }, savedRed = { red } )
-                                } else {
-                                    // Placeholder for Preview
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(horizontal = 8.dp).fillMaxWidth().height(78.dp).background( Theme.tabLevel3, RoundedCornerShape(16.dp) ),
-                                        contentAlignment = Alignment.CenterStart
-                                    ) {
-                                        Text(
-                                            text = item.name,
-                                            color = Color.White,
-                                            modifier = Modifier.padding(start = 16.dp),
-                                            fontFamily = Theme.R.fontFamilyDMsanss
-                                        )
-                                    }
+                            val red = savedRed()
+                            if (red != null) {
+                                NicheItemRow(
+                                    item = item,
+                                    savedRed = red,
+                                    onNicheClick = onNicheClick,
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                )
+                            } else {
+                                // Placeholder for Preview
+                                Box(
+                                    modifier = Modifier
+                                        .padding(vertical = 2.dp)
+                                        .padding(horizontal = 8.dp)
+                                        .fillMaxWidth()
+                                        .height(78.dp)
+                                        .background(Theme.tabLevel3, RoundedCornerShape(16.dp)),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Text(
+                                        text = item.name,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(start = 16.dp),
+                                        fontFamily = Theme.R.fontFamilyDMsanss
+                                    )
                                 }
                             }
                         }
@@ -298,10 +306,29 @@ fun NichesTabContent(
                         .align(Alignment.CenterEnd)
                         .width(2.dp)
                 ) {
-                    VerticalScrollbar { scrollPercent.value }
+                    VerticalScrollbar(scrollPercentProvider)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NicheItemRow(
+    item: Niche,
+    savedRed: SavedRed,
+    onNicheClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val onClick = remember(item.id, onNicheClick) { { onNicheClick(item.id) } }
+    val nicheProvider = remember(item) { { item } }
+    val redProvider = remember(savedRed) { { savedRed } }
+    Box(modifier = modifier) {
+        NichePreview2(
+            niches = nicheProvider,
+            onClick = onClick,
+            savedRed = redProvider,
+        )
     }
 }
 

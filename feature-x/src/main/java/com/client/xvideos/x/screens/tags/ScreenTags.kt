@@ -33,6 +33,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.tags.atom.TagsPaginatedListScreen
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
 import kotlinx.coroutines.launch
 
@@ -59,6 +60,16 @@ class ScreenTags(val tag: String) : Screen {
 
         val topCutout = getTopInsetDp()
 
+        val onPageChange: (Int) -> Unit = remember(job, pagerState) {
+            { page -> job.launch { pagerState.animateScrollToPage(page) } }
+        }
+        val loadPage: suspend (Int) -> List<ItemsX> = remember(vm) {
+            { page -> vm.loadPage(page).items }
+        }
+        val onOpenVideo: (ItemsX) -> Unit = remember(navigator) {
+            { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) }
+        }
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -68,7 +79,7 @@ class ScreenTags(val tag: String) : Screen {
                 // /tags/<тег>/N от страны не зависит.
                 BottomListDashBoardNavigationButtons2(
                     value = pagerState.currentPage,
-                    onChange = { job.launch { pagerState.animateScrollToPage(it) } },
+                    onChange = onPageChange,
                     max = vm.screen.lastPage,
                 )
             },
@@ -85,8 +96,8 @@ class ScreenTags(val tag: String) : Screen {
                 ) { pageIndex ->
                     TagsPaginatedListScreen(
                         pageIndex = pageIndex,
-                        loadPage = { vm.loadPage(it).items },
-                        onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) },
+                        loadPage = loadPage,
+                        onOpenVideo = onOpenVideo,
                         isCurrentPage = pagerState.currentPage == pageIndex,
                         listState = listStates.getOrPut(pageIndex) { LazyListState() },
                         header = {

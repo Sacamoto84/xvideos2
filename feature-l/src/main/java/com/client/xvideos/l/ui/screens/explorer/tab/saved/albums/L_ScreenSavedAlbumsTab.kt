@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
+import com.client.xvideos.l.model.AlbumDetails
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -58,7 +60,18 @@ object L_ScreenSavedAlbumsTab : Screen {
         // itemsToIgnore = 1: нулевой item грида — full-span спейсер под вырез,
         // без него индикатор считает спейсер контентом и врёт по позиции и длине.
         val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(state, itemsToIgnore = 1)
+        val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
+        val onAlbumClick: (AlbumDetails) -> Unit = remember(navigator) {
+            { item ->
+                val albumId = item.id.toLongOrNull()
+                if (albumId != null) {
+                    navigator.push(ScreenLAlbum(albumId))
+                } else {
+                    SnackBar.error("Не удалось открыть альбом: пустой id")
+                }
+            }
+        }
 
         val topInset = getTopInsetDp()
 
@@ -86,30 +99,40 @@ object L_ScreenSavedAlbumsTab : Screen {
                         // роняет LazyLayout ("Key ... was already used") — тот же
                         // приём, что и в ScreenAlbumList.
                         itemsIndexed(vm.albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
-                            val albumId = item.id.toLongOrNull()
-                            AlbumListItem(
-                                title = item.title,
-                                coverUrl = item.cover?.url.orEmpty(),
-                                numberOfAnimatedPictures = item.number_of_animated_pictures,
-                                numberOfPictures = item.number_of_pictures,
+                            SavedAlbumGridItem(
+                                item = item,
+                                onAlbumClick = onAlbumClick,
                                 modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
-                            ) {
-                                if (albumId != null) {
-                                    navigator.push(ScreenLAlbum(albumId))
-                                } else {
-                                    SnackBar.error("Не удалось открыть альбом: пустой id")
-                                }
-                            }
+                            )
                         }
                     }
 
             /** Вертикальный индикатор прокрутки */
-            Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
+            Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) {
+                VerticalScrollbar(scrollPercentProvider)
+            }
         }
 
 
     }
 
+}
+
+@Composable
+private fun SavedAlbumGridItem(
+    item: AlbumDetails,
+    onAlbumClick: (AlbumDetails) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val onClick = remember(item, onAlbumClick) { { onAlbumClick(item) } }
+    AlbumListItem(
+        title = item.title,
+        coverUrl = item.cover?.url.orEmpty(),
+        numberOfAnimatedPictures = item.number_of_animated_pictures,
+        numberOfPictures = item.number_of_pictures,
+        modifier = modifier,
+        onClick = onClick,
+    )
 }
 
 

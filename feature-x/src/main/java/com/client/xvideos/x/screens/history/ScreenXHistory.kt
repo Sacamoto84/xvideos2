@@ -200,6 +200,36 @@ fun HistoryContent(
         onDismissBatchDelete = { showBatchDeleteConfirm = false },
     )
 
+    val onToggleSelect: (Long) -> Unit = remember(selectedIds) {
+        { id ->
+            if (id in selectedIds) {
+                selectedIds.remove(id)
+            } else {
+                selectedIds.add(id)
+            }
+        }
+    }
+    val onStartSelection: (Long) -> Unit = remember(selectedIds) {
+        { id ->
+            if (!isSelectionMode) {
+                isSelectionMode = true
+                selectedIds.add(id)
+            }
+        }
+    }
+    val onDeleteRequest: (ItemsX) -> Unit = remember { { pendingDelete = it } }
+
+    val actions = remember(onToggleFavorite, onDeleteRequest, onDownload, onPlayLocal, onOpenVideo, onSaveToGallery) {
+        HistoryRowActions(
+            onToggleFavorite = onToggleFavorite,
+            onDelete = onDeleteRequest,
+            onDownload = onDownload,
+            onPlayLocal = onPlayLocal,
+            onOpenVideo = onOpenVideo,
+            onSaveToGallery = onSaveToGallery,
+        )
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -231,46 +261,69 @@ fun HistoryContent(
         if (history.isEmpty()) {
             HistoryEmptyState(modifier = Modifier.padding(padding))
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                state = gridState,
+            HistoryGrid(
+                history = history,
+                gridState = gridState,
+                selectedIds = selectedIds,
+                isSelectionMode = isSelectionMode,
+                isFavorite = isFavorite,
+                localUrlOf = localUrlOf,
+                posterUrlOf = posterUrlOf,
+                actions = actions,
+                onToggleSelect = onToggleSelect,
+                onStartSelection = onStartSelection,
                 modifier = Modifier.padding(padding),
-            ) {
-                itemsIndexed(history, key = { index, historyItem -> "${historyItem.item.id}#$index" }) { _, historyItem ->
-                    val isSelected = historyItem.item.id in selectedIds
-                    val selectionState = HistorySelectionState(
-                        isSelectionMode = isSelectionMode,
-                        isSelected = isSelected,
-                        onToggleSelect = {
-                            if (isSelected) {
-                                selectedIds.remove(historyItem.item.id)
-                            } else {
-                                selectedIds.add(historyItem.item.id)
-                            }
-                        },
-                        onStartSelection = {
-                            if (!isSelectionMode) {
-                                isSelectionMode = true
-                                selectedIds.add(historyItem.item.id)
-                            }
-                        },
-                    )
+            )
+        }
+    }
+}
 
-                    HistoryRow(
-                        historyItem = historyItem,
-                        isFavorite = isFavorite(historyItem.item),
-                        onToggleFavorite = { onToggleFavorite(historyItem.item) },
-                        localUrl = localUrlOf(historyItem.item),
-                        posterUrl = posterUrlOf(historyItem.item),
-                        selectionState = selectionState,
-                        onDelete = { pendingDelete = historyItem.item },
-                        onDownload = { onDownload(historyItem.item) },
-                        onSaveToGallery = { onSaveToGallery(historyItem.item) },
-                        onPlayLocal = { url -> onPlayLocal(url, historyItem.item) },
-                        onOpenVideo = { onOpenVideo(historyItem.item) },
-                    )
-                }
-            }
+@Immutable
+data class HistoryRowActions(
+    val onToggleFavorite: (ItemsX) -> Unit,
+    val onDelete: (ItemsX) -> Unit,
+    val onDownload: (ItemsX) -> Unit,
+    val onPlayLocal: (String, ItemsX) -> Unit,
+    val onOpenVideo: (ItemsX) -> Unit,
+    val onSaveToGallery: (ItemsX) -> Unit = {},
+)
+
+@Composable
+private fun HistoryGrid(
+    history: List<XHistoryItem>,
+    gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
+    selectedIds: List<Long>,
+    isSelectionMode: Boolean,
+    isFavorite: (ItemsX) -> Boolean,
+    localUrlOf: (ItemsX) -> String?,
+    posterUrlOf: (ItemsX) -> String,
+    actions: HistoryRowActions,
+    onToggleSelect: (Long) -> Unit,
+    onStartSelection: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        state = gridState,
+        modifier = modifier,
+    ) {
+        itemsIndexed(history, key = { index, historyItem -> "${historyItem.item.id}#$index" }) { _, historyItem ->
+            val isSelected = historyItem.item.id in selectedIds
+            val localUrl = remember(historyItem.item, localUrlOf) { localUrlOf(historyItem.item) }
+            val posterUrl = remember(historyItem.item, posterUrlOf) { posterUrlOf(historyItem.item) }
+            val favorite = isFavorite(historyItem.item)
+
+            HistoryRow(
+                historyItem = historyItem,
+                isFavorite = favorite,
+                localUrl = localUrl,
+                posterUrl = posterUrl,
+                isSelectionMode = isSelectionMode,
+                isSelected = isSelected,
+                onToggleSelect = onToggleSelect,
+                onStartSelection = onStartSelection,
+                actions = actions,
+            )
         }
     }
 }
@@ -558,17 +611,30 @@ private fun HistoryWatchedBadge(modifier: Modifier = Modifier) {
 private fun HistoryRow(
     historyItem: XHistoryItem,
     isFavorite: Boolean,
-    onToggleFavorite: () -> Unit,
     localUrl: String?,
     posterUrl: String,
-    selectionState: HistorySelectionState,
-    onDelete: () -> Unit,
-    onDownload: () -> Unit,
-    onPlayLocal: (String) -> Unit,
-    onOpenVideo: () -> Unit,
-    onSaveToGallery: () -> Unit = {},
+    isSelectionMode: Boolean,
+    isSelected: Boolean,
+    onToggleSelect: (Long) -> Unit,
+    onStartSelection: (Long) -> Unit,
+    actions: HistoryRowActions,
 ) {
     val item = historyItem.item
+
+    val selectionState = remember(isSelectionMode, isSelected, item.id, onToggleSelect, onStartSelection) {
+        HistorySelectionState(
+            isSelectionMode = isSelectionMode,
+            isSelected = isSelected,
+            onToggleSelect = { onToggleSelect(item.id) },
+            onStartSelection = { onStartSelection(item.id) },
+        )
+    }
+    val handleToggleFavorite = remember(item, actions.onToggleFavorite) { { actions.onToggleFavorite(item) } }
+    val handleDelete = remember(item, actions.onDelete) { { actions.onDelete(item) } }
+    val handleDownload = remember(item, actions.onDownload) { { actions.onDownload(item) } }
+    val handlePlayLocal = remember(item, actions.onPlayLocal) { { url: String -> actions.onPlayLocal(url, item) } }
+    val handleOpenVideo = remember(item, actions.onOpenVideo) { { actions.onOpenVideo(item) } }
+    val handleSaveToGallery = remember(item, actions.onSaveToGallery) { { actions.onSaveToGallery(item) } }
 
     val cardBorderModifier = if (selectionState.isSelected) {
         Modifier.border(2.dp, Color(0xFFE91E63))
@@ -589,8 +655,8 @@ private fun HistoryRow(
             localUrl = localUrl,
             posterUrl = posterUrl,
             selectionState = selectionState,
-            onPlayLocal = onPlayLocal,
-            onOpenVideo = onOpenVideo,
+            onPlayLocal = handlePlayLocal,
+            onOpenVideo = handleOpenVideo,
         )
 
         if (selectionState.isSelectionMode) {
@@ -610,10 +676,10 @@ private fun HistoryRow(
             Row(Modifier.align(Alignment.TopEnd)) {
                 HistoryActionsMenu(
                     isFavorite = isFavorite,
-                    onToggleFavorite = onToggleFavorite,
-                    onDelete = onDelete,
-                    onDownload = onDownload,
-                    onSaveToGallery = onSaveToGallery,
+                    onToggleFavorite = handleToggleFavorite,
+                    onDelete = handleDelete,
+                    onDownload = handleDownload,
+                    onSaveToGallery = handleSaveToGallery,
                 )
             }
         }

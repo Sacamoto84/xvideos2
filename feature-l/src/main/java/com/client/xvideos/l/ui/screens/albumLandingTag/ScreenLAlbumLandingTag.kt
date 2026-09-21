@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,13 +102,29 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val title = albumTopHits?.title
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
+        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+        val onAlbumClick: (Long) -> Unit = remember(navigator) {
+            { albumId -> navigator.push(ScreenLAlbum(albumId)) }
+        }
+        val onSeeAllClick: (Landing_page_albumSection) -> Unit = remember(navigator, vm, title, tag) {
+            { item ->
+                val filter = vm.createFilter(item)
+                navigator.push(
+                    L_ScreenAlbumList.create(
+                        filter = filter,
+                        title = "Tag: ${title ?: tag}"
+                    )
+                )
+            }
+        }
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Theme.background,
             topBar = {
                 LandingTagTopBar(
                     title = "Tag: ${title ?: tag}",
-                    onBack = { navigator.pop() }
+                    onBack = onBack
                 )
             }
         ) { padding ->
@@ -123,16 +140,8 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                         LandingTagSectionItem(
                             item = item,
                             screenWidth = screenWidth,
-                            onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) },
-                            onSeeAllClick = {
-                                val filter = vm.createFilter(item)
-                                navigator.push(
-                                    L_ScreenAlbumList.create(
-                                        filter = filter,
-                                        title = "Tag: ${title ?: tag}"
-                                    )
-                                )
-                            }
+                            onAlbumClick = onAlbumClick,
+                            onSeeAllClick = onSeeAllClick
                         )
                     }
 
@@ -183,8 +192,12 @@ private fun LandingTagSectionItem(
     item: Landing_page_albumSection,
     screenWidth: androidx.compose.ui.unit.Dp,
     onAlbumClick: (Long) -> Unit,
-    onSeeAllClick: () -> Unit
+    onSeeAllClick: (Landing_page_albumSection) -> Unit
 ) {
+    val onSeeAll = remember(item, onSeeAllClick) { { onSeeAllClick(item) } }
+    val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
+    val displayAlbums = remember(item.items) { item.items.take(9) }
+
     Text(
         item.title,
         color = Theme.L.textColor,
@@ -201,8 +214,11 @@ private fun LandingTagSectionItem(
             .padding(horizontal = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        val itemWidth = (screenWidth - 8.dp) / 3
-        item.items.take(9).forEach { album ->
+        displayAlbums.forEach { album ->
+            val albumId = remember(album.id) { album.id.toLongOrNull() }
+            val onCardClick = remember(albumId, onAlbumClick) {
+                { if (albumId != null) onAlbumClick(albumId) }
+            }
             Box(
                 modifier = Modifier
                     .width(itemWidth)
@@ -214,7 +230,7 @@ private fun LandingTagSectionItem(
                     coverUrl = album.cover?.url.orEmpty(),
                     numberOfAnimatedPictures = album.numberOfAnimatedPictures,
                     numberOfPictures = album.numberOfPictures,
-                    onClick = { album.id.toLongOrNull()?.let { onAlbumClick(it) } }
+                    onClick = onCardClick
                 )
             }
         }
@@ -227,7 +243,7 @@ private fun LandingTagSectionItem(
             .fillMaxWidth()
             .height(40.dp)
             .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
-            .clickable(onClick = onSeeAllClick),
+            .clickable(onClick = onSeeAll),
         contentAlignment = Alignment.Center
     ) {
         Text(

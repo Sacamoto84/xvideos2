@@ -104,16 +104,21 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
             }
         }
 
+        val relatedNichesProvider: () -> NichesResponse = remember(vm) { { vm.related } }
+        val topCreatorsProvider: () -> TopCreatorsResponse = remember(vm) { { vm.topCreator } }
+        val onSortChange: (Order) -> Unit = remember(vm) { { vm.lazyHost.changeSortType(it) } }
+        val onUpClick: () -> Unit = remember(vm) { { vm.lazyHost.gotoUp() } }
+
         ScreenNicheContent(
             niche = vm.niche,
-            relatedNiches = { vm.related },
-            topCreators = { vm.topCreator },
+            relatedNiches = relatedNichesProvider,
+            topCreators = topCreatorsProvider,
             lazyHost = vm.lazyHost,
             currentSort = sort,
-            onSortChange = { vm.lazyHost.changeSortType(it) },
+            onSortChange = onSortChange,
             onNicheClick = onNicheClick,
             onCreatorClick = onCreatorClick,
-            onUpClick = { vm.lazyHost.gotoUp() },
+            onUpClick = onUpClick,
             isFollowed = isFollowed,
             onFollowClick = onFollowClick
         )

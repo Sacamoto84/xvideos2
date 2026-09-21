@@ -137,6 +137,22 @@ object L_Screen_CollectionTab : Screen {
             )
         }
 
+        val onSortOrderClick: (LCollectionSortOrder) -> Unit = remember(savedL) {
+            { savedL.collection.applySortOrder(it) }
+        }
+        val onCollectionClick: (String) -> Unit = remember(savedL) {
+            { savedL.collection.setCollection(it) }
+        }
+        val onCollectionLongClick: (String) -> Unit = remember {
+            { itemPendingAction = it }
+        }
+        val onCreateNewCollectionClick: () -> Unit = remember(savedL) {
+            { savedL.collection.visibleDialogCreateNew = true }
+        }
+        val onExitCollection: () -> Unit = remember(savedL) {
+            { savedL.collection.exitCollection() }
+        }
+
         // Декларативная навигация таба: список коллекций <-> открытая коллекция.
         // Переключение через AnimatedContent с плавным fading переходом.
         AnimatedContent(
@@ -152,16 +168,16 @@ object L_Screen_CollectionTab : Screen {
                     collectionList = savedL.collection.collectionList,
                     sortOrder = savedL.collection.sortOrder,
                     gridState = vm.gridState,
-                    onSortOrderClick = { savedL.collection.applySortOrder(it) },
-                    onCollectionClick = { savedL.collection.setCollection(it) },
-                    onCollectionLongClick = { itemPendingAction = it },
-                    onCreateNewCollectionClick = { savedL.collection.visibleDialogCreateNew = true }
+                    onSortOrderClick = onSortOrderClick,
+                    onCollectionClick = onCollectionClick,
+                    onCollectionLongClick = onCollectionLongClick,
+                    onCreateNewCollectionClick = onCreateNewCollectionClick
                 )
             } else {
                 L_CollectionNameContent(
                     collectionName = collectionName,
                     savedL = savedL,
-                    onExitCollection = { savedL.collection.exitCollection() }
+                    onExitCollection = onExitCollection
                 )
             }
         }

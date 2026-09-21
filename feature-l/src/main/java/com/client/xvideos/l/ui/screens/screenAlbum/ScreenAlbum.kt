@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +29,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.LaunchedEffect
@@ -134,9 +134,18 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
         val pullToRefreshState = rememberPullToRefreshState()
 
-        val saved = parsed != null && parsed.id.isNotBlank() && vm.saved.albums.list.any { it.id == parsed.id }
+        val saved by remember(parsed?.id) {
+            derivedStateOf {
+                parsed != null && parsed.id.isNotBlank() && vm.saved.albums.list.any { it.id == parsed.id }
+            }
+        }
 
         val albumPicsDetails = album?.albumPicsDetails
+        val hasAnimatedItems by remember(albumPicsDetails) {
+            derivedStateOf {
+                albumPicsDetails?.pics?.any { it.isAnimatedMedia() } == true
+            }
+        }
         val showInitialItemsLoading =
             albumPicsDetails?.isPageRequestInFlight == true &&
                     vm.host.filteredPic.isEmpty()
@@ -236,22 +245,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                             if (parsed != null && parsed.id.isNotBlank()) {
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = {
-                                        if (itemPendingDelete != null) {
-                                            itemPendingDelete = null
-                                        } else if (vm.showOnlyAnimated) {
-                                            vm.showOnlyAnimated = false
-                                        } else {
-                                            navigator.pop()
-                                        }
-                                    }) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = "Back",
-                                            tint = Theme.L.textColor
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(4.dp))
                                     UrlImage( parsed.cover?.url.orEmpty(), modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
                                         .size(72.dp) )
@@ -264,9 +257,11 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
 
 
                                 Spacer(modifier = Modifier.height(4.dp))
-                                val strId = buildAnnotatedString {
-                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Id: ") }
-                                    withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(idAlbum.toString()) }
+                                val strId = remember(idAlbum) {
+                                    buildAnnotatedString {
+                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Id: ") }
+                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(idAlbum.toString()) }
+                                    }
                                 }
                                 Text(strId, color = Theme.L.textColor)
 
@@ -275,21 +270,29 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                 val textCreated = remember(parsed.created) { formatEpochSeconds(parsed.created) }
                                 val textModified = remember(parsed.modified) { formatEpochSeconds(parsed.modified) }
 
-                                if (textCreated != null) {
-                                    val str = buildAnnotatedString {
-                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Created: ") }
-                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textCreated) }
+                                val strCreated = remember(textCreated) {
+                                    textCreated?.let { created ->
+                                        buildAnnotatedString {
+                                            withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Created: ") }
+                                            withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(created) }
+                                        }
                                     }
-                                    Text(str, color = Theme.L.textColor)
+                                }
+                                if (strCreated != null) {
+                                    Text(strCreated, color = Theme.L.textColor)
                                 }
 
-                                if (textModified != null) {
-                                    val str1 = buildAnnotatedString {
-                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Modified: ") }
-                                        withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(textModified) }
+                                val strModified = remember(textModified) {
+                                    textModified?.let { modified ->
+                                        buildAnnotatedString {
+                                            withStyle( style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp).toSpanStyle() ) { append("Modified: ") }
+                                            withStyle( style = Theme.L.Type.rowTitle.copy(fontSize = 14.sp).toSpanStyle()) { append(modified) }
+                                        }
                                     }
+                                }
+                                if (strModified != null) {
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    Text( str1, color = Theme.L.textColor)
+                                    Text(strModified, color = Theme.L.textColor)
                                 }
 
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -303,9 +306,10 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                         L_ScreenAlbumList.create( filter = albumListFilterForAudience(audience), title = "Audience: ${audience.title}" )
                                     )
                                 }
-                                AlbumInfoTags({
+                                val activeTags = remember(parsed.tags) {
                                     parsed.tags.reversed().filter { it.count > 0 }
-                                }) { navigator.push(ScreenLAlbumLandingTag(it)) }
+                                }
+                                AlbumInfoTags({ activeTags }) { navigator.push(ScreenLAlbumLandingTag(it)) }
                                 AlbumInfoButtonSaveAlbum(saved, onClick = { if (!saved) { vm.saveAlbum() } else { itemPendingDelete = parsed } })
                                 AlbumInfoButtonServerFavorite(
                                     isFavorite = vm.isServerFavorite ?: (parsed.likeStatus.orEmpty().isNotBlank() && parsed.likeStatus != "none" && parsed.likeStatus != "dislike"),
@@ -316,7 +320,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                 AlbumInfoFilterButton(
                                     parsed = parsed,
                                     checked = vm.showOnlyAnimated,
-                                    hasAnimatedItems = albumPicsDetails?.pics?.any { it.isAnimatedMedia() } == true,
+                                    hasAnimatedItems = hasAnimatedItems,
                                     onCheckedChange = { vm.showOnlyAnimated = it }
                                 )
                                 LAlbumNetworkIssuePanel(
@@ -359,18 +363,6 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                                     }
                                 }
                             } else if (isLoading) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    IconButton(onClick = { navigator.pop() }) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = "Back",
-                                            tint = Theme.L.textColor
-                                        )
-                                    }
-                                }
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()

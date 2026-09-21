@@ -130,6 +130,8 @@ object R_Screen_Saved_DownloadTab : Screen {
             { item: GifsInfo -> vm.delete(item) }
         }
 
+        val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
@@ -162,10 +164,10 @@ object R_Screen_Saved_DownloadTab : Screen {
                     items(downloadRed, key = { it.id }) { item ->
                         DownloadListItem(
                             item = item,
-                            onItemClick = { onItemClickHandler(item) },
-                            onFullScreenClick = { onItemClickHandler(item) },
-                            onShareClick = { onShareClickHandler(item) },
-                            onDeleteClick = { onDeleteClickHandler(item) }
+                            onItemClick = onItemClickHandler,
+                            onFullScreenClick = onItemClickHandler,
+                            onShareClick = onShareClickHandler,
+                            onDeleteClick = onDeleteClickHandler
                         )
                     }
                 }
@@ -177,7 +179,7 @@ object R_Screen_Saved_DownloadTab : Screen {
                         .align(Alignment.CenterEnd)
                         .width(2.dp)
                 ) {
-                    VerticalScrollbar { scrollPercent.value }
+                    VerticalScrollbar(scrollPercentProvider)
                 }
             }
         }
@@ -187,11 +189,24 @@ object R_Screen_Saved_DownloadTab : Screen {
 @Composable
 private fun DownloadListItem(
     item: GifsInfo,
-    onItemClick: () -> Unit,
-    onFullScreenClick: () -> Unit,
-    onShareClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onItemClick: (GifsInfo) -> Unit,
+    onFullScreenClick: (GifsInfo) -> Unit,
+    onShareClick: (GifsInfo) -> Unit,
+    onDeleteClick: (GifsInfo) -> Unit
 ) {
+    val onClick = remember(item, onItemClick) { { onItemClick(item) } }
+    val onFullScreen = remember(item, onFullScreenClick) { { onFullScreenClick(item) } }
+    val onShare = remember(item, onShareClick) { { onShareClick(item) } }
+    val onDelete = remember(item, onDeleteClick) { { onDeleteClick(item) } }
+
+    val imagePath = remember(item.userName, item.id) {
+        AppPath.r_cache_download + "/" + item.userName + "/" + item.id + ".jpg"
+    }
+    val mp4Path = remember(item.userName, item.id) {
+        AppPath.r_cache_download + "/" + item.userName + "/" + item.id + ".mp4"
+    }
+    val size = remember(mp4Path) { File(mp4Path).length().toPrettyCount3() }
+
     Box(
         modifier = Modifier
             .padding(2.dp)
@@ -202,13 +217,8 @@ private fun DownloadListItem(
                 RoundedCornerShape(8.dp)
             )
             .background(Theme.tabLevel3)
-            .clickable(onClick = onItemClick)
+            .clickable(onClick = onClick)
     ) {
-        val imagePath = AppPath.r_cache_download + "/" + item.userName + "/" + item.id + ".jpg"
-        val mp4Path = AppPath.r_cache_download + "/" + item.userName + "/" + item.id + ".mp4"
-
-        val size = remember(mp4Path) { File(mp4Path).length().toPrettyCount3() }
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -219,7 +229,7 @@ private fun DownloadListItem(
                 modifier = Modifier
                     .width(72.dp)
                     .fillMaxHeight()
-                    .clickable(onClick = onItemClick),
+                    .clickable(onClick = onClick),
                 contentScale = ContentScale.Crop
             )
             Column(
@@ -262,7 +272,7 @@ private fun DownloadListItem(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onFullScreenClick) {
+                    IconButton(onClick = onFullScreen) {
                         Icon(
                             Icons.Outlined.Fullscreen,
                             contentDescription = "Открыть во весь экран",
@@ -270,14 +280,14 @@ private fun DownloadListItem(
                             modifier = Modifier.size(28.dp)
                         )
                     }
-                    IconButton(onClick = onShareClick) {
+                    IconButton(onClick = onShare) {
                         Icon(
                             Icons.Outlined.Share,
                             contentDescription = "Поделиться",
                             tint = Color.White
                         )
                     }
-                    IconButton(onClick = onDeleteClick) {
+                    IconButton(onClick = onDelete) {
                         Icon(
                             Icons.Outlined.Delete,
                             contentDescription = "Удалить загрузку",

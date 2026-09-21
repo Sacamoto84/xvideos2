@@ -205,95 +205,108 @@ fun DashboardsPaginatedListContent(
         modifier = Modifier.fillMaxSize(),
         state = gridState,
         contentPadding = PaddingValues(top = topCutout),
-    )
-    {
+    ) {
         itemsIndexed(items, key = { index, cell -> "${cell.id}#$index" }) { _, cell ->
+            DashboardGridCell(
+                cell = cell,
+                isFavorite = isFavorite(cell.id),
+                openVideoPlayer = openVideoPlayer,
+                onFavoriteAdd = onFavoriteAdd,
+                onFavoriteRemove = onFavoriteRemove,
+                onDownload = onDownload,
+                onSaveToGallery = onSaveToGallery,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DashboardGridCell(
+    cell: ItemsX,
+    isFavorite: Boolean,
+    openVideoPlayer: (ItemsX) -> Unit,
+    onFavoriteAdd: (ItemsX) -> Unit,
+    onFavoriteRemove: (ItemsX) -> Unit,
+    onDownload: (ItemsX) -> Unit,
+    onSaveToGallery: (ItemsX) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val handleOpen = remember(cell, openVideoPlayer) { { openVideoPlayer(cell) } }
+    val handleFavoriteAdd = remember(cell, onFavoriteAdd) { { onFavoriteAdd(cell) } }
+    val handleFavoriteRemove = remember(cell, onFavoriteRemove) { { onFavoriteRemove(cell) } }
+    val handleDownload = remember(cell, onDownload) { { onDownload(cell) } }
+    val handleSaveToGallery = remember(cell, onSaveToGallery) { { onSaveToGallery(cell) } }
+    val durationText = remember(cell.duration) { cell.duration.trim().removeSuffix(".") }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(352f / 198f)
+            .padding(1.dp)
+            .background(Color.DarkGray)
+    ) {
+        UrlVideoImageAndLongClickX(
+            cell,
+            onLongClick = handleOpen,
+            onDoubleClick = handleOpen,
+        ) {
+            if (durationText.isNotEmpty()) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    val offsetY = (-3).dp
+
+                    Text(
+                        text = durationText,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(0.5.dp, offsetY + 0.5.dp),
+                        textAlign = TextAlign.Right,
+                        fontSize = 14.sp,
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = durationText,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(0.dp, offsetY),
+                        textAlign = TextAlign.Right,
+                        fontSize = 14.sp,
+                        color = Color.White
+                    )
+                }
+            }
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(352f / 198f)
-                    .padding(1.dp)
-                    .background(Color.DarkGray)
-            )
-            {
-                //Отобразить карточку картинка видео
-                UrlVideoImageAndLongClickX(
-                    cell,
-                    onLongClick = {
-                        //Открыть экран плеера
-                        openVideoPlayer(cell)
-                    },
-                    onDoubleClick = {
-                        openVideoPlayer(cell)
-                    }
+                    .align(Alignment.TopStart)
+                    .background(Color(0x60000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = cell.channel,
+                    modifier = Modifier.align(Alignment.Center),
+                    fontSize = 14.sp,
+                    color = Color.White
                 )
-                {
-                    val durationText = cell.duration.trim().removeSuffix(".")
-                    if (durationText.isNotEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            val offsetY = (-3).dp
+            }
 
-                            //Продолжительность видео
-                            Text(
-                                text = durationText,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .offset(0.5.dp, offsetY + 0.5.dp),
-                                textAlign = TextAlign.Right,
-                                fontSize = 14.sp,
-                                color = Color.Black
-                            )
-
-                            Text(
-                                text = durationText,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .offset(0.dp, offsetY),
-                                textAlign = TextAlign.Right,
-                                fontSize = 14.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
-
-
-                    //Название канала
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .background(Color(0x60000000)), contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = cell.channel,
-                            modifier = Modifier.align(Alignment.Center),
-                            fontSize = 14.sp,
-                            color = Color.White
-                        )
-                    }
-
-                    Row(modifier = Modifier.align(Alignment.BottomEnd), horizontalArrangement = Arrangement.End) {
-                        //if (vm.saved.favorites.contains(cell.id)) {
-                        if (isFavorite(cell.id))
-                            //Индикатор что видео в фаворитах
-                            Box(modifier = Modifier) { IconFavorite18(Modifier.padding(bottom = 6.dp, end = 6.dp)) }
-                        }
-                    }
-
-                Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                    X_DashboardExpandMenu(
-                        isFavorite = isFavorite(cell.id),//vm.isFavorite(cell.id),
-                        onFavoriteAdd = { onFavoriteAdd(cell) },
-                        onFavoriteRemove = { onFavoriteRemove(cell) },
-                        onDownload = { onDownload(cell) },
-                        onSaveToGallery = { onSaveToGallery(cell) },
-                    )
-                }
-
+            Row(modifier = Modifier.align(Alignment.BottomEnd), horizontalArrangement = Arrangement.End) {
+                if (isFavorite) {
+                    Box(modifier = Modifier) { IconFavorite18(Modifier.padding(bottom = 6.dp, end = 6.dp)) }
                 }
             }
-        }
 
+            Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                X_DashboardExpandMenu(
+                    isFavorite = isFavorite,
+                    onFavoriteAdd = handleFavoriteAdd,
+                    onFavoriteRemove = handleFavoriteRemove,
+                    onDownload = handleDownload,
+                    onSaveToGallery = handleSaveToGallery,
+                )
+            }
+        }
+    }
 }
 
 

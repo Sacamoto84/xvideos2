@@ -18,12 +18,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -103,17 +99,6 @@ object HapticDemoScreen : Screen {
                         .background(Color(0xFF1B1B1B))
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
                 ) {
-                    IconButton(
-                        onClick = { navigator.pop() },
-                        modifier = Modifier
-                            .padding(start = 4.dp, top = 4.dp)
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = Color.White
-                        )
-                    }
                     Text(
                         text = "Haptic Feedback — демо",
                         color = Color.White,

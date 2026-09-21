@@ -201,7 +201,7 @@ private fun LCollectionDetailTopBar(
                 }
             }
             Text(
-                ">$collectionName",
+                collectionName,
                 modifier = Modifier.weight(1f),
                 color = Theme.L.primaryColor,
                 fontSize = 18.sp,

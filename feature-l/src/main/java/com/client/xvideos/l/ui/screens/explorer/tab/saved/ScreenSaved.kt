@@ -17,6 +17,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.BackHandler
@@ -72,6 +73,19 @@ object L_SavedTab : Screen {
 
         val columnCollection = Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
 
+        val onTabChange: (Int) -> Unit = remember(vm) {
+            { tab ->
+                if (tab == vm.screenType) {
+                    when (tab) {
+                        0 -> L_ScreenSavedLikesTab_AddColumn()
+                        2 -> { ColumnSelect_AddColumn(Settings.l_collectionTab_column_current_count, Settings.l_collectionTab_G_0_4) }
+                        4 -> L_ScreenSavedLikesTab_AddColumn()
+                    }
+                }
+                vm.screenType = tab
+            }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -82,16 +96,7 @@ object L_SavedTab : Screen {
                         containerColor = Theme.tabLevel1,
                         //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = SAVED_TAB_ICONS,
-                        onChangeState = {
-                            if (it == screenType) {
-                                when (it) {
-                                    0 -> L_ScreenSavedLikesTab_AddColumn()
-                                    2 -> { ColumnSelect_AddColumn(Settings.l_collectionTab_column_current_count, Settings.l_collectionTab_G_0_4) }
-                                    4 -> L_ScreenSavedLikesTab_AddColumn()
-                                }
-                            }
-                            vm.screenType = it
-                        },
+                        onChangeState = onTabChange,
                         overlay0 = { TabBarPoints(columnLikes, screenType == 0) },
                         overlay2 = { TabBarPoints(columnCollection, screenType == 2) },
                         overlay4 = { TabBarPoints(columnLikes, screenType == 4) }

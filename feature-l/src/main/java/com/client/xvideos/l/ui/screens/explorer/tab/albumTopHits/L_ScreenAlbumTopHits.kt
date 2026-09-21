@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,6 +77,21 @@ object L_ScreenAlbumTopHits : Screen {
         val vm: ScreenLAlbumTopHitsSM = getScreenModel()
         val items = vm.albumTopHits.collectAsStateWithLifecycle().value?.items
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
+
+        val onAlbumClick: (Long) -> Unit = remember(navigator) {
+            { albumId -> navigator.push(ScreenLAlbum(albumId)) }
+        }
+        val onSeeAllClick: (String, String) -> Unit = remember(navigator) {
+            { url, title ->
+                navigator.push(
+                    L_ScreenAlbumList.create(
+                        filter = albumListFilterFromTopHitsUrl(url),
+                        title = title
+                    )
+                )
+            }
+        }
 
         Box(
             modifier = Modifier.fillMaxSize().background(Theme.background)
@@ -104,9 +120,6 @@ object L_ScreenAlbumTopHits : Screen {
                         horizontalArrangement = Arrangement.SpaceBetween
                     )
                     {
-
-                        val itemWidth = (screenWidth - 8.dp) / 3
-
                         item.items.take(9).forEach { album ->
                             Box(
                                 modifier = Modifier.width(itemWidth).padding(vertical = 2.dp)
@@ -117,20 +130,13 @@ object L_ScreenAlbumTopHits : Screen {
                                     coverUrl = album.cover?.url.orEmpty(),
                                     numberOfAnimatedPictures = album.numberOfAnimatedPictures,
                                     numberOfPictures = album.numberOfPictures,
-                                    onClick = { album.id.toLongOrNull()?.let { navigator.push(ScreenLAlbum(it)) } }
+                                    onClick = { album.id.toLongOrNull()?.let { onAlbumClick(it) } }
                                 )
                             }
                         }
                     }
                     ButtonSeeAll(
-                        onClick = {
-                            navigator.push(
-                                L_ScreenAlbumList.create(
-                                    filter = albumListFilterFromTopHitsUrl(item.url),
-                                    title = item.title
-                                )
-                            )
-                        }
+                        onClick = { onSeeAllClick(item.url, item.title) }
                     )
                 }
             }

@@ -10,6 +10,7 @@ import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -70,14 +71,16 @@ object R_Screen_Saved_LikesTab : Screen {
                 .collect { pager.refresh() }
         }
 
+        val onClickOpenProfile: (String) -> Unit = remember(navigator) {
+            { profileName -> navigator.push(ScreenRedProfile(profileName)) }
+        }
+
         Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
             LazyRow123(
                 host = vm.likedHost,
                 modifier = Modifier.fillMaxSize(),
-                onClickOpenProfile = {
-                    navigator.push(ScreenRedProfile(it))
-                },
+                onClickOpenProfile = onClickOpenProfile,
                 contentPadding = PaddingValues(top = getTopInsetDp()),
                 isRunLike = true
             )

@@ -73,6 +73,10 @@ class ScreenXDashBoards : Screen {
         // Прогресс загрузки для зелёного индикатора снизу (как в R).
         val downloadPercent by vm.saved.downloads.percent.collectAsStateWithLifecycle()
 
+        val onSavedTabChange: (Int) -> Unit = remember(vm) { { vm.savedTab = it } }
+        val onMainTabChange: (Int) -> Unit = remember(vm) { { vm.mainTab = it } }
+        val onDashboardPageChange: suspend (Int) -> Unit = remember(vm) { { page -> vm.pagerState.scrollToPage(page.coerceAtLeast(0)) } }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -84,13 +88,13 @@ class ScreenXDashBoards : Screen {
                         SAVABLE -> TabRow(
                             titlesIcon = savedTabs,
                             value = vm.savedTab,
-                            onChangeState = { vm.savedTab = it },
+                            onChangeState = onSavedTabChange,
                             containerColor = Theme.tabLevel1,
                         )
                         else -> DashboardControlsRow(
                             isCurrentPage = vm.pagerState.currentPage,
                             isMax = vm.pagerState.pageCount,
-                            onChange = { vm.pagerState.scrollToPage(it.coerceAtLeast(0)) }
+                            onChange = onDashboardPageChange
                         )
                     }
 
@@ -98,7 +102,7 @@ class ScreenXDashBoards : Screen {
                     TabRow(
                         titlesIcon = mainTabs,
                         value = vm.mainTab,
-                        onChangeState = { vm.mainTab = it },
+                        onChangeState = onMainTabChange,
                         containerColor = Theme.tabLevel0,
                     )
 

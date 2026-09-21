@@ -205,13 +205,17 @@ object R_Screen_CollectionTab : Screen {
             )
         }
 
+        val onCollectionClick: (String) -> Unit = remember(savedRed) { { savedRed.collections.selectedCollection.value = it } }
+        val onCollectionLongClick: (String) -> Unit = remember { { itemPendingAction = it } }
+        val onCreateNewCollectionClick: () -> Unit = remember(savedRed) { { savedRed.collections.visibleDialogCreateNew = true } }
+
         R_SavedCollectionTabContent(
             selectedCollection = selectedCollection,
             collectionList = savedRed.collections.collectionList,
             gridState = vm.gridState,
-            onCollectionClick = { savedRed.collections.selectedCollection.value = it },
-            onCollectionLongClick = { itemPendingAction = it },
-            onCreateNewCollectionClick = { savedRed.collections.visibleDialogCreateNew = true },
+            onCollectionClick = onCollectionClick,
+            onCollectionLongClick = onCollectionLongClick,
+            onCreateNewCollectionClick = onCreateNewCollectionClick,
             navigationContent = {
                 if (selectedCollection != null) {
                     Navigator(ScreenCollectionName(selectedCollection))

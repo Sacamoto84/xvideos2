@@ -162,6 +162,34 @@ private fun Screen.ScreenAlbumListContent(
             pagesToLoad.forEach { page -> vm.loadAlbumList(page) }
         }
 
+        val onClickVisibleFilter: () -> Unit = remember(haptic) {
+            {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                showFilterDialog = true
+            }
+        }
+        val onPageChange: (Int) -> Unit = remember(vm, scope, haptic) {
+            { page ->
+                scope.launch { vm.statePager.scrollToPage(page) }
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                vm.loadAlbumList(page)
+            }
+        }
+        val onAlbumClick: (Long) -> Unit = remember(navigator) {
+            { albumId -> navigator.push(ScreenLAlbum(albumId)) }
+        }
+        val onFilterClose: () -> Unit = remember { { showFilterDialog = false } }
+        val onFilterApply: (LAlbumListFilter) -> Unit = remember(vm) {
+            { newFilter ->
+                vm.screenModelScope.launch {
+                    vm.stateGrid.clear()
+                    vm.statePager.scrollToPage(0)
+                    vm.filterUpdate(newFilter)
+                    vm.loadInitialData()
+                }
+            }
+        }
+
         Box(Modifier.fillMaxSize()) {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -179,18 +207,10 @@ private fun Screen.ScreenAlbumListContent(
                 },
                 bottomBar = {
                     AlbumListBottomBar(
-                        onClickVisibleFilter = {
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                            // ✅ Открываем диалог
-                            showFilterDialog = true
-                        },
+                        onClickVisibleFilter = onClickVisibleFilter,
                         currentPage = vm.statePager.currentPage,
                         totalPages = info?.totalPages ?: 1,
-                        onChange = {
-                            scope.launch { vm.statePager.scrollToPage(it) }
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                            vm.loadAlbumList(it)
-                        }
+                        onChange = onPageChange
                     )
                 },
                 containerColor = Theme.background
@@ -215,7 +235,7 @@ private fun Screen.ScreenAlbumListContent(
                         title = title,
                         topInset = topInset,
                         haptic = haptic,
-                        onAlbumClick = { albumId -> navigator.push(ScreenLAlbum(albumId)) }
+                        onAlbumClick = onAlbumClick
                     )
 
                     val status = vm.bigList[page]?.status
@@ -232,15 +252,8 @@ private fun Screen.ScreenAlbumListContent(
                 filter = currentFilter,
                 filterGCount = filterGCount,
                 filterTagsCount = filterTagsCount,
-                onClose = { showFilterDialog = false },
-                onApply = { newFilter ->
-                    vm.screenModelScope.launch {
-                        vm.stateGrid.clear()
-                        vm.statePager.scrollToPage(0)
-                        vm.filterUpdate(newFilter)
-                        vm.loadInitialData()
-                    }
-                }
+                onClose = onFilterClose,
+                onApply = onFilterApply
             )
         }
     }

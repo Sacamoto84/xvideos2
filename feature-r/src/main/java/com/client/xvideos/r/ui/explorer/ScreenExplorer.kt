@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
@@ -67,6 +68,17 @@ class ScreenRedExplorer : Screen {
             Settings.r_explorerGifsTab_column_current_count.field.collectAsStateWithLifecycle().value
         )
 
+        val onTabChange: (Int) -> Unit = remember(vm) {
+            { tab ->
+                if (tab == vm.screenType) {
+                    when (tab) {
+                        0 -> { ColumnSelect_AddRColumn(Settings.r_explorerGifsTab_column_current_count) }
+                    }
+                }
+                vm.screenType = tab
+            }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -75,14 +87,7 @@ class ScreenRedExplorer : Screen {
                 containerColor = Theme.tabLevel0,
                 titlesIcon = EXPLORER_TAB_ICONS,
                 value = vm.screenType,
-                onChangeState = {
-                    if (it == vm.screenType) {
-                        when (it) {
-                            0 -> { ColumnSelect_AddRColumn(Settings.r_explorerGifsTab_column_current_count) }
-                        }
-                    }
-                    vm.screenType = it
-                },
+                onChangeState = onTabChange,
                 overlay0 = { TabBarPoints(overlay0, vm.screenType == 0) },
             )
 

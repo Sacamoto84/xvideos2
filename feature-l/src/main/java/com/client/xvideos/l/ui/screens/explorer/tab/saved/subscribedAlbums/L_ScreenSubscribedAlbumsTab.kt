@@ -138,13 +138,17 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         }
         val onRetry = remember(vm) { { vm.loadInitial() } }
         val onRefresh = remember(vm) { { vm.refresh() } }
+        val handleRefresh = remember(haptic, vm) {
+            {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                vm.refresh()
+            }
+        }
+        val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
         PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = {
-                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                vm.refresh()
-            },
+            onRefresh = handleRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .background(Theme.background),
@@ -186,7 +190,7 @@ object L_ScreenSubscribedAlbumsTab : Screen {
                             .align(Alignment.CenterEnd)
                             .width(2.dp)
                     ) {
-                        VerticalScrollbar { scrollPercent.value }
+                        VerticalScrollbar(scrollPercentProvider)
                     }
                 }
 
@@ -322,17 +326,12 @@ private fun SubscribedAlbumsGrid(
         }
 
         itemsIndexed(albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
-            val albumId = remember(item.id) { item.id.toLongOrNull() }
-            AlbumListItem(
-                title = item.title,
-                coverUrl = item.cover?.url.orEmpty(),
-                numberOfAnimatedPictures = item.number_of_animated_pictures,
-                numberOfPictures = item.number_of_pictures,
+            SubscribedAlbumGridItem(
+                item = item,
+                onAlbumClick = onAlbumClick,
+                onAlbumLongClick = onAlbumLongClick,
                 modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
-                onLongClick = { onAlbumLongClick(item) }
-            ) {
-                onAlbumClick(albumId)
-            }
+            )
         }
 
         if (isLoading && albums.isNotEmpty()) {
@@ -348,4 +347,25 @@ private fun SubscribedAlbumsGrid(
             }
         }
     }
+}
+
+@Composable
+private fun SubscribedAlbumGridItem(
+    item: AlbumDetails,
+    onAlbumClick: (Long?) -> Unit,
+    onAlbumLongClick: (AlbumDetails) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val albumId = remember(item.id) { item.id.toLongOrNull() }
+    val onClick = remember(albumId, onAlbumClick) { { onAlbumClick(albumId) } }
+    val onLongClick = remember(item, onAlbumLongClick) { { onAlbumLongClick(item) } }
+    AlbumListItem(
+        title = item.title,
+        coverUrl = item.cover?.url.orEmpty(),
+        numberOfAnimatedPictures = item.number_of_animated_pictures,
+        numberOfPictures = item.number_of_pictures,
+        modifier = modifier,
+        onLongClick = onLongClick,
+        onClick = onClick,
+    )
 }

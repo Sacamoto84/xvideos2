@@ -93,13 +93,16 @@ object L_ScreenServerLikesTab : Screen {
 
         val onRetry = remember(vm) { { vm.loadInitial() } }
         val onRefresh = remember(vm) { { vm.refresh() } }
+        val handleRefresh = remember(haptic, onRefresh) {
+            {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                onRefresh()
+            }
+        }
 
         PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = {
-                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                onRefresh()
-            },
+            onRefresh = handleRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .background(Theme.background),
