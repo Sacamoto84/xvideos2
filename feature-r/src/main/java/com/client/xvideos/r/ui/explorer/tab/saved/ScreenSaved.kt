@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -81,6 +82,7 @@ object R_ScreenSavedTab : Screen {
         )
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 Column {
                     HorizontalDivider()

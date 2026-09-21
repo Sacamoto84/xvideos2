@@ -21,6 +21,6 @@ data class ItemsX(
     val previewImage : String = "",   // * Путь до картинки превью
     val previewVideo : String = "",   // * Путь до видео превью
     val href: String = "",            // * Путь до страницы видео (Для открытия в экране плеера) Только оно и нужно для этого
-    val nameProfile: String = "",     // - Отображаемое название профиля (TODO)
+    val nameProfile: String = "",     // - Отображаемое название профиля
     val linkProfile: String = "",     // * Путь до профиля путь к каналу (/old4k)
 ) : Serializable

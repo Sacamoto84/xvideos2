@@ -9,6 +9,7 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -66,7 +67,9 @@ class ScreenRedExplorer : Screen {
             Settings.r_explorerGifsTab_column_current_count.field.collectAsStateWithLifecycle().value
         )
 
-        Scaffold(bottomBar = {
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            bottomBar = {
 
             TabRow(
                 containerColor = Theme.tabLevel0,

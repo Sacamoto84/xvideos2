@@ -90,17 +90,13 @@ fun RedUrlVideoImageAndLongClickTikTok(
         }
     }
 
-    val imageUrl by remember {
-        mutableStateOf(
-            run {
-                val imagePath = "${AppPath.r_cache_download}/${item.userName}/${item.id}.jpg"
-                if (File(imagePath).exists()) {
-                    imagePath
-                } else {
-                    item.urls.poster ?: item.urls.thumbnail
-                }
-            }
-        )
+    val imageUrl = remember(item.id, item.userName) {
+        val imagePath = "${AppPath.r_cache_download}/${item.userName}/${item.id}.jpg"
+        if (File(imagePath).exists()) {
+            imagePath
+        } else {
+            item.urls.poster ?: item.urls.thumbnail
+        }
     }
 
     Box(

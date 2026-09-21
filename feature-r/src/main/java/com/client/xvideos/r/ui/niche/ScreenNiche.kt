@@ -79,7 +79,7 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
 
         val followedList = savedRed.niches.list
 
-        val isFollowed by remember(vm.niche.id) {
+        val isFollowed by remember(vm.niche.id, followedList) {
             derivedStateOf {
                 followedList.any { it.id == vm.niche.id }
             }

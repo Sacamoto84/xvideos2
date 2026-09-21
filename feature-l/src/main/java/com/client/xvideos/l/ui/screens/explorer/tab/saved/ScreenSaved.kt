@@ -4,6 +4,7 @@ import com.client.xvideos.common.theme.Theme
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -72,6 +73,7 @@ object L_SavedTab : Screen {
         val columnCollection = Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 Column {
                     HorizontalDivider()

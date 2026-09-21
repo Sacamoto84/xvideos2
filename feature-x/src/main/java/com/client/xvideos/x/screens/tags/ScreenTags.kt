@@ -3,6 +3,7 @@ package com.client.xvideos.x.screens.tags
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -60,6 +61,7 @@ class ScreenTags(val tag: String) : Screen {
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             containerColor = Theme.L.grey6,
             bottomBar = {
                 // Без кнопки страны, в отличие от ленты раздела: адрес

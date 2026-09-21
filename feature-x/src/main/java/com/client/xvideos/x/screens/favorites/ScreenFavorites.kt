@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -78,18 +79,22 @@ class ScreenFavorites : Screen {
 
         FavoritesContent(
             favorites = vm.favorites,
-            localUrlOf = { item ->
-                if (item.id in downloadedIds) vm.saved.downloads.localUrl(item.id) else null
+            localUrlOf = remember(downloadedIds, vm.saved) {
+                { item ->
+                    if (item.id in downloadedIds) vm.saved.downloads.localUrl(item.id) else null
+                }
             },
-            posterUrlOf = { item ->
-                if (item.id in downloadedIds) (vm.saved.downloads.localPosterPath(item.id) ?: item.previewImage)
-                else item.previewImage
+            posterUrlOf = remember(downloadedIds, vm.saved) {
+                { item ->
+                    if (item.id in downloadedIds) (vm.saved.downloads.localPosterPath(item.id) ?: item.previewImage)
+                    else item.previewImage
+                }
             },
-            onDelete = { vm.removeFavorite(it) },
-            onDownload = { vm.download(it) },
-            onSaveToGallery = { vm.saveToGallery(it) },
-            onPlayLocal = { url -> navigator.push(ScreenX_LocalVideoPlayer(url)) },
-            onOpenVideo = { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) },
+            onDelete = remember(vm) { { vm.removeFavorite(it) } },
+            onDownload = remember(vm) { { vm.download(it) } },
+            onSaveToGallery = remember(vm) { { vm.saveToGallery(it) } },
+            onPlayLocal = remember(navigator) { { url -> navigator.push(ScreenX_LocalVideoPlayer(url)) } },
+            onOpenVideo = remember(navigator) { { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) } },
         )
     }
 }
@@ -135,7 +140,11 @@ private fun FavoritesContent(
 
     val topCutout = getTopInsetDp()
 
-    Scaffold(modifier = Modifier.fillMaxSize(), containerColor = Theme.L.grey6) { padding ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        containerColor = Theme.L.grey6
+    ) { padding ->
 
         if (favorites.isEmpty()) {
             Box(

@@ -60,6 +60,8 @@ fun L_ScreenSavedLikesTab_AddColumn(){
  *
  * Space is not necessary but is used for readability.
  */
+private val LIKES_FILTER_OPTIONS = listOf("All", "Image", "Gif")
+
 object L_ScreenSavedLikesTab : Screen {
 
     private fun readResolve(): Any = L_ScreenSavedLikesTab
@@ -83,7 +85,7 @@ object L_ScreenSavedLikesTab : Screen {
 
         var selectedIndex by remember { mutableIntStateOf(0) }
 
-        val options = listOf("All", "Image", "Gif")
+        val options = LIKES_FILTER_OPTIONS
 
         LaunchedEffect(vm.original.size, selectedIndex) {
             vm.filterSelect(selectedIndex)

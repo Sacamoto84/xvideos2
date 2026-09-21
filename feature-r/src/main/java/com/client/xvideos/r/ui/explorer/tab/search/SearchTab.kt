@@ -117,6 +117,7 @@ fun SearchTabContent(
 
     Scaffold(
         modifier = Modifier,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             Column(
                 modifier = Modifier

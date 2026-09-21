@@ -84,7 +84,7 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
         // Используем SnapshotStateList напрямую для реактивности UI
         val selectedListCreator = vm.savedRed.subscriptions.selectedListCreator
 
-        val hasSelectedCreators by remember {
+        val hasSelectedCreators by remember(selectedListCreator) {
             derivedStateOf { selectedListCreator.any { it.select } }
         }
 

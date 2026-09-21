@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -230,15 +231,18 @@ fun R_SavedCollectionTabContent(
     onCreateNewCollectionClick: () -> Unit,
     navigationContent: @Composable () -> Unit
 ) {
-    com.client.xvideos.common.collectionDB.ui.CollectionsGrid(
-        selectedCollection = selectedCollection,
-        collections = collectionList.map {
+    val gridItems = remember(collectionList) {
+        collectionList.map {
             com.client.xvideos.common.collectionDB.model.CollectionGridItem(
                 name = it.collection,
                 previewUrl = it.items.lastOrNull()?.urls?.thumbnail,
                 itemsCount = null
             )
-        },
+        }
+    }
+    com.client.xvideos.common.collectionDB.ui.CollectionsGrid(
+        selectedCollection = selectedCollection,
+        collections = gridItems,
         gridState = gridState,
         style = com.client.xvideos.common.collectionDB.model.CollectionsGridStyle(
             backgroundColor = Color.Transparent,

@@ -45,7 +45,7 @@ fun NichePreview2(niches: () -> Niche, savedRed: () -> SavedRed, onClick: () -> 
 
     //val isFollowed = savedRed().niches.list.any { it.id == niche.id }
 
-    val isFollowed by remember(niches()) {
+    val isFollowed by remember(niche.id) {
         derivedStateOf {
             savedRed().niches.list.any { it.id == niche.id }
         }

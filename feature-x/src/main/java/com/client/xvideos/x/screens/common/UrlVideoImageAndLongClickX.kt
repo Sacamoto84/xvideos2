@@ -32,7 +32,7 @@ fun UrlVideoImageAndLongClickX(
 
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
-    var isVideo by remember { mutableStateOf(false) }
+    var isVideo by remember(item.id) { mutableStateOf(false) }
     // Разбор отдаёт null, если превью собрать не удалось. Откат — то, что уже
     // лежит в модели; "null" оттуда больше не приходит, но записи, сделанные
     // прошлыми версиями, ещё могут его содержать — отсюда takeIf.

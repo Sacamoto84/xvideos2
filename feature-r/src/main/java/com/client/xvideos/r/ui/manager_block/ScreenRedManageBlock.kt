@@ -61,6 +61,7 @@ class ScreenRedManageBlock : Screen {
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 Row(
                     modifier = Modifier

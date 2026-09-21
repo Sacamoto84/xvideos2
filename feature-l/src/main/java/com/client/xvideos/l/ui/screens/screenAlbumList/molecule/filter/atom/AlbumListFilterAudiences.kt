@@ -41,16 +41,20 @@ fun AlbumListFilterAudiences(
     val palette = StyleGenresTags.Palette
     val mediaCategories = mediaCategoriesFlow.collectAsStateWithLifecycle().value
     val audiences = mediaCategories?.audiences?.takeIf { it.isNotEmpty() } ?: fallbackAudiences()
-    val allIds = audiences.map { it.id }.toSet()
-    val selectedIds = parseAudienceIds(filter.audienceIds).filter { it in allIds }.toSet().ifEmpty { allIds }
-    val isAllSelected = selectedIds.containsAll(allIds)
+    val allIds = remember(audiences) { audiences.map { it.id }.toSet() }
+    val selectedIds = remember(filter.audienceIds, allIds) {
+        parseAudienceIds(filter.audienceIds).filter { it in allIds }.toSet().ifEmpty { allIds }
+    }
+    val isAllSelected = remember(selectedIds, allIds) { selectedIds.containsAll(allIds) }
 
     var showDialog by remember { mutableStateOf(false) }
 
-    val summaryText = if (isAllSelected) {
-        "All audiences"
-    } else {
-        audiences.filter { it.id in selectedIds }.joinToString { it.title }
+    val summaryText = remember(isAllSelected, audiences, selectedIds) {
+        if (isAllSelected) {
+            "All audiences"
+        } else {
+            audiences.filter { it.id in selectedIds }.joinToString { it.title }
+        }
     }
 
     Row(

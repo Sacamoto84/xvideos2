@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -178,14 +179,17 @@ fun L_SavedCollectionTabContent(
     onCollectionLongClick: (String) -> Unit,
     onCreateNewCollectionClick: () -> Unit
 ) {
-    CollectionsGrid(
-        collections = collectionList.map {
+    val gridItems = remember(collectionList) {
+        collectionList.map {
             CollectionGridItem(
                 name = it.collection,
                 previewUrl = it.previewUrl,
                 itemsCount = it.itemsCount
             )
-        },
+        }
+    }
+    CollectionsGrid(
+        collections = gridItems,
         gridState = gridState,
         style = CollectionsGridStyle(
             backgroundColor = Theme.background,

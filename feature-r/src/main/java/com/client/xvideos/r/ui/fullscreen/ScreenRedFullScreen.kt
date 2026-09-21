@@ -18,6 +18,7 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -348,6 +349,7 @@ private fun RedFullScreenScaffold(
     content: @Composable (bottomPadding: Dp) -> Unit
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             Column(modifier = Modifier.background(Theme.R.colorCommonBackground)) {
                 Box(

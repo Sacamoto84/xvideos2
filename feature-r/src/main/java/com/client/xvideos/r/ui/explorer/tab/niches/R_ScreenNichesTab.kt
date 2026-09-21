@@ -5,11 +5,11 @@ import com.client.xvideos.common.theme.Theme
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -217,6 +217,7 @@ fun NichesTabContent(
         )
     } else {
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 NichesBottomBar(
                     isSearchFocused = isSearchFocused,
@@ -233,7 +234,7 @@ fun NichesTabContent(
                 modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()).fillMaxSize()
             )
             {
-                LazyColumn( state = listState, modifier = Modifier.fillMaxSize(), contentPadding = WindowInsets.displayCutout.asPaddingValues() )
+                LazyColumn( state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(top = getTopInsetDp()) )
                 {
 
                     item{

@@ -24,6 +24,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -164,6 +165,7 @@ private fun Screen.ScreenAlbumListContent(
         Box(Modifier.fillMaxSize()) {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 topBar = {
                     if (isRequest) {
                         Box(

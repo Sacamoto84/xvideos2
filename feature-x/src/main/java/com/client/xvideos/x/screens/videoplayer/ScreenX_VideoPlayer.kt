@@ -15,8 +15,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -183,9 +187,13 @@ private fun VideoPlayerLoadingView(onBack: () -> Unit) {
         IconButton(
             onClick = onBack,
             modifier = Modifier
-                .displayCutoutPadding()
-                .padding(8.dp)
-                .align(Alignment.TopStart),
+                .align(Alignment.TopStart)
+                .windowInsetsPadding(
+                    WindowInsets.displayCutout.only(
+                        WindowInsetsSides.Top + WindowInsetsSides.Start
+                    )
+                )
+                .padding(8.dp),
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -297,7 +305,11 @@ private fun VideoPlayerContentView(
                             }
                         },
                         modifier = Modifier
-                            .displayCutoutPadding()
+                            .windowInsetsPadding(
+                                WindowInsets.displayCutout.only(
+                                    WindowInsetsSides.Top + WindowInsetsSides.Start
+                                )
+                            )
                             .padding(8.dp),
                     ) {
                         Icon(
@@ -313,7 +325,11 @@ private fun VideoPlayerContentView(
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .displayCutoutPadding()
+                            .windowInsetsPadding(
+                                WindowInsets.displayCutout.only(
+                                    WindowInsetsSides.Top + WindowInsetsSides.Start
+                                )
+                            )
                             .padding(start = 56.dp, end = 12.dp, top = 8.dp)
                     ) {
                         ComposeTags(

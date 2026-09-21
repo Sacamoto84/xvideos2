@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -134,7 +135,9 @@ fun L_CollectionNameContent(
     // Изменение количества отображаемых элементов
     LaunchedEffect(columnSelect) { host.columns = columnSelect }
 
-    Scaffold(topBar = {
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
         LCollectionDetailTopBar(
             collectionName = selectedCollection ?: collectionName,
             searchQuery = searchQuery,

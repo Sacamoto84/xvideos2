@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -181,6 +182,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         }
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 if (album?.albumPicsDetails?.percentLoad != 1.0f) {
                     LinearProgressIndicator(
@@ -224,11 +226,10 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                     expandMenu = ExpandMenuType.ALBUM,
                     showInitialLoading = showInitialItemsLoading,
                     itemBefore = {
-                        Column(modifier = Modifier
-
-                            //.displayCutoutPadding()
-                            .padding(horizontal = 4.dp))
-                        {
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                        ) {
 
                             Box(modifier = Modifier.fillMaxWidth().height(topInset)){ }
 
@@ -398,6 +399,7 @@ private fun ScreenLAlbumPreviewBody(
     percentLoad: Float,
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (percentLoad != 1.0f) {
                 LinearProgressIndicator(

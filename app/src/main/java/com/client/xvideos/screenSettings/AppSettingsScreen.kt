@@ -19,6 +19,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -222,6 +223,7 @@ private fun AppSettingsScreenContent(
     val topCutout = getTopInsetDp()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
         AppSettingsScreenBody(

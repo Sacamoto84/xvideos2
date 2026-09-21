@@ -156,9 +156,11 @@ internal fun BackupConsole(
     lines: List<String>,
     onClear: () -> Unit
 ) {
-    val visibleLines = lines
-        .ifEmpty { listOf("Пока пусто") }
-        .flatMap { entry -> entry.lineSequence().toList() }
+    val visibleLines = remember(lines) {
+        lines
+            .ifEmpty { listOf("Пока пусто") }
+            .flatMap { entry -> entry.lineSequence().toList() }
+    }
 
     // LazyColumn, а не Column в verticalScroll: буфер поднят до
     // BACKUP_CONSOLE_MAX_LINES, и рисовать столько строк разом незачем —
@@ -195,7 +197,10 @@ internal fun BackupConsole(
             .background(SettingsTopBarColor, RoundedCornerShape(8.dp))
             .padding(10.dp)
     ) {
-        items(visibleLines.size) { index ->
+        items(
+            count = visibleLines.size,
+            key = { index -> index }
+        ) { index ->
             BackupConsoleLine(visibleLines[index])
         }
     }
@@ -283,28 +288,31 @@ internal fun BackupFolderList(
 
     var expandedSections by rememberSaveable { mutableStateOf(emptyList<String>()) }
 
-    items
-        .filter { it.parentPath == null }
-        .forEachIndexed { index, section ->
-            val children = items.filter { it.parentPath == section.path }
-            if (index > 0) SettingsDivider()
-            BackupSectionGroup(
-                section = section,
-                children = children,
-                items = items,
-                selectedPaths = selectedPaths,
-                expanded = section.path in expandedSections,
-                enabled = enabled,
-                onToggleExpanded = {
-                    expandedSections = if (section.path in expandedSections) {
-                        expandedSections - section.path
-                    } else {
-                        expandedSections + section.path
-                    }
-                },
-                onToggle = onToggle
-            )
-        }
+    val rootItems = remember(items) { items.filter { it.parentPath == null } }
+    val childrenByParent = remember(items) {
+        items.filter { it.parentPath != null }.groupBy { it.parentPath }
+    }
+
+    rootItems.forEachIndexed { index, section ->
+        val children = childrenByParent[section.path].orEmpty()
+        if (index > 0) SettingsDivider()
+        BackupSectionGroup(
+            section = section,
+            children = children,
+            items = items,
+            selectedPaths = selectedPaths,
+            expanded = section.path in expandedSections,
+            enabled = enabled,
+            onToggleExpanded = {
+                expandedSections = if (section.path in expandedSections) {
+                    expandedSections - section.path
+                } else {
+                    expandedSections + section.path
+                }
+            },
+            onToggle = onToggle
+        )
+    }
 }
 
 @Composable

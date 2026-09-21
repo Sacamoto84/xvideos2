@@ -88,7 +88,7 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(state, itemsToIgnore = 1)
 
         // Пагинация: автоматическая подгрузка следующей страницы при приближении к концу списка
-        val shouldLoadMore by remember {
+        val shouldLoadMore by remember(state) {
             derivedStateOf {
                 val totalItems = state.layoutInfo.totalItemsCount
                 val lastVisibleItem = state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0

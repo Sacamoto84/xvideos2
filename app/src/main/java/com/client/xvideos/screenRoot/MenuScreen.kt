@@ -63,6 +63,7 @@ object MenuScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 Box(
                     modifier = Modifier

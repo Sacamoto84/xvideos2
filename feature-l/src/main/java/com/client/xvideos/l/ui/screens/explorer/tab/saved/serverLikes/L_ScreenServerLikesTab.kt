@@ -76,7 +76,7 @@ object L_ScreenServerLikesTab : Screen {
         val pullToRefreshState = rememberPullToRefreshState()
 
         // Пагинация: автоматическая подгрузка следующей страницы при прокрутке к концу
-        val shouldLoadMore by remember {
+        val shouldLoadMore by remember(vm.host.state) {
             derivedStateOf {
                 val totalItems = vm.host.state.layoutInfo.totalItemsCount
                 val lastVisibleItem = vm.host.state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
