@@ -84,14 +84,18 @@ object Theme {
         val spacing = 12.dp
         val shape = RoundedCornerShape(16.dp)
 
-        val backgroundColor = Color(0x73262626) // 45% затемнение в тон #262626
-        val tintColor = Color.White.copy(alpha = 0.10f)
+        // Глубокое темное стекло (Dark Smoked Glass)
+        val backgroundColor = Color(0xD9181818) // ~85% глубокий темный тон
+        val tintColor = Color(0x33000000)      // 20% темный оттенок (smoked glass)
+        const val whitePoint = 0.02f            // Минимальная точка белого (убирает белесый налет)
+        const val specularIntensity = 0.30f     // Тонкие деликатные блики без засветов
+        const val ambientResponse = 0.15f       // Приглушенный рассеянный свет
 
-        // Стеклянная фаска (грань преломления света)
+        // Стеклянная фаска (тонкий блик на верхней грани)
         val glassBorder = Brush.verticalGradient(
             colors = listOf(
-                Color(0x80FFFFFF), // Верхняя грань ярко отражает свет (50% белый)
-                Color(0x20FFFFFF)  // Нижняя грань мягко растворяется (12% белый)
+                Color(0x40FFFFFF), // 25% мягкий блик сверху
+                Color(0x0DFFFFFF)  // 5% снизу
             )
         )
         val containerColor = Color.Transparent

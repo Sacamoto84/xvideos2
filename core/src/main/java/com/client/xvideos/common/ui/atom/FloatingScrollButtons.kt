@@ -114,6 +114,9 @@ private fun ScrollFabSlot(
                             backgroundColor(Theme.ScrollFab.backgroundColor)
                             tint(Theme.ScrollFab.tintColor)
                             shape(Theme.ScrollFab.shape)
+                            whitePoint(Theme.ScrollFab.whitePoint)
+                            specularIntensity(Theme.ScrollFab.specularIntensity)
+                            ambientResponse(Theme.ScrollFab.ambientResponse)
                         }
                     )
                     .clip(Theme.ScrollFab.shape)
