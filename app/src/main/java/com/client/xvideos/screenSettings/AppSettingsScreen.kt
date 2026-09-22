@@ -1,6 +1,7 @@
 package com.client.xvideos.screenSettings
 
 import com.client.xvideos.R
+import com.client.xvideos.screenSettings.section.AppearanceSettingsSection
 import com.client.xvideos.screenSettings.section.CacheSettingsSection
 import com.client.xvideos.screenSettings.section.LSettingsSection
 import com.client.xvideos.common.util.getTopInsetDp
@@ -378,6 +379,7 @@ private fun SettingsDetailPage(params: SettingsDetailParams) {
             nichesCacheLastModifiedHour = nichesCacheLastModifiedHour
         )
         SettingsPage.X -> XSettingsSection()
+        SettingsPage.Appearance -> AppearanceSettingsSection()
         SettingsPage.Storage -> StorageStatisticsSection(params.storageStats)
         SettingsPage.Backup -> BackupSettingsSection(
             context = params.context,
@@ -398,6 +400,11 @@ internal enum class SettingsPage(
         title = "Настройки",
         icon = R.drawable.memory_24,
         subtitle = ""
+    ),
+    Appearance(
+        title = "Отображение",
+        icon = R.drawable.ic_blur_24,
+        subtitle = "Стиль кнопок скролла и эффекты"
     ),
     Privacy(
         title = "Приватность",
@@ -451,7 +458,7 @@ internal enum class SettingsPage(
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Privacy, Network, WebServer, Cache, Storage, Backup, P2P)
+        val primaryPages: List<SettingsPage> = listOf(Appearance, Privacy, Network, WebServer, Cache, Storage, Backup, P2P)
         val contentPages: List<SettingsPage> = listOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages

@@ -85,8 +85,13 @@ object Theme {
         val shape = RoundedCornerShape(16.dp)
 
         // Глубокое темное стекло (Dark Smoked Glass)
-        val backgroundColor = Color(0xD9181818) // ~85% глубокий темный тон
+        val backgroundColor = Color(0xD9282828) // ~85% глубокий темный тон
         val tintColor = Color(0x33000000)      // 20% темный оттенок (smoked glass)
+        // Параметры блюра (Haze Blur)
+        val blurRadius = 24.dp
+        const val noiseFactor = 0.10f
+
+        // Оптические параметры стекла (Haze Glass)
         const val whitePoint = 0.02f            // Минимальная точка белого (убирает белесый налет)
         const val specularIntensity = 0.30f     // Тонкие деликатные блики без засветов
         const val ambientResponse = 0.15f       // Приглушенный рассеянный свет

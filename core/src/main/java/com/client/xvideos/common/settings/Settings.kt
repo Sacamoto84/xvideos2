@@ -118,6 +118,13 @@ object Settings {
     val blur_recent_tasks by lazy { SettingElementBoolean(pref, "blur_recent_tasks", true) }
 
     /**
+     * Стиль отображения плавающих кнопок быстрой прокрутки (FLAT, BLUR, GLASS).
+     */
+    val scroll_buttons_effect by lazy {
+        SettingElementString(pref, "scroll_buttons_effect", ScrollButtonEffect.BLUR.name)
+    }
+
+    /**
      * Включение/выключение DNS-over-HTTPS (DoH).
      */
     val doh_enabled by lazy { SettingElementBoolean(pref, "doh_enabled", true) }
