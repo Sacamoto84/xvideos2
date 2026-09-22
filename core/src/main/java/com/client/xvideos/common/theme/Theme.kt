@@ -1,5 +1,6 @@
 package com.client.xvideos.common.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import dev.chrisbanes.haze.HazeStyle
@@ -80,6 +81,10 @@ object Theme {
      * Вариант: Настоящее матовое стекло (Haze Blur + Glass Border).
      */
     object ScrollFab {
+        val size = 56.dp
+        val spacing = 12.dp
+        val shape = RoundedCornerShape(16.dp)
+
         // Стилистический Haze эффект (физический блюр + матовый шум)
         val hazeStyle = HazeStyle(
             backgroundColor = Color(0x73262626), // 45% затемнение в тон #262626

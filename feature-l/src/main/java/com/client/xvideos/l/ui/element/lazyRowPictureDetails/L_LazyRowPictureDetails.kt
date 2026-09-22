@@ -5,12 +5,9 @@ import com.client.xvideos.common.theme.Theme
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -27,15 +24,11 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -307,99 +300,33 @@ fun L_LazyRowPictureDetails(
         Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
 
         /** FloatingButtons "Вверх" и "Вниз" */
-        Column(
+        FloatingScrollButtons(
+            showScrollToTop = showScrollToTop,
+            showScrollToBottom = showScrollToBottom,
+            hazeState = hazeState,
+            contentColor = Theme.ScrollFab.contentColorL,
+            onScrollToTop = {
+                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+                scope.launch { host.state.scrollToItem(0) }
+            },
+            onScrollToBottom = {
+                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+                scope.launch {
+                    val lastIndex = host.filteredPic.lastIndex
+                    if (lastIndex >= 0) {
+                        val target = calculateGridScrollIndex(
+                            position = lastIndex,
+                            itemCount = host.filteredPic.size,
+                            showInitialLoading = showInitialLoading
+                        ) ?: (host.filteredPic.size + 1)
+                        host.state.scrollToItem(target)
+                    }
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            AnimatedVisibility(
-                visible = showScrollToTop,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                FloatingActionButton(
-                    onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
-                        scope.launch { host.state.scrollToItem(0) }
-                    },
-                    containerColor = Color.Transparent,
-                    contentColor = Theme.ScrollFab.contentColorL,
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 0.dp,
-                        focusedElevation = 0.dp,
-                        hoveredElevation = 0.dp
-                    ),
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .hazeEffect(
-                            state = hazeState,
-                            style = Theme.ScrollFab.hazeStyle
-                        )
-                        .border(
-                            width = Theme.ScrollFab.borderWidth,
-                            brush = Theme.ScrollFab.glassBorder,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = "Scroll to top"
-                    )
-                }
-            }
-
-            AnimatedVisibility(
-                visible = showScrollToBottom,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                FloatingActionButton(
-                    onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
-                        scope.launch {
-                            val lastIndex = host.filteredPic.lastIndex
-                            if (lastIndex >= 0) {
-                                val target = calculateGridScrollIndex(
-                                    position = lastIndex,
-                                    itemCount = host.filteredPic.size,
-                                    showInitialLoading = showInitialLoading
-                                ) ?: (host.filteredPic.size + 1)
-                                host.state.scrollToItem(target)
-                            }
-                        }
-                    },
-                    containerColor = Color.Transparent,
-                    contentColor = Theme.ScrollFab.contentColorL,
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 0.dp,
-                        focusedElevation = 0.dp,
-                        hoveredElevation = 0.dp
-                    ),
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .hazeEffect(
-                            state = hazeState,
-                            style = Theme.ScrollFab.hazeStyle
-                        )
-                        .border(
-                            width = Theme.ScrollFab.borderWidth,
-                            brush = Theme.ScrollFab.glassBorder,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Scroll to bottom"
-                    )
-                }
-            }
-        }
+                .padding(16.dp)
+        )
 
     }
 }

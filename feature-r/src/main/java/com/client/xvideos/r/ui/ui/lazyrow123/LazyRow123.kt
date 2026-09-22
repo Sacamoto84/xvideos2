@@ -1,16 +1,9 @@
 package com.client.xvideos.r.ui.ui.lazyrow123
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -20,21 +13,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
+import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -52,7 +40,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -173,11 +160,12 @@ fun LazyRow123(
         ) { VerticalScrollbar { scrollPercent.value } }
 
         //---- Floating Buttons "Вверх" и "Вниз" ----
-        LazyRow123ScrollButtons(
+        FloatingScrollButtons(
             visible = showScrollButtons,
             showScrollToTop = showScrollToTop,
             showScrollToBottom = showScrollToBottom,
             hazeState = hazeState,
+            contentColor = Theme.ScrollFab.contentColorR,
             onScrollToTop = {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 scope.launch { host.state.scrollToItem(0) }
@@ -197,95 +185,6 @@ fun LazyRow123(
         )
     }
 
-}
-
-@Composable
-private fun LazyRow123ScrollButtons(
-    visible: Boolean,
-    showScrollToTop: Boolean,
-    showScrollToBottom: Boolean,
-    hazeState: HazeState,
-    onScrollToTop: () -> Unit,
-    onScrollToBottom: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (!visible) return
-
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        AnimatedVisibility(
-            visible = showScrollToTop,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut()
-        ) {
-            FloatingActionButton(
-                onClick = onScrollToTop,
-                containerColor = Color.Transparent,
-                contentColor = Theme.ScrollFab.contentColorR,
-                shape = RoundedCornerShape(16.dp),
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp,
-                    focusedElevation = 0.dp,
-                    hoveredElevation = 0.dp
-                ),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .hazeEffect(
-                        state = hazeState,
-                        style = Theme.ScrollFab.hazeStyle
-                    )
-                    .border(
-                        width = Theme.ScrollFab.borderWidth,
-                        brush = Theme.ScrollFab.glassBorder,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowUp,
-                    contentDescription = "Scroll to top"
-                )
-            }
-        }
-
-        AnimatedVisibility(
-            visible = showScrollToBottom,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut()
-        ) {
-            FloatingActionButton(
-                onClick = onScrollToBottom,
-                containerColor = Color.Transparent,
-                contentColor = Theme.ScrollFab.contentColorR,
-                shape = RoundedCornerShape(16.dp),
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp,
-                    focusedElevation = 0.dp,
-                    hoveredElevation = 0.dp
-                ),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .hazeEffect(
-                        state = hazeState,
-                        style = Theme.ScrollFab.hazeStyle
-                    )
-                    .border(
-                        width = Theme.ScrollFab.borderWidth,
-                        brush = Theme.ScrollFab.glassBorder,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Scroll to bottom"
-                )
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
