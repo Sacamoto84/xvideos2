@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -128,8 +129,8 @@ private fun ScrollFabSlot(
                     hoveredElevation = 0.dp
                 ),
                 modifier = Modifier
-                    .scrollFabVisualEffect(effect = effect, hazeState = hazeState)
                     .clip(Theme.ScrollFab.shape)
+                    .scrollFabVisualEffect(effect = effect, hazeState = hazeState)
                     .border(
                         width = Theme.ScrollFab.borderWidth,
                         brush = Theme.ScrollFab.glassBorder,
@@ -154,14 +155,17 @@ private fun Modifier.scrollFabVisualEffect(
         color = Theme.ScrollFab.backgroundColor,
         shape = Theme.ScrollFab.shape
     )
-    ScrollButtonEffect.BLUR -> this.hazeBlur(
-        input = HazeInput.Sources(hazeState),
-        style = HazeBlurStyle.then {
-            backgroundColor(Theme.ScrollFab.backgroundColor)
-            blurRadius(Theme.ScrollFab.blurRadius)
-            noiseFactor(Theme.ScrollFab.noiseFactor)
-        }
-    )
+    ScrollButtonEffect.BLUR -> this
+        .clip(Theme.ScrollFab.shape)
+        .hazeBlur(
+            input = HazeInput.Sources(hazeState),
+            style = HazeBlurStyle.then {
+                backgroundColor(Theme.ScrollFab.backgroundColor)
+                blurRadius(Theme.ScrollFab.blurRadius)
+                noiseFactor(Theme.ScrollFab.noiseFactor)
+                blurredEdgeTreatment(BlurredEdgeTreatment(Theme.ScrollFab.shape))
+            }
+        )
     ScrollButtonEffect.GLASS -> this.hazeGlass(
         input = HazeInput.Sources(hazeState),
         style = GlassStyle.regular.then {
