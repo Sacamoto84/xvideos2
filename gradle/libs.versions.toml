@@ -18,7 +18,7 @@ hiltAndroid = "2.60.1"
 hiltAndroidCompiler = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 imageLoader = "1.10.0"
-haze = "1.7.3"
+haze = "2.0.0"
 jsoup = "1.23.2"
 kotlin = "2.4.20"
 detekt = "1.23.8"
@@ -89,7 +89,8 @@ compose-zoom = { module = "com.github.SmartToolFactory:Compose-Zoom", version.re
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 image-loader = { module = "io.github.qdsfdhvh:image-loader", version.ref = "imageLoader" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
-haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
+haze-glass = { module = "dev.chrisbanes.haze:haze-glass", version.ref = "haze" }
+haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
 androidx-collection = { module = "androidx.collection:collection", version.ref = "androidxCollection" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }

@@ -3,7 +3,6 @@ package com.client.xvideos.common.theme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import dev.chrisbanes.haze.HazeStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -85,13 +84,8 @@ object Theme {
         val spacing = 12.dp
         val shape = RoundedCornerShape(16.dp)
 
-        // Стилистический Haze эффект (физический блюр + матовый шум)
-        val hazeStyle = HazeStyle(
-            backgroundColor = Color(0x73262626), // 45% затемнение в тон #262626
-            tints = emptyList(),
-            blurRadius = 24.dp,
-            noiseFactor = 0.12f
-        )
+        val backgroundColor = Color(0x73262626) // 45% затемнение в тон #262626
+        val tintColor = Color.White.copy(alpha = 0.10f)
 
         // Стеклянная фаска (грань преломления света)
         val glassBorder = Brush.verticalGradient(

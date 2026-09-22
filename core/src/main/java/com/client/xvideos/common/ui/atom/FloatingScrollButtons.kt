@@ -24,8 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.glass.GlassStyle
+import dev.chrisbanes.haze.glass.hazeGlass
 
 /**
  * Плавающие кнопки быстрой прокрутки ("Вверх" и "Вниз") с эффектом матового стекла (Haze).
@@ -74,6 +77,7 @@ fun FloatingScrollButtons(
     }
 }
 
+@OptIn(ExperimentalHazeApi::class)
 @Composable
 private fun ScrollFabSlot(
     visible: Boolean,
@@ -104,11 +108,15 @@ private fun ScrollFabSlot(
                     hoveredElevation = 0.dp
                 ),
                 modifier = Modifier
-                    .clip(Theme.ScrollFab.shape)
-                    .hazeEffect(
-                        state = hazeState,
-                        style = Theme.ScrollFab.hazeStyle
+                    .hazeGlass(
+                        input = HazeInput.Sources(hazeState),
+                        style = GlassStyle.regular.then {
+                            backgroundColor(Theme.ScrollFab.backgroundColor)
+                            tint(Theme.ScrollFab.tintColor)
+                            shape(Theme.ScrollFab.shape)
+                        }
                     )
+                    .clip(Theme.ScrollFab.shape)
                     .border(
                         width = Theme.ScrollFab.borderWidth,
                         brush = Theme.ScrollFab.glassBorder,
