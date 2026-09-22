@@ -90,7 +90,7 @@ object R_ScreenSavedTab : Screen {
         val selectedCollection by vm.savedRed.collections.selectedCollection.collectAsStateWithLifecycle()
         val isInsideCollection = pagerState.currentPage == 4 && selectedCollection != null
 
-        BackHandler(enabled = pagerState.currentPage != 0) {
+        BackHandler(enabled = pagerState.currentPage != 0 && !isInsideCollection) {
             scope.launch { pagerState.scrollToPage(0) }
         }
 

@@ -127,10 +127,6 @@ fun ScreenNicheContent(
     onFollowClick: () -> Unit
 ) {
     StatelessScreenNicheContent(
-        niche = niche,
-        currentSort = currentSort,
-        onSortChange = onSortChange,
-        columns = lazyHost.columns,
         content = { padding ->
             Box(
                 modifier = Modifier
@@ -164,10 +160,6 @@ fun ScreenNicheContent(
 
 @Composable
 private fun StatelessScreenNicheContent(
-    niche: NichesInfo,
-    currentSort: Order,
-    onSortChange: (Order) -> Unit,
-    columns: Int,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -264,10 +256,6 @@ private fun NicheHeaderContent(
 private fun ScreenNicheContentPreview() {
     XvideosTheme {
         StatelessScreenNicheContent(
-            niche = sampleNicheInfo,
-            currentSort = Order.LATEST,
-            onSortChange = {},
-            columns = 2,
             content = { padding ->
                 Column(
                     modifier = Modifier

@@ -1,6 +1,8 @@
 package com.client.xvideos.common.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import dev.chrisbanes.haze.HazeStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -71,6 +73,33 @@ object Theme {
         val tintColor = Color(0xFF1F1F1F)  // Почти черный
         val backgroundColor = Color(0xFFFFFAF5)  // Теплый белый с кремовым оттенком
         val style = Type.menuItem.copy(color = tintColor)
+    }
+
+    /**
+     * Стили для плавающих кнопок скролла (FAB в списках L и R).
+     * Вариант: Настоящее матовое стекло (Haze Blur + Glass Border).
+     */
+    object ScrollFab {
+        // Стилистический Haze эффект (физический блюр + матовый шум)
+        val hazeStyle = HazeStyle(
+            backgroundColor = Color(0x73262626), // 45% затемнение в тон #262626
+            tints = emptyList(),
+            blurRadius = 24.dp,
+            noiseFactor = 0.12f
+        )
+
+        // Стеклянная фаска (грань преломления света)
+        val glassBorder = Brush.verticalGradient(
+            colors = listOf(
+                Color(0x80FFFFFF), // Верхняя грань ярко отражает свет (50% белый)
+                Color(0x20FFFFFF)  // Нижняя грань мягко растворяется (12% белый)
+            )
+        )
+        val containerColor = Color.Transparent
+        val contentColorR = Color.White
+        val contentColorL = Color.White
+        val contentColor = Color.White
+        val borderWidth = 1.dp
     }
 
     /**

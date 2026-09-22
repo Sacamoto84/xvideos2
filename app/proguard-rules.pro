@@ -116,6 +116,8 @@
 
 # Ktor CIO дёргает JDK-API управления, которых на Android нет.
 -dontwarn java.lang.management.**
+# Ktor OpenAPI рефлексирует опциональный JWTAuthProvider
+-dontwarn io.ktor.server.auth.jwt.JWTAuthenticationProvider
 
 # MediaType.Companion — object, Ktor достаёт его конструктор рефлексией.
 -keepclassmembers class okhttp3.MediaType$Companion {

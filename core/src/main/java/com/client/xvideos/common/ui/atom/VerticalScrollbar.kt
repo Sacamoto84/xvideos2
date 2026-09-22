@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.abs
 
 /**
@@ -39,7 +40,7 @@ fun ProvidePagerScrollbarAlpha(
     LaunchedEffect(pagerState) {
         snapshotFlow {
             pagerState.isScrollInProgress || abs(pagerState.currentPageOffsetFraction) > 0.001f
-        }.collect { isMoving ->
+        }.collectLatest { isMoving ->
             if (isMoving) {
                 alphaAnim.snapTo(0f)
             } else {

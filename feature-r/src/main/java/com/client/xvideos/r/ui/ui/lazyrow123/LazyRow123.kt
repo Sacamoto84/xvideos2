@@ -31,7 +31,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -69,6 +73,7 @@ import com.client.xvideos.r.ui.explorer.LocalRNavigationState
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -90,6 +95,7 @@ fun LazyRow123(
     val listGifs = host.pager.collectAsLazyPagingItems()
 
     val scope = rememberCoroutineScope()
+    val hazeState = remember { HazeState() }
     val haptic = LocalHapticFeedback.current
     var isRefreshing by remember { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
@@ -150,7 +156,7 @@ fun LazyRow123(
         LazyRow123Content(
             host = host,
             listGifs = listGifs,
-            modifier = modifier,
+            modifier = modifier.hazeSource(hazeState),
             onClickOpenProfile = onClickOpenProfile,
             contentPadding = contentPadding,
             contentBeforeList = contentBeforeList,
@@ -167,58 +173,119 @@ fun LazyRow123(
         ) { VerticalScrollbar { scrollPercent.value } }
 
         //---- Floating Buttons "Вверх" и "Вниз" ----
-        if (showScrollButtons) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                AnimatedVisibility(
-                    visible = showScrollToTop,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    FloatingActionButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                            scope.launch { host.state.scrollToItem(0) }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowUp,
-                            contentDescription = "Scroll to top"
-                        )
+        LazyRow123ScrollButtons(
+            visible = showScrollButtons,
+            showScrollToTop = showScrollToTop,
+            showScrollToBottom = showScrollToBottom,
+            hazeState = hazeState,
+            onScrollToTop = {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                scope.launch { host.state.scrollToItem(0) }
+            },
+            onScrollToBottom = {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                scope.launch {
+                    val totalItems = host.state.layoutInfo.totalItemsCount
+                    if (totalItems > 0) {
+                        host.state.scrollToItem(totalItems - 1)
                     }
                 }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        )
+    }
 
-                AnimatedVisibility(
-                    visible = showScrollToBottom,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    FloatingActionButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                            scope.launch {
-                                val totalItems = host.state.layoutInfo.totalItemsCount
-                                if (totalItems > 0) {
-                                    host.state.scrollToItem(totalItems - 1)
-                                }
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Scroll to bottom"
-                        )
-                    }
-                }
+}
+
+@Composable
+private fun LazyRow123ScrollButtons(
+    visible: Boolean,
+    showScrollToTop: Boolean,
+    showScrollToBottom: Boolean,
+    hazeState: HazeState,
+    onScrollToTop: () -> Unit,
+    onScrollToBottom: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (!visible) return
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        AnimatedVisibility(
+            visible = showScrollToTop,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            FloatingActionButton(
+                onClick = onScrollToTop,
+                containerColor = Color.Transparent,
+                contentColor = Theme.ScrollFab.contentColorR,
+                shape = RoundedCornerShape(16.dp),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp,
+                    focusedElevation = 0.dp,
+                    hoveredElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .hazeEffect(
+                        state = hazeState,
+                        style = Theme.ScrollFab.hazeStyle
+                    )
+                    .border(
+                        width = Theme.ScrollFab.borderWidth,
+                        brush = Theme.ScrollFab.glassBorder,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowUp,
+                    contentDescription = "Scroll to top"
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showScrollToBottom,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            FloatingActionButton(
+                onClick = onScrollToBottom,
+                containerColor = Color.Transparent,
+                contentColor = Theme.ScrollFab.contentColorR,
+                shape = RoundedCornerShape(16.dp),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp,
+                    focusedElevation = 0.dp,
+                    hoveredElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .hazeEffect(
+                        state = hazeState,
+                        style = Theme.ScrollFab.hazeStyle
+                    )
+                    .border(
+                        width = Theme.ScrollFab.borderWidth,
+                        brush = Theme.ScrollFab.glassBorder,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Scroll to bottom"
+                )
             }
         }
     }
-
 }
 
 @OptIn(ExperimentalFoundationApi::class)

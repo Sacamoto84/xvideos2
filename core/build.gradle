@@ -58,6 +58,8 @@ dependencies {
     api libs.androidx.material.icons.core
     api libs.androidx.material.icons.extended
     api libs.androidx.adaptive
+    api libs.haze
+    api libs.haze.materials
 
     api libs.androidx.core.ktx
     api libs.androidx.activity.ktx

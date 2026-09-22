@@ -32,7 +32,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -144,13 +148,14 @@ fun L_LazyRowPictureDetails(
     val activeItemRange by rememberActiveItemRange(host, showInitialLoading)
 
     val scope = rememberCoroutineScope()
+    val hazeState = remember { HazeState() }
 
     Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
         LazyVerticalStaggeredGrid(
             state = host.state,
             columns = StaggeredGridCells.Fixed(host.columns),
-            modifier = Modifier.fillMaxSize().then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)
+            modifier = Modifier.fillMaxSize().hazeSource(hazeState).then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)
         ) {
 
             item(span = StaggeredGridItemSpan.FullLine) { itemBefore() }
@@ -318,7 +323,27 @@ fun L_LazyRowPictureDetails(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
                         scope.launch { host.state.scrollToItem(0) }
-                    }
+                    },
+                    containerColor = Color.Transparent,
+                    contentColor = Theme.ScrollFab.contentColorL,
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp,
+                        focusedElevation = 0.dp,
+                        hoveredElevation = 0.dp
+                    ),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .hazeEffect(
+                            state = hazeState,
+                            style = Theme.ScrollFab.hazeStyle
+                        )
+                        .border(
+                            width = Theme.ScrollFab.borderWidth,
+                            brush = Theme.ScrollFab.glassBorder,
+                            shape = RoundedCornerShape(16.dp)
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowUp,
@@ -346,7 +371,27 @@ fun L_LazyRowPictureDetails(
                                 host.state.scrollToItem(target)
                             }
                         }
-                    }
+                    },
+                    containerColor = Color.Transparent,
+                    contentColor = Theme.ScrollFab.contentColorL,
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp,
+                        focusedElevation = 0.dp,
+                        hoveredElevation = 0.dp
+                    ),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .hazeEffect(
+                            state = hazeState,
+                            style = Theme.ScrollFab.hazeStyle
+                        )
+                        .border(
+                            width = Theme.ScrollFab.borderWidth,
+                            brush = Theme.ScrollFab.glassBorder,
+                            shape = RoundedCornerShape(16.dp)
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
