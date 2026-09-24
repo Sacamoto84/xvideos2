@@ -143,14 +143,15 @@ object MenuScreen : Screen {
  * @param onClick callback, вызываемый при нажатии.
  */
 @Composable
-private fun ButtonSelect(iconId: Int, tag : String= "", onClick: () -> Unit) {
+private fun ButtonSelect(iconId: Int, tag: String = "", onClick: () -> Unit) {
+    val buttonShape = remember { RoundedCornerShape(16.dp) }
 
     Box(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(2.dp, Color(0xFF565656), RoundedCornerShape(16.dp))
+            .clip(buttonShape)
+            .border(2.dp, Color(0xFF565656), buttonShape)
             .background(Color(0xFF212121))
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp)
@@ -158,9 +159,7 @@ private fun ButtonSelect(iconId: Int, tag : String= "", onClick: () -> Unit) {
                 if (tag.isNotEmpty()) {
                     Modifier.testTag(tag)
                 } else Modifier
-            )
-
-        ,
+            ),
         contentAlignment = Alignment.Center
     ) {
         Image(

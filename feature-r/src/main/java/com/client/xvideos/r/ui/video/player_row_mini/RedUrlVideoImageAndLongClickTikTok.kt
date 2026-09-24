@@ -99,6 +99,34 @@ fun RedUrlVideoImageAndLongClickTikTok(
         }
     }
 
+    val handleDoubleClick = remember(context, onDoubleClick) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            onDoubleClick()
+        }
+    }
+    val handleLongClick = remember(context, onLongClick) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            onLongClick()
+        }
+    }
+    val handleClick = remember(haptic) {
+        {
+            isVideo = !isVideo
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }
+    }
+    val handleVideoClick = remember {
+        { isVideo = !isVideo }
+    }
+    val handleVideoLongClick = remember(onFullScreen) {
+        { onFullScreen() }
+    }
+    val handlePosterChange = remember {
+        { isShowing: Boolean -> poster = isShowing }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -106,20 +134,9 @@ fun RedUrlVideoImageAndLongClickTikTok(
             .combinedClickable(
                 indication = null, // 👈 отключает ripple
                 interactionSource = interactionSource, // 👈 обязательно для отключения ripple
-
-                onDoubleClick = {
-                    vibrateWithPatternAndAmplitude(context = context)
-                    onDoubleClick.invoke()
-                },
-                onLongClick = {
-                    //haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    vibrateWithPatternAndAmplitude(context = context)
-                    onLongClick.invoke()
-                },
-                onClick = {
-                    isVideo = isVideo.not()
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                }
+                onDoubleClick = handleDoubleClick,
+                onLongClick = handleLongClick,
+                onClick = handleClick
             )
             .then(modifier),
         contentAlignment = Alignment.Center
@@ -135,9 +152,9 @@ fun RedUrlVideoImageAndLongClickTikTok(
                 Red_Video_Lite_Row2(
                     videoUri,
                     play = true,
-                    onClick = { isVideo = isVideo.not() },
-                    onLongClick = { onFullScreen.invoke() },
-                    poster = { poster = it }
+                    onClick = handleVideoClick,
+                    onLongClick = handleVideoLongClick,
+                    poster = handlePosterChange
                 )
             }
         }

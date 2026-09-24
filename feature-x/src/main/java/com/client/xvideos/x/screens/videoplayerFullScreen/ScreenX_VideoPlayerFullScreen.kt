@@ -17,6 +17,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -90,13 +91,17 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             }
         }
 
-        fun exit(currentExoPosition: Long = position) {
-            val safePos = currentExoPosition.coerceAtLeast(0L)
-            EventBus.postEvent(Event.X_FullScreenExitPosition(safePos))
-            navigator.pop()
+        val onExit: (Long) -> Unit = remember(navigator, position) {
+            { currentExoPosition: Long ->
+                val safePos = currentExoPosition.coerceAtLeast(0L)
+                EventBus.postEvent(Event.X_FullScreenExitPosition(safePos))
+                navigator.pop().let {}
+            }
         }
+        val onExitDirect = remember(onExit, position) { { onExit(position) } }
+        val onReloadVideo = remember(vm) { { vm.loadVideo(forceReload = true) } }
 
-        BackHandler(enabled = vm.isError || vm.isLoading || vm.passedString.isBlank()) { exit() }
+        BackHandler(enabled = vm.isError || vm.isLoading || vm.passedString.isBlank(), onBack = onExitDirect)
 
         if (vm.isError) {
             Box(
@@ -109,11 +114,11 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
                     Text("Не удалось загрузить видео", color = Color.White)
                     Spacer(modifier = Modifier.height(12.dp))
                     Row {
-                        Button(onClick = { vm.loadVideo(forceReload = true) }) {
+                        Button(onClick = onReloadVideo) {
                             Text("Повторить")
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Button(onClick = { exit() }) {
+                        Button(onClick = onExitDirect) {
                             Text("Назад")
                         }
                     }
@@ -176,13 +181,15 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             onDispose { exo.removeListener(listener) }
         }
 
-        fun exitWithExo() {
-            val pos = exo.currentPosition.coerceAtLeast(0L)
-            exo.pause()
-            exit(pos)
+        val onExitWithExo = remember(exo, onExit) {
+            {
+                val pos = exo.currentPosition.coerceAtLeast(0L)
+                exo.pause()
+                onExit(pos)
+            }
         }
 
-        BackHandler(enabled = !vm.isError && !vm.isLoading && vm.passedString.isNotBlank()) { exitWithExo() }
+        BackHandler(enabled = !vm.isError && !vm.isLoading && vm.passedString.isNotBlank(), onBack = onExitWithExo)
 
         AndroidView(
             factory = { ctx ->
@@ -193,7 +200,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
                     setShowFastForwardButton(true)
                     setShowNextButton(false)
                     setShowPreviousButton(false)
-                    setFullscreenButtonClickListener { exitWithExo() }
+                    setFullscreenButtonClickListener { onExitWithExo() }
                 }
             },
             modifier = Modifier.fillMaxSize(),

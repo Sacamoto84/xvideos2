@@ -22,7 +22,19 @@ import com.client.xvideos.common.snackbar.SnackBar
 @Composable
 internal fun LSettingsSection(lLogin: String) {
     val thumbnailSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
-    val currentDisplayName = ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: "?"
+    val currentDisplayName = remember(thumbnailSize) {
+        ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: "?"
+    }
+
+    val isLoginBlank = remember(lLogin) { lLogin.isBlank() }
+    val loginValueText = remember(isLoginBlank) { if (isLoginBlank) "Нет" else "Выйти" }
+    val logoutDialogBody = remember(isLoginBlank, lLogin) {
+        if (isLoginBlank) {
+            "Вы не авторизованы в L."
+        } else {
+            "При следующем открытии L нужно будет снова ввести логин и пароль: $lLogin"
+        }
+    }
 
     val onLogoutL = remember {
         {
@@ -44,13 +56,9 @@ internal fun LSettingsSection(lLogin: String) {
         SettingsButtonRowWithDialog(
             icon = R.drawable.icon_luscious,
             text = "Профиль L",
-            value = if (lLogin.isBlank()) "Нет" else "Выйти",
+            value = loginValueText,
             textDialogTitle = "Выйти из профиля L",
-            textDialogBody = if (lLogin.isBlank()) {
-                "Вы не авторизованы в L."
-            } else {
-                "При следующем открытии L нужно будет снова ввести логин и пароль: $lLogin"
-            },
+            textDialogBody = logoutDialogBody,
             textDialogButton = "Выйти",
             onClick = onLogoutL
         )

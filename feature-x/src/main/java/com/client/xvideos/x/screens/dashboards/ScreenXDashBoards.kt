@@ -73,15 +73,27 @@ class ScreenXDashBoards : Screen {
         // Прогресс загрузки для зелёного индикатора снизу (как в R).
         val downloadPercent by vm.saved.downloads.percent.collectAsStateWithLifecycle()
 
-        val onSavedTabChange: (Int) -> Unit = remember(vm) { { vm.savedTab = it } }
-        val onMainTabChange: (Int) -> Unit = remember(vm) { { vm.mainTab = it } }
+        val onSavedTabChange: (Int) -> Unit = remember(vm) { { newTab -> vm.savedTab = newTab } }
+        val onMainTabChange: (Int) -> Unit = remember(vm) { { newTab -> vm.mainTab = newTab } }
         val onDashboardPageChange: suspend (Int) -> Unit = remember(vm) { { page -> vm.pagerState.scrollToPage(page.coerceAtLeast(0)) } }
-        val onOpenVideoPlayer: (ItemsX) -> Unit = remember(vm, navigator) { { vm.openVideoPlayer(it, navigator) } }
-        val onIsFavorite: (Long) -> Boolean = remember(vm) { { vm.isFavorite(it) } }
-        val onFavoriteAdd: (ItemsX) -> Unit = remember(vm) { { vm.addFavorite(it) } }
-        val onFavoriteRemove: (ItemsX) -> Unit = remember(vm) { { vm.removeFavorite(it) } }
-        val onDownload: (ItemsX) -> Unit = remember(vm) { { vm.download(it) } }
-        val onSaveToGallery: (ItemsX) -> Unit = remember(vm) { { vm.saveToGallery(it) } }
+        val onOpenVideoPlayer: (ItemsX) -> Unit = remember(vm, navigator) { { item -> vm.openVideoPlayer(item, navigator) } }
+        val onIsFavorite: (Long) -> Boolean = remember(vm) { { itemId -> vm.isFavorite(itemId) } }
+        val onFavoriteAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
+        val onFavoriteRemove: (ItemsX) -> Unit = remember(vm) { { item -> vm.removeFavorite(item) } }
+        val onDownload: (ItemsX) -> Unit = remember(vm) { { item -> vm.download(item) } }
+        val onSaveToGallery: (ItemsX) -> Unit = remember(vm) { { item -> vm.saveToGallery(item) } }
+
+        val snapAnimationSpec = remember {
+            spring(
+                stiffness = 600f,
+                visibilityThreshold = Int.VisibilityThreshold.toFloat()
+            )
+        }
+        val pagerFlingBehavior = PagerDefaults.flingBehavior(
+            state = vm.pagerState,
+            snapPositionalThreshold = 0.15f,
+            snapAnimationSpec = snapAnimationSpec
+        )
 
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -137,14 +149,7 @@ class ScreenXDashBoards : Screen {
                         modifier = Modifier.fillMaxSize(),
                         beyondViewportPageCount = 1,
                         key = { pageIndex -> pageIndex },
-                        flingBehavior = PagerDefaults.flingBehavior(
-                            state = vm.pagerState,
-                            snapPositionalThreshold = 0.15f,
-                            snapAnimationSpec = spring(
-                                stiffness = 600f,
-                                visibilityThreshold = Int.VisibilityThreshold.toFloat()
-                            )
-                        )
+                        flingBehavior = pagerFlingBehavior
                     ) { pageIndex ->
                         DashboardsPaginatedListScreen(
                             pageIndex = pageIndex,

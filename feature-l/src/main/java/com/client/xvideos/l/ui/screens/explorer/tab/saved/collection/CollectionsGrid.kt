@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +55,8 @@ fun CollectionsGrid(
     onCreateNewCollectionClick: () -> Unit,
     topBar: @Composable (() -> Unit)? = null
 ) {
+    val previewCornerShape = remember { RoundedCornerShape(8.dp) }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { topBar?.invoke() },
@@ -66,60 +69,27 @@ fun CollectionsGrid(
             state = gridState,
             columns = GridCells.Fixed(2)
         ) {
-            itemsIndexed(collections, key = { index, item -> "${item.name}#$index" }) { _, collection ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .padding(vertical = 4.dp)
-                        .combinedClickable(
-                            onClick = { onCollectionClick(collection.name) },
-                            onLongClick = { onCollectionLongClick(collection.name) }
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val previewUrl = collection.previewUrl
-                    if (previewUrl != null) {
-                        UrlImage(
-                            url = previewUrl,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .size(72.dp)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .size(72.dp)
-                                .background(style.placeholderColor)
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            collection.name,
-                            color = style.itemNameColor,
-                            fontFamily = style.itemFontFamily
-                        )
-                        collection.itemsCount?.let { count ->
-                            Text(
-                                "Элементов: $count",
-                                color = style.itemSecondaryColor,
-                                fontSize = 12.sp,
-                                fontFamily = style.itemFontFamily
-                            )
-                        }
-                    }
-                }
+            itemsIndexed(
+                items = collections,
+                key = { index, item -> "${item.name}#$index" },
+                contentType = { _, _ -> "collection_item" }
+            ) { _, collection ->
+                CollectionGridCell(
+                    collection = collection,
+                    style = style,
+                    shape = previewCornerShape,
+                    onClick = onCollectionClick,
+                    onLongClick = onCollectionLongClick
+                )
             }
 
-            item {
+            item(key = "add_button", contentType = "add_button") {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Box(
                         modifier = Modifier
                             .padding(start = 8.dp, top = 4.dp)
                             .size(72.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(previewCornerShape)
                             .background(style.addButtonBackground)
                             .clickable(onClick = onCreateNewCollectionClick),
                         contentAlignment = Alignment.Center
@@ -132,6 +102,65 @@ fun CollectionsGrid(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CollectionGridCell(
+    collection: CollectionGridItem,
+    style: CollectionsGridStyle,
+    shape: RoundedCornerShape,
+    onClick: (String) -> Unit,
+    onLongClick: (String) -> Unit,
+) {
+    val handleClick = remember(collection.name, onClick) { { onClick(collection.name) } }
+    val handleLongClick = remember(collection.name, onLongClick) { { onLongClick(collection.name) } }
+    val countText = remember(collection.itemsCount) {
+        collection.itemsCount?.let { "Элементов: $it" }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .combinedClickable(
+                onClick = handleClick,
+                onLongClick = handleLongClick
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val previewUrl = collection.previewUrl
+        if (previewUrl != null) {
+            UrlImage(
+                url = previewUrl,
+                modifier = Modifier
+                    .clip(shape)
+                    .size(72.dp)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .clip(shape)
+                    .size(72.dp)
+                    .background(style.placeholderColor)
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Column {
+            Text(
+                collection.name,
+                color = style.itemNameColor,
+                fontFamily = style.itemFontFamily
+            )
+            if (countText != null) {
+                Text(
+                    countText,
+                    color = style.itemSecondaryColor,
+                    fontSize = 12.sp,
+                    fontFamily = style.itemFontFamily
+                )
             }
         }
     }

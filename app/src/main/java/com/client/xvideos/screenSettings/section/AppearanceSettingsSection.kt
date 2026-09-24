@@ -15,6 +15,7 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,14 +68,16 @@ internal fun AppearanceSettingsSection() {
     SettingsSectionTitle("Кнопки быстрой прокрутки")
     SettingsGroup {
         ScrollButtonEffect.entries.forEachIndexed { index, effect ->
-            if (index > 0) {
-                SettingsDivider()
+            key(effect.name) {
+                if (index > 0) {
+                    SettingsDivider()
+                }
+                ScrollEffectItem(
+                    effect = effect,
+                    isSelected = (currentEffect == effect),
+                    onSelect = onSelectEffect
+                )
             }
-            ScrollEffectItem(
-                effect = effect,
-                isSelected = (currentEffect == effect),
-                onSelect = onSelectEffect
-            )
         }
     }
 }
@@ -117,12 +120,24 @@ private fun ScrollButtonPreviewCard(
     hazeState: HazeState,
     currentEffect: ScrollButtonEffect
 ) {
+    val previewCardShape = remember { RoundedCornerShape(24.dp) }
+    val previewGradient = remember {
+        Brush.linearGradient(
+            colors = listOf(
+                Color(0xFF2C194D),
+                Color(0xFF880E4F),
+                Color(0xFF0D47A1),
+                Color(0xFF004D40)
+            )
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(180.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(previewCardShape)
             .background(SettingsCardColor)
     ) {
         // Цветной имитационный фон галереи, помеченный как hazeSource
@@ -130,16 +145,7 @@ private fun ScrollButtonPreviewCard(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSource(hazeState)
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF2C194D),
-                            Color(0xFF880E4F),
-                            Color(0xFF0D47A1),
-                            Color(0xFF004D40)
-                        )
-                    )
-                )
+                .background(previewGradient)
         ) {
             // Декоративные цветные круги для проверки преломления и размытия
             Box(

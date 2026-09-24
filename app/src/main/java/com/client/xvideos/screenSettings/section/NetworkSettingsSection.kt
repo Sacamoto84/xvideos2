@@ -11,6 +11,7 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -85,16 +86,20 @@ internal fun NetworkSettingsSection() {
         }
     }
 
+    val dohSubtitle = remember(dohEnabled) {
+        if (dohEnabled) {
+            "Шифрование DNS и обход блокировок включены"
+        } else {
+            "Выключено (используется системный DNS)"
+        }
+    }
+
     SettingsSectionTitle("DNS-over-HTTPS (DoH)")
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.ic_dns_24,
             text = "DNS-over-HTTPS",
-            subtitle = if (dohEnabled) {
-                "Шифрование DNS и обход блокировок включены"
-            } else {
-                "Выключено (используется системный DNS)"
-            },
+            subtitle = dohSubtitle,
             value = dohEnabled,
             onValueChange = onToggleDoh
         )
@@ -132,23 +137,29 @@ private fun DohProviderSelectionGroup(
     onSelectProvider: (DohProvider) -> Unit,
     onOpenCustomUrlDialog: () -> Unit
 ) {
+    val customSubtitle = remember(customUrl) {
+        if (customUrl.isNotBlank()) customUrl else "Нажмите для ввода URL"
+    }
+
     SettingsSectionTitle("Провайдер DNS")
     SettingsGroup {
         DohProvider.entries.forEachIndexed { index, provider ->
-            if (index > 0) SettingsDivider()
+            key(provider.name) {
+                if (index > 0) SettingsDivider()
 
-            val subtitle = if (provider == DohProvider.CUSTOM) {
-                if (customUrl.isNotBlank()) customUrl else provider.description
-            } else {
-                provider.description
+                val subtitle = if (provider == DohProvider.CUSTOM) {
+                    if (customUrl.isNotBlank()) customUrl else provider.description
+                } else {
+                    provider.description
+                }
+
+                DohProviderItem(
+                    provider = provider,
+                    isSelected = currentProvider == provider,
+                    subtitle = subtitle,
+                    onSelect = onSelectProvider
+                )
             }
-
-            DohProviderItem(
-                provider = provider,
-                isSelected = currentProvider == provider,
-                subtitle = subtitle,
-                onSelect = onSelectProvider
-            )
         }
 
         if (currentProvider == DohProvider.CUSTOM) {
@@ -156,7 +167,7 @@ private fun DohProviderSelectionGroup(
             SettingsListItem(
                 icon = R.drawable.ic_dns_24,
                 text = "Адрес DoH сервера",
-                subtitle = if (customUrl.isNotBlank()) customUrl else "Нажмите для ввода URL",
+                subtitle = customSubtitle,
                 onClick = onOpenCustomUrlDialog
             )
         }

@@ -165,7 +165,7 @@ object R_Screen_Saved_DownloadTab : Screen {
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(4.dp)
                 ) {
-                    items(downloadRed, key = { it.id }) { item ->
+                    items(downloadRed, key = { it.id }, contentType = { "download_item" }) { item ->
                         DownloadListItem(
                             item = item,
                             onItemClick = onItemClickHandler,

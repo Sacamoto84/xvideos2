@@ -120,7 +120,7 @@ object R_Screen_CollectionTab : Screen {
         val onDismissAction: () -> Unit = remember { { itemPendingAction = null } }
         val onDismissRename: () -> Unit = remember { { itemPendingRename = null } }
         val onDismissDelete: () -> Unit = remember { { itemPendingDelete = null } }
-        val onRenameValueChange: (String) -> Unit = remember { { renameValue = it } }
+        val onRenameValueChange: (String) -> Unit = remember { { text -> renameValue = text } }
 
         val onRenameAction: (String) -> Unit = remember {
             { pending ->
@@ -155,12 +155,14 @@ object R_Screen_CollectionTab : Screen {
             }
         }
 
-        val dialogData = R_CollectionDialogData(
-            itemPendingAction = itemPendingAction,
-            itemPendingRename = itemPendingRename,
-            itemPendingDelete = itemPendingDelete,
-            renameValue = renameValue,
-        )
+        val dialogData = remember(itemPendingAction, itemPendingRename, itemPendingDelete, renameValue) {
+            R_CollectionDialogData(
+                itemPendingAction = itemPendingAction,
+                itemPendingRename = itemPendingRename,
+                itemPendingDelete = itemPendingDelete,
+                renameValue = renameValue,
+            )
+        }
 
         R_CollectionDialogsHost(
             dialogData = dialogData,
@@ -176,8 +178,8 @@ object R_Screen_CollectionTab : Screen {
             onConfirmDelete = onConfirmDelete,
         )
 
-        val onCollectionClick: (String) -> Unit = remember(savedRed) { { savedRed.collections.selectedCollection.value = it } }
-        val onCollectionLongClick: (String) -> Unit = remember { { itemPendingAction = it } }
+        val onCollectionClick: (String) -> Unit = remember(savedRed) { { name -> savedRed.collections.selectedCollection.value = name } }
+        val onCollectionLongClick: (String) -> Unit = remember { { name -> itemPendingAction = name } }
         val onCreateNewCollectionClick: () -> Unit = remember(savedRed) { { savedRed.collections.visibleDialogCreateNew = true } }
         val navigationContent: @Composable () -> Unit = remember(selectedCollection) {
             {
@@ -293,15 +295,18 @@ private fun R_CollectionDialogsHost(
         val onConfirm = remember(pending, onConfirmDelete) {
             { onConfirmDelete(pending) }
         }
+        val dialogBody = remember(pending) {
+            buildAnnotatedString {
+                append("Удалить «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
+                append("» из коллекции")
+            }
+        }
         LavenderDialog(
             title = "Удалить коллекцию?",
             onDismiss = onDismissDelete,
             icon = { CollectionCoverIcon(coverOf(pending)) },
-            body = buildAnnotatedString {
-                append("Удалить «")
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
-                append("» из коллекции")
-            },
+            body = dialogBody,
             confirmText = "Удалить",
             onConfirm = onConfirm,
             destructive = true,
@@ -354,10 +359,11 @@ fun R_SavedCollectionTabContent(
 @Composable
 private fun CollectionCoverIcon(coverUrl: String?) {
     val size = Theme.DialogLavande.iconSize
+    val iconShape = remember { RoundedCornerShape(8.dp) }
     if (coverUrl != null) {
-        UrlImage(url = coverUrl, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(size))
+        UrlImage(url = coverUrl, modifier = Modifier.clip(iconShape).size(size))
     } else {
-        Box(Modifier.clip(RoundedCornerShape(8.dp)).size(size).background(Color.Gray))
+        Box(Modifier.clip(iconShape).size(size).background(Color.Gray))
     }
 }
 

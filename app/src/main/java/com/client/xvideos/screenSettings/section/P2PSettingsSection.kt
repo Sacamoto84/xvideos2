@@ -52,11 +52,15 @@ internal fun P2PSettingsSection() {
         }
     }
 
+    val bgReceiveSubtitle = remember(bgReceive) {
+        if (bgReceive) "Включён" else "Выключен"
+    }
+
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.icon_red,
             text = "Приём в фоне",
-            subtitle = if (bgReceive) "Включён" else "Выключен",
+            subtitle = bgReceiveSubtitle,
             value = bgReceive,
             onValueChange = onBgReceiveChanged
         )

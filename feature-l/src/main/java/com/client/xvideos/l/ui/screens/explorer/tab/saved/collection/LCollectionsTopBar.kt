@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,6 +37,11 @@ internal fun LCollectionsTopBar(
     onSortOrderClick: (LCollectionSortOrder) -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val onOpenMenu = remember { { menuExpanded = true } }
+    val onDismissMenu = remember { { menuExpanded = false } }
+    val collectionTitle = remember(selectedCollection) {
+        selectedCollection?.let { ">$it" }
+    }
 
     // Топ-бар лежит в Scaffold(topBar = ...) — Material3 не применяет инсет
     // к этому слоту, а хост таба паддит только низ. Соседние таби (Albums,
@@ -59,9 +65,9 @@ internal fun LCollectionsTopBar(
         ) {
             Column(modifier = Modifier.weight(1f)) {
 
-                if (!selectedCollection.isNullOrEmpty()) {
+                if (collectionTitle != null) {
                     Text(
-                        ">${selectedCollection}",
+                        collectionTitle,
                         color = Theme.L.primaryColor,
                         fontSize = 18.sp,
                         fontFamily = Theme.L.fontFamilyPopinsRegular
@@ -82,7 +88,7 @@ internal fun LCollectionsTopBar(
             if (selectedCollection == null) {
 
                 Box {
-                    IconButton(onClick = { menuExpanded = true }) {
+                    IconButton(onClick = onOpenMenu) {
                         Icon(
                             Icons.Default.FilterList,
                             contentDescription = "Сортировка коллекций",
@@ -92,24 +98,29 @@ internal fun LCollectionsTopBar(
 
                     DropdownMenu(
                         expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false },
+                        onDismissRequest = onDismissMenu,
                         containerColor = Theme.L.grey3
                     ) {
                         LCollectionSortOrder.entries.forEach { order ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        order.title,
-                                        style = Theme.L.Type.menuItem.copy(
-                                            color = if (order == sortOrder) Color.White else Theme.L.grey2
-                                        )
-                                    )
-                                },
-                                onClick = {
-                                    onSortOrderClick(order)
-                                    menuExpanded = false
+                            key(order.name) {
+                                val isSelected = order == sortOrder
+                                val textColor = if (isSelected) Color.White else Theme.L.grey2
+                                val handleOrderClick = remember(order, onSortOrderClick) {
+                                    {
+                                        onSortOrderClick(order)
+                                        menuExpanded = false
+                                    }
                                 }
-                            )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            order.title,
+                                            style = Theme.L.Type.menuItem.copy(color = textColor)
+                                        )
+                                    },
+                                    onClick = handleOrderClick
+                                )
+                            }
                         }
                     }
                 }

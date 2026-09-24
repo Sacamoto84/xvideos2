@@ -61,7 +61,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -77,7 +76,6 @@ object L_ScreenAlbumTopHits : Screen {
 
     private fun readResolve(): Any = L_ScreenAlbumTopHits
 
-    @OptIn(ExperimentalZoomableApi::class)
     @Composable
     override fun Content() {
 
@@ -237,14 +235,15 @@ internal fun albumListFilterFromTopHitsUrl(url: String): AlbumListFilter {
 
 @Composable
 private fun ButtonSeeAll(onClick: () -> Unit) {
+    val buttonShape = remember { RoundedCornerShape(8.dp) }
     Box(
         modifier = Modifier
             .padding(top = 4.dp)
             .padding(horizontal = 4.dp)
             .fillMaxWidth()
             .height(32.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Theme.L.grey2, RoundedCornerShape(8.dp))
+            .clip(buttonShape)
+            .border(1.dp, Theme.L.grey2, buttonShape)
             .background(Theme.L.grey3)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

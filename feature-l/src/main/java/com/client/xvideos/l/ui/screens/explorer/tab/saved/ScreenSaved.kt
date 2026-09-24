@@ -84,9 +84,16 @@ object L_SavedTab : Screen {
         val selectedCollection = vm.savedL.collection.currentCollectionName
         val isInsideCollection = pagerState.currentPage == 2 && selectedCollection != null
 
-        BackHandler(enabled = pagerState.currentPage != 0 && !isInsideCollection) {
-            scope.launch { pagerState.scrollToPage(0) }
+        val onBackToFirstPage: () -> Unit = remember(scope, pagerState) {
+            {
+                scope.launch { pagerState.scrollToPage(0) }.let {}
+            }
         }
+
+        BackHandler(
+            enabled = pagerState.currentPage != 0 && !isInsideCollection,
+            onBack = onBackToFirstPage
+        )
 
         val columnLikes by Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle()
 
@@ -106,6 +113,19 @@ object L_SavedTab : Screen {
             }
         }
 
+        val isPage0 = pagerState.currentPage == 0
+        val isPage2 = pagerState.currentPage == 2
+        val isPage4 = pagerState.currentPage == 4
+        val overlay0Composable: @Composable () -> Unit = remember(columnLikes, isPage0) {
+            { TabBarPoints(columnLikes, isPage0) }
+        }
+        val overlay2Composable: @Composable () -> Unit = remember(columnCollection, isPage2) {
+            { TabBarPoints(columnCollection, isPage2) }
+        }
+        val overlay4Composable: @Composable () -> Unit = remember(columnLikes, isPage4) {
+            { TabBarPoints(columnLikes, isPage4) }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -117,9 +137,9 @@ object L_SavedTab : Screen {
                         //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = SAVED_TAB_ICONS,
                         onChangeState = onTabChange,
-                        overlay0 = { TabBarPoints(columnLikes, pagerState.currentPage == 0) },
-                        overlay2 = { TabBarPoints(columnCollection, pagerState.currentPage == 2) },
-                        overlay4 = { TabBarPoints(columnLikes, pagerState.currentPage == 4) }
+                        overlay0 = overlay0Composable,
+                        overlay2 = overlay2Composable,
+                        overlay4 = overlay4Composable
                     )
                 }
             },
@@ -134,6 +154,7 @@ object L_SavedTab : Screen {
                         state = pagerState,
                         userScrollEnabled = !isInsideCollection,
                         beyondViewportPageCount = 0,
+                        key = { page -> page },
                         modifier = Modifier.fillMaxSize()
                     ) { page ->
                         when (page) {

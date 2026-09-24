@@ -19,14 +19,17 @@ internal fun XSettingsSection() {
     val xvideosRow2 by Settings.xvideos_row2.field.collectAsStateWithLifecycle()
     val xvideosShemale by Settings.xvideos_shemale.field.collectAsStateWithLifecycle()
 
-    val onRow2Change: (Boolean) -> Unit = remember { { Settings.xvideos_row2.setValue(it) } }
-    val onShemaleChange: (Boolean) -> Unit = remember { { Settings.xvideos_shemale.setValue(it) } }
+    val onRow2Change: (Boolean) -> Unit = remember { { enabled -> Settings.xvideos_row2.setValue(enabled) } }
+    val onShemaleChange: (Boolean) -> Unit = remember { { enabled -> Settings.xvideos_shemale.setValue(enabled) } }
+
+    val row2Subtitle = remember(xvideosRow2) { if (xvideosRow2) "Включено" else "Выключено" }
+    val shemaleSubtitle = remember(xvideosShemale) { if (xvideosShemale) "Включено" else "Выключено" }
 
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.icon_xvideos_white,
             text = "2 столбика",
-            subtitle = if (xvideosRow2) "Включено" else "Выключено",
+            subtitle = row2Subtitle,
             value = xvideosRow2,
             onValueChange = onRow2Change
         )
@@ -35,7 +38,7 @@ internal fun XSettingsSection() {
         SettingsSwitchRow(
             icon = R.drawable.icon_xvideos_white,
             text = "Shemale",
-            subtitle = if (xvideosShemale) "Включено" else "Выключено",
+            subtitle = shemaleSubtitle,
             value = xvideosShemale,
             onValueChange = onShemaleChange
         )

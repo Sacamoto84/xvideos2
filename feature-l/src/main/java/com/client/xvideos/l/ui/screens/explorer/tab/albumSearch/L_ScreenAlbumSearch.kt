@@ -215,6 +215,7 @@ private fun AlbumSearchInputField(
         }
     }
     val keyboardActions = remember(handleSearch) { KeyboardActions(onSearch = { handleSearch() }) }
+    val searchTextStyle = remember { Theme.L.Type.body.copy(color = Theme.L.textColor) }
 
     OutlinedTextField(
         value = searchText,
@@ -225,7 +226,7 @@ private fun AlbumSearchInputField(
             .padding(horizontal = 4.dp, vertical = 4.dp),
         singleLine = true,
         label = { Text("Search") },
-        textStyle = Theme.L.Type.body.copy(color = Theme.L.textColor),
+        textStyle = searchTextStyle,
         trailingIcon = {
             if (searchText.isNotEmpty()) {
                 IconButton(onClick = handleClear) {
@@ -251,6 +252,7 @@ private fun AlbumSearchSectionBlock(
 ) {
     val handleSeeAll = remember(section, onSeeAllClick) { { onSeeAllClick(section) } }
     val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
+    val seeAllShape = remember { RoundedCornerShape(8.dp) }
 
     Text(
         section.title,
@@ -286,7 +288,7 @@ private fun AlbumSearchSectionBlock(
             .padding(horizontal = 4.dp)
             .fillMaxWidth()
             .height(40.dp)
-            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
+            .border(2.dp, Theme.L.grey3, seeAllShape)
             .clickable(onClick = handleSeeAll),
         contentAlignment = Alignment.Center
     ) {

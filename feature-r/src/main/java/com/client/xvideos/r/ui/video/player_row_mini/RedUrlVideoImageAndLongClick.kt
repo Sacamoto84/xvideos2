@@ -98,6 +98,34 @@ fun RedUrlVideoImageAndLongClick(
         }
     }
 
+    val handleDoubleClick = remember(context, onDoubleClick) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            onDoubleClick()
+        }
+    }
+    val handleLongClick = remember(context, onLongClick) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            onLongClick()
+        }
+    }
+    val handleClick = remember(haptic) {
+        {
+            isVideo = !isVideo
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }
+    }
+    val handleVideoClick = remember {
+        { isVideo = !isVideo }
+    }
+    val handleVideoLongClick = remember(onFullScreen) {
+        { onFullScreen() }
+    }
+    val handlePosterChange = remember {
+        { isShowing: Boolean -> poster = isShowing }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -105,18 +133,9 @@ fun RedUrlVideoImageAndLongClick(
             .combinedClickable(
                 indication = null,
                 interactionSource = interactionSource,
-                onDoubleClick = {
-                    vibrateWithPatternAndAmplitude(context = context)
-                    onDoubleClick()
-                },
-                onLongClick = {
-                    vibrateWithPatternAndAmplitude(context = context)
-                    onLongClick()
-                },
-                onClick = {
-                    isVideo = !isVideo
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                }
+                onDoubleClick = handleDoubleClick,
+                onLongClick = handleLongClick,
+                onClick = handleClick
             )
             .then(modifier),
         contentAlignment = Alignment.Center
@@ -135,9 +154,9 @@ fun RedUrlVideoImageAndLongClick(
                 Red_Video_Lite_Row2(
                     url = videoUri,
                     play = shouldPlayVideo,
-                    onClick = { isVideo = !isVideo },
-                    onLongClick = { onFullScreen() },
-                    poster = { poster = it }
+                    onClick = handleVideoClick,
+                    onLongClick = handleVideoLongClick,
+                    poster = handlePosterChange
                 )
             }
         }

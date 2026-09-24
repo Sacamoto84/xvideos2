@@ -5,9 +5,7 @@ import com.client.xvideos.R
 import android.content.Context
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,10 +52,26 @@ internal fun CacheSettingsSection(
         }
     }
 
+    val normalizedRam = remember(ramCachePercent) {
+        CoilImageLoaderFactory.normalizedRamCachePercent(ramCachePercent)
+    }
+    val normalizedDisk = remember(diskCacheSizeMb) {
+        CoilImageLoaderFactory.normalizedDiskCacheSizeMb(diskCacheSizeMb)
+    }
+    val formattedDiskSize = remember(imageCacheSizeBytes) {
+        formatBytes(imageCacheSizeBytes)
+    }
+    val diskCacheSubtitle = remember(diskCacheEnabled) {
+        if (diskCacheEnabled) "Включён" else "Выключен"
+    }
+    val clearDialogBody = remember(formattedDiskSize) {
+        "Размер на диске: $formattedDiskSize"
+    }
+
     SettingsGroup {
         IntSliderSetting(
             text = "RAM кэш картинок",
-            value = CoilImageLoaderFactory.normalizedRamCachePercent(ramCachePercent),
+            value = normalizedRam,
             min = CoilImageLoaderFactory.MIN_RAM_CACHE_PERCENT,
             max = CoilImageLoaderFactory.MAX_RAM_CACHE_PERCENT,
             step = 1,
@@ -70,7 +84,7 @@ internal fun CacheSettingsSection(
         SettingsSwitchRow(
             icon = R.drawable.hard_disk_24,
             text = "Дисковый кэш картинок",
-            subtitle = if (diskCacheEnabled) "Включён" else "Выключен",
+            subtitle = diskCacheSubtitle,
             value = diskCacheEnabled,
             onValueChange = onDiskCacheToggled
         )
@@ -78,7 +92,7 @@ internal fun CacheSettingsSection(
 
         IntSliderSetting(
             text = "Лимит кэша картинок",
-            value = CoilImageLoaderFactory.normalizedDiskCacheSizeMb(diskCacheSizeMb),
+            value = normalizedDisk,
             min = CoilImageLoaderFactory.MIN_DISK_CACHE_SIZE_MB,
             max = CoilImageLoaderFactory.MAX_DISK_CACHE_SIZE_MB,
             step = 50,
@@ -92,7 +106,7 @@ internal fun CacheSettingsSection(
         SettingsValueRow(
             icon = R.drawable.hard_disk_24,
             text = "Кэш картинок на диске",
-            value = formatBytes(imageCacheSizeBytes)
+            value = formattedDiskSize
         )
         SettingsDivider()
 
@@ -101,7 +115,7 @@ internal fun CacheSettingsSection(
             text = "Очистить кэш картинок",
             value = "Очистить",
             textDialogTitle = "Очистить кэш картинок",
-            textDialogBody = "Размер на диске: ${formatBytes(imageCacheSizeBytes)}",
+            textDialogBody = clearDialogBody,
             textDialogButton = "Очистить",
             onClick = onClearImageCache
         )

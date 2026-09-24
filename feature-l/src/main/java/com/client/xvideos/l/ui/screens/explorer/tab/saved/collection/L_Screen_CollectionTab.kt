@@ -84,14 +84,18 @@ object L_Screen_CollectionTab : Screen {
         var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
         var renameValue by rememberSaveable { mutableStateOf("") }
 
+        val onBackToResetDialogs = remember {
+            {
+                itemPendingAction = null
+                itemPendingRename = null
+                itemPendingDelete = null
+            }
+        }
         BackHandler(
             enabled = selectedCollection == null &&
-                (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null)
-        ) {
-            itemPendingAction = null
-            itemPendingRename = null
-            itemPendingDelete = null
-        }
+                (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null),
+            onBack = onBackToResetDialogs
+        )
 
         val onDismissActionDialog: () -> Unit = remember { { itemPendingAction = null } }
         val onDismissRenameDialog: () -> Unit = remember { { itemPendingRename = null } }
@@ -130,12 +134,14 @@ object L_Screen_CollectionTab : Screen {
             }
         }
 
-        val dialogData = CollectionDialogData(
-            itemPendingAction = itemPendingAction,
-            itemPendingRename = itemPendingRename,
-            itemPendingDelete = itemPendingDelete,
-            renameValue = renameValue,
-        )
+        val dialogData = remember(itemPendingAction, itemPendingRename, itemPendingDelete, renameValue) {
+            CollectionDialogData(
+                itemPendingAction = itemPendingAction,
+                itemPendingRename = itemPendingRename,
+                itemPendingDelete = itemPendingDelete,
+                renameValue = renameValue,
+            )
+        }
 
         CollectionDialogsHost(
             dialogData = dialogData,
@@ -151,13 +157,13 @@ object L_Screen_CollectionTab : Screen {
         )
 
         val onSortOrderClick: (LCollectionSortOrder) -> Unit = remember(savedL) {
-            { savedL.collection.applySortOrder(it) }
+            { order -> savedL.collection.applySortOrder(order) }
         }
         val onCollectionClick: (String) -> Unit = remember(savedL) {
-            { savedL.collection.setCollection(it) }
+            { name -> savedL.collection.setCollection(name) }
         }
         val onCollectionLongClick: (String) -> Unit = remember {
-            { itemPendingAction = it }
+            { name -> itemPendingAction = name }
         }
         val onCreateNewCollectionClick: () -> Unit = remember(savedL) {
             { savedL.collection.visibleDialogCreateNew = true }
@@ -338,15 +344,16 @@ private fun CollectionActionDialog(
     onShare: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val iconShape = remember { RoundedCornerShape(8.dp) }
     LavenderDialog(
         title = "Действие с коллекцией",
         onDismiss = onDismiss,
         icon = {
             val iconSize = Theme.DialogLavande.iconSize
             if (coverUrl != null) {
-                UrlImage(url = coverUrl, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize))
+                UrlImage(url = coverUrl, modifier = Modifier.clip(iconShape).size(iconSize))
             } else {
-                Box(Modifier.clip(RoundedCornerShape(8.dp)).size(iconSize).background(Color.Gray))
+                Box(Modifier.clip(iconShape).size(iconSize).background(Color.Gray))
             }
         },
         content = {
@@ -387,7 +394,7 @@ private fun CollectionRenameDialog(
     onConfirm: (String) -> Unit
 ) {
     var renameValue by rememberSaveable(initialValue) { mutableStateOf(initialValue) }
-    val onValueChange: (String) -> Unit = remember { { renameValue = it } }
+    val onValueChange: (String) -> Unit = remember { { text -> renameValue = text } }
     val onConfirmClick: () -> Unit = remember(onConfirm) { { onConfirm(renameValue) } }
 
     LavenderDialog(
@@ -422,14 +429,17 @@ private fun CollectionDeleteDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    LavenderDialog(
-        title = "Удалить коллекцию?",
-        onDismiss = onDismiss,
-        body = buildAnnotatedString {
+    val dialogBody = remember(pending) {
+        buildAnnotatedString {
             append("Удалить «")
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
             append("» из коллекции")
-        },
+        }
+    }
+    LavenderDialog(
+        title = "Удалить коллекцию?",
+        onDismiss = onDismiss,
+        body = dialogBody,
         confirmText = "Удалить",
         onConfirm = onConfirm,
         destructive = true

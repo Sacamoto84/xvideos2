@@ -299,7 +299,8 @@ private fun HistoryGrid(
     ) {
         items(
             items = history,
-            key = { it.item.id }
+            key = { it.item.id },
+            contentType = { "history_row" }
         ) { historyItem ->
             val isSelected = historyItem.item.id in selectedIds
             val localUrl = remember(historyItem.item, localUrlOf) { localUrlOf(historyItem.item) }

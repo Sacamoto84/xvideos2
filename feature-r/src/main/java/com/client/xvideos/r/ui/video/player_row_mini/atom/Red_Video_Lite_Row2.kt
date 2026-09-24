@@ -65,6 +65,15 @@ fun Red_Video_Lite_Row2(
 
     LaunchedEffect(playerHost.poster) { poster(playerHost.poster) }
 
+    val onSeek: (Float) -> Unit = remember(playerHost) {
+        { seekTime -> playerHost.seekTo(seekTime) }
+    }
+    val onSeekFinished: () -> Unit = remember(playerHost) {
+        { playerHost.play() }
+    }
+    val enterFade = remember { fadeIn(animationSpec = tween(300)) }
+    val exitFade = remember { fadeOut(animationSpec = tween(300)) }
+
     Box(modifier = Modifier.fillMaxWidth()) {
 
         StaticPlayer(playerHost, false)
@@ -73,8 +82,8 @@ fun Red_Video_Lite_Row2(
 
         AnimatedVisibility(
             visible = !playerHost.poster,
-            enter = fadeIn(animationSpec = tween(300)),
-            exit = fadeOut(animationSpec = tween(300)),
+            enter = enterFade,
+            exit = exitFade,
             modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(),
         ) {
             Box(
@@ -89,8 +98,8 @@ fun Red_Video_Lite_Row2(
                     timeABEnable = false,
                     visibleAB = false,
                     play = play,
-                    onSeek = { playerHost.seekTo(it) },
-                    onSeekFinished = { playerHost.play() },
+                    onSeek = onSeek,
+                    onSeekFinished = onSeekFinished,
                     modifier = Modifier.padding(start = 2.dp, end = 2.dp).fillMaxWidth().offset(y = 5.dp),
                     isVisibleTime = true,
                     isVisibleStep = false,

@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -142,17 +143,19 @@ private fun LikesFilterSegmentedRow(
             .padding(horizontal = 4.dp)
     ) {
         options.forEachIndexed { index, label ->
-            val onClick = remember(index, onSelectIndex) { { onSelectIndex(index) } }
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = options.size
-                ),
-                onClick = onClick,
-                selected = index == selectedIndex,
-                label = { Text(label) },
-                colors = buttonColors
-            )
+            key(label) {
+                val onClick = remember(index, onSelectIndex) { { onSelectIndex(index) } }
+                SegmentedButton(
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = options.size
+                    ),
+                    onClick = onClick,
+                    selected = index == selectedIndex,
+                    label = { Text(label) },
+                    colors = buttonColors
+                )
+            }
         }
     }
 }

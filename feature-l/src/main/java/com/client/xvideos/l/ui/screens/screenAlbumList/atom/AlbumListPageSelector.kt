@@ -30,7 +30,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
@@ -62,6 +61,35 @@ fun AlbumListPageSelector(
     val haptic = LocalHapticFeedback.current
     var expanded by remember { mutableStateOf(false) }
 
+    val onPrevPage = remember(page, onChange) { { onChange(calculatePrevAlbumPage(page)) } }
+    val onNextPage = remember(page, pageMax, onChange) { { onChange(calculateNextAlbumPage(page, pageMax)) } }
+    val onOpenDialog = remember(haptic) {
+        {
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            expanded = true
+        }
+    }
+    val onDismissDialog = remember { { expanded = false } }
+
+    val pageText = remember(page, pageMax) { "Page ${page + 1} of ${pageMax.coerceAtLeast(1)}" }
+    val pageTextStyle = remember { Theme.L.Type.rowTitle.copy(textAlign = TextAlign.Center) }
+    val dialogShape = remember { RoundedCornerShape(16.dp) }
+    val keyboardTheme = remember {
+        KeyboardNumberTheme(
+            colorBackground = Color(0xFF2D2D2D),
+            colorBorderBackground = Color(0xFF282828),
+            colorText = Color(0xFFFFFFFF),
+            buttonColor = Color(0xFF282828),
+            colorButtonBorder = Color(0xFF232323),
+        )
+    }
+    val onKeyboardNumberClick = remember(onChange) {
+        { selectedNumber: Int ->
+            onChange(selectedNumber - 1)
+            expanded = false
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -75,7 +103,7 @@ fun AlbumListPageSelector(
                 .fillMaxHeight()
                 .weight(1f)
                 .background(Theme.L.red)
-                .clickable(onClick = { onChange(calculatePrevAlbumPage(page)) }),
+                .clickable(onClick = onPrevPage),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, tint = Color.White, contentDescription = null) }
 
@@ -85,7 +113,6 @@ fun AlbumListPageSelector(
                 .weight(2f)
                 .drawBehind {
                     val strokeWidth = 1.dp.toPx()
-                    val color = Theme.L.grey3.toArgb()
 
                     // верхняя линия
                     drawLine(
@@ -102,17 +129,13 @@ fun AlbumListPageSelector(
                         strokeWidth = strokeWidth
                     )
                 }
-                .clickable(onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    expanded = true
-                }),
+                .clickable(onClick = onOpenDialog),
             contentAlignment = Alignment.Center
         ) {
-            val safePageMax = pageMax.coerceAtLeast(1)
             Text(
-                "Page ${page + 1} of $safePageMax",
+                pageText,
                 color = Theme.L.textColor,
-                style = Theme.L.Type.rowTitle.copy(textAlign = TextAlign.Center)
+                style = pageTextStyle
             )
         }
 
@@ -121,9 +144,7 @@ fun AlbumListPageSelector(
                 .fillMaxHeight()
                 .weight(1f)
                 .background(Theme.L.red)
-                .clickable(
-                    onClick = { onChange(calculateNextAlbumPage(page, pageMax)) }
-                ),
+                .clickable(onClick = onNextPage),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -137,30 +158,19 @@ fun AlbumListPageSelector(
     //-- Диалог --
     if (expanded) {
 
-        Dialog(onDismissRequest = { expanded = false }) {
+        Dialog(onDismissRequest = onDismissDialog) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(2.dp, Color(0xFF3E3E3E), RoundedCornerShape(16.dp))
+                    .clip(dialogShape)
+                    .border(2.dp, Color(0xFF3E3E3E), dialogShape)
                     .background(Color(0xFF373737))
                     .padding(16.dp), contentAlignment = Alignment.Center
             )
             {
                 KeyboardNumber(
-
-                    theme = KeyboardNumberTheme(
-                        colorBackground = Color(0xFF2D2D2D),
-                        colorBorderBackground = Color(0xFF282828),
-                        colorText = Color(0xFFFFFFFF),
-                        buttonColor = Color(0xFF282828),
-                        colorButtonBorder = Color(0xFF232323),
-                    ),
-
+                    theme = keyboardTheme,
                     value = -1, max = pageMax,
-                    onClick = {
-                        onChange(it - 1)
-                        expanded = false
-                    }
+                    onClick = onKeyboardNumberClick
                 )
             }
         }

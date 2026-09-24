@@ -144,7 +144,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 items(
                     items = list,
                     key = { it.id },
-                    contentType = { "saved_row" }
+                    contentType = { _ -> "saved_row" }
                 ) { item ->
                     val posterUrl = remember(item.id, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
@@ -269,6 +269,7 @@ fun ConfirmDeleteVideoDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val imageShape = remember { RoundedCornerShape(8.dp) }
     LavenderDialog(
         title = title,
         onDismiss = onDismiss,
@@ -278,7 +279,7 @@ fun ConfirmDeleteVideoDialog(
                 modifier = Modifier
                     .width(160.dp)
                     .aspectRatio(352f / 198f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(imageShape)
             )
         },
         confirmText = "Удалить",

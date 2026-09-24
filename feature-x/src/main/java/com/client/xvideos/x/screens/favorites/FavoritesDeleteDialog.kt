@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +26,7 @@ fun ConfirmDeleteFavoriteDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val posterShape = remember { RoundedCornerShape(8.dp) }
     LavenderDialog(
         title = "Удалить из избранного?",
         onDismiss = onDismiss,
@@ -34,7 +36,7 @@ fun ConfirmDeleteFavoriteDialog(
                 modifier = Modifier
                     .width(160.dp)
                     .aspectRatio(352f / 198f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(posterShape)
             )
         },
         confirmText = "Удалить",

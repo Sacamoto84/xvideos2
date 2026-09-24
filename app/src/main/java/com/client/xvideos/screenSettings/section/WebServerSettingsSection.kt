@@ -109,6 +109,10 @@ internal fun WebServerSettingsSection() {
         }
     }
 
+    val serverSubtitle = remember(isRunning, serverUrl) {
+        if (isRunning) "Работает: $serverUrl" else "Сервер выключен"
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         SettingsSectionTitle("Веб-сервер Wi-Fi")
 
@@ -116,7 +120,7 @@ internal fun WebServerSettingsSection() {
             SettingsSwitchRow(
                 icon = R.drawable.hard_drive_2_24,
                 text = "Трансляция на ПК",
-                subtitle = if (isRunning) "Работает: $serverUrl" else "Сервер выключен",
+                subtitle = serverSubtitle,
                 value = isRunning,
                 onValueChange = onToggleServer
             )
@@ -285,6 +289,12 @@ private fun WebServerActionButtons(
         }
     }
 
+    val copyButtonColors = ButtonDefaults.buttonColors(
+        containerColor = SettingsAccentColor,
+        contentColor = Color(0xFF2E2961)
+    )
+    val buttonShape = remember { RoundedCornerShape(12.dp) }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -292,11 +302,8 @@ private fun WebServerActionButtons(
         Button(
             onClick = onCopy,
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = SettingsAccentColor,
-                contentColor = Color(0xFF2E2961)
-            ),
-            shape = RoundedCornerShape(12.dp)
+            colors = copyButtonColors,
+            shape = buttonShape
         ) {
             Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
@@ -306,7 +313,7 @@ private fun WebServerActionButtons(
         OutlinedButton(
             onClick = onShare,
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(12.dp)
+            shape = buttonShape
         ) {
             Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = SettingsRowTextPrimary)
             Spacer(Modifier.width(6.dp))

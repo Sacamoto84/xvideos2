@@ -352,11 +352,11 @@ private fun SubscribedAlbumsGrid(
         modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        item(key = "top_inset", span = { GridItemSpan(maxLineSpan) }) {
+        item(key = "top_inset", contentType = "top_inset", span = { GridItemSpan(maxLineSpan) }) {
             Box(modifier = Modifier.height(topInset))
         }
 
-        items(albums, key = { it.id }) { item ->
+        items(albums, key = { it.id }, contentType = { "album_item" }) { item ->
             SubscribedAlbumGridItem(
                 item = item,
                 onAlbumClick = onAlbumClick,
@@ -366,7 +366,7 @@ private fun SubscribedAlbumsGrid(
         }
 
         if (isLoading && albums.isNotEmpty()) {
-            item(key = "loading_indicator", span = { GridItemSpan(maxLineSpan) }) {
+            item(key = "loading_indicator", contentType = "loading_indicator", span = { GridItemSpan(maxLineSpan) }) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

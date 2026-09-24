@@ -54,7 +54,7 @@ class ScreenTags(val tag: String) : Screen {
         val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
         val listStates = remember { mutableStateMapOf<Int, LazyListState>() }
 
-        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+        val onBack: () -> Unit = remember(navigator) { { navigator.pop().let {} } }
         BackHandler(onBack = onBack)
 
         val topCutout = getTopInsetDp()
@@ -67,6 +67,17 @@ class ScreenTags(val tag: String) : Screen {
         }
         val onOpenVideo: (ItemsX) -> Unit = remember(navigator) {
             { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) }
+        }
+
+        val renderHeader: @Composable () -> Unit = remember(tag, vm.screen.title0, vm.screen.title1, topCutout) {
+            {
+                TagsHeader(
+                    tag = tag,
+                    title0 = vm.screen.title0,
+                    title1 = vm.screen.title1,
+                    topCutout = topCutout
+                )
+            }
         }
 
         Scaffold(
@@ -99,14 +110,7 @@ class ScreenTags(val tag: String) : Screen {
                         loadPage = loadPage,
                         onOpenVideo = onOpenVideo,
                         listState = listStates.getOrPut(pageIndex) { LazyListState() },
-                        header = {
-                            TagsHeader(
-                                tag = tag,
-                                title0 = vm.screen.title0,
-                                title1 = vm.screen.title1,
-                                topCutout = topCutout
-                            )
-                        }
+                        header = renderHeader
                     )
                 }
             }
@@ -123,6 +127,9 @@ private fun TagsHeader(
     topCutout: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
+    val hasTitle0 = remember(title0) { title0.isNotBlank() }
+    val hasTitle1 = remember(title1) { title1.isNotBlank() }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -136,16 +143,16 @@ private fun TagsHeader(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        if (title0.isNotBlank() || title1.isNotBlank()) {
+        if (hasTitle0 || hasTitle1) {
             Row {
-                if (title0.isNotBlank()) {
+                if (hasTitle0) {
                     Text(
                         text = "$title0 ",
                         color = Color(0xFFB0B0B0),
                         fontSize = 12.sp,
                     )
                 }
-                if (title1.isNotBlank()) {
+                if (hasTitle1) {
                     Text(
                         text = title1,
                         color = Color(0xFF787878),

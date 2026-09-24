@@ -101,8 +101,8 @@ fun AppLockSettingsSection() {
     val onDisableLock: () -> Unit = remember { { dialogMode = AppLockDialogMode.DISABLE } }
     val onShowTimeoutClick: () -> Unit = remember { { showTimeoutDialog = true } }
     val onEnableCamouflageRequested: () -> Unit = remember { { showCamouflageVerificationDialog = true } }
-    val onToggleIncognito: (Boolean) -> Unit = remember { { Settings.keyboard_incognito_enabled.setValue(it) } }
-    val onToggleBlurRecent: (Boolean) -> Unit = remember { { Settings.blur_recent_tasks.setValue(it) } }
+    val onToggleIncognito: (Boolean) -> Unit = remember { { enabledValue -> Settings.keyboard_incognito_enabled.setValue(enabledValue) } }
+    val onToggleBlurRecent: (Boolean) -> Unit = remember { { enabledValue -> Settings.blur_recent_tasks.setValue(enabledValue) } }
 
     val isAnyDialogOpen = dialogMode != null || showCamouflageVerificationDialog || showTimeoutDialog
     val onBackDismiss = remember {
@@ -129,8 +129,8 @@ fun AppLockSettingsSection() {
         )
     }
 
+    val currentTimeout = remember(timeoutSeconds) { AppLockTimeout.fromSeconds(timeoutSeconds) }
     if (showTimeoutDialog) {
-        val currentTimeout = AppLockTimeout.fromSeconds(timeoutSeconds)
         AppLockTimeoutDialog(
             currentTimeout = currentTimeout,
             onDismiss = onDismissTimeoutDialog,
@@ -154,22 +154,35 @@ fun AppLockSettingsSection() {
         }
     }
 
+    val lockSubtitle = remember(enabled) { if (enabled) "Включена" else "Выключена" }
+    val timeoutSubtitle = remember(currentTimeout) {
+        when (currentTimeout) {
+            AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
+            AppLockTimeout.NEVER -> "Выключена (только при перезапуске)"
+            else -> "Через ${currentTimeout.displayName.lowercase()} в фоне"
+        }
+    }
+    val keyboardSubtitle = remember(keyboardIncognito) {
+        if (keyboardIncognito) "Клавиатура не сохраняет поисковые запросы" else "Стандартный режим ввода"
+    }
+    val blurSubtitle = remember(blurRecentTasks) {
+        if (blurRecentTasks) {
+            "Превью скрыто/размыто в карусели недавних задач"
+        } else {
+            "Отображается обычный снимок экрана"
+        }
+    }
+
     SettingsGroup {
         SettingsListItem(
             icon = R.drawable.key_24,
             text = "Блокировка при запуске",
-            subtitle = if (enabled) "Включена" else "Выключена",
+            subtitle = lockSubtitle,
             trailing = setOrChangeTrailing
         )
 
         if (enabled) {
             SettingsDivider2()
-            val currentTimeout = AppLockTimeout.fromSeconds(timeoutSeconds)
-            val timeoutSubtitle = when (currentTimeout) {
-                AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
-                AppLockTimeout.NEVER -> "Выключена (только при перезапуске)"
-                else -> "Через ${currentTimeout.displayName.lowercase()} в фоне"
-            }
             SettingsListItem(
                 icon = R.drawable.key_24,
                 text = "Автоблокировка",
@@ -198,7 +211,7 @@ fun AppLockSettingsSection() {
         SettingsSwitchRow(
             icon = R.drawable.memory_24,
             text = "Инкогнито-клавиатура",
-            subtitle = if (keyboardIncognito) "Клавиатура не сохраняет поисковые запросы" else "Стандартный режим ввода",
+            subtitle = keyboardSubtitle,
             value = keyboardIncognito,
             onValueChange = onToggleIncognito
         )
@@ -208,11 +221,7 @@ fun AppLockSettingsSection() {
         SettingsSwitchRow(
             icon = R.drawable.ic_blur_24,
             text = "Защита в диспетчере задач",
-            subtitle = if (blurRecentTasks) {
-                "Превью скрыто/размыто в карусели недавних задач"
-            } else {
-                "Отображается обычный снимок экрана"
-            },
+            subtitle = blurSubtitle,
             value = blurRecentTasks,
             onValueChange = onToggleBlurRecent
         )
@@ -226,10 +235,12 @@ private fun CamouflageGroup(
 ) {
     val context = LocalContext.current.applicationContext
     val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
-    val camouflageSubtitle = when {
-        !passwordSet -> "Сначала задайте код доступа"
-        isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
-        else -> "Выключена (стандартная иконка приложения)"
+    val camouflageSubtitle = remember(passwordSet, isCamouflage) {
+        when {
+            !passwordSet -> "Сначала задайте код доступа"
+            isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
+            else -> "Выключена (стандартная иконка приложения)"
+        }
     }
     val onToggleCamouflage: (Boolean) -> Unit = remember(passwordSet, onEnableRequested, context) {
         { enable ->

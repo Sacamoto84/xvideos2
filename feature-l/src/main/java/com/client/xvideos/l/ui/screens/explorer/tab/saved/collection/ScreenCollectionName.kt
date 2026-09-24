@@ -76,7 +76,7 @@ class ScreenCollectionName(
             {
                 vm.savedL.collection.exitCollection()
                 if (popOnBack) {
-                    navigator.pop()
+                    navigator.pop().let {}
                 }
             }
         }
@@ -121,7 +121,7 @@ fun L_CollectionNameContent(
     }
 
     val onSearchChange: (String) -> Unit = remember(host) {
-        { host.collectionSearchQuery = it }
+        { query -> host.collectionSearchQuery = query }
     }
 
     val onToggleSearch: () -> Unit = remember(host, searchVisible) {
@@ -147,19 +147,16 @@ fun L_CollectionNameContent(
         }
     }
 
+    val onClearSearchQuery = remember(host) { { host.collectionSearchQuery = "" } }
+    val onHideSearch = remember { { searchVisible = false } }
+
     // Иерархия «Назад»:
     // 1. Очистить текст поискового запроса, если введен
     // 2. Скрыть поле поиска, если панель открыта
     // 3. Выйти из коллекции
-    BackHandler(enabled = searchQuery.isNotEmpty()) {
-        host.collectionSearchQuery = ""
-    }
-    BackHandler(enabled = searchQuery.isEmpty() && searchVisible) {
-        searchVisible = false
-    }
-    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible) {
-        handleExit()
-    }
+    BackHandler(enabled = searchQuery.isNotEmpty(), onBack = onClearSearchQuery)
+    BackHandler(enabled = searchQuery.isEmpty() && searchVisible, onBack = onHideSearch)
+    BackHandler(enabled = searchQuery.isEmpty() && !searchVisible, onBack = handleExit)
 
     val columnSelect by Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle()
 
@@ -233,13 +230,14 @@ private fun LCollectionDetailTopBar(
         }
 
         AnimatedVisibility(searchVisible) {
+            val searchTextStyle = remember { Theme.L.Type.body.copy(color = Theme.L.textColor) }
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 label = { Text("Поиск в коллекции") },
-                textStyle = Theme.L.Type.body.copy(color = Theme.L.textColor)
+                textStyle = searchTextStyle
             )
         }
     }

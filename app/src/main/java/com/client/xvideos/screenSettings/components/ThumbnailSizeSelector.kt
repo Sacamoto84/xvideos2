@@ -9,6 +9,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,22 +26,30 @@ fun ThumbnailSizeSelector(
     var expanded by remember { mutableStateOf(false) }
     val items = ThumbnailsSize.displayNames
 
+    val onOpen = remember { { expanded = true } }
+    val onDismiss = remember { { expanded = false } }
+
     Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 72.dp, vertical = 4.dp)) {
-        Button(onClick = { expanded = true }) {
+        Button(onClick = onOpen) {
             Text(currentValue)
         }
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = onDismiss
         ) {
             items.forEach { name ->
-                DropdownMenuItem(
-                    text = { Text(name) },
-                    onClick = {
-                        onSelected(name)
-                        expanded = false
+                key(name) {
+                    val handleSelect = remember(name, onSelected) {
+                        {
+                            onSelected(name)
+                            expanded = false
+                        }
                     }
-                )
+                    DropdownMenuItem(
+                        text = { Text(name) },
+                        onClick = handleSelect
+                    )
+                }
             }
         }
     }

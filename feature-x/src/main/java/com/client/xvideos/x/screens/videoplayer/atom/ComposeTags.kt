@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -151,6 +152,9 @@ fun ComposeTags(
 
     if (tagsState.visibleItems.isEmpty()) return
 
+    val onExpandTags = remember { { isExpanded = true } }
+    val onCollapseTags = remember { { isExpanded = false } }
+
     Box(
         modifier = modifier
             .animateContentSize()
@@ -173,28 +177,30 @@ fun ComposeTags(
             horizontalArrangement = Arrangement.Start,
         ) {
             tagsState.visibleItems.forEach { item ->
-                when (item) {
-                    is TagItem.Channel -> {
-                        ScreenItemTagsModelPornostars(
-                            text = item.model.name,
-                            color = TAG_CHANNEL_COLOR,
-                            count = item.model.count,
-                            onClick = { onClick(item.model.name) },
-                        )
-                    }
-                    is TagItem.Pornstar -> {
-                        ScreenItemTagsModelPornostars(
-                            text = item.model.name,
-                            color = TAG_PORNSTAR_COLOR,
-                            count = item.model.count,
-                            onClick = { onClick(item.model.name) },
-                        )
-                    }
-                    is TagItem.Keyword -> {
-                        TagChip(
-                            text = item.tag,
-                            onClick = { onClick(item.tag) },
-                        )
+                key(item.name) {
+                    when (item) {
+                        is TagItem.Channel -> {
+                            ScreenItemTagsModelPornostars(
+                                text = item.model.name,
+                                color = TAG_CHANNEL_COLOR,
+                                count = item.model.count,
+                                onClick = { onClick(item.model.name) },
+                            )
+                        }
+                        is TagItem.Pornstar -> {
+                            ScreenItemTagsModelPornostars(
+                                text = item.model.name,
+                                color = TAG_PORNSTAR_COLOR,
+                                count = item.model.count,
+                                onClick = { onClick(item.model.name) },
+                            )
+                        }
+                        is TagItem.Keyword -> {
+                            TagChip(
+                                text = item.tag,
+                                onClick = { onClick(item.tag) },
+                            )
+                        }
                     }
                 }
             }
@@ -205,14 +211,14 @@ fun ComposeTags(
                         text = "+${tagsState.hiddenCount}",
                         isExpanded = false,
                         contentDescription = "Развернуть теги",
-                        onClick = { isExpanded = true },
+                        onClick = onExpandTags,
                     )
                 } else {
                     TagToggleChip(
                         text = "Свернуть",
                         isExpanded = true,
                         contentDescription = "Свернуть теги",
-                        onClick = { isExpanded = false },
+                        onClick = onCollapseTags,
                     )
                 }
             }

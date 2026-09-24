@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,8 +27,12 @@ import com.composables.core.Icon
 
 @Composable
 fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, isVisibleDuration : Boolean = true) {
+    val tileShape = remember { RoundedCornerShape(8.dp) }
+    val indexText = remember(index) { index.toString() }
+    val prettyViews = remember(item.views) { item.views?.toPrettyCount() ?: "-" }
+    val prettyDuration = remember(item.duration) { item.duration?.toMinSec() ?: "-" }
 
-    Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp))) {
+    Box(modifier = Modifier.fillMaxSize().clip(tileShape)) {
 
 //        if (item.urls.poster != null) {
 //            UrlImage( url = item.urls.poster!!, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize() )
@@ -37,7 +42,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
 //        }
         //Индекс картинки
         Text(
-            index.toString(),
+            indexText,
             color = Color.Gray,
             modifier = Modifier.padding(start = 8.dp).offset(1.dp, 1.dp),
             fontFamily = Theme.R.fontFamilyPopinsMedium
@@ -72,7 +77,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
 
                     Box {
                         Text(
-                            item.views?.toPrettyCount() ?: "-",
+                            prettyViews,
                             color = Color.Black,
                             modifier = Modifier
                                 .padding(start = 8.dp)
@@ -81,7 +86,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                         )
 
                         Text(
-                            item.views?.toPrettyCount() ?: "-",
+                            prettyViews,
                             color = Color.White,
                             modifier = Modifier
                                 .padding(start = 8.dp),
@@ -96,7 +101,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                 Box {
 
                     Text(
-                        item.duration?.toMinSec() ?: "-",
+                        prettyDuration,
                         color = Color.Black,
                         modifier = Modifier
                             .padding(8.dp)
@@ -105,7 +110,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                     )
 
                     Text(
-                        item.duration?.toMinSec() ?: "-",
+                        prettyDuration,
                         color = Color.White,
                         modifier = Modifier
                             .padding(8.dp),

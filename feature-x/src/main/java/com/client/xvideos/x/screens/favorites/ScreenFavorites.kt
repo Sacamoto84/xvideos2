@@ -91,11 +91,11 @@ class ScreenFavorites : Screen {
                     else item.previewImage
                 }
             },
-            onDelete = remember(vm) { { vm.removeFavorite(it) } },
-            onDownload = remember(vm) { { vm.download(it) } },
-            onSaveToGallery = remember(vm) { { vm.saveToGallery(it) } },
+            onDelete = remember(vm) { { item -> vm.removeFavorite(item) } },
+            onDownload = remember(vm) { { item -> vm.download(item) } },
+            onSaveToGallery = remember(vm) { { item -> vm.saveToGallery(item) } },
             onPlayLocal = remember(navigator) { { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) } },
-            onOpenVideo = remember(navigator) { { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) } },
+            onOpenVideo = remember(navigator) { { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) } },
         )
     }
 }
@@ -175,11 +175,11 @@ private fun FavoritesContent(
                     .fillMaxSize()
                     .padding(bottom = padding.calculateBottomPadding())
             ) {
-                item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
+                item(key = "header", contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
                     FavoritesHeader(topCutout = topCutout)
                 }
 
-                items(items = favorites, key = { it.id }) { item ->
+                items(items = favorites, key = { it.id }, contentType = { "favorite_row" }) { item ->
                     FavoriteRow(
                         item = item,
                         localUrl = localUrlOf(item),
@@ -369,7 +369,7 @@ private fun FavoriteActionsExpandMenu(
 /** Продолжительность видео в правом верхнем углу с «тенью» (как в оригинале). */
 @Composable
 private fun DurationOverlay(duration: String) {
-    val text = duration.trim().removeSuffix(".")
+    val text = remember(duration) { duration.trim().removeSuffix(".") }
     if (text.isEmpty()) return
     val offsetY = (-3).dp
     Box(modifier = Modifier) {

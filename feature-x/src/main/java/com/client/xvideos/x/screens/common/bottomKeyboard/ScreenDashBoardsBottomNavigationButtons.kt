@@ -48,9 +48,9 @@ fun ScreenDashBoardsBottomNavigationButtonsPreview() {
 
         Text(value.toString(), fontSize = 32.sp)
 
-        BottomListDashBoardNavigationButtons2(value, {
-            value = it
-            println("!!! $it")
+        BottomListDashBoardNavigationButtons2(value, { newValue ->
+            value = newValue
+            println("!!! $newValue")
         }, 20000)
 
     }
@@ -65,6 +65,10 @@ private val colorAccent = Color(0xFFFF9000)
 private val colorTextWhite = Color(0xFFCCCCCC)
 
 private val colorBlackBackground = Color(0xFF252525)
+
+private val selectedBorderColor = Color(0xFFFF9900)
+
+private val unselectedBorderColor = Color(0x000000)
 
 private val height = 48.dp
 
@@ -88,6 +92,13 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
         state.animateScrollToItem(index = indexToScroll, scrollOffset = -offset)
     }
 
+    val onBackClick = remember(value, onChange) {
+        { onChange((value - 1).coerceAtLeast(0)) }
+    }
+    val onForwardClick = remember(value, maxPageIndex, onChange) {
+        { onChange((value + 1).coerceIn(0, maxPageIndex)) }
+    }
+
     Row(
         modifier = Modifier
             .height(48.dp)
@@ -98,15 +109,13 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
         ///////////////////////////////
         Box(
             modifier = Modifier
-                .padding(horizontal = (0.5).dp)
+                .padding(horizontal = 0.5.dp)
                 .width(height)
                 .height(height)
                 .background(
                     if (!canGoBack) colorTextBlack else colorAccent
                 )
-                .clickable(enabled = canGoBack) {
-                    onChange.invoke((value - 1).coerceAtLeast(0))
-                },
+                .clickable(enabled = canGoBack, onClick = onBackClick),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -120,42 +129,35 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f), state = state
+                .weight(1f),
+            state = state
         ) {
-
-            items(count = safeMax, key = { it }) { index ->
-                val pageNumber = index + 1
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = (0.5).dp)
-                        .fillParentMaxWidth(0.2f)
-                        .height(height)
-                        .border(
-                            2.dp,
-                            Color(if (value == index) 0xFFFF9900 else 0x000000)
-                        )
-                        .background(colorBlackBackground)
-                        .clickable {
-                            onChange.invoke(index.coerceIn(0, maxPageIndex))
-                        }, contentAlignment = Alignment.Center
-                ) {
-                    Text("$pageNumber", color = colorTextWhite)
+            items(
+                count = safeMax,
+                key = { index -> index },
+                contentType = { "page_number_item" }
+            ) { index ->
+                val onPageClick = remember(index, maxPageIndex, onChange) {
+                    { onChange(index.coerceIn(0, maxPageIndex)) }
                 }
+                PageNumberButton(
+                    pageNumber = index + 1,
+                    isSelected = value == index,
+                    onClick = onPageClick,
+                    modifier = Modifier.fillParentMaxWidth(0.2f)
+                )
             }
-
         }
 
         ///////////////////////////////
         val canGoForward = value < maxPageIndex
         Box(
             modifier = Modifier
-                .padding(horizontal = (0.5).dp)
+                .padding(horizontal = 0.5.dp)
                 .width(height)
                 .height(height)
                 .background(if (!canGoForward) colorTextBlack else colorAccent)
-                .clickable(enabled = canGoForward) {
-                    onChange.invoke((value + 1).coerceIn(0, maxPageIndex))
-                },
+                .clickable(enabled = canGoForward, onClick = onForwardClick),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -166,6 +168,29 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
             )
         }
 
+    }
+}
+
+@Composable
+private fun PageNumberButton(
+    pageNumber: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .padding(horizontal = 0.5.dp)
+            .height(height)
+            .border(
+                2.dp,
+                if (isSelected) selectedBorderColor else unselectedBorderColor
+            )
+            .background(colorBlackBackground)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("$pageNumber", color = colorTextWhite)
     }
 }
 

@@ -78,13 +78,16 @@ object R_Screen_Saved_LikesTab : Screen {
             }
         }
 
+        val topInset = getTopInsetDp()
+        val contentPadding = remember(topInset) { PaddingValues(top = topInset) }
+
         Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
             LazyRow123(
                 host = vm.likedHost,
                 modifier = Modifier.fillMaxSize(),
                 onClickOpenProfile = onClickOpenProfile,
-                contentPadding = PaddingValues(top = getTopInsetDp()),
+                contentPadding = contentPadding,
                 isRunLike = true
             )
 

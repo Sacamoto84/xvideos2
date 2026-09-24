@@ -278,15 +278,33 @@ internal fun BackupSettingsSection(
         }
     }
 
+    val backupHeaderValue = remember(screen) {
+        if (screen == BackupFlowScreen.CREATE) {
+            "Создание архива выбранных папок. DB, настройки и кеши не входят в ZIP."
+        } else {
+            "Восстановление заменяет выбранные папки. Для R Download после restore автоматически проверяются .info."
+        }
+    }
+    val backupSummaryText = remember(backupReport) { selectionSummaryText(backupReport) }
+    val backupValueText = remember(isWorking, backupSummaryText) {
+        if (isWorking) "Идет операция" else backupSummaryText
+    }
+    val restoreSubtitle = remember(restoreUri) {
+        restoreUri?.lastPathSegment ?: "Сначала выберите архив"
+    }
+    val restoreSummaryText = remember(restoreReport) { selectionSummaryText(restoreReport) }
+    val restoreValueText = remember(isWorking, restoreSummaryText) {
+        if (isWorking) "Идет операция" else restoreSummaryText
+    }
+    val restoreDialogBody = remember(restoreSummaryText) {
+        "Выбранные папки будут заменены данными из архива: $restoreSummaryText. DB, настройки и кеши не трогаются."
+    }
+
     SettingsGroup {
         SettingsValueRow(
             icon = R.drawable.hard_drive_2_24,
             text = "Backup X/L/R",
-            value = if (screen == BackupFlowScreen.CREATE) {
-                "Создание архива выбранных папок. DB, настройки и кеши не входят в ZIP."
-            } else {
-                "Восстановление заменяет выбранные папки. Для R Download после restore автоматически проверяются .info."
-            }
+            value = backupHeaderValue
         )
         BackupModeSelector(
             selected = screen,
@@ -301,7 +319,7 @@ internal fun BackupSettingsSection(
                 SettingsValueRow(
                     icon = R.drawable.hard_drive_2_24,
                     text = "Выбрано для архива",
-                    value = if (isWorking) "Идет операция" else selectionSummaryText(backupReport)
+                    value = backupValueText
                 )
                 SettingsDivider2()
 
@@ -340,7 +358,7 @@ internal fun BackupSettingsSection(
                 SettingsListItem(
                     icon = R.drawable.hard_drive_2_24,
                     text = "Создать бэкап",
-                    subtitle = selectionSummaryText(backupReport),
+                    subtitle = backupSummaryText,
                     trailing = {
                         Button(
                             enabled = !isWorking && selectedBackupPaths.isNotEmpty(),
@@ -360,7 +378,7 @@ internal fun BackupSettingsSection(
                 SettingsListItem(
                     icon = R.drawable.hard_drive_2_24,
                     text = "Открыть архив",
-                    subtitle = restoreUri?.lastPathSegment ?: "Сначала выберите архив",
+                    subtitle = restoreSubtitle,
                     trailing = {
                         Button(
                             enabled = !isWorking,
@@ -391,7 +409,7 @@ internal fun BackupSettingsSection(
                     SettingsValueRow(
                         icon = R.drawable.hard_drive_2_24,
                         text = "Выбрано для восстановления",
-                        value = if (isWorking) "Идет операция" else selectionSummaryText(restoreReport)
+                        value = restoreValueText
                     )
                     BackupSelectionActions(
                         enabled = !isWorking,
@@ -410,7 +428,7 @@ internal fun BackupSettingsSection(
                         text = "Восстановить выбранное",
                         value = if (isWorking) "Идет..." else "Восстановить",
                         textDialogTitle = "Восстановить backup",
-                        textDialogBody = "Выбранные папки будут заменены данными из архива: ${selectionSummaryText(restoreReport)}. DB, настройки и кеши не трогаются.",
+                        textDialogBody = restoreDialogBody,
                         textDialogButton = "Восстановить",
                         onClick = {
                             val uri = restoreUri
@@ -426,7 +444,7 @@ internal fun BackupSettingsSection(
                                 scope.launch(Dispatchers.Main) {
                                     isWorking = true
                                     try {
-                                        appendBackupLog("Восстановление backup: ${selectionSummaryText(restoreReport)}")
+                                        appendBackupLog("Восстановление backup: $restoreSummaryText")
                                         val autoRecoverL = shouldAutoRecoverL(selectedRestorePaths)
                                         val autoRecoverRedDownload = shouldAutoRecoverRedDownload(selectedRestorePaths)
                                         val result = withContext(Dispatchers.IO) {

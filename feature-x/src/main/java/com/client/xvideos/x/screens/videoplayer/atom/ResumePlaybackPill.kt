@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,8 +27,12 @@ fun ResumePlaybackPill(
     onRestart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val pillShape = remember { RoundedCornerShape(20.dp) }
+    val buttonShape = remember { RoundedCornerShape(6.dp) }
+    val handleRestart = remember(onRestart) { { onRestart() } }
+
     Surface(
-        modifier = modifier.clip(RoundedCornerShape(20.dp)),
+        modifier = modifier.clip(pillShape),
         color = Color(0xDD212121),
         shadowElevation = 4.dp,
         tonalElevation = 6.dp,
@@ -48,8 +53,8 @@ fun ResumePlaybackPill(
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .clickable { onRestart() }
+                    .clip(buttonShape)
+                    .clickable(onClick = handleRestart)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }

@@ -152,7 +152,11 @@ object R_Screen_CreatorsTab : Screen {
                     state = state,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(savedRed.creators.list, key = { it.username }) { item ->
+                    items(
+                        items = savedRed.creators.list,
+                        key = { it.username },
+                        contentType = { "creator_item" }
+                    ) { item ->
                         CreatorListItem(
                             item = item,
                             onClick = onCreatorClick,
@@ -189,14 +193,15 @@ private fun CreatorListItem(
     onClick: (String) -> Unit,
     onDelete: (UserInfo) -> Unit
 ) {
-    val displayName = item.name.ifBlank { item.username }
+    val displayName = remember(item.name, item.username) { item.name.ifBlank { item.username } }
     val handleItemClick = remember(item.username, onClick) { { onClick(item.username) } }
     val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
+    val cardShape = remember { RoundedCornerShape(8.dp) }
 
     Row(
         modifier = Modifier
             .padding(vertical = 2.dp, horizontal = 6.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(cardShape)
             .fillMaxWidth()
             .background(Theme.tabLevel3)
             .clickable(onClick = handleItemClick),

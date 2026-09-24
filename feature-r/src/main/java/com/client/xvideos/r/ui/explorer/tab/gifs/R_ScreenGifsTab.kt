@@ -117,7 +117,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
 
     LaunchedEffect(columnSelect) { vm.lazyHost.columns = columnSelect }
 
-    val onSortSelect: (Order) -> Unit = remember(vm) { { vm.lazyHost.changeSortType(it) } }
+    val onSortSelect: (Order) -> Unit = remember(vm) { { order -> vm.lazyHost.changeSortType(order) } }
     val onUpClick: () -> Unit = remember(vm, haptic) {
         {
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -134,6 +134,9 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
     val searchFieldComposable: @Composable (Modifier) -> Unit = remember(search) {
         { modifier -> RSearchTextField(search, modifier = modifier) }
     }
+
+    val topInset = getTopInsetDp()
+    val contentPadding = remember(topInset) { PaddingValues(top = topInset) }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -157,7 +160,7 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
                     host = vm.lazyHost,
                     modifier = Modifier.fillMaxSize(),
                     onClickOpenProfile = onClickOpenProfile,
-                    contentPadding = PaddingValues(top = getTopInsetDp()),
+                    contentPadding = contentPadding,
                 )
         }
     }

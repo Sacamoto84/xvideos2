@@ -77,18 +77,20 @@ object SavedNichesTab : Screen {
         )
 
         var itemPendingDelete by remember { mutableStateOf<NichesInfo?>(null) }
-
-        BackHandler(enabled = itemPendingDelete != null) {
-            itemPendingDelete = null
-        }
-
-        DialogNicheDelete(
-            item = itemPendingDelete,
-            onDismiss = { itemPendingDelete = null },
-            onConfirm = { pending ->
+        val onDismissDelete = remember { { itemPendingDelete = null } }
+        val onConfirmDelete = remember(vm) {
+            { pending: NichesInfo ->
                 vm.savedRed.niches.remove(pending)
                 itemPendingDelete = null
             }
+        }
+
+        BackHandler(enabled = itemPendingDelete != null, onBack = onDismissDelete)
+
+        DialogNicheDelete(
+            item = itemPendingDelete,
+            onDismiss = onDismissDelete,
+            onConfirm = onConfirmDelete
         )
 
         val onNicheClick: (NichesInfo) -> Unit = remember(navigator) {
@@ -129,9 +131,8 @@ object SavedNichesTab : Screen {
                 LazyColumn(
                     state = state,
                     modifier = Modifier.fillMaxSize()
-                )
-                {
-                    items(vm.savedRed.niches.list, key = { it.id }) { item ->
+                ) {
+                    items(vm.savedRed.niches.list, key = { it.id }, contentType = { "saved_niche" }) { item ->
                         SavedNicheRow(
                             item = item,
                             onClick = onNicheClick,

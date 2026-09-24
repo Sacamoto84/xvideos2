@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
+import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
@@ -54,6 +55,37 @@ fun X_PlayerBottomBar(
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
     var sliderValue by remember(host) { mutableFloatStateOf(0f) }
 
+    val onTogglePlayPause = remember(host) { { host.togglePlayPause() } }
+    val onSeekBarValueChange: (Float) -> Unit = remember(host) {
+        { v ->
+            sliderValue = v
+            host.isSliding = true
+            host.seekToTime = v
+        }
+    }
+    val onSeekBarValueChangeFinished: () -> Unit = remember(host) {
+        {
+            host.seekTo(sliderValue)
+        }
+    }
+    val onSpeedSelected: (PlayerSpeed) -> Unit = remember(host) {
+        { newSpeed -> host.speed = newSpeed }
+    }
+    val fitModeShape = remember { RoundedCornerShape(4.dp) }
+    val onToggleFitMode = remember(host) {
+        {
+            host.videoFitMode = if (host.videoFitMode == ScreenResize.FIT) {
+                ScreenResize.FILL
+            } else {
+                ScreenResize.FIT
+            }
+        }
+    }
+    val onFullScreenClick = remember(onFullScreen) {
+        onFullScreen?.let { action -> { action() } }
+    }
+    val formattedTotalTime = remember(host.totalTime) { formatTime(host.totalTime) }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -70,7 +102,7 @@ fun X_PlayerBottomBar(
             tint = Color.White,
             modifier = Modifier
                 .size(28.dp)
-                .clickable { host.togglePlayPause() }
+                .clickable(onClick = onTogglePlayPause)
         )
 
         // Текущее время
@@ -97,21 +129,15 @@ fun X_PlayerBottomBar(
             modifier = Modifier.weight(1f),
             progress = safeCurrentTime,
             maxProgress = safeMaxProgress,
-            onValueChange = { v ->
-                sliderValue = v
-                host.isSliding = true
-                host.seekToTime = v
-            },
-            onValueChangeFinished = {
-                host.seekTo(sliderValue)
-            },
+            onValueChange = onSeekBarValueChange,
+            onValueChangeFinished = onSeekBarValueChangeFinished,
             thumbRadius = 6.dp,
             trackHeight = 3.dp,
         )
 
         // Общее время
         Text(
-            text = formatTime(host.totalTime),
+            text = formattedTotalTime,
             color = Color.White,
             fontFamily = FontFamily.SansSerif,
             fontSize = 11.sp
@@ -120,7 +146,7 @@ fun X_PlayerBottomBar(
         // Меню выбора скорости воспроизведения
         PlaybackSpeedMenu(
             currentSpeed = host.speed,
-            onSpeedSelected = { host.speed = it }
+            onSpeedSelected = onSpeedSelected
         )
 
         // Переключатель режима масштабирования Fit / Fill
@@ -132,27 +158,21 @@ fun X_PlayerBottomBar(
                 fontWeight = FontWeight.Bold,
                 fontSize = 11.sp,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .clickable {
-                        host.videoFitMode = if (host.videoFitMode == ScreenResize.FIT) {
-                            ScreenResize.FILL
-                        } else {
-                            ScreenResize.FIT
-                        }
-                    }
+                    .clip(fitModeShape)
+                    .clickable(onClick = onToggleFitMode)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }
 
         // Полный экран (если поддержан экраном)
-        if (onFullScreen != null) {
+        if (onFullScreenClick != null) {
             Icon(
                 imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
                 contentDescription = if (isFullScreen) "Exit Fullscreen" else "Fullscreen",
                 tint = Color.White,
                 modifier = Modifier
                     .size(28.dp)
-                    .clickable { onFullScreen() }
+                    .clickable(onClick = onFullScreenClick)
             )
         }
     }

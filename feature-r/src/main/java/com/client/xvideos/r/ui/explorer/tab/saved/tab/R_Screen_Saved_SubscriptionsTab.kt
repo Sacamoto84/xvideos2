@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -103,8 +104,11 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
         BackHandler(enabled = userToDelete != null, onBack = onDismissDelete)
         BackHandler(enabled = userToDelete == null && hasSelectedCreators, onBack = onClearSelectedCreators)
 
-        val onOpenProfile = remember(navigator) {
-            { username: String -> navigator.push(ScreenRedProfile(username)) }
+        val onOpenProfile = remember(navigator, vm) {
+            { username: String ->
+                vm.likedHost.currentIndexGoto = vm.likedHost.currentIndex
+                navigator.push(ScreenRedProfile(username))
+            }
         }
         val onSelectCreator = remember(selectedListCreator, pager) {
             { name: String ->
@@ -203,11 +207,13 @@ fun CreatorsHeader(
             .padding(4.dp)
     ) {
         listCreators.forEach { creator ->
-            CreatorChipItem(
-                creator = creator,
-                onCreatorClick = onCreatorClick,
-                onLongClick = onLongClick
-            )
+            key(creator.name) {
+                CreatorChipItem(
+                    creator = creator,
+                    onCreatorClick = onCreatorClick,
+                    onLongClick = onLongClick
+                )
+            }
         }
     }
 }

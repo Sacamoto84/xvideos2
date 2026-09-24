@@ -101,18 +101,28 @@ internal fun RSettingsSection(
         }
     }
 
+    val formattedTotal = remember(sizeRedTotal) { formatBytes(sizeRedTotal) }
+    val formattedDownload = remember(sizeRedDownload) { formatBytes(sizeRedDownload) }
+    val clearDialogBody = remember(formattedDownload) { "Подтвердить очистку: $formattedDownload" }
+    val nichesCacheValue = remember(nichesCacheSize, nichesCacheLastModifiedHour) {
+        "$nichesCacheSize \u2022 ${nichesCacheLastModifiedHour}h"
+    }
+    val nichesSubtitle = remember(isNichesCacheDownloading) {
+        if (isNichesCacheDownloading) "Идёт обновление" else "Данные для поиска и фильтров R"
+    }
+
     SettingsGroup {
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = "Размер всех папок Red",
-            value = formatBytes(sizeRedTotal)
+            value = formattedTotal
         )
         SettingsDivider()
 
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = "Размер папки Download",
-            value = formatBytes(sizeRedDownload)
+            value = formattedDownload
         )
         SettingsDivider()
 
@@ -121,7 +131,7 @@ internal fun RSettingsSection(
             text = "Очистить папку Download",
             value = "Очистить",
             textDialogTitle = "Очистка папки Download",
-            textDialogBody = "Подтвердить очистку: ${formatBytes(sizeRedDownload)}",
+            textDialogBody = clearDialogBody,
             textDialogButton = "Очистить",
             onClick = onClearDownload
         )
@@ -138,7 +148,7 @@ internal fun RSettingsSection(
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = "Кэш Niches",
-            value = "$nichesCacheSize \u2022 ${nichesCacheLastModifiedHour}h"
+            value = nichesCacheValue
         )
 
         if (isNichesCacheDownloading) {
@@ -157,7 +167,7 @@ internal fun RSettingsSection(
         SettingsListItem(
             icon = R.drawable.icon_red,
             text = "Обновить кэш Niches",
-            subtitle = if (isNichesCacheDownloading) "Идёт обновление" else "Данные для поиска и фильтров R",
+            subtitle = nichesSubtitle,
             trailing = nichesTrailing
         )
     }

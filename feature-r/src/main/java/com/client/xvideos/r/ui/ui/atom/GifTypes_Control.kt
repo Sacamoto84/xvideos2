@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,13 +25,16 @@ import com.client.xvideos.r.ui.profile.TypeGifs
 
 @Composable
 fun GifTypes_Control(vm: ScreenRedProfileSM) {
+    val handleTypeSelected: (TypeGifs) -> Unit = remember(vm) {
+        { type ->
+            vm.typeGifs = type
+            vm.clear()
+        }
+    }
     GifTypes_Control(
         typeGifsList = vm.typeGifsList,
         selectedType = vm.typeGifs,
-        onTypeSelected = {
-            vm.typeGifs = it
-            vm.clear()
-        }
+        onTypeSelected = handleTypeSelected
     )
 }
 
@@ -40,16 +44,35 @@ fun GifTypes_Control(
     selectedType: TypeGifs,
     onTypeSelected: (TypeGifs) -> Unit
 ) {
+    val item0 = typeGifsList.getOrNull(0)
+    val item1 = typeGifsList.getOrNull(1)
+    val onSelect0 = remember(item0, onTypeSelected) {
+        { item0?.let(onTypeSelected) ?: Unit }
+    }
+    val onSelect1 = remember(item1, onTypeSelected) {
+        { item1?.let(onTypeSelected) ?: Unit }
+    }
+
     Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
 
-        TextAndLine(Modifier.weight(1f), typeGifsList[0].value, typeGifsList[0] == selectedType) {
-            onTypeSelected(typeGifsList[0])
+        if (item0 != null) {
+            TextAndLine(
+                modifier = Modifier.weight(1f),
+                str = item0.value,
+                select = item0 == selectedType,
+                onClick = onSelect0
+            )
         }
 
         Box(Modifier.width(1.dp).height(48.dp).background(Theme.R.colorBorderGray))
 
-        TextAndLine(Modifier.weight(1f), typeGifsList[1].value, typeGifsList[1] == selectedType) {
-            onTypeSelected(typeGifsList[1])
+        if (item1 != null) {
+            TextAndLine(
+                modifier = Modifier.weight(1f),
+                str = item1.value,
+                select = item1 == selectedType,
+                onClick = onSelect1
+            )
         }
 
     }
@@ -57,23 +80,24 @@ fun GifTypes_Control(
 
 @Composable
 private fun TextAndLine(
-    modifier: Modifier = Modifier,
     str: String,
     select: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val textColor = if (select) Color.White else Theme.R.colorTextGray
+    val indicatorColor = if (select) Theme.R.colorRed else Color.Transparent
 
     Box(
-        modifier = Modifier
-            .then(modifier)
+        modifier = modifier
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
 
         Text(
-            str,
+            text = str,
             fontSize = 18.sp,
-            color = if (select) Color.White else Theme.R.colorTextGray,
+            color = textColor,
             fontFamily = Theme.R.fontFamilyPopinsRegular
         )
 
@@ -83,7 +107,7 @@ private fun TextAndLine(
                 .offset(0.dp, 16.dp)
                 .width(48.dp)
                 .height(4.dp)
-                .background(if (select) Theme.R.colorRed else Color.Transparent)
+                .background(indicatorColor)
         )
 
     }

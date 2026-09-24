@@ -59,6 +59,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import timber.log.Timber
 
+@Suppress("LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LLoginContent(
@@ -77,17 +78,38 @@ fun LLoginContent(
     val autofillManager = remember(context) { context.getSystemService(AutofillManager::class.java) }
     val uriHandler = LocalUriHandler.current
 
-    fun saveCredentials() {
-        val normalizedLogin = login.trim()
-        if (normalizedLogin.isBlank() || password.isBlank()) {
-            SnackBar.warning("Введите логин и пароль L")
-            return
+    val onLoginChange = remember { { newLogin: String -> login = newLogin } }
+    val onPasswordChange = remember { { newPassword: String -> password = newPassword } }
+    val onTogglePasswordVisible = remember { { passwordVisible = !passwordVisible } }
+
+    val onSaveCredentials = remember(login, password, autofillManager, onSaved) {
+        {
+            val normalizedLogin = login.trim()
+            if (normalizedLogin.isBlank() || password.isBlank()) {
+                SnackBar.warning("Введите логин и пароль L")
+            } else {
+                Settings.l_login.setValue(normalizedLogin)
+                Settings.l_pass.setValue(password)
+                autofillManager?.commit()
+                SnackBar.success("Авторизация L сохранена")
+                onSaved()
+            }
         }
-        Settings.l_login.setValue(normalizedLogin)
-        Settings.l_pass.setValue(password)
-        autofillManager?.commit()
-        SnackBar.success("Авторизация L сохранена")
-        onSaved()
+    }
+
+    val onOpenWebsite: () -> Unit = remember(uriHandler) {
+        {
+            runCatching {
+                uriHandler.openUri("https://www.luscious.net")
+            }.onFailure { e ->
+                Timber.w(e, "L_ScreenLogin: не удалось открыть ссылку Luscious")
+                SnackBar.error("Не удалось открыть ссылку")
+            }.let {}
+        }
+    }
+
+    val keyboardActions = remember(onSaveCredentials) {
+        KeyboardActions(onDone = { onSaveCredentials() })
     }
 
     val scrollState = rememberScrollState()
@@ -108,14 +130,7 @@ fun LLoginContent(
             fontStyle = FontStyle.Italic,
             textDecoration = TextDecoration.Underline,
             color = Theme.L.b0,
-            modifier = Modifier.clickable {
-                runCatching {
-                    uriHandler.openUri("https://www.luscious.net")
-                }.onFailure { e ->
-                    Timber.w(e, "L_ScreenLogin: не удалось открыть ссылку Luscious")
-                    SnackBar.error("Не удалось открыть ссылку")
-                }
-            },
+            modifier = Modifier.clickable(onClick = onOpenWebsite),
             fontSize = 24.sp
         )
 
@@ -140,7 +155,7 @@ fun LLoginContent(
 
         OutlinedTextField(
             value = login,
-            onValueChange = { login = it },
+            onValueChange = onLoginChange,
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics { contentType = ContentType.Username },
@@ -174,13 +189,13 @@ fun LLoginContent(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = onPasswordChange,
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics { contentType = ContentType.Password },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                IconButton(onClick = onTogglePasswordVisible) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                         contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
@@ -192,7 +207,7 @@ fun LLoginContent(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
             ),
-            keyboardActions = KeyboardActions(onDone = { saveCredentials() }),
+            keyboardActions = keyboardActions,
             singleLine = true,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color(0xFF484848),
@@ -213,7 +228,7 @@ fun LLoginContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { saveCredentials() },
+            onClick = onSaveCredentials,
             modifier = Modifier.fillMaxWidth().height(64.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
             shape = RoundedCornerShape(8.dp)
