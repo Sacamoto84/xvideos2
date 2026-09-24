@@ -165,25 +165,22 @@ class L_FullScreenImage(
             }
         }
 
+        val onDismissInfo: () -> Unit = remember { { showInfoDialog = false } }
+        val onResetZoom: () -> Unit = remember { { resetZoomTrigger++ } }
+        val onExitFullScreen: () -> Unit = remember { { isFullScreen = false } }
+        val onCloseScreen: () -> Unit = remember { { isClosing = true } }
+
         // Диалог информации об элементе: первый жест «Назад» закрывает диалог
-        BackHandler(enabled = showInfoDialog) {
-            showInfoDialog = false
-        }
+        BackHandler(enabled = showInfoDialog, onBack = onDismissInfo)
 
         // Нажатие кнопки «Назад» при активном зуме плавно сбрасывает масштаб до 1.0x
-        BackHandler(enabled = !showInfoDialog && isCurrentPageZoomed) {
-            resetZoomTrigger++
-        }
+        BackHandler(enabled = !showInfoDialog && isCurrentPageZoomed, onBack = onResetZoom)
 
         // В полноэкранном режиме (контролы скрыты) первый жест «Назад» возвращает контролы
-        BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && isFullScreen) {
-            isFullScreen = false
-        }
+        BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && isFullScreen, onBack = onExitFullScreen)
 
         // Выход из экрана просмотра
-        BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && !isFullScreen) {
-            isClosing = true
-        }
+        BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && !isFullScreen, onBack = onCloseScreen)
 
 
         // Текущий индекс из pagerState
@@ -204,6 +201,18 @@ class L_FullScreenImage(
             }
         }
 
+        val onAlbumClick: (Long) -> Unit = remember(navigator) {
+            { albumId ->
+                showInfoDialog = false
+                val inStack = navigator.items.any { it is ScreenLAlbum && it.idAlbum == albumId }
+                if (inStack) {
+                    navigator.popUntil { it is ScreenLAlbum && it.idAlbum == albumId }
+                } else {
+                    navigator.push(ScreenLAlbum(albumId))
+                }
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -217,19 +226,8 @@ class L_FullScreenImage(
                     item = filteredPic.getOrNull(currentIndex) ?: item,
                     position = currentIndex,
                     total = filteredPic.size,
-                    onDismiss = { showInfoDialog = false },
-                    onAlbumClick = { albumId ->
-                        showInfoDialog = false
-                        // Штатный путь альбом -> фуллскрин -> инфо -> тот же альбом
-                        // клал второй экземпляр экрана поверх первого. Если альбом
-                        // уже в стеке — возвращаемся к нему.
-                        val inStack = navigator.items.any { it is ScreenLAlbum && it.idAlbum == albumId }
-                        if (inStack) {
-                            navigator.popUntil { it is ScreenLAlbum && it.idAlbum == albumId }
-                        } else {
-                            navigator.push(ScreenLAlbum(albumId))
-                        }
-                    }
+                    onDismiss = onDismissInfo,
+                    onAlbumClick = onAlbumClick
                 )
             }
 

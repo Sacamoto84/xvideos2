@@ -99,18 +99,25 @@ internal fun BackupSettingsSection(
     var restorePassword by remember { mutableStateOf<CharArray?>(null) }
     var restorePasswordError by rememberSaveable { mutableStateOf<String?>(null) }
 
-    BackHandler(enabled = isWorking || showCreatePasswordDialog || showRestorePasswordDialog || screen == BackupFlowScreen.RESTORE) {
-        when {
-            isWorking -> SnackBar.info("Пожалуйста, дождитесь окончания операции")
-            showCreatePasswordDialog -> showCreatePasswordDialog = false
-            showRestorePasswordDialog -> {
-                showRestorePasswordDialog = false
-                pendingRestoreUri = null
-                restorePasswordError = null
+    val onBack = remember(isWorking, showCreatePasswordDialog, showRestorePasswordDialog, screen) {
+        {
+            when {
+                isWorking -> SnackBar.info("Пожалуйста, дождитесь окончания операции")
+                showCreatePasswordDialog -> showCreatePasswordDialog = false
+                showRestorePasswordDialog -> {
+                    showRestorePasswordDialog = false
+                    pendingRestoreUri = null
+                    restorePasswordError = null
+                }
+                screen == BackupFlowScreen.RESTORE -> screen = BackupFlowScreen.CREATE
             }
-            screen == BackupFlowScreen.RESTORE -> screen = BackupFlowScreen.CREATE
         }
     }
+
+    BackHandler(
+        enabled = isWorking || showCreatePasswordDialog || showRestorePasswordDialog || screen == BackupFlowScreen.RESTORE,
+        onBack = onBack
+    )
 
     fun appendBackupLog(message: String) {
         if (backupConsole.size >= BACKUP_CONSOLE_MAX_LINES) {
@@ -236,8 +243,40 @@ internal fun BackupSettingsSection(
         }
     }
 
-    val backupReport = XlrBackupManager.reportForSelection(backupItems, selectedBackupPaths)
-    val restoreReport = XlrBackupManager.reportForSelection(restoreItems, selectedRestorePaths)
+    val backupReport = remember(backupItems, selectedBackupPaths) {
+        XlrBackupManager.reportForSelection(backupItems, selectedBackupPaths)
+    }
+    val restoreReport = remember(restoreItems, selectedRestorePaths) {
+        XlrBackupManager.reportForSelection(restoreItems, selectedRestorePaths)
+    }
+
+    val onSelectScreen = remember { { target: BackupFlowScreen -> screen = target } }
+    val onLBackupModeChange = remember { { mode: XlrBackupContentMode -> lBackupMode = mode } }
+    val onRBackupModeChange = remember { { mode: XlrBackupContentMode -> rBackupMode = mode } }
+    val onSelectAllBackup = remember(backupItems) {
+        { selectedBackupPaths = initialSectionSelection(backupItems) }
+    }
+    val onSelectNoneBackup = remember { { selectedBackupPaths = emptySet() } }
+    val onToggleBackupPath = remember(backupItems, selectedBackupPaths) {
+        { path: String -> selectedBackupPaths = toggleBackupPath(backupItems, selectedBackupPaths, path) }
+    }
+    val onShowCreatePasswordDialog = remember { { showCreatePasswordDialog = true } }
+    val onSelectAllRestore = remember(restoreItems) {
+        { selectedRestorePaths = initialSectionSelection(restoreItems) }
+    }
+    val onSelectNoneRestore = remember { { selectedRestorePaths = emptySet() } }
+    val onToggleRestorePath = remember(restoreItems, selectedRestorePaths) {
+        { path: String -> selectedRestorePaths = toggleBackupPath(restoreItems, selectedRestorePaths, path) }
+    }
+    val onClearConsole = remember { { backupConsole.clear() } }
+    val onDismissCreatePasswordDialog = remember { { showCreatePasswordDialog = false } }
+    val onDismissRestorePasswordDialog = remember {
+        {
+            showRestorePasswordDialog = false
+            pendingRestoreUri = null
+            restorePasswordError = null
+        }
+    }
 
     SettingsGroup {
         SettingsValueRow(
@@ -252,7 +291,7 @@ internal fun BackupSettingsSection(
         BackupModeSelector(
             selected = screen,
             enabled = !isWorking,
-            onSelected = { screen = it }
+            onSelected = onSelectScreen
         )
         SettingsDivider()
 
@@ -271,7 +310,7 @@ internal fun BackupSettingsSection(
                     value = lBackupMode,
                     enabled = !isWorking,
                     description = "Мини: Likes/Collection без медиа, только metadata",
-                    onValueChange = { lBackupMode = it }
+                    onValueChange = onLBackupModeChange
                 )
 
                 SettingsDivider2()
@@ -281,21 +320,21 @@ internal fun BackupSettingsSection(
                     value = rBackupMode,
                     enabled = !isWorking,
                     description = "Мини: Download без mp4/jpg, только .info",
-                    onValueChange = { rBackupMode = it }
+                    onValueChange = onRBackupModeChange
                 )
 
                 SettingsDivider2()
 
                 BackupSelectionActions(
                     enabled = !isWorking,
-                    onSelectAll = { selectedBackupPaths = initialSectionSelection(backupItems) },
-                    onSelectNone = { selectedBackupPaths = emptySet() }
+                    onSelectAll = onSelectAllBackup,
+                    onSelectNone = onSelectNoneBackup
                 )
                 BackupFolderList(
                     items = backupItems,
                     selectedPaths = selectedBackupPaths,
                     enabled = !isWorking,
-                    onToggle = { path -> selectedBackupPaths = toggleBackupPath(backupItems, selectedBackupPaths, path) }
+                    onToggle = onToggleBackupPath
                 )
                 SettingsDivider()
                 SettingsListItem(
@@ -305,7 +344,7 @@ internal fun BackupSettingsSection(
                     trailing = {
                         Button(
                             enabled = !isWorking && selectedBackupPaths.isNotEmpty(),
-                            onClick = { showCreatePasswordDialog = true },
+                            onClick = onShowCreatePasswordDialog,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = SettingsAccentColor,
                                 contentColor = SettingsScreenBackground
@@ -356,16 +395,14 @@ internal fun BackupSettingsSection(
                     )
                     BackupSelectionActions(
                         enabled = !isWorking,
-                        onSelectAll = { selectedRestorePaths = initialSectionSelection(restoreItems) },
-                        onSelectNone = { selectedRestorePaths = emptySet() }
+                        onSelectAll = onSelectAllRestore,
+                        onSelectNone = onSelectNoneRestore
                     )
                     BackupFolderList(
                         items = restoreItems,
                         selectedPaths = selectedRestorePaths,
                         enabled = !isWorking,
-                        onToggle = { path ->
-                            selectedRestorePaths = toggleBackupPath(restoreItems, selectedRestorePaths, path)
-                        }
+                        onToggle = onToggleRestorePath
                     )
                     SettingsDivider()
                     SettingsButtonRowWithDialog(
@@ -463,15 +500,13 @@ internal fun BackupSettingsSection(
         SettingsDivider()
         BackupConsole(
             lines = backupConsole,
-            onClear = { backupConsole.clear() }
+            onClear = onClearConsole
         )
     }
 
     if (showCreatePasswordDialog) {
         BackupCreatePasswordDialog(
-            onDismiss = {
-                showCreatePasswordDialog = false
-            },
+            onDismiss = onDismissCreatePasswordDialog,
             onConfirm = { password ->
                 showCreatePasswordDialog = false
                 createPassword = password
@@ -483,11 +518,7 @@ internal fun BackupSettingsSection(
     if (showRestorePasswordDialog) {
         BackupRestorePasswordDialog(
             errorMessage = restorePasswordError,
-            onDismiss = {
-                showRestorePasswordDialog = false
-                pendingRestoreUri = null
-                restorePasswordError = null
-            },
+            onDismiss = onDismissRestorePasswordDialog,
             onConfirm = { password ->
                 val uri = pendingRestoreUri ?: run {
                     password.fill('\u0000')

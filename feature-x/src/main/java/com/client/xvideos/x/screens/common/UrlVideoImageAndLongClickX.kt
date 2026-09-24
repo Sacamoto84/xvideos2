@@ -42,38 +42,55 @@ fun UrlVideoImageAndLongClickX(
     }
     val fallbackUrls = remember(item.previewVideo) { listOf(item.previewVideo) }
 
+    val handleDoubleClick: () -> Unit = remember(context, onDoubleClick) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            onDoubleClick.invoke()
+        }
+    }
+
+    val handleLongClick: () -> Unit = remember(context, onLongClick) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            onLongClick.invoke()
+        }
+    }
+
+    val handleClick: () -> Unit = remember(item, previewVideoUrl, haptic) {
+        {
+            val nextIsVideo = !isVideo
+            isVideo = nextIsVideo
+            if (nextIsVideo) {
+                Timber.d(
+                    """
+                    !!! X preview item click
+                    id: ${item.id}
+                    title: ${item.title}
+                    href: ${item.href}
+                    poster: ${item.previewImage}
+                    parsed preview video: $previewVideoUrl
+                    saved preview video: ${item.previewVideo}
+                    """.trimIndent()
+                )
+            }
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }
+    }
+
+    val handleVideoClick: () -> Unit = remember(haptic) {
+        {
+            isVideo = !isVideo
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .combinedClickable(
-                onDoubleClick = {
-                    vibrateWithPatternAndAmplitude(context = context)
-                    onDoubleClick.invoke()
-                },
-
-                onLongClick = {
-                    //haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    vibrateWithPatternAndAmplitude(context = context)
-                    onLongClick.invoke()
-                },
-                onClick = {
-                    val nextIsVideo = !isVideo
-                    isVideo = nextIsVideo
-                    if (nextIsVideo) {
-                        Timber.d(
-                            """
-                            !!! X preview item click
-                            id: ${item.id}
-                            title: ${item.title}
-                            href: ${item.href}
-                            poster: ${item.previewImage}
-                            parsed preview video: $previewVideoUrl
-                            saved preview video: ${item.previewVideo}
-                            """.trimIndent()
-                        )
-                    }
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                }
+                onDoubleClick = handleDoubleClick,
+                onLongClick = handleLongClick,
+                onClick = handleClick
             )
             .then(modifier)
 
@@ -86,10 +103,7 @@ fun UrlVideoImageAndLongClickX(
                 posterUrl = item.previewImage,
                 modifier = Modifier.fillMaxSize(),
                 fallbackUrls = fallbackUrls,
-                onClick = {
-                    isVideo = !isVideo
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                }
+                onClick = handleVideoClick
             )
         } else {
             //Показ картинки

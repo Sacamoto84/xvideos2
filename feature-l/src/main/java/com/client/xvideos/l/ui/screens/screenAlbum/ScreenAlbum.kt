@@ -113,30 +113,32 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
         /**  ➜ сюда запоминаем элемент, который пользователь хочет удалить  */
         var itemPendingDelete by remember { mutableStateOf<AlbumDetails?>(null) }
 
+        val onDismissDelete: () -> Unit = remember { { itemPendingDelete = null } }
+        val onDismissAnimatedFilter: () -> Unit = remember(vm) { { vm.showOnlyAnimated = false } }
+        val onPopScreen: () -> Unit = remember(navigator) { { navigator.pop() } }
+        val onRequestDelete: (AlbumDetails) -> Unit = remember { { itemPendingDelete = it } }
+
         // Активен только когда НЕ открыта полноэкранная картинка — в этом случае
         // back перехватывает L_FullScreenImage (закрывает картинку), и выход из альбома не происходит.
-        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete != null) {
-            itemPendingDelete = null
-        }
-        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && vm.showOnlyAnimated) {
-            vm.showOnlyAnimated = false
-        }
-        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && !vm.showOnlyAnimated) {
-            navigator.pop()
-        }
+        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete != null, onBack = onDismissDelete)
+        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && vm.showOnlyAnimated, onBack = onDismissAnimatedFilter)
+        BackHandler(enabled = vm.host.selectedImage == null && itemPendingDelete == null && !vm.showOnlyAnimated, onBack = onPopScreen)
 
         val topInset = getTopInsetDp()
         val album by vm.albumInfo.collectAsStateWithLifecycle()
 
         /* ---------- Диалог подтверждения ---------- */
         itemPendingDelete?.let { pending ->
-            AlbumDialogDeleteAlbum(
-                pending = pending,
-                onDismiss = { itemPendingDelete = null },
-                onClick = {
+            val onConfirmDelete: () -> Unit = remember(pending, vm) {
+                {
                     vm.saved.albums.remove(pending)
                     itemPendingDelete = null
                 }
+            }
+            AlbumDialogDeleteAlbum(
+                pending = pending,
+                onDismiss = onDismissDelete,
+                onClick = onConfirmDelete
             )
         }
         /* ---------- /Диалог ---------- */
@@ -157,7 +159,7 @@ class ScreenLAlbum(val idAlbum: Long) : Screen {
                 navigator = navigator,
                 topInset = topInset,
                 idAlbum = idAlbum,
-                onRequestDelete = { itemPendingDelete = it }
+                onRequestDelete = onRequestDelete
             )
         } else {
             Box(

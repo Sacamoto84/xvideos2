@@ -141,10 +141,9 @@ private fun Screen.ScreenAlbumListContent(
 
         // ✅ Состояние для диалога
         var showFilterDialog by remember { mutableStateOf(false) }
+        val onFilterClose: () -> Unit = remember { { showFilterDialog = false } }
 
-        BackHandler(enabled = showFilterDialog) {
-            showFilterDialog = false
-        }
+        BackHandler(enabled = showFilterDialog, onBack = onFilterClose)
 
         val topInset = getTopInsetDp()
 
@@ -179,7 +178,6 @@ private fun Screen.ScreenAlbumListContent(
         val onAlbumClick: (Long) -> Unit = remember(navigator) {
             { albumId -> navigator.push(ScreenLAlbum(albumId)) }
         }
-        val onFilterClose: () -> Unit = remember { { showFilterDialog = false } }
         val onFilterApply: (LAlbumListFilter) -> Unit = remember(vm) {
             { newFilter ->
                 vm.screenModelScope.launch {
@@ -305,7 +303,8 @@ private fun AlbumListPageGrid(
 
             items(
                 items = pageItems,
-                key = { it.id }
+                key = { it.id },
+                contentType = { "album_item" }
             ) { item ->
                 AlbumGridItem(
                     item = item,

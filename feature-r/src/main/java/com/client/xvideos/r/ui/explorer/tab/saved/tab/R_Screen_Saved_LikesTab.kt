@@ -71,8 +71,11 @@ object R_Screen_Saved_LikesTab : Screen {
                 .collect { pager.refresh() }
         }
 
-        val onClickOpenProfile: (String) -> Unit = remember(navigator) {
-            { profileName -> navigator.push(ScreenRedProfile(profileName)) }
+        val onClickOpenProfile: (String) -> Unit = remember(vm, navigator) {
+            { profileName ->
+                vm.likedHost.currentIndexGoto = vm.likedHost.currentIndex
+                navigator.push(ScreenRedProfile(profileName))
+            }
         }
 
         Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {

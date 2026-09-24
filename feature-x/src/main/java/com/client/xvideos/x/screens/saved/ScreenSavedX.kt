@@ -96,11 +96,6 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
         }
     }
 
-    // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
-    BackHandler(enabled = pendingDelete != null) {
-        pendingDelete = null
-    }
-
     val onConfirmDelete = remember(saved.downloads) {
         { item: ItemsX ->
             saved.downloads.delete(item)
@@ -108,6 +103,9 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
         }
     }
     val onDismissDelete = remember { { pendingDelete = null } }
+
+    // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
+    BackHandler(enabled = pendingDelete != null, onBack = onDismissDelete)
 
     pendingDelete?.let { item ->
         val onConfirmItem = remember(item, onConfirmDelete) {
@@ -140,10 +138,14 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 state = listState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                item(key = "header") {
+                item(key = "header", contentType = "header") {
                     SavedHeader(topCutout = topCutout)
                 }
-                items(list, key = { it.id }) { item ->
+                items(
+                    items = list,
+                    key = { it.id },
+                    contentType = { "saved_row" }
+                ) { item ->
                     val posterUrl = remember(item.id, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
                     }

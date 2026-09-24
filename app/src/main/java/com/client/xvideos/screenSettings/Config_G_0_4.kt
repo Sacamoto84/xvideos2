@@ -44,6 +44,14 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
     ) {
         Text(text, modifier = Modifier.width(64.dp), style = styleTextConfig)
 
+        val onToggleIndex: (Int) -> Unit = remember(setting, list) {
+            { settingIndex ->
+                val updatedList = list.toMutableList()
+                updatedList[settingIndex] = updatedList[settingIndex].not()
+                setting.setValue(updatedList)
+            }
+        }
+
         MultiChoiceSegmentedButtonRow(
             modifier = Modifier.padding(start = 16.dp).fillMaxWidth()
         ) {
@@ -54,11 +62,7 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
                         count = visibleIndices.size
                     ),
                     checked = list[settingIndex],
-                    onCheckedChange = {
-                        val updatedList = list.toMutableList()
-                        updatedList[settingIndex] = updatedList[settingIndex].not()
-                        setting.setValue(updatedList)
-                    },
+                    onCheckedChange = { onToggleIndex(settingIndex) },
 
                     //icon = { SegmentedButtonDefaults.Icon(selectedOptions[index]) },
 

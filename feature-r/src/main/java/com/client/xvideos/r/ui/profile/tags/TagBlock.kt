@@ -48,6 +48,7 @@ fun TagsBlock(
     // Оптимизация 2: Стабильная лямбда для предотвращения рекомпозиции чипов
     val currentOnClick by rememberUpdatedState(onClick)
     val stableOnClick = remember { { tag: String -> currentOnClick(tag) } }
+    val onToggleExpanded: () -> Unit = remember { { expanded = !expanded } }
 
     SubcomposeLayout { constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
@@ -55,7 +56,7 @@ fun TagsBlock(
 
         // Измеряем кнопку сразу, она нам нужна для расчетов лимита
         val buttonPlaceable = subcompose("btn") {
-            ExpandCollapseButton(expanded) { expanded = !expanded }
+            ExpandCollapseButton(expanded, onToggleExpanded)
         }.first().measure(loose)
 
         val shownPlaceables = mutableListOf<Placeable>()
@@ -132,7 +133,7 @@ fun TagsBlock(
 
 @Composable
 private fun TagChip(text: String, select: Boolean, onClick: (String) -> Unit) {
-    // Оптимизация 4: Упрощение модификаторов и удаление лишних состояний
+    val handleTagClick = remember(text, onClick) { { onClick(text) } }
     Text(
         text = text,
         color = if (select) Color.Black else Color.White,
@@ -144,7 +145,7 @@ private fun TagChip(text: String, select: Boolean, onClick: (String) -> Unit) {
             .clip(RoundedCornerShape(16.dp)) // Используем фиксированный радиус для скорости
             .background(if (select) Theme.R.colorYellow else Color.Transparent)
             .border(1.dp, Theme.R.colorYellow, RoundedCornerShape(16.dp))
-            .clickable { onClick(text) }
+            .clickable(onClick = handleTagClick)
             .padding(horizontal = 12.dp, vertical = 4.dp)
             .wrapContentWidth()
     )

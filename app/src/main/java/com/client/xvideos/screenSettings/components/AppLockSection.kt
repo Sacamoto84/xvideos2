@@ -279,6 +279,34 @@ private fun CamouflageVerificationDialog(
             pinError = null
         }
     }
+    val onDoneNoOp = remember { {} }
+    val onConfirmVerification = remember(pinInput, isVerifyingPin, context, onSuccess) {
+        {
+            if (!isVerifyingPin) {
+                if (!pinInput.all { it.isDigit() }) {
+                    pinError = "Код доступа для калькулятора должен состоять только из цифр"
+                } else {
+                    scope.launch {
+                        isVerifyingPin = true
+                        try {
+                            val ok = AppLockRepository.verifyPassword(context, pinInput)
+                            if (ok) {
+                                Settings.camouflage_calculator_enabled.setValue(true)
+                                LauncherAliasManager.setCalculatorAliasEnabled(context, true)
+                                pinInput = ""
+                                onSuccess()
+                                SnackBar.success("Маскировка под калькулятор включена")
+                            } else {
+                                pinError = "Неверный код доступа. Если текущий пароль содержит буквы, сначала измените его на числовой PIN."
+                            }
+                        } finally {
+                            isVerifyingPin = false
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     LavenderDialog(
         title = "Включение маскировки",
@@ -295,7 +323,7 @@ private fun CamouflageVerificationDialog(
                     onValueChange = onPinInputChange,
                     label = "Числовой PIN-код",
                     keyboardType = KeyboardType.NumberPassword,
-                    onDone = {}
+                    onDone = onDoneNoOp
                 )
                 pinError?.let {
                     val errorColor = Color(0xFFB3261E)
@@ -305,30 +333,7 @@ private fun CamouflageVerificationDialog(
         },
         confirmText = "Включить",
         confirmEnabled = pinInput.length >= 4 && !isVerifyingPin,
-        onConfirm = {
-            if (isVerifyingPin) return@LavenderDialog
-            if (!pinInput.all { it.isDigit() }) {
-                pinError = "Код доступа для калькулятора должен состоять только из цифр"
-                return@LavenderDialog
-            }
-            scope.launch {
-                isVerifyingPin = true
-                try {
-                    val ok = AppLockRepository.verifyPassword(context, pinInput)
-                    if (ok) {
-                        Settings.camouflage_calculator_enabled.setValue(true)
-                        LauncherAliasManager.setCalculatorAliasEnabled(context, true)
-                        pinInput = ""
-                        onSuccess()
-                        SnackBar.success("Маскировка под калькулятор включена")
-                    } else {
-                        pinError = "Неверный код доступа. Если текущий пароль содержит буквы, сначала измените его на числовой PIN."
-                    }
-                } finally {
-                    isVerifyingPin = false
-                }
-            }
-        }
+        onConfirm = onConfirmVerification
     )
 }
 
@@ -347,6 +352,7 @@ private fun AppLockSettingsSectionPreview() = SettingsPreview {
     AppLockSettingsSection()
 }
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun AppLockPasswordDialog(
     mode: AppLockDialogMode,
@@ -430,6 +436,31 @@ internal fun AppLockPasswordDialog(
         }
     }
 
+    val onCurrentPasswordChange = remember {
+        { value: String ->
+            currentPassword = value
+            errorText = null
+        }
+    }
+    val onNewPasswordChange = remember {
+        { value: String ->
+            newPassword = value
+            errorText = null
+        }
+    }
+    val onConfirmPasswordChange = remember {
+        { value: String ->
+            confirmPassword = value
+            errorText = null
+        }
+    }
+    val onDoneSubmit = remember(canSubmit) {
+        {
+            if (canSubmit) submit()
+        }
+    }
+    val onConfirmSubmit = remember { { submit() } }
+
     LavenderDialog(
         title = when (mode) {
             AppLockDialogMode.SET -> "Задать код доступа"
@@ -443,36 +474,27 @@ internal fun AppLockPasswordDialog(
                 if (needsCurrentPassword) {
                     PasswordSettingField(
                         value = currentPassword,
-                        onValueChange = {
-                            currentPassword = it
-                            errorText = null
-                        },
+                        onValueChange = onCurrentPasswordChange,
                         label = "Текущий код доступа",
                         keyboardType = passwordKeyboardType,
-                        onDone = { if (canSubmit) submit() }
+                        onDone = onDoneSubmit
                     )
                 }
 
                 if (needsNewPassword) {
                     PasswordSettingField(
                         value = newPassword,
-                        onValueChange = {
-                            newPassword = it
-                            errorText = null
-                        },
+                        onValueChange = onNewPasswordChange,
                         label = "Новый код доступа",
                         keyboardType = passwordKeyboardType,
-                        onDone = { if (canSubmit) submit() }
+                        onDone = onDoneSubmit
                     )
                     PasswordSettingField(
                         value = confirmPassword,
-                        onValueChange = {
-                            confirmPassword = it
-                            errorText = null
-                        },
+                        onValueChange = onConfirmPasswordChange,
                         label = "Повтор кода доступа",
                         keyboardType = passwordKeyboardType,
-                        onDone = { if (canSubmit) submit() }
+                        onDone = onDoneSubmit
                     )
                 }
 
@@ -488,7 +510,7 @@ internal fun AppLockPasswordDialog(
             AppLockDialogMode.DISABLE -> "Отключить"
             else -> "Сохранить"
         },
-        onConfirm = { submit() },
+        onConfirm = onConfirmSubmit,
         confirmEnabled = canSubmit,
         destructive = mode == AppLockDialogMode.DISABLE,
     )
@@ -529,6 +551,16 @@ fun PasswordSettingField(
 
     var showPassword by remember { mutableStateOf(false) }
     val dialogTheme = Theme.DialogLavande
+    val onToggleShowPassword = remember { { showPassword = !showPassword } }
+    val keyboardOptions = remember(keyboardType) {
+        androidx.compose.foundation.text.KeyboardOptions(
+            keyboardType = keyboardType,
+            imeAction = ImeAction.Done
+        )
+    }
+    val keyboardActions = remember(onDone) {
+        androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() })
+    }
 
     OutlinedTextField(
         value = value,
@@ -538,14 +570,11 @@ fun PasswordSettingField(
         singleLine = true,
         visualTransformation =
             if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() }),
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         textStyle = Theme.L.Type.body.copy(color = dialogTheme.bodyColor),
         trailingIcon = {
-            IconButton(onClick = { showPassword = !showPassword }) {
+            IconButton(onClick = onToggleShowPassword) {
                 Icon(
                     imageVector =
                         if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,

@@ -304,9 +304,9 @@ private fun AppSettingsScreenBody(
             SettingsGroup {
                 SettingsPage.primaryPages.forEachIndexed { index, page ->
                     if (index > 0) { SettingsDivider2() }
-                    SettingsNavigationRow(
+                    SettingsNavigationItem(
                         page = page,
-                        onClick = { onOpenPage(page) }
+                        onOpenPage = onOpenPage
                     )
                 }
             }
@@ -316,9 +316,9 @@ private fun AppSettingsScreenBody(
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
                     if (index > 0) { SettingsDivider2() }
-                    SettingsNavigationRow(
+                    SettingsNavigationItem(
                         page = page,
-                        onClick = { onOpenPage(page) }
+                        onOpenPage = onOpenPage
                     )
                 }
             }
@@ -477,6 +477,20 @@ internal enum class SettingsPage(
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
     }
+}
+
+@Composable
+private fun SettingsNavigationItem(
+    page: SettingsPage,
+    onOpenPage: (SettingsPage) -> Unit
+) {
+    val onClick = remember(page, onOpenPage) { { onOpenPage(page) } }
+    SettingsListItem(
+        icon = page.icon,
+        text = page.title,
+        subtitle = page.subtitle,
+        onClick = onClick
+    )
 }
 
 @Composable

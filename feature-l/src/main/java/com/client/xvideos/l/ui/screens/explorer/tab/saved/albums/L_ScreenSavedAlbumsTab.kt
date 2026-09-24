@@ -103,7 +103,11 @@ object L_ScreenSavedAlbumsTab : Screen {
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
+                    item(
+                        key = "top_spacer",
+                        span = { GridItemSpan(maxLineSpan) },
+                        contentType = "top_spacer"
+                    ) {
                         Box(modifier = Modifier.height(topInset))
                     }
 
@@ -111,7 +115,11 @@ object L_ScreenSavedAlbumsTab : Screen {
                     // содержать один альбом дважды, а дублирующийся ключ
                     // роняет LazyLayout ("Key ... was already used") — тот же
                     // приём, что и в ScreenAlbumList.
-                    itemsIndexed(albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
+                    itemsIndexed(
+                        items = albums,
+                        key = { index, item -> "${item.id}#$index" },
+                        contentType = { _, _ -> "album_item" }
+                    ) { _, item ->
                         SavedAlbumGridItem(
                             item = item,
                             onAlbumClick = onAlbumClick,

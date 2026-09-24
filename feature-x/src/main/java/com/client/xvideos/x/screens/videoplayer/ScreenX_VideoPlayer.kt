@@ -78,13 +78,11 @@ class ScreenX_VideoPlayer(
 
         OrientationAndSystemBarsEffect(vm.isFullScreen)
 
-        // Нажатие кнопки «Назад» при ошибке или загрузке закрывает экран
-        BackHandler(enabled = vm.isError || vm.isLoading || vm.passedHLS.isBlank()) {
-            navigator.pop()
-        }
-
         val onRetryLoad: () -> Unit = remember(vm) { { vm.loadVideo(forceReload = true) } }
         val onPopBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+
+        // Нажатие кнопки «Назад» при ошибке или загрузке закрывает экран
+        BackHandler(enabled = vm.isError || vm.isLoading || vm.passedHLS.isBlank(), onBack = onPopBack)
 
         when {
             vm.isError -> {
@@ -239,21 +237,17 @@ private fun VideoPlayerContentView(
     var isZoomed by remember { mutableStateOf(false) }
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
+    val onResetZoom: () -> Unit = remember { { resetZoomTrigger++ } }
+    val onExitFullScreen: () -> Unit = remember(vm) { { vm.exitFullScreen() } }
+    val onPopScreen: () -> Unit = remember(navigator) { { navigator.pop() } }
+
     // Иерархия «Назад»:
     // 1. При активном зуме сбрасывает масштаб до 1.0x (как в обычном, так и в ландшафтном режиме)
     // 2. В ландшафтном полноэкранном режиме возвращает в портретный режим
     // 3. Выходит из экрана плеера
-    BackHandler(enabled = isZoomed) {
-        resetZoomTrigger++
-    }
-
-    BackHandler(enabled = !isZoomed && vm.isFullScreen) {
-        vm.exitFullScreen()
-    }
-
-    BackHandler(enabled = !isZoomed && !vm.isFullScreen) {
-        navigator.pop()
-    }
+    BackHandler(enabled = isZoomed, onBack = onResetZoom)
+    BackHandler(enabled = !isZoomed && vm.isFullScreen, onBack = onExitFullScreen)
+    BackHandler(enabled = !isZoomed && !vm.isFullScreen, onBack = onPopScreen)
 
     LaunchedEffect(vm.isFullScreen) {
         areControlsVisible = true

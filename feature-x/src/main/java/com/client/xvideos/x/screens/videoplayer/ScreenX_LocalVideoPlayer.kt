@@ -125,13 +125,12 @@ class ScreenX_LocalVideoPlayer(
         var isZoomed by remember { mutableStateOf(false) }
         var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
+        val onResetZoom: () -> Unit = remember { { resetZoomTrigger++ } }
+        val onPopScreen: () -> Unit = remember(navigator) { { navigator.pop() } }
+
         // Нажатие кнопки «Назад» при зуме сбрасывает масштаб, иначе выходит из плеера
-        BackHandler(enabled = isZoomed) {
-            resetZoomTrigger++
-        }
-        BackHandler(enabled = !isZoomed) {
-            navigator.pop()
-        }
+        BackHandler(enabled = isZoomed, onBack = onResetZoom)
+        BackHandler(enabled = !isZoomed, onBack = onPopScreen)
 
         val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
         val onTap: () -> Unit = remember(host) { { host.togglePlayPause() } }
