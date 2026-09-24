@@ -72,16 +72,20 @@ class ScreenCollectionName(
         val vm = getScreenModel<ScreenLCollectionNameSM, ScreenLCollectionNameSM.Factory> { factory -> factory.create(collectionName) }
         val navigator = LocalNavigator.currentOrThrow
 
-        L_CollectionNameContent(
-            collectionName = collectionName,
-            savedL = vm.savedL,
-            host = vm.host,
-            onExitCollection = {
+        val onExitCollection: () -> Unit = remember(vm.savedL, popOnBack, navigator) {
+            {
                 vm.savedL.collection.exitCollection()
                 if (popOnBack) {
                     navigator.pop()
                 }
             }
+        }
+
+        L_CollectionNameContent(
+            collectionName = collectionName,
+            savedL = vm.savedL,
+            host = vm.host,
+            onExitCollection = onExitCollection
         )
 
     }
@@ -109,10 +113,37 @@ fun L_CollectionNameContent(
 
     val selectedCollection = savedL.collection.currentCollectionName
 
-    val handleExit = {
-        Timber.d("BackHandler SavedCollectionTab")
-        onExitCollection?.invoke() ?: run {
-            savedL.collection.exitCollection()
+    val handleExit: () -> Unit = remember(onExitCollection, savedL) {
+        {
+            Timber.d("BackHandler SavedCollectionTab")
+            onExitCollection?.invoke() ?: savedL.collection.exitCollection()
+        }
+    }
+
+    val onSearchChange: (String) -> Unit = remember(host) {
+        { host.collectionSearchQuery = it }
+    }
+
+    val onToggleSearch: () -> Unit = remember(host, searchVisible) {
+        {
+            if (searchVisible) {
+                host.collectionSearchQuery = ""
+                searchVisible = false
+            } else {
+                searchVisible = true
+            }
+        }
+    }
+
+    val onExitTopBar: () -> Unit = remember(searchQuery, searchVisible, host, handleExit) {
+        {
+            if (searchQuery.isNotEmpty()) {
+                host.collectionSearchQuery = ""
+            } else if (searchVisible) {
+                searchVisible = false
+            } else {
+                handleExit()
+            }
         }
     }
 
@@ -142,24 +173,9 @@ fun L_CollectionNameContent(
             collectionName = selectedCollection ?: collectionName,
             searchQuery = searchQuery,
             searchVisible = searchVisible,
-            onSearchChange = { host.collectionSearchQuery = it },
-            onToggleSearch = {
-                if (searchVisible) {
-                    host.collectionSearchQuery = ""
-                    searchVisible = false
-                } else {
-                    searchVisible = true
-                }
-            },
-            onExitCollection = {
-                if (searchQuery.isNotEmpty()) {
-                    host.collectionSearchQuery = ""
-                } else if (searchVisible) {
-                    searchVisible = false
-                } else {
-                    handleExit()
-                }
-            }
+            onSearchChange = onSearchChange,
+            onToggleSearch = onToggleSearch,
+            onExitCollection = onExitTopBar
         )
     }) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){

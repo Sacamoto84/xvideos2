@@ -137,6 +137,7 @@ class ScreenXDashBoards : Screen {
                         state = vm.pagerState,
                         modifier = Modifier.fillMaxSize(),
                         beyondViewportPageCount = 1,
+                        key = { pageIndex -> pageIndex },
                         flingBehavior = PagerDefaults.flingBehavior(
                             state = vm.pagerState,
                             snapPositionalThreshold = 0.15f,

@@ -79,6 +79,10 @@ class ScreenRedExplorer : Screen {
             }
         }
 
+        val renderOverlay0: @Composable () -> Unit = remember(overlay0, vm.screenType) {
+            { TabBarPoints(overlay0, vm.screenType == 0) }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -88,7 +92,7 @@ class ScreenRedExplorer : Screen {
                 titlesIcon = EXPLORER_TAB_ICONS,
                 value = vm.screenType,
                 onChangeState = onTabChange,
-                overlay0 = { TabBarPoints(overlay0, vm.screenType == 0) },
+                overlay0 = renderOverlay0,
             )
 
 

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -81,6 +82,8 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -136,8 +139,10 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                     .background(Theme.background)
             ) {
                 LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize()) {
-                    items(items?.size ?: 0, key = { index -> "${index}_${items?.get(index)?.title.orEmpty()}" }) { index ->
-                        val item = items?.get(index) ?: return@items
+                    items(
+                        items = items.orEmpty(),
+                        key = { it.title }
+                    ) { item ->
                         LandingTagSectionItem(
                             item = item,
                             screenWidth = screenWidth,
@@ -216,24 +221,11 @@ private fun LandingTagSectionItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         displayAlbums.forEach { album ->
-            val albumId = remember(album.id) { album.id.toLongOrNull() }
-            val onCardClick = remember(albumId, onAlbumClick) {
-                { if (albumId != null) onAlbumClick(albumId) }
-            }
-            Box(
-                modifier = Modifier
-                    .width(itemWidth)
-                    .padding(vertical = 2.dp)
-            ) {
-                AlbumListItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = album.title,
-                    coverUrl = album.cover?.url.orEmpty(),
-                    numberOfAnimatedPictures = album.numberOfAnimatedPictures,
-                    numberOfPictures = album.numberOfPictures,
-                    onClick = onCardClick
-                )
-            }
+            LandingTagAlbumItem(
+                album = album,
+                itemWidth = itemWidth,
+                onAlbumClick = onAlbumClick
+            )
         }
     }
 
@@ -254,6 +246,32 @@ private fun LandingTagSectionItem(
             fontSize = 22.sp,
             fontFamily = Theme.L.fontFamilyKarla,
             fontWeight = FontWeight.Medium,
+        )
+    }
+}
+
+@Composable
+private fun LandingTagAlbumItem(
+    album: Album,
+    itemWidth: androidx.compose.ui.unit.Dp,
+    onAlbumClick: (Long) -> Unit
+) {
+    val albumId = remember(album.id) { album.id.toLongOrNull() }
+    val onCardClick = remember(albumId, onAlbumClick) {
+        { if (albumId != null) onAlbumClick(albumId) }
+    }
+    Box(
+        modifier = Modifier
+            .width(itemWidth)
+            .padding(vertical = 2.dp)
+    ) {
+        AlbumListItem(
+            modifier = Modifier.fillMaxWidth(),
+            title = album.title,
+            coverUrl = album.cover?.url.orEmpty(),
+            numberOfAnimatedPictures = album.numberOfAnimatedPictures,
+            numberOfPictures = album.numberOfPictures,
+            onClick = onCardClick
         )
     }
 }
@@ -476,7 +494,8 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
 
     val state = LazyListState()
 
-    val albumTopHits = MutableStateFlow<Landing_page_albumType?>(null)
+    private val _albumTopHits = MutableStateFlow<Landing_page_albumType?>(null)
+    val albumTopHits: StateFlow<Landing_page_albumType?> = _albumTopHits.asStateFlow()
 
     init {
         Timber.d("ScreenLAlbumLandingTagSM init")
@@ -485,7 +504,7 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
                 val res = withContext(Dispatchers.IO) {
                     luscious.getLandingPageAlbumTag(tag)
                 }
-                albumTopHits.value = res.getOrNull()
+                _albumTopHits.value = res.getOrNull()
                 if (res.isFailure) {
                     Timber.w(res.exceptionOrNull(), "ScreenLAlbumLandingTagSM: failed to load tag $tag")
                 }

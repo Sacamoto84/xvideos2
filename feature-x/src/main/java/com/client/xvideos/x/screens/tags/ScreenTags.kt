@@ -93,6 +93,7 @@ class ScreenTags(val tag: String) : Screen {
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
                     beyondViewportPageCount = 1,
+                    key = { pageIndex -> pageIndex }
                 ) { pageIndex ->
                     TagsPaginatedListScreen(
                         pageIndex = pageIndex,
@@ -100,38 +101,12 @@ class ScreenTags(val tag: String) : Screen {
                         onOpenVideo = onOpenVideo,
                         listState = listStates.getOrPut(pageIndex) { LazyListState() },
                         header = {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = topCutout + 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
-                            ) {
-                                Text(
-                                    text = tag,
-                                    color = Color.White,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                if (vm.screen.title0.isNotBlank() || vm.screen.title1.isNotBlank()) {
-                                    Row {
-                                        if (vm.screen.title0.isNotBlank()) {
-                                            Text(
-                                                text = vm.screen.title0 + " ",
-                                                color = Color(0xFFB0B0B0),
-                                                fontSize = 12.sp,
-                                            )
-                                        }
-                                        if (vm.screen.title1.isNotBlank()) {
-                                            Text(
-                                                text = vm.screen.title1,
-                                                color = Color(0xFF787878),
-                                                fontSize = 12.sp,
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                            TagsHeader(
+                                tag = tag,
+                                title0 = vm.screen.title0,
+                                title1 = vm.screen.title1,
+                                topCutout = topCutout
+                            )
                         }
                     )
                 }
@@ -139,6 +114,48 @@ class ScreenTags(val tag: String) : Screen {
         }
     }
 
+}
+
+@Composable
+private fun TagsHeader(
+    tag: String,
+    title0: String,
+    title1: String,
+    topCutout: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = topCutout + 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
+    ) {
+        Text(
+            text = tag,
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (title0.isNotBlank() || title1.isNotBlank()) {
+            Row {
+                if (title0.isNotBlank()) {
+                    Text(
+                        text = "$title0 ",
+                        color = Color(0xFFB0B0B0),
+                        fontSize = 12.sp,
+                    )
+                }
+                if (title1.isNotBlank()) {
+                    Text(
+                        text = title1,
+                        color = Color(0xFF787878),
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+        }
+    }
 }
 
 internal enum class TagsBackAction {

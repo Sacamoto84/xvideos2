@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.activity.compose.BackHandler
@@ -303,26 +304,45 @@ private fun AlbumListPageGrid(
             }
 
             items(
-                count = pageItems.size,
-                key = { "${pageItems[it].id}#$it" }
-            ) { index ->
-                val item = pageItems[index]
-                Box(
-                    Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AlbumListItem(
-                        title = item.title,
-                        coverUrl = item.cover?.url.orEmpty(),
-                        numberOfAnimatedPictures = item.numberOfAnimatedPictures,
-                        numberOfPictures = item.numberOfPictures,
-                    ) {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        item.id.toLongOrNull()?.let { onAlbumClick(it) }
-                    }
-                }
+                items = pageItems,
+                key = { it.id }
+            ) { item ->
+                AlbumGridItem(
+                    item = item,
+                    haptic = haptic,
+                    onAlbumClick = onAlbumClick
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun AlbumGridItem(
+    item: Album,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    onAlbumClick: (Long) -> Unit
+) {
+    val onClick: () -> Unit = remember(item.id, haptic, onAlbumClick) {
+        {
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            val id = item.id.toLongOrNull()
+            if (id != null) {
+                onAlbumClick(id)
+            }
+        }
+    }
+    Box(
+        Modifier.padding(vertical = 2.dp, horizontal = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        AlbumListItem(
+            title = item.title,
+            coverUrl = item.cover?.url.orEmpty(),
+            numberOfAnimatedPictures = item.numberOfAnimatedPictures,
+            numberOfPictures = item.numberOfPictures,
+            onClick = onClick
+        )
     }
 }
 
@@ -350,7 +370,7 @@ private fun AlbumListFilterOverlay(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable { onClose() }
+                    .clickable(onClick = onClose)
             )
 
             val screenHeight = LocalConfiguration.current.screenHeightDp.dp

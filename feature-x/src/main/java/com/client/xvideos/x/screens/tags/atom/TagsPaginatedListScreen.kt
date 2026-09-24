@@ -78,18 +78,21 @@ fun TagsPaginatedListScreen(
         }
     }
 
+    val onRetry: () -> Unit = remember {
+        {
+            retryTrigger += 1
+        }
+    }
+
     if (loaded == null) {
         Column(modifier = Modifier.fillMaxSize()) {
             header?.invoke()
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (failed) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Страница не загрузилась", color = Color.Gray)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(onClick = { retryTrigger++ }) {
-                            Text("Повторить")
-                        }
-                    }
+                    TagsStateMessage(
+                        message = "Страница не загрузилась",
+                        onRetry = onRetry
+                    )
                 } else {
                     CircularProgressIndicator(modifier = Modifier.size(40.dp))
                 }
@@ -102,13 +105,10 @@ fun TagsPaginatedListScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             header?.invoke()
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Видео не найдены", color = Color.Gray)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = { retryTrigger++ }) {
-                        Text("Повторить")
-                    }
-                }
+                TagsStateMessage(
+                    message = "Видео не найдены",
+                    onRetry = onRetry
+                )
             }
         }
         return
@@ -170,5 +170,23 @@ private fun TagGridCell(
             onLongClick = handleOpen,
             onDoubleClick = handleOpen,
         )
+    }
+}
+
+@Composable
+private fun TagsStateMessage(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(message, color = Color.Gray)
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onRetry) {
+            Text("Повторить")
+        }
     }
 }

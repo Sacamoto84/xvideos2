@@ -46,13 +46,27 @@ fun DaialogNewCollection(
         focusRequester.requestFocus()
     }
 
+    val onTextChange: (String) -> Unit = remember {
+        { text = it }
+    }
+
+    val onConfirmAction: () -> Unit = remember(text, onBlockConfirmed, onDismiss) {
+        {
+            val trimmed = text.trim()
+            if (trimmed.isNotEmpty()) {
+                onBlockConfirmed(trimmed)
+                onDismiss()
+            }
+        }
+    }
+
     LavenderDialog(
         title = "Создать коллекцию",
         onDismiss = onDismiss,
         content = {
             OutlinedTextField(
                 value = text,
-                onValueChange = { text = it },
+                onValueChange = onTextChange,
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 singleLine = true,
                 keyboardOptions = IncognitoKeyboard.options(),
@@ -70,12 +84,6 @@ fun DaialogNewCollection(
         },
         confirmText = "Создать",
         confirmEnabled = text.isNotBlank(),
-        onConfirm = {
-            val trimmed = text.trim()
-            if (trimmed.isNotEmpty()) {
-                onBlockConfirmed(trimmed)
-                onDismiss()
-            }
-        },
+        onConfirm = onConfirmAction,
     )
 }

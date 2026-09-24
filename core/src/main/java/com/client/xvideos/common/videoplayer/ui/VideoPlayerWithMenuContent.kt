@@ -68,7 +68,7 @@ fun VideoPlayerWithMenuContent(
     }
 
     var seekDragAmount by remember { mutableFloatStateOf(0f) }
-    val seekDragModifier = Modifier.pointerInput(Unit) {
+    val seekDragModifier = Modifier.pointerInput(playerHost) {
         detectHorizontalDragGestures(
             onDragStart = { seekDragAmount = 0f },
             onDragEnd = {
@@ -82,6 +82,26 @@ fun VideoPlayerWithMenuContent(
         )
     }
 
+    val onResetZoom: () -> Unit = remember(coroutineScope, zoomState) {
+        {
+            coroutineScope.launch {
+                zoomState.changeScale(1.0f, Offset.Zero)
+            }
+        }
+    }
+
+    val onDoubleTapZoom: (Offset) -> Unit = remember(coroutineScope, zoomState) {
+        { tapOffset ->
+            coroutineScope.launch {
+                if (zoomState.scale > 1.05f) {
+                    zoomState.changeScale(1.0f, Offset.Zero)
+                } else {
+                    zoomState.changeScale(2.5f, tapOffset)
+                }
+            }
+        }
+    }
+
     Box(modifier = modifier.clipToBounds()) {
 
         Box(
@@ -89,16 +109,8 @@ fun VideoPlayerWithMenuContent(
                 zoomState = zoomState,
                 zoomEnabled = true,
                 enableOneFingerZoom = false,
-                onTap = { onClick.invoke() },
-                onDoubleTap = { tapOffset ->
-                    coroutineScope.launch {
-                        if (zoomState.scale > 1.05f) {
-                            zoomState.changeScale(1.0f, Offset.Zero)
-                        } else {
-                            zoomState.changeScale(2.5f, tapOffset)
-                        }
-                    }
-                }
+                onTap = { onClick() },
+                onDoubleTap = onDoubleTapZoom
             )
         ) {
             StaticPlayer(playerHost, autoRotate)
@@ -110,11 +122,7 @@ fun VideoPlayerWithMenuContent(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 16.dp),
-            onReset = {
-                coroutineScope.launch {
-                    zoomState.changeScale(1.0f, Offset.Zero)
-                }
-            }
+            onReset = onResetZoom
         )
 
         // Нижняя сенсорная часть перемотки (отключается при активном увеличении кадра)

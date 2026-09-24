@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Refresh
@@ -267,7 +267,7 @@ fun NichesTabContent(
                             }
                         }
                     } else {
-                        itemsIndexed(items = niches, key = { index, item -> "${item.id}#$index" }, contentType = { _, _ -> "niche" }) { _, item ->
+                        items(items = niches, key = { it.id }, contentType = { "niche" }) { item ->
                             val red = savedRed()
                             if (red != null) {
                                 NicheItemRow(

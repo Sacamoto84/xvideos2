@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -108,11 +108,16 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     }
     val onDismissDelete = remember { { pendingDelete = null } }
 
-    pendingDelete?.let { item ->
+    val onConfirmItemDelete = remember(pendingDelete, onConfirmDelete) {
+        pendingDelete?.let { item -> { onConfirmDelete(item) } }
+    }
+
+    if (pendingDelete != null && onConfirmItemDelete != null) {
+        val item = pendingDelete!!
         ConfirmDeleteVideoDialog(
             title = "Удалить из сохранённого?",
             imageUrl = saved.downloads.localPosterPath(item.id) ?: item.previewImage,
-            onConfirm = { onConfirmDelete(item) },
+            onConfirm = onConfirmItemDelete,
             onDismiss = onDismissDelete,
         )
     }
@@ -130,19 +135,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .padding(top = topCutout)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Сохранённое",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-                    )
-                }
-                HorizontalDivider(color = Color(0xFF9E9E9E))
+                SavedHeader()
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Пусто", color = Color.Gray, fontSize = 16.sp)
                 }
@@ -153,27 +146,11 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 item(key = "header") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = topCutout)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Сохранённое",
-                                color = Color.White,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-                            )
-                        }
-                        HorizontalDivider(color = Color(0xFF9E9E9E))
+                    Box(modifier = Modifier.padding(top = topCutout)) {
+                        SavedHeader()
                     }
                 }
-                itemsIndexed(list, key = { index, item -> "${item.id}#$index" }) { _, item ->
+                items(list, key = { it.id }) { item ->
                     val posterUrl = remember(item.id) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
                     }
@@ -187,6 +164,25 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SavedHeader(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Сохранённое",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+            )
+        }
+        HorizontalDivider(color = Color(0xFF9E9E9E))
     }
 }
 

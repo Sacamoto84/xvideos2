@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -57,6 +57,8 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
@@ -90,7 +92,7 @@ object SearchTab : Screen {
         val searchText by vm.searchText.collectAsStateWithLifecycle()
         val isLoading by vm.isLoading.collectAsStateWithLifecycle()
 
-        val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.searchText.value = it } }
+        val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.updateSearchText(it) } }
         val onCreatorClick: (String) -> Unit = remember(navigator) {
             { handle -> navigator.push(ScreenRedProfile(handle)) }
         }
@@ -116,6 +118,10 @@ fun SearchTabContent(
 ) {
     val listState = rememberLazyListState()
 
+    val onClearSearch: () -> Unit = remember(onSearchTextChange) {
+        { onSearchTextChange("") }
+    }
+
     BackHandler(enabled = searchText.isNotEmpty()) {
         onSearchTextChange("")
     }
@@ -140,7 +146,7 @@ fun SearchTabContent(
                     },
                     trailingIcon = {
                         if (searchText.isNotBlank()) {
-                            IconButton(onClick = { onSearchTextChange("") }) {
+                            IconButton(onClick = onClearSearch) {
                                 Icon(Icons.Default.Close, contentDescription = "Очистить", tint = Color.Gray)
                             }
                         }
@@ -173,13 +179,26 @@ fun SearchTabContent(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentPadding = PaddingValues(vertical = 4.dp)
             ) {
-                itemsIndexed(creatorsList, key = { index, item -> "${item.text}_${item.name}_$index" }) { _, item ->
-                    val handle = item.text.removePrefix("@").ifBlank { item.name }
-                    SearchCreatorItem(item = item, onClick = { onCreatorClick(handle) })
+                items(creatorsList, key = { it.text.ifBlank { it.name } }) { item ->
+                    SearchCreatorListItem(item = item, onCreatorClick = onCreatorClick)
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SearchCreatorListItem(
+    item: SearchItemCreatorsResponse,
+    onCreatorClick: (String) -> Unit
+) {
+    val handle = remember(item.text, item.name) {
+        item.text.removePrefix("@").ifBlank { item.name }
+    }
+    val onClick = remember(handle, onCreatorClick) {
+        { onCreatorClick(handle) }
+    }
+    SearchCreatorItem(item = item, onClick = onClick)
 }
 
 @Composable
@@ -282,33 +301,40 @@ class ScreenRedExplorerSearchSM @Inject constructor(
     val redApi: RedApi
 ) : ScreenModel {
 
-    val searchText = MutableStateFlow<String>("")
-    val isLoading = MutableStateFlow(false)
+    private val _searchText = MutableStateFlow<String>("")
+    val searchText: StateFlow<String> = _searchText.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     val creatorsList = mutableStateListOf<SearchItemCreatorsResponse>()
     val nichesList = mutableStateListOf<SearchItemNichesResponse>()
     val tagsList = mutableStateListOf<SearchItemTagsResponse>()
 
+    fun updateSearchText(query: String) {
+        _searchText.value = query
+    }
+
     init {
         screenModelScope.launch {
             @OptIn(FlowPreview::class)
-            searchText
+            _searchText
                 .debounce(300)
                 .collectLatest { rawText ->
                     val text = rawText.trim()
                     if (text.isBlank()) {
                         creatorsList.clear()
-                        isLoading.value = false
+                        _isLoading.value = false
                         return@collectLatest
                     }
 
-                    isLoading.value = true
+                    _isLoading.value = true
                     try {
                         runCatchingCancellable { redApi.search.searchCreatorsShort(text).getOrThrow() }
                             .onSuccess { creatorsList.replaceWith(it.items) }
                             .onFailure { Timber.w(it, "Поиск авторов не удался: %s", text) }
                     } finally {
-                        isLoading.value = false
+                        _isLoading.value = false
                     }
                 }
         }
