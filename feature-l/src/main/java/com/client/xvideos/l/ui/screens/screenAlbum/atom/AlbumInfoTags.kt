@@ -8,28 +8,44 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.capitalizeEachWord
 import com.client.xvideos.l.model.Tag
 
+private val tagChipShape = RoundedCornerShape(4.dp)
+
 @Composable
 fun AlbumInfoTags(tags: () -> (List<Tag>), onClick: (String) -> Unit) {
+    val tagTextStyle = remember(Theme.L.Type.caption, Theme.L.textColor) {
+        Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
+    }
+
     FlowRow(verticalArrangement = Arrangement.Center) {
-        //parsed.tags.reversed().filter{it.count>0}.forEach {
-        tags().forEach {
-            Text(
-                "${it.text.capitalizeEachWord()} (${it.count})",
-                modifier = Modifier
-                    .padding(vertical = 2.dp)
-                    .border(1.dp, Theme.L.secondaryColor, RoundedCornerShape(4.dp))
-                    .padding(4.dp)
-                    .clickable(onClick = { onClick(it.text) }),
-                color = Theme.L.textColor,
-                style = Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
-            )
+        tags().forEach { tag ->
+            key(tag.id) {
+                val label = remember(tag.text, tag.count) {
+                    "${tag.text.capitalizeEachWord()} (${tag.count})"
+                }
+                val handleClick = remember(tag.text, onClick) { { onClick(tag.text) } }
+
+                Text(
+                    text = label,
+                    modifier = Modifier
+                        .padding(vertical = 2.dp)
+                        .border(1.dp, Theme.L.secondaryColor, tagChipShape)
+                        .clip(tagChipShape)
+                        .clickable(onClick = handleClick)
+                        .padding(4.dp),
+                    color = Theme.L.textColor,
+                    style = tagTextStyle
+                )
+            }
         }
     }
 }

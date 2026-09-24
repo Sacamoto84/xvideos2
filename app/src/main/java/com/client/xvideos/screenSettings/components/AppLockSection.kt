@@ -55,6 +55,9 @@ import kotlinx.coroutines.launch
 
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
+private val appLockErrorColor = Color(0xFFB3261E)
+private val appLockDisableColor = Color(0xFFFF7A7A)
+
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun AppLockSettingsSection() {
@@ -149,7 +152,7 @@ fun AppLockSettingsSection() {
     val disableTrailing: @Composable () -> Unit = remember(onDisableLock) {
         {
             TextButton(onClick = onDisableLock) {
-                Text("Отключить", color = Color(0xFFFF7A7A))
+                Text("Отключить", color = appLockDisableColor)
             }
         }
     }
@@ -294,7 +297,7 @@ private fun CamouflageVerificationDialog(
     val onConfirmVerification = remember(pinInput, isVerifyingPin, context, onSuccess) {
         {
             if (!isVerifyingPin) {
-                if (!pinInput.all { it.isDigit() }) {
+                if (!pinInput.all { ch -> ch.isDigit() }) {
                     pinError = "Код доступа для калькулятора должен состоять только из цифр"
                 } else {
                     scope.launch {
@@ -336,9 +339,8 @@ private fun CamouflageVerificationDialog(
                     keyboardType = KeyboardType.NumberPassword,
                     onDone = onDoneNoOp
                 )
-                pinError?.let {
-                    val errorColor = Color(0xFFB3261E)
-                    Text(it, color = errorColor, style = Theme.L.Type.dialogBody.copy(color = errorColor))
+                pinError?.let { err ->
+                    Text(err, color = appLockErrorColor, style = Theme.L.Type.dialogBody.copy(color = appLockErrorColor))
                 }
             }
         },
@@ -413,7 +415,7 @@ internal fun AppLockPasswordDialog(
                     return@launch
                 }
 
-                if (isCamouflage && needsNewPassword && !newPassword.all { it.isDigit() }) {
+                if (isCamouflage && needsNewPassword && !newPassword.all { ch -> ch.isDigit() }) {
                     errorText = "При включённой маскировке код доступа должен состоять только из цифр"
                     return@launch
                 }
@@ -423,16 +425,16 @@ internal fun AppLockPasswordDialog(
                         AppLockRepository.setPassword(context, newPassword).onSuccess {
                             SnackBar.success("Код доступа включён")
                             onComplete()
-                        }.onFailure {
-                            errorText = it.message ?: "Не удалось сохранить код доступа"
+                        }.onFailure { error ->
+                            errorText = error.message ?: "Не удалось сохранить код доступа"
                         }
                     }
                     AppLockDialogMode.CHANGE -> {
                         AppLockRepository.setPassword(context, newPassword).onSuccess {
                             SnackBar.success("Код доступа изменён")
                             onComplete()
-                        }.onFailure {
-                            errorText = it.message ?: "Не удалось изменить код доступа"
+                        }.onFailure { error ->
+                            errorText = error.message ?: "Не удалось изменить код доступа"
                         }
                     }
                     AppLockDialogMode.DISABLE -> {
@@ -509,11 +511,8 @@ internal fun AppLockPasswordDialog(
                     )
                 }
 
-                errorText?.let {
-                    // Тёмно-красный, а не светлый: диалог стоит на светлом фоне,
-                    // прежний #FF7A7A на нём почти не читался.
-                    val errorColor = Color(0xFFB3261E)
-                    Text(it, color = errorColor, style = Theme.L.Type.dialogBody.copy(color = errorColor))
+                errorText?.let { err ->
+                    Text(err, color = appLockErrorColor, style = Theme.L.Type.dialogBody.copy(color = appLockErrorColor))
                 }
             }
         },

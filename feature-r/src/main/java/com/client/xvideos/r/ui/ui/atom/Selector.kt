@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,27 +31,32 @@ fun DefaultPreview() {
 
 @Composable
 fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
+    val selectorShape = remember { RoundedCornerShape(8.dp) }
+    val onSelect1 = remember(onSelect) { { onSelect(1) } }
+    val onSelect2 = remember(onSelect) { { onSelect(2) } }
+
+    val bg2 = if (selectedIndex == 2) Theme.R.colorBorderSelect else Theme.background
+    val tint2 = if (selectedIndex == 2) Color.White else Theme.R.colorTextGray
+    val bg1 = if (selectedIndex == 1) Theme.R.colorBorderSelect else Theme.background
+    val tint1 = if (selectedIndex == 1) Color.White else Theme.R.colorTextGray
 
     Row(
-
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
+            .clip(selectorShape)
+            .border(1.dp, Theme.R.colorBorderGray, selectorShape)
     ) {
-
         Box(
             modifier = Modifier
                 .size(46.dp)
-                .background(if (selectedIndex == 2) Theme.R.colorBorderSelect else Theme.background)
-                .clickable { onSelect(2) },
-
+                .background(bg2)
+                .clickable(onClick = onSelect2),
             contentAlignment = Alignment.Center
-        )
-        {
+        ) {
             Icon(
                 painter = painterResource(R.drawable.select_2),
                 contentDescription = null,
-                tint = if (selectedIndex == 2) Color.White else Theme.R.colorTextGray, modifier = Modifier.size(24.dp)
+                tint = tint2,
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -60,24 +66,22 @@ fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
                 .height(46.dp)
                 .background(Theme.R.colorBorderGray)
         )
+
         Box(
             modifier = Modifier
                 .size(46.dp)
-                .background(if (selectedIndex == 1) Theme.R.colorBorderSelect else Theme.background)
-                .clickable { onSelect(1) }, contentAlignment = Alignment.Center
-        )
-        {
+                .background(bg1)
+                .clickable(onClick = onSelect1),
+            contentAlignment = Alignment.Center
+        ) {
             Icon(
                 painter = painterResource(R.drawable.select_1),
                 contentDescription = null,
-                tint = if (selectedIndex == 1) Color.White else Theme.R.colorTextGray, modifier = Modifier.size(24.dp)
+                tint = tint1,
+                modifier = Modifier.size(24.dp)
             )
         }
-
-
     }
-
-
 }
 
 

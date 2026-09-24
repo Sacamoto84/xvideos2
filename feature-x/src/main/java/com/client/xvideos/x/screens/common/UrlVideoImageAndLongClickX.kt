@@ -40,7 +40,13 @@ fun UrlVideoImageAndLongClickX(
         parserVideoPreviewFromImageUrl(item.previewImage)
             ?: item.previewVideo.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
     }
-    val fallbackUrls = remember(item.previewVideo) { listOf(item.previewVideo) }
+    val fallbackUrls = remember(item.previewVideo) {
+        if (item.previewVideo.isNotBlank() && !item.previewVideo.equals("null", ignoreCase = true)) {
+            listOf(item.previewVideo)
+        } else {
+            emptyList()
+        }
+    }
 
     val handleDoubleClick: () -> Unit = remember(context, onDoubleClick) {
         {
@@ -85,15 +91,13 @@ fun UrlVideoImageAndLongClickX(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .combinedClickable(
                 onDoubleClick = handleDoubleClick,
                 onLongClick = handleLongClick,
                 onClick = handleClick
             )
-            .then(modifier)
-
     ) {
 
         if (isVideo) {

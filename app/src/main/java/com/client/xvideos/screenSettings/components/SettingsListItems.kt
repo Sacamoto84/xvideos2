@@ -56,6 +56,7 @@ internal val SettingsRowTextPrimary = Color(0xFFE5E2E9)
 internal val SettingsRowTextSecondary = Color(0xFFA6A4AC)
 internal val SettingsDividerColor = Color(0x2E79747E)
 internal val WhatsAppGreen = SettingsAccentColor
+internal val settingsCardShape = RoundedCornerShape(24.dp)
 
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 
@@ -108,7 +109,7 @@ fun SettingsGroup(content: @Composable () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(settingsCardShape)
             .background(SettingsCardColor)
     ) {
         CompositionLocalProvider(LocalSettingsInGroup provides true) {
@@ -162,6 +163,23 @@ fun SettingsListItem(
         Modifier
     }
 
+    val titleStyle = remember(Theme.L.Type.rowTitle) {
+        Theme.L.Type.rowTitle.copy(
+            color = SettingsRowTextPrimary,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 22.sp
+        )
+    }
+    val subtitleStyle = remember(Theme.L.Type.rowSubtitle) {
+        Theme.L.Type.rowSubtitle.copy(
+            color = SettingsRowTextSecondary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 18.sp
+        )
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,7 +189,7 @@ fun SettingsListItem(
                 } else {
                     Modifier
                         .padding(horizontal = 16.dp)
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(settingsCardShape)
                 }
             )
             .background(SettingsCardColor)
@@ -191,24 +209,14 @@ fun SettingsListItem(
             Text(
                 text = text,
                 color = SettingsRowTextPrimary,
-                style = Theme.L.Type.rowTitle.copy(
-                    color = SettingsRowTextPrimary,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 22.sp
-                )
+                style = titleStyle
             )
             if (subtitle != null) {
                 Spacer(Modifier.height(3.dp))
                 Text(
                     text = subtitle,
                     color = SettingsRowTextSecondary,
-                    style = Theme.L.Type.rowSubtitle.copy(
-                        color = SettingsRowTextSecondary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 18.sp
-                    )
+                    style = subtitleStyle
                 )
             }
         }
@@ -313,7 +321,7 @@ private fun SettingsSwitchRowPreview() = SettingsPreview {
         text = "Переключатель",
         subtitle = if (checked) "Вкл" else "Выкл",
         value = checked,
-        onValueChange = { checked = it }
+        onValueChange = { isChecked -> checked = isChecked }
     )
 }
 
@@ -329,14 +337,16 @@ fun SettingsButtonRowWithDialog(
     onClick: () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
+    val onDismiss = remember { { visible = false } }
+    val onOpen = remember { { visible = true } }
 
     DialogButton(
         visible = visible,
         title = textDialogTitle,
         body = textDialogBody,
         buttonText = textDialogButton,
-        onDismiss = { visible = false },
-        onBlockConfirmed = { onClick() },
+        onDismiss = onDismiss,
+        onBlockConfirmed = onClick,
         composable = composable
     )
 
@@ -345,7 +355,7 @@ fun SettingsButtonRowWithDialog(
         text = text,
         subtitle = null,
         trailing = {
-            TextButton(onClick = { visible = true }) {
+            TextButton(onClick = onOpen) {
                 Text(value, color = SettingsAccentColor, fontWeight = FontWeight.Medium)
             }
         }
@@ -382,6 +392,12 @@ fun IntSliderSetting(
     val currentValue = snapSliderValue(sliderValue, min, max, step)
     val steps = ((max - min) / step - 1).coerceAtLeast(0)
 
+    val onFinished = remember(sliderValue, min, max, step, onValueChangeFinished) {
+        {
+            onValueChangeFinished(snapSliderValue(sliderValue, min, max, step))
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         SettingsListItem(
             icon = icon,
@@ -390,10 +406,10 @@ fun IntSliderSetting(
         )
         Slider(
             value = currentValue.toFloat(),
-            onValueChange = { sliderValue = snapSliderValue(it, min, max, step).toFloat() },
-            onValueChangeFinished = {
-                onValueChangeFinished(snapSliderValue(sliderValue, min, max, step))
+            onValueChange = { rawValue ->
+                sliderValue = snapSliderValue(rawValue, min, max, step).toFloat()
             },
+            onValueChangeFinished = onFinished,
             modifier = Modifier.padding(start = if (icon != 0) 56.dp else 16.dp, end = 16.dp),
             valueRange = min.toFloat()..max.toFloat(),
             steps = steps,

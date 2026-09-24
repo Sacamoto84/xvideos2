@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +16,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private val pillShape = RoundedCornerShape(20.dp)
+private val pillButtonShape = RoundedCornerShape(6.dp)
+private val pillBackgroundColor = Color(0xDD212121)
+private val pillRestartColor = Color(0xFFFF5252)
 
 /**
  * Плашка с уведомлением о возобновлении воспроизведения и кнопкой «С начала».
@@ -27,13 +31,9 @@ fun ResumePlaybackPill(
     onRestart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val pillShape = remember { RoundedCornerShape(20.dp) }
-    val buttonShape = remember { RoundedCornerShape(6.dp) }
-    val handleRestart = remember(onRestart) { { onRestart() } }
-
     Surface(
         modifier = modifier.clip(pillShape),
-        color = Color(0xDD212121),
+        color = pillBackgroundColor,
         shadowElevation = 4.dp,
         tonalElevation = 6.dp,
     ) {
@@ -49,12 +49,12 @@ fun ResumePlaybackPill(
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = "С начала",
-                color = Color(0xFFFF5252),
+                color = pillRestartColor,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 modifier = Modifier
-                    .clip(buttonShape)
-                    .clickable(onClick = handleRestart)
+                    .clip(pillButtonShape)
+                    .clickable(onClick = onRestart)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }

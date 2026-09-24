@@ -33,17 +33,21 @@ import com.client.xvideos.common.snackbar.UiSnackbarVisuals
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 
+private val snackbarShape = RoundedCornerShape(12.dp)
+
 @Composable
 fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
     Box(modifier = Modifier.zIndex(Float.MAX_VALUE)) {
         SnackbarHost(snackBarHostState) { data ->
             val uiMsg = (data.visuals as? UiSnackbarVisuals)?.ui ?: UiMessage.Info(data.visuals.message)
 
-            val (bg, fg, icon) = when (uiMsg) {
-                is UiMessage.Success -> Triple(Theme.Feedback.success, Color.White, Icons.Default.Check)
-                is UiMessage.Error -> Triple(Theme.Feedback.error, Color.White, Icons.Default.ErrorOutline)
-                is UiMessage.Info -> Triple(Theme.Feedback.info, Color.White, Icons.Default.Info)
-                is UiMessage.Warning -> Triple(Theme.Feedback.warning, Color.White, Icons.Default.Info)
+            val (bg, fg, icon) = remember(uiMsg) {
+                when (uiMsg) {
+                    is UiMessage.Success -> Triple(Theme.Feedback.success, Color.White, Icons.Default.Check)
+                    is UiMessage.Error -> Triple(Theme.Feedback.error, Color.White, Icons.Default.ErrorOutline)
+                    is UiMessage.Info -> Triple(Theme.Feedback.info, Color.White, Icons.Default.Info)
+                    is UiMessage.Warning -> Triple(Theme.Feedback.warning, Color.White, Icons.Default.Info)
+                }
             }
 
             LaunchedEffect(data) {
@@ -55,13 +59,19 @@ fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
                 data.dismiss()
             }
 
+            val onAction: () -> Unit = remember(data) {
+                {
+                    data.performAction()
+                }
+            }
+
             Surface(
                 modifier = Modifier
                     .wrapContentWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 104.dp),
                 color = bg,
                 contentColor = fg,
-                shape = RoundedCornerShape(12.dp),
+                shape = snackbarShape,
                 tonalElevation = 6.dp,
                 shadowElevation = 6.dp,
             ) {
@@ -73,7 +83,7 @@ fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
                     Spacer(Modifier.width(8.dp))
                     Text(data.visuals.message, fontFamily = Theme.R.fontFamilyDMsanss)
                     data.visuals.actionLabel?.let { label ->
-                        TextButton(onClick = { data.performAction() }) {
+                        TextButton(onClick = onAction) {
                             Text(label)
                         }
                     }

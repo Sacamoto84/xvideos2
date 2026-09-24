@@ -24,6 +24,9 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.common.saved.SelectedCreator
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val subscriptionAvatarShape = RoundedCornerShape(8.dp)
+private val subscriptionAvatarPlaceholderBg = Color.DarkGray
+
 @Composable
 fun DialogSubscriptionDelete(
     user: SelectedCreator?,
@@ -34,7 +37,6 @@ fun DialogSubscriptionDelete(
         val handleConfirm = remember(pending.name, onConfirm) {
             { onConfirm(pending.name) }
         }
-        val avatarShape = remember { RoundedCornerShape(8.dp) }
         val dialogBody = remember(pending.name) {
             buildAnnotatedString {
                 append("Удалить автора «")
@@ -48,9 +50,9 @@ fun DialogSubscriptionDelete(
             icon = {
                 Box(
                     modifier = Modifier
-                        .clip(avatarShape)
+                        .clip(subscriptionAvatarShape)
                         .size(96.dp)
-                        .background(Color.DarkGray),
+                        .background(subscriptionAvatarPlaceholderBg),
                     contentAlignment = Alignment.Center
                 ) {
                     if (pending.urlProfile != null) {

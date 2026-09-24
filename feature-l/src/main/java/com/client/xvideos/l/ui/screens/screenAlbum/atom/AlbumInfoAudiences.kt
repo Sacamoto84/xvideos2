@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,36 +21,44 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 
+private val audienceChipShape = RoundedCornerShape(4.dp)
+
 @Composable
 fun AlbumInfoAudiences(
     parsed: AlbumDetails,
     onAudienceClick: (Audience) -> Unit = {}
 ) {
+    val headerStyle = remember(Theme.L.Type.rowTitle) {
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+    }
+    val audienceTextStyle = remember(Theme.L.Type.rowValue, Theme.L.primaryColor) {
+        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = 14.sp)
+    }
+
     FlowRow(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            "Audiences: ",
+            text = "Audiences: ",
             color = Theme.L.textColor,
-            style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp),
+            style = headerStyle,
             modifier = Modifier.padding(vertical = 4.dp)
         )
-        parsed.audiences.forEachIndexed { index, item ->
-            Text(
-                text = buildString {
-                    append(item.title)
-                    //if (index != parsed.audiences.lastIndex) append(",")
-                },
-                modifier = Modifier
-                    .padding(horizontal = 2.dp)
-                    .padding(vertical = 2.dp)
-                    .border(1.dp, Theme.L.secondaryColor, RoundedCornerShape(4.dp))
-                    .clickable(onClick = { onAudienceClick(item) })
-                    .padding(4.dp),
-                color = Theme.L.primaryColor,
-                style = Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = 14.sp),
-            )
-
+        parsed.audiences.forEach { item ->
+            key(item.id) {
+                val handleClick = remember(item, onAudienceClick) { { onAudienceClick(item) } }
+                Text(
+                    text = item.title,
+                    modifier = Modifier
+                        .padding(horizontal = 2.dp, vertical = 2.dp)
+                        .border(1.dp, Theme.L.secondaryColor, audienceChipShape)
+                        .clip(audienceChipShape)
+                        .clickable(onClick = handleClick)
+                        .padding(4.dp),
+                    color = Theme.L.primaryColor,
+                    style = audienceTextStyle
+                )
+            }
         }
     }
 }

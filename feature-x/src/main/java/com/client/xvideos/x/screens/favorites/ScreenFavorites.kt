@@ -179,7 +179,7 @@ private fun FavoritesContent(
                     FavoritesHeader(topCutout = topCutout)
                 }
 
-                items(items = favorites, key = { it.id }, contentType = { "favorite_row" }) { item ->
+                items(items = favorites, key = { item -> item.id }, contentType = { "favorite_row" }) { item ->
                     FavoriteRow(
                         item = item,
                         localUrl = localUrlOf(item),
@@ -366,18 +366,19 @@ private fun FavoriteActionsExpandMenu(
     }
 }
 
+private val durationOffsetY = (-3).dp
+
 /** Продолжительность видео в правом верхнем углу с «тенью» (как в оригинале). */
 @Composable
 private fun DurationOverlay(duration: String) {
     val text = remember(duration) { duration.trim().removeSuffix(".") }
     if (text.isEmpty()) return
-    val offsetY = (-3).dp
     Box(modifier = Modifier) {
         Text(
             text = text,
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(1.dp, offsetY + 1.dp),
+                .offset(1.dp, durationOffsetY + 1.dp),
             textAlign = TextAlign.Right,
             fontSize = 14.sp,
             color = Color.Black
@@ -386,7 +387,7 @@ private fun DurationOverlay(duration: String) {
             text = text,
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(0.dp, offsetY),
+                .offset(0.dp, durationOffsetY),
             textAlign = TextAlign.Right,
             fontSize = 14.sp,
             color = Color.White

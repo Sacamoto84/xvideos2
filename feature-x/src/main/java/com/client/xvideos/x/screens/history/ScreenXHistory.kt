@@ -216,7 +216,7 @@ fun HistoryContent(
     val onStartSelection: (Long) -> Unit = remember(selectedIds) {
         { id -> isSelectionMode = true; if (id !in selectedIds) selectedIds.add(id) }
     }
-    val onDeleteRequest: (ItemsX) -> Unit = remember { { pendingDelete = it } }
+    val onDeleteRequest: (ItemsX) -> Unit = remember { { item -> pendingDelete = item } }
 
     val actions = remember(onToggleFavorite, onDeleteRequest, onDownload, onPlayLocal, onOpenVideo, onSaveToGallery) {
         HistoryRowActions(
@@ -299,7 +299,7 @@ private fun HistoryGrid(
     ) {
         items(
             items = history,
-            key = { it.item.id },
+            key = { historyItem -> historyItem.item.id },
             contentType = { "history_row" }
         ) { historyItem ->
             val isSelected = historyItem.item.id in selectedIds
@@ -822,7 +822,7 @@ private fun HistoryActionsMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val onDismissMenu: () -> Unit = remember { { expanded = false } }
-    val onToggleExpanded: (Boolean) -> Unit = remember { { expanded = it } }
+    val onToggleExpanded: (Boolean) -> Unit = remember { { isExpanded -> expanded = isExpanded } }
 
     val handleToggleFavorite = remember(onToggleFavorite) {
         {
@@ -908,6 +908,9 @@ private fun HistoryActionsMenu(
     }
 }
 
+private val historyPosterShape = RoundedCornerShape(8.dp)
+private val historyDurationOffsetY = (-3).dp
+
 @Composable
 private fun ConfirmDeleteHistoryDialog(
     item: ItemsX,
@@ -924,7 +927,7 @@ private fun ConfirmDeleteHistoryDialog(
                 modifier = Modifier
                     .width(160.dp)
                     .aspectRatio(352f / 198f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(historyPosterShape)
             )
         },
         confirmText = "Удалить",
@@ -960,11 +963,14 @@ private fun ConfirmDeleteBatchHistoryDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val messageText = remember(count) {
+        "Будет удалено $count видео из истории просмотров."
+    }
     LavenderDialog(
         title = "Удалить выбранные?",
         content = {
             Text(
-                text = "Будет удалено $count видео из истории просмотров.",
+                text = messageText,
                 color = Color.White,
                 fontSize = 14.sp,
             )
@@ -978,15 +984,14 @@ private fun ConfirmDeleteBatchHistoryDialog(
 
 @Composable
 private fun DurationOverlay(duration: String) {
-    val text = duration.trim().removeSuffix(".")
+    val text = remember(duration) { duration.trim().removeSuffix(".") }
     if (text.isEmpty()) return
-    val offsetY = (-3).dp
     Box(modifier = Modifier) {
         Text(
             text = text,
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(1.dp, offsetY + 1.dp),
+                .offset(1.dp, historyDurationOffsetY + 1.dp),
             textAlign = TextAlign.Right,
             fontSize = 14.sp,
             color = Color.Black
@@ -995,7 +1000,7 @@ private fun DurationOverlay(duration: String) {
             text = text,
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(0.dp, offsetY),
+                .offset(0.dp, historyDurationOffsetY),
             textAlign = TextAlign.Right,
             fontSize = 14.sp,
             color = Color.White

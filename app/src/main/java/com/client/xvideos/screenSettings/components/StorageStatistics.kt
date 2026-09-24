@@ -16,8 +16,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +28,8 @@ import com.client.xvideos.R
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.util.formatBytes
 import java.io.File
+
+private val progressShape = RoundedCornerShape(6.dp)
 
 @Immutable
 internal data class StorageStat(
@@ -50,21 +54,24 @@ internal val EmptyStorageStats = listOf(
 @Composable
 internal fun StorageStatisticsSection(stats: List<StorageStat>) {
     val totalBytes = stats.sumOf { it.sizeBytes }
+    val formattedTotal = remember(totalBytes) { formatBytes(totalBytes) }
     SettingsGroup {
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = "Всего данных",
-            value = formatBytes(totalBytes)
+            value = formattedTotal
         )
 
         stats.forEach { stat ->
-            SettingsDivider()
-            val progress = if (totalBytes > 0L) {
-                (stat.sizeBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
-            } else {
-                0f
+            key(stat.key) {
+                SettingsDivider()
+                val progress = if (totalBytes > 0L) {
+                    (stat.sizeBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+                StorageProgressRow(stat = stat, progress = progress)
             }
-            StorageProgressRow(stat = stat, progress = progress)
         }
     }
 }
@@ -83,6 +90,20 @@ private fun StorageStatisticsSectionPreview() = SettingsPreview {
 
 @Composable
 internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
+    val formattedSize = remember(stat.sizeBytes) { formatBytes(stat.sizeBytes) }
+    val subtitleText = remember(stat.key, stat.fileCount) {
+        "${sectionSubtitle(stat.key)} \u2022 файлов: ${stat.fileCount}"
+    }
+    val rowTitleStyle = remember {
+        Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
+    }
+    val rowSubtitleStyle = remember {
+        Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
+    }
+    val captionStyle = remember {
+        Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -101,12 +122,12 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
                 Text(
                     text = stat.title,
                     color = SettingsRowTextPrimary,
-                    style = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
+                    style = rowTitleStyle
                 )
                 Text(
-                    text = formatBytes(stat.sizeBytes),
+                    text = formattedSize,
                     color = SettingsRowTextSecondary,
-                    style = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
+                    style = rowSubtitleStyle
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -115,15 +136,15 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
-                    .clip(RoundedCornerShape(6.dp)),
+                    .clip(progressShape),
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "${sectionSubtitle(stat.key)} \u2022 файлов: ${stat.fileCount}",
+                text = subtitleText,
                 color = SettingsRowTextSecondary,
-                style = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
+                style = captionStyle
             )
         }
     }

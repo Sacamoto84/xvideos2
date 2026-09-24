@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -13,6 +12,9 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.ui.theme.XvideosTheme
+
+private val favoritePosterShape = RoundedCornerShape(8.dp)
+private const val POSTER_ASPECT_RATIO = 352f / 198f
 
 /**
  * Диалог подтверждения удаления видео из «Избранного».
@@ -26,7 +28,6 @@ fun ConfirmDeleteFavoriteDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val posterShape = remember { RoundedCornerShape(8.dp) }
     LavenderDialog(
         title = "Удалить из избранного?",
         onDismiss = onDismiss,
@@ -35,8 +36,8 @@ fun ConfirmDeleteFavoriteDialog(
                 url = posterUrl,
                 modifier = Modifier
                     .width(160.dp)
-                    .aspectRatio(352f / 198f)
-                    .clip(posterShape)
+                    .aspectRatio(POSTER_ASPECT_RATIO)
+                    .clip(favoritePosterShape)
             )
         },
         confirmText = "Удалить",

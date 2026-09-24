@@ -1,8 +1,11 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.dialog
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -16,23 +19,35 @@ import com.client.xvideos.l.model.Content
 import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
 
+private val albumDialogCoverShape = RoundedCornerShape(8.dp)
+
 @Composable
 fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick: () -> Unit) {
+    val coverUrl = pending.cover?.url.orEmpty()
+    val dialogBody = remember(pending.title) {
+        buildAnnotatedString {
+            append("Удалить «")
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.title) }
+            append("» из сохранённых?")
+        }
+    }
 
     LavenderDialog(
         title = "Удалить Альбом?",
         onDismiss = onDismiss,
-        icon = { UrlImage(pending.cover?.url.orEmpty(), modifier = Modifier.size(96.dp)) },
-        body = buildAnnotatedString {
-            append("Удалить «")
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.title) }
-            append("» из сохранённых?")
+        icon = {
+            UrlImage(
+                url = coverUrl,
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(albumDialogCoverShape)
+            )
         },
+        body = dialogBody,
         confirmText = "Удалить",
         onConfirm = onClick,
         destructive = true,
     )
-
 }
 
 @Preview

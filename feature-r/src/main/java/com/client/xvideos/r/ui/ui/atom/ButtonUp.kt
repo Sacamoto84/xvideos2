@@ -23,43 +23,44 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+private val buttonUpBorderColor = Color(0x80757575)
+private val buttonUpRoundedShape = RoundedCornerShape(8.dp)
+
 @Composable
-fun ButtonUp(width : Dp = 32.dp, onClick: () -> Unit) {
+fun ButtonUp(width: Dp = 32.dp, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .height(46.dp)
             .width(width)
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Color(0x80757575), RoundedCornerShape(8.dp))
+            .clip(buttonUpRoundedShape)
+            .border(1.dp, buttonUpBorderColor, buttonUpRoundedShape)
             .background(Theme.tabLevel0)
-            .clickable(
-                onClick = onClick), contentAlignment = Alignment.Center
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             Icons.Filled.ArrowUpward,
             contentDescription = null,
-            tint = Color.LightGray,
-            modifier = Modifier
+            tint = Color.LightGray
         )
     }
 }
 
 @Composable
-fun ButtonUpCircle(size : Dp = 46.dp, onClick: () -> Unit) {
+fun ButtonUpCircle(size: Dp = 46.dp, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .border(1.dp, Color(0x80757575), CircleShape)
+            .border(1.dp, buttonUpBorderColor, CircleShape)
             .background(Theme.tabLevel0)
-            .clickable(
-                onClick = onClick), contentAlignment = Alignment.Center
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             Icons.Filled.ArrowUpward,
             contentDescription = null,
-            tint = Color.LightGray,
-            modifier = Modifier
+            tint = Color.LightGray
         )
     }
 }

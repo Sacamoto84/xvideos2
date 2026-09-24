@@ -79,7 +79,7 @@ fun TagsPaginatedListScreen(
         }
     }
 
-    val onRetry: () -> Unit = remember {
+    val onRetry: () -> Unit = remember(pageIndex) {
         {
             retryTrigger += 1
         }
@@ -115,7 +115,10 @@ fun TagsPaginatedListScreen(
         return
     }
 
-    val itemsPerRow = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
+    val orientation = LocalConfiguration.current.orientation
+    val itemsPerRow = remember(orientation) {
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
+    }
     val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
     LazyColumn(

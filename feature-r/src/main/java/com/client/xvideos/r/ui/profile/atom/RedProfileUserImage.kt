@@ -21,7 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +39,11 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.ui.theme.XvideosTheme
-import androidx.compose.material3.Text
+
+private val profileAvatarShape = RoundedCornerShape(8.dp)
+private val profileFollowButtonShape = RoundedCornerShape(8.dp)
+private val profileStatLabelColor = Color(0xFF9E9DA9)
+private val profileStatDividerColor = Color(0xFF3D3C53)
 
 @Composable
 fun RedProfileCreaterInfo(item: UserInfo, savedRed: () -> SavedRed) {
@@ -57,24 +63,32 @@ fun RedProfileCreaterInfo(
     isFollow: Boolean,
     onFollowClick: () -> Unit
 ) {
+    val followersPretty = remember(item.followers) { item.followers.toPrettyCount() }
+    val viewsPretty = remember(item.views) { item.views.toPrettyCount() }
+    val publishedGifsPretty = remember(item.publishedGifs) { item.publishedGifs.toPrettyCount() }
+    val aboutTitle = remember(item.username) { "About ${item.username}:" }
+    val descriptionTrimmed = remember(item.description) { item.description?.trimMargin() }
 
-    Column( modifier = Modifier.padding(horizontal = 4.dp).fillMaxWidth() )
-    {
+    Column(modifier = Modifier.padding(horizontal = 4.dp).fillMaxWidth()) {
 
-        //Top info
-        Row( modifier = Modifier.padding(top = 2.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically )
-        {
-
+        // Top info
+        Row(
+            modifier = Modifier.padding(top = 2.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             if (item.profileImageUrl != null) {
-                UrlImage(item.profileImageUrl, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(96.dp))
+                UrlImage(
+                    item.profileImageUrl,
+                    modifier = Modifier.clip(profileAvatarShape).size(96.dp)
+                )
             } else {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(0.dp))
+                        .clip(profileAvatarShape)
                         .size(96.dp)
-                        .background(Color.DarkGray), contentAlignment = Alignment.Center
-                )
-                {
+                        .background(Color.DarkGray),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
@@ -84,14 +98,22 @@ fun RedProfileCreaterInfo(
                 }
             }
 
-            Column( modifier = Modifier.fillMaxWidth().height(96.dp), verticalArrangement = Arrangement.SpaceAround )
-            {
+            Column(
+                modifier = Modifier.fillMaxWidth().height(96.dp),
+                verticalArrangement = Arrangement.SpaceAround
+            ) {
                 Row(
                     modifier = Modifier.height(48.dp),
                     verticalAlignment = Alignment.Top
                 ) {
                     Spacer(Modifier.width(8.dp))
-                    Text( item.username, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium, fontSize = 28.sp, modifier = Modifier )
+                    Text(
+                        item.username,
+                        color = Color.White,
+                        fontFamily = Theme.R.fontFamilyPopinsMedium,
+                        fontSize = 28.sp,
+                        modifier = Modifier
+                    )
                     if (item.verified) {
                         Spacer(Modifier.width(8.dp))
                         Image(
@@ -106,19 +128,17 @@ fun RedProfileCreaterInfo(
                     modifier = Modifier
                         .align(Alignment.Start)
                         .padding(start = 8.dp, end = 64.dp)
-                        //.width(96.dp)
                         .fillMaxWidth()
                         .height(48.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(profileFollowButtonShape)
                         .background(if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow)
                         .border(
                             1.dp,
                             if (isFollow) Color.White else Color.Transparent,
-                            RoundedCornerShape(8.dp)
+                            profileFollowButtonShape
                         )
-                        .clickable {
-                            onFollowClick()
-                        }, contentAlignment = Alignment.Center
+                        .clickable(onClick = onFollowClick),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         if (isFollow) "Unfollow" else "Follow",
@@ -128,79 +148,62 @@ fun RedProfileCreaterInfo(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
             }
-
-
         }
-
 
         Row(
             modifier = Modifier.padding(top = 8.dp, bottom = 8.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround
-        )
-        {
-
-            Column( horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().weight(1f) )
-            {
-                Text( item.followers.toPrettyCount(), color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium )
-                Text( "Подписчиков", color = Color(0xFF9E9DA9), fontFamily = Theme.R.fontFamilyPopinsRegular )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
+                Text(followersPretty, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium)
+                Text("Подписчиков", color = profileStatLabelColor, fontFamily = Theme.R.fontFamilyPopinsRegular)
             }
 
-            Box( Modifier.width(1.dp).height(24.dp).background(Color(0xFF3D3C53)) )
+            Box(Modifier.width(1.dp).height(24.dp).background(profileStatDividerColor))
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                modifier = Modifier.fillMaxWidth().weight(1f)
             ) {
                 Text(
-                    item.views.toPrettyCount(),
+                    viewsPretty,
                     color = Color.White,
                     fontFamily = Theme.R.fontFamilyPopinsMedium
                 )
-
                 Text(
                     "Просмотров",
-                    color = Color(0xFF9E9DA9),
+                    color = profileStatLabelColor,
                     fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
             }
 
-            Box(
-                Modifier
-                    .width(1.dp)
-                    .height(24.dp)
-                    .background(Color(0xFF3D3C53))
-            )
+            Box(Modifier.width(1.dp).height(24.dp).background(profileStatDividerColor))
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                modifier = Modifier.fillMaxWidth().weight(1f)
             ) {
-
                 Text(
-                    item.publishedGifs.toPrettyCount(),
+                    publishedGifsPretty,
                     color = Color.White,
                     fontFamily = Theme.R.fontFamilyPopinsMedium
                 )
-
                 Text(
                     "Постов",
-                    color = Color(0xFF9E9DA9),
+                    color = profileStatLabelColor,
                     fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
-
             }
         }
 
-        if (item.description != null) {
+        if (descriptionTrimmed != null) {
             Text(
-                "About ${item.username}:",
+                aboutTitle,
                 color = Theme.R.colorTextGray,
                 fontSize = 14.sp,
                 fontFamily = Theme.R.fontFamilyPopinsRegular
@@ -209,14 +212,14 @@ fun RedProfileCreaterInfo(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                item.description.trimMargin(),
+                descriptionTrimmed,
                 color = Color.White,
-                fontSize = 14.sp, fontFamily = Theme.R.fontFamilyPopinsRegular
+                fontSize = 14.sp,
+                fontFamily = Theme.R.fontFamilyPopinsRegular
             )
         }
 
         Spacer(Modifier.height(8.dp))
-
     }
 
 }

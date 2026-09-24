@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,14 +36,31 @@ fun AlbumInfoButtonServerFavorite(
     isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
+    val buttonShape = remember { RoundedCornerShape(4.dp) }
+    val buttonText = remember(isFavorite) {
+        if (isFavorite) "Удалить альбом с сервера" else "Добавить альбом на сервер"
+    }
+    val iconVector = remember(isFavorite) {
+        if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+    }
+    val iconTint = remember(isFavorite) {
+        if (isFavorite) Theme.L.red else Color.White
+    }
+    val backgroundColor = remember(isFavorite) {
+        if (isFavorite) Theme.L.grey6 else Theme.L.red
+    }
+    val buttonTextStyle = remember {
+        Theme.L.Type.button.copy(color = Color.White)
+    }
+
     Box(
         modifier = Modifier
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
-            .border(1.dp, Theme.L.grey3, RoundedCornerShape(4.dp))
-            .background(if (isFavorite) Theme.L.grey6 else Theme.L.red)
+            .clip(buttonShape)
+            .border(1.dp, Theme.L.grey3, buttonShape)
+            .background(backgroundColor)
             .clickable(enabled = !isLoading, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -58,15 +76,15 @@ fun AlbumInfoButtonServerFavorite(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    imageVector = iconVector,
                     contentDescription = null,
-                    tint = if (isFavorite) Theme.L.red else Color.White,
+                    tint = iconTint,
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = if (isFavorite) "Удалить альбом с сервера" else "Добавить альбом на сервер",
+                    text = buttonText,
                     color = Color.White,
-                    style = Theme.L.Type.button.copy(color = Color.White)
+                    style = buttonTextStyle
                 )
             }
         }

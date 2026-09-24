@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,21 +22,26 @@ import com.client.xvideos.common.theme.Theme
 /** Кнопка «поделиться альбомом по P2P» в шапке ScreenLAlbum. */
 @Composable
 fun AlbumInfoButtonShareAlbum(onClick: () -> Unit) {
+    val buttonShape = remember { RoundedCornerShape(4.dp) }
+    val buttonTextStyle = remember {
+        Theme.L.Type.button.copy(color = Color.White)
+    }
+
     Box(
         modifier = Modifier
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
-            .border(1.dp, Theme.L.grey3, RoundedCornerShape(4.dp))
+            .clip(buttonShape)
+            .border(1.dp, Theme.L.grey3, buttonShape)
             .background(Theme.L.grey6)
-            .clickable(onClick = { onClick() }),
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             "Share Album (P2P)",
             color = Color.White,
-            style = Theme.L.Type.button.copy(color = Color.White)
+            style = buttonTextStyle
         )
     }
 }

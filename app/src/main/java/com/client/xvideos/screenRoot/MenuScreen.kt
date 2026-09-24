@@ -48,6 +48,12 @@ import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
 import com.client.xvideos.r.ui.root.R_Screen_Root
 import com.client.xvideos.x.screens.dashboards.ScreenXDashBoards
 
+private val menuWindowInsets = WindowInsets(0, 0, 0, 0)
+private val menuBackgroundColor = Color(0xFF353535)
+private val menuButtonShape = RoundedCornerShape(16.dp)
+private val menuButtonBorderColor = Color(0xFF565656)
+private val menuButtonBgColor = Color(0xFF212121)
+
 /**
  * Стартовый экран выбора раздела приложения.
  *
@@ -71,7 +77,7 @@ object MenuScreen : Screen {
         val onOpenR = remember(navigator) { { navigator.push(R_Screen_Root()) } }
 
         Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = menuWindowInsets,
             topBar = {
                 Box(
                     modifier = Modifier
@@ -119,7 +125,7 @@ object MenuScreen : Screen {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF353535))
+                    .background(menuBackgroundColor)
                     .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom
@@ -144,22 +150,19 @@ object MenuScreen : Screen {
  */
 @Composable
 private fun ButtonSelect(iconId: Int, tag: String = "", onClick: () -> Unit) {
-    val buttonShape = remember { RoundedCornerShape(16.dp) }
+    val baseModifier = Modifier
+        .padding(16.dp)
+        .fillMaxWidth()
+        .clip(menuButtonShape)
+        .border(2.dp, menuButtonBorderColor, menuButtonShape)
+        .background(menuButtonBgColor)
+        .clickable(onClick = onClick)
+        .padding(vertical = 16.dp)
+
+    val finalModifier = if (tag.isNotEmpty()) baseModifier.testTag(tag) else baseModifier
 
     Box(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-            .clip(buttonShape)
-            .border(2.dp, Color(0xFF565656), buttonShape)
-            .background(Color(0xFF212121))
-            .clickable(onClick = onClick)
-            .padding(vertical = 16.dp)
-            .then(
-                if (tag.isNotEmpty()) {
-                    Modifier.testTag(tag)
-                } else Modifier
-            ),
+        modifier = finalModifier,
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -169,7 +172,6 @@ private fun ButtonSelect(iconId: Int, tag: String = "", onClick: () -> Unit) {
             contentScale = ContentScale.FillHeight
         )
     }
-
 }
 
 /**

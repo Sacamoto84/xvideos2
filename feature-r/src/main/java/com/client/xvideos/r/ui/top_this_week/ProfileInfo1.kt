@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +33,8 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import com.client.xvideos.r.model.UserInfo
 
+private val profileUserNameOffsetY = (-3).dp
+
 @Composable
 fun ProfileInfo1(
     modifier: Modifier = Modifier,
@@ -39,41 +42,67 @@ fun ProfileInfo1(
     videoItem: GifsInfo,
     listUsers: List<UserInfo>,
     visibleUserName: Boolean = true,
-    sizeIcon : Dp = 48.dp,
-    cornerRadius : Dp = 12.dp,
+    sizeIcon: Dp = 48.dp,
+    cornerRadius: Dp = 12.dp,
     verticalAlignment: Alignment.Vertical = Alignment.Bottom
+) {
+    val matchedUser = remember(listUsers, videoItem.userName) {
+        listUsers.firstOrNull { it.username == videoItem.userName }
+    }
+    val avatarUrl = matchedUser?.profileImageUrl
+    val avatarShape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
+    val textAutoSize = remember { TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 18.sp) }
+
+    Row(
+        modifier = modifier.clickable(onClick = onClick),
+        verticalAlignment = verticalAlignment
     ) {
-
-        Row( modifier = Modifier.then(modifier).clickable(onClick = onClick), verticalAlignment = verticalAlignment)
-        {
-            val matchedUser = listUsers.firstOrNull { it.username == videoItem.userName }
-            val avatarUrl = matchedUser?.profileImageUrl
-
-            if (avatarUrl != null) {
-                Box( modifier = Modifier.clip(RoundedCornerShape(cornerRadius)).size(sizeIcon), contentAlignment = Alignment.Center )
-                { UrlImage( avatarUrl, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop ) }
+        if (avatarUrl != null) {
+            Box(
+                modifier = Modifier
+                    .clip(avatarShape)
+                    .size(sizeIcon),
+                contentAlignment = Alignment.Center
+            ) {
+                UrlImage(
+                    avatarUrl,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
             }
-            else {
-                Box( modifier = Modifier.clip(RoundedCornerShape(cornerRadius)).size(sizeIcon).background(Color.DarkGray), contentAlignment = Alignment.Center )
-                { Icon( Icons.Default.Person, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White ) }
+        } else {
+            Box(
+                modifier = Modifier
+                    .clip(avatarShape)
+                    .size(sizeIcon)
+                    .background(Color.DarkGray),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.White
+                )
             }
+        }
 
-            if (visibleUserName)
-                Column()
-                {
-                    Text(
-                        videoItem.userName,
-                        autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 18.sp),
-                        minLines = 1,
-                        maxLines = 1,
-                        color = Color.White,
-                        fontFamily = Theme.R.fontFamilyPopinsRegular,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(start = 4.dp).offset(y= (-3).dp)
-                    )
-                }
-
-
+        if (visibleUserName) {
+            Column {
+                Text(
+                    text = videoItem.userName,
+                    autoSize = textAutoSize,
+                    minLines = 1,
+                    maxLines = 1,
+                    color = Color.White,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .offset(y = profileUserNameOffsetY)
+                )
+            }
+        }
     }
 }
 

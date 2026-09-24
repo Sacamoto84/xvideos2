@@ -34,6 +34,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -234,11 +235,11 @@ private fun AppSettingsScreenContent(
         }
     }
 
-    val onOpenPage: (SettingsPage) -> Unit = remember { { currentPage = it } }
+    val onOpenPage: (SettingsPage) -> Unit = remember { { page -> currentPage = page } }
     val topCutout = getTopInsetDp()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        contentWindowInsets = settingsWindowInsets,
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
         AppSettingsScreenBody(
@@ -262,6 +263,8 @@ private fun AppSettingsScreenContent(
     }
 }
 
+private val settingsWindowInsets = WindowInsets(0, 0, 0, 0)
+
 @Composable
 private fun AppSettingsScreenBody(
     modifier: Modifier = Modifier,
@@ -278,6 +281,15 @@ private fun AppSettingsScreenBody(
     context: Context,
     onBackupDataChanged: () -> Unit
 ) {
+    val titleStyle = remember(Theme.L.Type.screenTitle) {
+        Theme.L.Type.screenTitle.copy(
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = SettingsRowTextPrimary,
+            textAlign = TextAlign.Start
+        )
+    }
+
     Column(
         modifier = modifier
             .background(SettingsScreenBackground)
@@ -290,12 +302,7 @@ private fun AppSettingsScreenBody(
                 .fillMaxWidth()
                 .padding(top = topCutout + 12.dp, bottom = 12.dp, start = 16.dp, end = 16.dp),
             color = SettingsRowTextPrimary,
-            style = Theme.L.Type.screenTitle.copy(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = SettingsRowTextPrimary,
-                textAlign = TextAlign.Start
-            )
+            style = titleStyle
         )
 
         if (currentPage == SettingsPage.Main) {
@@ -303,11 +310,13 @@ private fun AppSettingsScreenBody(
 
             SettingsGroup {
                 SettingsPage.primaryPages.forEachIndexed { index, page ->
-                    if (index > 0) { SettingsDivider2() }
-                    SettingsNavigationItem(
-                        page = page,
-                        onOpenPage = onOpenPage
-                    )
+                    key(page) {
+                        if (index > 0) { SettingsDivider2() }
+                        SettingsNavigationItem(
+                            page = page,
+                            onOpenPage = onOpenPage
+                        )
+                    }
                 }
             }
 
@@ -315,11 +324,13 @@ private fun AppSettingsScreenBody(
             SettingsSectionTitle("Разделы")
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
-                    if (index > 0) { SettingsDivider2() }
-                    SettingsNavigationItem(
-                        page = page,
-                        onOpenPage = onOpenPage
-                    )
+                    key(page) {
+                        if (index > 0) { SettingsDivider2() }
+                        SettingsNavigationItem(
+                            page = page,
+                            onOpenPage = onOpenPage
+                        )
+                    }
                 }
             }
         } else {
