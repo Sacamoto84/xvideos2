@@ -51,6 +51,34 @@ internal fun RSettingsSection(
     var isRecoveringDownload by remember { mutableStateOf(false) }
     var recoveryReport by remember { mutableStateOf<RedDownloadRecoveryReport?>(null) }
 
+    val onStartRecovery = remember(downloadRed, scope) {
+        {
+            val redDownloader = downloadRed
+            if (redDownloader != null) {
+                isRecoveringDownload = true
+                scope.launch {
+                    redDownloader.recoverIncompleteDownloads(onComplete = { report ->
+                        scope.launch {
+                            recoveryReport = report
+                            isRecoveringDownload = false
+                            if (report.incompleteItems == 0) {
+                                SnackBar.success("Download проверен: все файлы на месте")
+                            } else {
+                                SnackBar.success(
+                                    "Запущено: видео ${report.queuedVideo}, превью ${report.queuedPreview}"
+                                )
+                            }
+                        }
+                    })
+                }
+            }
+        }
+    }
+
+    val onRefreshNichesCache: () -> Unit = remember(savedRed) {
+        { savedRed?.nichesCache?.refresh() }
+    }
+
     SettingsGroup {
         SettingsValueRow(
             icon = R.drawable.icon_red,
@@ -84,25 +112,7 @@ internal fun RSettingsSection(
             trailing = {
                 Button(
                     enabled = downloadRed != null && !isRecoveringDownload,
-                    onClick = {
-                        val redDownloader = downloadRed ?: return@Button
-                        isRecoveringDownload = true
-                        scope.launch {
-                            redDownloader.recoverIncompleteDownloads(onComplete = { report ->
-                                scope.launch {
-                                    recoveryReport = report
-                                    isRecoveringDownload = false
-                                    if (report.incompleteItems == 0) {
-                                        SnackBar.success("Download проверен: все файлы на месте")
-                                    } else {
-                                        SnackBar.success(
-                                            "Запущено: видео ${report.queuedVideo}, превью ${report.queuedPreview}"
-                                        )
-                                    }
-                                }
-                            })
-                        }
-                    }
+                    onClick = onStartRecovery
                 ) {
                     Text("Старт")
                 }
@@ -136,7 +146,7 @@ internal fun RSettingsSection(
             trailing = {
                 Button(
                     enabled = savedRed != null && !isNichesCacheDownloading,
-                    onClick = { savedRed?.nichesCache?.refresh() }
+                    onClick = onRefreshNichesCache
                 ) {
                     Text("Обновить")
                 }

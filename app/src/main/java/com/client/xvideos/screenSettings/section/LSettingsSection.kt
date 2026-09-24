@@ -4,6 +4,7 @@ import com.client.xvideos.R
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,6 +24,22 @@ internal fun LSettingsSection(lLogin: String) {
     val thumbnailSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
     val currentDisplayName = ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: "?"
 
+    val onLogoutL = remember {
+        {
+            Settings.l_login.setValue("")
+            Settings.l_pass.setValue("")
+            SnackBar.success("Профиль L закрыт")
+        }
+    }
+    val onSelectThumbnailSize: (String) -> Unit = remember {
+        { selectedDisplayName ->
+            ThumbnailsSize.fromDisplayName(selectedDisplayName)?.apply {
+                Settings.thumbalistSize.setValue(value)
+                SnackBar.success("Размер миниатюры: $displayName")
+            }
+        }
+    }
+
     SettingsGroup {
         SettingsButtonRowWithDialog(
             icon = R.drawable.icon_luscious,
@@ -35,11 +52,7 @@ internal fun LSettingsSection(lLogin: String) {
                 "При следующем открытии L нужно будет снова ввести логин и пароль: $lLogin"
             },
             textDialogButton = "Выйти",
-            onClick = {
-                Settings.l_login.setValue("")
-                Settings.l_pass.setValue("")
-                SnackBar.success("Профиль L закрыт")
-            }
+            onClick = onLogoutL
         )
         SettingsDivider()
         SettingsValueRow(
@@ -49,12 +62,7 @@ internal fun LSettingsSection(lLogin: String) {
         )
         ThumbnailSizeSelector(
             currentValue = currentDisplayName,
-            onSelected = { selectedDisplayName ->
-                ThumbnailsSize.fromDisplayName(selectedDisplayName)?.apply {
-                    Settings.thumbalistSize.setValue(value)
-                    SnackBar.success("Размер миниатюры: $displayName")
-                }
-            }
+            onSelected = onSelectThumbnailSize
         )
         SettingsDivider()
 

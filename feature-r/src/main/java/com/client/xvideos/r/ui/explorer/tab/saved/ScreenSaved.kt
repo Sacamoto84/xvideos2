@@ -138,6 +138,7 @@ object R_ScreenSavedTab : Screen {
                 ProvidePagerScrollbarAlpha(pagerState = pagerState) {
                     HorizontalPager(
                         state = pagerState,
+                        key = { page -> page },
                         userScrollEnabled = !isInsideCollection,
                         beyondViewportPageCount = 0,
                         modifier = Modifier.fillMaxSize()

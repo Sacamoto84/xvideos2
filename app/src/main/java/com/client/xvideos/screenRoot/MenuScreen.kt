@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +63,13 @@ object MenuScreen : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
+        val onOpenSettings = remember(navigator) { { navigator.push(AppSettingsScreen) } }
+        val onOpenHapticDemo = remember(navigator) { { navigator.push(HapticDemoScreen) } }
+        val onOpenP2pReceive = remember(navigator) { { navigator.push(ScreenP2pReceive()) } }
+        val onOpenX = remember(navigator) { { navigator.push(ScreenXDashBoards()) } }
+        val onOpenL = remember(navigator) { { navigator.push(L_ScreenExplorer()) } }
+        val onOpenR = remember(navigator) { { navigator.push(R_Screen_Root()) } }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
@@ -71,7 +79,7 @@ object MenuScreen : Screen {
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top)),
                     contentAlignment = Alignment.TopStart
                 ) {
-                    IconButton(onClick = { navigator.push(AppSettingsScreen) }, modifier = Modifier.size(48.dp)) {
+                    IconButton(onClick = onOpenSettings, modifier = Modifier.size(48.dp)) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = "Настройки",
@@ -80,7 +88,7 @@ object MenuScreen : Screen {
                     }
                     // Демо-экран виброоткликов (HapticFeedbackType) для тестов
                     IconButton(
-                        onClick = { navigator.push(HapticDemoScreen) },
+                        onClick = onOpenHapticDemo,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .size(48.dp)
@@ -94,7 +102,7 @@ object MenuScreen : Screen {
 
                     // Приём item по P2P (Nearby)
                     IconButton(
-                        onClick = { navigator.push(ScreenP2pReceive()) },
+                        onClick = onOpenP2pReceive,
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .size(48.dp)
@@ -117,16 +125,10 @@ object MenuScreen : Screen {
                 verticalArrangement = Arrangement.Bottom
             ) {
 
-                ButtonSelect(R.drawable.icon_xvideos_white) {
-                    navigator.push(ScreenXDashBoards())
-                }
+                ButtonSelect(R.drawable.icon_xvideos_white, onClick = onOpenX)
 
-                ButtonSelect(R.drawable.icon_luscious, "buttonL") {
-                    navigator.push(L_ScreenExplorer()) // или ScreenLusciousRoot()
-                }
-                ButtonSelect(R.drawable.icon_red) {
-                    navigator.push(R_Screen_Root()) // или ScreenRedRoot()
-                }
+                ButtonSelect(R.drawable.icon_luscious, "buttonL", onClick = onOpenL)
+                ButtonSelect(R.drawable.icon_red, onClick = onOpenR)
 
             }
         }
@@ -150,7 +152,7 @@ private fun ButtonSelect(iconId: Int, tag : String= "", onClick: () -> Unit) {
             .clip(RoundedCornerShape(16.dp))
             .border(2.dp, Color(0xFF565656), RoundedCornerShape(16.dp))
             .background(Color(0xFF212121))
-            .clickable { onClick() }
+            .clickable(onClick = onClick)
             .padding(vertical = 16.dp)
             .then(
                 if (tag.isNotEmpty()) {

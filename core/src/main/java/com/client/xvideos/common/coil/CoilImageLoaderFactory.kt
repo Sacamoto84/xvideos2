@@ -136,21 +136,25 @@ object CoilImageLoaderFactory {
 
     fun recreate(context: Context) {
         synchronized(this) {
-            instance?.memoryCache?.clear()
+            val old = instance
             instance = createImageLoader(context.applicationContext)
+            old?.memoryCache?.clear()
+            old?.shutdown()
         }
     }
 
     fun clearCache(context: Context) {
         synchronized(this) {
             val appContext = context.applicationContext
-            instance?.apply {
+            val old = instance
+            old?.apply {
                 memoryCache?.clear()
                 diskCache?.clear()
             }
             clearDirectory(imageCacheDir(appContext))
             clearDirectory(httpCacheDir(appContext))
             instance = createImageLoader(appContext)
+            old?.shutdown()
         }
     }
 

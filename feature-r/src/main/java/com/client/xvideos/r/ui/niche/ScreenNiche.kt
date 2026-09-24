@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -213,12 +213,12 @@ private fun NicheHeaderContent(
                     .fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                itemsIndexed(
+                items(
                     items = related,
-                    key = { index, item -> "${item.id}#$index" },
-                    contentType = { _, _ -> "niche_preview" }
-                ) { _, item ->
-                    NichePreview({ item }, onClick = { onNicheClick(item.id) })
+                    key = { item -> item.id },
+                    contentType = { "niche_preview" }
+                ) { item ->
+                    NichePreviewItem(item = item, onClick = onNicheClick)
                 }
             }
         }
@@ -235,12 +235,12 @@ private fun NicheHeaderContent(
                 modifier = Modifier.padding(vertical = 4.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                itemsIndexed(
+                items(
                     items = creators,
-                    key = { index, item -> "${item.username}#$index" },
-                    contentType = { _, _ -> "top_creator" }
-                ) { _, creator ->
-                    NicheTopCreator(creator, onClick = { onCreatorClick(creator.username) })
+                    key = { creator -> creator.username },
+                    contentType = { "top_creator" }
+                ) { creator ->
+                    NicheCreatorItem(creator = creator, onClick = onCreatorClick)
                 }
             }
         }
@@ -249,6 +249,25 @@ private fun NicheHeaderContent(
 
         NicheBottomBar(niche = niche, currentSort = currentSort, onSortChange = onSortChange, columns = columns)
     }
+}
+
+@Composable
+private fun NichePreviewItem(
+    item: Niche,
+    onClick: (String) -> Unit
+) {
+    val handleClick = remember(item.id, onClick) { { onClick(item.id) } }
+    val itemProvider = remember(item) { { item } }
+    NichePreview(itemProvider, onClick = handleClick)
+}
+
+@Composable
+private fun NicheCreatorItem(
+    creator: TopCreator,
+    onClick: (String) -> Unit
+) {
+    val handleClick = remember(creator.username, onClick) { { onClick(creator.username) } }
+    NicheTopCreator(creator, onClick = handleClick)
 }
 
 @Preview

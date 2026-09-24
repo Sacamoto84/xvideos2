@@ -180,42 +180,41 @@ fun HistoryContent(
         }
     }
 
-    HistoryDialogs(
+    val dialogData = HistoryDialogData(
         pendingDelete = pendingDelete,
-        posterUrlOf = posterUrlOf,
-        onConfirmDelete = { onDelete(it); pendingDelete = null },
-        onDismissDelete = { pendingDelete = null },
         showClearAllConfirm = showClearAllConfirm,
-        onConfirmClearAll = { onClearAll(); showClearAllConfirm = false },
-        onDismissClearAll = { showClearAllConfirm = false },
         showBatchDeleteConfirm = showBatchDeleteConfirm,
-        batchDeleteCount = selectedIds.size,
-        onConfirmBatchDelete = {
-            val items = history.map { it.item }.filter { it.id in selectedIds }
+        selectedIds = selectedIds,
+    )
+    val onDismissDelete = remember { { pendingDelete = null } }
+    val onDismissClearAll = remember { { showClearAllConfirm = false } }
+    val onDismissBatchDelete = remember { { showBatchDeleteConfirm = false } }
+    val onBatchDeleteExecuted = remember(selectedIds, onDeleteBatch) {
+        { items: Collection<ItemsX> ->
             onDeleteBatch(items)
             isSelectionMode = false
             selectedIds.clear()
             showBatchDeleteConfirm = false
-        },
-        onDismissBatchDelete = { showBatchDeleteConfirm = false },
+        }
+    }
+
+    HistoryDialogHost(
+        dialogData = dialogData,
+        posterUrlOf = posterUrlOf,
+        onDelete = onDelete,
+        onClearAll = onClearAll,
+        onDeleteBatch = onBatchDeleteExecuted,
+        history = history,
+        onDismissDelete = onDismissDelete,
+        onDismissClearAll = onDismissClearAll,
+        onDismissBatchDelete = onDismissBatchDelete,
     )
 
     val onToggleSelect: (Long) -> Unit = remember(selectedIds) {
-        { id ->
-            if (id in selectedIds) {
-                selectedIds.remove(id)
-            } else {
-                selectedIds.add(id)
-            }
-        }
+        { id -> if (id in selectedIds) selectedIds.remove(id) else selectedIds.add(id) }
     }
     val onStartSelection: (Long) -> Unit = remember(selectedIds) {
-        { id ->
-            if (!isSelectionMode) {
-                isSelectionMode = true
-                selectedIds.add(id)
-            }
-        }
+        { id -> isSelectionMode = true; if (id !in selectedIds) selectedIds.add(id) }
     }
     val onDeleteRequest: (ItemsX) -> Unit = remember { { pendingDelete = it } }
 
@@ -230,31 +229,22 @@ fun HistoryContent(
         )
     }
 
+    val onDeleteBatchRequest = remember { { showBatchDeleteConfirm = true } }
+    val onClearAllRequest = remember { { showClearAllConfirm = true } }
+    val onSetSelectionMode = remember { { mode: Boolean -> isSelectionMode = mode } }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.L.grey6,
         topBar = {
-            HistoryTopBar(
+            HistoryTopBarHost(
                 isSelectionMode = isSelectionMode,
-                selectedCount = selectedIds.size,
-                allSelected = history.isNotEmpty() && selectedIds.size == history.size,
-                hasItems = history.isNotEmpty(),
-                onEnterSelectionMode = { isSelectionMode = true },
-                onExitSelectionMode = {
-                    isSelectionMode = false
-                    selectedIds.clear()
-                },
-                onToggleSelectAll = {
-                    if (selectedIds.size == history.size) {
-                        selectedIds.clear()
-                    } else {
-                        selectedIds.clear()
-                        selectedIds.addAll(history.map { it.item.id })
-                    }
-                },
-                onDeleteBatch = { showBatchDeleteConfirm = true },
-                onClearAll = { showClearAllConfirm = true },
+                selectedIds = selectedIds,
+                history = history,
+                onSetSelectionMode = onSetSelectionMode,
+                onDeleteBatch = onDeleteBatchRequest,
+                onClearAll = onClearAllRequest,
             )
         }
     ) { padding ->
@@ -326,6 +316,100 @@ private fun HistoryGrid(
             )
         }
     }
+}
+
+@Immutable
+private data class HistoryDialogData(
+    val pendingDelete: ItemsX? = null,
+    val showClearAllConfirm: Boolean = false,
+    val showBatchDeleteConfirm: Boolean = false,
+    val selectedIds: List<Long> = emptyList(),
+)
+
+@Composable
+private fun HistoryDialogHost(
+    dialogData: HistoryDialogData,
+    posterUrlOf: (ItemsX) -> String,
+    onDelete: (ItemsX) -> Unit,
+    onClearAll: () -> Unit,
+    onDeleteBatch: (Collection<ItemsX>) -> Unit,
+    history: List<XHistoryItem>,
+    onDismissDelete: () -> Unit,
+    onDismissClearAll: () -> Unit,
+    onDismissBatchDelete: () -> Unit,
+) {
+    val handleConfirmDelete = remember(onDelete, onDismissDelete) {
+        { item: ItemsX ->
+            onDelete(item)
+            onDismissDelete()
+        }
+    }
+    val handleConfirmClearAll = remember(onClearAll, onDismissClearAll) {
+        {
+            onClearAll()
+            onDismissClearAll()
+        }
+    }
+    val handleConfirmBatchDelete = remember(history, dialogData.selectedIds, onDeleteBatch) {
+        {
+            val items = history.map { it.item }.filter { it.id in dialogData.selectedIds }
+            onDeleteBatch(items)
+        }
+    }
+
+    HistoryDialogs(
+        pendingDelete = dialogData.pendingDelete,
+        posterUrlOf = posterUrlOf,
+        onConfirmDelete = handleConfirmDelete,
+        onDismissDelete = onDismissDelete,
+        showClearAllConfirm = dialogData.showClearAllConfirm,
+        onConfirmClearAll = handleConfirmClearAll,
+        onDismissClearAll = onDismissClearAll,
+        showBatchDeleteConfirm = dialogData.showBatchDeleteConfirm,
+        batchDeleteCount = dialogData.selectedIds.size,
+        onConfirmBatchDelete = handleConfirmBatchDelete,
+        onDismissBatchDelete = onDismissBatchDelete,
+    )
+}
+
+@Composable
+private fun HistoryTopBarHost(
+    isSelectionMode: Boolean,
+    selectedIds: androidx.compose.runtime.snapshots.SnapshotStateList<Long>,
+    history: List<XHistoryItem>,
+    onSetSelectionMode: (Boolean) -> Unit,
+    onDeleteBatch: () -> Unit,
+    onClearAll: () -> Unit,
+) {
+    val onEnterSelectionMode = remember { { onSetSelectionMode(true) } }
+    val onExitSelectionMode = remember(selectedIds) {
+        {
+            onSetSelectionMode(false)
+            selectedIds.clear()
+        }
+    }
+    val onToggleSelectAll: () -> Unit = remember(history, selectedIds) {
+        {
+            if (selectedIds.size == history.size) {
+                selectedIds.clear()
+            } else {
+                selectedIds.clear()
+                val ignored = selectedIds.addAll(history.map { it.item.id })
+            }
+        }
+    }
+    val allSelected = history.isNotEmpty() && selectedIds.size == history.size
+    HistoryTopBar(
+        isSelectionMode = isSelectionMode,
+        selectedCount = selectedIds.size,
+        allSelected = allSelected,
+        hasItems = history.isNotEmpty(),
+        onEnterSelectionMode = onEnterSelectionMode,
+        onExitSelectionMode = onExitSelectionMode,
+        onToggleSelectAll = onToggleSelectAll,
+        onDeleteBatch = onDeleteBatch,
+        onClearAll = onClearAll,
+    )
 }
 
 @Composable
@@ -664,7 +748,7 @@ private fun HistoryRow(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(if (selectionState.isSelected) Color(0x55E91E63) else Color.Transparent)
-                    .clickable { selectionState.onToggleSelect() }
+                    .clickable(onClick = selectionState.onToggleSelect)
             )
             SelectionCheckBadge(
                 isSelected = selectionState.isSelected,

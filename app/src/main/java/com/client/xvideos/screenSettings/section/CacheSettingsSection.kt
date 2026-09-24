@@ -6,6 +6,7 @@ import android.content.Context
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +32,28 @@ internal fun CacheSettingsSection(
     onClearImageCache: () -> Unit,
     context: Context
 ) {
+    val onRamCacheFinished: (Int) -> Unit = remember(context) {
+        { value ->
+            Settings.image_cache_ram_percent.setValue(value)
+            CoilImageLoaderFactory.recreate(context)
+            SnackBar.success("RAM кэш картинок: $value%")
+        }
+    }
+    val onDiskCacheToggled: (Boolean) -> Unit = remember(context) {
+        { enabled ->
+            Settings.image_cache_disk_enabled.setValue(enabled)
+            CoilImageLoaderFactory.recreate(context)
+            SnackBar.success(if (enabled) "Дисковый кэш включен" else "Дисковый кэш выключен")
+        }
+    }
+    val onDiskCacheLimitFinished: (Int) -> Unit = remember(context) {
+        { value ->
+            Settings.image_cache_disk_size_mb.setValue(value)
+            CoilImageLoaderFactory.recreate(context)
+            SnackBar.success("Размер кэша картинок: $value MB")
+        }
+    }
+
     SettingsGroup {
         IntSliderSetting(
             text = "RAM кэш картинок",
@@ -40,11 +63,7 @@ internal fun CacheSettingsSection(
             step = 1,
             suffix = "%",
             icon = R.drawable.memory_24,
-            onValueChangeFinished = { value ->
-                Settings.image_cache_ram_percent.setValue(value)
-                CoilImageLoaderFactory.recreate(context)
-                SnackBar.success("RAM кэш картинок: $value%")
-            }
+            onValueChangeFinished = onRamCacheFinished
         )
         SettingsDivider()
 
@@ -53,11 +72,7 @@ internal fun CacheSettingsSection(
             text = "Дисковый кэш картинок",
             subtitle = if (diskCacheEnabled) "Включён" else "Выключен",
             value = diskCacheEnabled,
-            onValueChange = { enabled ->
-                Settings.image_cache_disk_enabled.setValue(enabled)
-                CoilImageLoaderFactory.recreate(context)
-                SnackBar.success(if (enabled) "Дисковый кэш включен" else "Дисковый кэш выключен")
-            }
+            onValueChange = onDiskCacheToggled
         )
         SettingsDivider()
 
@@ -70,11 +85,7 @@ internal fun CacheSettingsSection(
             suffix = " MB",
             icon = R.drawable.hard_drive_2_24,
             enabled = diskCacheEnabled,
-            onValueChangeFinished = { value ->
-                Settings.image_cache_disk_size_mb.setValue(value)
-                CoilImageLoaderFactory.recreate(context)
-                SnackBar.success("Размер кэша картинок: $value MB")
-            }
+            onValueChangeFinished = onDiskCacheLimitFinished
         )
         SettingsDivider()
 

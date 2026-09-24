@@ -24,7 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +46,7 @@ import kotlinx.coroutines.delay
  */
 @Composable
 fun P2pBackgroundOverlay() {
-    val event by EventBus.events.collectAsState(null)
+    val event by EventBus.events.collectAsStateWithLifecycle(null)
     var visible by rememberSaveable { mutableStateOf(false) }
     var text by rememberSaveable { mutableStateOf("") }
     var progress by remember { mutableFloatStateOf(0f) }
@@ -95,7 +95,7 @@ fun P2pBackgroundOverlay() {
                 .displayCutoutPadding()
                 .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
-            color = if (isError) Theme.L.r0 else if (isSuccess) Theme.L.g0 else Color(0xFF2C2C2C),
+            color = if (isError) Theme.Feedback.error else if (isSuccess) Theme.Feedback.success else Color(0xFF2C2C2C),
             shadowElevation = 8.dp
         ) {
             Column(modifier = Modifier.padding(12.dp)) {

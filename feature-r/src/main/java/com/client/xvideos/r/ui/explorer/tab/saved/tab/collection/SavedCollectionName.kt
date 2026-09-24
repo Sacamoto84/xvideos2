@@ -17,6 +17,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -75,23 +76,27 @@ class ScreenCollectionName(
 
         val selectedCollection by savedRed.collections.selectedCollection.collectAsStateWithLifecycle()
 
-        val closeCollection = {
-            Timber.d("BackHandler SavedCollectionTab")
-            savedRed.collections.selectedCollection.value = null
-            if (popOnBack) {
-                navigator.pop()
+        val closeCollection: () -> Unit = remember(savedRed, popOnBack, navigator) {
+            {
+                Timber.d("BackHandler SavedCollectionTab")
+                savedRed.collections.selectedCollection.value = null
+                if (popOnBack) {
+                    navigator.pop()
+                }
             }
         }
 
-        BackHandler {
-            closeCollection()
-        }
+        BackHandler(onBack = closeCollection)
 
         val columnSelectRaw by Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle()
         val columnSelect = normalizeRColumnCount(columnSelectRaw)
 
         //Изменение количества отображаемых элементов
         LaunchedEffect(columnSelect) { vm.likedHost.columns = columnSelect }
+
+        val onClickOpenProfile: (String) -> Unit = remember(navigator) {
+            { profileName -> navigator.push(ScreenRedProfile(profileName)) }
+        }
 
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -123,7 +128,7 @@ class ScreenCollectionName(
                 LazyRow123(
                     host = vm.likedHost,
                     modifier = Modifier.fillMaxSize(),
-                    onClickOpenProfile = { navigator.push(ScreenRedProfile(it)) })
+                    onClickOpenProfile = onClickOpenProfile)
             }
         }
 

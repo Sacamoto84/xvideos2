@@ -5,11 +5,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,9 +67,16 @@ class ScreenP2pReceive : Screen {
         val idleState = remember { MutableStateFlow<ReceiveState>(ReceiveState.Idle) }
         val state by (activeController?.state ?: idleState).collectAsStateWithLifecycle()
 
+        val onPop: () -> Unit = remember(navigator) {
+            {
+                navigator.pop()
+                Unit
+            }
+        }
+
         ScreenP2pReceiveContent(
             state = state,
-            onPop = { navigator.pop() },
+            onPop = onPop,
         )
     }
 }
@@ -77,6 +86,18 @@ private fun ScreenP2pReceiveContent(
     state: ReceiveState,
     onPop: () -> Unit,
 ) {
+    val onAccept: () -> Unit = remember {
+        {
+            P2pReceiveManager.controller.value?.accept()
+            Unit
+        }
+    }
+    val onReject: () -> Unit = remember(onPop) {
+        {
+            P2pReceiveManager.controller.value?.reject()
+            onPop()
+        }
+    }
 
     Scaffold(modifier = Modifier.background(Theme.background)) { padding ->
 
@@ -95,12 +116,9 @@ private fun ScreenP2pReceiveContent(
                     Text("Подключение к: ${s.endpointName}", style = MaterialTheme.typography.titleMedium)
                     Text("Код подтверждения:", modifier = Modifier.padding(top = 16.dp))
                     Text(s.authDigits, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 8.dp))
-                    androidx.compose.foundation.layout.Row(modifier = Modifier.padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Button(onClick = { P2pReceiveManager.controller.value?.accept() }) { Text("Принять") }
-                        androidx.compose.material3.OutlinedButton(onClick = {
-                            P2pReceiveManager.controller.value?.reject()
-                            onPop()
-                        }) { Text("Отклонить") }
+                    Row(modifier = Modifier.padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Button(onClick = onAccept) { Text("Принять") }
+                        OutlinedButton(onClick = onReject) { Text("Отклонить") }
                     }
                 }
                 is ReceiveState.Receiving -> {
@@ -110,11 +128,11 @@ private fun ScreenP2pReceiveContent(
                 }
                 is ReceiveState.Done -> {
                     Text("Принято ✓", style = MaterialTheme.typography.titleLarge)
-                    Button(onClick = { onPop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Готово") }
+                    Button(onClick = onPop, modifier = Modifier.padding(top = 16.dp)) { Text("Готово") }
                 }
                 is ReceiveState.Error -> {
                     Text("Ошибка: ${s.message}", color = MaterialTheme.colorScheme.error)
-                    Button(onClick = { onPop() }, modifier = Modifier.padding(top = 16.dp)) { Text("Закрыть") }
+                    Button(onClick = onPop, modifier = Modifier.padding(top = 16.dp)) { Text("Закрыть") }
                 }
             }
         }

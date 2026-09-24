@@ -225,6 +225,13 @@ private fun FavoriteRow(
     val onDeleteThis = remember(item, onDelete) { { onDelete(item) } }
     val onDownloadThis = remember(item, onDownload) { { onDownload(item) } }
     val onSaveToGalleryThis = remember(item, onSaveToGallery) { { onSaveToGallery(item) } }
+    val onPlayLocalThis = remember(localUrl, item, onPlayLocal) {
+        if (localUrl != null) {
+            { onPlayLocal(localUrl, item) }
+        } else {
+            {}
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -246,7 +253,7 @@ private fun FavoriteRow(
                         posterUrl,
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable { onPlayLocal(localUrl, item) }
+                            .clickable(onClick = onPlayLocalThis)
                     )
                     // Значок «скачано» (как в R — IconSave18).
                     Row(

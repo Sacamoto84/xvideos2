@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -35,25 +36,29 @@ internal fun P2PSettingsSection() {
         }
     }
 
+    val onBgReceiveChanged: (Boolean) -> Unit = remember(context, permissionLauncher) {
+        { enabled ->
+            Settings.p2p_background_receive.setValue(enabled)
+            if (enabled) {
+                if (P2pPermissions.allGranted(context)) {
+                    toggleP2pService(context, true)
+                } else {
+                    permissionLauncher.launch(P2pPermissions.required())
+                }
+            } else {
+                toggleP2pService(context, false)
+            }
+            SnackBar.success(if (enabled) "Приём в фоне включен" else "Приём в фоне выключен")
+        }
+    }
+
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.icon_red,
             text = "Приём в фоне",
             subtitle = if (bgReceive) "Включён" else "Выключен",
             value = bgReceive,
-            onValueChange = { enabled ->
-                Settings.p2p_background_receive.setValue(enabled)
-                if (enabled) {
-                    if (P2pPermissions.allGranted(context)) {
-                        toggleP2pService(context, true)
-                    } else {
-                        permissionLauncher.launch(P2pPermissions.required())
-                    }
-                } else {
-                    toggleP2pService(context, false)
-                }
-                SnackBar.success(if (enabled) "Приём в фоне включен" else "Приём в фоне выключен")
-            }
+            onValueChange = onBgReceiveChanged
         )
     }
 }
