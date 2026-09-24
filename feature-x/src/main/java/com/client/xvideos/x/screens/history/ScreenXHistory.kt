@@ -26,7 +26,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -297,7 +297,10 @@ private fun HistoryGrid(
         state = gridState,
         modifier = modifier,
     ) {
-        itemsIndexed(history, key = { index, historyItem -> "${historyItem.item.id}#$index" }) { _, historyItem ->
+        items(
+            items = history,
+            key = { it.item.id }
+        ) { historyItem ->
             val isSelected = historyItem.item.id in selectedIds
             val localUrl = remember(historyItem.item, localUrlOf) { localUrlOf(historyItem.item) }
             val posterUrl = remember(historyItem.item, posterUrlOf) { posterUrlOf(historyItem.item) }
@@ -381,8 +384,8 @@ private fun HistoryTopBarHost(
     onDeleteBatch: () -> Unit,
     onClearAll: () -> Unit,
 ) {
-    val onEnterSelectionMode = remember { { onSetSelectionMode(true) } }
-    val onExitSelectionMode = remember(selectedIds) {
+    val onEnterSelectionMode = remember(onSetSelectionMode) { { onSetSelectionMode(true) } }
+    val onExitSelectionMode = remember(onSetSelectionMode, selectedIds) {
         {
             onSetSelectionMode(false)
             selectedIds.clear()
@@ -621,6 +624,41 @@ private fun HistoryCardMedia(
     onOpenVideo: () -> Unit,
 ) {
     val context = LocalContext.current
+    val onCombinedClick = remember(selectionState, onPlayLocal, localUrl) {
+        {
+            if (selectionState.isSelectionMode) {
+                selectionState.onToggleSelect()
+            } else if (localUrl != null) {
+                onPlayLocal(localUrl)
+            }
+        }
+    }
+    val onCombinedLongClick = remember(selectionState, context) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            selectionState.onStartSelection()
+        }
+    }
+    val onRemoteLongClick = remember(selectionState, context) {
+        {
+            vibrateWithPatternAndAmplitude(context = context)
+            if (selectionState.isSelectionMode) {
+                selectionState.onToggleSelect()
+            } else {
+                selectionState.onStartSelection()
+            }
+        }
+    }
+    val onRemoteDoubleClick = remember(selectionState, onOpenVideo) {
+        {
+            if (selectionState.isSelectionMode) {
+                selectionState.onToggleSelect()
+            } else {
+                onOpenVideo()
+            }
+        }
+    }
+
     when {
         localUrl != null -> {
             UrlImage(
@@ -628,17 +666,8 @@ private fun HistoryCardMedia(
                 modifier = Modifier
                     .fillMaxSize()
                     .combinedClickable(
-                        onClick = {
-                            if (selectionState.isSelectionMode) {
-                                selectionState.onToggleSelect()
-                            } else {
-                                onPlayLocal(localUrl)
-                            }
-                        },
-                        onLongClick = {
-                            vibrateWithPatternAndAmplitude(context = context)
-                            selectionState.onStartSelection()
-                        }
+                        onClick = onCombinedClick,
+                        onLongClick = onCombinedLongClick
                     )
             )
             Row(modifier = Modifier.padding(4.dp)) {
@@ -647,21 +676,8 @@ private fun HistoryCardMedia(
         }
         else -> UrlVideoImageAndLongClickX(
             item,
-            onLongClick = {
-                vibrateWithPatternAndAmplitude(context = context)
-                if (selectionState.isSelectionMode) {
-                    selectionState.onToggleSelect()
-                } else {
-                    selectionState.onStartSelection()
-                }
-            },
-            onDoubleClick = {
-                if (selectionState.isSelectionMode) {
-                    selectionState.onToggleSelect()
-                } else {
-                    onOpenVideo()
-                }
-            },
+            onLongClick = onRemoteLongClick,
+            onDoubleClick = onRemoteDoubleClick,
         )
     }
 }
@@ -804,10 +820,37 @@ private fun HistoryActionsMenu(
     onSaveToGallery: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val onDismissMenu: () -> Unit = remember { { expanded = false } }
+    val onToggleExpanded: (Boolean) -> Unit = remember { { expanded = it } }
+
+    val handleToggleFavorite = remember(onToggleFavorite) {
+        {
+            onToggleFavorite()
+            expanded = false
+        }
+    }
+    val handleDownload = remember(onDownload) {
+        {
+            onDownload()
+            expanded = false
+        }
+    }
+    val handleSaveToGallery = remember(onSaveToGallery) {
+        {
+            onSaveToGallery()
+            expanded = false
+        }
+    }
+    val handleDelete = remember(onDelete) {
+        {
+            onDelete()
+            expanded = false
+        }
+    }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it }
+        onExpandedChange = onToggleExpanded
     ) {
         IconButton(
             modifier = Modifier
@@ -833,32 +876,33 @@ private fun HistoryActionsMenu(
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
+            onDismissRequest = onDismissMenu,
             modifier = Modifier.width(IntrinsicSize.Min),
             containerColor = Theme.ExpandMenu.backgroundColor,
         ) {
             ExpandMenuActionItem(
                 if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                if (isFavorite) "Удалить из избранного" else "В избранное"
-            ) {
-                onToggleFavorite()
-                expanded = false
-            }
+                if (isFavorite) "Удалить из избранного" else "В избранное",
+                onClick = handleToggleFavorite
+            )
 
-            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, "Скачать") {
-                onDownload()
-                expanded = false
-            }
+            ExpandMenuActionItem(
+                Icons.Filled.ArrowCircleDown,
+                "Скачать",
+                onClick = handleDownload
+            )
 
-            ExpandMenuActionItem(Icons.Filled.SaveAlt, "В галерею") {
-                onSaveToGallery()
-                expanded = false
-            }
+            ExpandMenuActionItem(
+                Icons.Filled.SaveAlt,
+                "В галерею",
+                onClick = handleSaveToGallery
+            )
 
-            ExpandMenuActionItem(Icons.Filled.Delete, "Удалить из истории") {
-                onDelete()
-                expanded = false
-            }
+            ExpandMenuActionItem(
+                Icons.Filled.Delete,
+                "Удалить из истории",
+                onClick = handleDelete
+            )
         }
     }
 }

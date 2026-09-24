@@ -240,9 +240,8 @@ fun NichesTabContent(
                 LazyColumn( state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(top = getTopInsetDp()) )
                 {
 
-                    item{
-                        AnimatedVisibility(cacheHour > 72, enter = fadeIn(), exit = fadeOut() )
-                        {
+                    item(key = "refresh_mini") {
+                        AnimatedVisibility(cacheHour > 72, enter = fadeIn(), exit = fadeOut()) {
                             RefreshMini(
                                 onRefreshNichesCacheClick = onRefreshNichesCacheClick,
                                 nichesCacheProgress = nichesCacheProgress,
@@ -252,7 +251,7 @@ fun NichesTabContent(
                     }
 
                     if (niches.isEmpty()) {
-                        item {
+                        item(key = "empty_placeholder") {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -267,12 +266,12 @@ fun NichesTabContent(
                             }
                         }
                     } else {
+                        val currentRed = savedRed()
                         items(items = niches, key = { it.id }, contentType = { "niche" }) { item ->
-                            val red = savedRed()
-                            if (red != null) {
+                            if (currentRed != null) {
                                 NicheItemRow(
                                     item = item,
-                                    savedRed = red,
+                                    savedRed = currentRed,
                                     onNicheClick = onNicheClick,
                                     modifier = Modifier.padding(vertical = 2.dp)
                                 )

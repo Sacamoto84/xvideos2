@@ -43,37 +43,38 @@ fun NichePreview2(niches: () -> Niche, savedRed: () -> SavedRed, onClick: () -> 
 
     val niche = niches()
 
-    //val isFollowed = savedRed().niches.list.any { it.id == niche.id }
-
     val isFollowed by remember(niche.id) {
         derivedStateOf {
             savedRed().niches.list.any { it.id == niche.id }
         }
     }
 
-    NichePreview2Content(
-        niche = { niche },
-        isFollowed = isFollowed,
-        onFollowClick = {
-            savedRed().let {
-                val nichesInfo = NichesInfo(
-                    id = niche.id,
-                    name = niche.name,
-                    subscribers = niche.subscribers,
-                    gifs = niche.gifs,
-                    thumbnail = niche.thumbnail,
-                )
+    val onFollowClick = remember(isFollowed, niche, savedRed) {
+        {
+            val red = savedRed()
+            val nichesInfo = NichesInfo(
+                id = niche.id,
+                name = niche.name,
+                subscribers = niche.subscribers,
+                gifs = niche.gifs,
+                thumbnail = niche.thumbnail,
+            )
 
-                if (isFollowed) it.niches.remove(nichesInfo) else it.niches.add(nichesInfo)
-            }
-        },
+            if (isFollowed) red.niches.remove(nichesInfo) else red.niches.add(nichesInfo)
+        }
+    }
+
+    NichePreview2Content(
+        niche = niche,
+        isFollowed = isFollowed,
+        onFollowClick = onFollowClick,
         onClick = onClick
     )
 }
 
 @Composable
 private fun NichePreview2Content(
-    niche: () -> Niche,
+    niche: Niche,
     isFollowed: Boolean,
     onFollowClick: () -> Unit,
     onClick: () -> Unit
@@ -85,14 +86,13 @@ private fun NichePreview2Content(
             .height(78.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Theme.tabLevel3)
-            .clickable { onClick() },
+            .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
-    )
-    {
+    ) {
 
         UrlImage(
-            niche().thumbnail,
+            niche.thumbnail,
             modifier = Modifier
                 .padding(start = 4.dp)
                 .size(70.dp)
@@ -103,12 +103,12 @@ private fun NichePreview2Content(
             modifier = Modifier
                 .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
                 .fillMaxWidth()
-                .fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween
-        )
-        {
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
 
             Text(
-                text = niche().name,
+                text = niche.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height((70 / 3).dp),
@@ -137,7 +137,7 @@ private fun NichePreview2Content(
                             tint = Color.LightGray,
                         )
                         Text(
-                            text = niche().subscribers.toPrettyCountInt(),
+                            text = niche.subscribers.toPrettyCountInt(),
                             modifier = Modifier.padding(start = 4.dp),
                             color = Color.LightGray,
                             fontSize = 16.sp,
@@ -155,7 +155,7 @@ private fun NichePreview2Content(
                             tint = Color.LightGray,
                         )
                         Text(
-                            text = niche().gifs.toPrettyCountInt(),
+                            text = niche.gifs.toPrettyCountInt(),
                             modifier = Modifier.padding(start = 4.dp),
                             color = Color.LightGray,
                             fontSize = 16.sp,
@@ -176,7 +176,8 @@ private fun NichePreview2Content(
                             RoundedCornerShape(10.dp)
                         )
                         .background(if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow)
-                        .clickable(onClick = onFollowClick), contentAlignment = Alignment.Center
+                        .clickable(onClick = onFollowClick),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         if (isFollowed) "Выйти" else "Подписаться",
@@ -193,16 +194,14 @@ private fun NichePreview2Content(
 fun NichePreview2Preview() {
     XvideosTheme {
         NichePreview2Content(
-            niche = {
-                Niche(
+            niche = Niche(
                 id = "female-backs",
                 name = "Female Backs",
                 gifs = 245,
                 subscribers = 914,
                 thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
                 previews = emptyList()
-                )
-            },
+            ),
             isFollowed = false,
             onFollowClick = {},
             onClick = {}
@@ -215,16 +214,14 @@ fun NichePreview2Preview() {
 fun NichePreview2FollowedPreview() {
     XvideosTheme {
         NichePreview2Content(
-            niche = {
-                Niche(
+            niche = Niche(
                 id = "female-backs",
                 name = "Female Backs",
                 gifs = 245,
                 subscribers = 914,
                 thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
                 previews = emptyList()
-                )
-            },
+            ),
             isFollowed = true,
             onFollowClick = {},
             onClick = {}

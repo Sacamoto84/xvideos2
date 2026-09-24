@@ -80,27 +80,52 @@ fun AppLockSettingsSection() {
         }
     }
 
-    BackHandler(enabled = dialogMode != null || showCamouflageVerificationDialog || showTimeoutDialog) {
-        dialogMode = null
-        showCamouflageVerificationDialog = false
-        showTimeoutDialog = false
+    val onDismissDialogMode: () -> Unit = remember { { dialogMode = null } }
+    val onDismissCamouflageVerification: () -> Unit = remember { { showCamouflageVerificationDialog = false } }
+    val onDismissTimeoutDialog: () -> Unit = remember { { showTimeoutDialog = false } }
+    val onSelectTimeout: (AppLockTimeout) -> Unit = remember {
+        { timeout ->
+            Settings.app_lock_timeout_seconds.setValue(timeout.seconds)
+            showTimeoutDialog = false
+        }
     }
+    val onPasswordDialogComplete: () -> Unit = remember(context) {
+        {
+            passwordSet = AppLockRepository.isPasswordSet(context)
+            dialogMode = null
+        }
+    }
+    val onSetOrChangeLock: () -> Unit = remember(enabled) {
+        { dialogMode = if (enabled) AppLockDialogMode.CHANGE else AppLockDialogMode.SET }
+    }
+    val onDisableLock: () -> Unit = remember { { dialogMode = AppLockDialogMode.DISABLE } }
+    val onShowTimeoutClick: () -> Unit = remember { { showTimeoutDialog = true } }
+    val onEnableCamouflageRequested: () -> Unit = remember { { showCamouflageVerificationDialog = true } }
+    val onToggleIncognito: (Boolean) -> Unit = remember { { Settings.keyboard_incognito_enabled.setValue(it) } }
+    val onToggleBlurRecent: (Boolean) -> Unit = remember { { Settings.blur_recent_tasks.setValue(it) } }
+
+    val isAnyDialogOpen = dialogMode != null || showCamouflageVerificationDialog || showTimeoutDialog
+    val onBackDismiss = remember {
+        {
+            dialogMode = null
+            showCamouflageVerificationDialog = false
+            showTimeoutDialog = false
+        }
+    }
+    BackHandler(enabled = isAnyDialogOpen, onBack = onBackDismiss)
 
     dialogMode?.let { mode ->
         AppLockPasswordDialog(
             mode = mode,
-            onDismiss = { dialogMode = null },
-            onComplete = {
-                passwordSet = AppLockRepository.isPasswordSet(context)
-                dialogMode = null
-            }
+            onDismiss = onDismissDialogMode,
+            onComplete = onPasswordDialogComplete
         )
     }
 
     if (showCamouflageVerificationDialog) {
         CamouflageVerificationDialog(
-            onDismiss = { showCamouflageVerificationDialog = false },
-            onSuccess = { showCamouflageVerificationDialog = false }
+            onDismiss = onDismissCamouflageVerification,
+            onSuccess = onDismissCamouflageVerification
         )
     }
 
@@ -108,12 +133,25 @@ fun AppLockSettingsSection() {
         val currentTimeout = AppLockTimeout.fromSeconds(timeoutSeconds)
         AppLockTimeoutDialog(
             currentTimeout = currentTimeout,
-            onDismiss = { showTimeoutDialog = false },
-            onSelect = { timeout ->
-                Settings.app_lock_timeout_seconds.setValue(timeout.seconds)
-                showTimeoutDialog = false
-            }
+            onDismiss = onDismissTimeoutDialog,
+            onSelect = onSelectTimeout
         )
+    }
+
+    val setOrChangeTrailing: @Composable () -> Unit = remember(enabled, onSetOrChangeLock) {
+        {
+            Button(onClick = onSetOrChangeLock) {
+                Text(if (enabled) "Изменить" else "Задать")
+            }
+        }
+    }
+
+    val disableTrailing: @Composable () -> Unit = remember(onDisableLock) {
+        {
+            TextButton(onClick = onDisableLock) {
+                Text("Отключить", color = Color(0xFFFF7A7A))
+            }
+        }
     }
 
     SettingsGroup {
@@ -121,13 +159,7 @@ fun AppLockSettingsSection() {
             icon = R.drawable.key_24,
             text = "Блокировка при запуске",
             subtitle = if (enabled) "Включена" else "Выключена",
-            trailing = {
-                Button(
-                    onClick = { dialogMode = if (enabled) AppLockDialogMode.CHANGE else AppLockDialogMode.SET }
-                ) {
-                    Text(if (enabled) "Изменить" else "Задать")
-                }
-            }
+            trailing = setOrChangeTrailing
         )
 
         if (enabled) {
@@ -142,7 +174,7 @@ fun AppLockSettingsSection() {
                 icon = R.drawable.key_24,
                 text = "Автоблокировка",
                 subtitle = timeoutSubtitle,
-                onClick = { showTimeoutDialog = true }
+                onClick = onShowTimeoutClick
             )
 
             SettingsDivider2()
@@ -150,11 +182,7 @@ fun AppLockSettingsSection() {
                 icon = R.drawable.key_24,
                 text = "Код доступа",
                 subtitle = "Отключить блокировку приложения",
-                trailing = {
-                    TextButton(onClick = { dialogMode = AppLockDialogMode.DISABLE }) {
-                        Text("Отключить", color = Color(0xFFFF7A7A))
-                    }
-                }
+                trailing = disableTrailing
             )
         }
 
@@ -162,7 +190,7 @@ fun AppLockSettingsSection() {
 
         CamouflageGroup(
             passwordSet = passwordSet,
-            onEnableRequested = { showCamouflageVerificationDialog = true }
+            onEnableRequested = onEnableCamouflageRequested
         )
 
         SettingsDivider2()
@@ -172,7 +200,7 @@ fun AppLockSettingsSection() {
             text = "Инкогнито-клавиатура",
             subtitle = if (keyboardIncognito) "Клавиатура не сохраняет поисковые запросы" else "Стандартный режим ввода",
             value = keyboardIncognito,
-            onValueChange = { Settings.keyboard_incognito_enabled.setValue(it) }
+            onValueChange = onToggleIncognito
         )
 
         SettingsDivider2()
@@ -186,7 +214,7 @@ fun AppLockSettingsSection() {
                 "Отображается обычный снимок экрана"
             },
             value = blurRecentTasks,
-            onValueChange = { Settings.blur_recent_tasks.setValue(it) }
+            onValueChange = onToggleBlurRecent
         )
     }
 }
@@ -203,26 +231,28 @@ private fun CamouflageGroup(
         isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
         else -> "Выключена (стандартная иконка приложения)"
     }
-
-    SettingsSwitchRow(
-            icon = R.drawable.ic_launcher_calculator,
-            text = "Маскировка под калькулятор",
-            subtitle = camouflageSubtitle,
-            value = isCamouflage && passwordSet,
-            enabled = passwordSet,
-            onValueChange = { enable ->
-                if (passwordSet) {
-                    if (enable) {
-                        onEnableRequested()
-                    } else {
-                        Settings.camouflage_calculator_enabled.setValue(false)
-                        LauncherAliasManager.setCalculatorAliasEnabled(context, false)
-                        SnackBar.info("Маскировка под калькулятор отключена")
-                    }
+    val onToggleCamouflage: (Boolean) -> Unit = remember(passwordSet, onEnableRequested, context) {
+        { enable ->
+            if (passwordSet) {
+                if (enable) {
+                    onEnableRequested()
+                } else {
+                    Settings.camouflage_calculator_enabled.setValue(false)
+                    LauncherAliasManager.setCalculatorAliasEnabled(context, false)
+                    SnackBar.info("Маскировка под калькулятор отключена")
                 }
             }
-        )
+        }
+    }
 
+    SettingsSwitchRow(
+        icon = R.drawable.ic_launcher_calculator,
+        text = "Маскировка под калькулятор",
+        subtitle = camouflageSubtitle,
+        value = isCamouflage && passwordSet,
+        enabled = passwordSet,
+        onValueChange = onToggleCamouflage
+    )
 }
 
 @Composable
@@ -236,10 +266,18 @@ private fun CamouflageVerificationDialog(
     var pinError by remember { mutableStateOf<String?>(null) }
     var isVerifyingPin by remember { mutableStateOf(false) }
 
-    val handleDismiss = {
-        pinInput = ""
-        pinError = null
-        onDismiss()
+    val handleDismiss = remember(onDismiss) {
+        {
+            pinInput = ""
+            pinError = null
+            onDismiss()
+        }
+    }
+    val onPinInputChange = remember {
+        { value: String ->
+            pinInput = value
+            pinError = null
+        }
     }
 
     LavenderDialog(
@@ -254,10 +292,7 @@ private fun CamouflageVerificationDialog(
                 )
                 PasswordSettingField(
                     value = pinInput,
-                    onValueChange = {
-                        pinInput = it
-                        pinError = null
-                    },
+                    onValueChange = onPinInputChange,
                     label = "Числовой PIN-код",
                     keyboardType = KeyboardType.NumberPassword,
                     onDone = {}
@@ -559,41 +594,57 @@ internal fun AppLockTimeoutDialog(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 AppLockTimeout.entries.forEach { timeout ->
-                    val isSelected = timeout == currentTimeout
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onSelect(timeout) }
-                            .padding(horizontal = 8.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = SettingsAccentColor,
-                                unselectedColor = Color(0xFF938F99)
-                            )
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        val label = when (timeout) {
-                            AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
-                            AppLockTimeout.NEVER -> "Никогда (только при перезапуске)"
-                            else -> timeout.displayName
-                        }
-                        Text(
-                            text = label,
-                            style = Theme.L.Type.dialogBody.copy(
-                                color = if (isSelected) SettingsAccentColor else Theme.DialogLavande.bodyColor,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                            )
-                        )
-                    }
+                    AppLockTimeoutItem(
+                        timeout = timeout,
+                        isSelected = (timeout == currentTimeout),
+                        onSelect = onSelect
+                    )
                 }
             }
         }
     )
+}
+
+@Composable
+private fun AppLockTimeoutItem(
+    timeout: AppLockTimeout,
+    isSelected: Boolean,
+    onSelect: (AppLockTimeout) -> Unit
+) {
+    val onClick = remember(timeout, onSelect) { { onSelect(timeout) } }
+    val label = remember(timeout) {
+        when (timeout) {
+            AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
+            AppLockTimeout.NEVER -> "Никогда (только при перезапуске)"
+            else -> timeout.displayName
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = SettingsAccentColor,
+                unselectedColor = Color(0xFF938F99)
+            )
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = label,
+            style = Theme.L.Type.dialogBody.copy(
+                color = if (isSelected) SettingsAccentColor else Theme.DialogLavande.bodyColor,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            )
+        )
+    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF353535)

@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,50 +93,62 @@ object L_Screen_CollectionTab : Screen {
             itemPendingDelete = null
         }
 
-        itemPendingAction?.let { pending ->
-            val cover = savedL.collection.collectionList
-                .firstOrNull { it.collection == pending }?.previewUrl
-            CollectionActionDialog(
-                pending = pending,
-                coverUrl = cover,
-                onDismiss = { itemPendingAction = null },
-                onRename = {
-                    renameValue = pending
-                    itemPendingRename = pending
-                    itemPendingAction = null
-                },
-                onShare = {
-                    itemPendingAction = null
-                    navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
-                },
-                onDelete = {
-                    itemPendingDelete = pending
-                    itemPendingAction = null
-                }
-            )
+        val onDismissActionDialog: () -> Unit = remember { { itemPendingAction = null } }
+        val onDismissRenameDialog: () -> Unit = remember { { itemPendingRename = null } }
+        val onDismissDeleteDialog: () -> Unit = remember { { itemPendingDelete = null } }
+
+        val onRenameAction: (String) -> Unit = remember {
+            { pending ->
+                renameValue = pending
+                itemPendingRename = pending
+                itemPendingAction = null
+            }
+        }
+        val onShareAction: (String) -> Unit = remember(navigator) {
+            { pending ->
+                itemPendingAction = null
+                navigator.push(ScreenP2pSend(P2pSendSource.ShareCollection(pending)))
+            }
+        }
+        val onDeleteAction: (String) -> Unit = remember {
+            { pending ->
+                itemPendingDelete = pending
+                itemPendingAction = null
+            }
         }
 
-        itemPendingRename?.let { pending ->
-            CollectionRenameDialog(
-                initialValue = renameValue,
-                onDismiss = { itemPendingRename = null },
-                onConfirm = { targetName ->
-                    itemPendingRename = null
-                    vm.renameCollection(pending, targetName)
-                }
-            )
+        val onConfirmRename: (String, String) -> Unit = remember(vm) {
+            { pending, targetName ->
+                itemPendingRename = null
+                vm.renameCollection(pending, targetName)
+            }
+        }
+        val onConfirmDelete: (String) -> Unit = remember(vm) {
+            { pending ->
+                itemPendingDelete = null
+                vm.deleteCollection(pending)
+            }
         }
 
-        itemPendingDelete?.let { pending ->
-            CollectionDeleteDialog(
-                pending = pending,
-                onDismiss = { itemPendingDelete = null },
-                onConfirm = {
-                    itemPendingDelete = null
-                    vm.deleteCollection(pending)
-                }
-            )
-        }
+        val dialogData = CollectionDialogData(
+            itemPendingAction = itemPendingAction,
+            itemPendingRename = itemPendingRename,
+            itemPendingDelete = itemPendingDelete,
+            renameValue = renameValue,
+        )
+
+        CollectionDialogsHost(
+            dialogData = dialogData,
+            collectionList = savedL.collection.collectionList,
+            onDismissAction = onDismissActionDialog,
+            onDismissRename = onDismissRenameDialog,
+            onDismissDelete = onDismissDeleteDialog,
+            onRenameAction = onRenameAction,
+            onShareAction = onShareAction,
+            onDeleteAction = onDeleteAction,
+            onConfirmRename = onConfirmRename,
+            onConfirmDelete = onConfirmDelete,
+        )
 
         val onSortOrderClick: (LCollectionSortOrder) -> Unit = remember(savedL) {
             { savedL.collection.applySortOrder(it) }
@@ -204,10 +217,8 @@ fun L_SavedCollectionTabContent(
             )
         }
     }
-    CollectionsGrid(
-        collections = gridItems,
-        gridState = gridState,
-        style = CollectionsGridStyle(
+    val gridStyle = remember {
+        CollectionsGridStyle(
             backgroundColor = Theme.background,
             titleColor = Theme.L.primaryColor,
             titleFontFamily = Theme.L.fontFamilyPopinsRegular,
@@ -215,17 +226,25 @@ fun L_SavedCollectionTabContent(
             itemSecondaryColor = Color.LightGray,
             itemFontFamily = Theme.L.fontFamilyDMsanss,
             addButtonBackground = Theme.L.primaryColor
-        ),
-        onCollectionClick = onCollectionClick,
-        onCollectionLongClick = onCollectionLongClick,
-        onCreateNewCollectionClick = onCreateNewCollectionClick,
-        topBar = {
+        )
+    }
+    val topBarContent: @Composable () -> Unit = remember(sortOrder, onSortOrderClick) {
+        {
             LCollectionsTopBar(
                 selectedCollection = null,
                 sortOrder = sortOrder,
                 onSortOrderClick = onSortOrderClick,
             )
         }
+    }
+    CollectionsGrid(
+        collections = gridItems,
+        gridState = gridState,
+        style = gridStyle,
+        onCollectionClick = onCollectionClick,
+        onCollectionLongClick = onCollectionLongClick,
+        onCreateNewCollectionClick = onCreateNewCollectionClick,
+        topBar = topBarContent
     )
 }
 
@@ -245,6 +264,67 @@ private fun PreviewL_SavedCollectionTabContent() {
             onCollectionClick = {},
             onCollectionLongClick = {},
             onCreateNewCollectionClick = {}
+        )
+    }
+}
+
+@Immutable
+private data class CollectionDialogData(
+    val itemPendingAction: String? = null,
+    val itemPendingRename: String? = null,
+    val itemPendingDelete: String? = null,
+    val renameValue: String = "",
+)
+
+@Composable
+private fun CollectionDialogsHost(
+    dialogData: CollectionDialogData,
+    collectionList: List<LCollectionEntity>,
+    onDismissAction: () -> Unit,
+    onDismissRename: () -> Unit,
+    onDismissDelete: () -> Unit,
+    onRenameAction: (String) -> Unit,
+    onShareAction: (String) -> Unit,
+    onDeleteAction: (String) -> Unit,
+    onConfirmRename: (String, String) -> Unit,
+    onConfirmDelete: (String) -> Unit,
+) {
+    dialogData.itemPendingAction?.let { pending ->
+        val cover = collectionList
+            .firstOrNull { it.collection == pending }?.previewUrl
+        val handleRename = remember(pending, onRenameAction) { { onRenameAction(pending) } }
+        val handleShare = remember(pending, onShareAction) { { onShareAction(pending) } }
+        val handleDelete = remember(pending, onDeleteAction) { { onDeleteAction(pending) } }
+
+        CollectionActionDialog(
+            pending = pending,
+            coverUrl = cover,
+            onDismiss = onDismissAction,
+            onRename = handleRename,
+            onShare = handleShare,
+            onDelete = handleDelete
+        )
+    }
+
+    dialogData.itemPendingRename?.let { pending ->
+        val handleConfirmRename = remember(pending, onConfirmRename) {
+            { targetName: String -> onConfirmRename(pending, targetName) }
+        }
+        CollectionRenameDialog(
+            initialValue = dialogData.renameValue,
+            onDismiss = onDismissRename,
+            onConfirm = handleConfirmRename
+        )
+    }
+
+    dialogData.itemPendingDelete?.let { pending ->
+        val handleConfirmDelete = remember(pending, onConfirmDelete) {
+            { onConfirmDelete(pending) }
+        }
+        CollectionDeleteDialog(
+            pending = pending,
+            onDismiss = onDismissDelete,
+            onConfirm = handleConfirmDelete
         )
     }
 }
@@ -307,13 +387,16 @@ private fun CollectionRenameDialog(
     onConfirm: (String) -> Unit
 ) {
     var renameValue by rememberSaveable(initialValue) { mutableStateOf(initialValue) }
+    val onValueChange: (String) -> Unit = remember { { renameValue = it } }
+    val onConfirmClick: () -> Unit = remember(onConfirm) { { onConfirm(renameValue) } }
+
     LavenderDialog(
         title = "Переименовать коллекцию",
         onDismiss = onDismiss,
         content = {
             OutlinedTextField(
                 value = renameValue,
-                onValueChange = { renameValue = it },
+                onValueChange = onValueChange,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Название коллекции") },
@@ -329,7 +412,7 @@ private fun CollectionRenameDialog(
             )
         },
         confirmText = "Сохранить",
-        onConfirm = { onConfirm(renameValue) }
+        onConfirm = onConfirmClick
     )
 }
 
