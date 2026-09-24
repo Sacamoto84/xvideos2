@@ -17,7 +17,10 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val nicheIconShape = RoundedCornerShape(8.dp)
+private val NICHE_ICON_SHAPE = RoundedCornerShape(8.dp)
+private val NICHE_ICON_SIZE = 96.dp
+private const val DIALOG_TITLE = "Удалить группу?"
+private const val CONFIRM_TEXT = "Удалить"
 
 @Composable
 fun DialogNicheDelete(
@@ -36,19 +39,22 @@ fun DialogNicheDelete(
                 append("» из сохранённых?")
             }
         }
-        LavenderDialog(
-            title = "Удалить группу?",
-            onDismiss = onDismiss,
-            icon = {
+        val iconContent: @Composable () -> Unit = remember(pending.thumbnail) {
+            {
                 UrlImage(
                     url = pending.thumbnail,
                     modifier = Modifier
-                        .clip(nicheIconShape)
-                        .size(96.dp)
+                        .clip(NICHE_ICON_SHAPE)
+                        .size(NICHE_ICON_SIZE)
                 )
-            },
+            }
+        }
+        LavenderDialog(
+            title = DIALOG_TITLE,
+            onDismiss = onDismiss,
+            icon = iconContent,
             body = dialogBody,
-            confirmText = "Удалить",
+            confirmText = CONFIRM_TEXT,
             onConfirm = handleConfirm,
             destructive = true,
         )

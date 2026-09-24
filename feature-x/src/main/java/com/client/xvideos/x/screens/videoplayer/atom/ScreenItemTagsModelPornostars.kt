@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +24,19 @@ private val PORNOSTAR_TAG_SHAPE = RoundedCornerShape(6.dp)
 private val COUNT_BADGE_SHAPE = RoundedCornerShape(4.dp)
 private val COUNT_BADGE_BG = Color(0x33000000)
 
+private val TAG_HEIGHT = 28.dp
+private val TAG_PADDING_HORIZONTAL = 3.dp
+private val TAG_PADDING_VERTICAL = 2.dp
+private val TEXT_PADDING_START = 8.dp
+private val TEXT_PADDING_END_WITH_COUNT = 4.dp
+private val TEXT_PADDING_END_NO_COUNT = 8.dp
+private val BADGE_HEIGHT = 20.dp
+private val BADGE_PADDING_END = 4.dp
+private val BADGE_PADDING_HORIZONTAL = 5.dp
+
+private val TEXT_FONT_SIZE = 13.sp
+private val COUNT_FONT_SIZE = 11.sp
+
 /**
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
  */
@@ -33,9 +47,10 @@ fun ScreenItemTagsModelPornostars(
     count: String,
     onClick: (() -> Unit)? = null
 ) {
+    val hasCount = remember(count) { count.isNotBlank() }
     val baseModifier = Modifier
-        .padding(horizontal = 3.dp, vertical = 2.dp)
-        .height(28.dp)
+        .padding(horizontal = TAG_PADDING_HORIZONTAL, vertical = TAG_PADDING_VERTICAL)
+        .height(TAG_HEIGHT)
         .clip(PORNOSTAR_TAG_SHAPE)
         .background(color)
     val rowModifier = if (onClick != null) baseModifier.clickable(onClick = onClick) else baseModifier
@@ -46,26 +61,26 @@ fun ScreenItemTagsModelPornostars(
     ) {
         Text(
             text,
-            modifier = Modifier.padding(start = 8.dp, end = if (count.isNotBlank()) 4.dp else 8.dp),
+            modifier = Modifier.padding(start = TEXT_PADDING_START, end = if (hasCount) TEXT_PADDING_END_WITH_COUNT else TEXT_PADDING_END_NO_COUNT),
             color = Color.White,
-            fontSize = 13.sp,
+            fontSize = TEXT_FONT_SIZE,
             fontWeight = FontWeight.Medium
         )
 
-        if (count.isNotBlank()) {
+        if (hasCount) {
             Box(
                 modifier = Modifier
-                    .padding(end = 4.dp)
-                    .height(20.dp)
+                    .padding(end = BADGE_PADDING_END)
+                    .height(BADGE_HEIGHT)
                     .clip(COUNT_BADGE_SHAPE)
                     .background(COUNT_BADGE_BG)
-                    .padding(horizontal = 5.dp),
+                    .padding(horizontal = BADGE_PADDING_HORIZONTAL),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     count,
                     color = Color.White,
-                    fontSize = 11.sp,
+                    fontSize = COUNT_FONT_SIZE,
                     fontFamily = FontFamily.SansSerif,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.SemiBold

@@ -53,6 +53,27 @@ private val TAG_CONTAINER_EXPANDED_BG = Color(0xE6141418)
 private val TAG_CONTAINER_SHAPE = RoundedCornerShape(12.dp)
 private val TAG_CHIP_SHAPE = RoundedCornerShape(6.dp)
 
+private val TAG_BORDER_WIDTH = 1.dp
+private val TAG_CONTAINER_PADDING = 6.dp
+private val TAG_CONTAINER_MAX_HEIGHT = 160.dp
+private val TAG_CHIP_HEIGHT = 28.dp
+private val TAG_CHIP_HORIZONTAL_PADDING = 3.dp
+private val TAG_CHIP_VERTICAL_PADDING = 2.dp
+private val TAG_CHIP_CONTENT_PADDING = 8.dp
+private val TAG_TOGGLE_START_PADDING = 8.dp
+private val TAG_TOGGLE_END_PADDING = 4.dp
+private val TAG_TOGGLE_ICON_SIZE = 18.dp
+
+private val TAG_FONT_SIZE = 13.sp
+private val TAG_TOGGLE_FONT_SIZE = 12.sp
+
+private const val ROTATION_COLLAPSED = 0f
+private const val ROTATION_EXPANDED = 180f
+
+private const val CD_EXPAND_TAGS = "Развернуть теги"
+private const val CD_COLLAPSE_TAGS = "Свернуть теги"
+private const val TEXT_COLLAPSE = "Свернуть"
+
 sealed interface TagItem {
     val name: String
 
@@ -166,9 +187,9 @@ fun ComposeTags(
                     Modifier
                         .clip(TAG_CONTAINER_SHAPE)
                         .background(TAG_CONTAINER_EXPANDED_BG)
-                        .border(1.dp, TAG_BORDER_COLOR, TAG_CONTAINER_SHAPE)
-                        .padding(horizontal = 6.dp, vertical = 6.dp)
-                        .heightIn(max = 160.dp)
+                        .border(TAG_BORDER_WIDTH, TAG_BORDER_COLOR, TAG_CONTAINER_SHAPE)
+                        .padding(horizontal = TAG_CONTAINER_PADDING, vertical = TAG_CONTAINER_PADDING)
+                        .heightIn(max = TAG_CONTAINER_MAX_HEIGHT)
                         .verticalScroll(rememberScrollState())
                 } else {
                     Modifier
@@ -183,25 +204,34 @@ fun ComposeTags(
                 key(item.name) {
                     when (item) {
                         is TagItem.Channel -> {
+                            val handleChannelClick = remember(item.model.name, onClick) {
+                                { onClick(item.model.name) }
+                            }
                             ScreenItemTagsModelPornostars(
                                 text = item.model.name,
                                 color = TAG_CHANNEL_COLOR,
                                 count = item.model.count,
-                                onClick = { onClick(item.model.name) },
+                                onClick = handleChannelClick,
                             )
                         }
                         is TagItem.Pornstar -> {
+                            val handlePornstarClick = remember(item.model.name, onClick) {
+                                { onClick(item.model.name) }
+                            }
                             ScreenItemTagsModelPornostars(
                                 text = item.model.name,
                                 color = TAG_PORNSTAR_COLOR,
                                 count = item.model.count,
-                                onClick = { onClick(item.model.name) },
+                                onClick = handlePornstarClick,
                             )
                         }
                         is TagItem.Keyword -> {
+                            val handleKeywordClick = remember(item.tag, onClick) {
+                                { onClick(item.tag) }
+                            }
                             TagChip(
                                 text = item.tag,
-                                onClick = { onClick(item.tag) },
+                                onClick = handleKeywordClick,
                             )
                         }
                     }
@@ -213,14 +243,14 @@ fun ComposeTags(
                     TagToggleChip(
                         text = "+${tagsState.hiddenCount}",
                         isExpanded = false,
-                        contentDescription = "Развернуть теги",
+                        contentDescription = CD_EXPAND_TAGS,
                         onClick = onExpandTags,
                     )
                 } else {
                     TagToggleChip(
-                        text = "Свернуть",
+                        text = TEXT_COLLAPSE,
                         isExpanded = true,
-                        contentDescription = "Свернуть теги",
+                        contentDescription = CD_COLLAPSE_TAGS,
                         onClick = onCollapseTags,
                     )
                 }
@@ -236,19 +266,19 @@ private fun TagChip(
 ) {
     Box(
         modifier = Modifier
-            .padding(horizontal = 3.dp, vertical = 2.dp)
-            .height(28.dp)
+            .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
+            .height(TAG_CHIP_HEIGHT)
             .clip(TAG_CHIP_SHAPE)
             .background(TAG_BG_COLOR)
-            .border(1.dp, TAG_BORDER_COLOR, TAG_CHIP_SHAPE)
+            .border(TAG_BORDER_WIDTH, TAG_BORDER_COLOR, TAG_CHIP_SHAPE)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = TAG_CHIP_CONTENT_PADDING),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
             color = Color.White,
-            fontSize = 13.sp,
+            fontSize = TAG_FONT_SIZE,
             fontFamily = FontFamily.SansSerif,
             fontWeight = FontWeight.Medium,
         )
@@ -264,19 +294,19 @@ private fun TagToggleChip(
 ) {
     Row(
         modifier = Modifier
-            .padding(horizontal = 3.dp, vertical = 2.dp)
-            .height(28.dp)
+            .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
+            .height(TAG_CHIP_HEIGHT)
             .clip(TAG_CHIP_SHAPE)
             .background(TAG_ACTION_BG_COLOR)
-            .border(1.dp, TAG_ACTION_BORDER_COLOR, TAG_CHIP_SHAPE)
+            .border(TAG_BORDER_WIDTH, TAG_ACTION_BORDER_COLOR, TAG_CHIP_SHAPE)
             .clickable(onClick = onClick)
-            .padding(start = 8.dp, end = 4.dp),
+            .padding(start = TAG_TOGGLE_START_PADDING, end = TAG_TOGGLE_END_PADDING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = text,
             color = Color.White,
-            fontSize = 12.sp,
+            fontSize = TAG_TOGGLE_FONT_SIZE,
             fontFamily = FontFamily.SansSerif,
             fontWeight = FontWeight.SemiBold,
         )
@@ -285,8 +315,8 @@ private fun TagToggleChip(
             contentDescription = contentDescription,
             tint = Color.White,
             modifier = Modifier
-                .size(18.dp)
-                .rotate(if (isExpanded) 180f else 0f),
+                .size(TAG_TOGGLE_ICON_SIZE)
+                .rotate(if (isExpanded) ROTATION_EXPANDED else ROTATION_COLLAPSED),
         )
     }
 }

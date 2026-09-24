@@ -42,6 +42,23 @@ private val OPERATOR_BG = Color(0xFFFF9F0A)
 private val OPERATOR_TEXT = Color.White
 private val HISTORY_TEXT_COLOR = Color(0xFF8E8E93)
 
+private val BUTTON_SHAPE = CircleShape
+private val KEYPAD_SPACING = 12.dp
+
+private val SCREEN_HORIZONTAL_PADDING = 16.dp
+private val SCREEN_VERTICAL_PADDING = 12.dp
+private val DISPLAY_HORIZONTAL_PADDING = 12.dp
+private val HISTORY_SPACER_HEIGHT = 8.dp
+private val DISPLAY_BOTTOM_SPACER_HEIGHT = 16.dp
+
+private val HISTORY_FONT_SIZE = 22.sp
+private val FONT_SIZE_LONG = 34.sp
+private val FONT_SIZE_MEDIUM = 42.sp
+private val FONT_SIZE_SHORT = 52.sp
+private val FONT_SIZE_DEFAULT = 64.sp
+private val BTN_FONT_SIZE_SMALL = 22.sp
+private val BTN_FONT_SIZE_DEFAULT = 28.sp
+
 /**
  * Экран-камуфляж «Калькулятор».
  *
@@ -74,7 +91,7 @@ fun CalculatorScreen(
             .fillMaxSize()
             .background(Color.Black)
             .displayCutoutPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = SCREEN_HORIZONTAL_PADDING, vertical = SCREEN_VERTICAL_PADDING),
         verticalArrangement = Arrangement.Bottom
     ) {
         CalculatorDisplay(
@@ -107,19 +124,19 @@ private fun CalculatorDisplay(
             Text(
                 text = expressionHistory,
                 color = HISTORY_TEXT_COLOR,
-                fontSize = 22.sp,
+                fontSize = HISTORY_FONT_SIZE,
                 textAlign = TextAlign.End,
                 maxLines = 1,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = DISPLAY_HORIZONTAL_PADDING)
             )
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(HISTORY_SPACER_HEIGHT))
 
         val fontSize = when {
-            displayValue.length > 13 -> 34.sp
-            displayValue.length > 10 -> 42.sp
-            displayValue.length > 7 -> 52.sp
-            else -> 64.sp
+            displayValue.length > 13 -> FONT_SIZE_LONG
+            displayValue.length > 10 -> FONT_SIZE_MEDIUM
+            displayValue.length > 7 -> FONT_SIZE_SHORT
+            else -> FONT_SIZE_DEFAULT
         }
 
         Text(
@@ -129,9 +146,9 @@ private fun CalculatorDisplay(
             fontWeight = FontWeight.Light,
             textAlign = TextAlign.End,
             maxLines = 1,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = DISPLAY_HORIZONTAL_PADDING)
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(DISPLAY_BOTTOM_SPACER_HEIGHT))
     }
 }
 
@@ -143,37 +160,35 @@ private fun CalculatorKeypad(
     onUnlock: suspend (String) -> Boolean,
     onUnlockFailed: () -> Unit = {}
 ) {
-    val spacing = 12.dp
-
-    KeypadRow(spacing) {
+    KeypadRow(KEYPAD_SPACING) {
         CalcButton(if (state.isAllClear) "AC" else "C", FUNCTION_BG, FUNCTION_TEXT) { state.onClear(haptic) }
         CalcButton("⌫", FUNCTION_BG, FUNCTION_TEXT) { state.onBackspace(haptic) }
         CalcButton("%", FUNCTION_BG, FUNCTION_TEXT) { state.onPercent(haptic) }
         OperatorButton("÷", state.pendingOperation == "÷") { state.onOperator("÷", haptic) }
     }
 
-    KeypadRow(spacing) {
+    KeypadRow(KEYPAD_SPACING) {
         CalcButton("7", DIGIT_BG, DIGIT_TEXT) { state.onDigit("7", haptic) }
         CalcButton("8", DIGIT_BG, DIGIT_TEXT) { state.onDigit("8", haptic) }
         CalcButton("9", DIGIT_BG, DIGIT_TEXT) { state.onDigit("9", haptic) }
         OperatorButton("×", state.pendingOperation == "×") { state.onOperator("×", haptic) }
     }
 
-    KeypadRow(spacing) {
+    KeypadRow(KEYPAD_SPACING) {
         CalcButton("4", DIGIT_BG, DIGIT_TEXT) { state.onDigit("4", haptic) }
         CalcButton("5", DIGIT_BG, DIGIT_TEXT) { state.onDigit("5", haptic) }
         CalcButton("6", DIGIT_BG, DIGIT_TEXT) { state.onDigit("6", haptic) }
         OperatorButton("-", state.pendingOperation == "-") { state.onOperator("-", haptic) }
     }
 
-    KeypadRow(spacing) {
+    KeypadRow(KEYPAD_SPACING) {
         CalcButton("1", DIGIT_BG, DIGIT_TEXT) { state.onDigit("1", haptic) }
         CalcButton("2", DIGIT_BG, DIGIT_TEXT) { state.onDigit("2", haptic) }
         CalcButton("3", DIGIT_BG, DIGIT_TEXT) { state.onDigit("3", haptic) }
         OperatorButton("+", state.pendingOperation == "+") { state.onOperator("+", haptic) }
     }
 
-    KeypadRow(spacing) {
+    KeypadRow(KEYPAD_SPACING) {
         CalcButton("+/-", DIGIT_BG, DIGIT_TEXT) { state.onPlusMinus(haptic) }
         CalcButton("0", DIGIT_BG, DIGIT_TEXT) { state.onDigit("0", haptic) }
         CalcButton(".", DIGIT_BG, DIGIT_TEXT) { state.onDecimal(haptic) }
@@ -225,7 +240,7 @@ private fun RowScope.CalcButton(
         modifier = modifier
             .weight(1f)
             .aspectRatio(1f)
-            .clip(CircleShape)
+            .clip(BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -233,7 +248,7 @@ private fun RowScope.CalcButton(
         Text(
             text = text,
             color = textColor,
-            fontSize = if (text.length > 2) 22.sp else 28.sp,
+            fontSize = if (text.length > 2) BTN_FONT_SIZE_SMALL else BTN_FONT_SIZE_DEFAULT,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
         )

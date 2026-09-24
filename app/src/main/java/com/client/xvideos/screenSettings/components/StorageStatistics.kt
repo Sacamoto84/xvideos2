@@ -29,7 +29,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.util.formatBytes
 import java.io.File
 
-private val progressShape = RoundedCornerShape(6.dp)
+private val PROGRESS_SHAPE = RoundedCornerShape(6.dp)
 private const val TEXT_TOTAL_DATA = "Всего данных"
 private const val SUBTITLE_X = "XVideos"
 private const val SUBTITLE_L = "Luscious"
@@ -37,6 +37,8 @@ private const val SUBTITLE_R = "RedGifs"
 private val STORAGE_ROW_HORIZONTAL_PADDING = 16.dp
 private val STORAGE_ROW_VERTICAL_PADDING = 12.dp
 private val PROGRESS_BAR_HEIGHT = 6.dp
+private val ICON_SPACER_WIDTH = 16.dp
+private val SUBTITLE_SPACER_HEIGHT = 4.dp
 
 @Immutable
 internal data class StorageStat(
@@ -119,7 +121,7 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         SettingsIcon(storageIcon(stat.key))
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(ICON_SPACER_WIDTH))
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -143,11 +145,11 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(PROGRESS_BAR_HEIGHT)
-                    .clip(progressShape),
+                    .clip(PROGRESS_SHAPE),
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(SUBTITLE_SPACER_HEIGHT))
             Text(
                 text = subtitleText,
                 color = SettingsRowTextSecondary,

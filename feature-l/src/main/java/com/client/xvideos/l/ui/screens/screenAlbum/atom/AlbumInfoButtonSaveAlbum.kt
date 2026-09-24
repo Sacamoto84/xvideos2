@@ -26,12 +26,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
-private val saveAlbumButtonShape = RoundedCornerShape(4.dp)
+private val SAVE_ALBUM_BUTTON_SHAPE = RoundedCornerShape(4.dp)
+private val BUTTON_HEIGHT = 46.dp
+private val BUTTON_TOP_PADDING = 2.dp
+private val BUTTON_BOTTOM_PADDING = 4.dp
+private val BUTTON_BORDER_WIDTH = 1.dp
+private val CONTENT_SPACING = 8.dp
+private val ICON_SIZE = 20.dp
+private const val TEXT_SAVE_ALBUM = "Сохранить альбом"
+private const val TEXT_REMOVE_ALBUM = "Удалить из сохранённых"
 
 @Composable
 fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick: () -> Unit) {
     val buttonText = remember(saved) {
-        if (!saved) "Сохранить альбом" else "Удалить из сохранённых"
+        if (!saved) TEXT_SAVE_ALBUM else TEXT_REMOVE_ALBUM
     }
     val iconVector = remember(saved) {
         if (saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder
@@ -48,24 +56,24 @@ fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick: () -> Unit) {
 
     Box(
         modifier = Modifier
-            .padding(top = 2.dp, bottom = 4.dp)
-            .height(46.dp)
+            .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
+            .height(BUTTON_HEIGHT)
             .fillMaxWidth()
-            .clip(saveAlbumButtonShape)
-            .border(1.dp, Theme.L.grey3, saveAlbumButtonShape)
+            .clip(SAVE_ALBUM_BUTTON_SHAPE)
+            .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SAVE_ALBUM_BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(CONTENT_SPACING),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = iconVector,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(ICON_SIZE)
             )
             Text(
                 text = buttonText,

@@ -50,17 +50,25 @@ fun calculatePrevAlbumPage(page: Int): Int = (page - 1).coerceAtLeast(0)
 fun calculateNextAlbumPage(page: Int, pageMax: Int): Int =
     (page + 1).coerceAtMost((pageMax - 1).coerceAtLeast(0))
 
-private val pageSelectorDialogShape = RoundedCornerShape(16.dp)
-private val pageSelectorDialogBorderColor = Color(0xFF3E3E3E)
-private val pageSelectorDialogBgColor = Color(0xFF373737)
+private val PAGE_SELECTOR_DIALOG_SHAPE = RoundedCornerShape(16.dp)
+private val PAGE_SELECTOR_DIALOG_BORDER_COLOR = Color(0xFF3E3E3E)
+private val PAGE_SELECTOR_DIALOG_BG_COLOR = Color(0xFF373737)
 
-private val defaultAlbumKeyboardTheme = KeyboardNumberTheme(
+private val DEFAULT_ALBUM_KEYBOARD_THEME = KeyboardNumberTheme(
     colorBackground = Color(0xFF2D2D2D),
     colorBorderBackground = Color(0xFF282828),
     colorText = Color(0xFFFFFFFF),
     buttonColor = Color(0xFF282828),
     colorButtonBorder = Color(0xFF232323),
 )
+
+private val SELECTOR_HEIGHT = 48.dp
+private val DIALOG_BORDER_WIDTH = 2.dp
+private val DIALOG_PADDING = 16.dp
+private val BORDER_LINE_WIDTH = 1.dp
+private const val DEFAULT_KEYBOARD_VALUE = -1
+private const val CD_PREV_PAGE = "Предыдущая страница"
+private const val CD_NEXT_PAGE = "Следующая страница"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +103,7 @@ fun AlbumListPageSelector(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(SELECTOR_HEIGHT),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -107,14 +115,14 @@ fun AlbumListPageSelector(
                 .background(Theme.L.red)
                 .clickable(onClick = onPrevPage),
             contentAlignment = Alignment.Center
-        ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, tint = Color.White, contentDescription = null) }
+        ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, tint = Color.White, contentDescription = CD_PREV_PAGE) }
 
         Box(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(2f)
                 .drawBehind {
-                    val strokeWidth = 1.dp.toPx()
+                    val strokeWidth = BORDER_LINE_WIDTH.toPx()
 
                     // верхняя линия
                     drawLine(
@@ -152,7 +160,7 @@ fun AlbumListPageSelector(
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 tint = Color.White,
-                contentDescription = null
+                contentDescription = CD_NEXT_PAGE
             )
         }
     }
@@ -163,15 +171,15 @@ fun AlbumListPageSelector(
         Dialog(onDismissRequest = onDismissDialog) {
             Box(
                 modifier = Modifier
-                    .clip(pageSelectorDialogShape)
-                    .border(2.dp, pageSelectorDialogBorderColor, pageSelectorDialogShape)
-                    .background(pageSelectorDialogBgColor)
-                    .padding(16.dp),
+                    .clip(PAGE_SELECTOR_DIALOG_SHAPE)
+                    .border(DIALOG_BORDER_WIDTH, PAGE_SELECTOR_DIALOG_BORDER_COLOR, PAGE_SELECTOR_DIALOG_SHAPE)
+                    .background(PAGE_SELECTOR_DIALOG_BG_COLOR)
+                    .padding(DIALOG_PADDING),
                 contentAlignment = Alignment.Center
             ) {
                 KeyboardNumber(
-                    theme = defaultAlbumKeyboardTheme,
-                    value = -1,
+                    theme = DEFAULT_ALBUM_KEYBOARD_THEME,
+                    value = DEFAULT_KEYBOARD_VALUE,
                     max = pageMax,
                     onClick = onKeyboardNumberClick
                 )

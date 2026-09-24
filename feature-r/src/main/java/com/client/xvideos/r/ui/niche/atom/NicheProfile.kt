@@ -36,17 +36,29 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val nicheThumbnailShape = RoundedCornerShape(8.dp)
-private val nicheFollowButtonShape = RoundedCornerShape(8.dp)
+private val NICHE_THUMBNAIL_SHAPE = RoundedCornerShape(8.dp)
+private val NICHE_FOLLOW_BUTTON_SHAPE = RoundedCornerShape(8.dp)
+
+private val NICHE_THUMBNAIL_SIZE = 128.dp
+private val COLUMN_HEIGHT = 128.dp
+private val STAT_ICON_SIZE = 16.dp
+private val STAT_FONT_SIZE = 16.sp
+private val FOLLOW_BUTTON_WIDTH = 128.dp
+private val FOLLOW_BUTTON_HEIGHT = 44.dp
+private val FOLLOW_BORDER_WIDTH = 1.dp
+private val PADDING_XSMALL = 4.dp
+private val PADDING_SMALL = 8.dp
+
+private const val TEXT_UNSUBSCRIBE = "Выйти"
+private const val TEXT_SUBSCRIBE = "Подписаться"
+private const val DEFAULT_PLACEHOLDER_ID = "id"
 
 @Composable
 fun NicheProfile(savedRed: () -> SavedRed, niche: NichesInfo) {
     val isFollowed = savedRed().niches.list.any { it.id == niche.id }
 
-    NicheProfileContent(
-        niche = { niche },
-        isFollowed = isFollowed,
-        onFollowClick = {
+    val handleFollowClick = remember(niche, isFollowed, savedRed) {
+        {
             val nichesInfo = NichesInfo(
                 id = niche.id,
                 name = niche.name,
@@ -55,11 +67,18 @@ fun NicheProfile(savedRed: () -> SavedRed, niche: NichesInfo) {
                 thumbnail = niche.thumbnail,
             )
 
-            if (isFollowed)
+            if (isFollowed) {
                 savedRed().niches.remove(nichesInfo)
-            else
+            } else {
                 savedRed().niches.add(nichesInfo)
+            }
         }
+    }
+
+    NicheProfileContent(
+        niche = { niche },
+        isFollowed = isFollowed,
+        onFollowClick = handleFollowClick
     )
 }
 
@@ -75,7 +94,7 @@ fun NicheProfileContent(
 
     Row(
         modifier = Modifier
-            .padding(start = 4.dp)
+            .padding(start = PADDING_XSMALL)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -83,18 +102,18 @@ fun NicheProfileContent(
         UrlImage(
             currentNiche.thumbnail,
             modifier = Modifier
-                .size(128.dp)
-                .clip(nicheThumbnailShape)
+                .size(NICHE_THUMBNAIL_SIZE)
+                .clip(NICHE_THUMBNAIL_SHAPE)
         )
 
         Column(
             modifier = Modifier
-                .padding(start = 8.dp)
-                .height(128.dp)
+                .padding(start = PADDING_SMALL)
+                .height(COLUMN_HEIGHT)
                 .weight(1f),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            if (currentNiche.id != "id") {
+            if (currentNiche.id != DEFAULT_PLACEHOLDER_ID) {
                 Text(currentNiche.name, color = Color.White, fontFamily = Theme.R.fontFamilyDMsanss)
             }
 
@@ -103,16 +122,16 @@ fun NicheProfileContent(
                     painter = painterResource(R.drawable.members),
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(STAT_ICON_SIZE)
                 )
                 Text(
                     text = subscribersText,
                     modifier = Modifier
-                        .padding(start = 4.dp, end = 4.dp)
+                        .padding(start = PADDING_XSMALL, end = PADDING_XSMALL)
                         .wrapContentWidth(Alignment.CenterHorizontally),
                     color = Color.White,
                     textAlign = TextAlign.Center,
-                    fontSize = 16.sp
+                    fontSize = STAT_FONT_SIZE
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -120,20 +139,20 @@ fun NicheProfileContent(
                     painter = painterResource(R.drawable.posts),
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(STAT_ICON_SIZE)
                 )
                 Text(
                     text = gifsText,
                     modifier = Modifier
-                        .padding(start = 4.dp, end = 4.dp)
+                        .padding(start = PADDING_XSMALL, end = PADDING_XSMALL)
                         .wrapContentWidth(Alignment.CenterHorizontally),
                     color = Color.White,
                     textAlign = TextAlign.Center,
-                    fontSize = 16.sp
+                    fontSize = STAT_FONT_SIZE
                 )
             }
 
-            if (currentNiche.id != "id") {
+            if (currentNiche.id != DEFAULT_PLACEHOLDER_ID) {
                 ButtonFollowContent(isFollowed = isFollowed, onClick = onFollowClick)
             }
         }
@@ -145,18 +164,18 @@ private fun ButtonFollowContent(
     isFollowed: Boolean,
     onClick: () -> Unit
 ) {
-    val buttonText = remember(isFollowed) { if (isFollowed) "Выйти" else "Подписаться" }
+    val buttonText = remember(isFollowed) { if (isFollowed) TEXT_UNSUBSCRIBE else TEXT_SUBSCRIBE }
     val buttonTextColor = remember(isFollowed) { if (isFollowed) Color.White else Color.Black }
     val buttonBgColor = remember(isFollowed) { if (isFollowed) Theme.tabLevel1 else Theme.R.colorYellow }
     val buttonBorderColor = remember(isFollowed) { if (isFollowed) Color.White else Color.Transparent }
 
     Box(
         modifier = Modifier
-            .padding(end = 4.dp)
-            .clip(nicheFollowButtonShape)
-            .width(128.dp)
-            .height(44.dp)
-            .border(1.dp, buttonBorderColor, nicheFollowButtonShape)
+            .padding(end = PADDING_XSMALL)
+            .clip(NICHE_FOLLOW_BUTTON_SHAPE)
+            .width(FOLLOW_BUTTON_WIDTH)
+            .height(FOLLOW_BUTTON_HEIGHT)
+            .border(FOLLOW_BORDER_WIDTH, buttonBorderColor, NICHE_FOLLOW_BUTTON_SHAPE)
             .background(buttonBgColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
