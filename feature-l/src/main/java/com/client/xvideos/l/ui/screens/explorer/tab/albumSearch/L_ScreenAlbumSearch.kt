@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -173,15 +174,14 @@ object L_ScreenAlbumSearch : Screen {
                 }
 
                 items(
-                    count = sections?.size ?: 0,
-                    key = { index -> "${index}_${sections?.get(index)?.title.orEmpty()}" }
-                ) { index ->
-                    val section = sections?.get(index) ?: return@items
+                    items = sections.orEmpty(),
+                    key = { section -> section.title }
+                ) { section ->
                     AlbumSearchSectionBlock(
                         section = section,
                         screenWidth = screenWidth,
                         onAlbumClick = onAlbumClick,
-                        onSeeAllClick = { onSeeAllClick(section) }
+                        onSeeAllClick = onSeeAllClick
                     )
                 }
 
@@ -231,8 +231,10 @@ private fun AlbumSearchSectionBlock(
     section: Landing_page_albumSection,
     screenWidth: androidx.compose.ui.unit.Dp,
     onAlbumClick: (Long) -> Unit,
-    onSeeAllClick: () -> Unit
+    onSeeAllClick: (Landing_page_albumSection) -> Unit
 ) {
+    val handleSeeAll = remember(section, onSeeAllClick) { { onSeeAllClick(section) } }
+
     Text(
         section.title,
         color = Theme.L.textColor,
@@ -262,7 +264,7 @@ private fun AlbumSearchSectionBlock(
                     coverUrl = album.cover?.url.orEmpty(),
                     numberOfAnimatedPictures = album.numberOfAnimatedPictures,
                     numberOfPictures = album.numberOfPictures,
-                    onClick = { album.id.toLongOrNull()?.let { onAlbumClick(it) } }
+                    onClick = { album.id.toLongOrNull()?.let(onAlbumClick) }
                 )
             }
         }
@@ -275,7 +277,7 @@ private fun AlbumSearchSectionBlock(
             .fillMaxWidth()
             .height(40.dp)
             .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
-            .clickable(onClick = onSeeAllClick),
+            .clickable(onClick = handleSeeAll),
         contentAlignment = Alignment.Center
     ) {
         Text(

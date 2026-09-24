@@ -48,12 +48,12 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
 
+        val onResetTags: () -> Unit = remember(vm) { { vm.tagsSelect.value = emptySet() } }
+
         // Навигация «Назад»:
         // 1. Сброс выбранных тегов фильтрации (если есть).
         // 2. Выход из профиля.
-        BackHandler(enabled = tagsSelect.isNotEmpty()) {
-            vm.tagsSelect.value = emptySet()
-        }
+        BackHandler(enabled = tagsSelect.isNotEmpty(), onBack = onResetTags)
 
         val tagsList = remember(tags) { tags.toList() }
         val tagsSelectList = remember(tagsSelect) { tagsSelect.toList() }

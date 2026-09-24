@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +44,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.manager_block.bottomr_bar.BottomrBar
 
 class ScreenRedManageBlock : Screen {
@@ -56,9 +58,10 @@ class ScreenRedManageBlock : Screen {
         val blockList by vm.blockList.collectAsStateWithLifecycle()
         val listState = rememberLazyListState()
 
-        BackHandler {
-            navigator.pop()
-        }
+        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+        val onUnblock: (GifsInfo) -> Unit = remember(vm) { { vm.unblock(it) } }
+
+        BackHandler(onBack = onBack)
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -71,7 +74,7 @@ class ScreenRedManageBlock : Screen {
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { navigator.pop() }) {
+                    IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад",
@@ -110,54 +113,66 @@ class ScreenRedManageBlock : Screen {
                         .fillMaxSize()
                 ) {
                     items(blockList, key = { it.id }) { item ->
-                        Row(
-                            modifier = Modifier
-                                .padding(vertical = 4.dp, horizontal = 8.dp)
-                                .fillMaxWidth()
-                                .height(128.dp)
-                                .background(Color.Transparent)
-                                .border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp)),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            UrlImage(
-                                item.urls.thumbnail,
-                                modifier = Modifier.aspectRatio(1f),
-                                contentScale = ContentScale.Fit
-                            )
-
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 12.dp)
-                            ) {
-                                Text(
-                                    text = item.userName,
-                                    color = Theme.Text.primary,
-                                    fontSize = 16.sp,
-                                    fontFamily = Theme.R.fontFamilyPopinsMedium
-                                )
-                                Text(
-                                    text = item.id,
-                                    color = Theme.Text.secondary,
-                                    fontSize = 13.sp,
-                                    fontFamily = Theme.R.fontFamilyDMsanss
-                                )
-                            }
-
-                            IconButton(
-                                onClick = { vm.unblock(item) },
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Разблокировать",
-                                    tint = Color(0xFFFF7A7A)
-                                )
-                            }
-                        }
+                        BlockedUserRow(
+                            item = item,
+                            onUnblock = onUnblock
+                        )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BlockedUserRow(
+    item: GifsInfo,
+    onUnblock: (GifsInfo) -> Unit
+) {
+    val handleUnblock = remember(item, onUnblock) { { onUnblock(item) } }
+    Row(
+        modifier = Modifier
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .fillMaxWidth()
+            .height(128.dp)
+            .background(Color.Transparent)
+            .border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp)),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        UrlImage(
+            item.urls.thumbnail,
+            modifier = Modifier.aspectRatio(1f),
+            contentScale = ContentScale.Fit
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp)
+        ) {
+            Text(
+                text = item.userName,
+                color = Theme.Text.primary,
+                fontSize = 16.sp,
+                fontFamily = Theme.R.fontFamilyPopinsMedium
+            )
+            Text(
+                text = item.id,
+                color = Theme.Text.secondary,
+                fontSize = 13.sp,
+                fontFamily = Theme.R.fontFamilyDMsanss
+            )
+        }
+
+        IconButton(
+            onClick = handleUnblock,
+            modifier = Modifier.padding(end = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Разблокировать",
+                tint = Color(0xFFFF7A7A)
+            )
         }
     }
 }

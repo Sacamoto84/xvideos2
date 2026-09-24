@@ -49,8 +49,28 @@ internal fun NetworkSettingsSection() {
     val currentProvider = remember(providerName) { DohProvider.fromNameOrDefault(providerName) }
     var showCustomUrlDialog by remember { mutableStateOf(false) }
 
-    BackHandler(enabled = showCustomUrlDialog) {
-        showCustomUrlDialog = false
+    val onDismissCustomUrl = remember { { showCustomUrlDialog = false } }
+    val onOpenCustomUrl = remember { { showCustomUrlDialog = true } }
+
+    BackHandler(enabled = showCustomUrlDialog, onBack = onDismissCustomUrl)
+
+    val onSelectProvider: (DohProvider) -> Unit = remember(customUrl) {
+        { provider ->
+            Settings.doh_provider.setValue(provider.name)
+            AppDns.clearCache()
+            if (provider == DohProvider.CUSTOM && customUrl.isBlank()) {
+                showCustomUrlDialog = true
+            }
+        }
+    }
+
+    val onSaveCustomUrl: (String) -> Unit = remember {
+        { newUrl ->
+            Settings.doh_custom_url.setValue(newUrl)
+            AppDns.clearCache()
+            showCustomUrlDialog = false
+            SnackBar.success("DoH URL сохранён")
+        }
     }
 
     SettingsSectionTitle("DNS-over-HTTPS (DoH)")
@@ -80,14 +100,8 @@ internal fun NetworkSettingsSection() {
         DohProviderSelectionGroup(
             currentProvider = currentProvider,
             customUrl = customUrl,
-            onSelectProvider = { provider ->
-                Settings.doh_provider.setValue(provider.name)
-                AppDns.clearCache()
-                if (provider == DohProvider.CUSTOM && customUrl.isBlank()) {
-                    showCustomUrlDialog = true
-                }
-            },
-            onOpenCustomUrlDialog = { showCustomUrlDialog = true }
+            onSelectProvider = onSelectProvider,
+            onOpenCustomUrlDialog = onOpenCustomUrl
         )
 
         NetworkParamsGroup(
@@ -101,13 +115,8 @@ internal fun NetworkSettingsSection() {
     if (showCustomUrlDialog) {
         CustomDohUrlDialog(
             initialUrl = customUrl,
-            onDismiss = { showCustomUrlDialog = false },
-            onSave = { newUrl ->
-                Settings.doh_custom_url.setValue(newUrl)
-                AppDns.clearCache()
-                showCustomUrlDialog = false
-                SnackBar.success("DoH URL сохранён")
-            }
+            onDismiss = onDismissCustomUrl,
+            onSave = onSaveCustomUrl
         )
     }
 }
@@ -199,39 +208,46 @@ private fun NetworkParamsGroup(
 @Composable
 private fun DohDiagnosticsGroup() {
     val scope = rememberCoroutineScope()
+    val onDiagnose: () -> Unit = remember(scope) {
+        {
+            scope.launch {
+                SnackBar.info("Тестирование соединения...")
+                val result = withContext(Dispatchers.IO) {
+                    AppDns.diagnose("api.redgifs.com")
+                }
+                result.fold(
+                    onSuccess = { diag ->
+                        val ipText = diag.addresses.firstOrNull() ?: "нет IP"
+                        SnackBar.success("${diag.providerTitle}: ${diag.elapsedMs} мс ($ipText)")
+                    },
+                    onFailure = { err ->
+                        SnackBar.error("Ошибка DNS: ${err.message}")
+                    }
+                )
+            }
+        }
+    }
+    val onClearCache = remember {
+        {
+            AppDns.clearCache()
+            SnackBar.success("DNS-кэш успешно очищен")
+        }
+    }
+
     SettingsSectionTitle("Диагностика")
     SettingsGroup {
         SettingsListItem(
             icon = R.drawable.diagnostics_24,
             text = "Проверить DNS-резолвинг",
             subtitle = "Тестовый замер скорости отклика DoH-сервера",
-            onClick = {
-                scope.launch {
-                    SnackBar.info("Тестирование соединения...")
-                    val result = withContext(Dispatchers.IO) {
-                        AppDns.diagnose("api.redgifs.com")
-                    }
-                    result.fold(
-                        onSuccess = { diag ->
-                            val ipText = diag.addresses.firstOrNull() ?: "нет IP"
-                            SnackBar.success("${diag.providerTitle}: ${diag.elapsedMs} мс ($ipText)")
-                        },
-                        onFailure = { err ->
-                            SnackBar.error("Ошибка DNS: ${err.message}")
-                        }
-                    )
-                }
-            }
+            onClick = onDiagnose
         )
         SettingsDivider()
         SettingsListItem(
             icon = R.drawable.hard_disk_24,
             text = "Очистить DNS-кэш",
             subtitle = "Сброс всех закэшированных IP-адресов",
-            onClick = {
-                AppDns.clearCache()
-                SnackBar.success("DNS-кэш успешно очищен")
-            }
+            onClick = onClearCache
         )
     }
 }

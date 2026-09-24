@@ -93,8 +93,9 @@ class FileStringCacheTable(
 }
 
 private fun String.prettyJsonOrSelf(): String {
+    if (isBlank()) return this
     val trimmed = trimStart()
-    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return this
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return this
 
     return runCatching {
         val element = AppJson.parseToJsonElement(this)

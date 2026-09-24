@@ -87,7 +87,7 @@ fun CustomSeekBar(
     Box(
         modifier = modifier
             .height(thumbRadius * 2)
-            .onSizeChanged { newSize -> trackWidth = newSize.width.toFloat() }
+            .onSizeChanged { newSize -> trackWidth = newSize.width.toFloat().coerceAtLeast(1f) }
             .pointerInput(maxProgress) {
                 detectTapGestures { offset ->
                     val newValue = calculateCustomSeekBarSeekPosition(offset.x, trackWidth, maxProgress)

@@ -31,7 +31,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -151,8 +153,8 @@ fun AlbumFilterGenresDialog(
                         SelectableGenreRow(
                             item = item,
                             count = genreCountByTitle[item.title],
-                            onAddPlus = { onAddPlus(item) },
-                            onAddMinus = { onAddMinus(item) }
+                            onAddPlus = onAddPlus,
+                            onAddMinus = onAddMinus
                         )
                     }
                 }
@@ -174,57 +176,64 @@ private fun GenreSelectedChipsBar(
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         items(genresPlus, key = { "plus_${it.id.ifBlank { it.title }}" }) { genre ->
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.selectedBorder, RoundedCornerShape(6.dp))
-                    .background(palette.selected)
-                    .clickable { onRemovePlus(genre) }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "+ ${genre.title}",
-                    color = palette.selectedText,
-                    style = Theme.L.Type.rowValue.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = palette.selectedBorder,
-                    modifier = Modifier.size(14.dp)
-                )
+            val annotatedTitle = remember(genre.title) {
+                AnnotatedString("+ ${genre.title}")
             }
+            GenreChip(
+                text = annotatedTitle,
+                textColor = palette.selectedText,
+                borderColor = palette.selectedBorder,
+                backgroundColor = palette.selected,
+                onClick = { onRemovePlus(genre) }
+            )
         }
         items(genresMinus, key = { "minus_${it.id.ifBlank { it.title }}" }) { genre ->
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.excludedBorder, RoundedCornerShape(6.dp))
-                    .background(palette.excluded)
-                    .clickable { onRemoveMinus(genre) }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val annotatedGenre = buildAnnotatedString {
+            val annotatedGenre = remember(genre.title, palette.excludedBorder) {
+                buildAnnotatedString {
                     withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) { append("NOT") }
                     append(" ${genre.title}")
                 }
-                Text(
-                    text = annotatedGenre,
-                    color = palette.excludedText,
-                    style = Theme.L.Type.rowValue.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = palette.excludedBorder,
-                    modifier = Modifier.size(14.dp)
-                )
             }
+            GenreChip(
+                text = annotatedGenre,
+                textColor = palette.excludedText,
+                borderColor = palette.excludedBorder,
+                backgroundColor = palette.excluded,
+                onClick = { onRemoveMinus(genre) }
+            )
         }
+    }
+}
+
+@Composable
+private fun GenreChip(
+    text: AnnotatedString,
+    textColor: Color,
+    borderColor: Color,
+    backgroundColor: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(6.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            style = Theme.L.Type.rowValue.copy(fontWeight = FontWeight.Bold)
+        )
+        Spacer(Modifier.width(4.dp))
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = "Remove",
+            tint = borderColor,
+            modifier = Modifier.size(14.dp)
+        )
     }
 }
 
@@ -232,10 +241,12 @@ private fun GenreSelectedChipsBar(
 private fun SelectableGenreRow(
     item: FilterGenre,
     count: Int?,
-    onAddPlus: () -> Unit,
-    onAddMinus: () -> Unit
+    onAddPlus: (FilterGenre) -> Unit,
+    onAddMinus: (FilterGenre) -> Unit
 ) {
     val palette = StyleGenresTags.Palette
+    val onPlusClick = remember(item, onAddPlus) { { onAddPlus(item) } }
+    val onMinusClick = remember(item, onAddMinus) { { onAddMinus(item) } }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -257,7 +268,7 @@ private fun SelectableGenreRow(
                     .clip(RoundedCornerShape(6.dp))
                     .border(1.dp, palette.selectedBorder, RoundedCornerShape(6.dp))
                     .background(palette.field)
-                    .clickable { onAddPlus() }
+                    .clickable(onClick = onPlusClick)
                     .padding(6.dp)
             )
 
@@ -273,7 +284,7 @@ private fun SelectableGenreRow(
                     .clip(RoundedCornerShape(6.dp))
                     .border(1.dp, palette.excludedBorder, RoundedCornerShape(6.dp))
                     .background(palette.field)
-                    .clickable { onAddMinus() }
+                    .clickable(onClick = onMinusClick)
                     .padding(6.dp)
             )
 

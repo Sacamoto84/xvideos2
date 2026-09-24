@@ -146,40 +146,56 @@ object AppSettingsScreen : Screen {
             refreshRedSizes()
         }
 
-        val refreshFileStats: () -> Unit = {
-            scope.launch {
-                refreshStorageStats()
-                refreshRedSizes()
+        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+
+        val refreshFileStats: () -> Unit = remember(scope) {
+            {
+                scope.launch {
+                    refreshStorageStats()
+                    refreshRedSizes()
+                }
             }
         }
 
-        AppSettingsScreenContent(
-            onBack = { navigator.pop() },
-            imageCacheSizeBytes = imageCacheSizeBytes,
-            storageStats = storageStats,
-            sizeRedTotal = sizeRedTotal,
-            sizeRedDownload = sizeRedDownload,
-            onClearImageCache = {
+        val onClearImageCache: () -> Unit = remember(scope, context) {
+            {
                 scope.launch {
                     withContext(Dispatchers.IO) { CoilImageLoaderFactory.clearCache(context) }
                     refreshImageCacheSize()
                     SnackBar.success("Кэш картинок очищен")
                 }
-            },
-            onClearDownload = {
+            }
+        }
+
+        val onClearDownload: () -> Unit = remember(vm, scope) {
+            {
                 vm.downloadRed.deleteAll {
                     scope.launch {
                         refreshRedSizes()
                         SnackBar.success("Папка Download очищена")
                     }
                 }
-            },
-            data = SettingsDataHolders(
+            }
+        }
+
+        val data = remember(vm) {
+            SettingsDataHolders(
                 savedRed = vm.savedRed,
                 blockRed = vm.blockRed,
                 downloadRed = vm.downloadRed,
                 savedL = vm.savedL
-            ),
+            )
+        }
+
+        AppSettingsScreenContent(
+            onBack = onBack,
+            imageCacheSizeBytes = imageCacheSizeBytes,
+            storageStats = storageStats,
+            sizeRedTotal = sizeRedTotal,
+            sizeRedDownload = sizeRedDownload,
+            onClearImageCache = onClearImageCache,
+            onClearDownload = onClearDownload,
+            data = data,
             context = context,
             onBackupDataChanged = refreshFileStats,
             onRefreshFileStats = refreshFileStats
@@ -208,12 +224,9 @@ private fun AppSettingsScreenContent(
         scrollState.scrollTo(0)
     }
 
-    BackHandler(enabled = currentPage != SettingsPage.Main) {
-        currentPage = SettingsPage.Main
-    }
-    BackHandler(enabled = currentPage == SettingsPage.Main) {
-        onBack()
-    }
+    val onMainBack: () -> Unit = remember { { currentPage = SettingsPage.Main } }
+    BackHandler(enabled = currentPage != SettingsPage.Main, onBack = onMainBack)
+    BackHandler(enabled = currentPage == SettingsPage.Main, onBack = onBack)
 
     LaunchedEffect(currentPage) {
         if (currentPage == SettingsPage.Storage) {
@@ -221,6 +234,7 @@ private fun AppSettingsScreenContent(
         }
     }
 
+    val onOpenPage: (SettingsPage) -> Unit = remember { { currentPage = it } }
     val topCutout = getTopInsetDp()
 
     Scaffold(
@@ -234,7 +248,7 @@ private fun AppSettingsScreenContent(
                 .verticalScroll(scrollState),
             topCutout = topCutout,
             currentPage = currentPage,
-            onOpenPage = { currentPage = it },
+            onOpenPage = onOpenPage,
             imageCacheSizeBytes = imageCacheSizeBytes,
             storageStats = storageStats,
             sizeRedTotal = sizeRedTotal,

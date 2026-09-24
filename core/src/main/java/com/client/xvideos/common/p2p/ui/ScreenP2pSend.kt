@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +26,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.theme.LavenderDialog
+import com.client.xvideos.common.p2p.P2pEndpoint
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.P2pReceiveManager
@@ -122,6 +123,9 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
             )
         }
 
+        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+        val onConnect: (String) -> Unit = remember(controller) { { controller.connectTo(it) } }
+
         // Запуск поиска при наличии прав
         LaunchedEffect(hasPermissions) {
             if (hasPermissions) {
@@ -161,8 +165,8 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
                 TopAppBar(
                     title = { Text("Отправка файлов") },
                     navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                         }
                     }
                 )
@@ -207,10 +211,9 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
                         } else {
                             LazyColumn(modifier = Modifier.fillMaxSize()) {
                                 items(list, key = { it.id }) { ep ->
-                                    ListItem(
-                                        headlineContent = { Text(ep.name) },
-                                        supportingContent = { Text("Нажмите, чтобы подключиться") },
-                                        modifier = Modifier.clickable { controller.connectTo(ep.id) }
+                                    P2pEndpointItem(
+                                        endpoint = ep,
+                                        onConnect = onConnect
                                     )
                                 }
                             }
@@ -256,7 +259,7 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text("Готово ✓", style = MaterialTheme.typography.headlineMedium)
-                            Button(onClick = { navigator.pop() }, modifier = Modifier.padding(top = 16.dp)) {
+                            Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
                                 Text("Вернуться")
                             }
                         }
@@ -269,7 +272,7 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
                         ) {
                             Text("Ошибка", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.headlineSmall)
                             Text(s.message, textAlign = TextAlign.Center)
-                            Button(onClick = { navigator.pop() }, modifier = Modifier.padding(top = 16.dp)) {
+                            Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
                                 Text("Закрыть")
                             }
                         }
@@ -282,7 +285,7 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
         if (showPermissionDialog) {
             LavenderDialog(
                 title = "Нужны разрешения",
-                onDismiss = { navigator.pop() },
+                onDismiss = onBack,
                 body = androidx.compose.ui.text.AnnotatedString("Для поиска устройств рядом приложению нужны разрешения на Bluetooth и Wi-Fi."),
                 confirmText = "Предоставить",
                 onConfirm = {
@@ -300,4 +303,17 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
             )
         }
     }
+}
+
+@Composable
+private fun P2pEndpointItem(
+    endpoint: P2pEndpoint,
+    onConnect: (String) -> Unit
+) {
+    val handleConnect = remember(endpoint.id, onConnect) { { onConnect(endpoint.id) } }
+    ListItem(
+        headlineContent = { Text(endpoint.name) },
+        supportingContent = { Text("Нажмите, чтобы подключиться") },
+        modifier = Modifier.clickable(onClick = handleConnect)
+    )
 }
