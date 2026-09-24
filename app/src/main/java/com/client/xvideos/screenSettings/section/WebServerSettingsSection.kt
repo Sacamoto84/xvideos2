@@ -60,6 +60,27 @@ import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+private val CONNECTION_CARD_SHAPE = RoundedCornerShape(24.dp)
+private val NETWORK_INDICATOR_SHAPE = RoundedCornerShape(5.dp)
+private val URL_BOX_SHAPE = RoundedCornerShape(12.dp)
+private val QR_BOX_SHAPE = RoundedCornerShape(18.dp)
+private val ACTION_BUTTON_SHAPE = RoundedCornerShape(12.dp)
+private val NETWORK_ACTIVE_COLOR = Color(0xFF00E676)
+private val URL_BOX_BG_COLOR = Color(0xFF25232A)
+private val ERROR_TEXT_COLOR = Color(0xFFFF5252)
+private val COPY_BUTTON_TEXT_COLOR = Color(0xFF2E2961)
+private val QR_BOX_SIZE = 210.dp
+
+private const val TITLE_WEBSERVER = "Веб-сервер Wi-Fi"
+private const val TITLE_CONNECTION = "Подключение"
+private const val TEXT_STREAM_TO_PC = "Трансляция на ПК"
+private const val TEXT_KEEP_AWAKE = "Не усыплять Wi-Fi и процессор"
+private const val TEXT_KEEP_AWAKE_SUBTITLE = "Стабильный стриминг при заблокированном экране"
+private const val TEXT_SERVER_STOPPED = "Сервер выключен"
+private const val TEXT_COPY = "Скопировать"
+private const val TEXT_SHARE = "Поделиться"
+private const val TEXT_SHARE_CHOOSER = "Поделиться ссылкой"
+
 @Suppress("DEPRECATION")
 @Composable
 internal fun WebServerSettingsSection() {
@@ -104,22 +125,22 @@ internal fun WebServerSettingsSection() {
         }
     }
     val onKeepAwakeChange: (Boolean) -> Unit = remember {
-        {
-            Settings.web_server_keep_awake.setValue(it)
+        { enabled ->
+            Settings.web_server_keep_awake.setValue(enabled)
         }
     }
 
     val serverSubtitle = remember(isRunning, serverUrl) {
-        if (isRunning) "Работает: $serverUrl" else "Сервер выключен"
+        if (isRunning) "Работает: $serverUrl" else TEXT_SERVER_STOPPED
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        SettingsSectionTitle("Веб-сервер Wi-Fi")
+        SettingsSectionTitle(TITLE_WEBSERVER)
 
         SettingsGroup {
             SettingsSwitchRow(
                 icon = R.drawable.hard_drive_2_24,
-                text = "Трансляция на ПК",
+                text = TEXT_STREAM_TO_PC,
                 subtitle = serverSubtitle,
                 value = isRunning,
                 onValueChange = onToggleServer
@@ -129,8 +150,8 @@ internal fun WebServerSettingsSection() {
 
             SettingsSwitchRow(
                 icon = R.drawable.memory_24,
-                text = "Не усыплять Wi-Fi и процессор",
-                subtitle = "Стабильный стриминг при заблокированном экране",
+                text = TEXT_KEEP_AWAKE,
+                subtitle = TEXT_KEEP_AWAKE_SUBTITLE,
                 value = keepAwake,
                 onValueChange = onKeepAwakeChange
             )
@@ -140,7 +161,7 @@ internal fun WebServerSettingsSection() {
             Spacer(Modifier.height(8.dp))
             Text(
                 text = "Ошибка: $lastError",
-                color = Color(0xFFFF5252),
+                color = ERROR_TEXT_COLOR,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
@@ -149,7 +170,7 @@ internal fun WebServerSettingsSection() {
         val currentServerUrl = serverUrl
         if (isRunning && currentServerUrl != null) {
             Spacer(Modifier.height(16.dp))
-            SettingsSectionTitle("Подключение")
+            SettingsSectionTitle(TITLE_CONNECTION)
             WebServerConnectionCard(
                 serverUrl = currentServerUrl,
                 networkName = networkName,
@@ -179,7 +200,7 @@ private fun WebServerConnectionCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(CONNECTION_CARD_SHAPE)
             .background(SettingsCardColor)
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -193,8 +214,8 @@ private fun WebServerConnectionCard(
             Box(
                 modifier = Modifier
                     .size(10.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(Color(0xFF00E676))
+                    .clip(NETWORK_INDICATOR_SHAPE)
+                    .background(NETWORK_ACTIVE_COLOR)
             )
             Spacer(Modifier.width(8.dp))
             Text(
@@ -209,8 +230,8 @@ private fun WebServerConnectionCard(
         // Кликабельный URL
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFF25232A))
+                .clip(URL_BOX_SHAPE)
+                .background(URL_BOX_BG_COLOR)
                 .clickable(onClick = onCopyUrl)
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
@@ -229,8 +250,8 @@ private fun WebServerConnectionCard(
         if (qrBitmap != null) {
             Box(
                 modifier = Modifier
-                    .size(210.dp)
-                    .clip(RoundedCornerShape(18.dp))
+                    .size(QR_BOX_SIZE)
+                    .clip(QR_BOX_SHAPE)
                     .background(Color.White)
                     .padding(12.dp),
                 contentAlignment = Alignment.Center
@@ -284,16 +305,15 @@ private fun WebServerActionButtons(
                 putExtra(Intent.EXTRA_TEXT, serverUrl)
                 type = "text/plain"
             }
-            val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой")
+            val shareIntent = Intent.createChooser(sendIntent, TEXT_SHARE_CHOOSER)
             context.startActivity(shareIntent)
         }
     }
 
     val copyButtonColors = ButtonDefaults.buttonColors(
         containerColor = SettingsAccentColor,
-        contentColor = Color(0xFF2E2961)
+        contentColor = COPY_BUTTON_TEXT_COLOR
     )
-    val buttonShape = remember { RoundedCornerShape(12.dp) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -303,22 +323,21 @@ private fun WebServerActionButtons(
             onClick = onCopy,
             modifier = Modifier.weight(1f),
             colors = copyButtonColors,
-            shape = buttonShape
+            shape = ACTION_BUTTON_SHAPE
         ) {
             Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
-            Text("Скопировать", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Text(TEXT_COPY, fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
 
         OutlinedButton(
             onClick = onShare,
             modifier = Modifier.weight(1f),
-            shape = buttonShape
+            shape = ACTION_BUTTON_SHAPE
         ) {
             Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = SettingsRowTextPrimary)
             Spacer(Modifier.width(6.dp))
-            Text("Поделиться", fontSize = 13.sp, color = SettingsRowTextPrimary)
+            Text(TEXT_SHARE, fontSize = 13.sp, color = SettingsRowTextPrimary)
         }
     }
 }
-

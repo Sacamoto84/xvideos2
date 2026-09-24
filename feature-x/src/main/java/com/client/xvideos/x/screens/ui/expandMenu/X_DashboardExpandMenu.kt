@@ -2,7 +2,6 @@ package com.client.xvideos.x.screens.ui.expandMenu
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
@@ -30,6 +29,14 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+private val BUTTON_VERT_SIZE = 26.dp
+private val MENU_SHADOW_ELEVATION = 2.dp
+private val MENU_TONAL_ELEVATION = 16.dp
+private const val FAVORITE_ACTION_DELAY_MS = 50L
+private const val TEXT_FAVORITE = "Избранное"
+private const val TEXT_SAVE = "Сохранить"
+private const val TEXT_SAVE_TO_GALLERY = "В галерею"
+
 @Composable
 fun X_DashboardExpandMenu(
     isFavorite: Boolean,
@@ -39,28 +46,23 @@ fun X_DashboardExpandMenu(
     onSaveToGallery: () -> Unit = {},
     isExpanded: Boolean = false
 ) {
-
     var expanded by remember(isExpanded) { mutableStateOf(isExpanded) }
     val onOpen = remember { { expanded = true } }
     val onDismissMenu = remember { { expanded = false } }
 
-    val size = 26.dp
-
     Box(
         modifier = Modifier,
         contentAlignment = Alignment.Center
-    )
-    {
-
-        ButtonMoveVert(size, onOpen)
+    ) {
+        ButtonMoveVert(BUTTON_VERT_SIZE, onOpen)
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = onDismissMenu,
             containerColor = Theme.ExpandMenu.backgroundColor,
-            shadowElevation = 2.dp, tonalElevation = 16.dp
-        )
-        {
+            shadowElevation = MENU_SHADOW_ELEVATION,
+            tonalElevation = MENU_TONAL_ELEVATION
+        ) {
             X_DashboardExpandMenuContent(
                 isFavorite = isFavorite,
                 onFavoriteAdd = onFavoriteAdd,
@@ -70,7 +72,6 @@ fun X_DashboardExpandMenu(
                 onDismiss = onDismissMenu
             )
         }
-
     }
 }
 
@@ -89,12 +90,13 @@ fun X_DashboardExpandMenuContent(
         {
             onDismiss()
             scope.launch {
-                delay(50)
-                when (isFavorite) {
-                    true -> onFavoriteRemove()
-                    false -> onFavoriteAdd()
+                delay(FAVORITE_ACTION_DELAY_MS)
+                if (isFavorite) {
+                    onFavoriteRemove()
+                } else {
+                    onFavoriteAdd()
                 }
-            }.let {}
+            }
         }
     }
     val handleDownload = remember(onDismiss, onDownload) {
@@ -113,37 +115,51 @@ fun X_DashboardExpandMenuContent(
         if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
     }
 
-    DropdownMenuItem(
-        text = { Text("Избранное") },
-        onClick = handleFavorite,
-        leadingIcon = {
+    val favoriteLeadingIcon: @Composable () -> Unit = remember(favoriteIcon) {
+        {
             Icon(
                 imageVector = favoriteIcon,
                 contentDescription = null
             )
         }
-    )
-
-    DropdownMenuItem(
-        text = { Text("Сохранить") },
-        onClick = handleDownload,
-        leadingIcon = {
+    }
+    val saveLeadingIcon: @Composable () -> Unit = remember {
+        {
             Icon(
                 Icons.Outlined.Save,
                 contentDescription = null
             )
         }
-    )
-
-    DropdownMenuItem(
-        text = { Text("В галерею") },
-        onClick = handleSaveToGallery,
-        leadingIcon = {
+    }
+    val galleryLeadingIcon: @Composable () -> Unit = remember {
+        {
             Icon(
                 Icons.Outlined.SaveAlt,
                 contentDescription = null
             )
         }
+    }
+
+    val favoriteItemText: @Composable () -> Unit = remember { { Text(TEXT_FAVORITE) } }
+    val saveItemText: @Composable () -> Unit = remember { { Text(TEXT_SAVE) } }
+    val galleryItemText: @Composable () -> Unit = remember { { Text(TEXT_SAVE_TO_GALLERY) } }
+
+    DropdownMenuItem(
+        text = favoriteItemText,
+        onClick = handleFavorite,
+        leadingIcon = favoriteLeadingIcon
+    )
+
+    DropdownMenuItem(
+        text = saveItemText,
+        onClick = handleDownload,
+        leadingIcon = saveLeadingIcon
+    )
+
+    DropdownMenuItem(
+        text = galleryItemText,
+        onClick = handleSaveToGallery,
+        leadingIcon = galleryLeadingIcon
     )
 }
 
@@ -166,8 +182,8 @@ fun Preview_X_DashboardExpandMenu_Content() {
     XvideosTheme {
         Surface(
             color = Color(0xFFF2EDF7),
-            tonalElevation = 16.dp,
-            shadowElevation = 2.dp
+            tonalElevation = MENU_TONAL_ELEVATION,
+            shadowElevation = MENU_SHADOW_ELEVATION
         ) {
             Column {
                 X_DashboardExpandMenuContent(

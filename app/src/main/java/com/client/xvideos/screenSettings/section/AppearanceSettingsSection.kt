@@ -43,6 +43,22 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
+private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
+private val PREVIEW_CARD_SHAPE = RoundedCornerShape(24.dp)
+private val PREVIEW_GRADIENT = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF2C194D),
+        Color(0xFF880E4F),
+        Color(0xFF0D47A1),
+        Color(0xFF004D40)
+    )
+)
+private val CIRCLE_COLOR_PINK = Color(0xFFE91E63).copy(alpha = 0.85f)
+private val CIRCLE_COLOR_ORANGE = Color(0xFFFF9800).copy(alpha = 0.85f)
+private val CIRCLE_COLOR_CYAN = Color(0xFF00E5FF).copy(alpha = 0.70f)
+private const val TITLE_PREVIEW = "Предпросмотр"
+private const val TITLE_SCROLL_BUTTONS = "Кнопки быстрой прокрутки"
+
 /**
  * Экран настроек «Отображение» (Appearance).
  * Содержит интерактивное превью и переключатель режима кнопок быстрой прокрутки (Заливка, Блюр, Стекло).
@@ -57,7 +73,7 @@ internal fun AppearanceSettingsSection() {
         { effect -> Settings.scroll_buttons_effect.setValue(effect.name) }
     }
 
-    SettingsSectionTitle("Предпросмотр")
+    SettingsSectionTitle(TITLE_PREVIEW)
     ScrollButtonPreviewCard(
         hazeState = previewHazeState,
         currentEffect = currentEffect
@@ -65,7 +81,7 @@ internal fun AppearanceSettingsSection() {
 
     Spacer(Modifier.height(8.dp))
 
-    SettingsSectionTitle("Кнопки быстрой прокрутки")
+    SettingsSectionTitle(TITLE_SCROLL_BUTTONS)
     SettingsGroup {
         ScrollButtonEffect.entries.forEachIndexed { index, effect ->
             key(effect.name) {
@@ -96,7 +112,7 @@ private fun ScrollEffectItem(
                 onClick = null,
                 colors = RadioButtonDefaults.colors(
                     selectedColor = SettingsAccentColor,
-                    unselectedColor = Color(0xFF938F99)
+                    unselectedColor = RADIO_UNSELECTED_COLOR
                 )
             )
         }
@@ -120,24 +136,12 @@ private fun ScrollButtonPreviewCard(
     hazeState: HazeState,
     currentEffect: ScrollButtonEffect
 ) {
-    val previewCardShape = remember { RoundedCornerShape(24.dp) }
-    val previewGradient = remember {
-        Brush.linearGradient(
-            colors = listOf(
-                Color(0xFF2C194D),
-                Color(0xFF880E4F),
-                Color(0xFF0D47A1),
-                Color(0xFF004D40)
-            )
-        )
-    }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(180.dp)
-            .clip(previewCardShape)
+            .clip(PREVIEW_CARD_SHAPE)
             .background(SettingsCardColor)
     ) {
         // Цветной имитационный фон галереи, помеченный как hazeSource
@@ -145,7 +149,7 @@ private fun ScrollButtonPreviewCard(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSource(hazeState)
-                .background(previewGradient)
+                .background(PREVIEW_GRADIENT)
         ) {
             // Декоративные цветные круги для проверки преломления и размытия
             Box(
@@ -154,14 +158,14 @@ private fun ScrollButtonPreviewCard(
                     .align(Alignment.TopStart)
                     .padding(start = 16.dp, top = 16.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFE91E63).copy(alpha = 0.85f))
+                    .background(CIRCLE_COLOR_PINK)
             )
             Box(
                 modifier = Modifier
                     .size(90.dp)
                     .align(Alignment.BottomCenter)
                     .clip(CircleShape)
-                    .background(Color(0xFFFF9800).copy(alpha = 0.85f))
+                    .background(CIRCLE_COLOR_ORANGE)
             )
             Box(
                 modifier = Modifier
@@ -169,7 +173,7 @@ private fun ScrollButtonPreviewCard(
                     .align(Alignment.CenterEnd)
                     .padding(end = 24.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF00E5FF).copy(alpha = 0.70f))
+                    .background(CIRCLE_COLOR_CYAN)
             )
         }
 

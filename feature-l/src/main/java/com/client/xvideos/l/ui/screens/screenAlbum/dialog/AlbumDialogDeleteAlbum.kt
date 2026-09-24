@@ -19,7 +19,10 @@ import com.client.xvideos.l.model.Content
 import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
 
-private val albumDialogCoverShape = RoundedCornerShape(8.dp)
+private val ALBUM_DIALOG_COVER_SHAPE = RoundedCornerShape(8.dp)
+private val ALBUM_COVER_SIZE = 96.dp
+private const val DIALOG_TITLE = "Удалить Альбом?"
+private const val CONFIRM_TEXT = "Удалить"
 
 @Composable
 fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick: () -> Unit) {
@@ -31,20 +34,23 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
             append("» из сохранённых?")
         }
     }
-
-    LavenderDialog(
-        title = "Удалить Альбом?",
-        onDismiss = onDismiss,
-        icon = {
+    val iconContent: @Composable () -> Unit = remember(coverUrl) {
+        {
             UrlImage(
                 url = coverUrl,
                 modifier = Modifier
-                    .size(96.dp)
-                    .clip(albumDialogCoverShape)
+                    .size(ALBUM_COVER_SIZE)
+                    .clip(ALBUM_DIALOG_COVER_SHAPE)
             )
-        },
+        }
+    }
+
+    LavenderDialog(
+        title = DIALOG_TITLE,
+        onDismiss = onDismiss,
+        icon = iconContent,
         body = dialogBody,
-        confirmText = "Удалить",
+        confirmText = CONFIRM_TEXT,
         onConfirm = onClick,
         destructive = true,
     )
@@ -53,10 +59,9 @@ fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick
 @Preview
 @Composable
 fun AlbumDialogDeleteAlbumPreview() {
-
     val sampleAlbumDetails = AlbumDetails(
-        created = 1678886400.0, // Example timestamp
-        modified = 1678886400.0, // Example timestamp
+        created = 1678886400.0,
+        modified = 1678886400.0,
         id = "album123",
         title = "Summer Vacation",
         tags = emptyList(),
@@ -78,4 +83,3 @@ fun AlbumDialogDeleteAlbumPreview() {
         onClick = {}
     )
 }
-

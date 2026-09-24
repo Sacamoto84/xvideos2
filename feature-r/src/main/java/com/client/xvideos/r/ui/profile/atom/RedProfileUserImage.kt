@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,16 +46,33 @@ private val profileAvatarShape = RoundedCornerShape(8.dp)
 private val profileFollowButtonShape = RoundedCornerShape(8.dp)
 private val profileStatLabelColor = Color(0xFF9E9DA9)
 private val profileStatDividerColor = Color(0xFF3D3C53)
+private val AVATAR_SIZE = 96.dp
+private const val TEXT_FOLLOW = "Follow"
+private const val TEXT_UNFOLLOW = "Unfollow"
+private const val TEXT_SUBSCRIBERS = "Подписчиков"
+private const val TEXT_VIEWS = "Просмотров"
+private const val TEXT_POSTS = "Постов"
 
 @Composable
 fun RedProfileCreaterInfo(item: UserInfo, savedRed: () -> SavedRed) {
-    val isFollow = savedRed().creators.list.any { it.username == item.username }
+    val isFollow by remember(item.username) {
+        derivedStateOf {
+            savedRed().creators.list.any { it.username == item.username }
+        }
+    }
+    val onFollowClick = remember(isFollow, item, savedRed) {
+        {
+            if (isFollow) {
+                savedRed().creators.remove(item.username)
+            } else {
+                savedRed().creators.add(item)
+            }
+        }
+    }
     RedProfileCreaterInfo(
         item = item,
         isFollow = isFollow,
-        onFollowClick = {
-            if (isFollow) savedRed().creators.remove(item.username) else savedRed().creators.add(item)
-        }
+        onFollowClick = onFollowClick
     )
 }
 
@@ -69,6 +88,13 @@ fun RedProfileCreaterInfo(
     val aboutTitle = remember(item.username) { "About ${item.username}:" }
     val descriptionTrimmed = remember(item.description) { item.description?.trimMargin() }
 
+    val followButtonText = if (isFollow) TEXT_UNFOLLOW else TEXT_FOLLOW
+    val followButtonTextColor = if (isFollow) Color.White else Color.Black
+    val followButtonBgColor = if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow
+    val followButtonBorderModifier = remember(isFollow) {
+        if (isFollow) Modifier.border(1.dp, Color.White, profileFollowButtonShape) else Modifier
+    }
+
     Column(modifier = Modifier.padding(horizontal = 4.dp).fillMaxWidth()) {
 
         // Top info
@@ -79,13 +105,13 @@ fun RedProfileCreaterInfo(
             if (item.profileImageUrl != null) {
                 UrlImage(
                     item.profileImageUrl,
-                    modifier = Modifier.clip(profileAvatarShape).size(96.dp)
+                    modifier = Modifier.clip(profileAvatarShape).size(AVATAR_SIZE)
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .clip(profileAvatarShape)
-                        .size(96.dp)
+                        .size(AVATAR_SIZE)
                         .background(Color.DarkGray),
                     contentAlignment = Alignment.Center
                 ) {
@@ -99,7 +125,7 @@ fun RedProfileCreaterInfo(
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth().height(96.dp),
+                modifier = Modifier.fillMaxWidth().height(AVATAR_SIZE),
                 verticalArrangement = Arrangement.SpaceAround
             ) {
                 Row(
@@ -131,18 +157,14 @@ fun RedProfileCreaterInfo(
                         .fillMaxWidth()
                         .height(48.dp)
                         .clip(profileFollowButtonShape)
-                        .background(if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow)
-                        .border(
-                            1.dp,
-                            if (isFollow) Color.White else Color.Transparent,
-                            profileFollowButtonShape
-                        )
+                        .background(followButtonBgColor)
+                        .then(followButtonBorderModifier)
                         .clickable(onClick = onFollowClick),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        if (isFollow) "Unfollow" else "Follow",
-                        color = if (isFollow) Color.White else Color.Black,
+                        followButtonText,
+                        color = followButtonTextColor,
                         fontFamily = Theme.R.fontFamilyDMsanss,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
@@ -161,7 +183,7 @@ fun RedProfileCreaterInfo(
                 modifier = Modifier.fillMaxWidth().weight(1f)
             ) {
                 Text(followersPretty, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium)
-                Text("Подписчиков", color = profileStatLabelColor, fontFamily = Theme.R.fontFamilyPopinsRegular)
+                Text(TEXT_SUBSCRIBERS, color = profileStatLabelColor, fontFamily = Theme.R.fontFamilyPopinsRegular)
             }
 
             Box(Modifier.width(1.dp).height(24.dp).background(profileStatDividerColor))
@@ -176,7 +198,7 @@ fun RedProfileCreaterInfo(
                     fontFamily = Theme.R.fontFamilyPopinsMedium
                 )
                 Text(
-                    "Просмотров",
+                    TEXT_VIEWS,
                     color = profileStatLabelColor,
                     fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
@@ -194,7 +216,7 @@ fun RedProfileCreaterInfo(
                     fontFamily = Theme.R.fontFamilyPopinsMedium
                 )
                 Text(
-                    "Постов",
+                    TEXT_POSTS,
                     color = profileStatLabelColor,
                     fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
@@ -221,7 +243,6 @@ fun RedProfileCreaterInfo(
 
         Spacer(Modifier.height(8.dp))
     }
-
 }
 
 @Preview

@@ -25,12 +25,15 @@ import androidx.compose.ui.unit.dp
 
 private val buttonUpBorderColor = Color(0x80757575)
 private val buttonUpRoundedShape = RoundedCornerShape(8.dp)
+private val BUTTON_UP_HEIGHT = 46.dp
+private val DEFAULT_BUTTON_UP_WIDTH = 32.dp
+private val DEFAULT_BUTTON_UP_CIRCLE_SIZE = 46.dp
 
 @Composable
-fun ButtonUp(width: Dp = 32.dp, onClick: () -> Unit) {
+fun ButtonUp(width: Dp = DEFAULT_BUTTON_UP_WIDTH, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .height(46.dp)
+            .height(BUTTON_UP_HEIGHT)
             .width(width)
             .clip(buttonUpRoundedShape)
             .border(1.dp, buttonUpBorderColor, buttonUpRoundedShape)
@@ -47,7 +50,7 @@ fun ButtonUp(width: Dp = 32.dp, onClick: () -> Unit) {
 }
 
 @Composable
-fun ButtonUpCircle(size: Dp = 46.dp, onClick: () -> Unit) {
+fun ButtonUpCircle(size: Dp = DEFAULT_BUTTON_UP_CIRCLE_SIZE, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(size)
@@ -76,5 +79,3 @@ fun ButtonUpPreview() {
 fun ButtonUpCirclePreview() {
     ButtonUpCircle(onClick = {})
 }
-
-

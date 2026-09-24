@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,26 +21,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val buttonIconBorderColor = Color(0x80757575)
+private val BUTTON_ICON_BORDER_COLOR = Color(0x80757575)
+private val BUTTON_ICON_SHAPE = RoundedCornerShape(8.dp)
+private val BUTTON_ICON_SIZE = 46.dp
 
 @Composable
 fun ButtonIcon(imageVector: ImageVector, onClick: () -> Unit) {
-    val buttonShape = remember { RoundedCornerShape(8.dp) }
-
     Box(
         modifier = Modifier
-            .size(46.dp)
-            .clip(buttonShape)
-            .border(1.dp, buttonIconBorderColor, buttonShape)
+            .size(BUTTON_ICON_SIZE)
+            .clip(BUTTON_ICON_SHAPE)
+            .border(1.dp, BUTTON_ICON_BORDER_COLOR, BUTTON_ICON_SHAPE)
             .background(Theme.R.colorCommonBackground)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector,
+            imageVector = imageVector,
             contentDescription = null,
-            tint = Color.LightGray,
-            modifier = Modifier
+            tint = Color.LightGray
         )
     }
 }

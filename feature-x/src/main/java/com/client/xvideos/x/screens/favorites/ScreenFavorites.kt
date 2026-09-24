@@ -66,6 +66,21 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.normalizeXUrl
 import com.composables.core.HorizontalSeparator
 
+private const val FAVORITE_CARD_ASPECT_RATIO = 352f / 198f
+private const val GRID_COLUMNS = 2
+private const val CONTENT_TYPE_HEADER = "header"
+private const val CONTENT_TYPE_FAVORITE_ROW = "favorite_row"
+private const val TEXT_EMPTY = "Пусто"
+private const val TEXT_FAVORITES_TITLE = "Избранное"
+private const val TEXT_DOWNLOAD = "Скачать"
+private const val TEXT_IN_GALLERY = "В галерею"
+private const val TEXT_DELETE = "Удалить"
+private const val TEXT_ACTIONS = "Действия"
+private val ACTION_ICON_BUTTON_SIZE = 48.dp
+private val ACTION_ICON_SIZE = 24.dp
+private val SEPARATOR_COLOR = Color(0xFF9E9E9E)
+private val durationOffsetY = (-3).dp
+
 class ScreenFavorites : Screen {
 
     override val key: ScreenKey = "ScreenFavorites"
@@ -163,23 +178,23 @@ private fun FavoritesContent(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FavoritesHeader(topCutout = topCutout)
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Пусто", color = Color.Gray, fontSize = 16.sp)
+                        Text(TEXT_EMPTY, color = Color.Gray, fontSize = 16.sp)
                     }
                 }
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(GRID_COLUMNS),
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = padding.calculateBottomPadding())
             ) {
-                item(key = "header", contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
+                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER, span = { GridItemSpan(maxLineSpan) }) {
                     FavoritesHeader(topCutout = topCutout)
                 }
 
-                items(items = favorites, key = { item -> item.id }, contentType = { "favorite_row" }) { item ->
+                items(items = favorites, key = { item -> item.id }, contentType = { CONTENT_TYPE_FAVORITE_ROW }) { item ->
                     FavoriteRow(
                         item = item,
                         localUrl = localUrlOf(item),
@@ -204,13 +219,13 @@ private fun FavoritesHeader(topCutout: Dp) {
             .padding(top = topCutout)
     ) {
         Text(
-            "Избранное",
+            TEXT_FAVORITES_TITLE,
             color = Color.White,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
         )
-        HorizontalSeparator(color = Color(0xFF9E9E9E))
+        HorizontalSeparator(color = SEPARATOR_COLOR)
     }
 }
 
@@ -238,49 +253,32 @@ private fun FavoriteRow(
             .fillMaxWidth()
             .padding(vertical = 1.dp)
             .padding(horizontal = 1.dp)
-            //.clip(RoundedCornerShape(8.dp))
-            //.border(1.dp, Color.DarkGray, RoundedCornerShape(8.dp))
-            .aspectRatio(352f / 198f)
+            .aspectRatio(FAVORITE_CARD_ASPECT_RATIO)
             .background(Color.DarkGray)
-
     ) {
-
-            when {
-
-                // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.
-                localUrl != null && onPlayLocalThis != null -> {
-                    UrlImage(
-                        posterUrl,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clickable(onClick = onPlayLocalThis)
-                    )
-                    // Значок «скачано» (как в R — IconSave18).
-                    Row(
-                        modifier = Modifier
-                        //.align(Alignment.TopStart)
-                        //.padding(6.dp)
-                            //.background(Color(0x99000000), RoundedCornerShape(50))
-                        .padding(4.dp)
-                    ) {
-                        IconSave18()
-                    }
-                }
-
-                // В preview видео-компонент не поднимаем (нет контекста/сети) — только оверлей.
-                //LocalInspectionMode.current -> DurationOverlay(item.duration)
-                // Не скачано: обычный сетевой превью-компонент.
-                // Раньше оба обработчика были пустыми, и открыть видео из
-                // избранного было нельзя вовсе: тап переключал превью, а долгий
-                // и двойной не делали ничего. Жесты те же, что в ленте раздела
-                // и на экране тега.
-                else -> UrlVideoImageAndLongClickX(
-                    item,
-                    onLongClick = onOpenThisVideo,
-                    onDoubleClick = onOpenThisVideo,
+        when {
+            // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.
+            localUrl != null && onPlayLocalThis != null -> {
+                UrlImage(
+                    posterUrl,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(onClick = onPlayLocalThis)
                 )
+                // Значок «скачано» (как в R — IconSave18).
+                Row(
+                    modifier = Modifier.padding(4.dp)
+                ) {
+                    IconSave18()
+                }
             }
 
+            else -> UrlVideoImageAndLongClickX(
+                item,
+                onLongClick = onOpenThisVideo,
+                onDoubleClick = onOpenThisVideo,
+            )
+        }
 
         Row(Modifier.align(Alignment.TopEnd)) {
             FavoriteActionsExpandMenu(
@@ -291,9 +289,6 @@ private fun FavoriteRow(
         }
 
         Row(Modifier.align(Alignment.BottomEnd).padding(end = 8.dp)) { DurationOverlay(item.duration) }
-
-
-
     }
 }
 
@@ -333,23 +328,23 @@ private fun FavoriteActionsExpandMenu(
     ) {
         IconButton(
             modifier = Modifier
-                .size(48.dp)
+                .size(ACTION_ICON_BUTTON_SIZE)
                 .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
             onClick = {}
         ) {
             Icon(
                 Icons.Default.MoreVert,
-                contentDescription = "Действия",
+                contentDescription = TEXT_ACTIONS,
                 tint = Color.Black,
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(ACTION_ICON_SIZE)
                     .offset(0.5.dp, 0.5.dp)
             )
             Icon(
                 Icons.Default.MoreVert,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(ACTION_ICON_SIZE)
             )
         }
 
@@ -359,14 +354,12 @@ private fun FavoriteActionsExpandMenu(
             modifier = Modifier.width(IntrinsicSize.Min),
             containerColor = Theme.ExpandMenu.backgroundColor
         ) {
-            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, "Скачать", onClick = handleDownload)
-            ExpandMenuActionItem(Icons.Filled.SaveAlt, "В галерею", onClick = handleSaveToGallery)
-            ExpandMenuActionItem(Icons.Filled.Delete, "Удалить", onClick = handleDelete)
+            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, TEXT_DOWNLOAD, onClick = handleDownload)
+            ExpandMenuActionItem(Icons.Filled.SaveAlt, TEXT_IN_GALLERY, onClick = handleSaveToGallery)
+            ExpandMenuActionItem(Icons.Filled.Delete, TEXT_DELETE, onClick = handleDelete)
         }
     }
 }
-
-private val durationOffsetY = (-3).dp
 
 /** Продолжительность видео в правом верхнем углу с «тенью» (как в оригинале). */
 @Composable

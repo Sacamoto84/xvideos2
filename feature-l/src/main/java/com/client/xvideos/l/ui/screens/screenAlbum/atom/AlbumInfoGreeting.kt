@@ -25,7 +25,8 @@ import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
 import com.client.xvideos.l.model.Tag
 
-private val genreShape = RoundedCornerShape(4.dp)
+private val GENRE_CHIP_SHAPE = RoundedCornerShape(4.dp)
+private const val LABEL_GENRES = "Genres: "
 
 @Composable
 fun AlbumInfoGreeting(
@@ -43,7 +44,7 @@ fun AlbumInfoGreeting(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Genres: ",
+            text = LABEL_GENRES,
             color = Theme.L.textColor,
             style = headerStyle,
             modifier = Modifier.padding(vertical = 4.dp)
@@ -56,8 +57,8 @@ fun AlbumInfoGreeting(
                     text = item.title,
                     modifier = Modifier
                         .padding(horizontal = 2.dp, vertical = 2.dp)
-                        .border(1.dp, Theme.L.secondaryColor, genreShape)
-                        .clip(genreShape)
+                        .border(1.dp, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
+                        .clip(GENRE_CHIP_SHAPE)
                         .clickable(onClick = handleClick)
                         .padding(4.dp),
                     color = Theme.L.primaryColor,
@@ -99,9 +100,3 @@ fun AlbumInfoGreetingPreview() {
     )
     AlbumInfoGreeting(parsed = parsed)
 }
-
-
-
-
-
-

@@ -20,11 +20,18 @@ import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.common.snackbar.SnackBar
 
+private const val TEXT_BACKGROUND_RECEIVE = "Приём в фоне"
+private const val TEXT_ENABLED = "Включён"
+private const val TEXT_DISABLED = "Выключен"
+private const val MSG_PERMISSIONS_REQUIRED = "Нужны разрешения для работы P2P в фоне"
+private const val MSG_BG_RECEIVE_ENABLED = "Приём в фоне включен"
+private const val MSG_BG_RECEIVE_DISABLED = "Приём в фоне выключен"
+
 @Composable
 internal fun P2PSettingsSection() {
     val context = LocalContext.current
     val bgReceive by Settings.p2p_background_receive.field.collectAsStateWithLifecycle()
-    
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -32,7 +39,7 @@ internal fun P2PSettingsSection() {
             toggleP2pService(context, true)
         } else {
             Settings.p2p_background_receive.setValue(false)
-            SnackBar.error("Нужны разрешения для работы P2P в фоне")
+            SnackBar.error(MSG_PERMISSIONS_REQUIRED)
         }
     }
 
@@ -48,18 +55,18 @@ internal fun P2PSettingsSection() {
             } else {
                 toggleP2pService(context, false)
             }
-            SnackBar.success(if (enabled) "Приём в фоне включен" else "Приём в фоне выключен")
+            SnackBar.success(if (enabled) MSG_BG_RECEIVE_ENABLED else MSG_BG_RECEIVE_DISABLED)
         }
     }
 
     val bgReceiveSubtitle = remember(bgReceive) {
-        if (bgReceive) "Включён" else "Выключен"
+        if (bgReceive) TEXT_ENABLED else TEXT_DISABLED
     }
 
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.icon_red,
-            text = "Приём в фоне",
+            text = TEXT_BACKGROUND_RECEIVE,
             subtitle = bgReceiveSubtitle,
             value = bgReceive,
             onValueChange = onBgReceiveChanged

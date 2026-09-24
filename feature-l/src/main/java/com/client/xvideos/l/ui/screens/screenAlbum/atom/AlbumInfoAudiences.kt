@@ -21,7 +21,8 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 
-private val audienceChipShape = RoundedCornerShape(4.dp)
+private val AUDIENCE_CHIP_SHAPE = RoundedCornerShape(4.dp)
+private const val LABEL_AUDIENCES = "Audiences: "
 
 @Composable
 fun AlbumInfoAudiences(
@@ -39,7 +40,7 @@ fun AlbumInfoAudiences(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Audiences: ",
+            text = LABEL_AUDIENCES,
             color = Theme.L.textColor,
             style = headerStyle,
             modifier = Modifier.padding(vertical = 4.dp)
@@ -51,8 +52,8 @@ fun AlbumInfoAudiences(
                     text = item.title,
                     modifier = Modifier
                         .padding(horizontal = 2.dp, vertical = 2.dp)
-                        .border(1.dp, Theme.L.secondaryColor, audienceChipShape)
-                        .clip(audienceChipShape)
+                        .border(1.dp, Theme.L.secondaryColor, AUDIENCE_CHIP_SHAPE)
+                        .clip(AUDIENCE_CHIP_SHAPE)
                         .clickable(onClick = handleClick)
                         .padding(4.dp),
                     color = Theme.L.primaryColor,

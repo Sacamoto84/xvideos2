@@ -14,12 +14,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.urlVideoImage.UrlVideoLite
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parserVideoPreviewFromImageUrl
 import timber.log.Timber
+
+private const val NULL_STRING = "null"
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -28,20 +32,18 @@ fun UrlVideoImageAndLongClickX(
     modifier: Modifier = Modifier,
     onLongClick: () -> Unit,
     onDoubleClick: () -> Unit,
-    overlay: @Composable () -> Unit= {}) {
-
+    overlay: @Composable () -> Unit = {}
+) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     var isVideo by remember(item.id) { mutableStateOf(false) }
-    // Разбор отдаёт null, если превью собрать не удалось. Откат — то, что уже
-    // лежит в модели; "null" оттуда больше не приходит, но записи, сделанные
-    // прошлыми версиями, ещё могут его содержать — отсюда takeIf.
+
     val previewVideoUrl = remember(item.previewImage, item.previewVideo) {
         parserVideoPreviewFromImageUrl(item.previewImage)
-            ?: item.previewVideo.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
+            ?: item.previewVideo.takeIf { it.isNotBlank() && !it.equals(NULL_STRING, ignoreCase = true) }
     }
     val fallbackUrls = remember(item.previewVideo) {
-        if (item.previewVideo.isNotBlank() && !item.previewVideo.equals("null", ignoreCase = true)) {
+        if (item.previewVideo.isNotBlank() && !item.previewVideo.equals(NULL_STRING, ignoreCase = true)) {
             listOf(item.previewVideo)
         } else {
             emptyList()
@@ -51,14 +53,14 @@ fun UrlVideoImageAndLongClickX(
     val handleDoubleClick: () -> Unit = remember(context, onDoubleClick) {
         {
             vibrateWithPatternAndAmplitude(context = context)
-            onDoubleClick.invoke()
+            onDoubleClick()
         }
     }
 
     val handleLongClick: () -> Unit = remember(context, onLongClick) {
         {
             vibrateWithPatternAndAmplitude(context = context)
-            onLongClick.invoke()
+            onLongClick()
         }
     }
 
@@ -99,9 +101,7 @@ fun UrlVideoImageAndLongClickX(
                 onClick = handleClick
             )
     ) {
-
         if (isVideo) {
-            //Показ видео
             UrlVideoLite(
                 url = previewVideoUrl.orEmpty(),
                 posterUrl = item.previewImage,
@@ -110,11 +110,30 @@ fun UrlVideoImageAndLongClickX(
                 onClick = handleVideoClick
             )
         } else {
-            //Показ картинки
             UrlImage(item.previewImage, modifier = Modifier.fillMaxWidth())
-            overlay.invoke()
+            overlay()
         }
-
     }
+}
 
+@Preview
+@Composable
+private fun UrlVideoImageAndLongClickXPreview() {
+    XvideosTheme {
+        UrlVideoImageAndLongClickX(
+            item = ItemsX(
+                id = 1L,
+                title = "Preview video",
+                duration = "10:00",
+                views = "100K",
+                channel = "Channel",
+                previewImage = "",
+                href = "/video",
+                nameProfile = "Profile",
+                linkProfile = "/profile",
+            ),
+            onLongClick = {},
+            onDoubleClick = {}
+        )
+    }
 }

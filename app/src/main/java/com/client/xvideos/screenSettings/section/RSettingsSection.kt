@@ -35,6 +35,19 @@ import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 import com.client.xvideos.r.common.saved.SavedRed
 import kotlinx.coroutines.launch
 
+private const val TEXT_RED_ALL_FOLDERS = "Размер всех папок Red"
+private const val TEXT_RED_DOWNLOAD_FOLDER = "Размер папки Download"
+private const val TEXT_CLEAR_DOWNLOAD = "Очистить папку Download"
+private const val TEXT_CLEAR = "Очистить"
+private const val TEXT_CLEAR_DIALOG_TITLE = "Очистка папки Download"
+private const val TEXT_RECOVER_DOWNLOAD = "Докачать Download по .info"
+private const val TEXT_NICHES_CACHE = "Кэш Niches"
+private const val TEXT_UPDATE_NICHES_CACHE = "Обновить кэш Niches"
+private const val TEXT_START = "Старт"
+private const val TEXT_UPDATE = "Обновить"
+private const val TEXT_UPDATING = "Идёт обновление"
+private const val TEXT_NICHES_SUBTITLE_DEFAULT = "Данные для поиска и фильтров R"
+
 @Composable
 internal fun RSettingsSection(
     sizeRedTotal: Long,
@@ -85,7 +98,7 @@ internal fun RSettingsSection(
                 enabled = downloadRed != null && !isRecoveringDownload,
                 onClick = onStartRecovery
             ) {
-                Text("Старт")
+                Text(TEXT_START)
             }
         }
     }
@@ -96,7 +109,7 @@ internal fun RSettingsSection(
                 enabled = savedRed != null && !isNichesCacheDownloading,
                 onClick = onRefreshNichesCache
             ) {
-                Text("Обновить")
+                Text(TEXT_UPDATE)
             }
         }
     }
@@ -108,38 +121,38 @@ internal fun RSettingsSection(
         "$nichesCacheSize \u2022 ${nichesCacheLastModifiedHour}h"
     }
     val nichesSubtitle = remember(isNichesCacheDownloading) {
-        if (isNichesCacheDownloading) "Идёт обновление" else "Данные для поиска и фильтров R"
+        if (isNichesCacheDownloading) TEXT_UPDATING else TEXT_NICHES_SUBTITLE_DEFAULT
     }
 
     SettingsGroup {
         SettingsValueRow(
             icon = R.drawable.icon_red,
-            text = "Размер всех папок Red",
+            text = TEXT_RED_ALL_FOLDERS,
             value = formattedTotal
         )
         SettingsDivider()
 
         SettingsValueRow(
             icon = R.drawable.icon_red,
-            text = "Размер папки Download",
+            text = TEXT_RED_DOWNLOAD_FOLDER,
             value = formattedDownload
         )
         SettingsDivider()
 
         SettingsButtonRowWithDialog(
             icon = R.drawable.icon_red,
-            text = "Очистить папку Download",
-            value = "Очистить",
-            textDialogTitle = "Очистка папки Download",
+            text = TEXT_CLEAR_DOWNLOAD,
+            value = TEXT_CLEAR,
+            textDialogTitle = TEXT_CLEAR_DIALOG_TITLE,
             textDialogBody = clearDialogBody,
-            textDialogButton = "Очистить",
+            textDialogButton = TEXT_CLEAR,
             onClick = onClearDownload
         )
         SettingsDivider()
 
         SettingsListItem(
             icon = R.drawable.hard_drive_2_24,
-            text = "Докачать Download по .info",
+            text = TEXT_RECOVER_DOWNLOAD,
             subtitle = redDownloadRecoveryText(recoveryReport, isRecoveringDownload),
             trailing = recoveryTrailing
         )
@@ -147,7 +160,7 @@ internal fun RSettingsSection(
 
         SettingsValueRow(
             icon = R.drawable.icon_red,
-            text = "Кэш Niches",
+            text = TEXT_NICHES_CACHE,
             value = nichesCacheValue
         )
 
@@ -166,7 +179,7 @@ internal fun RSettingsSection(
 
         SettingsListItem(
             icon = R.drawable.icon_red,
-            text = "Обновить кэш Niches",
+            text = TEXT_UPDATE_NICHES_CACHE,
             subtitle = nichesSubtitle,
             trailing = nichesTrailing
         )
