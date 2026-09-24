@@ -64,7 +64,6 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun WebServerSettingsSection() {
     val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
 
     val isRunning by WebServerState.isRunning.collectAsStateWithLifecycle()
     val serverUrl by WebServerState.serverUrl.collectAsStateWithLifecycle()
@@ -143,11 +142,12 @@ internal fun WebServerSettingsSection() {
             )
         }
 
-        if (isRunning && serverUrl != null) {
+        val currentServerUrl = serverUrl
+        if (isRunning && currentServerUrl != null) {
             Spacer(Modifier.height(16.dp))
             SettingsSectionTitle("Подключение")
             WebServerConnectionCard(
-                serverUrl = serverUrl!!,
+                serverUrl = currentServerUrl,
                 networkName = networkName,
                 qrBitmap = qrBitmap
             )
@@ -248,7 +248,10 @@ private fun WebServerConnectionCard(
         Spacer(Modifier.height(16.dp))
 
         // Кнопки действий: Копировать и Поделиться
-        WebServerActionButtons(serverUrl = serverUrl)
+        WebServerActionButtons(
+            serverUrl = serverUrl,
+            onCopy = onCopyUrl
+        )
 
         Spacer(Modifier.height(16.dp))
 
@@ -263,18 +266,13 @@ private fun WebServerConnectionCard(
     }
 }
 
-@Suppress("DEPRECATION")
 @Composable
-private fun WebServerActionButtons(serverUrl: String) {
+private fun WebServerActionButtons(
+    serverUrl: String,
+    onCopy: () -> Unit
+) {
     val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
 
-    val onCopy: () -> Unit = remember(serverUrl, clipboardManager) {
-        {
-            clipboardManager.setText(AnnotatedString(serverUrl))
-            SnackBar.success("Ссылка скопирована")
-        }
-    }
     val onShare: () -> Unit = remember(serverUrl, context) {
         {
             val sendIntent = Intent().apply {

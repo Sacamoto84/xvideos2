@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -108,16 +109,14 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     }
     val onDismissDelete = remember { { pendingDelete = null } }
 
-    val onConfirmItemDelete = remember(pendingDelete, onConfirmDelete) {
-        pendingDelete?.let { item -> { onConfirmDelete(item) } }
-    }
-
-    if (pendingDelete != null && onConfirmItemDelete != null) {
-        val item = pendingDelete!!
+    pendingDelete?.let { item ->
+        val onConfirmItem = remember(item, onConfirmDelete) {
+            { onConfirmDelete(item) }
+        }
         ConfirmDeleteVideoDialog(
             title = "Удалить из сохранённого?",
             imageUrl = saved.downloads.localPosterPath(item.id) ?: item.previewImage,
-            onConfirm = onConfirmItemDelete,
+            onConfirm = onConfirmItem,
             onDismiss = onDismissDelete,
         )
     }
@@ -130,12 +129,8 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
             .background(Theme.L.grey6)
     ) {
         if (list.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = topCutout)
-            ) {
-                SavedHeader()
+            Column(modifier = Modifier.fillMaxSize()) {
+                SavedHeader(topCutout = topCutout)
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Пусто", color = Color.Gray, fontSize = 16.sp)
                 }
@@ -146,12 +141,10 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 item(key = "header") {
-                    Box(modifier = Modifier.padding(top = topCutout)) {
-                        SavedHeader()
-                    }
+                    SavedHeader(topCutout = topCutout)
                 }
                 items(list, key = { it.id }) { item ->
-                    val posterUrl = remember(item.id) {
+                    val posterUrl = remember(item.id, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
                     }
                     SavedRow(
@@ -168,8 +161,15 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SavedHeader(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.fillMaxWidth()) {
+private fun SavedHeader(
+    modifier: Modifier = Modifier,
+    topCutout: Dp = 0.dp,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = topCutout)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
             verticalAlignment = Alignment.CenterVertically

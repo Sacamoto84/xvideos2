@@ -93,9 +93,20 @@ object L_ScreenSavedLikesTab : Screen {
             vm.filterSelect(selectedIndex)
         }
 
-        BackHandler(enabled = selectedIndex != 0) {
-            selectedIndex = 0
-            vm.filterSelect(0)
+        val onBackToAll = remember { { selectedIndex = 0 } }
+        BackHandler(enabled = selectedIndex != 0, onBack = onBackToAll)
+
+        val onSelectFilterIndex = remember { { index: Int -> selectedIndex = index } }
+
+        val renderItemBefore: @Composable () -> Unit = remember(options, selectedIndex, onSelectFilterIndex, topInset) {
+            {
+                LikesFilterSegmentedRow(
+                    options = options,
+                    selectedIndex = selectedIndex,
+                    onSelectIndex = onSelectFilterIndex,
+                    topInset = topInset
+                )
+            }
         }
 
         Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
@@ -104,40 +115,7 @@ object L_ScreenSavedLikesTab : Screen {
                 vm.host,
                 expandMenu = ExpandMenuType.LIKES,
                 tag = "lLikes",
-                itemBefore = {
-
-                    // Верх — от topInset (вырез в портрете), бока — от displayCutout:
-                    // прежний displayCutoutPadding закрывал всё сразу, миграция на
-                    // topInset потеряла боковую защиту в ландшафте (проход 10, UI3).
-                    SingleChoiceSegmentedButtonRow(
-                        modifier = Modifier
-                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
-                            .padding(top = topInset)
-                            .padding(horizontal = 4.dp)
-                    ) {
-
-                        options.forEachIndexed { index, label ->
-                            SegmentedButton(
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = index,
-                                    count = options.size
-                                ),
-                                onClick = {
-                                    selectedIndex = index
-                                    vm.filterSelect(selectedIndex)
-                                },
-                                selected = index == selectedIndex,
-                                label = { Text(label) },
-                                colors = SegmentedButtonDefaults.colors(
-                                    activeContainerColor =  Color(0xFF938F99)// Theme.L.b0
-                                )
-                            )
-                        }
-
-                    }
-
-
-                }
+                itemBefore = renderItemBefore
             )
         }
 
@@ -145,6 +123,39 @@ object L_ScreenSavedLikesTab : Screen {
 
 }
 
+@Composable
+private fun LikesFilterSegmentedRow(
+    options: ImmutableList<String>,
+    selectedIndex: Int,
+    onSelectIndex: (Int) -> Unit,
+    topInset: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier
+) {
+    val buttonColors = SegmentedButtonDefaults.colors(
+        activeContainerColor = Color(0xFF938F99)
+    )
+
+    SingleChoiceSegmentedButtonRow(
+        modifier = modifier
+            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+            .padding(top = topInset)
+            .padding(horizontal = 4.dp)
+    ) {
+        options.forEachIndexed { index, label ->
+            val onClick = remember(index, onSelectIndex) { { onSelectIndex(index) } }
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = options.size
+                ),
+                onClick = onClick,
+                selected = index == selectedIndex,
+                label = { Text(label) },
+                colors = buttonColors
+            )
+        }
+    }
+}
 
 enum class AllImagGif {
     ALL, IMAGE, GIF

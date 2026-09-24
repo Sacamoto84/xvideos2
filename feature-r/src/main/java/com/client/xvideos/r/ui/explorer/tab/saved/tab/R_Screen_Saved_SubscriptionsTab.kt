@@ -88,17 +88,20 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
 
         var userToDelete by remember { mutableStateOf<SelectedCreator?>(null) }
 
-        BackHandler(enabled = userToDelete != null) {
-            userToDelete = null
-        }
-        BackHandler(enabled = userToDelete == null && hasSelectedCreators) {
-            for (i in selectedListCreator.indices) {
-                if (selectedListCreator[i].select) {
-                    selectedListCreator[i] = selectedListCreator[i].copy(select = false)
+        val onDismissDelete = remember { { userToDelete = null } }
+        val onClearSelectedCreators = remember(selectedListCreator, pager) {
+            {
+                for (i in selectedListCreator.indices) {
+                    if (selectedListCreator[i].select) {
+                        selectedListCreator[i] = selectedListCreator[i].copy(select = false)
+                    }
                 }
+                pager.refresh()
             }
-            pager.refresh()
         }
+
+        BackHandler(enabled = userToDelete != null, onBack = onDismissDelete)
+        BackHandler(enabled = userToDelete == null && hasSelectedCreators, onBack = onClearSelectedCreators)
 
         val onOpenProfile = remember(navigator) {
             { username: String -> navigator.push(ScreenRedProfile(username)) }
@@ -134,11 +137,9 @@ object R_Screen_Saved_SubscriptionsTab : Screen {
                 pager.refresh()
             }
         }
-        val onDismissDelete = remember { { userToDelete = null } }
-        val userToDeleteProvider = remember(userToDelete) { { userToDelete } }
 
         DialogSubscriptionDelete(
-            user = userToDeleteProvider,
+            user = userToDelete,
             onDismiss = onDismissDelete,
             onConfirm = onConfirmDelete
         )

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,18 +26,25 @@ import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun DialogSubscriptionDelete(
-    user: () -> SelectedCreator?,
+    user: SelectedCreator?,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    user()?.let { pending ->
+    user?.let { pending ->
+        val handleConfirm = remember(pending.name, onConfirm) {
+            { onConfirm(pending.name) }
+        }
         LavenderDialog(
             title = "Удалить подписку?",
             onDismiss = onDismiss,
             icon = {
-                Box(modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .size(96.dp).background(Color.DarkGray), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .size(96.dp)
+                        .background(Color.DarkGray),
+                    contentAlignment = Alignment.Center
+                ) {
                     if (pending.urlProfile != null) {
                         UrlImage(url = pending.urlProfile)
                     } else {
@@ -55,7 +63,7 @@ fun DialogSubscriptionDelete(
                 append("» из подписок?")
             },
             confirmText = "Удалить",
-            onConfirm = { onConfirm(pending.name) },
+            onConfirm = handleConfirm,
             destructive = true,
         )
     }
@@ -66,7 +74,7 @@ fun DialogSubscriptionDelete(
 private fun DialogSubscriptionDeletePreview() {
     XvideosTheme {
         DialogSubscriptionDelete(
-            user = { SelectedCreator( name = "SampleUser", true, "https://via.placeholder.com/96" ) },
+            user = SelectedCreator(name = "SampleUser", true, "https://via.placeholder.com/96"),
             onDismiss = {},
             onConfirm = {}
         )
