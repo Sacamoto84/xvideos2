@@ -50,6 +50,9 @@ private val TAG_ACTION_BG_COLOR = Color(0xDD34343B)
 private val TAG_ACTION_BORDER_COLOR = Color(0x55FFFFFF)
 private val TAG_CONTAINER_EXPANDED_BG = Color(0xE6141418)
 
+private val TAG_CONTAINER_SHAPE = RoundedCornerShape(12.dp)
+private val TAG_CHIP_SHAPE = RoundedCornerShape(6.dp)
+
 sealed interface TagItem {
     val name: String
 
@@ -161,9 +164,9 @@ fun ComposeTags(
             .then(
                 if (tagsState.isExpanded) {
                     Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(TAG_CONTAINER_SHAPE)
                         .background(TAG_CONTAINER_EXPANDED_BG)
-                        .border(1.dp, TAG_BORDER_COLOR, RoundedCornerShape(12.dp))
+                        .border(1.dp, TAG_BORDER_COLOR, TAG_CONTAINER_SHAPE)
                         .padding(horizontal = 6.dp, vertical = 6.dp)
                         .heightIn(max = 160.dp)
                         .verticalScroll(rememberScrollState())
@@ -235,9 +238,9 @@ private fun TagChip(
         modifier = Modifier
             .padding(horizontal = 3.dp, vertical = 2.dp)
             .height(28.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(TAG_CHIP_SHAPE)
             .background(TAG_BG_COLOR)
-            .border(1.dp, TAG_BORDER_COLOR, RoundedCornerShape(6.dp))
+            .border(1.dp, TAG_BORDER_COLOR, TAG_CHIP_SHAPE)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.Center,
@@ -263,9 +266,9 @@ private fun TagToggleChip(
         modifier = Modifier
             .padding(horizontal = 3.dp, vertical = 2.dp)
             .height(28.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(TAG_CHIP_SHAPE)
             .background(TAG_ACTION_BG_COLOR)
-            .border(1.dp, TAG_ACTION_BORDER_COLOR, RoundedCornerShape(6.dp))
+            .border(1.dp, TAG_ACTION_BORDER_COLOR, TAG_CHIP_SHAPE)
             .clickable(onClick = onClick)
             .padding(start = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -59,6 +59,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+private const val DASHBOARD_CARD_ASPECT_RATIO = 352f / 198f
+private val CHANNEL_BADGE_BG = Color(0x60000000)
+
 internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
     val raw = urlStart + if (currentNumberScreen == 0) "" else "/new/$currentNumberScreen"
@@ -248,7 +251,7 @@ private fun DashboardGridCell(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(352f / 198f)
+            .aspectRatio(DASHBOARD_CARD_ASPECT_RATIO)
             .padding(1.dp)
             .background(Color.DarkGray)
     ) {
@@ -286,7 +289,7 @@ private fun DashboardGridCell(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .background(Color(0x60000000)),
+                    .background(CHANNEL_BADGE_BG),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

@@ -21,6 +21,17 @@ import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
 
+private const val TEXT_RAM_CACHE = "RAM кэш картинок"
+private const val TEXT_DISK_CACHE = "Дисковый кэш картинок"
+private const val TEXT_DISK_CACHE_LIMIT = "Лимит кэша картинок"
+private const val TEXT_DISK_CACHE_ON_DISK = "Кэш картинок на диске"
+private const val TEXT_CLEAR_IMAGE_CACHE = "Очистить кэш картинок"
+private const val TEXT_CLEAR = "Очистить"
+private const val TEXT_ENABLED = "Включён"
+private const val TEXT_DISABLED = "Выключен"
+private const val DISK_CACHE_STEP_MB = 50
+private const val DISK_CACHE_SUFFIX_MB = " MB"
+
 @Composable
 internal fun CacheSettingsSection(
     ramCachePercent: Int,
@@ -34,7 +45,7 @@ internal fun CacheSettingsSection(
         { value ->
             Settings.image_cache_ram_percent.setValue(value)
             CoilImageLoaderFactory.recreate(context)
-            SnackBar.success("RAM кэш картинок: $value%")
+            SnackBar.success("$TEXT_RAM_CACHE: $value%")
         }
     }
     val onDiskCacheToggled: (Boolean) -> Unit = remember(context) {
@@ -62,7 +73,7 @@ internal fun CacheSettingsSection(
         formatBytes(imageCacheSizeBytes)
     }
     val diskCacheSubtitle = remember(diskCacheEnabled) {
-        if (diskCacheEnabled) "Включён" else "Выключен"
+        if (diskCacheEnabled) TEXT_ENABLED else TEXT_DISABLED
     }
     val clearDialogBody = remember(formattedDiskSize) {
         "Размер на диске: $formattedDiskSize"
@@ -70,7 +81,7 @@ internal fun CacheSettingsSection(
 
     SettingsGroup {
         IntSliderSetting(
-            text = "RAM кэш картинок",
+            text = TEXT_RAM_CACHE,
             value = normalizedRam,
             min = CoilImageLoaderFactory.MIN_RAM_CACHE_PERCENT,
             max = CoilImageLoaderFactory.MAX_RAM_CACHE_PERCENT,
@@ -83,7 +94,7 @@ internal fun CacheSettingsSection(
 
         SettingsSwitchRow(
             icon = R.drawable.hard_disk_24,
-            text = "Дисковый кэш картинок",
+            text = TEXT_DISK_CACHE,
             subtitle = diskCacheSubtitle,
             value = diskCacheEnabled,
             onValueChange = onDiskCacheToggled
@@ -91,12 +102,12 @@ internal fun CacheSettingsSection(
         SettingsDivider()
 
         IntSliderSetting(
-            text = "Лимит кэша картинок",
+            text = TEXT_DISK_CACHE_LIMIT,
             value = normalizedDisk,
             min = CoilImageLoaderFactory.MIN_DISK_CACHE_SIZE_MB,
             max = CoilImageLoaderFactory.MAX_DISK_CACHE_SIZE_MB,
-            step = 50,
-            suffix = " MB",
+            step = DISK_CACHE_STEP_MB,
+            suffix = DISK_CACHE_SUFFIX_MB,
             icon = R.drawable.hard_drive_2_24,
             enabled = diskCacheEnabled,
             onValueChangeFinished = onDiskCacheLimitFinished
@@ -105,18 +116,18 @@ internal fun CacheSettingsSection(
 
         SettingsValueRow(
             icon = R.drawable.hard_disk_24,
-            text = "Кэш картинок на диске",
+            text = TEXT_DISK_CACHE_ON_DISK,
             value = formattedDiskSize
         )
         SettingsDivider()
 
         SettingsButtonRowWithDialog(
             icon = R.drawable.hard_disk_24,
-            text = "Очистить кэш картинок",
-            value = "Очистить",
-            textDialogTitle = "Очистить кэш картинок",
+            text = TEXT_CLEAR_IMAGE_CACHE,
+            value = TEXT_CLEAR,
+            textDialogTitle = TEXT_CLEAR_IMAGE_CACHE,
             textDialogBody = clearDialogBody,
-            textDialogButton = "Очистить",
+            textDialogButton = TEXT_CLEAR,
             onClick = onClearImageCache
         )
     }

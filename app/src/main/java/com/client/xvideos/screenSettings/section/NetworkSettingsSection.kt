@@ -39,6 +39,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
+private const val DIAGNOSTIC_TEST_HOST = "api.redgifs.com"
+
 @Composable
 internal fun NetworkSettingsSection() {
     val dohEnabled by Settings.doh_enabled.field.collectAsStateWithLifecycle()
@@ -147,10 +150,12 @@ private fun DohProviderSelectionGroup(
             key(provider.name) {
                 if (index > 0) SettingsDivider()
 
-                val subtitle = if (provider == DohProvider.CUSTOM) {
-                    if (customUrl.isNotBlank()) customUrl else provider.description
-                } else {
-                    provider.description
+                val subtitle = remember(provider, customUrl) {
+                    if (provider == DohProvider.CUSTOM) {
+                        if (customUrl.isNotBlank()) customUrl else provider.description
+                    } else {
+                        provider.description
+                    }
                 }
 
                 DohProviderItem(
@@ -189,7 +194,7 @@ private fun DohProviderItem(
                 onClick = null,
                 colors = RadioButtonDefaults.colors(
                     selectedColor = SettingsAccentColor,
-                    unselectedColor = Color(0xFF938F99)
+                    unselectedColor = RADIO_UNSELECTED_COLOR
                 )
             )
         }
@@ -209,12 +214,27 @@ private fun NetworkParamsGroup(
     ipv4Only: Boolean
 ) {
     val onFallbackChange: (Boolean) -> Unit = remember {
-        { Settings.doh_fallback_to_system.setValue(it) }
+        { enabled -> Settings.doh_fallback_to_system.setValue(enabled) }
     }
     val onIpv4OnlyChange: (Boolean) -> Unit = remember {
-        {
-            Settings.doh_ipv4_only.setValue(it)
+        { enabled ->
+            Settings.doh_ipv4_only.setValue(enabled)
             AppDns.clearCache()
+        }
+    }
+
+    val fallbackSubtitle = remember(fallbackToSystem) {
+        if (fallbackToSystem) {
+            "При сбое DoH запрос отправится через DNS оператора"
+        } else {
+            "Строгая изоляция: запросы только через DoH"
+        }
+    }
+    val ipv4OnlySubtitle = remember(ipv4Only) {
+        if (ipv4Only) {
+            "Отключает задержки IPv6, ускоряет запуск видео"
+        } else {
+            "Разрешены IPv4 и IPv6 адреса"
         }
     }
 
@@ -223,11 +243,7 @@ private fun NetworkParamsGroup(
         SettingsSwitchRow(
             icon = R.drawable.ic_dns_24,
             text = "Fallback на системный DNS",
-            subtitle = if (fallbackToSystem) {
-                "При сбое DoH запрос отправится через DNS оператора"
-            } else {
-                "Строгая изоляция: запросы только через DoH"
-            },
+            subtitle = fallbackSubtitle,
             value = fallbackToSystem,
             onValueChange = onFallbackChange
         )
@@ -235,11 +251,7 @@ private fun NetworkParamsGroup(
         SettingsSwitchRow(
             icon = R.drawable.ic_dns_24,
             text = "Только IPv4",
-            subtitle = if (ipv4Only) {
-                "Отключает задержки IPv6, ускоряет запуск видео"
-            } else {
-                "Разрешены IPv4 и IPv6 адреса"
-            },
+            subtitle = ipv4OnlySubtitle,
             value = ipv4Only,
             onValueChange = onIpv4OnlyChange
         )
@@ -254,7 +266,7 @@ private fun DohDiagnosticsGroup() {
             scope.launch {
                 SnackBar.info("Тестирование соединения...")
                 val result = withContext(Dispatchers.IO) {
-                    AppDns.diagnose("api.redgifs.com")
+                    AppDns.diagnose(DIAGNOSTIC_TEST_HOST)
                 }
                 result.fold(
                     onSuccess = { diag ->
@@ -301,7 +313,7 @@ private fun CustomDohUrlDialog(
 ) {
     var tempUrl by remember(initialUrl) { mutableStateOf(initialUrl) }
     val onConfirmSave: () -> Unit = remember(onSave) { { onSave(tempUrl.trim()) } }
-    val onUrlChange: (String) -> Unit = remember { { tempUrl = it } }
+    val onUrlChange: (String) -> Unit = remember { { newUrl -> tempUrl = newUrl } }
 
     LavenderDialog(
         title = "Пользовательский DoH URL",

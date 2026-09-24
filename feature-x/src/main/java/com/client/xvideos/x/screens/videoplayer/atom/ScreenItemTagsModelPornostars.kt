@@ -19,6 +19,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+private val PORNOSTAR_TAG_SHAPE = RoundedCornerShape(6.dp)
+private val COUNT_BADGE_SHAPE = RoundedCornerShape(4.dp)
+private val COUNT_BADGE_BG = Color(0x33000000)
+
 /**
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
  */
@@ -29,20 +33,15 @@ fun ScreenItemTagsModelPornostars(
     count: String,
     onClick: (() -> Unit)? = null
 ) {
+    val baseModifier = Modifier
+        .padding(horizontal = 3.dp, vertical = 2.dp)
+        .height(28.dp)
+        .clip(PORNOSTAR_TAG_SHAPE)
+        .background(color)
+    val rowModifier = if (onClick != null) baseModifier.clickable(onClick = onClick) else baseModifier
 
     Row(
-        modifier = Modifier
-            .padding(horizontal = 3.dp, vertical = 2.dp)
-            .height(28.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(color)
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(onClick = onClick)
-                } else {
-                    Modifier
-                }
-            ),
+        modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -58,8 +57,8 @@ fun ScreenItemTagsModelPornostars(
                 modifier = Modifier
                     .padding(end = 4.dp)
                     .height(20.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0x33000000))
+                    .clip(COUNT_BADGE_SHAPE)
+                    .background(COUNT_BADGE_BG)
                     .padding(horizontal = 5.dp),
                 contentAlignment = Alignment.Center
             ) {

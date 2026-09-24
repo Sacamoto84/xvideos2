@@ -50,6 +50,18 @@ fun calculatePrevAlbumPage(page: Int): Int = (page - 1).coerceAtLeast(0)
 fun calculateNextAlbumPage(page: Int, pageMax: Int): Int =
     (page + 1).coerceAtMost((pageMax - 1).coerceAtLeast(0))
 
+private val pageSelectorDialogShape = RoundedCornerShape(16.dp)
+private val pageSelectorDialogBorderColor = Color(0xFF3E3E3E)
+private val pageSelectorDialogBgColor = Color(0xFF373737)
+
+private val defaultAlbumKeyboardTheme = KeyboardNumberTheme(
+    colorBackground = Color(0xFF2D2D2D),
+    colorBorderBackground = Color(0xFF282828),
+    colorText = Color(0xFFFFFFFF),
+    buttonColor = Color(0xFF282828),
+    colorButtonBorder = Color(0xFF232323),
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumListPageSelector(
@@ -73,16 +85,6 @@ fun AlbumListPageSelector(
 
     val pageText = remember(page, pageMax) { "Page ${page + 1} of ${pageMax.coerceAtLeast(1)}" }
     val pageTextStyle = remember { Theme.L.Type.rowTitle.copy(textAlign = TextAlign.Center) }
-    val dialogShape = remember { RoundedCornerShape(16.dp) }
-    val keyboardTheme = remember {
-        KeyboardNumberTheme(
-            colorBackground = Color(0xFF2D2D2D),
-            colorBorderBackground = Color(0xFF282828),
-            colorText = Color(0xFFFFFFFF),
-            buttonColor = Color(0xFF282828),
-            colorButtonBorder = Color(0xFF232323),
-        )
-    }
     val onKeyboardNumberClick = remember(onChange) {
         { selectedNumber: Int ->
             onChange(selectedNumber - 1)
@@ -161,23 +163,19 @@ fun AlbumListPageSelector(
         Dialog(onDismissRequest = onDismissDialog) {
             Box(
                 modifier = Modifier
-                    .clip(dialogShape)
-                    .border(2.dp, Color(0xFF3E3E3E), dialogShape)
-                    .background(Color(0xFF373737))
-                    .padding(16.dp), contentAlignment = Alignment.Center
-            )
-            {
+                    .clip(pageSelectorDialogShape)
+                    .border(2.dp, pageSelectorDialogBorderColor, pageSelectorDialogShape)
+                    .background(pageSelectorDialogBgColor)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 KeyboardNumber(
-                    theme = keyboardTheme,
-                    value = -1, max = pageMax,
+                    theme = defaultAlbumKeyboardTheme,
+                    value = -1,
+                    max = pageMax,
                     onClick = onKeyboardNumberClick
                 )
             }
         }
     }
-
 }
-
-
-
-

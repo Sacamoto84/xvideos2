@@ -1,7 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.bottomBar
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,9 +20,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListPageSelector
+
+private val filterButtonShape = RoundedCornerShape(4.dp)
+private val filterButtonBorderColor = Color(0xFF434343)
+private val filterButtonBgColor = Color(0xFF414141)
 
 @Composable
 fun AlbumListBottomBar(
@@ -45,42 +48,44 @@ fun AlbumListBottomBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
-            Box(
-                modifier = Modifier
-                    .padding(end = 2.dp)
-                    .width(48.dp)
-                    .height(48.dp)
-                    .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
-                    .background(Color(0xFF414141))
-                    .clickable(onClick = { onClickVisibleFilter() }),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.FilterList, contentDescription = null, tint = Color.White)
-            }
+            FilterButton(
+                modifier = Modifier.padding(end = 2.dp),
+                onClick = onClickVisibleFilter
+            )
 
             Box(modifier = Modifier.weight(1f)) {
-                AlbumListPageSelector(currentPage, totalPages) { onChange(it) }
+                AlbumListPageSelector(
+                    page = currentPage,
+                    pageMax = totalPages,
+                    onChange = onChange
+                )
             }
 
-            Box(
-                modifier = Modifier
-                    .padding(start = 2.dp, end = 0.dp)
-                    .width(48.dp)
-                    .height(48.dp)
-                    .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
-                    .background(Color(0xFF414141))
-                    .clickable(onClick = { onClickVisibleFilter() }),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.FilterList, contentDescription = null, tint = Color.White)
-            }
-
+            FilterButton(
+                modifier = Modifier.padding(start = 2.dp),
+                onClick = onClickVisibleFilter
+            )
         }
 
-
-
         HorizontalDivider()
+    }
+}
+
+@Composable
+private fun FilterButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .width(48.dp)
+            .height(48.dp)
+            .border(2.dp, filterButtonBorderColor, filterButtonShape)
+            .background(filterButtonBgColor)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(Icons.Default.FilterList, contentDescription = null, tint = Color.White)
     }
 }
 

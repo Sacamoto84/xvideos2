@@ -38,6 +38,12 @@ import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val NICHE_CARD_SHAPE = RoundedCornerShape(16.dp)
+private val NICHE_IMAGE_SHAPE = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+private val NICHE_BUTTON_SHAPE = RoundedCornerShape(10.dp)
+private const val BUTTON_FOLLOW_TEXT = "Подписаться"
+private const val BUTTON_UNFOLLOW_TEXT = "Выйти"
+
 @Composable
 fun NichePreview2(niches: () -> Niche, savedRed: () -> SavedRed, onClick: () -> Unit) {
 
@@ -79,12 +85,21 @@ private fun NichePreview2Content(
     onFollowClick: () -> Unit,
     onClick: () -> Unit
 ) {
+    val subscribersText = remember(niche.subscribers) { niche.subscribers.toPrettyCountInt() }
+    val gifsText = remember(niche.gifs) { niche.gifs.toPrettyCountInt() }
+    val buttonText = if (isFollowed) BUTTON_UNFOLLOW_TEXT else BUTTON_FOLLOW_TEXT
+    val buttonTextColor = if (isFollowed) Color.White else Color.Black
+    val buttonBgColor = if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow
+    val buttonBorderModifier = remember(isFollowed) {
+        if (isFollowed) Modifier.border(1.dp, Color.White, NICHE_BUTTON_SHAPE) else Modifier
+    }
+
     Row(
         modifier = Modifier
             .padding(horizontal = 8.dp)
             .fillMaxWidth()
             .height(78.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(NICHE_CARD_SHAPE)
             .background(Theme.tabLevel3)
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
@@ -96,7 +111,7 @@ private fun NichePreview2Content(
             modifier = Modifier
                 .padding(start = 4.dp)
                 .size(70.dp)
-                .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
+                .clip(NICHE_IMAGE_SHAPE)
         )
 
         Column(
@@ -137,7 +152,7 @@ private fun NichePreview2Content(
                             tint = Color.LightGray,
                         )
                         Text(
-                            text = niche.subscribers.toPrettyCountInt(),
+                            text = subscribersText,
                             modifier = Modifier.padding(start = 4.dp),
                             color = Color.LightGray,
                             fontSize = 16.sp,
@@ -155,7 +170,7 @@ private fun NichePreview2Content(
                             tint = Color.LightGray,
                         )
                         Text(
-                            text = niche.gifs.toPrettyCountInt(),
+                            text = gifsText,
                             modifier = Modifier.padding(start = 4.dp),
                             color = Color.LightGray,
                             fontSize = 16.sp,
@@ -169,19 +184,15 @@ private fun NichePreview2Content(
                         .padding(end = 6.dp)
                         .width(128.dp)
                         .height(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(
-                            1.dp,
-                            if (isFollowed) Color.White else Color.Transparent,
-                            RoundedCornerShape(10.dp)
-                        )
-                        .background(if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow)
+                        .clip(NICHE_BUTTON_SHAPE)
+                        .then(buttonBorderModifier)
+                        .background(buttonBgColor)
                         .clickable(onClick = onFollowClick),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        if (isFollowed) "Выйти" else "Подписаться",
-                        color = if (isFollowed) Color.White else Color.Black
+                        text = buttonText,
+                        color = buttonTextColor
                     )
                 }
             }

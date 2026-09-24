@@ -8,9 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.feature.country.ComposeCountry
-import kotlinx.coroutines.Dispatchers
+import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import kotlinx.coroutines.launch
 
 /**
@@ -23,9 +22,9 @@ fun DashboardControlsRow(
     isMax: Int,
     onChange: suspend (Int) -> Unit
 ) {
-    val job = rememberCoroutineScope()
-    val handleChange: (Int) -> Unit = remember(job, onChange) {
-        { page -> job.launch(Dispatchers.Main) { onChange.invoke(page) } }
+    val scope = rememberCoroutineScope()
+    val handleChange: (Int) -> Unit = remember(scope, onChange) {
+        { page -> scope.launch { onChange(page) } }
     }
 
     Row(modifier = Modifier.fillMaxWidth()) {
@@ -42,4 +41,6 @@ fun DashboardControlsRow(
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-private fun PreviewDashboardControlsRow() { DashboardControlsRow( isCurrentPage = 1, isMax = 10,  onChange = {}) }
+private fun PreviewDashboardControlsRow() {
+    DashboardControlsRow(isCurrentPage = 1, isMax = 10, onChange = {})
+}

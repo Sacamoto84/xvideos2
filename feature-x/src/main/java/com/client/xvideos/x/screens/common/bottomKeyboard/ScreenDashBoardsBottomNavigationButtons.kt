@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,21 +54,13 @@ fun ScreenDashBoardsBottomNavigationButtonsPreview() {
     }
 }
 
-
-//Черный цвет текста
+// Черный цвет текста
 private val colorTextBlack = Color(0xFF2C2C2C)
-
 private val colorAccent = Color(0xFFFF9000)
-
 private val colorTextWhite = Color(0xFFCCCCCC)
-
 private val colorBlackBackground = Color(0xFF252525)
-
 private val selectedBorderColor = Color(0xFFFF9900)
-
-private val unselectedBorderColor = Color(0x000000)
-
-private val height = 48.dp
+private val navButtonHeight = 48.dp
 
 /**
  * Bottom navigation buttons
@@ -80,7 +70,6 @@ private val height = 48.dp
  */
 @Composable
 fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, max: Int) {
-
 
     val safeMax = max.coerceAtLeast(1)
     val maxPageIndex = safeMax - 1
@@ -101,31 +90,31 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
 
     Row(
         modifier = Modifier
-            .height(48.dp)
+            .height(navButtonHeight)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val canGoBack = value > 0
-        ///////////////////////////////
+        val backBg = if (!canGoBack) colorTextBlack else colorAccent
+        val backTextColor = if (!canGoBack) Color.DarkGray else Color.Black
+
         Box(
             modifier = Modifier
                 .padding(horizontal = 0.5.dp)
-                .width(height)
-                .height(height)
-                .background(
-                    if (!canGoBack) colorTextBlack else colorAccent
-                )
+                .width(navButtonHeight)
+                .height(navButtonHeight)
+                .background(backBg)
                 .clickable(enabled = canGoBack, onClick = onBackClick),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 "<",
-                color = if (!canGoBack) Color.DarkGray else Color.Black,
+                color = backTextColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
         }
-        ///////////////////////////////
+
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -149,25 +138,26 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
             }
         }
 
-        ///////////////////////////////
         val canGoForward = value < maxPageIndex
+        val forwardBg = if (!canGoForward) colorTextBlack else colorAccent
+        val forwardTextColor = if (!canGoForward) Color.DarkGray else Color.Black
+
         Box(
             modifier = Modifier
                 .padding(horizontal = 0.5.dp)
-                .width(height)
-                .height(height)
-                .background(if (!canGoForward) colorTextBlack else colorAccent)
+                .width(navButtonHeight)
+                .height(navButtonHeight)
+                .background(forwardBg)
                 .clickable(enabled = canGoForward, onClick = onForwardClick),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 ">",
-                color = if (!canGoForward) Color.DarkGray else Color.Black,
+                color = forwardTextColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
         }
-
     }
 }
 
@@ -178,19 +168,22 @@ private fun PageNumberButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val borderModifier = if (isSelected) {
+        Modifier.border(2.dp, selectedBorderColor)
+    } else {
+        Modifier
+    }
+
     Box(
         modifier = modifier
             .padding(horizontal = 0.5.dp)
-            .height(height)
-            .border(
-                2.dp,
-                if (isSelected) selectedBorderColor else unselectedBorderColor
-            )
+            .height(navButtonHeight)
+            .then(borderModifier)
             .background(colorBlackBackground)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text("$pageNumber", color = colorTextWhite)
+        Text(text = pageNumber.toString(), color = colorTextWhite)
     }
 }
 

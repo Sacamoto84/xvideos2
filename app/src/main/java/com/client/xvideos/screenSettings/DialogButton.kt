@@ -1,5 +1,6 @@
 package com.client.xvideos.screenSettings
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.AnnotatedString
@@ -26,12 +27,15 @@ fun DialogButton(
                 onDismiss()
             }
         }
+        val dialogContent: @Composable ColumnScope.() -> Unit = remember(composable) {
+            { composable() }
+        }
 
         LavenderDialog(
             title = title,
             onDismiss = onDismiss,
             body = bodyAnnotated,
-            content = { composable() },
+            content = dialogContent,
             confirmText = buttonText,
             onConfirm = handleConfirm,
         )

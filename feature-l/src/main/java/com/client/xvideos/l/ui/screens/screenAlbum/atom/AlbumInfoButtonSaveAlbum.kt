@@ -26,9 +26,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
+private val saveAlbumButtonShape = RoundedCornerShape(4.dp)
+
 @Composable
 fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick: () -> Unit) {
-    val buttonShape = remember { RoundedCornerShape(4.dp) }
     val buttonText = remember(saved) {
         if (!saved) "Сохранить альбом" else "Удалить из сохранённых"
     }
@@ -50,8 +51,8 @@ fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick: () -> Unit) {
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
-            .clip(buttonShape)
-            .border(1.dp, Theme.L.grey3, buttonShape)
+            .clip(saveAlbumButtonShape)
+            .border(1.dp, Theme.L.grey3, saveAlbumButtonShape)
             .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

@@ -27,11 +27,11 @@ class BlockRed @Inject constructor(
     var blockItem: GifsInfo? = null
     var blockVisibleDialog by mutableStateOf(false)
 
-    private val _blockList = MutableStateFlow<List<GifsInfo>>(emptyList())
-    val blockList: StateFlow<List<GifsInfo>> get() = _blockList
+    val blockList: StateFlow<List<GifsInfo>>
+        field = MutableStateFlow<List<GifsInfo>>(emptyList())
 
-    private val _blockedIds = MutableStateFlow<Set<String>>(emptySet())
-    val blockedIds: StateFlow<Set<String>> get() = _blockedIds
+    val blockedIds: StateFlow<Set<String>>
+        field = MutableStateFlow<Set<String>>(emptySet())
 
     init {
         refresh()
@@ -41,14 +41,14 @@ class BlockRed @Inject constructor(
         val blocked = withContext(Dispatchers.IO) {
             blockGetAllBlockedGifsInfo()
         }
-        _blockList.value = blocked
-        _blockedIds.value = blocked.mapTo(HashSet(blocked.size)) { it.id }
+        blockList.value = blocked
+        blockedIds.value = blocked.mapTo(HashSet(blocked.size)) { it.id }
     }
 
-    fun isBlocked(id: String): Boolean = id in _blockedIds.value
+    fun isBlocked(id: String): Boolean = id in blockedIds.value
 
     fun refreshListAndBlock(list: MutableStateFlow<List<GifsInfo>>) {
-        val blocked = _blockedIds.value
+        val blocked = blockedIds.value
         list.value = list.value.filterNot { it.id in blocked }
     }
 

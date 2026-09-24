@@ -35,6 +35,9 @@ import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import java.util.Locale
 
+private val FIT_MODE_SHAPE = RoundedCornerShape(4.dp)
+private val BOTTOM_BAR_BG = Color(0x73000000)
+
 /**
  * Нижняя панель управления X-плеером поверх видео.
  *
@@ -71,7 +74,6 @@ fun X_PlayerBottomBar(
     val onSpeedSelected: (PlayerSpeed) -> Unit = remember(host) {
         { newSpeed -> host.speed = newSpeed }
     }
-    val fitModeShape = remember { RoundedCornerShape(4.dp) }
     val onToggleFitMode = remember(host) {
         {
             host.videoFitMode = if (host.videoFitMode == ScreenResize.FIT) {
@@ -89,7 +91,7 @@ fun X_PlayerBottomBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.Black.copy(alpha = 0.45f))
+            .background(BOTTOM_BAR_BG)
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -158,7 +160,7 @@ fun X_PlayerBottomBar(
                 fontWeight = FontWeight.Bold,
                 fontSize = 11.sp,
                 modifier = Modifier
-                    .clip(fitModeShape)
+                    .clip(FIT_MODE_SHAPE)
                     .clickable(onClick = onToggleFitMode)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )

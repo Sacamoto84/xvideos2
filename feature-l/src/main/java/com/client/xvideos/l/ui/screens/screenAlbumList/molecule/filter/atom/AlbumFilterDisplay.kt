@@ -1,7 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,9 +25,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.albumFilterDisplay
 
 private val UNIQUE_PRIMARY_LIST = albumFilterDisplay.map { it.primary }.distinct()
+private val filterFieldShape = RoundedCornerShape(6.dp)
 
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
 @Composable
@@ -47,8 +47,17 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
     var showPrimaryDialog by remember { mutableStateOf(false) }
     var showSecondaryDialog by remember { mutableStateOf(false) }
 
+    val onOpenPrimary = remember { { showPrimaryDialog = true } }
+    val onOpenSecondary = remember { { showSecondaryDialog = true } }
+    val onDismissPrimary = remember { { showPrimaryDialog = false } }
+    val onDismissSecondary = remember { { showSecondaryDialog = false } }
+
     var selected by remember(startString) {
         mutableStateOf(list.firstOrNull { it.request == startString } ?: list.first())
+    }
+
+    val valueTextStyle = remember(palette.textPrimary) {
+        Theme.L.Type.rowValue.copy(color = palette.textPrimary)
     }
 
     Row(
@@ -61,10 +70,10 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                .clip(filterFieldShape)
+                .border(1.dp, palette.border, filterFieldShape)
                 .background(palette.field)
-                .clickable { showPrimaryDialog = true }
+                .clickable(onClick = onOpenPrimary)
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -78,7 +87,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                     modifier = Modifier.weight(1f, fill = false),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = Theme.L.Type.rowValue.copy(color = palette.textPrimary)
+                    style = valueTextStyle
                 )
                 Icon(
                     Icons.Default.ArrowDropDown,
@@ -93,10 +102,10 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                .clip(filterFieldShape)
+                .border(1.dp, palette.border, filterFieldShape)
                 .background(palette.field)
-                .clickable { showSecondaryDialog = true }
+                .clickable(onClick = onOpenSecondary)
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -110,7 +119,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                     modifier = Modifier.weight(1f, fill = false),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = Theme.L.Type.rowValue.copy(color = palette.textPrimary)
+                    style = valueTextStyle
                 )
                 Icon(
                     Icons.Default.ArrowDropDown,
@@ -128,7 +137,7 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
             items = UNIQUE_PRIMARY_LIST,
             selectedItem = selected.primary,
             itemTitle = { it },
-            onDismiss = { showPrimaryDialog = false },
+            onDismiss = onDismissPrimary,
             onSelect = { primary ->
                 val newSelected = list.firstOrNull { it.primary == primary } ?: list.first()
                 selected = newSelected
@@ -140,13 +149,15 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
 
     // --- Диалог выбора Secondary ---
     if (showSecondaryDialog) {
-        val secondaryItems = list.filter { it.primary == selected.primary }
+        val secondaryItems = remember(list, selected.primary) {
+            list.filter { it.primary == selected.primary }
+        }
         AlbumFilterSelectDialog(
             title = selected.primary,
             items = secondaryItems,
             selectedItem = selected,
             itemTitle = { it.secondary },
-            onDismiss = { showSecondaryDialog = false },
+            onDismiss = onDismissSecondary,
             onSelect = { item ->
                 selected = item
                 showSecondaryDialog = false

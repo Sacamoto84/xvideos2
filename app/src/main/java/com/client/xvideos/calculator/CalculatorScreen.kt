@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -39,6 +40,7 @@ private val DIGIT_BG = Color(0xFF333333)
 private val DIGIT_TEXT = Color.White
 private val OPERATOR_BG = Color(0xFFFF9F0A)
 private val OPERATOR_TEXT = Color.White
+private val HISTORY_TEXT_COLOR = Color(0xFF8E8E93)
 
 /**
  * Экран-камуфляж «Калькулятор».
@@ -59,15 +61,13 @@ fun CalculatorScreen(
     val canBackspace = state.displayValue == CalculatorState.ERROR_TEXT || (!state.isNewEntry && state.displayValue != "0")
     val canClear = !canBackspace && !state.isAllClear
 
-    BackHandler(enabled = canBackspace) {
-        state.onBackspace(haptic)
-    }
-    BackHandler(enabled = canClear) {
-        state.onClear(haptic)
-    }
-    BackHandler(enabled = !canBackspace && !canClear) {
-        onBack()
-    }
+    val onBackspaceAction = remember(state, haptic) { { state.onBackspace(haptic) } }
+    val onClearAction = remember(state, haptic) { { state.onClear(haptic) } }
+    val onBackAction = remember(onBack) { { onBack() } }
+
+    BackHandler(enabled = canBackspace, onBack = onBackspaceAction)
+    BackHandler(enabled = canClear, onBack = onClearAction)
+    BackHandler(enabled = !canBackspace && !canClear, onBack = onBackAction)
 
     Column(
         modifier = Modifier
@@ -106,7 +106,7 @@ private fun CalculatorDisplay(
         if (expressionHistory.isNotEmpty()) {
             Text(
                 text = expressionHistory,
-                color = Color(0xFF8E8E93),
+                color = HISTORY_TEXT_COLOR,
                 fontSize = 22.sp,
                 textAlign = TextAlign.End,
                 maxLines = 1,

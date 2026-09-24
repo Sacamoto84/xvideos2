@@ -17,6 +17,8 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val nicheIconShape = RoundedCornerShape(8.dp)
+
 @Composable
 fun DialogNicheDelete(
     item: NichesInfo?,
@@ -24,7 +26,6 @@ fun DialogNicheDelete(
     onConfirm: (NichesInfo) -> Unit
 ) {
     item?.let { pending ->
-        val iconShape = remember { RoundedCornerShape(8.dp) }
         val handleConfirm = remember(pending, onConfirm) {
             { onConfirm(pending) }
         }
@@ -42,7 +43,7 @@ fun DialogNicheDelete(
                 UrlImage(
                     url = pending.thumbnail,
                     modifier = Modifier
-                        .clip(iconShape)
+                        .clip(nicheIconShape)
                         .size(96.dp)
                 )
             },
