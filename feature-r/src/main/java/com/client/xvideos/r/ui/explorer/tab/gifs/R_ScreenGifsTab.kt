@@ -68,6 +68,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.collections.immutable.persistentListOf
 import javax.inject.Inject
 
 private val rColumnOptions = listOf(2, 3, 4)
@@ -130,11 +131,15 @@ private fun R_ScreenGifsTabContent(vm: ScreenRedExplorerGifsSM) {
         }
     }
 
+    val searchFieldComposable: @Composable (Modifier) -> Unit = remember(search) {
+        { modifier -> RSearchTextField(search, modifier = modifier) }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             StatelessGifsTabBottomBar(
-                searchField = { modifier -> RSearchTextField(search, modifier = modifier) },
+                searchField = searchFieldComposable,
                 searchQuery = searchQuery,
                 isFocused = isFocused,
                 sortType = sortType,
@@ -185,11 +190,11 @@ private fun StatelessGifsTabBottomBar(
                         // время» у RedGifs так и называется, отдельного
                         // значения нет. Теперь набор ленты отличается от набора
                         // поиска ровно на Relevant.
-                        listOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP, Order.TRENDING, Order.LATEST)
+                        persistentListOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP, Order.TRENDING, Order.LATEST)
                     } else {
                         // У поиска свой набор: Relevant есть только здесь, а
                         // Week и Month сервер понимает как top7 и top28.
-                        listOf(
+                        persistentListOf(
                             Order.RELEVANT, Order.TOP, Order.TOP_WEEK,
                             Order.TOP_MONTH, Order.TRENDING, Order.LATEST
                         )

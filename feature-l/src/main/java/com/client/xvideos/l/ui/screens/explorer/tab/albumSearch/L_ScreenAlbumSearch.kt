@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -128,7 +129,7 @@ object L_ScreenAlbumSearch : Screen {
 
             LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize()) {
 
-                item {
+                item(key = "search_input", contentType = "search_input") {
                     AlbumSearchInputField(
                         searchText = searchText,
                         onSearchTextChange = onSearchTextChange,
@@ -136,8 +137,8 @@ object L_ScreenAlbumSearch : Screen {
                     )
                 }
 
-                item {
-                    if (title != null) {
+                if (title != null) {
+                    item(key = "search_title", contentType = "search_title") {
                         Text(
                             title,
                             color = Theme.L.textColor,
@@ -150,7 +151,7 @@ object L_ScreenAlbumSearch : Screen {
                 }
 
                 if (isLoading) {
-                    item {
+                    item(key = "search_loading", contentType = "search_loading") {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -161,7 +162,7 @@ object L_ScreenAlbumSearch : Screen {
                 }
 
                 if (!isLoading && hasNoSearchResults(result)) {
-                    item {
+                    item(key = "search_empty", contentType = "search_empty") {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -180,7 +181,8 @@ object L_ScreenAlbumSearch : Screen {
 
                 items(
                     items = sections.orEmpty(),
-                    key = { section -> section.title }
+                    key = { section -> section.title },
+                    contentType = { "search_section" }
                 ) { section ->
                     AlbumSearchSectionBlock(
                         section = section,
@@ -190,7 +192,7 @@ object L_ScreenAlbumSearch : Screen {
                     )
                 }
 
-                item {
+                item(key = "bottom_spacer", contentType = "spacer") {
                     Spacer(Modifier.height(64.dp))
                 }
             }
@@ -268,11 +270,13 @@ private fun AlbumSearchSectionBlock(
     ) {
         val albums = remember(section.items) { section.items.take(9) }
         albums.forEach { album ->
-            AlbumSearchGridItem(
-                album = album,
-                itemWidth = itemWidth,
-                onAlbumClick = onAlbumClick
-            )
+            key(album.id) {
+                AlbumSearchGridItem(
+                    album = album,
+                    itemWidth = itemWidth,
+                    onAlbumClick = onAlbumClick
+                )
+            }
         }
     }
 

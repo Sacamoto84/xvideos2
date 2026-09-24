@@ -31,6 +31,8 @@ import com.client.xvideos.r.ui.profile.atom.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.tags.TagsBlock
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.common.util.getTopInsetDp
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 class ScreenRedProfile(val profileName: String) : Screen {
 
@@ -55,8 +57,8 @@ class ScreenRedProfile(val profileName: String) : Screen {
         // 2. Выход из профиля.
         BackHandler(enabled = tagsSelect.isNotEmpty(), onBack = onResetTags)
 
-        val tagsList = remember(tags) { tags.toList() }
-        val tagsSelectList = remember(tagsSelect) { tagsSelect.toList() }
+        val tagsList = remember(tags) { tags.toImmutableList() }
+        val tagsSelectList = remember(tagsSelect) { tagsSelect.toImmutableList() }
 
         val onTagClick: (String) -> Unit = remember(vm) { { vm.toggleSelectTag(it) } }
         val onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit = remember(vm) {
@@ -69,7 +71,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
         val savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed = remember(vm) { { vm.savedRed } }
 
         RedProfileScreenContent(
-            profileName = profileName,
             creator = vm.creator,
             tags = tagsList,
             tagsSelect = tagsSelectList,
@@ -85,10 +86,9 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
 @Composable
 fun RedProfileScreenContent(
-    profileName: String = "",
     creator: UserInfo?,
-    tags: List<String>,
-    tagsSelect: List<String>,
+    tags: ImmutableList<String>,
+    tagsSelect: ImmutableList<String>,
     isLoading: Boolean,
     likedHost: com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host,
     onTagClick: (String) -> Unit,

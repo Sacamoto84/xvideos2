@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -108,7 +109,8 @@ object L_ScreenAlbumTopHits : Screen {
             LazyColumn(state = vm.state) {
                 items(
                     items = items.orEmpty(),
-                    key = { it.title }
+                    key = { it.title },
+                    contentType = { "top_hits_section" }
                 ) { item ->
                     TopHitsSectionItem(
                         item = item,
@@ -147,11 +149,13 @@ private fun TopHitsSectionItem(
     ) {
         val albums = remember(item.items) { item.items.take(9) }
         albums.forEach { album ->
-            TopHitsAlbumItem(
-                album = album,
-                itemWidth = itemWidth,
-                onAlbumClick = onAlbumClick
-            )
+            key(album.id) {
+                TopHitsAlbumItem(
+                    album = album,
+                    itemWidth = itemWidth,
+                    onAlbumClick = onAlbumClick
+                )
+            }
         }
     }
     ButtonSeeAll(

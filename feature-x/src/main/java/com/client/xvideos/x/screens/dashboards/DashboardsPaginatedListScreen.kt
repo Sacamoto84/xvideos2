@@ -123,13 +123,15 @@ fun DashboardsPaginatedListScreen(
     }
 
 
+    val onRetry: () -> Unit = remember(pageIndex) { { retryTrigger++ } }
+
     if (videoItems.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hasError) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Не удалось загрузить страницу", color = Color.Gray)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = { retryTrigger++ }) {
+                    Button(onClick = onRetry) {
                         Text("Повторить")
                     }
                 }
@@ -172,7 +174,7 @@ fun DashboardsPaginatedListScreen(
                             modifier = Modifier.weight(1f)
                         )
                         Button(
-                            onClick = { retryTrigger++ },
+                            onClick = onRetry,
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
@@ -205,7 +207,11 @@ fun DashboardsPaginatedListContent(
         state = gridState,
         contentPadding = PaddingValues(top = topCutout),
     ) {
-        itemsIndexed(items, key = { index, cell -> "${cell.id}#$index" }) { _, cell ->
+        itemsIndexed(
+            items = items,
+            key = { index, cell -> "${cell.id}#$index" },
+            contentType = { _, _ -> "dashboard_cell" }
+        ) { _, cell ->
             DashboardGridCell(
                 cell = cell,
                 isFavorite = isFavorite(cell.id),

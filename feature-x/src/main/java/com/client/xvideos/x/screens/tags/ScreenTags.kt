@@ -54,9 +54,8 @@ class ScreenTags(val tag: String) : Screen {
         val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
         val listStates = remember { mutableStateMapOf<Int, LazyListState>() }
 
-        BackHandler {
-            navigator.pop()
-        }
+        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+        BackHandler(onBack = onBack)
 
         val topCutout = getTopInsetDp()
 

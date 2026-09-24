@@ -79,6 +79,28 @@ internal fun RSettingsSection(
         { savedRed?.nichesCache?.refresh() }
     }
 
+    val recoveryTrailing: @Composable () -> Unit = remember(downloadRed, isRecoveringDownload, onStartRecovery) {
+        {
+            Button(
+                enabled = downloadRed != null && !isRecoveringDownload,
+                onClick = onStartRecovery
+            ) {
+                Text("Старт")
+            }
+        }
+    }
+
+    val nichesTrailing: @Composable () -> Unit = remember(savedRed, isNichesCacheDownloading, onRefreshNichesCache) {
+        {
+            Button(
+                enabled = savedRed != null && !isNichesCacheDownloading,
+                onClick = onRefreshNichesCache
+            ) {
+                Text("Обновить")
+            }
+        }
+    }
+
     SettingsGroup {
         SettingsValueRow(
             icon = R.drawable.icon_red,
@@ -109,14 +131,7 @@ internal fun RSettingsSection(
             icon = R.drawable.hard_drive_2_24,
             text = "Докачать Download по .info",
             subtitle = redDownloadRecoveryText(recoveryReport, isRecoveringDownload),
-            trailing = {
-                Button(
-                    enabled = downloadRed != null && !isRecoveringDownload,
-                    onClick = onStartRecovery
-                ) {
-                    Text("Старт")
-                }
-            }
+            trailing = recoveryTrailing
         )
         SettingsDivider()
 
@@ -129,13 +144,13 @@ internal fun RSettingsSection(
         if (isNichesCacheDownloading) {
             LinearProgressIndicator(
                 progress = { nichesCacheProgress },
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
-            color = WhatsAppGreen,
-            trackColor = SettingsDividerColor,
-            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-        )
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                color = WhatsAppGreen,
+                trackColor = SettingsDividerColor,
+                strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+            )
         }
         SettingsDivider()
 
@@ -143,14 +158,7 @@ internal fun RSettingsSection(
             icon = R.drawable.icon_red,
             text = "Обновить кэш Niches",
             subtitle = if (isNichesCacheDownloading) "Идёт обновление" else "Данные для поиска и фильтров R",
-            trailing = {
-                Button(
-                    enabled = savedRed != null && !isNichesCacheDownloading,
-                    onClick = onRefreshNichesCache
-                ) {
-                    Text("Обновить")
-                }
-            }
+            trailing = nichesTrailing
         )
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -123,21 +124,27 @@ fun TagsPaginatedListScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (header != null) {
-            item(key = "tag_header") {
+            item(key = "tag_header", contentType = "tag_header") {
                 header()
             }
         }
         // Ключ с индексом, а не голый id: страницы тегов парсятся из HTML и один
         // и тот же ролик может встретиться на нескольких страницах — дублирующийся
         // ключ уронил бы список.
-        itemsIndexed(chunkedRows, key = { index, row -> "${index}_${row.first().id}" }) { _, row ->
+        itemsIndexed(
+            items = chunkedRows,
+            key = { index, row -> "${index}_${row.first().id}" },
+            contentType = { _, _ -> "tag_row" }
+        ) { _, row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEach { cell ->
-                    TagGridCell(
-                        cell = cell,
-                        onOpenVideo = onOpenVideo,
-                        modifier = Modifier.weight(1f),
-                    )
+                    key(cell.id) {
+                        TagGridCell(
+                            cell = cell,
+                            onOpenVideo = onOpenVideo,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
                 // Если элементов в строке меньше, чем itemsPerRow, добавляем пустые ячейки
                 if (row.size < itemsPerRow) {

@@ -289,7 +289,7 @@ private fun CustomDohUrlDialog(
     onSave: (String) -> Unit
 ) {
     var tempUrl by remember(initialUrl) { mutableStateOf(initialUrl) }
-    val onConfirmSave: () -> Unit = remember(tempUrl, onSave) { { onSave(tempUrl.trim()) } }
+    val onConfirmSave: () -> Unit = remember(onSave) { { onSave(tempUrl.trim()) } }
     val onUrlChange: (String) -> Unit = remember { { tempUrl = it } }
 
     LavenderDialog(

@@ -64,9 +64,8 @@ class ScreenXDashBoards : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenXDashBoardsScreenModel = getScreenModel()
         // При нажатии «Назад» во вторичных табах сохраненного возвращаемся в ленту дашбордов
-        BackHandler(enabled = vm.mainTab != 0) {
-            vm.mainTab = 0
-        }
+        val onBack: () -> Unit = remember(vm) { { vm.mainTab = 0 } }
+        BackHandler(enabled = vm.mainTab != 0, onBack = onBack)
 
         // Стабильный экземпляр «Избранного» для инлайн-рендера (как object-табы saved в R/L).
         val favoritesScreen = remember { ScreenFavorites() }
