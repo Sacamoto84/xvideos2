@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -97,7 +98,8 @@ fun L_LazyRowPictureDetails(
     expandMenu: ExpandMenuType,
     tag: String = "",
     showInitialLoading: Boolean = false,
-    isCollection: Boolean = false
+    isCollection: Boolean = false,
+    showScrollButtons: Boolean = true
 ) {
     val expandMenuViewModel: ExpandMenuViewModel = hiltViewModel()
     val navigator = LocalNavigator.currentOrThrow
@@ -117,7 +119,7 @@ fun L_LazyRowPictureDetails(
     // кадре прокрутки. State отдаётся скроллбару лямбдой, см. VerticalScrollbar.
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid( host.state, 0 )
 
-    val thumbnailsSize = Settings.thumbalistSize.field.collectAsStateWithLifecycle().value
+    val thumbnailsSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
 
     /** Показывать ли кнопку "вверх" */
     val showScrollToTop by remember(host.state) { derivedStateOf { host.state.firstVisibleItemIndex > 2 } }
@@ -301,16 +303,17 @@ fun L_LazyRowPictureDetails(
 
         /** FloatingButtons "Вверх" и "Вниз" */
         FloatingScrollButtons(
+            visible = showScrollButtons,
             showScrollToTop = showScrollToTop,
             showScrollToBottom = showScrollToBottom,
             hazeState = hazeState,
             contentColor = Theme.ScrollFab.contentColorL,
             onScrollToTop = {
-                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 scope.launch { host.state.scrollToItem(0) }
             },
             onScrollToBottom = {
-                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 scope.launch {
                     val lastIndex = host.filteredPic.lastIndex
                     if (lastIndex >= 0) {

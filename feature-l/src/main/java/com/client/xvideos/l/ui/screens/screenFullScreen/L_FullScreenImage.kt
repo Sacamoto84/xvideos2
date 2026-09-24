@@ -145,8 +145,8 @@ class L_FullScreenImage(
 
         var rotate by remember { mutableStateOf(false) }
         var showInfoDialog by remember { mutableStateOf(false) }
-        val verticalPager = Settings.l_fullscreen_vertical_pager.field.collectAsStateWithLifecycle().value
-        val videoMuted = Settings.l_fullscreen_video_muted.field.collectAsStateWithLifecycle().value
+        val verticalPager by Settings.l_fullscreen_vertical_pager.field.collectAsStateWithLifecycle()
+        val videoMuted by Settings.l_fullscreen_video_muted.field.collectAsStateWithLifecycle()
 
         val initialIndex = remember(filteredPic, item) { resolveInitialIndex(filteredPic, item) }
 

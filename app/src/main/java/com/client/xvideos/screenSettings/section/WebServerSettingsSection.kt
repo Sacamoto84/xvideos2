@@ -70,8 +70,8 @@ internal fun WebServerSettingsSection() {
     val networkName by WebServerState.networkName.collectAsStateWithLifecycle()
     val lastError by WebServerState.lastError.collectAsStateWithLifecycle()
 
-    val keepAwake = Settings.web_server_keep_awake.field.collectAsStateWithLifecycle().value
-    val port = Settings.web_server_port.field.collectAsStateWithLifecycle().value
+    val keepAwake by Settings.web_server_keep_awake.field.collectAsStateWithLifecycle()
+    val port by Settings.web_server_port.field.collectAsStateWithLifecycle()
 
     val qrBitmap by produceState<ImageBitmap?>(initialValue = null, serverUrl) {
         value = serverUrl?.let { url ->

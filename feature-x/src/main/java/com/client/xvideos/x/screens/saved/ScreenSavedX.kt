@@ -69,13 +69,13 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 
     val navigator = LocalNavigator.currentOrThrow
     val coroutineScope = rememberCoroutineScope()
-    val list = saved.downloads.list.collectAsStateWithLifecycle().value
+    val list by saved.downloads.list.collectAsStateWithLifecycle()
 
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
     val listState = rememberLazyListState()
 
     val onPlayItem: (ItemsX) -> Unit = remember(navigator, saved.downloads) {
-        { item -> navigator.push(ScreenX_LocalVideoPlayer(saved.downloads.localUrl(item.id))) }
+        { item -> navigator.push(ScreenX_LocalVideoPlayer(saved.downloads.localUrl(item.id), item)) }
     }
     val onDeleteItem: (ItemsX) -> Unit = remember {
         { item -> pendingDelete = item }

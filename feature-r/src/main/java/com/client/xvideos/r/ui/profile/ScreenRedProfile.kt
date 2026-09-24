@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -28,11 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.r.model.UserInfo
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
-import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.r.ui.profile.atom.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.tags.TagsBlock
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
@@ -44,7 +38,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenRedProfileSM, ScreenRedProfileSM.Factory> { factory ->
             factory.create(profileName)
         }
@@ -62,13 +55,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
             vm.tagsSelect.value = emptySet()
         }
 
-        // Расчет процентов для скролл.
-        // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
-        // перекомпоновывало бы весь экран на каждом кадре прокрутки.
-        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
-            gridState = vm.likedHost.state, itemsToIgnore = 3, numberOfColumns = 2
-        )
-
         val tagsList = remember(tags) { tags.toList() }
         val tagsSelectList = remember(tagsSelect) { tagsSelect.toList() }
 
@@ -81,16 +67,6 @@ class ScreenRedProfile(val profileName: String) : Screen {
             }
         }
         val savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed = remember(vm) { { vm.savedRed } }
-        val onBack: () -> Unit = remember(vm, navigator) {
-            {
-                if (vm.tagsSelect.value.isNotEmpty()) {
-                    vm.tagsSelect.value = emptySet()
-                } else {
-                    navigator.pop()
-                }
-            }
-        }
-        val scrollPercentProvider: () -> Pair<Float, Float> = remember(scrollPercent) { { scrollPercent.value } }
 
         RedProfileScreenContent(
             profileName = profileName,
@@ -98,12 +74,10 @@ class ScreenRedProfile(val profileName: String) : Screen {
             tags = tagsList,
             tagsSelect = tagsSelectList,
             isLoading = isLoading,
-            scrollPercent = scrollPercentProvider,
             likedHost = vm.likedHost,
             onTagClick = onTagClick,
             onAppendLoaded = onAppendLoaded,
-            savedRedProvider = savedRedProvider,
-            onBack = onBack
+            savedRedProvider = savedRedProvider
         )
     }
 
@@ -116,12 +90,10 @@ fun RedProfileScreenContent(
     tags: List<String>,
     tagsSelect: List<String>,
     isLoading: Boolean,
-    scrollPercent: () -> Pair<Float, Float>,
     likedHost: com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host,
     onTagClick: (String) -> Unit,
     onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit,
-    savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed,
-    onBack: () -> Unit = {}
+    savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed
 ) {
     val topInset = getTopInsetDp()
 
@@ -164,14 +136,6 @@ fun RedProfileScreenContent(
                     )
                 }
             }
-
-            // Скролл
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterEnd)
-                    .width(2.dp)
-            ) { VerticalScrollbar(scrollPercent) }
         }
     }
 }
@@ -209,4 +173,3 @@ fun ScreenRedProfilePreview() {
         }
     }
 }
-

@@ -39,7 +39,7 @@ fun AlbumListFilterAudiences(
     onChange: (AlbumListFilter) -> Unit
 ) {
     val palette = StyleGenresTags.Palette
-    val mediaCategories = mediaCategoriesFlow.collectAsStateWithLifecycle().value
+    val mediaCategories by mediaCategoriesFlow.collectAsStateWithLifecycle()
     val audiences = mediaCategories?.audiences?.takeIf { it.isNotEmpty() } ?: fallbackAudiences()
     val allIds = remember(audiences) { audiences.map { it.id }.toSet() }
     val selectedIds = remember(filter.audienceIds, allIds) {

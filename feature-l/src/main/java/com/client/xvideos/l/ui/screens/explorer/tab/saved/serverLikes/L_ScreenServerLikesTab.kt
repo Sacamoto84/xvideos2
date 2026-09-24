@@ -65,7 +65,7 @@ object L_ScreenServerLikesTab : Screen {
         val isRefreshing by vm.isRefreshing.collectAsStateWithLifecycle()
         val errorMessage by vm.errorMessage.collectAsStateWithLifecycle()
 
-        val column = Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
+        val column by Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle()
         LaunchedEffect(column) {
             if (column != 0) {
                 vm.host.columns = column

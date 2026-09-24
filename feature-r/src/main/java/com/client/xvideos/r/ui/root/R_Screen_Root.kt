@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -56,7 +57,7 @@ class R_Screen_Root : Screen {
         CompositionLocalProvider(LocalRNavigationState provides vm.navigationState) {
             val savedRed = vm.savedRed
 
-            val percentDownload = vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value
+            val percentDownload by vm.downloadRed.downloader.percent.collectAsStateWithLifecycle()
 
             val isAnyDialogOpen = savedRed.collections.visibleDialog ||
                 savedRed.collections.visibleDialogCreateNew ||

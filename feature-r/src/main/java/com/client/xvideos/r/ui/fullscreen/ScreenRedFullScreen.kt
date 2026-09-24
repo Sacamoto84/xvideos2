@@ -348,6 +348,8 @@ private fun RedFullScreenScaffold(
     isVideoBuffering: Boolean,
     content: @Composable (bottomPadding: Dp) -> Unit
 ) {
+    val percentDownload by vm.downloadRed.downloader.percent.collectAsStateWithLifecycle()
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
@@ -378,7 +380,7 @@ private fun RedFullScreenScaffold(
                 Box(modifier = Modifier.background(Theme.tabLevel1)) {
                     FeedControls_Container_Line0(vm = vm)
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                        DownloadIndicator(vm.downloadRed.downloader.percent.collectAsStateWithLifecycle().value)
+                        DownloadIndicator(percentDownload)
                     }
                 }
             }

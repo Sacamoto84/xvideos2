@@ -343,10 +343,10 @@ private data class SettingsDetailParams(
 
 @Composable
 private fun SettingsDetailPage(params: SettingsDetailParams) {
-    val ramCachePercent = Settings.image_cache_ram_percent.field.collectAsStateWithLifecycle().value
-    val diskCacheEnabled = Settings.image_cache_disk_enabled.field.collectAsStateWithLifecycle().value
-    val diskCacheSizeMb = Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle().value
-    val lLogin = Settings.l_login.field.collectAsStateWithLifecycle().value
+    val ramCachePercent by Settings.image_cache_ram_percent.field.collectAsStateWithLifecycle()
+    val diskCacheEnabled by Settings.image_cache_disk_enabled.field.collectAsStateWithLifecycle()
+    val diskCacheSizeMb by Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle()
+    val lLogin by Settings.l_login.field.collectAsStateWithLifecycle()
 
     val isNichesCacheDownloading = params.data.savedRed?.nichesCache?.isDownloading ?: false
     val nichesCacheProgress = params.data.savedRed?.nichesCache?.progress ?: 0f

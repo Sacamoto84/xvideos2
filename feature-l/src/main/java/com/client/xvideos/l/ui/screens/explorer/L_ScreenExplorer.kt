@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -82,8 +83,10 @@ class L_ScreenExplorer : Screen {
 
         LaunchedEffect(Unit) { navigationDepth.depth = 0 }
 
-        val savedLogin = Settings.l_login.field.collectAsStateWithLifecycle().value
-        val savedPassword = Settings.l_pass.field.collectAsStateWithLifecycle().value
+        val savedLogin by Settings.l_login.field.collectAsStateWithLifecycle()
+        val savedPassword by Settings.l_pass.field.collectAsStateWithLifecycle()
+        val percentDownload by savedL.likes.percentDownload.collectAsStateWithLifecycle()
+        val columnGifsTab by Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle()
 
         if ((savedLogin.isBlank() || savedPassword.isBlank()) && !LSession.loginSkipped) {
             LLoginContent(
@@ -95,10 +98,6 @@ class L_ScreenExplorer : Screen {
             )
             return
         }
-
-        val percentDownload = savedL.likes.percentDownload.collectAsStateWithLifecycle().value
-
-        val columnR_ScreenGifsTab = Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle().value
 
         val onTabChange: (Int) -> Unit = remember(vm) {
             { tab ->
@@ -121,7 +120,7 @@ class L_ScreenExplorer : Screen {
                     titlesIcon = EXPLORER_ICONS,
                     value = vm.screenType,
                     onChangeState = onTabChange,
-                    overlay0 = { TabBarPoints(columnR_ScreenGifsTab, vm.screenType == 0) },
+                    overlay0 = { TabBarPoints(columnGifsTab, vm.screenType == 0) },
                     tags = EXPLORER_TAGS
                 )
             }

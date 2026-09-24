@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -19,12 +18,11 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.common.snackbar.SnackBar
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun P2PSettingsSection() {
     val context = LocalContext.current
-    val bgReceive = Settings.p2p_background_receive.field.collectAsStateWithLifecycle().value
+    val bgReceive by Settings.p2p_background_receive.field.collectAsStateWithLifecycle()
     
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()

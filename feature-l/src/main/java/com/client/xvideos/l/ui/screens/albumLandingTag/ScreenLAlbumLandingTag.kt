@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -97,7 +98,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
         BackHandler { navigator.pop() }
-        val albumTopHits = vm.albumTopHits.collectAsStateWithLifecycle().value
+        val albumTopHits by vm.albumTopHits.collectAsStateWithLifecycle()
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp

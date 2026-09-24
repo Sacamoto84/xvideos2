@@ -151,7 +151,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 }
             }
 
-            val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
+            val blurRecentTasks by Settings.blur_recent_tasks.field.collectAsStateWithLifecycle()
             val shouldBlur = (isAppMinimized && blurRecentTasks) || isAppLocked
 
             // SECURITY: динамическая аппаратная защита превью в Recent Apps через FLAG_SECURE
@@ -246,7 +246,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     @Composable
     private fun MinimizedPrivacyOverlay() {
-        val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+        val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
         val scrimAlpha = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 0.45f else 0.88f
         Box(
             modifier = Modifier
@@ -268,7 +268,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     @Composable
     private fun AppLockOverlay(onUnlockSuccess: () -> Unit) {
-        val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+        val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
         if (isCamouflage) {
             CalculatorScreen(
                 onUnlock = { password ->

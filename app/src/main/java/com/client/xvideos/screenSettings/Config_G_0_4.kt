@@ -16,6 +16,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +32,7 @@ import com.skydoves.compose.stability.runtime.TraceRecomposition
 @Composable
 fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolean>) {
 
-    val list =  setting.field.collectAsStateWithLifecycle().value
+    val list by setting.field.collectAsStateWithLifecycle()
     val visibleIndices = remember(list) { list.indices.filter { it in 1..4 } }
 
     //val selectedOptions = remember { mutableStateListOf(false, false, true, true, false) }

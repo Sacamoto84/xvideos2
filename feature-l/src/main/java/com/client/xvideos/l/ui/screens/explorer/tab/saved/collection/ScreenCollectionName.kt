@@ -130,7 +130,7 @@ fun L_CollectionNameContent(
         handleExit()
     }
 
-    val columnSelect = Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
+    val columnSelect by Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle()
 
     // Изменение количества отображаемых элементов
     LaunchedEffect(columnSelect) { host.columns = columnSelect }

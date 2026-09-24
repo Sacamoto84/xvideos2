@@ -135,7 +135,7 @@ fun ScreenNicheContent(
             ) {
                 LazyRow123(
                     host = lazyHost,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxSize(),
                     onClickOpenProfile = onCreatorClick,
                     contentBeforeList = {
                         NicheHeaderContent(

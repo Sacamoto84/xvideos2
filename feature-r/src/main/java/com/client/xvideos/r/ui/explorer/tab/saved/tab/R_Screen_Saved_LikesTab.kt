@@ -10,6 +10,7 @@ import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,9 +55,8 @@ object R_Screen_Saved_LikesTab : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenSavedLikesSM = getScreenModel()
 
-        val columnSelect = normalizeRColumnCount(
-            Settings.r_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
-        )
+        val columnSelectRaw by Settings.r_likesTab_column_current_count.field.collectAsStateWithLifecycle()
+        val columnSelect = normalizeRColumnCount(columnSelectRaw)
 
         val pager = vm.likedHost.pager.collectAsLazyPagingItems()
 

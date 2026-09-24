@@ -73,7 +73,7 @@ class ScreenCollectionName(
         val navigator = LocalNavigator.currentOrThrow
         val savedRed = vm.savedRed
 
-        val selectedCollection = savedRed.collections.selectedCollection.collectAsStateWithLifecycle().value
+        val selectedCollection by savedRed.collections.selectedCollection.collectAsStateWithLifecycle()
 
         val closeCollection = {
             Timber.d("BackHandler SavedCollectionTab")
@@ -83,17 +83,12 @@ class ScreenCollectionName(
             }
         }
 
-        val handleBack = {
-            closeCollection()
-        }
-
         BackHandler {
             closeCollection()
         }
 
-        val columnSelect = normalizeRColumnCount(
-            Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
-        )
+        val columnSelectRaw by Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle()
+        val columnSelect = normalizeRColumnCount(columnSelectRaw)
 
         //Изменение количества отображаемых элементов
         LaunchedEffect(columnSelect) { vm.likedHost.columns = columnSelect }
@@ -108,7 +103,7 @@ class ScreenCollectionName(
                     .padding(start = 4.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = handleBack) {
+                IconButton(onClick = closeCollection) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Назад",
@@ -127,6 +122,7 @@ class ScreenCollectionName(
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){
                 LazyRow123(
                     host = vm.likedHost,
+                    modifier = Modifier.fillMaxSize(),
                     onClickOpenProfile = { navigator.push(ScreenRedProfile(it)) })
             }
         }

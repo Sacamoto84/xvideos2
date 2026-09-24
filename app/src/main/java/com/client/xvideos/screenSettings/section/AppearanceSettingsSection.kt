@@ -14,6 +14,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +36,7 @@ import com.client.xvideos.screenSettings.components.SettingsCardColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -45,7 +48,7 @@ import dev.chrisbanes.haze.rememberHazeState
  */
 @Composable
 internal fun AppearanceSettingsSection() {
-    val effectName = Settings.scroll_buttons_effect.field.collectAsStateWithLifecycle().value
+    val effectName by Settings.scroll_buttons_effect.field.collectAsStateWithLifecycle()
     val currentEffect = remember(effectName) { ScrollButtonEffect.fromNameOrDefault(effectName) }
     val previewHazeState = rememberHazeState()
 
@@ -168,5 +171,13 @@ private fun ScrollButtonPreviewCard(
                 .align(Alignment.CenterEnd)
                 .padding(end = 20.dp)
         )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun AppearanceSettingsSectionPreview() {
+    SettingsPreview {
+        AppearanceSettingsSection()
     }
 }

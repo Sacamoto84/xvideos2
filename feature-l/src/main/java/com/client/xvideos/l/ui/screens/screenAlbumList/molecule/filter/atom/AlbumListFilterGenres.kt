@@ -45,7 +45,7 @@ fun AlbumListFilterGenres(
     filterGenreStateCount: List<AlbumListFilterGenreCountResponse>?,
     onChange: (AlbumListFilter) -> Unit
 ) {
-    val mediaCategories = mediaCategoriesFlow.collectAsStateWithLifecycle().value
+    val mediaCategories by mediaCategoriesFlow.collectAsStateWithLifecycle()
 
     val filterTerms = remember(filterGenreStateCount) {
         filterGenreStateCount?.map { it.term }?.toSet()

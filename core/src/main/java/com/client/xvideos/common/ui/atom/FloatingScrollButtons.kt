@@ -18,6 +18,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,10 +61,8 @@ fun FloatingScrollButtons(
     contentColor: Color = Theme.ScrollFab.contentColor,
     effect: ScrollButtonEffect? = null,
 ) {
-    val resolvedEffect = effect ?: run {
-        val effectName = Settings.scroll_buttons_effect.field.collectAsStateWithLifecycle().value
-        remember(effectName) { ScrollButtonEffect.fromNameOrDefault(effectName) }
-    }
+    val effectName by Settings.scroll_buttons_effect.field.collectAsStateWithLifecycle()
+    val resolvedEffect = effect ?: remember(effectName) { ScrollButtonEffect.fromNameOrDefault(effectName) }
 
     AnimatedVisibility(
         visible = visible && (showScrollToTop || showScrollToBottom),
@@ -79,7 +78,7 @@ fun FloatingScrollButtons(
                 visible = showScrollToTop,
                 onClick = onScrollToTop,
                 icon = Icons.Default.KeyboardArrowUp,
-                contentDescription = "Scroll to top",
+                contentDescription = "Прокрутить вверх",
                 hazeState = hazeState,
                 contentColor = contentColor,
                 effect = resolvedEffect
@@ -89,7 +88,7 @@ fun FloatingScrollButtons(
                 visible = showScrollToBottom,
                 onClick = onScrollToBottom,
                 icon = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Scroll to bottom",
+                contentDescription = "Прокрутить вниз",
                 hazeState = hazeState,
                 contentColor = contentColor,
                 effect = resolvedEffect
@@ -147,6 +146,28 @@ private fun ScrollFabSlot(
 }
 
 @OptIn(ExperimentalHazeApi::class)
+private val scrollFabBlurStyle: HazeBlurStyle by lazy {
+    HazeBlurStyle.then {
+        backgroundColor(Theme.ScrollFab.backgroundColor)
+        blurRadius(Theme.ScrollFab.blurRadius)
+        noiseFactor(Theme.ScrollFab.noiseFactor)
+        blurredEdgeTreatment(BlurredEdgeTreatment(Theme.ScrollFab.shape))
+    }
+}
+
+@OptIn(ExperimentalHazeApi::class)
+private val scrollFabGlassStyle: GlassStyle by lazy {
+    GlassStyle.regular.then {
+        backgroundColor(Theme.ScrollFab.backgroundColor)
+        tint(Theme.ScrollFab.tintColor)
+        shape(Theme.ScrollFab.shape)
+        whitePoint(Theme.ScrollFab.whitePoint)
+        specularIntensity(Theme.ScrollFab.specularIntensity)
+        ambientResponse(Theme.ScrollFab.ambientResponse)
+    }
+}
+
+@OptIn(ExperimentalHazeApi::class)
 private fun Modifier.scrollFabVisualEffect(
     effect: ScrollButtonEffect,
     hazeState: HazeState
@@ -155,26 +176,12 @@ private fun Modifier.scrollFabVisualEffect(
         color = Theme.ScrollFab.backgroundColor,
         shape = Theme.ScrollFab.shape
     )
-    ScrollButtonEffect.BLUR -> this
-        .clip(Theme.ScrollFab.shape)
-        .hazeBlur(
-            input = HazeInput.Sources(hazeState),
-            style = HazeBlurStyle.then {
-                backgroundColor(Theme.ScrollFab.backgroundColor)
-                blurRadius(Theme.ScrollFab.blurRadius)
-                noiseFactor(Theme.ScrollFab.noiseFactor)
-                blurredEdgeTreatment(BlurredEdgeTreatment(Theme.ScrollFab.shape))
-            }
-        )
+    ScrollButtonEffect.BLUR -> this.hazeBlur(
+        input = HazeInput.Sources(hazeState),
+        style = scrollFabBlurStyle
+    )
     ScrollButtonEffect.GLASS -> this.hazeGlass(
         input = HazeInput.Sources(hazeState),
-        style = GlassStyle.regular.then {
-            backgroundColor(Theme.ScrollFab.backgroundColor)
-            tint(Theme.ScrollFab.tintColor)
-            shape(Theme.ScrollFab.shape)
-            whitePoint(Theme.ScrollFab.whitePoint)
-            specularIntensity(Theme.ScrollFab.specularIntensity)
-            ambientResponse(Theme.ScrollFab.ambientResponse)
-        }
+        style = scrollFabGlassStyle
     )
 }

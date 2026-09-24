@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.x.screens.videoplayer.atom.formatTime
 import cafe.adriel.voyager.core.screen.Screen
@@ -59,20 +60,23 @@ class ScreenX_LocalVideoPlayer(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val sm: ScreenX_LocalVideoPlayerSM = getScreenModel()
+        val downloadsList by sm.saved.downloads.list.collectAsStateWithLifecycle()
 
         val videoId = item?.id?.takeIf { it > 0L }
             ?: Uri.parse(fileUrl).lastPathSegment?.substringBefore('.')?.toLongOrNull()
             ?: 0L
 
-        val resolvedItem = remember(item, videoId, sm.saved.downloads.list.value) {
+        val resolvedItem = remember(item, videoId, downloadsList) {
             item
-                ?: sm.saved.downloads.list.value.find { it.id == videoId }
+                ?: downloadsList.find { it.id == videoId }
                 ?: ItemsX(id = videoId)
         }
 
-        val historyItem = if (videoId > 0L) sm.saved.history.get(videoId) else null
-        val resumePosition = historyItem?.takeIf { it.isEligibleForResume }?.let {
-            (it.lastPositionMs / 1000f).takeIf { sec -> sec.isFinite() && sec >= 0f }
+        val historyItem = remember(videoId) { if (videoId > 0L) sm.saved.history.get(videoId) else null }
+        val resumePosition = remember(historyItem) {
+            historyItem?.takeIf { it.isEligibleForResume }?.let {
+                (it.lastPositionMs / 1000f).takeIf { sec -> sec.isFinite() && sec >= 0f }
+            }
         }
 
         var resumeNoticeText by remember(fileUrl) {
@@ -100,18 +104,19 @@ class ScreenX_LocalVideoPlayer(
             }
         }
 
-        // Периодическое сохранение прогресса раз в 5 секунд во время воспроизведения
+        // Периодическое сохранение прогресса во время активного воспроизведения
         LaunchedEffect(host.isPaused) {
             if (!host.isPaused) {
+                saveProgress(sm, resolvedItem, host.currentTime, host.totalTime)
                 while (isActive) {
-                    delay(5000)
+                    delay(3000)
                     saveProgress(sm, resolvedItem, host.currentTime, host.totalTime)
                 }
             }
         }
 
         // Финальное сохранение при закрытии экрана
-        DisposableEffect(Unit) {
+        DisposableEffect(host, sm, resolvedItem) {
             onDispose {
                 saveProgress(sm, resolvedItem, host.currentTime, host.totalTime)
             }

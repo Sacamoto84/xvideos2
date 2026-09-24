@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -75,7 +76,8 @@ object L_ScreenAlbumTopHits : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLAlbumTopHitsSM = getScreenModel()
-        val items = vm.albumTopHits.collectAsStateWithLifecycle().value?.items
+        val albumTopHits by vm.albumTopHits.collectAsStateWithLifecycle()
+        val items = albumTopHits?.items
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
 

@@ -4,7 +4,6 @@ import com.client.xvideos.R
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,7 +15,9 @@ import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 
 @Composable
 internal fun XSettingsSection() {
-    val xvideosRow2 = Settings.xvideos_row2.field.collectAsStateWithLifecycle().value
+    val xvideosRow2 by Settings.xvideos_row2.field.collectAsStateWithLifecycle()
+    val xvideosShemale by Settings.xvideos_shemale.field.collectAsStateWithLifecycle()
+
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.icon_xvideos_white,
@@ -27,7 +28,6 @@ internal fun XSettingsSection() {
         )
         SettingsDivider()
 
-        val xvideosShemale = Settings.xvideos_shemale.field.collectAsStateWithLifecycle().value
         SettingsSwitchRow(
             icon = R.drawable.icon_xvideos_white,
             text = "Shemale",

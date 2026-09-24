@@ -94,13 +94,11 @@ object R_ScreenSavedTab : Screen {
             scope.launch { pagerState.scrollToPage(0) }
         }
 
-        val overlay0 = normalizeRColumnCount(
-            Settings.r_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
-        )
+        val overlay0Raw by Settings.r_likesTab_column_current_count.field.collectAsStateWithLifecycle()
+        val overlay0 = normalizeRColumnCount(overlay0Raw)
 
-        val overlay4 = normalizeRColumnCount(
-            Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
-        )
+        val overlay4Raw by Settings.r_collectionTab_column_current_count.field.collectAsStateWithLifecycle()
+        val overlay4 = normalizeRColumnCount(overlay4Raw)
 
         val onTabChange: (Int) -> Unit = remember(pagerState, scope) {
             { tab ->

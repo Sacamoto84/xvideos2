@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -60,7 +62,7 @@ fun L_ScreenSavedLikesTab_AddColumn(){
  *
  * Space is not necessary but is used for readability.
  */
-private val LIKES_FILTER_OPTIONS = listOf("All", "Image", "Gif")
+private val LIKES_FILTER_OPTIONS: ImmutableList<String> = persistentListOf("All", "Image", "Gif")
 
 object L_ScreenSavedLikesTab : Screen {
 
@@ -73,7 +75,7 @@ object L_ScreenSavedLikesTab : Screen {
 
         val vm: ScreenSavedLLikesSM = getScreenModel()
 
-        val column = Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
+        val column by Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle()
 
         val topInset = getTopInsetDp()
 

@@ -14,8 +14,11 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.client.xvideos.l.model.AlbumDetails
 import androidx.compose.ui.Alignment
@@ -56,6 +59,9 @@ object L_ScreenSavedAlbumsTab : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLSavedAlbumsSM = getScreenModel()
         val state = vm.state
+        val albums by remember(vm.saved.albums.list) {
+            derivedStateOf { vm.albums }
+        }
 
         // itemsToIgnore = 1: нулевой item грида — full-span спейсер под вырез,
         // без него индикатор считает спейсер контентом и врёт по позиции и длине.
@@ -78,38 +84,46 @@ object L_ScreenSavedAlbumsTab : Screen {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                //.padding(top = topInset)
                 .background(Theme.background)
-        )
-        {
-                    LazyVerticalGrid(
-                        state = state,
-                        columns = GridCells.Fixed(2),
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            if (albums.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Нет сохранённых альбомов",
+                        color = Theme.L.textColor.copy(alpha = 0.6f)
                     )
-                    {
-                        item ( span = { GridItemSpan(maxLineSpan) }){
-                            Box(modifier = Modifier.height(topInset))
-                        }
-
-                        // Индекс в ключе обязателен: сохранённый список может
-                        // содержать один альбом дважды, а дублирующийся ключ
-                        // роняет LazyLayout ("Key ... was already used") — тот же
-                        // приём, что и в ScreenAlbumList.
-                        itemsIndexed(vm.albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
-                            SavedAlbumGridItem(
-                                item = item,
-                                onAlbumClick = onAlbumClick,
-                                modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
-                            )
-                        }
+                }
+            } else {
+                LazyVerticalGrid(
+                    state = state,
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(modifier = Modifier.height(topInset))
                     }
 
-            /** Вертикальный индикатор прокрутки */
-            Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) {
-                VerticalScrollbar(scrollPercentProvider)
+                    // Индекс в ключе обязателен: сохранённый список может
+                    // содержать один альбом дважды, а дублирующийся ключ
+                    // роняет LazyLayout ("Key ... was already used") — тот же
+                    // приём, что и в ScreenAlbumList.
+                    itemsIndexed(albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
+                        SavedAlbumGridItem(
+                            item = item,
+                            onAlbumClick = onAlbumClick,
+                            modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                /** Вертикальный индикатор прокрутки */
+                Box(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp)) {
+                    VerticalScrollbar(scrollPercentProvider)
+                }
             }
         }
 

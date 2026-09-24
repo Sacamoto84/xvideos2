@@ -20,6 +20,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -87,9 +88,9 @@ object L_SavedTab : Screen {
             scope.launch { pagerState.scrollToPage(0) }
         }
 
-        val columnLikes = Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle().value
+        val columnLikes by Settings.l_likesTab_column_current_count.field.collectAsStateWithLifecycle()
 
-        val columnCollection = Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle().value
+        val columnCollection by Settings.l_collectionTab_column_current_count.field.collectAsStateWithLifecycle()
 
         val onTabChange: (Int) -> Unit = remember(pagerState, scope) {
             { tab ->

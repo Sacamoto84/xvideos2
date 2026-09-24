@@ -13,7 +13,6 @@ import com.composables.core.HorizontalSeparator
 
 @Composable
 fun DownloadIndicator(percentDownload : Float) {
-    //val percentDownload = Downloader.percent.collectAsStateWithLifecycle().value
     //Индикатор загрузки
     when(percentDownload) {
         in  0f..1f -> LinearProgressIndicator(progress = percentDownload,  modifier = Modifier.fillMaxWidth().height(2.dp), color = Color.Green)

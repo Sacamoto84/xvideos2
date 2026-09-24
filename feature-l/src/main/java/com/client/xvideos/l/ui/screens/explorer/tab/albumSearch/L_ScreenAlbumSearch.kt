@@ -31,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,11 +90,12 @@ object L_ScreenAlbumSearch : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLAlbumSearchSM = getScreenModel()
 
-        val searchText = vm.searchText.collectAsStateWithLifecycle().value
+        val searchText by vm.searchText.collectAsStateWithLifecycle()
         BackHandler(enabled = searchText.isNotEmpty()) { vm.searchText.value = "" }
-        val result = vm.result.collectAsStateWithLifecycle().value
-        val isLoading = vm.isLoading.collectAsStateWithLifecycle().value
+        val result by vm.result.collectAsStateWithLifecycle()
+        val isLoading by vm.isLoading.collectAsStateWithLifecycle()
         val sections = result?.sections
+        val title = result?.title
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
         val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.searchText.value = it } }
@@ -129,9 +131,9 @@ object L_ScreenAlbumSearch : Screen {
                 }
 
                 item {
-                    if (result?.title != null) {
+                    if (title != null) {
                         Text(
-                            result.title,
+                            title,
                             color = Theme.L.textColor,
                             fontSize = 32.sp,
                             fontFamily = Theme.L.fontFamilyKarla,

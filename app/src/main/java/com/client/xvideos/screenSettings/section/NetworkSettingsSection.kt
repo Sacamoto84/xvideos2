@@ -40,13 +40,13 @@ import kotlinx.coroutines.withContext
 
 @Composable
 internal fun NetworkSettingsSection() {
-    val dohEnabled = Settings.doh_enabled.field.collectAsStateWithLifecycle().value
-    val providerName = Settings.doh_provider.field.collectAsStateWithLifecycle().value
-    val customUrl = Settings.doh_custom_url.field.collectAsStateWithLifecycle().value
-    val fallbackToSystem = Settings.doh_fallback_to_system.field.collectAsStateWithLifecycle().value
-    val ipv4Only = Settings.doh_ipv4_only.field.collectAsStateWithLifecycle().value
+    val dohEnabled by Settings.doh_enabled.field.collectAsStateWithLifecycle()
+    val providerName by Settings.doh_provider.field.collectAsStateWithLifecycle()
+    val customUrl by Settings.doh_custom_url.field.collectAsStateWithLifecycle()
+    val fallbackToSystem by Settings.doh_fallback_to_system.field.collectAsStateWithLifecycle()
+    val ipv4Only by Settings.doh_ipv4_only.field.collectAsStateWithLifecycle()
 
-    val currentProvider = DohProvider.fromNameOrDefault(providerName)
+    val currentProvider = remember(providerName) { DohProvider.fromNameOrDefault(providerName) }
     var showCustomUrlDialog by remember { mutableStateOf(false) }
 
     BackHandler(enabled = showCustomUrlDialog) {

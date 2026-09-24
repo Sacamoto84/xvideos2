@@ -4,7 +4,6 @@ import com.client.xvideos.R
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,6 +20,9 @@ import com.client.xvideos.common.snackbar.SnackBar
 
 @Composable
 internal fun LSettingsSection(lLogin: String) {
+    val thumbnailSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
+    val currentDisplayName = ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: "?"
+
     SettingsGroup {
         SettingsButtonRowWithDialog(
             icon = R.drawable.icon_luscious,
@@ -40,9 +42,6 @@ internal fun LSettingsSection(lLogin: String) {
             }
         )
         SettingsDivider()
-
-        val thumbnailSize = Settings.thumbalistSize.field.collectAsStateWithLifecycle().value
-        val currentDisplayName = ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: "?"
         SettingsValueRow(
             icon = R.drawable.icon_luscious,
             text = "Размер миниатюры",

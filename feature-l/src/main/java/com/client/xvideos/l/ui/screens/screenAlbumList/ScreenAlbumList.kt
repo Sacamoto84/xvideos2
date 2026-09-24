@@ -129,11 +129,11 @@ private fun Screen.ScreenAlbumListContent(
             factory.create(initialFilter)
         }
         val bigList = vm.bigList
-        val info = vm.info.collectAsStateWithLifecycle().value
-        val currentFilter = vm.filter.collectAsStateWithLifecycle().value
-        val isRequest = vm.isRequest.collectAsStateWithLifecycle().value
-        val filterGCount = vm.filterGenreStateCount.collectAsStateWithLifecycle().value
-        val filterTagsCount = vm.filterTaggedStateCount.collectAsStateWithLifecycle().value
+        val info by vm.info.collectAsStateWithLifecycle()
+        val currentFilter by vm.filter.collectAsStateWithLifecycle()
+        val isRequest by vm.isRequest.collectAsStateWithLifecycle()
+        val filterGCount by vm.filterGenreStateCount.collectAsStateWithLifecycle()
+        val filterTagsCount by vm.filterTaggedStateCount.collectAsStateWithLifecycle()
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
         var totalPages by remember { mutableIntStateOf(1) }

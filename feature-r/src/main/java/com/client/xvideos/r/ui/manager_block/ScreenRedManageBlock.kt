@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,7 +53,7 @@ class ScreenRedManageBlock : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenRedManageBlockSM = getScreenModel()
-        val blockList = vm.blockList.collectAsStateWithLifecycle().value
+        val blockList by vm.blockList.collectAsStateWithLifecycle()
         val listState = rememberLazyListState()
 
         BackHandler {

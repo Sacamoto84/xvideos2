@@ -59,7 +59,10 @@ internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 @Composable
 fun AppLockSettingsSection() {
     val context = LocalContext.current.applicationContext
-    val appLockEnabled = Settings.app_lock_enabled.field.collectAsStateWithLifecycle().value
+    val appLockEnabled by Settings.app_lock_enabled.field.collectAsStateWithLifecycle()
+    val timeoutSeconds by Settings.app_lock_timeout_seconds.field.collectAsStateWithLifecycle()
+    val keyboardIncognito by Settings.keyboard_incognito_enabled.field.collectAsStateWithLifecycle()
+    val blurRecentTasks by Settings.blur_recent_tasks.field.collectAsStateWithLifecycle()
     var passwordSet by remember { mutableStateOf(AppLockRepository.isPasswordSet(context)) }
     var dialogMode by remember { mutableStateOf<AppLockDialogMode?>(null) }
     val enabled = appLockEnabled && passwordSet
@@ -102,7 +105,6 @@ fun AppLockSettingsSection() {
     }
 
     if (showTimeoutDialog) {
-        val timeoutSeconds = Settings.app_lock_timeout_seconds.field.collectAsStateWithLifecycle().value
         val currentTimeout = AppLockTimeout.fromSeconds(timeoutSeconds)
         AppLockTimeoutDialog(
             currentTimeout = currentTimeout,
@@ -130,7 +132,6 @@ fun AppLockSettingsSection() {
 
         if (enabled) {
             SettingsDivider2()
-            val timeoutSeconds = Settings.app_lock_timeout_seconds.field.collectAsStateWithLifecycle().value
             val currentTimeout = AppLockTimeout.fromSeconds(timeoutSeconds)
             val timeoutSubtitle = when (currentTimeout) {
                 AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
@@ -166,8 +167,6 @@ fun AppLockSettingsSection() {
 
         SettingsDivider2()
 
-        val keyboardIncognito = Settings.keyboard_incognito_enabled.field.collectAsStateWithLifecycle().value
-
         SettingsSwitchRow(
             icon = R.drawable.memory_24,
             text = "Инкогнито-клавиатура",
@@ -177,8 +176,6 @@ fun AppLockSettingsSection() {
         )
 
         SettingsDivider2()
-
-        val blurRecentTasks = Settings.blur_recent_tasks.field.collectAsStateWithLifecycle().value
 
         SettingsSwitchRow(
             icon = R.drawable.ic_blur_24,
@@ -200,7 +197,7 @@ private fun CamouflageGroup(
     onEnableRequested: () -> Unit
 ) {
     val context = LocalContext.current.applicationContext
-    val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+    val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
     val camouflageSubtitle = when {
         !passwordSet -> "Сначала задайте код доступа"
         isCamouflage -> "Иконка «Калькулятор», секретный вход по PIN + «=»"
@@ -332,7 +329,7 @@ internal fun AppLockPasswordDialog(
     var isSubmitting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    val isCamouflage = Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle().value
+    val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
     val passwordKeyboardType = if (isCamouflage) KeyboardType.NumberPassword else KeyboardType.Text
 
     val needsCurrentPassword = mode == AppLockDialogMode.CHANGE || mode == AppLockDialogMode.DISABLE

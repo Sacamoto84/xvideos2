@@ -93,7 +93,7 @@ class ScreenFavorites : Screen {
             onDelete = remember(vm) { { vm.removeFavorite(it) } },
             onDownload = remember(vm) { { vm.download(it) } },
             onSaveToGallery = remember(vm) { { vm.saveToGallery(it) } },
-            onPlayLocal = remember(navigator) { { url -> navigator.push(ScreenX_LocalVideoPlayer(url)) } },
+            onPlayLocal = remember(navigator) { { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) } },
             onOpenVideo = remember(navigator) { { navigator.push(ScreenX_VideoPlayer(normalizeXUrl(it.href), it)) } },
         )
     }
@@ -113,7 +113,7 @@ private fun FavoritesContent(
     posterUrlOf: (ItemsX) -> String,
     onDelete: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
-    onPlayLocal: (String) -> Unit,
+    onPlayLocal: (String, ItemsX) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
@@ -217,7 +217,7 @@ private fun FavoriteRow(
     posterUrl: String,
     onDelete: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
-    onPlayLocal: (String) -> Unit,
+    onPlayLocal: (String, ItemsX) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
@@ -246,7 +246,7 @@ private fun FavoriteRow(
                         posterUrl,
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable { onPlayLocal(localUrl) }
+                            .clickable { onPlayLocal(localUrl, item) }
                     )
                     // Значок «скачано» (как в R — IconSave18).
                     Row(
@@ -419,7 +419,7 @@ private fun ScreenFavoritesPreview() {
         posterUrlOf = { it.previewImage },
         onDelete = {},
         onDownload = {},
-        onPlayLocal = {},
+        onPlayLocal = { _, _ -> },
         onOpenVideo = {},
     )
 }

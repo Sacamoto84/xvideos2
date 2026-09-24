@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.Stable
@@ -86,8 +87,8 @@ object SearchTab : Screen {
         val vm: ScreenRedExplorerSearchSM = getScreenModel()
         val navigator = LocalNavigator.currentOrThrow
 
-        val searchText = vm.searchText.collectAsStateWithLifecycle().value
-        val isLoading = vm.isLoading.collectAsStateWithLifecycle().value
+        val searchText by vm.searchText.collectAsStateWithLifecycle()
+        val isLoading by vm.isLoading.collectAsStateWithLifecycle()
 
         val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.searchText.value = it } }
         val onCreatorClick: (String) -> Unit = remember(navigator) {

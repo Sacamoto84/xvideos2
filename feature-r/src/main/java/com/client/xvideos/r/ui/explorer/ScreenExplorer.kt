@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Stable
@@ -64,9 +65,8 @@ class ScreenRedExplorer : Screen {
             vm.screenType = 0
         }
 
-        val overlay0 = normalizeRColumnCount(
-            Settings.r_explorerGifsTab_column_current_count.field.collectAsStateWithLifecycle().value
-        )
+        val columnGifsTab by Settings.r_explorerGifsTab_column_current_count.field.collectAsStateWithLifecycle()
+        val overlay0 = normalizeRColumnCount(columnGifsTab)
 
         val onTabChange: (Int) -> Unit = remember(vm) {
             { tab ->
