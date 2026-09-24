@@ -57,6 +57,19 @@ internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
 private val appLockErrorColor = Color(0xFFB3261E)
 private val appLockDisableColor = Color(0xFFFF7A7A)
+private val TIMEOUT_ITEM_SHAPE = RoundedCornerShape(12.dp)
+private val UNFOCUSED_BORDER_COLOR = Color(0xFF9A9A9A)
+private val UNFOCUSED_LABEL_COLOR = Color(0xFF6E6E6E)
+private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
+
+private val RADIO_SPACER_WIDTH = 12.dp
+private val DIALOG_ITEM_SPACING = 10.dp
+private val TIMEOUT_ITEM_SPACING = 4.dp
+private val TIMEOUT_ITEM_HORIZONTAL_PADDING = 8.dp
+private val TIMEOUT_ITEM_VERTICAL_PADDING = 10.dp
+
+private const val CD_HIDE_CODE = "Скрыть код доступа"
+private const val CD_SHOW_CODE = "Показать код доступа"
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
@@ -327,7 +340,7 @@ private fun CamouflageVerificationDialog(
         onDismiss = handleDismiss,
         content = {
             DisableAppLockAutofill()
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(DIALOG_ITEM_SPACING)) {
                 Text(
                     "Для работы маскировки под калькулятор код доступа должен состоять только из цифр. Введите ваш текущий PIN-код для подтверждения:",
                     style = Theme.L.Type.dialogBody.copy(color = Theme.DialogLavande.bodyColor)
@@ -483,7 +496,7 @@ internal fun AppLockPasswordDialog(
         onDismiss = onDismiss,
         content = {
             DisableAppLockAutofill()
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(DIALOG_ITEM_SPACING)) {
                 if (needsCurrentPassword) {
                     PasswordSettingField(
                         value = currentPassword,
@@ -589,7 +602,7 @@ fun PasswordSettingField(
                     imageVector =
                         if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                     contentDescription =
-                        if (showPassword) "Скрыть код доступа" else "Показать код доступа",
+                        if (showPassword) CD_HIDE_CODE else CD_SHOW_CODE,
                     tint = dialogTheme.dismissTextColor
                 )
             }
@@ -599,9 +612,9 @@ fun PasswordSettingField(
             unfocusedTextColor = dialogTheme.bodyColor,
             cursorColor = dialogTheme.dismissTextColor,
             focusedBorderColor = dialogTheme.dismissTextColor,
-            unfocusedBorderColor = Color(0xFF9A9A9A),
+            unfocusedBorderColor = UNFOCUSED_BORDER_COLOR,
             focusedLabelColor = dialogTheme.dismissTextColor,
-            unfocusedLabelColor = Color(0xFF6E6E6E)
+            unfocusedLabelColor = UNFOCUSED_LABEL_COLOR
         )
     )
 }
@@ -630,7 +643,7 @@ internal fun AppLockTimeoutDialog(
         content = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(TIMEOUT_ITEM_SPACING)
             ) {
                 AppLockTimeout.entries.forEach { timeout ->
                     AppLockTimeoutItem(
@@ -662,9 +675,9 @@ private fun AppLockTimeoutItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(TIMEOUT_ITEM_SHAPE)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 10.dp),
+            .padding(horizontal = TIMEOUT_ITEM_HORIZONTAL_PADDING, vertical = TIMEOUT_ITEM_VERTICAL_PADDING),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
@@ -672,10 +685,10 @@ private fun AppLockTimeoutItem(
             onClick = null,
             colors = RadioButtonDefaults.colors(
                 selectedColor = SettingsAccentColor,
-                unselectedColor = Color(0xFF938F99)
+                unselectedColor = RADIO_UNSELECTED_COLOR
             )
         )
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(RADIO_SPACER_WIDTH))
         Text(
             text = label,
             style = Theme.L.Type.dialogBody.copy(

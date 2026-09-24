@@ -28,6 +28,14 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
 private val SERVER_FAVORITE_BUTTON_SHAPE = RoundedCornerShape(4.dp)
+private val BUTTON_HEIGHT = 46.dp
+private val BUTTON_TOP_PADDING = 2.dp
+private val BUTTON_BOTTOM_PADDING = 4.dp
+private val BUTTON_BORDER_WIDTH = 1.dp
+private val CONTENT_SPACING = 8.dp
+private val ICON_SIZE = 20.dp
+private val PROGRESS_INDICATOR_SIZE = 20.dp
+private val PROGRESS_STROKE_WIDTH = 2.dp
 private const val TEXT_REMOVE_FROM_SERVER = "Удалить альбом с сервера"
 private const val TEXT_ADD_TO_SERVER = "Добавить альбом на сервер"
 
@@ -58,31 +66,31 @@ fun AlbumInfoButtonServerFavorite(
 
     Box(
         modifier = Modifier
-            .padding(top = 2.dp, bottom = 4.dp)
-            .height(46.dp)
+            .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
+            .height(BUTTON_HEIGHT)
             .fillMaxWidth()
             .clip(SERVER_FAVORITE_BUTTON_SHAPE)
-            .border(1.dp, Theme.L.grey3, SERVER_FAVORITE_BUTTON_SHAPE)
+            .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SERVER_FAVORITE_BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(enabled = !isLoading, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(PROGRESS_INDICATOR_SIZE),
                 color = Color.White,
-                strokeWidth = 2.dp
+                strokeWidth = PROGRESS_STROKE_WIDTH
             )
         } else {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CONTENT_SPACING),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = iconVector,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(ICON_SIZE)
                 )
                 Text(
                     text = buttonText,

@@ -54,13 +54,21 @@ fun ScreenDashBoardsBottomNavigationButtonsPreview() {
     }
 }
 
-// Черный цвет текста
-private val colorTextBlack = Color(0xFF2C2C2C)
-private val colorAccent = Color(0xFFFF9000)
-private val colorTextWhite = Color(0xFFCCCCCC)
-private val colorBlackBackground = Color(0xFF252525)
-private val selectedBorderColor = Color(0xFFFF9900)
-private val navButtonHeight = 48.dp
+private val COLOR_TEXT_BLACK = Color(0xFF2C2C2C)
+private val COLOR_ACCENT = Color(0xFFFF9000)
+private val COLOR_TEXT_WHITE = Color(0xFFCCCCCC)
+private val COLOR_BLACK_BACKGROUND = Color(0xFF252525)
+private val SELECTED_BORDER_COLOR = Color(0xFFFF9900)
+
+private val NAV_BUTTON_HEIGHT = 48.dp
+private val ITEM_PADDING_HORIZONTAL = 0.5.dp
+private val SELECTED_BORDER_WIDTH = 2.dp
+private val ARROW_FONT_SIZE = 24.sp
+private const val PAGE_FRACTION = 0.2f
+
+private const val CONTENT_TYPE_PAGE_NUMBER = "page_number_item"
+private const val ARROW_LEFT = "<"
+private const val ARROW_RIGHT = ">"
 
 /**
  * Bottom navigation buttons
@@ -90,27 +98,27 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
 
     Row(
         modifier = Modifier
-            .height(navButtonHeight)
+            .height(NAV_BUTTON_HEIGHT)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val canGoBack = value > 0
-        val backBg = if (!canGoBack) colorTextBlack else colorAccent
+        val backBg = if (!canGoBack) COLOR_TEXT_BLACK else COLOR_ACCENT
         val backTextColor = if (!canGoBack) Color.DarkGray else Color.Black
 
         Box(
             modifier = Modifier
-                .padding(horizontal = 0.5.dp)
-                .width(navButtonHeight)
-                .height(navButtonHeight)
+                .padding(horizontal = ITEM_PADDING_HORIZONTAL)
+                .width(NAV_BUTTON_HEIGHT)
+                .height(NAV_BUTTON_HEIGHT)
                 .background(backBg)
                 .clickable(enabled = canGoBack, onClick = onBackClick),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                "<",
+                ARROW_LEFT,
                 color = backTextColor,
-                fontSize = 24.sp,
+                fontSize = ARROW_FONT_SIZE,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -124,7 +132,7 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
             items(
                 count = safeMax,
                 key = { index -> index },
-                contentType = { "page_number_item" }
+                contentType = { CONTENT_TYPE_PAGE_NUMBER }
             ) { index ->
                 val onPageClick = remember(index, maxPageIndex, onChange) {
                     { onChange(index.coerceIn(0, maxPageIndex)) }
@@ -133,28 +141,28 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
                     pageNumber = index + 1,
                     isSelected = value == index,
                     onClick = onPageClick,
-                    modifier = Modifier.fillParentMaxWidth(0.2f)
+                    modifier = Modifier.fillParentMaxWidth(PAGE_FRACTION)
                 )
             }
         }
 
         val canGoForward = value < maxPageIndex
-        val forwardBg = if (!canGoForward) colorTextBlack else colorAccent
+        val forwardBg = if (!canGoForward) COLOR_TEXT_BLACK else COLOR_ACCENT
         val forwardTextColor = if (!canGoForward) Color.DarkGray else Color.Black
 
         Box(
             modifier = Modifier
-                .padding(horizontal = 0.5.dp)
-                .width(navButtonHeight)
-                .height(navButtonHeight)
+                .padding(horizontal = ITEM_PADDING_HORIZONTAL)
+                .width(NAV_BUTTON_HEIGHT)
+                .height(NAV_BUTTON_HEIGHT)
                 .background(forwardBg)
                 .clickable(enabled = canGoForward, onClick = onForwardClick),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                ">",
+                ARROW_RIGHT,
                 color = forwardTextColor,
-                fontSize = 24.sp,
+                fontSize = ARROW_FONT_SIZE,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -169,21 +177,21 @@ private fun PageNumberButton(
     modifier: Modifier = Modifier,
 ) {
     val borderModifier = if (isSelected) {
-        Modifier.border(2.dp, selectedBorderColor)
+        Modifier.border(SELECTED_BORDER_WIDTH, SELECTED_BORDER_COLOR)
     } else {
         Modifier
     }
 
     Box(
         modifier = modifier
-            .padding(horizontal = 0.5.dp)
-            .height(navButtonHeight)
+            .padding(horizontal = ITEM_PADDING_HORIZONTAL)
+            .height(NAV_BUTTON_HEIGHT)
             .then(borderModifier)
-            .background(colorBlackBackground)
+            .background(COLOR_BLACK_BACKGROUND)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = pageNumber.toString(), color = colorTextWhite)
+        Text(text = pageNumber.toString(), color = COLOR_TEXT_WHITE)
     }
 }
 

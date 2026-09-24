@@ -18,6 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.settings.ThumbnailsSize
 
+private val SELECTOR_HORIZONTAL_PADDING = 72.dp
+private val SELECTOR_VERTICAL_PADDING = 4.dp
+
 @Composable
 fun ThumbnailSizeSelector(
     currentValue: String,
@@ -29,7 +32,7 @@ fun ThumbnailSizeSelector(
     val onOpen = remember { { expanded = true } }
     val onDismiss = remember { { expanded = false } }
 
-    Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 72.dp, vertical = 4.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().padding(horizontal = SELECTOR_HORIZONTAL_PADDING, vertical = SELECTOR_VERTICAL_PADDING)) {
         Button(onClick = onOpen) {
             Text(currentValue)
         }
@@ -45,8 +48,9 @@ fun ThumbnailSizeSelector(
                             expanded = false
                         }
                     }
+                    val itemContent: @Composable () -> Unit = remember(name) { { Text(name) } }
                     DropdownMenuItem(
-                        text = { Text(name) },
+                        text = itemContent,
                         onClick = handleSelect
                     )
                 }

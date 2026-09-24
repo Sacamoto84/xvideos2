@@ -20,6 +20,10 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
 private val SHARE_ALBUM_BUTTON_SHAPE = RoundedCornerShape(4.dp)
+private val BUTTON_HEIGHT = 46.dp
+private val BUTTON_TOP_PADDING = 2.dp
+private val BUTTON_BOTTOM_PADDING = 4.dp
+private val BUTTON_BORDER_WIDTH = 1.dp
 private const val TEXT_SHARE_ALBUM = "Share Album (P2P)"
 
 /** Кнопка «поделиться альбомом по P2P» в шапке ScreenLAlbum. */
@@ -31,11 +35,11 @@ fun AlbumInfoButtonShareAlbum(onClick: () -> Unit) {
 
     Box(
         modifier = Modifier
-            .padding(top = 2.dp, bottom = 4.dp)
-            .height(46.dp)
+            .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
+            .height(BUTTON_HEIGHT)
             .fillMaxWidth()
             .clip(SHARE_ALBUM_BUTTON_SHAPE)
-            .border(1.dp, Theme.L.grey3, SHARE_ALBUM_BUTTON_SHAPE)
+            .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SHARE_ALBUM_BUTTON_SHAPE)
             .background(Theme.L.grey6)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

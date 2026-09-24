@@ -38,6 +38,12 @@ import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
+private val PLAYER_BG_COLOR = Color(0xFF040404)
+private val RESUME_PILL_BOTTOM_PADDING = 76.dp
+private const val RESUME_NOTICE_AUTO_HIDE_MS = 4000L
+private const val PROGRESS_SAVE_INTERVAL_MS = 3000L
+private const val RESUME_NOTICE_PREFIX = "Возобновлено с "
+
 /**
  * Плеер локального (скачанного) файла X.
  *
@@ -82,7 +88,7 @@ class ScreenX_LocalVideoPlayer(
         var resumeNoticeText by remember(fileUrl) {
             mutableStateOf(
                 resumePosition?.let { sec ->
-                    "Возобновлено с ${formatTime(sec.toInt())}"
+                    "$RESUME_NOTICE_PREFIX${formatTime(sec.toInt())}"
                 }
             )
         }
@@ -99,7 +105,7 @@ class ScreenX_LocalVideoPlayer(
         // Авто-скрытие плашки о возобновлении через 4 секунды
         LaunchedEffect(resumeNoticeText) {
             if (resumeNoticeText != null) {
-                delay(4000)
+                delay(RESUME_NOTICE_AUTO_HIDE_MS)
                 resumeNoticeText = null
             }
         }
@@ -109,7 +115,7 @@ class ScreenX_LocalVideoPlayer(
             if (!host.isPaused) {
                 saveProgress(sm, resolvedItem, host.currentTime, host.totalTime)
                 while (isActive) {
-                    delay(3000)
+                    delay(PROGRESS_SAVE_INTERVAL_MS)
                     saveProgress(sm, resolvedItem, host.currentTime, host.totalTime)
                 }
             }
@@ -141,7 +147,7 @@ class ScreenX_LocalVideoPlayer(
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
+        Box(modifier = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)) {
             ComposeVideoPlayer(
                 playerHost = host,
                 modifier = Modifier.fillMaxSize(),
@@ -156,7 +162,7 @@ class ScreenX_LocalVideoPlayer(
                         exit = fadeOut(),
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = 76.dp)
+                            .padding(bottom = RESUME_PILL_BOTTOM_PADDING)
                     ) {
                         resumeNoticeText?.let { notice ->
                             ResumePlaybackPill(

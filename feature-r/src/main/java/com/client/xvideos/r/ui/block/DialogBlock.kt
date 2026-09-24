@@ -8,6 +8,8 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.ui.theme.XvideosTheme
 
 private val BLOCK_DIALOG_BODY = AnnotatedString("Вы уверены, что хотите заблокировать этот GIFs?")
+private const val DIALOG_TITLE = "Подтвердите блокировку"
+private const val CONFIRM_TEXT = "Блокировать"
 
 @Composable
 fun DialogBlock(
@@ -23,10 +25,10 @@ fun DialogBlock(
             }
         }
         LavenderDialog(
-            title = "Подтвердите блокировку",
+            title = DIALOG_TITLE,
             onDismiss = onDismiss,
             body = BLOCK_DIALOG_BODY,
-            confirmText = "Блокировать",
+            confirmText = CONFIRM_TEXT,
             onConfirm = handleConfirm,
             destructive = true,
         )

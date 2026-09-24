@@ -42,16 +42,33 @@ import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val profileAvatarShape = RoundedCornerShape(8.dp)
-private val profileFollowButtonShape = RoundedCornerShape(8.dp)
-private val profileStatLabelColor = Color(0xFF9E9DA9)
-private val profileStatDividerColor = Color(0xFF3D3C53)
+private val PROFILE_AVATAR_SHAPE = RoundedCornerShape(8.dp)
+private val PROFILE_FOLLOW_BUTTON_SHAPE = RoundedCornerShape(8.dp)
+private val PROFILE_STAT_LABEL_COLOR = Color(0xFF9E9DA9)
+private val PROFILE_STAT_DIVIDER_COLOR = Color(0xFF3D3C53)
+
 private val AVATAR_SIZE = 96.dp
+private val STAT_DIVIDER_WIDTH = 1.dp
+private val STAT_DIVIDER_HEIGHT = 24.dp
+private val PERSON_ICON_SIZE = 24.dp
+private val VERIFIED_BADGE_SIZE = 26.dp
+private val ROW_HEADER_HEIGHT = 48.dp
+private val BUTTON_HEIGHT = 48.dp
+private val BUTTON_BORDER_WIDTH = 1.dp
+private val BUTTON_END_PADDING = 64.dp
+private val USERNAME_SPACER_WIDTH = 8.dp
+private val VERIFIED_OFFSET_Y = 8.dp
+
+private val USERNAME_FONT_SIZE = 28.sp
+private val BUTTON_FONT_SIZE = 18.sp
+private val DESCRIPTION_FONT_SIZE = 14.sp
+
 private const val TEXT_FOLLOW = "Follow"
 private const val TEXT_UNFOLLOW = "Unfollow"
 private const val TEXT_SUBSCRIBERS = "Подписчиков"
 private const val TEXT_VIEWS = "Просмотров"
 private const val TEXT_POSTS = "Постов"
+private const val CD_VERIFIED_CREATOR = "Verified Creator"
 
 @Composable
 fun RedProfileCreaterInfo(item: UserInfo, savedRed: () -> SavedRed) {
@@ -92,7 +109,7 @@ fun RedProfileCreaterInfo(
     val followButtonTextColor = if (isFollow) Color.White else Color.Black
     val followButtonBgColor = if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow
     val followButtonBorderModifier = remember(isFollow) {
-        if (isFollow) Modifier.border(1.dp, Color.White, profileFollowButtonShape) else Modifier
+        if (isFollow) Modifier.border(BUTTON_BORDER_WIDTH, Color.White, PROFILE_FOLLOW_BUTTON_SHAPE) else Modifier
     }
 
     Column(modifier = Modifier.padding(horizontal = 4.dp).fillMaxWidth()) {
@@ -105,12 +122,12 @@ fun RedProfileCreaterInfo(
             if (item.profileImageUrl != null) {
                 UrlImage(
                     item.profileImageUrl,
-                    modifier = Modifier.clip(profileAvatarShape).size(AVATAR_SIZE)
+                    modifier = Modifier.clip(PROFILE_AVATAR_SHAPE).size(AVATAR_SIZE)
                 )
             } else {
                 Box(
                     modifier = Modifier
-                        .clip(profileAvatarShape)
+                        .clip(PROFILE_AVATAR_SHAPE)
                         .size(AVATAR_SIZE)
                         .background(Color.DarkGray),
                     contentAlignment = Alignment.Center
@@ -118,7 +135,7 @@ fun RedProfileCreaterInfo(
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(PERSON_ICON_SIZE),
                         tint = Color.White
                     )
                 }
@@ -129,23 +146,23 @@ fun RedProfileCreaterInfo(
                 verticalArrangement = Arrangement.SpaceAround
             ) {
                 Row(
-                    modifier = Modifier.height(48.dp),
+                    modifier = Modifier.height(ROW_HEADER_HEIGHT),
                     verticalAlignment = Alignment.Top
                 ) {
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
                     Text(
                         item.username,
                         color = Color.White,
                         fontFamily = Theme.R.fontFamilyPopinsMedium,
-                        fontSize = 28.sp,
+                        fontSize = USERNAME_FONT_SIZE,
                         modifier = Modifier
                     )
                     if (item.verified) {
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
                         Image(
                             painter = painterResource(id = R.drawable.verificed),
-                            contentDescription = "Verified Creator",
-                            modifier = Modifier.size(26.dp).offset(y = 8.dp)
+                            contentDescription = CD_VERIFIED_CREATOR,
+                            modifier = Modifier.size(VERIFIED_BADGE_SIZE).offset(y = VERIFIED_OFFSET_Y)
                         )
                     }
                 }
@@ -153,10 +170,10 @@ fun RedProfileCreaterInfo(
                 Box(
                     modifier = Modifier
                         .align(Alignment.Start)
-                        .padding(start = 8.dp, end = 64.dp)
+                        .padding(start = 8.dp, end = BUTTON_END_PADDING)
                         .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(profileFollowButtonShape)
+                        .height(BUTTON_HEIGHT)
+                        .clip(PROFILE_FOLLOW_BUTTON_SHAPE)
                         .background(followButtonBgColor)
                         .then(followButtonBorderModifier)
                         .clickable(onClick = onFollowClick),
@@ -166,7 +183,7 @@ fun RedProfileCreaterInfo(
                         followButtonText,
                         color = followButtonTextColor,
                         fontFamily = Theme.R.fontFamilyDMsanss,
-                        fontSize = 18.sp,
+                        fontSize = BUTTON_FONT_SIZE,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -183,10 +200,10 @@ fun RedProfileCreaterInfo(
                 modifier = Modifier.fillMaxWidth().weight(1f)
             ) {
                 Text(followersPretty, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium)
-                Text(TEXT_SUBSCRIBERS, color = profileStatLabelColor, fontFamily = Theme.R.fontFamilyPopinsRegular)
+                Text(TEXT_SUBSCRIBERS, color = PROFILE_STAT_LABEL_COLOR, fontFamily = Theme.R.fontFamilyPopinsRegular)
             }
 
-            Box(Modifier.width(1.dp).height(24.dp).background(profileStatDividerColor))
+            Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -199,12 +216,12 @@ fun RedProfileCreaterInfo(
                 )
                 Text(
                     TEXT_VIEWS,
-                    color = profileStatLabelColor,
+                    color = PROFILE_STAT_LABEL_COLOR,
                     fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
             }
 
-            Box(Modifier.width(1.dp).height(24.dp).background(profileStatDividerColor))
+            Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -217,7 +234,7 @@ fun RedProfileCreaterInfo(
                 )
                 Text(
                     TEXT_POSTS,
-                    color = profileStatLabelColor,
+                    color = PROFILE_STAT_LABEL_COLOR,
                     fontFamily = Theme.R.fontFamilyPopinsRegular
                 )
             }
@@ -227,7 +244,7 @@ fun RedProfileCreaterInfo(
             Text(
                 aboutTitle,
                 color = Theme.R.colorTextGray,
-                fontSize = 14.sp,
+                fontSize = DESCRIPTION_FONT_SIZE,
                 fontFamily = Theme.R.fontFamilyPopinsRegular
             )
 
@@ -236,7 +253,7 @@ fun RedProfileCreaterInfo(
             Text(
                 descriptionTrimmed,
                 color = Color.White,
-                fontSize = 14.sp,
+                fontSize = DESCRIPTION_FONT_SIZE,
                 fontFamily = Theme.R.fontFamilyPopinsRegular
             )
         }
