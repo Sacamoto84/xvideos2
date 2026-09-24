@@ -59,6 +59,22 @@ import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.snackbar.SnackBar
 import java.io.File
 
+private const val VIDEO_ASPECT_RATIO = 352f / 198f
+private const val TEXT_SAVED_TITLE = "Сохранённое"
+private const val TEXT_EMPTY = "Пусто"
+private const val TEXT_DELETE_CONFIRM_TITLE = "Удалить из сохранённого?"
+private const val TEXT_DELETE = "Удалить"
+private const val CD_P2P = "P2P"
+private const val CD_DELETE = "Удалить"
+private const val CONTENT_TYPE_HEADER = "header"
+private const val CONTENT_TYPE_SAVED_ROW = "saved_row"
+
+private val SAVED_DIVIDER_COLOR = Color(0xFF9E9E9E)
+private val SHARE_ICON_SIZE = 26.dp
+private val DELETE_ICON_SIZE = 28.dp
+private val DIALOG_PREVIEW_WIDTH = 160.dp
+private val DIALOG_IMAGE_SHAPE = RoundedCornerShape(8.dp)
+
 /**
  * Контент экрана «Сохранённое» (загруженные превью-mp4).
  *
@@ -112,7 +128,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
             { onConfirmDelete(item) }
         }
         ConfirmDeleteVideoDialog(
-            title = "Удалить из сохранённого?",
+            title = TEXT_DELETE_CONFIRM_TITLE,
             imageUrl = saved.downloads.localPosterPath(item.id) ?: item.previewImage,
             onConfirm = onConfirmItem,
             onDismiss = onDismissDelete,
@@ -130,7 +146,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
             Column(modifier = Modifier.fillMaxSize()) {
                 SavedHeader(topCutout = topCutout)
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Пусто", color = Color.Gray, fontSize = 16.sp)
+                    Text(TEXT_EMPTY, color = Color.Gray, fontSize = 16.sp)
                 }
             }
         } else {
@@ -138,13 +154,13 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 state = listState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                item(key = "header", contentType = "header") {
+                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER) {
                     SavedHeader(topCutout = topCutout)
                 }
                 items(
                     items = list,
                     key = { it.id },
-                    contentType = { _ -> "saved_row" }
+                    contentType = { CONTENT_TYPE_SAVED_ROW }
                 ) { item ->
                     val posterUrl = remember(item.id, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
@@ -177,14 +193,14 @@ private fun SavedHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Сохранённое",
+                TEXT_SAVED_TITLE,
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
             )
         }
-        HorizontalDivider(color = Color(0xFF9E9E9E))
+        HorizontalDivider(color = SAVED_DIVIDER_COLOR)
     }
 }
 
@@ -208,7 +224,7 @@ private fun SavedRow(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(352f / 198f)
+                .aspectRatio(VIDEO_ASPECT_RATIO)
                 .background(Color.DarkGray)
                 .clickable(onClick = handlePlay)
         ) {
@@ -243,18 +259,18 @@ private fun SavedRow(
             IconButton(onClick = handleShareP2p) {
                 Icon(
                     imageVector = Icons.Filled.Share,
-                    contentDescription = "P2P",
+                    contentDescription = CD_P2P,
                     tint = Color.Gray,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(SHARE_ICON_SIZE)
                 )
             }
 
             IconButton(onClick = handleDelete) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Удалить",
+                    contentDescription = CD_DELETE,
                     tint = Color.Gray,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(DELETE_ICON_SIZE)
                 )
             }
         }
@@ -269,7 +285,6 @@ fun ConfirmDeleteVideoDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val imageShape = remember { RoundedCornerShape(8.dp) }
     LavenderDialog(
         title = title,
         onDismiss = onDismiss,
@@ -277,12 +292,12 @@ fun ConfirmDeleteVideoDialog(
             UrlImage(
                 url = imageUrl,
                 modifier = Modifier
-                    .width(160.dp)
-                    .aspectRatio(352f / 198f)
-                    .clip(imageShape)
+                    .width(DIALOG_PREVIEW_WIDTH)
+                    .aspectRatio(VIDEO_ASPECT_RATIO)
+                    .clip(DIALOG_IMAGE_SHAPE)
             )
         },
-        confirmText = "Удалить",
+        confirmText = TEXT_DELETE,
         onConfirm = onConfirm,
         destructive = true,
     )

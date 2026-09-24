@@ -30,6 +30,13 @@ import com.client.xvideos.common.util.formatBytes
 import java.io.File
 
 private val progressShape = RoundedCornerShape(6.dp)
+private const val TEXT_TOTAL_DATA = "Всего данных"
+private const val SUBTITLE_X = "XVideos"
+private const val SUBTITLE_L = "Luscious"
+private const val SUBTITLE_R = "RedGifs"
+private val STORAGE_ROW_HORIZONTAL_PADDING = 16.dp
+private val STORAGE_ROW_VERTICAL_PADDING = 12.dp
+private val PROGRESS_BAR_HEIGHT = 6.dp
 
 @Immutable
 internal data class StorageStat(
@@ -53,12 +60,12 @@ internal val EmptyStorageStats = listOf(
 
 @Composable
 internal fun StorageStatisticsSection(stats: List<StorageStat>) {
-    val totalBytes = stats.sumOf { it.sizeBytes }
+    val totalBytes = remember(stats) { stats.sumOf { it.sizeBytes } }
     val formattedTotal = remember(totalBytes) { formatBytes(totalBytes) }
     SettingsGroup {
         SettingsValueRow(
             icon = R.drawable.icon_red,
-            text = "Всего данных",
+            text = TEXT_TOTAL_DATA,
             value = formattedTotal
         )
 
@@ -108,7 +115,7 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
         modifier = Modifier
             .fillMaxWidth()
             .background(SettingsCardColor)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = STORAGE_ROW_HORIZONTAL_PADDING, vertical = STORAGE_ROW_VERTICAL_PADDING),
         verticalAlignment = Alignment.CenterVertically
     ) {
         SettingsIcon(storageIcon(stat.key))
@@ -130,12 +137,12 @@ internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
                     style = rowSubtitleStyle
                 )
             }
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(PROGRESS_BAR_HEIGHT))
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
+                    .height(PROGRESS_BAR_HEIGHT)
                     .clip(progressShape),
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor
@@ -170,9 +177,9 @@ private fun storageIcon(key: String): Int {
 
 private fun sectionSubtitle(key: String): String {
     return when (key) {
-        "X" -> "XVideos"
-        "L" -> "Luscious"
-        else -> "RedGifs"
+        "X" -> SUBTITLE_X
+        "L" -> SUBTITLE_L
+        else -> SUBTITLE_R
     }
 }
 

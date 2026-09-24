@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,30 +36,45 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.l.featured.saved.SavedL
 
+private val COLLECTION_ITEM_SHAPE = RoundedCornerShape(12.dp)
+private val COLLECTION_PREVIEW_SIZE = 56.dp
+private val FOLDER_ICON_SIZE = 28.dp
+private val FOLDER_PLACEHOLDER_BG = Color(0xFF3D3949)
+private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекцию"
+private const val TEXT_NO_COLLECTIONS = "Нет коллекций"
+private const val TEXT_CREATE = "Создать"
+
 @Composable
 fun LCollectionDialogs(savedL: SavedL) {
     val isAnyDialogOpen = savedL.collection.visibleDialogCreateNew || savedL.collection.visibleDialog
-    BackHandler(enabled = isAnyDialogOpen) {
-        when (resolveLCollectionDialogBackAction(
-            visibleDialogCreateNew = savedL.collection.visibleDialogCreateNew,
-            visibleDialog = savedL.collection.visibleDialog
-        )) {
-            LCollectionDialogBackAction.DISMISS_NEW_COLLECTION -> savedL.collection.visibleDialogCreateNew = false
-            LCollectionDialogBackAction.DISMISS_COLLECTION_PICKER -> savedL.collection.visibleDialog = false
-            LCollectionDialogBackAction.NONE -> Unit
+    val onBack = remember(savedL) {
+        {
+            when (resolveLCollectionDialogBackAction(
+                visibleDialogCreateNew = savedL.collection.visibleDialogCreateNew,
+                visibleDialog = savedL.collection.visibleDialog
+            )) {
+                LCollectionDialogBackAction.DISMISS_NEW_COLLECTION -> savedL.collection.visibleDialogCreateNew = false
+                LCollectionDialogBackAction.DISMISS_COLLECTION_PICKER -> savedL.collection.visibleDialog = false
+                LCollectionDialogBackAction.NONE -> Unit
+            }
         }
     }
+    BackHandler(enabled = isAnyDialogOpen, onBack = onBack)
 
     if (savedL.collection.visibleDialogCreateNew) {
-        DaialogNewCollection(
-            visible = savedL.collection.visibleDialogCreateNew,
-            onDismiss = { savedL.collection.visibleDialogCreateNew = false },
-            onBlockConfirmed = { collection ->
+        val onDismissNew = remember(savedL) { { savedL.collection.visibleDialogCreateNew = false } }
+        val onBlockConfirmed: (String) -> Unit = remember(savedL) {
+            { collection ->
                 if (collection.isNotEmpty()) {
                     savedL.collection.createCollection(collection)
                     savedL.collection.visibleDialogCreateNew = false
                 }
             }
+        }
+        DaialogNewCollection(
+            visible = savedL.collection.visibleDialogCreateNew,
+            onDismiss = onDismissNew,
+            onBlockConfirmed = onBlockConfirmed
         )
     }
 
@@ -77,14 +93,24 @@ fun LCollectionDialogs(savedL: SavedL) {
 @Composable
 fun L_DialogCollection(savedL: SavedL) {
     val haptic = LocalHapticFeedback.current
+    val onDismissDialog: () -> Unit = remember(savedL) { { savedL.collection.visibleDialog = false } }
+    val onConfirmCreate: () -> Unit = remember(savedL) {
+        {
+            savedL.collection.visibleDialog = false
+            savedL.collection.visibleDialogCreateNew = true
+        }
+    }
+    val title = remember(savedL.collection.collectionItemsPendingAdd.size) {
+        if (savedL.collection.collectionItemsPendingAdd.size > 1) {
+            "$TEXT_ADD_TO_COLLECTION (${savedL.collection.collectionItemsPendingAdd.size})"
+        } else {
+            TEXT_ADD_TO_COLLECTION
+        }
+    }
 
     LavenderDialog(
-        title = if (savedL.collection.collectionItemsPendingAdd.size > 1) {
-            "Добавить в коллекцию (${savedL.collection.collectionItemsPendingAdd.size})"
-        } else {
-            "Добавить в коллекцию"
-        },
-        onDismiss = { savedL.collection.visibleDialog = false },
+        title = title,
+        onDismiss = onDismissDialog,
         content = {
             if (savedL.collection.collectionList.isEmpty()) {
                 Box(
@@ -94,7 +120,7 @@ fun L_DialogCollection(savedL: SavedL) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Нет коллекций",
+                        text = TEXT_NO_COLLECTIONS,
                         color = Theme.DialogLavande.bodyColor,
                         fontFamily = Theme.L.fontFamilyDMsanss,
                         fontSize = 16.sp
@@ -114,7 +140,7 @@ fun L_DialogCollection(savedL: SavedL) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 4.dp, vertical = 4.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(COLLECTION_ITEM_SHAPE)
                                 .clickable(onClick = {
                                     savedL.collection.addPendingToCollection(collectionItem.collection)
                                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -125,21 +151,21 @@ fun L_DialogCollection(savedL: SavedL) {
                             if (collectionItem.previewUrl != null) {
                                 UrlImage(
                                     url = collectionItem.previewUrl,
-                                    modifier = Modifier.clip(RoundedCornerShape(12.dp)).size(56.dp)
+                                    modifier = Modifier.clip(COLLECTION_ITEM_SHAPE).size(COLLECTION_PREVIEW_SIZE)
                                 )
                             } else {
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .size(56.dp)
-                                        .background(Color(0xFF3D3949)),
+                                        .clip(COLLECTION_ITEM_SHAPE)
+                                        .size(COLLECTION_PREVIEW_SIZE)
+                                        .background(FOLDER_PLACEHOLDER_BG),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Folder,
                                         contentDescription = null,
                                         tint = Theme.DialogLavande.dismissTextColor,
-                                        modifier = Modifier.size(28.dp)
+                                        modifier = Modifier.size(FOLDER_ICON_SIZE)
                                     )
                                 }
                             }
@@ -156,11 +182,8 @@ fun L_DialogCollection(savedL: SavedL) {
                 }
             }
         },
-        confirmText = "Создать",
-        onConfirm = {
-            savedL.collection.visibleDialog = false
-            savedL.collection.visibleDialogCreateNew = true
-        },
+        confirmText = TEXT_CREATE,
+        onConfirm = onConfirmCreate,
     )
 }
 

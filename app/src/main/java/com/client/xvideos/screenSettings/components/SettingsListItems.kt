@@ -58,6 +58,15 @@ internal val SettingsDividerColor = Color(0x2E79747E)
 internal val WhatsAppGreen = SettingsAccentColor
 internal val settingsCardShape = RoundedCornerShape(24.dp)
 
+private val SWITCH_UNCHECKED_THUMB = Color(0xFF938F99)
+private val SWITCH_UNCHECKED_TRACK = Color(0xFF48464F)
+private val SWITCH_UNCHECKED_BORDER = Color(0xFF79747E)
+
+private val SETTINGS_ICON_SIZE = 24.dp
+private val SETTINGS_ITEM_MIN_HEIGHT = 60.dp
+private val SETTINGS_DIVIDER_THICKNESS = 0.5.dp
+private val SETTINGS_DIVIDER2_HEIGHT = 2.dp
+
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 
 @Composable
@@ -92,7 +101,7 @@ fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
     ) {
         HorizontalDivider(
             modifier = Modifier.padding(start = startIndent, end = 16.dp),
-            thickness = 0.5.dp,
+            thickness = SETTINGS_DIVIDER_THICKNESS,
             color = SettingsDividerColor
         )
     }
@@ -100,7 +109,7 @@ fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
 
 @Composable
 fun SettingsDivider2() {
-    Spacer(Modifier.fillMaxWidth().height(2.dp).background(SettingsScreenBackground))
+    Spacer(Modifier.fillMaxWidth().height(SETTINGS_DIVIDER2_HEIGHT).background(SettingsScreenBackground))
 }
 
 @Composable
@@ -194,7 +203,7 @@ fun SettingsListItem(
             )
             .background(SettingsCardColor)
             .then(clickableModifier)
-            .heightIn(min = 60.dp)
+            .heightIn(min = SETTINGS_ITEM_MIN_HEIGHT)
             .padding(horizontal = 16.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -240,14 +249,14 @@ private fun SettingsListItemPreview() = SettingsPreview {
 @Composable
 fun SettingsIcon(@DrawableRes icon: Int) {
     Box(
-        modifier = Modifier.size(24.dp),
+        modifier = Modifier.size(SETTINGS_ICON_SIZE),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
             tint = SettingsRowTextSecondary,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(SETTINGS_ICON_SIZE)
         )
     }
 }
@@ -303,9 +312,9 @@ fun SettingsSwitchRow(
                     checkedThumbColor = SettingsOnAccentColor,
                     checkedTrackColor = SettingsAccentColor,
                     checkedBorderColor = Color.Transparent,
-                    uncheckedThumbColor = Color(0xFF938F99),
-                    uncheckedTrackColor = Color(0xFF48464F),
-                    uncheckedBorderColor = Color(0xFF79747E)
+                    uncheckedThumbColor = SWITCH_UNCHECKED_THUMB,
+                    uncheckedTrackColor = SWITCH_UNCHECKED_TRACK,
+                    uncheckedBorderColor = SWITCH_UNCHECKED_BORDER
                 )
             )
         }

@@ -37,6 +37,14 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlin.math.ceil
 
+private val PANEL_CORNER_SHAPE = RoundedCornerShape(8.dp)
+private val CHALLENGE_WARNING_COLOR = Color(0xFFFFC857)
+private val PANEL_BORDER_WIDTH = 1.dp
+private val REFRESH_ICON_SPACER = 6.dp
+private val HEADER_ICON_SPACER = 8.dp
+private const val TEXT_RETRYING = "Повторяю..."
+private const val TEXT_RETRY = "Повторить страницы"
+
 @Composable
 internal fun LAlbumNetworkIssuePanel(
     albumPicsDetails: AlbumPicsDetails?,
@@ -80,26 +88,27 @@ private fun LAlbumNetworkIssuePanel(
     val failedPagesText = remember(failedPages) {
         failedPages.joinToString(", ") { it.page.toString() }.ifBlank { "нет" }
     }
+    val warningColor = if (htmlChallenge) CHALLENGE_WARNING_COLOR else Theme.L.grey2
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp, bottom = 4.dp)
             .border(
-                width = 1.dp,
-                color = if (htmlChallenge) Color(0xFFFFC857) else Theme.L.grey2,
-                shape = RoundedCornerShape(8.dp)
+                width = PANEL_BORDER_WIDTH,
+                color = warningColor,
+                shape = PANEL_CORNER_SHAPE
             )
-            .background(Theme.L.grey5, RoundedCornerShape(8.dp))
+            .background(Theme.L.grey5, PANEL_CORNER_SHAPE)
             .padding(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                tint = if (htmlChallenge) Color(0xFFFFC857) else Theme.L.grey2
+                tint = warningColor
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(HEADER_ICON_SPACER))
             Text(
                 text = if (htmlChallenge) {
                     if (retryAfterSeconds > 0) {
@@ -127,20 +136,19 @@ private fun LAlbumNetworkIssuePanel(
             onClick = onRetryFailedPages,
             enabled = failedPages.isNotEmpty() && !isRetryingFailedPages,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
-            shape = RoundedCornerShape(8.dp),
+            shape = PANEL_CORNER_SHAPE,
             modifier = Modifier.padding(top = 8.dp)
         ) {
             Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Black)
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(REFRESH_ICON_SPACER))
             Text(
-                if (isRetryingFailedPages) "Повторяю..." else "Повторить страницы",
+                if (isRetryingFailedPages) TEXT_RETRYING else TEXT_RETRY,
                 color = Color.Black,
                 style = Theme.L.Type.button
             )
         }
     }
 }
-
 
 // ----------------------------------------------------------------------------
 // PREVIEW
@@ -150,7 +158,6 @@ private fun LAlbumNetworkIssuePanel(
 // построить. Ниже — stateless-копия раскладки (Scaffold + нижний прогресс-бар
 // + плашка-шапка альбома) с фейковыми данными. Только для визуальной проверки.
 // ----------------------------------------------------------------------------
-
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360)
 @Composable
@@ -188,5 +195,3 @@ private fun LAlbumNetworkIssuePanelPreview() {
         }
     }
 }
-
-

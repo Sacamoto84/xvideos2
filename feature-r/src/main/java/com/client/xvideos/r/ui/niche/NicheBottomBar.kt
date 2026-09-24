@@ -27,6 +27,13 @@ import com.client.xvideos.common.ui.atom.TabBarPoints
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val NICHE_SORT_ORDERS = listOf(Order.TRENDING, Order.TOP, Order.LATEST)
+private val BAR_HEIGHT = 48.dp
+private val INDICATOR_CONTAINER_SIZE = 44.dp
+private val INDICATOR_BORDER_WIDTH = 1.dp
+private val INNER_HORIZONTAL_SPACER = 4.dp
+private val EDGE_HORIZONTAL_SPACER = 2.dp
+
 @Composable
 fun NicheBottomBar(
     niche: NichesInfo,
@@ -35,67 +42,45 @@ fun NicheBottomBar(
     columns: Int,
 ) {
     Column {
-        //HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
             modifier = Modifier
-                //.fillMaxWidth()
-                //.clip(RoundedCornerShape(50f))
-                .height(48.dp)
-                //.background(Theme.tabLevel1)
+                .height(BAR_HEIGHT)
                 .padding(horizontal = 0.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Spacer(modifier = Modifier.width(2.dp))
+                Spacer(modifier = Modifier.width(EDGE_HORIZONTAL_SPACER))
 
                 SortByOrder(
-                    listOf(Order.TRENDING, Order.TOP, Order.LATEST),
+                    NICHE_SORT_ORDERS,
                     currentSort,
                     onSelect = onSortChange,
                     containerColor = Theme.tabLevel0,
                     circle = true
                 )
 
-                Spacer(modifier = Modifier.width(4.dp))
-//                UrlImage(
-//                    niche.thumbnail,
-//                    modifier = Modifier
-//                        .size(45.dp)
-//                        .clip(RoundedCornerShape(50))
-//                )
+                Spacer(modifier = Modifier.width(INNER_HORIZONTAL_SPACER))
             }
-            Spacer(modifier = Modifier.width(4.dp))
-
-//            BasicText(
-//                niche.name,
-//                modifier = Modifier
-//                    .padding(horizontal = 4.dp)
-//                    .weight(1f),
-//                style = TextStyle(
-//                    color = Color.LightGray,
-//                    fontSize = 18.sp,
-//                    fontFamily = Theme.R.fontFamilyDMsanss
-//                ),
-//                autoSize = TextAutoSize.StepBased(10.sp, 18.sp)
-//            )
+            Spacer(modifier = Modifier.width(INNER_HORIZONTAL_SPACER))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-
                 Box(
-                    modifier = Modifier.size(44.dp).clip(CircleShape)
-                        .border(1.dp, Color.DarkGray, CircleShape)
-                        .background(Theme.tabLevel0), contentAlignment = Alignment.Center
+                    modifier = Modifier
+                        .size(INDICATOR_CONTAINER_SIZE)
+                        .clip(CircleShape)
+                        .border(INDICATOR_BORDER_WIDTH, Color.DarkGray, CircleShape)
+                        .background(Theme.tabLevel0),
+                    contentAlignment = Alignment.Center
                 ) {
                     TabBarPoints(columns, true)
                 }
 
-                Spacer(modifier = Modifier.width(2.dp))
+                Spacer(modifier = Modifier.width(EDGE_HORIZONTAL_SPACER))
             }
         }
     }
 }
-
 
 @Preview
 @Composable

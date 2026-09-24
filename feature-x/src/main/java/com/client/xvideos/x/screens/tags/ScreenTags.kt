@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
@@ -36,6 +37,13 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
 import kotlinx.coroutines.launch
+
+private val ZERO_INSETS = WindowInsets(0, 0, 0, 0)
+private val SUBTITLE_PRIMARY_COLOR = Color(0xFFB0B0B0)
+private val SUBTITLE_SECONDARY_COLOR = Color(0xFF787878)
+private val HEADER_TOP_PADDING_EXTRA = 8.dp
+private val HEADER_HORIZONTAL_PADDING = 16.dp
+private val HEADER_BOTTOM_PADDING = 8.dp
 
 class ScreenTags(val tag: String) : Screen {
 
@@ -82,7 +90,7 @@ class ScreenTags(val tag: String) : Screen {
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = ZERO_INSETS,
             containerColor = Theme.L.grey6,
             bottomBar = {
                 // Без кнопки страны, в отличие от ленты раздела: адрес
@@ -124,7 +132,7 @@ private fun TagsHeader(
     tag: String,
     title0: String,
     title1: String,
-    topCutout: androidx.compose.ui.unit.Dp,
+    topCutout: Dp,
     modifier: Modifier = Modifier
 ) {
     val hasTitle0 = remember(title0) { title0.isNotBlank() }
@@ -133,7 +141,12 @@ private fun TagsHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = topCutout + 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
+            .padding(
+                top = topCutout + HEADER_TOP_PADDING_EXTRA,
+                start = HEADER_HORIZONTAL_PADDING,
+                end = HEADER_HORIZONTAL_PADDING,
+                bottom = HEADER_BOTTOM_PADDING
+            )
     ) {
         Text(
             text = tag,
@@ -148,14 +161,14 @@ private fun TagsHeader(
                 if (hasTitle0) {
                     Text(
                         text = "$title0 ",
-                        color = Color(0xFFB0B0B0),
+                        color = SUBTITLE_PRIMARY_COLOR,
                         fontSize = 12.sp,
                     )
                 }
                 if (hasTitle1) {
                     Text(
                         text = title1,
-                        color = Color(0xFF787878),
+                        color = SUBTITLE_SECONDARY_COLOR,
                         fontSize = 12.sp,
                     )
                 }
@@ -171,4 +184,3 @@ internal enum class TagsBackAction {
 internal fun resolveTagsBackAction(): TagsBackAction {
     return TagsBackAction.POP
 }
-

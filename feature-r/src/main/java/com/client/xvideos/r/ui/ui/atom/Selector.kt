@@ -23,31 +23,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.feature.r.R
 
+private const val INDEX_SINGLE = 1
+private const val INDEX_DOUBLE = 2
+private val SELECTOR_SHAPE = RoundedCornerShape(8.dp)
+private val SELECTOR_BUTTON_SIZE = 46.dp
+private val SELECTOR_ICON_SIZE = 24.dp
+private val SELECTOR_DIVIDER_WIDTH = 1.dp
+private val SELECTOR_BORDER_WIDTH = 1.dp
+
 @Preview
 @Composable
 fun DefaultPreview() {
-    Selector(1, onSelect = {})
+    Selector(INDEX_SINGLE, onSelect = {})
 }
 
 @Composable
 fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
-    val selectorShape = remember { RoundedCornerShape(8.dp) }
-    val onSelect1 = remember(onSelect) { { onSelect(1) } }
-    val onSelect2 = remember(onSelect) { { onSelect(2) } }
+    val onSelect1 = remember(onSelect) { { onSelect(INDEX_SINGLE) } }
+    val onSelect2 = remember(onSelect) { { onSelect(INDEX_DOUBLE) } }
 
-    val bg2 = if (selectedIndex == 2) Theme.R.colorBorderSelect else Theme.background
-    val tint2 = if (selectedIndex == 2) Color.White else Theme.R.colorTextGray
-    val bg1 = if (selectedIndex == 1) Theme.R.colorBorderSelect else Theme.background
-    val tint1 = if (selectedIndex == 1) Color.White else Theme.R.colorTextGray
+    val bg2 = if (selectedIndex == INDEX_DOUBLE) Theme.R.colorBorderSelect else Theme.background
+    val tint2 = if (selectedIndex == INDEX_DOUBLE) Color.White else Theme.R.colorTextGray
+    val bg1 = if (selectedIndex == INDEX_SINGLE) Theme.R.colorBorderSelect else Theme.background
+    val tint1 = if (selectedIndex == INDEX_SINGLE) Color.White else Theme.R.colorTextGray
 
     Row(
         modifier = Modifier
-            .clip(selectorShape)
-            .border(1.dp, Theme.R.colorBorderGray, selectorShape)
+            .clip(SELECTOR_SHAPE)
+            .border(SELECTOR_BORDER_WIDTH, Theme.R.colorBorderGray, SELECTOR_SHAPE)
     ) {
         Box(
             modifier = Modifier
-                .size(46.dp)
+                .size(SELECTOR_BUTTON_SIZE)
                 .background(bg2)
                 .clickable(onClick = onSelect2),
             contentAlignment = Alignment.Center
@@ -56,20 +63,20 @@ fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
                 painter = painterResource(R.drawable.select_2),
                 contentDescription = null,
                 tint = tint2,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(SELECTOR_ICON_SIZE)
             )
         }
 
         Box(
             modifier = Modifier
-                .width(1.dp)
-                .height(46.dp)
+                .width(SELECTOR_DIVIDER_WIDTH)
+                .height(SELECTOR_BUTTON_SIZE)
                 .background(Theme.R.colorBorderGray)
         )
 
         Box(
             modifier = Modifier
-                .size(46.dp)
+                .size(SELECTOR_BUTTON_SIZE)
                 .background(bg1)
                 .clickable(onClick = onSelect1),
             contentAlignment = Alignment.Center
@@ -78,12 +85,8 @@ fun Selector(selectedIndex: Int, onSelect: (Int) -> Unit) {
                 painter = painterResource(R.drawable.select_1),
                 contentDescription = null,
                 tint = tint1,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(SELECTOR_ICON_SIZE)
             )
         }
     }
 }
-
-
-
-
