@@ -14,6 +14,11 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 
+private const val TEXT_TWO_COLUMNS = "2 столбика"
+private const val TEXT_SHEMALE = "Shemale"
+private const val TEXT_ENABLED = "Включено"
+private const val TEXT_DISABLED = "Выключено"
+
 @Composable
 internal fun XSettingsSection() {
     val xvideosRow2 by Settings.xvideos_row2.field.collectAsStateWithLifecycle()
@@ -22,13 +27,13 @@ internal fun XSettingsSection() {
     val onRow2Change: (Boolean) -> Unit = remember { { enabled -> Settings.xvideos_row2.setValue(enabled) } }
     val onShemaleChange: (Boolean) -> Unit = remember { { enabled -> Settings.xvideos_shemale.setValue(enabled) } }
 
-    val row2Subtitle = remember(xvideosRow2) { if (xvideosRow2) "Включено" else "Выключено" }
-    val shemaleSubtitle = remember(xvideosShemale) { if (xvideosShemale) "Включено" else "Выключено" }
+    val row2Subtitle = remember(xvideosRow2) { if (xvideosRow2) TEXT_ENABLED else TEXT_DISABLED }
+    val shemaleSubtitle = remember(xvideosShemale) { if (xvideosShemale) TEXT_ENABLED else TEXT_DISABLED }
 
     SettingsGroup {
         SettingsSwitchRow(
             icon = R.drawable.icon_xvideos_white,
-            text = "2 столбика",
+            text = TEXT_TWO_COLUMNS,
             subtitle = row2Subtitle,
             value = xvideosRow2,
             onValueChange = onRow2Change
@@ -37,7 +42,7 @@ internal fun XSettingsSection() {
 
         SettingsSwitchRow(
             icon = R.drawable.icon_xvideos_white,
-            text = "Shemale",
+            text = TEXT_SHEMALE,
             subtitle = shemaleSubtitle,
             value = xvideosShemale,
             onValueChange = onShemaleChange

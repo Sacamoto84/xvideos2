@@ -24,8 +24,12 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.common.saved.SelectedCreator
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val subscriptionAvatarShape = RoundedCornerShape(8.dp)
-private val subscriptionAvatarPlaceholderBg = Color.DarkGray
+private val SUBSCRIPTION_AVATAR_SHAPE = RoundedCornerShape(8.dp)
+private val SUBSCRIPTION_AVATAR_PLACEHOLDER_BG = Color.DarkGray
+private val AVATAR_BOX_SIZE = 96.dp
+private val PERSON_ICON_SIZE = 32.dp
+private const val DIALOG_TITLE = "Удалить подписку?"
+private const val CONFIRM_TEXT = "Удалить"
 
 @Composable
 fun DialogSubscriptionDelete(
@@ -44,31 +48,36 @@ fun DialogSubscriptionDelete(
                 append("» из подписок?")
             }
         }
-        LavenderDialog(
-            title = "Удалить подписку?",
-            onDismiss = onDismiss,
-            icon = {
+        val iconContent: @Composable () -> Unit = remember(pending.urlProfile) {
+            {
                 Box(
                     modifier = Modifier
-                        .clip(subscriptionAvatarShape)
-                        .size(96.dp)
-                        .background(subscriptionAvatarPlaceholderBg),
+                        .clip(SUBSCRIPTION_AVATAR_SHAPE)
+                        .size(AVATAR_BOX_SIZE)
+                        .background(SUBSCRIPTION_AVATAR_PLACEHOLDER_BG),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (pending.urlProfile != null) {
-                        UrlImage(url = pending.urlProfile)
+                    val url = pending.urlProfile
+                    if (url != null) {
+                        UrlImage(url = url)
                     } else {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            modifier = Modifier.size(32.dp),
+                            modifier = Modifier.size(PERSON_ICON_SIZE),
                             tint = Color.White
                         )
                     }
                 }
-            },
+            }
+        }
+
+        LavenderDialog(
+            title = DIALOG_TITLE,
+            onDismiss = onDismiss,
+            icon = iconContent,
             body = dialogBody,
-            confirmText = "Удалить",
+            confirmText = CONFIRM_TEXT,
             onConfirm = handleConfirm,
             destructive = true,
         )

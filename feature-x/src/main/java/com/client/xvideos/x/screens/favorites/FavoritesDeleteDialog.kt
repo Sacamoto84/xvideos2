@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -13,8 +14,11 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val favoritePosterShape = RoundedCornerShape(8.dp)
+private val FAVORITE_POSTER_SHAPE = RoundedCornerShape(8.dp)
 private const val POSTER_ASPECT_RATIO = 352f / 198f
+private val POSTER_WIDTH = 160.dp
+private const val DIALOG_TITLE = "Удалить из избранного?"
+private const val CONFIRM_TEXT = "Удалить"
 
 /**
  * Диалог подтверждения удаления видео из «Избранного».
@@ -28,19 +32,23 @@ fun ConfirmDeleteFavoriteDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    LavenderDialog(
-        title = "Удалить из избранного?",
-        onDismiss = onDismiss,
-        icon = {
+    val iconContent: @Composable () -> Unit = remember(posterUrl) {
+        {
             UrlImage(
                 url = posterUrl,
                 modifier = Modifier
-                    .width(160.dp)
+                    .width(POSTER_WIDTH)
                     .aspectRatio(POSTER_ASPECT_RATIO)
-                    .clip(favoritePosterShape)
+                    .clip(FAVORITE_POSTER_SHAPE)
             )
-        },
-        confirmText = "Удалить",
+        }
+    }
+
+    LavenderDialog(
+        title = DIALOG_TITLE,
+        onDismiss = onDismiss,
+        icon = iconContent,
+        confirmText = CONFIRM_TEXT,
         onConfirm = onConfirm,
         destructive = true,
     )

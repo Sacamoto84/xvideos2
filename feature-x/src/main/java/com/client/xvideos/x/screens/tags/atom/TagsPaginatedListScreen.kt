@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -37,6 +36,15 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
+
+private const val TAG_CARD_ASPECT_RATIO = 352f / 198f
+private const val ITEMS_PER_ROW_LANDSCAPE = 4
+private const val ITEMS_PER_ROW_PORTRAIT = 2
+private const val CONTENT_TYPE_TAG_HEADER = "tag_header"
+private const val CONTENT_TYPE_TAG_ROW = "tag_row"
+private const val MSG_FAILED_TO_LOAD = "Страница не загрузилась"
+private const val MSG_NO_VIDEOS = "Видео не найдены"
+private const val BUTTON_RETRY_TEXT = "Повторить"
 
 /**
  * Одна страница выдачи по тегу.
@@ -91,7 +99,7 @@ fun TagsPaginatedListScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (failed) {
                     TagsStateMessage(
-                        message = "Страница не загрузилась",
+                        message = MSG_FAILED_TO_LOAD,
                         onRetry = onRetry
                     )
                 } else {
@@ -107,7 +115,7 @@ fun TagsPaginatedListScreen(
             header?.invoke()
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 TagsStateMessage(
-                    message = "Видео не найдены",
+                    message = MSG_NO_VIDEOS,
                     onRetry = onRetry
                 )
             }
@@ -117,7 +125,7 @@ fun TagsPaginatedListScreen(
 
     val orientation = LocalConfiguration.current.orientation
     val itemsPerRow = remember(orientation) {
-        if (orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) ITEMS_PER_ROW_LANDSCAPE else ITEMS_PER_ROW_PORTRAIT
     }
     val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
@@ -127,7 +135,7 @@ fun TagsPaginatedListScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (header != null) {
-            item(key = "tag_header", contentType = "tag_header") {
+            item(key = CONTENT_TYPE_TAG_HEADER, contentType = CONTENT_TYPE_TAG_HEADER) {
                 header()
             }
         }
@@ -137,7 +145,7 @@ fun TagsPaginatedListScreen(
         itemsIndexed(
             items = chunkedRows,
             key = { index, row -> "${index}_${row.first().id}" },
-            contentType = { _, _ -> "tag_row" }
+            contentType = { _, _ -> CONTENT_TYPE_TAG_ROW }
         ) { _, row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEach { cell ->
@@ -169,7 +177,7 @@ private fun TagGridCell(
     val handleOpen = remember(cell, onOpenVideo) { { onOpenVideo(cell) } }
     Box(
         modifier = modifier
-            .aspectRatio(352f / 198f)
+            .aspectRatio(TAG_CARD_ASPECT_RATIO)
             .padding(1.dp)
             .background(Color.DarkGray)
     ) {
@@ -196,7 +204,7 @@ private fun TagsStateMessage(
         Text(message, color = Color.Gray)
         Spacer(modifier = Modifier.height(12.dp))
         Button(onClick = onRetry) {
-            Text("Повторить")
+            Text(BUTTON_RETRY_TEXT)
         }
     }
 }

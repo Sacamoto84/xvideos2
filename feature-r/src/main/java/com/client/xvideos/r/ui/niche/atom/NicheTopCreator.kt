@@ -16,15 +16,19 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.model.TopCreator
 import com.client.xvideos.ui.theme.XvideosTheme
 
-@Composable
-fun NicheTopCreator(creator : TopCreator, onClick: () -> Unit) {
+private val TOP_CREATOR_SHAPE = RoundedCornerShape(8.dp)
+private val TOP_CREATOR_SIZE = 96.dp
+private const val INNER_SHADOW_RADIUS = 3f
 
+@Composable
+fun NicheTopCreator(creator: TopCreator, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .padding(horizontal = 2.dp)
-            .size(96.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick.invoke() }) {
+            .size(TOP_CREATOR_SIZE)
+            .clip(TOP_CREATOR_SHAPE)
+            .clickable(onClick = onClick)
+    ) {
         UrlImage(
             creator.profileImageUrl,
             modifier = Modifier.fillMaxSize()
@@ -32,21 +36,16 @@ fun NicheTopCreator(creator : TopCreator, onClick: () -> Unit) {
 
         Box(
             modifier = Modifier
-                .size(96.dp)
+                .size(TOP_CREATOR_SIZE)
                 .innerShadow(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = TOP_CREATOR_SHAPE,
                     block = {
-                        radius = 3f
+                        radius = INNER_SHADOW_RADIUS
                         spread = 0f
-//                        brush = Brush.verticalGradient(
-//                        colors = listOf(Transparent, Color.Black)
-//                        )
                     }
-                )) {
-
-        }
+                )
+        )
     }
-
 }
 
 @Preview

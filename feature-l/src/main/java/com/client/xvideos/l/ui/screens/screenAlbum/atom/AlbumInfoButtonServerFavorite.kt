@@ -27,6 +27,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
+private val SERVER_FAVORITE_BUTTON_SHAPE = RoundedCornerShape(4.dp)
+private const val TEXT_REMOVE_FROM_SERVER = "Удалить альбом с сервера"
+private const val TEXT_ADD_TO_SERVER = "Добавить альбом на сервер"
+
 /**
  * Кнопка «добавить/удалить альбом из избранного на сервере Luscious» в шапке ScreenLAlbum.
  */
@@ -36,9 +40,8 @@ fun AlbumInfoButtonServerFavorite(
     isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
-    val buttonShape = remember { RoundedCornerShape(4.dp) }
     val buttonText = remember(isFavorite) {
-        if (isFavorite) "Удалить альбом с сервера" else "Добавить альбом на сервер"
+        if (isFavorite) TEXT_REMOVE_FROM_SERVER else TEXT_ADD_TO_SERVER
     }
     val iconVector = remember(isFavorite) {
         if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
@@ -58,8 +61,8 @@ fun AlbumInfoButtonServerFavorite(
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
-            .clip(buttonShape)
-            .border(1.dp, Theme.L.grey3, buttonShape)
+            .clip(SERVER_FAVORITE_BUTTON_SHAPE)
+            .border(1.dp, Theme.L.grey3, SERVER_FAVORITE_BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(enabled = !isLoading, onClick = onClick),
         contentAlignment = Alignment.Center
