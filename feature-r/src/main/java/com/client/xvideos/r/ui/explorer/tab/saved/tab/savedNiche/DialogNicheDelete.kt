@@ -3,6 +3,7 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.SpanStyle
@@ -23,19 +24,31 @@ fun DialogNicheDelete(
     onConfirm: (NichesInfo) -> Unit
 ) {
     item?.let { pending ->
-        LavenderDialog(
-            title = "Удалить группу?",
-            onDismiss = onDismiss,
-            icon = { UrlImage(pending.thumbnail, modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .size(96.dp)) },
-            body = buildAnnotatedString {
+        val iconShape = remember { RoundedCornerShape(8.dp) }
+        val handleConfirm = remember(pending, onConfirm) {
+            { onConfirm(pending) }
+        }
+        val dialogBody = remember(pending.name) {
+            buildAnnotatedString {
                 append("Удалить «")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
                 append("» из сохранённых?")
+            }
+        }
+        LavenderDialog(
+            title = "Удалить группу?",
+            onDismiss = onDismiss,
+            icon = {
+                UrlImage(
+                    url = pending.thumbnail,
+                    modifier = Modifier
+                        .clip(iconShape)
+                        .size(96.dp)
+                )
             },
+            body = dialogBody,
             confirmText = "Удалить",
-            onConfirm = { onConfirm(pending) },
+            onConfirm = handleConfirm,
             destructive = true,
         )
     }

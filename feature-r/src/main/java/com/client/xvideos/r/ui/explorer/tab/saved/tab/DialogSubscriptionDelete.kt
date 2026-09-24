@@ -34,13 +34,21 @@ fun DialogSubscriptionDelete(
         val handleConfirm = remember(pending.name, onConfirm) {
             { onConfirm(pending.name) }
         }
+        val avatarShape = remember { RoundedCornerShape(8.dp) }
+        val dialogBody = remember(pending.name) {
+            buildAnnotatedString {
+                append("Удалить автора «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                append("» из подписок?")
+            }
+        }
         LavenderDialog(
             title = "Удалить подписку?",
             onDismiss = onDismiss,
             icon = {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(avatarShape)
                         .size(96.dp)
                         .background(Color.DarkGray),
                     contentAlignment = Alignment.Center
@@ -57,11 +65,7 @@ fun DialogSubscriptionDelete(
                     }
                 }
             },
-            body = buildAnnotatedString {
-                append("Удалить автора «")
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                append("» из подписок?")
-            },
+            body = dialogBody,
             confirmText = "Удалить",
             onConfirm = handleConfirm,
             destructive = true,

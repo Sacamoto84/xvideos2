@@ -89,6 +89,8 @@ import timber.log.Timber
  * @param tag Тег для UI-тестов
  */
 
+private val pictureCornerShape = RoundedCornerShape(4.dp)
+
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
@@ -153,10 +155,10 @@ fun L_LazyRowPictureDetails(
             modifier = Modifier.fillMaxSize().hazeSource(hazeState).then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)
         ) {
 
-            item(span = StaggeredGridItemSpan.FullLine) { itemBefore() }
+            item(span = StaggeredGridItemSpan.FullLine, contentType = "header_before") { itemBefore() }
 
             if (showInitialLoading) {
-                item(span = StaggeredGridItemSpan.FullLine) {
+                item(span = StaggeredGridItemSpan.FullLine, contentType = "loading_placeholder") {
                     //Загрузка элементов...
                     InitialPictureItemsLoading()
                 }
@@ -169,8 +171,11 @@ fun L_LazyRowPictureDetails(
             // дважды, даёт две записи с одинаковым URL. Добавляем индекс — порядок
             // списка стабильный (страницы дописываются в хвост), поэтому идентичность
             // уже показанных элементов сохраняется.
-            itemsIndexed( host.filteredPic, key = { index, item -> "${item.url_to_original}#$index" } )
-            { index, item ->
+            itemsIndexed(
+                items = host.filteredPic,
+                key = { index, item -> "${item.url_to_original}#$index" },
+                contentType = { _, _ -> "picture_grid_item" }
+            ) { index, item ->
 
                 //if (item.url_to_original != null)
                 //{
@@ -223,8 +228,8 @@ fun L_LazyRowPictureDetails(
                                 .padding(1.dp)
                                 .aspectRatio(aspect)
                                 //.clipToBounds()
-                                .border( width = 0.5.dp, color = Theme.tabLevel4, shape = RoundedCornerShape(4.dp) )
-                                .clip(RoundedCornerShape(4.dp))
+                                .border( width = 0.5.dp, color = Theme.tabLevel4, shape = pictureCornerShape )
+                                .clip(pictureCornerShape)
                                 .background(Theme.tabLevel1)
                         )
                         {
@@ -301,18 +306,14 @@ fun L_LazyRowPictureDetails(
         /** Вертикальный индикатор прокрутки */
         Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
 
-        /** FloatingButtons "Вверх" и "Вниз" */
-        FloatingScrollButtons(
-            visible = showScrollButtons,
-            showScrollToTop = showScrollToTop,
-            showScrollToBottom = showScrollToBottom,
-            hazeState = hazeState,
-            contentColor = Theme.ScrollFab.contentColorL,
-            onScrollToTop = {
+        val onScrollToTop: () -> Unit = remember(haptic, scope, host) {
+            {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 scope.launch { host.state.scrollToItem(0) }
-            },
-            onScrollToBottom = {
+            }
+        }
+        val onScrollToBottom: () -> Unit = remember(haptic, scope, host, showInitialLoading) {
+            {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 scope.launch {
                     val lastIndex = host.filteredPic.lastIndex
@@ -325,7 +326,18 @@ fun L_LazyRowPictureDetails(
                         host.state.scrollToItem(target)
                     }
                 }
-            },
+            }
+        }
+
+        /** FloatingButtons "Вверх" и "Вниз" */
+        FloatingScrollButtons(
+            visible = showScrollButtons,
+            showScrollToTop = showScrollToTop,
+            showScrollToBottom = showScrollToBottom,
+            hazeState = hazeState,
+            contentColor = Theme.ScrollFab.contentColorL,
+            onScrollToTop = onScrollToTop,
+            onScrollToBottom = onScrollToBottom,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)

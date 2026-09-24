@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,14 +28,31 @@ import com.client.xvideos.common.theme.Theme
 
 @Composable
 fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick: () -> Unit) {
+    val buttonShape = remember { RoundedCornerShape(4.dp) }
+    val buttonText = remember(saved) {
+        if (!saved) "Сохранить альбом" else "Удалить из сохранённых"
+    }
+    val iconVector = remember(saved) {
+        if (saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder
+    }
+    val iconTint = remember(saved) {
+        if (saved) Theme.L.red else Color.White
+    }
+    val backgroundColor = remember(saved) {
+        if (!saved) Theme.L.red else Theme.L.grey6
+    }
+    val buttonTextStyle = remember {
+        Theme.L.Type.button.copy(color = Color.White)
+    }
+
     Box(
         modifier = Modifier
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
-            .border(1.dp, Theme.L.grey3, RoundedCornerShape(4.dp))
-            .background(if (!saved) Theme.L.red else Theme.L.grey6)
+            .clip(buttonShape)
+            .border(1.dp, Theme.L.grey3, buttonShape)
+            .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -43,15 +61,15 @@ fun AlbumInfoButtonSaveAlbum(saved: Boolean, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = if (saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                imageVector = iconVector,
                 contentDescription = null,
-                tint = if (saved) Theme.L.red else Color.White,
+                tint = iconTint,
                 modifier = Modifier.size(20.dp)
             )
             Text(
-                text = if (!saved) "Сохранить альбом" else "Удалить из сохранённых",
+                text = buttonText,
                 color = Color.White,
-                style = Theme.L.Type.button.copy(color = Color.White)
+                style = buttonTextStyle
             )
         }
     }

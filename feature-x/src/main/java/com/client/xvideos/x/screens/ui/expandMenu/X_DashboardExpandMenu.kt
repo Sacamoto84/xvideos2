@@ -41,6 +41,8 @@ fun X_DashboardExpandMenu(
 ) {
 
     var expanded by remember(isExpanded) { mutableStateOf(isExpanded) }
+    val onOpen = remember { { expanded = true } }
+    val onDismissMenu = remember { { expanded = false } }
 
     val size = 26.dp
 
@@ -50,11 +52,11 @@ fun X_DashboardExpandMenu(
     )
     {
 
-        ButtonMoveVert (size) { expanded = true }
+        ButtonMoveVert(size, onOpen)
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
+            onDismissRequest = onDismissMenu,
             containerColor = Theme.ExpandMenu.backgroundColor,
             shadowElevation = 2.dp, tonalElevation = 16.dp
         )
@@ -65,7 +67,7 @@ fun X_DashboardExpandMenu(
                 onFavoriteRemove = onFavoriteRemove,
                 onDownload = onDownload,
                 onSaveToGallery = onSaveToGallery,
-                onDismiss = { expanded = false }
+                onDismiss = onDismissMenu
             )
         }
 
@@ -83,9 +85,8 @@ fun X_DashboardExpandMenuContent(
 ) {
     val scope = rememberCoroutineScope()
 
-    DropdownMenuItem(
-        text = { Text("Избранное") },
-        onClick = {
+    val handleFavorite: () -> Unit = remember(isFavorite, onDismiss, onFavoriteRemove, onFavoriteAdd, scope) {
+        {
             onDismiss()
             scope.launch {
                 delay(50)
@@ -93,11 +94,31 @@ fun X_DashboardExpandMenuContent(
                     true -> onFavoriteRemove()
                     false -> onFavoriteAdd()
                 }
-            }
-        },
+            }.let {}
+        }
+    }
+    val handleDownload = remember(onDismiss, onDownload) {
+        {
+            onDismiss()
+            onDownload()
+        }
+    }
+    val handleSaveToGallery = remember(onDismiss, onSaveToGallery) {
+        {
+            onDismiss()
+            onSaveToGallery()
+        }
+    }
+    val favoriteIcon = remember(isFavorite) {
+        if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+    }
+
+    DropdownMenuItem(
+        text = { Text("Избранное") },
+        onClick = handleFavorite,
         leadingIcon = {
             Icon(
-                if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                imageVector = favoriteIcon,
                 contentDescription = null
             )
         }
@@ -105,10 +126,7 @@ fun X_DashboardExpandMenuContent(
 
     DropdownMenuItem(
         text = { Text("Сохранить") },
-        onClick = {
-            onDismiss()
-            onDownload()
-        },
+        onClick = handleDownload,
         leadingIcon = {
             Icon(
                 Icons.Outlined.Save,
@@ -119,10 +137,7 @@ fun X_DashboardExpandMenuContent(
 
     DropdownMenuItem(
         text = { Text("В галерею") },
-        onClick = {
-            onDismiss()
-            onSaveToGallery()
-        },
+        onClick = handleSaveToGallery,
         leadingIcon = {
             Icon(
                 Icons.Outlined.SaveAlt,

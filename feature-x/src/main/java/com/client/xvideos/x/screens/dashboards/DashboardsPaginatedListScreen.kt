@@ -153,6 +153,7 @@ fun DashboardsPaginatedListScreen(
             )
             val topCutout = getTopInsetDp()
             if (hasError) {
+                val errorBadgeShape = remember { RoundedCornerShape(8.dp) }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -162,7 +163,7 @@ fun DashboardsPaginatedListScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xD9212121), RoundedCornerShape(8.dp))
+                            .background(Color(0xD9212121), errorBadgeShape)
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -201,11 +202,12 @@ fun DashboardsPaginatedListContent(
     gridState: LazyGridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
 ) {
     val topCutout = getTopInsetDp()
+    val contentPadding = remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier.fillMaxSize(),
         state = gridState,
-        contentPadding = PaddingValues(top = topCutout),
+        contentPadding = contentPadding,
     ) {
         itemsIndexed(
             items = items,
@@ -342,7 +344,7 @@ private fun DashboardsPaginatedListScreenPreview() {
                     linkProfile = "/channel2",
                 ),
             ).toImmutableList(),
-            isFavorite = { it == 1L },
+            isFavorite = { id -> id == 1L },
             onFavoriteAdd = {},
             onFavoriteRemove = {},
             onDownload = {},

@@ -1,6 +1,7 @@
 package com.client.xvideos.screenSettings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
@@ -16,16 +17,23 @@ fun DialogButton(
     composable: @Composable () -> Unit = {}
 ) {
     if (visible) {
+        val bodyAnnotated = remember(body) {
+            if (body.isNotEmpty()) AnnotatedString(body) else null
+        }
+        val handleConfirm = remember(onBlockConfirmed, onDismiss) {
+            {
+                onBlockConfirmed()
+                onDismiss()
+            }
+        }
+
         LavenderDialog(
             title = title,
             onDismiss = onDismiss,
-            body = if (body.isNotEmpty()) AnnotatedString(body) else null,
+            body = bodyAnnotated,
             content = { composable() },
             confirmText = buttonText,
-            onConfirm = {
-                onBlockConfirmed()
-                onDismiss()
-            },
+            onConfirm = handleConfirm,
         )
     }
 }

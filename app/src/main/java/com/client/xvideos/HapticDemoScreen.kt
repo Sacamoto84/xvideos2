@@ -23,6 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +40,9 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
+
+private val hapticButtonShape = RoundedCornerShape(14.dp)
+private val hapticButtonPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
 
 /**
  * Демо-экран для тестирования виброоткликов.
@@ -67,9 +71,12 @@ object HapticDemoScreen : Screen {
 
         val scrollState = rememberScrollState()
 
-        BackHandler {
-            navigator.pop()
+        val onBack: () -> Unit = remember(navigator) {
+            {
+                navigator.pop().let {}
+            }
         }
+        BackHandler(onBack = onBack)
 
         // Порядок — от самых «полезных» к специфичным.
         val items = remember {
@@ -90,6 +97,15 @@ object HapticDemoScreen : Screen {
             )
         }
 
+        val subtitleText = remember(items.size) {
+            "Нажми кнопку, чтобы почувствовать отклик. Доступно ${items.size} типов."
+        }
+        val onCustomVibrate: () -> Unit = remember(context) {
+            {
+                vibrateWithPatternAndAmplitude(context)
+            }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
@@ -107,7 +123,7 @@ object HapticDemoScreen : Screen {
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                     Text(
-                        text = "Нажми кнопку, чтобы почувствовать отклик. Доступно ${items.size} типов.",
+                        text = subtitleText,
                         color = Color(0xFFB0B0B0),
                         fontSize = 13.sp,
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 10.dp)
@@ -125,12 +141,19 @@ object HapticDemoScreen : Screen {
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items.forEachIndexed { index, item ->
-                    HapticButton(
-                        index = index + 1,
-                        name = item.name,
-                        desc = item.desc,
-                        onClick = { haptic.performHapticFeedback(item.type) }
-                    )
+                    key(item.name) {
+                        val handleClick = remember(haptic, item.type) {
+                            {
+                                haptic.performHapticFeedback(item.type)
+                            }
+                        }
+                        HapticButton(
+                            index = index + 1,
+                            name = item.name,
+                            desc = item.desc,
+                            onClick = handleClick
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -140,7 +163,7 @@ object HapticDemoScreen : Screen {
                     fontSize = 13.sp
                 )
                 Button(
-                    onClick = { vibrateWithPatternAndAmplitude(context) },
+                    onClick = onCustomVibrate,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A3B00))
                 ) {
@@ -162,9 +185,9 @@ private fun HapticButton(
     Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = hapticButtonShape,
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A)),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+        contentPadding = hapticButtonPadding
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
