@@ -26,7 +26,7 @@ fun DailogNewCollectionPreview() {
     DaialogNewCollection(
         visible = true,
         onDismiss = {},
-        onBlockConfirmed = { it -> println(it) }
+        onBlockConfirmed = { println(it) }
     )
 }
 
@@ -39,7 +39,7 @@ fun DaialogNewCollection(
 
     if (!visible) return               // короче читается
 
-    var text by remember { mutableStateOf("") }
+    var text by remember(visible) { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {

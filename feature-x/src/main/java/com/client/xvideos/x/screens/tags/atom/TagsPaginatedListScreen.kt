@@ -53,7 +53,6 @@ fun TagsPaginatedListScreen(
     pageIndex: Int,
     loadPage: suspend (Int) -> List<ItemsX>,
     onOpenVideo: (ItemsX) -> Unit,
-    isCurrentPage: Boolean = true,
     listState: LazyListState = rememberLazyListState(),
     header: (@Composable () -> Unit)? = null,
 ) {
@@ -131,27 +130,14 @@ fun TagsPaginatedListScreen(
         // Ключ с индексом, а не голый id: страницы тегов парсятся из HTML и один
         // и тот же ролик может встретиться на нескольких страницах — дублирующийся
         // ключ уронил бы список.
-        itemsIndexed(chunkedRows, key = { index, row -> "${index}_${row.first().id}" })
-        { _, row ->
+        itemsIndexed(chunkedRows, key = { index, row -> "${index}_${row.first().id}" }) { _, row ->
             Row(modifier = Modifier.fillMaxWidth()) {
-                row.forEachIndexed { index, cell ->
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(352f / 198f)
-                            .padding(1.dp)
-                            .background(Color.DarkGray)
-                    ) {
-
-                        // Жесты как в ленте раздела: тап — превью, долгий тап и
-                        // двойной — открыть плеер.
-                        UrlVideoImageAndLongClickX(
-                            cell,
-                            onLongClick = { onOpenVideo(cell) },
-                            onDoubleClick = { onOpenVideo(cell) },
-                        )
-
-                    }
+                row.forEach { cell ->
+                    TagGridCell(
+                        cell = cell,
+                        onOpenVideo = onOpenVideo,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
                 // Если элементов в строке меньше, чем itemsPerRow, добавляем пустые ячейки
                 if (row.size < itemsPerRow) {
@@ -161,5 +147,28 @@ fun TagsPaginatedListScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TagGridCell(
+    cell: ItemsX,
+    onOpenVideo: (ItemsX) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val handleOpen = remember(cell, onOpenVideo) { { onOpenVideo(cell) } }
+    Box(
+        modifier = modifier
+            .aspectRatio(352f / 198f)
+            .padding(1.dp)
+            .background(Color.DarkGray)
+    ) {
+        // Жесты как в ленте раздела: тап — превью, долгий тап и
+        // двойной — открыть плеер.
+        UrlVideoImageAndLongClickX(
+            cell,
+            onLongClick = handleOpen,
+            onDoubleClick = handleOpen,
+        )
     }
 }

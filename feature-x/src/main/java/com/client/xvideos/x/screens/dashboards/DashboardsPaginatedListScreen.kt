@@ -95,7 +95,6 @@ fun DashboardsPaginatedListScreen(
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
-    isCurrentPage: Boolean = true,
 ) {
 
     var videoItems by remember(pageIndex) { mutableStateOf<ImmutableList<ItemsX>>(persistentListOf()) }

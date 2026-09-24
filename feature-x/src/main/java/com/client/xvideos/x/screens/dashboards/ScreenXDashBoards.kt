@@ -41,6 +41,7 @@ import com.client.xvideos.common.ui.atom.DownloadIndicator
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.history.ScreenXHistory
 import com.client.xvideos.x.screens.saved.X_SavedContent
+import com.client.xvideos.x.model.ItemsX
 
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
@@ -76,6 +77,12 @@ class ScreenXDashBoards : Screen {
         val onSavedTabChange: (Int) -> Unit = remember(vm) { { vm.savedTab = it } }
         val onMainTabChange: (Int) -> Unit = remember(vm) { { vm.mainTab = it } }
         val onDashboardPageChange: suspend (Int) -> Unit = remember(vm) { { page -> vm.pagerState.scrollToPage(page.coerceAtLeast(0)) } }
+        val onOpenVideoPlayer: (ItemsX) -> Unit = remember(vm, navigator) { { vm.openVideoPlayer(it, navigator) } }
+        val onIsFavorite: (Long) -> Boolean = remember(vm) { { vm.isFavorite(it) } }
+        val onFavoriteAdd: (ItemsX) -> Unit = remember(vm) { { vm.addFavorite(it) } }
+        val onFavoriteRemove: (ItemsX) -> Unit = remember(vm) { { vm.removeFavorite(it) } }
+        val onDownload: (ItemsX) -> Unit = remember(vm) { { vm.download(it) } }
+        val onSaveToGallery: (ItemsX) -> Unit = remember(vm) { { vm.saveToGallery(it) } }
 
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -140,14 +147,13 @@ class ScreenXDashBoards : Screen {
                         )
                     ) { pageIndex ->
                         DashboardsPaginatedListScreen(
-                            pageIndex,
-                            openVideoPlayer = { vm.openVideoPlayer(it, navigator) },
-                            isFavorite = { vm.isFavorite(it) },
-                            onFavoriteAdd = { vm.addFavorite(it) },
-                            onFavoriteRemove = { vm.removeFavorite(it) },
-                            onDownload = { vm.download(it) },
-                            onSaveToGallery = { vm.saveToGallery(it) },
-                            isCurrentPage = vm.mainTab == 0 && vm.pagerState.currentPage == pageIndex,
+                            pageIndex = pageIndex,
+                            openVideoPlayer = onOpenVideoPlayer,
+                            isFavorite = onIsFavorite,
+                            onFavoriteAdd = onFavoriteAdd,
+                            onFavoriteRemove = onFavoriteRemove,
+                            onDownload = onDownload,
+                            onSaveToGallery = onSaveToGallery,
                         )
                     }
                 }

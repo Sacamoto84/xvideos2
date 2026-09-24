@@ -51,13 +51,13 @@ import coil3.request.ImageRequest
 import coil3.size.Precision
 import coil3.size.Scale
 import com.client.xvideos.common.AppPath
-import com.composeunstyled.Text
+import androidx.compose.material3.Text
+import com.client.xvideos.common.util.formatBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.conflate
 import timber.log.Timber
 import java.io.File
-import kotlin.math.roundToInt
 
 
 @Suppress("LongMethod", "CyclomaticComplexMethod", "UiComposable")
@@ -406,11 +406,11 @@ private fun ProgressText(
 ) {
     if (bytesRead > 1000) {
         val text = if (totalBytes > 0) {
-            if (visibleByte) "${formatBytes1(bytesRead)} / ${formatBytes1(totalBytes)}" else formatBytes1(
+            if (visibleByte) "${formatBytes(bytesRead)} / ${formatBytes(totalBytes)}" else formatBytes(
                 totalBytes
             )
         } else {
-            formatBytes1(bytesRead)
+            formatBytes(bytesRead)
         }
 
         Text(
@@ -420,15 +420,5 @@ private fun ProgressText(
             fontFamily = Theme.L.fontFamilyKarla,
             fontSize = 9.sp
         )
-    }
-}
-
-fun formatBytes1(bytes: Long): String {
-    return when {
-        bytes < 0 -> "0"
-        bytes < 1024 -> "$bytes "
-        bytes < 1024 * 1024 -> "${(bytes / 1024.0).roundToInt()} K"
-        bytes < 1024 * 1024 * 1024 -> "${(bytes / (1024.0 * 1024.0) * 10).roundToInt() / 10.0} M"
-        else -> "${(bytes / (1024.0 * 1024.0 * 1024.0) * 100).roundToInt() / 100.0} G"
     }
 }

@@ -25,7 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +38,6 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 import com.client.xvideos.common.theme.Theme
-import com.composeunstyled.Text
 
 /**
  * Универсальная сетка коллекций c заголовком и кнопкой «+».
@@ -70,15 +71,17 @@ fun CollectionsGrid(
                         .windowInsetsTopHeight(WindowInsets.displayCutout.union(WindowInsets(top = 16.dp))),
                     contentAlignment = Alignment.Center
                 ) {
-
-                    Text(
-                        ">$selectedCollection",
-                        modifier = Modifier,
-                        color = Theme.R.colorYellow,
-                        fontSize = 18.sp,
-                        fontFamily = Theme.R.fontFamilyPopinsRegular,
-                        textAlign = TextAlign.Center
-                    )
+                    val headerText = if (selectedCollection.isNullOrEmpty()) "" else ">$selectedCollection"
+                    if (headerText.isNotEmpty()) {
+                        Text(
+                            headerText,
+                            modifier = Modifier,
+                            color = Theme.R.colorYellow,
+                            fontSize = 18.sp,
+                            fontFamily = Theme.R.fontFamilyPopinsRegular,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         },
@@ -92,51 +95,15 @@ fun CollectionsGrid(
                 columns = GridCells.Fixed(2)
             ) {
                 items(collections, key = { it.name }) { collection ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                            .padding(vertical = 4.dp)
-                            .combinedClickable(
-                                onClick = { onCollectionClick(collection.name) },
-                                onLongClick = { onCollectionLongClick(collection.name) }
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (collection.previewUrl != null) {
-                            UrlImage(
-                                url = collection.previewUrl,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .size(72.dp)
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .size(72.dp)
-                                    .background(style.placeholderColor)
-                            )
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                collection.name,
-                                color = style.itemNameColor,
-                                fontFamily = style.itemFontFamily
-                            )
-                            collection.itemsCount?.let { count ->
-                                Text(
-                                    "Элементов: $count",
-                                    color = style.itemSecondaryColor,
-                                    fontSize = 12.sp,
-                                    fontFamily = style.itemFontFamily
-                                )
-                            }
-                        }
-                    }
+                    CollectionGridCard(
+                        collection = collection,
+                        style = style,
+                        onCollectionClick = onCollectionClick,
+                        onCollectionLongClick = onCollectionLongClick,
+                    )
                 }
 
-                items(listOf(Unit)) {
+                item(key = "add_new_collection") {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         Box(
                             modifier = Modifier
@@ -159,6 +126,62 @@ fun CollectionsGrid(
             }
         } else {
             navigationContent()
+        }
+    }
+}
+
+@Composable
+private fun CollectionGridCard(
+    collection: CollectionGridItem,
+    style: CollectionsGridStyle,
+    onCollectionClick: (String) -> Unit,
+    onCollectionLongClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val handleClick = remember(collection.name, onCollectionClick) { { onCollectionClick(collection.name) } }
+    val handleLongClick = remember(collection.name, onCollectionLongClick) { { onCollectionLongClick(collection.name) } }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+            .padding(vertical = 4.dp)
+            .combinedClickable(
+                onClick = handleClick,
+                onLongClick = handleLongClick,
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (collection.previewUrl != null) {
+            UrlImage(
+                url = collection.previewUrl,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .size(72.dp)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .size(72.dp)
+                    .background(style.placeholderColor)
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Column {
+            Text(
+                collection.name,
+                color = style.itemNameColor,
+                fontFamily = style.itemFontFamily
+            )
+            collection.itemsCount?.let { count ->
+                Text(
+                    "Элементов: $count",
+                    color = style.itemSecondaryColor,
+                    fontSize = 12.sp,
+                    fontFamily = style.itemFontFamily
+                )
+            }
         }
     }
 }

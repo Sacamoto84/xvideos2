@@ -200,7 +200,6 @@ class CollectionDB<T>(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun readAllCollections(): Result<List<CollectionEntity<T>>> = try {
         val root = File(path)
         if (!root.exists()) return Result.success(emptyList())

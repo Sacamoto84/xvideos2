@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,13 +24,16 @@ fun DashboardControlsRow(
     onChange: suspend (Int) -> Unit
 ) {
     val job = rememberCoroutineScope()
+    val handleChange: (Int) -> Unit = remember(job, onChange) {
+        { page -> job.launch(Dispatchers.Main) { onChange.invoke(page) } }
+    }
 
     Row(modifier = Modifier.fillMaxWidth()) {
         ComposeCountry()
         Box(modifier = Modifier.weight(1f)) {
             BottomListDashBoardNavigationButtons2(
                 value = isCurrentPage,
-                onChange = { job.launch(Dispatchers.Main) { onChange.invoke(it) } },
+                onChange = handleChange,
                 max = isMax,
             )
         }

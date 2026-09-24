@@ -61,16 +61,6 @@ fun ProfileInfo1(
             if (visibleUserName)
                 Column()
                 {
-//                    Text(
-//                        videoItem.id,
-//                        autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 18.sp),
-//                        minLines = 1,
-//                        maxLines = 1,
-//                        color = Color.White,
-//                        fontFamily = Theme.R.fontFamilyPopinsRegular,
-//                        fontSize = 18.sp,
-//                        modifier = Modifier.padding(start = 4.dp).offset(y= (-3).dp)
-//                    )
                     Text(
                         videoItem.userName,
                         autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 18.sp),

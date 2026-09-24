@@ -98,7 +98,6 @@ class ScreenTags(val tag: String) : Screen {
                         pageIndex = pageIndex,
                         loadPage = loadPage,
                         onOpenVideo = onOpenVideo,
-                        isCurrentPage = pagerState.currentPage == pageIndex,
                         listState = listStates.getOrPut(pageIndex) { LazyListState() },
                         header = {
                             Column(
