@@ -73,6 +73,18 @@ internal fun NetworkSettingsSection() {
         }
     }
 
+    val onToggleDoh: (Boolean) -> Unit = remember {
+        { enabled ->
+            Settings.doh_enabled.setValue(enabled)
+            AppDns.clearCache()
+            if (enabled) {
+                SnackBar.success("DNS-over-HTTPS активирован")
+            } else {
+                SnackBar.info("DoH выключен: активен системный DNS")
+            }
+        }
+    }
+
     SettingsSectionTitle("DNS-over-HTTPS (DoH)")
     SettingsGroup {
         SettingsSwitchRow(
@@ -84,15 +96,7 @@ internal fun NetworkSettingsSection() {
                 "Выключено (используется системный DNS)"
             },
             value = dohEnabled,
-            onValueChange = {
-                Settings.doh_enabled.setValue(it)
-                AppDns.clearCache()
-                if (it) {
-                    SnackBar.success("DNS-over-HTTPS активирован")
-                } else {
-                    SnackBar.info("DoH выключен: активен системный DNS")
-                }
-            }
+            onValueChange = onToggleDoh
         )
     }
 
@@ -139,21 +143,11 @@ private fun DohProviderSelectionGroup(
                 provider.description
             }
 
-            SettingsListItem(
-                icon = R.drawable.ic_dns_24,
-                text = provider.title,
+            DohProviderItem(
+                provider = provider,
+                isSelected = currentProvider == provider,
                 subtitle = subtitle,
-                trailing = {
-                    RadioButton(
-                        selected = currentProvider == provider,
-                        onClick = null,
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = SettingsAccentColor,
-                            unselectedColor = Color(0xFF938F99)
-                        )
-                    )
-                },
-                onClick = { onSelectProvider(provider) }
+                onSelect = onSelectProvider
             )
         }
 
@@ -170,10 +164,49 @@ private fun DohProviderSelectionGroup(
 }
 
 @Composable
+private fun DohProviderItem(
+    provider: DohProvider,
+    isSelected: Boolean,
+    subtitle: String,
+    onSelect: (DohProvider) -> Unit
+) {
+    val onClick = remember(provider, onSelect) { { onSelect(provider) } }
+    val trailingContent: @Composable () -> Unit = remember(isSelected) {
+        {
+            RadioButton(
+                selected = isSelected,
+                onClick = null,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = SettingsAccentColor,
+                    unselectedColor = Color(0xFF938F99)
+                )
+            )
+        }
+    }
+    SettingsListItem(
+        icon = R.drawable.ic_dns_24,
+        text = provider.title,
+        subtitle = subtitle,
+        trailing = trailingContent,
+        onClick = onClick
+    )
+}
+
+@Composable
 private fun NetworkParamsGroup(
     fallbackToSystem: Boolean,
     ipv4Only: Boolean
 ) {
+    val onFallbackChange: (Boolean) -> Unit = remember {
+        { Settings.doh_fallback_to_system.setValue(it) }
+    }
+    val onIpv4OnlyChange: (Boolean) -> Unit = remember {
+        {
+            Settings.doh_ipv4_only.setValue(it)
+            AppDns.clearCache()
+        }
+    }
+
     SettingsSectionTitle("Параметры сети")
     SettingsGroup {
         SettingsSwitchRow(
@@ -185,7 +218,7 @@ private fun NetworkParamsGroup(
                 "Строгая изоляция: запросы только через DoH"
             },
             value = fallbackToSystem,
-            onValueChange = { Settings.doh_fallback_to_system.setValue(it) }
+            onValueChange = onFallbackChange
         )
         SettingsDivider()
         SettingsSwitchRow(
@@ -197,10 +230,7 @@ private fun NetworkParamsGroup(
                 "Разрешены IPv4 и IPv6 адреса"
             },
             value = ipv4Only,
-            onValueChange = {
-                Settings.doh_ipv4_only.setValue(it)
-                AppDns.clearCache()
-            }
+            onValueChange = onIpv4OnlyChange
         )
     }
 }
@@ -259,11 +289,14 @@ private fun CustomDohUrlDialog(
     onSave: (String) -> Unit
 ) {
     var tempUrl by remember(initialUrl) { mutableStateOf(initialUrl) }
+    val onConfirmSave: () -> Unit = remember(tempUrl, onSave) { { onSave(tempUrl.trim()) } }
+    val onUrlChange: (String) -> Unit = remember { { tempUrl = it } }
+
     LavenderDialog(
         title = "Пользовательский DoH URL",
         onDismiss = onDismiss,
         confirmText = "Сохранить",
-        onConfirm = { onSave(tempUrl.trim()) },
+        onConfirm = onConfirmSave,
         content = {
             Text(
                 "Введите HTTPS URL эндпоинта DoH резолвера (поддерживаются серверы с JSON API, RFC 8427):",
@@ -273,7 +306,7 @@ private fun CustomDohUrlDialog(
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = tempUrl,
-                onValueChange = { tempUrl = it },
+                onValueChange = onUrlChange,
                 placeholder = { Text("https://dns.example.com/dns-query") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()

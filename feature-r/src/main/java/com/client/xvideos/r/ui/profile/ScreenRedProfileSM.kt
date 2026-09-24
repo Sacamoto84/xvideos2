@@ -30,6 +30,7 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -65,16 +66,22 @@ class ScreenRedProfileSM @AssistedInject constructor(
 
     private val _tags = MutableStateFlow<Set<String>>(emptySet())
     val tags: StateFlow<Set<String>> = _tags
-    val tagsSelect = MutableStateFlow<Set<String>>(emptySet())
+
+    private val _tagsSelect = MutableStateFlow<Set<String>>(emptySet())
+    val tagsSelect: StateFlow<Set<String>> = _tagsSelect.asStateFlow()
 
     fun tagsAdd(l: List<String>) {
         _tags.update { it + l }
     }
 
     fun toggleSelectTag(tag: String) {
-        tagsSelect.update {
+        _tagsSelect.update {
             if (tag in it) it - tag else it + tag
         }
+    }
+
+    fun resetSelectedTags() {
+        _tagsSelect.value = emptySet()
     }
 
     val orderList = listOf(Order.TOP, Order.LATEST, Order.OLDEST, Order.TOP28, Order.TRENDING)
@@ -83,7 +90,8 @@ class ScreenRedProfileSM @AssistedInject constructor(
     val typeGifsList = listOf(TypeGifs.GIFS, TypeGifs.IMAGES)
     var typeGifs by mutableStateOf(TypeGifs.GIFS)
 
-    var isLoading = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     val selector: StateFlow<Int> = Settings.red_profile_selector.field
 
@@ -112,7 +120,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
             setSelector(2)
 
             if (cleanProfileName.isNotBlank()) {
-                isLoading.value = true
+                _isLoading.value = true
                 try {
                     val loadedCreator = redApi.readCreator(cleanProfileName).getOrNull()
                     creator = loadedCreator
@@ -124,7 +132,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
                     Timber.e(e)
                     SnackBar.error(e.message.toString())
                 } finally {
-                    isLoading.value = false
+                    _isLoading.value = false
                 }
             } else {
                 Timber.w("ScreenRedProfileSM init: пустое имя профиля")
@@ -133,7 +141,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
     }
 
     fun clear() {
-        isLoading.value = false
+        _isLoading.value = false
         _tags.update { emptySet() }
     }
 }

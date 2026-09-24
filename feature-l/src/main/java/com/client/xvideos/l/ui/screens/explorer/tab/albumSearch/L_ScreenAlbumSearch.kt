@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardActions
@@ -56,6 +57,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.model.Landing_page_albumType
@@ -73,6 +75,8 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -92,14 +96,15 @@ object L_ScreenAlbumSearch : Screen {
         val vm: ScreenLAlbumSearchSM = getScreenModel()
 
         val searchText by vm.searchText.collectAsStateWithLifecycle()
-        BackHandler(enabled = searchText.isNotEmpty()) { vm.searchText.value = "" }
+        val onClearSearch: () -> Unit = remember(vm) { { vm.clearSearchText() } }
+        BackHandler(enabled = searchText.isNotEmpty(), onBack = onClearSearch)
         val result by vm.result.collectAsStateWithLifecycle()
         val isLoading by vm.isLoading.collectAsStateWithLifecycle()
         val sections = result?.sections
         val title = result?.title
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
-        val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.searchText.value = it } }
+        val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.updateSearchText(it) } }
         val onSearch: () -> Unit = remember(vm) { { vm.search() } }
         val onAlbumClick: (Long) -> Unit = remember(navigator) {
             { albumId -> navigator.push(ScreenLAlbum(albumId)) }
@@ -200,6 +205,15 @@ private fun AlbumSearchInputField(
     onSearch: () -> Unit
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
+    val handleClear = remember(onSearchTextChange) { { onSearchTextChange("") } }
+    val handleSearch: () -> Unit = remember(onSearch, keyboard) {
+        {
+            onSearch()
+            keyboard?.hide()
+        }
+    }
+    val keyboardActions = remember(handleSearch) { KeyboardActions(onSearch = { handleSearch() }) }
+
     OutlinedTextField(
         value = searchText,
         onValueChange = onSearchTextChange,
@@ -212,28 +226,29 @@ private fun AlbumSearchInputField(
         textStyle = Theme.L.Type.body.copy(color = Theme.L.textColor),
         trailingIcon = {
             if (searchText.isNotEmpty()) {
-                IconButton(onClick = { onSearchTextChange("") }) {
+                IconButton(onClick = handleClear) {
                     Icon(Icons.Default.Close, contentDescription = "Очистить поле поиска", tint = Theme.L.textColor)
                 }
             } else {
-                IconButton(onClick = { onSearch(); keyboard?.hide() }) {
+                IconButton(onClick = handleSearch) {
                     Icon(Icons.Default.Search, contentDescription = "Искать", tint = Theme.L.textColor)
                 }
             }
         },
         keyboardOptions = IncognitoKeyboard.options(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { onSearch(); keyboard?.hide() })
+        keyboardActions = keyboardActions
     )
 }
 
 @Composable
 private fun AlbumSearchSectionBlock(
     section: Landing_page_albumSection,
-    screenWidth: androidx.compose.ui.unit.Dp,
+    screenWidth: Dp,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (Landing_page_albumSection) -> Unit
 ) {
     val handleSeeAll = remember(section, onSeeAllClick) { { onSeeAllClick(section) } }
+    val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
 
     Text(
         section.title,
@@ -251,22 +266,13 @@ private fun AlbumSearchSectionBlock(
             .padding(horizontal = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        val itemWidth = (screenWidth - 8.dp) / 3
-        section.items.take(9).forEach { album ->
-            Box(
-                modifier = Modifier
-                    .width(itemWidth)
-                    .padding(vertical = 2.dp)
-            ) {
-                AlbumListItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = album.title,
-                    coverUrl = album.cover?.url.orEmpty(),
-                    numberOfAnimatedPictures = album.numberOfAnimatedPictures,
-                    numberOfPictures = album.numberOfPictures,
-                    onClick = { album.id.toLongOrNull()?.let(onAlbumClick) }
-                )
-            }
+        val albums = remember(section.items) { section.items.take(9) }
+        albums.forEach { album ->
+            AlbumSearchGridItem(
+                album = album,
+                itemWidth = itemWidth,
+                onAlbumClick = onAlbumClick
+            )
         }
     }
 
@@ -291,6 +297,36 @@ private fun AlbumSearchSectionBlock(
     }
 }
 
+@Composable
+private fun AlbumSearchGridItem(
+    album: Album,
+    itemWidth: Dp,
+    onAlbumClick: (Long) -> Unit
+) {
+    val onClick = remember(album.id, onAlbumClick) {
+        {
+            val albumId = album.id.toLongOrNull()
+            if (albumId != null) {
+                onAlbumClick(albumId)
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .width(itemWidth)
+            .padding(vertical = 2.dp)
+    ) {
+        AlbumListItem(
+            modifier = Modifier.fillMaxWidth(),
+            title = album.title,
+            coverUrl = album.cover?.url.orEmpty(),
+            numberOfAnimatedPictures = album.numberOfAnimatedPictures,
+            numberOfPictures = album.numberOfPictures,
+            onClick = onClick
+        )
+    }
+}
+
 
 @Stable
 class ScreenLAlbumSearchSM @Inject constructor(
@@ -299,20 +335,33 @@ class ScreenLAlbumSearchSM @Inject constructor(
 
     val state = LazyListState()
 
-    val searchText = MutableStateFlow("")
-    val result = MutableStateFlow<Landing_page_albumType?>(null)
-    val isLoading = MutableStateFlow(false)
+    private val _searchText = MutableStateFlow("")
+    val searchText: StateFlow<String> = _searchText.asStateFlow()
+
+    private val _result = MutableStateFlow<Landing_page_albumType?>(null)
+    val result: StateFlow<Landing_page_albumType?> = _result.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private var searchJob: Job? = null
 
+    fun updateSearchText(text: String) {
+        _searchText.value = text
+    }
+
+    fun clearSearchText() {
+        _searchText.value = ""
+    }
+
     fun search() {
-        val query = searchText.value.trim()
+        val query = _searchText.value.trim()
         if (query.isBlank()) return
         searchJob?.cancel()
         searchJob = screenModelScope.launch {
-            isLoading.value = true
+            _isLoading.value = true
             try {
-                result.value = withContext(Dispatchers.IO) {
+                _result.value = withContext(Dispatchers.IO) {
                     luscious.getLandingPageAlbumSearch(query).getOrElse {
                         Timber.e(it, "ScreenLAlbumSearchSM search")
                         null
@@ -320,19 +369,19 @@ class ScreenLAlbumSearchSM @Inject constructor(
                 }
             } finally {
                 if (searchJob === coroutineContext[Job]) {
-                    isLoading.value = false
+                    _isLoading.value = false
                 }
             }
         }
     }
 
     fun createFilter(section: Landing_page_albumSection): AlbumListFilter =
-        createAlbumSearchFilter(section, searchText.value)
+        createAlbumSearchFilter(section, _searchText.value)
 
     override fun onDispose() {
         super.onDispose()
         searchJob?.cancel()
-        isLoading.value = false
+        _isLoading.value = false
         Timber.d("ScreenLAlbumSearchSM onDispose")
     }
 }

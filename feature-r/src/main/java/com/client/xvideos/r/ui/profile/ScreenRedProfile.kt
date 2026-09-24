@@ -48,7 +48,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
 
-        val onResetTags: () -> Unit = remember(vm) { { vm.tagsSelect.value = emptySet() } }
+        val onResetTags: () -> Unit = remember(vm) { { vm.resetSelectedTags() } }
 
         // Навигация «Назад»:
         // 1. Сброс выбранных тегов фильтрации (если есть).
@@ -97,6 +97,30 @@ fun RedProfileScreenContent(
 ) {
     val topInset = getTopInsetDp()
 
+    val renderContentBeforeList: @Composable () -> Unit = remember(
+        topInset,
+        creator,
+        tags,
+        tagsSelect,
+        onTagClick,
+        savedRedProvider
+    ) {
+        {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.fillMaxWidth().height(topInset))
+
+                if (creator != null) {
+                    RedProfileCreaterInfo(creator, savedRed = savedRedProvider)
+                }
+
+                if ((creator != null) && (tags.isNotEmpty())) {
+                    TagsBlock(tags, tagsSelect, onTagClick)
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
+        }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.background
@@ -110,20 +134,7 @@ fun RedProfileScreenContent(
             LazyRow123(
                 host = likedHost,
                 modifier = Modifier.fillMaxSize(),
-                contentBeforeList = {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Box(modifier = Modifier.fillMaxWidth().height(topInset)) { }
-
-                        if (creator != null) {
-                            RedProfileCreaterInfo(creator, savedRed = savedRedProvider)
-                        }
-
-                        if ((creator != null) && (tags.isNotEmpty())) {
-                            TagsBlock(tags, tagsSelect, onTagClick)
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
-                },
+                contentBeforeList = renderContentBeforeList,
                 onAppendLoaded = onAppendLoaded,
             )
 

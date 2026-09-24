@@ -21,9 +21,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -120,6 +121,13 @@ private fun FavoritesContent(
     // Подтверждение удаления из избранного (диалог).
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
     val onDeleteItem: (ItemsX) -> Unit = remember { { item -> pendingDelete = item } }
+    val onDismissDeleteDialog: () -> Unit = remember { { pendingDelete = null } }
+    val onConfirmDeleteDialog: (ItemsX) -> Unit = remember(onDelete) {
+        { item ->
+            onDelete(item)
+            pendingDelete = null
+        }
+    }
     val gridState = rememberLazyGridState()
 
     // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
@@ -131,11 +139,8 @@ private fun FavoritesContent(
         ConfirmDeleteFavoriteDialog(
             item = item,
             posterUrl = posterUrlOf(item),
-            onConfirm = {
-                onDelete(item)
-                pendingDelete = null
-            },
-            onDismiss = { pendingDelete = null },
+            onConfirm = { onConfirmDeleteDialog(item) },
+            onDismiss = onDismissDeleteDialog,
         )
     }
 
@@ -154,15 +159,8 @@ private fun FavoritesContent(
                     .padding(bottom = padding.calculateBottomPadding()),
                 contentAlignment = Alignment.TopCenter
             ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(top = topCutout)) {
-                    Text(
-                        "Избранное",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-                    )
-                    HorizontalSeparator(color = Color(0xFF9E9E9E))
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    FavoritesHeader(topCutout = topCutout)
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("Пусто", color = Color.Gray, fontSize = 16.sp)
                     }
@@ -177,23 +175,10 @@ private fun FavoritesContent(
                     .padding(bottom = padding.calculateBottomPadding())
             ) {
                 item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = topCutout)
-                    ) {
-                        Text(
-                            "Избранное",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-                        )
-                        HorizontalSeparator(color = Color(0xFF9E9E9E))
-                    }
+                    FavoritesHeader(topCutout = topCutout)
                 }
 
-                itemsIndexed(favorites, key = { index, item -> "${item.id}#$index" }) { _, item ->
+                items(items = favorites, key = { it.id }) { item ->
                     FavoriteRow(
                         item = item,
                         localUrl = localUrlOf(item),
@@ -207,6 +192,24 @@ private fun FavoritesContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FavoritesHeader(topCutout: Dp) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = topCutout)
+    ) {
+        Text(
+            "Избранное",
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+        )
+        HorizontalSeparator(color = Color(0xFF9E9E9E))
     }
 }
 
