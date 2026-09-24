@@ -104,25 +104,29 @@ object R_Screen_Saved_DownloadTab : Screen {
         }
 
         var chooserItem by remember { mutableStateOf<GifsInfo?>(null) }
+        val onDismissChooser = remember { { chooserItem = null } }
 
-        BackHandler(enabled = chooserItem != null) {
-            chooserItem = null
-        }
+        BackHandler(enabled = chooserItem != null, onBack = onDismissChooser)
 
-        val onShareClickHandler = remember(context) {
+        val onShareClickHandler = remember {
             { item: GifsInfo -> chooserItem = item }
         }
 
         chooserItem?.let { item ->
-            P2pSendChooserDialog(
-                onSystem = { useCaseShareGifs(context, item) },
-                onP2p = {
-                    // Шлём только метаданные (.info + .jpg) — видео получатель стримит по URL.
+            val onSystemShare = remember(context, item) {
+                { useCaseShareGifs(context, item) }
+            }
+            val onP2pShare = remember(navigator, vm, item) {
+                {
                     vm.downloadRed.shareMetaByP2p(item) { bundle ->
                         navigator.push(ScreenP2pSend(P2pSendSource.Ready(bundle)))
                     }
-                },
-                onDismiss = { chooserItem = null },
+                }
+            }
+            P2pSendChooserDialog(
+                onSystem = onSystemShare,
+                onP2p = onP2pShare,
+                onDismiss = onDismissChooser,
             )
         }
 
@@ -206,6 +210,7 @@ private fun DownloadListItem(
         AppPath.r_cache_download + "/" + item.userName + "/" + item.id + ".mp4"
     }
     val size = remember(mp4Path) { File(mp4Path).length().toPrettyCount3() }
+    val autoSize = remember { TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 18.sp) }
 
     Box(
         modifier = Modifier
@@ -228,8 +233,7 @@ private fun DownloadListItem(
                 imagePath,
                 modifier = Modifier
                     .width(72.dp)
-                    .fillMaxHeight()
-                    .clickable(onClick = onClick),
+                    .fillMaxHeight(),
                 contentScale = ContentScale.Crop
             )
             Column(
@@ -254,7 +258,7 @@ private fun DownloadListItem(
                         fontFamily = Theme.R.fontFamilyPopinsRegular,
                         fontSize = 18.sp
                     ),
-                    autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 18.sp),
+                    autoSize = autoSize,
                     maxLines = 1
                 )
 

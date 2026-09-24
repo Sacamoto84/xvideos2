@@ -283,12 +283,8 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
 
         // Диалог запроса разрешений
         if (showPermissionDialog) {
-            LavenderDialog(
-                title = "Нужны разрешения",
-                onDismiss = onBack,
-                body = androidx.compose.ui.text.AnnotatedString("Для поиска устройств рядом приложению нужны разрешения на Bluetooth и Wi-Fi."),
-                confirmText = "Предоставить",
-                onConfirm = {
+            val onRequestPermissions = remember(activity) {
+                {
                     val perms = P2pPermissions.required()
                     // Timber, а не Log: в релизе посажено дерево, пишущее ERROR
                     // в локальный журнал. Через android.util.Log эта ошибка мимо
@@ -299,7 +295,14 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
                     } else {
                         Timber.e("P2P: Activity is NULL, не можем запросить разрешения!")
                     }
-                },
+                }
+            }
+            LavenderDialog(
+                title = "Нужны разрешения",
+                onDismiss = onBack,
+                body = androidx.compose.ui.text.AnnotatedString("Для поиска устройств рядом приложению нужны разрешения на Bluetooth и Wi-Fi."),
+                confirmText = "Предоставить",
+                onConfirm = onRequestPermissions,
             )
         }
     }

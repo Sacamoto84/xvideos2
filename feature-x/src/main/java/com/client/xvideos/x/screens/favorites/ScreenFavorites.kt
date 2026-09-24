@@ -131,15 +131,16 @@ private fun FavoritesContent(
     val gridState = rememberLazyGridState()
 
     // Нажатие «Назад» при открытом диалоге закрывает диалог, не переключая вкладку
-    BackHandler(enabled = pendingDelete != null) {
-        pendingDelete = null
-    }
+    BackHandler(enabled = pendingDelete != null, onBack = onDismissDeleteDialog)
 
     pendingDelete?.let { item ->
+        val onConfirmThis = remember(item, onConfirmDeleteDialog) {
+            { onConfirmDeleteDialog(item) }
+        }
         ConfirmDeleteFavoriteDialog(
             item = item,
             posterUrl = posterUrlOf(item),
-            onConfirm = { onConfirmDeleteDialog(item) },
+            onConfirm = onConfirmThis,
             onDismiss = onDismissDeleteDialog,
         )
     }
@@ -229,11 +230,7 @@ private fun FavoriteRow(
     val onDownloadThis = remember(item, onDownload) { { onDownload(item) } }
     val onSaveToGalleryThis = remember(item, onSaveToGallery) { { onSaveToGallery(item) } }
     val onPlayLocalThis = remember(localUrl, item, onPlayLocal) {
-        if (localUrl != null) {
-            { onPlayLocal(localUrl, item) }
-        } else {
-            {}
-        }
+        localUrl?.let { url -> { onPlayLocal(url, item) } }
     }
 
     Box(
@@ -251,7 +248,7 @@ private fun FavoriteRow(
             when {
 
                 // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.
-                localUrl != null -> {
+                localUrl != null && onPlayLocalThis != null -> {
                     UrlImage(
                         posterUrl,
                         modifier = Modifier
@@ -309,9 +306,30 @@ private fun FavoriteActionsExpandMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    val onExpandedChange = remember { { isExpanded: Boolean -> expanded = isExpanded } }
+    val onDismissMenu = remember { { expanded = false } }
+    val handleDownload = remember(onDownload) {
+        {
+            onDownload()
+            expanded = false
+        }
+    }
+    val handleSaveToGallery = remember(onSaveToGallery) {
+        {
+            onSaveToGallery()
+            expanded = false
+        }
+    }
+    val handleDelete = remember(onDelete) {
+        {
+            onDelete()
+            expanded = false
+        }
+    }
+
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it }
+        onExpandedChange = onExpandedChange
     ) {
         IconButton(
             modifier = Modifier
@@ -337,24 +355,13 @@ private fun FavoriteActionsExpandMenu(
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
+            onDismissRequest = onDismissMenu,
             modifier = Modifier.width(IntrinsicSize.Min),
             containerColor = Theme.ExpandMenu.backgroundColor
         ) {
-            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, "Скачать") {
-                onDownload()
-                expanded = false
-            }
-
-            ExpandMenuActionItem(Icons.Filled.SaveAlt, "В галерею") {
-                onSaveToGallery()
-                expanded = false
-            }
-
-            ExpandMenuActionItem(Icons.Filled.Delete, "Удалить") {
-                onDelete()
-                expanded = false
-            }
+            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, "Скачать", onClick = handleDownload)
+            ExpandMenuActionItem(Icons.Filled.SaveAlt, "В галерею", onClick = handleSaveToGallery)
+            ExpandMenuActionItem(Icons.Filled.Delete, "Удалить", onClick = handleDelete)
         }
     }
 }

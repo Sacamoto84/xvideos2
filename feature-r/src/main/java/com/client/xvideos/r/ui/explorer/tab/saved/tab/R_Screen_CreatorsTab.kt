@@ -98,10 +98,9 @@ object R_Screen_CreatorsTab : Screen {
         val savedRed = vm.savedRed
 
         var itemPendingDelete by remember { mutableStateOf<UserInfo?>(null) }
+        val onDismissDelete = remember { { itemPendingDelete = null } }
 
-        BackHandler(enabled = itemPendingDelete != null) {
-            itemPendingDelete = null
-        }
+        BackHandler(enabled = itemPendingDelete != null, onBack = onDismissDelete)
 
         val onCreatorClick = remember(navigator) {
             { username: String -> navigator.push(ScreenRedProfile(username)) }
@@ -115,7 +114,6 @@ object R_Screen_CreatorsTab : Screen {
                 itemPendingDelete = null
             }
         }
-        val onDismissDelete = remember { { itemPendingDelete = null } }
 
         DeleteCreatorDialog(
             item = itemPendingDelete,
@@ -298,6 +296,7 @@ private fun CreatorMetric(
     value: Long,
     modifier: Modifier = Modifier
 ) {
+    val prettyValue = remember(value) { value.toPrettyCount() }
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
@@ -306,7 +305,7 @@ private fun CreatorMetric(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            value.toPrettyCount(),
+            prettyValue,
             color = Color.White,
             fontSize = 12.sp,
             fontFamily = Theme.R.fontFamilyPopinsRegular,
@@ -330,6 +329,9 @@ private fun DeleteCreatorDialog(
     onConfirm: (UserInfo) -> Unit
 ) {
     item?.let { pending ->
+        val handleConfirm = remember(pending, onConfirm) {
+            { onConfirm(pending) }
+        }
         LavenderDialog(
             title = "Удалить автора?",
             onDismiss = onDismiss,
@@ -344,7 +346,7 @@ private fun DeleteCreatorDialog(
                 append("» из сохранённых?")
             },
             confirmText = "Удалить",
-            onConfirm = { onConfirm(pending) },
+            onConfirm = handleConfirm,
             destructive = true,
         )
     }

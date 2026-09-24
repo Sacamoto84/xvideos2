@@ -100,6 +100,12 @@ object L_ScreenServerLikesTab : Screen {
             }
         }
 
+        val itemBefore: @Composable () -> Unit = remember(topInset) {
+            {
+                Box(modifier = Modifier.fillMaxWidth().height(topInset))
+            }
+        }
+
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = handleRefresh,
@@ -132,9 +138,7 @@ object L_ScreenServerLikesTab : Screen {
                         host = vm.host,
                         expandMenu = ExpandMenuType.SERVER_LIKES,
                         tag = "l_server_likes",
-                        itemBefore = {
-                            Box(modifier = Modifier.fillMaxWidth().height(topInset))
-                        }
+                        itemBefore = itemBefore
                     )
                 }
 

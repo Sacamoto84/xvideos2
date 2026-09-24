@@ -68,15 +68,23 @@ class ScreenP2pReceive : Screen {
         val state by (activeController?.state ?: idleState).collectAsStateWithLifecycle()
 
         val onPop: () -> Unit = remember(navigator) {
+            { navigator.pop() }
+        }
+        val onAccept: () -> Unit = remember {
+            { P2pReceiveManager.controller.value?.accept() }
+        }
+        val onReject: () -> Unit = remember(onPop) {
             {
-                navigator.pop()
-                Unit
+                P2pReceiveManager.controller.value?.reject()
+                onPop()
             }
         }
 
         ScreenP2pReceiveContent(
             state = state,
             onPop = onPop,
+            onAccept = onAccept,
+            onReject = onReject,
         )
     }
 }
@@ -85,20 +93,9 @@ class ScreenP2pReceive : Screen {
 private fun ScreenP2pReceiveContent(
     state: ReceiveState,
     onPop: () -> Unit,
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
 ) {
-    val onAccept: () -> Unit = remember {
-        {
-            P2pReceiveManager.controller.value?.accept()
-            Unit
-        }
-    }
-    val onReject: () -> Unit = remember(onPop) {
-        {
-            P2pReceiveManager.controller.value?.reject()
-            onPop()
-        }
-    }
-
     Scaffold(modifier = Modifier.background(Theme.background)) { padding ->
 
         Column(
@@ -145,7 +142,9 @@ private fun PreviewScreenP2pReceiveConnecting() {
     XvideosTheme {
         ScreenP2pReceiveContent(
             state = ReceiveState.Connecting("Pixel 6", "1234"),
-            onPop = {}
+            onPop = {},
+            onAccept = {},
+            onReject = {},
         )
     }
 }
@@ -156,7 +155,9 @@ private fun PreviewScreenP2pReceiveReceiving() {
     XvideosTheme {
         ScreenP2pReceiveContent(
             state = ReceiveState.Receiving(transferred = 45, total = 100),
-            onPop = {}
+            onPop = {},
+            onAccept = {},
+            onReject = {},
         )
     }
 }

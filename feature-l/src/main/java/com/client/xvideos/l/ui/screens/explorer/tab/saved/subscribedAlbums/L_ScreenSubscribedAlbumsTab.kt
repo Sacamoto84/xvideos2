@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Subscriptions
@@ -104,20 +104,22 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         }
 
         var itemPendingServerUnlike by remember { mutableStateOf<AlbumDetails?>(null) }
+        val onDismissUnlike = remember { { itemPendingServerUnlike = null } }
 
-        BackHandler(enabled = itemPendingServerUnlike != null) {
-            itemPendingServerUnlike = null
-        }
+        BackHandler(enabled = itemPendingServerUnlike != null, onBack = onDismissUnlike)
 
         itemPendingServerUnlike?.let { pending ->
-            SubscribedAlbumUnlikeDialog(
-                album = pending,
-                onConfirm = {
+            val onConfirmUnlike = remember(pending, vm, haptic) {
+                {
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     vm.unlikeAlbum(pending)
                     itemPendingServerUnlike = null
-                },
-                onDismiss = { itemPendingServerUnlike = null }
+                }
+            }
+            SubscribedAlbumUnlikeDialog(
+                album = pending,
+                onConfirm = onConfirmUnlike,
+                onDismiss = onDismissUnlike
             )
         }
 
@@ -165,42 +167,71 @@ object L_ScreenSubscribedAlbumsTab : Screen {
                 )
             }
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (albums.isEmpty() && !isLoading && !isRefreshing) {
-                    SubscribedAlbumsEmptyOrErrorState(
-                        topInset = topInset,
-                        errorMessage = errorMessage,
-                        onRetry = onRetry,
-                        onRefresh = onRefresh
-                    )
-                } else {
-                    SubscribedAlbumsGrid(
-                        state = state,
-                        albums = albums,
-                        topInset = topInset,
-                        isLoading = isLoading,
-                        onAlbumClick = onAlbumClick,
-                        onAlbumLongClick = onAlbumLongClick
-                    )
+            SubscribedAlbumsContent(
+                state = state,
+                albums = albums,
+                isLoading = isLoading,
+                isRefreshing = isRefreshing,
+                errorMessage = errorMessage,
+                topInset = topInset,
+                scrollPercentProvider = scrollPercentProvider,
+                onAlbumClick = onAlbumClick,
+                onAlbumLongClick = onAlbumLongClick,
+                onRetry = onRetry,
+                onRefresh = onRefresh
+            )
+        }
+    }
+}
 
-                    // Скроллбар
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .align(Alignment.CenterEnd)
-                            .width(2.dp)
-                    ) {
-                        VerticalScrollbar(scrollPercentProvider)
-                    }
-                }
+@Composable
+private fun SubscribedAlbumsContent(
+    state: androidx.compose.foundation.lazy.grid.LazyGridState,
+    albums: List<AlbumDetails>,
+    isLoading: Boolean,
+    isRefreshing: Boolean,
+    errorMessage: String?,
+    topInset: androidx.compose.ui.unit.Dp,
+    scrollPercentProvider: () -> Pair<Float, Float>,
+    onAlbumClick: (Long?) -> Unit,
+    onAlbumLongClick: (AlbumDetails) -> Unit,
+    onRetry: () -> Unit,
+    onRefresh: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (albums.isEmpty() && !isLoading && !isRefreshing) {
+            SubscribedAlbumsEmptyOrErrorState(
+                topInset = topInset,
+                errorMessage = errorMessage,
+                onRetry = onRetry,
+                onRefresh = onRefresh
+            )
+        } else {
+            SubscribedAlbumsGrid(
+                state = state,
+                albums = albums,
+                topInset = topInset,
+                isLoading = isLoading,
+                onAlbumClick = onAlbumClick,
+                onAlbumLongClick = onAlbumLongClick
+            )
 
-                if (isLoading && albums.isEmpty() && !isRefreshing) {
-                    CircularProgressIndicator(
-                        color = Theme.L.red,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+            // Скроллбар
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .align(Alignment.CenterEnd)
+                    .width(2.dp)
+            ) {
+                VerticalScrollbar(scrollPercentProvider)
             }
+        }
+
+        if (isLoading && albums.isEmpty() && !isRefreshing) {
+            CircularProgressIndicator(
+                color = Theme.L.red,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
     }
 }
@@ -321,11 +352,11 @@ private fun SubscribedAlbumsGrid(
         modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
+        item(key = "top_inset", span = { GridItemSpan(maxLineSpan) }) {
             Box(modifier = Modifier.height(topInset))
         }
 
-        itemsIndexed(albums, key = { index, item -> "${item.id}#$index" }) { _, item ->
+        items(albums, key = { it.id }) { item ->
             SubscribedAlbumGridItem(
                 item = item,
                 onAlbumClick = onAlbumClick,
@@ -335,7 +366,7 @@ private fun SubscribedAlbumsGrid(
         }
 
         if (isLoading && albums.isNotEmpty()) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            item(key = "loading_indicator", span = { GridItemSpan(maxLineSpan) }) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -357,11 +388,12 @@ private fun SubscribedAlbumGridItem(
     modifier: Modifier = Modifier,
 ) {
     val albumId = remember(item.id) { item.id.toLongOrNull() }
+    val coverUrl = remember(item.cover) { item.cover?.url.orEmpty() }
     val onClick = remember(albumId, onAlbumClick) { { onAlbumClick(albumId) } }
     val onLongClick = remember(item, onAlbumLongClick) { { onAlbumLongClick(item) } }
     AlbumListItem(
         title = item.title,
-        coverUrl = item.cover?.url.orEmpty(),
+        coverUrl = coverUrl,
         numberOfAnimatedPictures = item.number_of_animated_pictures,
         numberOfPictures = item.number_of_pictures,
         modifier = modifier,

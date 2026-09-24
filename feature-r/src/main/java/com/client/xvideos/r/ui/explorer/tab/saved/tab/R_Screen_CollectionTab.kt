@@ -71,7 +71,6 @@ object R_Screen_CollectionTab : Screen {
 
     override val key: ScreenKey = "R_Screen_CollectionTab"
 
-    @Suppress("LongMethod")
     @Composable
     override fun Content() {
 
@@ -83,10 +82,13 @@ object R_Screen_CollectionTab : Screen {
 
         val selectedCollection = savedRed.collections.selectedCollection.collectAsStateWithLifecycle().value
 
-        BackHandler(enabled = selectedCollection != null) {
-            Timber.d("BackHandler SavedCollectionTab")
-            savedRed.collections.selectedCollection.value = null
+        val onClearSelectedCollection = remember(savedRed) {
+            {
+                Timber.d("BackHandler SavedCollectionTab")
+                savedRed.collections.selectedCollection.value = null
+            }
         }
+        BackHandler(enabled = selectedCollection != null, onBack = onClearSelectedCollection)
 
         // Открытый диалог и набранный текст переживают пересоздание
         // композиции: на remember пересоздание Activity молча закрывало их.
@@ -95,14 +97,18 @@ object R_Screen_CollectionTab : Screen {
         var renameValue by rememberSaveable { mutableStateOf("") }
         var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
 
+        val onDismissAllDialogs = remember {
+            {
+                itemPendingAction = null
+                itemPendingRename = null
+                itemPendingDelete = null
+            }
+        }
         BackHandler(
             enabled = selectedCollection == null &&
-                (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null)
-        ) {
-            itemPendingAction = null
-            itemPendingRename = null
-            itemPendingDelete = null
-        }
+                (itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null),
+            onBack = onDismissAllDialogs
+        )
 
         val coverOf: (String) -> String? = remember(savedRed.collections.collectionList) {
             { name ->
@@ -114,101 +120,61 @@ object R_Screen_CollectionTab : Screen {
         val onDismissAction: () -> Unit = remember { { itemPendingAction = null } }
         val onDismissRename: () -> Unit = remember { { itemPendingRename = null } }
         val onDismissDelete: () -> Unit = remember { { itemPendingDelete = null } }
+        val onRenameValueChange: (String) -> Unit = remember { { renameValue = it } }
 
-        // ---------- Меню действий (long-press) ----------
-        itemPendingAction?.let { pending ->
-            LavenderDialog(
-                title = "Действие с коллекцией",
-                onDismiss = onDismissAction,
-                icon = { CollectionCoverIcon(coverOf(pending)) },
-                content = {
-                    androidx.compose.material3.Text(
-                        pending,
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                    )
-                    DropdownMenuItem(
-                        text = { androidx.compose.material3.Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                        onClick = {
-                            renameValue = pending
-                            itemPendingRename = pending
-                            itemPendingAction = null
-                        },
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
-                    )
-                    DropdownMenuItem(
-                        text = { androidx.compose.material3.Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                        onClick = {
-                            itemPendingAction = null
-                            navigator.push(ScreenP2pSend(P2pSendSource.ShareCollectionR(pending)))
-                        },
-                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
-                    )
-                    DropdownMenuItem(
-                        text = { androidx.compose.material3.Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
-                        onClick = {
-                            itemPendingDelete = pending
-                            itemPendingAction = null
-                        },
-                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
-                    )
-                },
-            )
+        val onRenameAction: (String) -> Unit = remember {
+            { pending ->
+                renameValue = pending
+                itemPendingRename = pending
+                itemPendingAction = null
+            }
+        }
+        val onShareAction: (String) -> Unit = remember(navigator) {
+            { pending ->
+                itemPendingAction = null
+                navigator.push(ScreenP2pSend(P2pSendSource.ShareCollectionR(pending)))
+            }
+        }
+        val onDeleteAction: (String) -> Unit = remember {
+            { pending ->
+                itemPendingDelete = pending
+                itemPendingAction = null
+            }
         }
 
-        // ---------- Переименование ----------
-        itemPendingRename?.let { pending ->
-            LavenderDialog(
-                title = "Переименовать коллекцию",
-                onDismiss = onDismissRename,
-                icon = { CollectionCoverIcon(coverOf(pending)) },
-                content = {
-                    OutlinedTextField(
-                        value = renameValue,
-                        onValueChange = { renameValue = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { androidx.compose.material3.Text("Название коллекции") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = Color.White,
-                            focusedBorderColor = Theme.DialogLavande.buttonBackground,
-                            unfocusedBorderColor = Color(0x66FFFFFF),
-                            focusedLabelColor = Theme.DialogLavande.dismissTextColor,
-                            unfocusedLabelColor = Theme.DialogLavande.bodyColor,
-                        ),
-                    )
-                },
-                confirmText = "Сохранить",
-                onConfirm = {
-                    val targetName = renameValue
-                    itemPendingRename = null
-                    vm.renameCollection(pending, targetName)
-                },
-            )
+        val onConfirmRename: (String, String) -> Unit = remember(vm) {
+            { pending, targetName ->
+                itemPendingRename = null
+                vm.renameCollection(pending, targetName)
+            }
+        }
+        val onConfirmDelete: (String) -> Unit = remember(vm) {
+            { pending ->
+                itemPendingDelete = null
+                vm.deleteCollection(pending)
+            }
         }
 
-        // ---------- Удаление ----------
-        itemPendingDelete?.let { pending ->
-            LavenderDialog(
-                title = "Удалить коллекцию?",
-                onDismiss = onDismissDelete,
-                icon = { CollectionCoverIcon(coverOf(pending)) },
-                body = buildAnnotatedString {
-                    append("Удалить «")
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
-                    append("» из коллекции")
-                },
-                confirmText = "Удалить",
-                onConfirm = {
-                    itemPendingDelete = null
-                    vm.deleteCollection(pending)
-                },
-                destructive = true,
-            )
-        }
+        val dialogData = R_CollectionDialogData(
+            itemPendingAction = itemPendingAction,
+            itemPendingRename = itemPendingRename,
+            itemPendingDelete = itemPendingDelete,
+            renameValue = renameValue,
+        )
+
+        R_CollectionDialogsHost(
+            dialogData = dialogData,
+            coverOf = coverOf,
+            onDismissAction = onDismissAction,
+            onDismissRename = onDismissRename,
+            onDismissDelete = onDismissDelete,
+            onRenameValueChange = onRenameValueChange,
+            onRenameAction = onRenameAction,
+            onShareAction = onShareAction,
+            onDeleteAction = onDeleteAction,
+            onConfirmRename = onConfirmRename,
+            onConfirmDelete = onConfirmDelete,
+        )
 
         val onCollectionClick: (String) -> Unit = remember(savedRed) { { savedRed.collections.selectedCollection.value = it } }
         val onCollectionLongClick: (String) -> Unit = remember { { itemPendingAction = it } }
@@ -233,6 +199,116 @@ object R_Screen_CollectionTab : Screen {
     }
 }
 
+@androidx.compose.runtime.Immutable
+private data class R_CollectionDialogData(
+    val itemPendingAction: String?,
+    val itemPendingRename: String?,
+    val itemPendingDelete: String?,
+    val renameValue: String,
+)
+
+@Composable
+private fun R_CollectionDialogsHost(
+    dialogData: R_CollectionDialogData,
+    coverOf: (String) -> String?,
+    onDismissAction: () -> Unit,
+    onDismissRename: () -> Unit,
+    onDismissDelete: () -> Unit,
+    onRenameValueChange: (String) -> Unit,
+    onRenameAction: (String) -> Unit,
+    onShareAction: (String) -> Unit,
+    onDeleteAction: (String) -> Unit,
+    onConfirmRename: (String, String) -> Unit,
+    onConfirmDelete: (String) -> Unit,
+) {
+    // ---------- Меню действий (long-press) ----------
+    dialogData.itemPendingAction?.let { pending ->
+        val onRenameClick = remember(pending, onRenameAction) { { onRenameAction(pending) } }
+        val onShareClick = remember(pending, onShareAction) { { onShareAction(pending) } }
+        val onDeleteClick = remember(pending, onDeleteAction) { { onDeleteAction(pending) } }
+        LavenderDialog(
+            title = "Действие с коллекцией",
+            onDismiss = onDismissAction,
+            icon = { CollectionCoverIcon(coverOf(pending)) },
+            content = {
+                androidx.compose.material3.Text(
+                    pending,
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+                DropdownMenuItem(
+                    text = { androidx.compose.material3.Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    onClick = onRenameClick,
+                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+                )
+                DropdownMenuItem(
+                    text = { androidx.compose.material3.Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    onClick = onShareClick,
+                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+                )
+                DropdownMenuItem(
+                    text = { androidx.compose.material3.Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    onClick = onDeleteClick,
+                    leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+                )
+            },
+        )
+    }
+
+    // ---------- Переименование ----------
+    dialogData.itemPendingRename?.let { pending ->
+        val onConfirm = remember(pending, dialogData.renameValue, onConfirmRename) {
+            { onConfirmRename(pending, dialogData.renameValue) }
+        }
+        LavenderDialog(
+            title = "Переименовать коллекцию",
+            onDismiss = onDismissRename,
+            icon = { CollectionCoverIcon(coverOf(pending)) },
+            content = {
+                OutlinedTextField(
+                    value = dialogData.renameValue,
+                    onValueChange = onRenameValueChange,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { androidx.compose.material3.Text("Название коллекции") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color.White,
+                        focusedBorderColor = Theme.DialogLavande.buttonBackground,
+                        unfocusedBorderColor = Color(0x66FFFFFF),
+                        focusedLabelColor = Theme.DialogLavande.dismissTextColor,
+                        unfocusedLabelColor = Theme.DialogLavande.bodyColor,
+                    ),
+                )
+            },
+            confirmText = "Сохранить",
+            onConfirm = onConfirm,
+        )
+    }
+
+    // ---------- Удаление ----------
+    dialogData.itemPendingDelete?.let { pending ->
+        val onConfirm = remember(pending, onConfirmDelete) {
+            { onConfirmDelete(pending) }
+        }
+        LavenderDialog(
+            title = "Удалить коллекцию?",
+            onDismiss = onDismissDelete,
+            icon = { CollectionCoverIcon(coverOf(pending)) },
+            body = buildAnnotatedString {
+                append("Удалить «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
+                append("» из коллекции")
+            },
+            confirmText = "Удалить",
+            onConfirm = onConfirm,
+            destructive = true,
+        )
+    }
+}
+
 @Composable
 fun R_SavedCollectionTabContent(
     selectedCollection: String?,
@@ -252,11 +328,8 @@ fun R_SavedCollectionTabContent(
             )
         }
     }
-    com.client.xvideos.common.collectionDB.ui.CollectionsGrid(
-        selectedCollection = selectedCollection,
-        collections = gridItems,
-        gridState = gridState,
-        style = com.client.xvideos.common.collectionDB.model.CollectionsGridStyle(
+    val gridStyle = remember {
+        com.client.xvideos.common.collectionDB.model.CollectionsGridStyle(
             backgroundColor = Color.Transparent,
             titleColor = Theme.R.colorYellow,
             titleFontFamily = Theme.R.fontFamilyPopinsRegular,
@@ -264,7 +337,13 @@ fun R_SavedCollectionTabContent(
             itemSecondaryColor = Color.LightGray,
             itemFontFamily = Theme.R.fontFamilyDMsanss,
             addButtonBackground = Theme.R.colorYellow
-        ),
+        )
+    }
+    com.client.xvideos.common.collectionDB.ui.CollectionsGrid(
+        selectedCollection = selectedCollection,
+        collections = gridItems,
+        gridState = gridState,
+        style = gridStyle,
         onCollectionClick = onCollectionClick,
         onCollectionLongClick = onCollectionLongClick,
         onCreateNewCollectionClick = onCreateNewCollectionClick,
