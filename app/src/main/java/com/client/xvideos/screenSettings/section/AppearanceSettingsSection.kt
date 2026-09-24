@@ -52,6 +52,10 @@ internal fun AppearanceSettingsSection() {
     val currentEffect = remember(effectName) { ScrollButtonEffect.fromNameOrDefault(effectName) }
     val previewHazeState = rememberHazeState()
 
+    val onSelectEffect: (ScrollButtonEffect) -> Unit = remember {
+        { effect -> Settings.scroll_buttons_effect.setValue(effect.name) }
+    }
+
     SettingsSectionTitle("Предпросмотр")
     ScrollButtonPreviewCard(
         hazeState = previewHazeState,
@@ -66,24 +70,41 @@ internal fun AppearanceSettingsSection() {
             if (index > 0) {
                 SettingsDivider()
             }
-            SettingsListItem(
-                icon = R.drawable.ic_blur_24,
-                text = effect.title,
-                subtitle = effect.subtitle,
-                trailing = {
-                    RadioButton(
-                        selected = (currentEffect == effect),
-                        onClick = null,
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = SettingsAccentColor,
-                            unselectedColor = Color(0xFF938F99)
-                        )
-                    )
-                },
-                onClick = { Settings.scroll_buttons_effect.setValue(effect.name) }
+            ScrollEffectItem(
+                effect = effect,
+                isSelected = (currentEffect == effect),
+                onSelect = onSelectEffect
             )
         }
     }
+}
+
+@Composable
+private fun ScrollEffectItem(
+    effect: ScrollButtonEffect,
+    isSelected: Boolean,
+    onSelect: (ScrollButtonEffect) -> Unit
+) {
+    val onClick = remember(effect, onSelect) { { onSelect(effect) } }
+    val trailingContent: @Composable () -> Unit = remember(isSelected) {
+        {
+            RadioButton(
+                selected = isSelected,
+                onClick = null,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = SettingsAccentColor,
+                    unselectedColor = Color(0xFF938F99)
+                )
+            )
+        }
+    }
+    SettingsListItem(
+        icon = R.drawable.ic_blur_24,
+        text = effect.title,
+        subtitle = effect.subtitle,
+        trailing = trailingContent,
+        onClick = onClick
+    )
 }
 
 /**
@@ -159,13 +180,15 @@ private fun ScrollButtonPreviewCard(
                 .padding(16.dp)
         )
 
+        val onScrollPreview = remember { {} }
+
         // Плавающие кнопки скролла в правом краю карточки
         FloatingScrollButtons(
             showScrollToTop = true,
             showScrollToBottom = true,
             hazeState = hazeState,
-            onScrollToTop = {},
-            onScrollToBottom = {},
+            onScrollToTop = onScrollPreview,
+            onScrollToBottom = onScrollPreview,
             effect = currentEffect,
             modifier = Modifier
                 .align(Alignment.CenterEnd)

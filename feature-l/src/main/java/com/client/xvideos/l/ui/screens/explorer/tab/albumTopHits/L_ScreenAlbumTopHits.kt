@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -39,7 +41,9 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.model.AlbumListFilter
+import com.client.xvideos.l.model.AlbumListTopHits
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.net.AlbumTopHitsImpl
 import com.client.xvideos.l.net.Luscious
@@ -53,6 +57,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import timber.log.Timber
@@ -100,49 +106,86 @@ object L_ScreenAlbumTopHits : Screen {
         ) {
 
             LazyColumn(state = vm.state) {
-
-                items(items?.size ?: 0, key = { index -> "${index}_${items?.get(index)?.title.orEmpty()}" }) { index ->
-
-                    val item = items?.get(index) ?: return@items
-
-                    Text(
-                        item.title,
-                        color = Theme.L.textColor,
-                        fontSize = 24.sp,
-                        fontFamily = Theme.L.fontFamilyKarla,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 4.dp, top = 16.dp)
-                    )
-
-                    FlowRow(
-                        maxItemsInEachRow = 3,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 1.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    )
-                    {
-                        item.items.take(9).forEach { album ->
-                            Box(
-                                modifier = Modifier.width(itemWidth).padding(vertical = 2.dp)
-                            ) {
-                                AlbumListItem(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    title = album.title,
-                                    coverUrl = album.cover?.url.orEmpty(),
-                                    numberOfAnimatedPictures = album.numberOfAnimatedPictures,
-                                    numberOfPictures = album.numberOfPictures,
-                                    onClick = { album.id.toLongOrNull()?.let { onAlbumClick(it) } }
-                                )
-                            }
-                        }
-                    }
-                    ButtonSeeAll(
-                        onClick = { onSeeAllClick(item.url, item.title) }
+                items(
+                    items = items.orEmpty(),
+                    key = { it.title }
+                ) { item ->
+                    TopHitsSectionItem(
+                        item = item,
+                        itemWidth = itemWidth,
+                        onAlbumClick = onAlbumClick,
+                        onSeeAllClick = onSeeAllClick
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TopHitsSectionItem(
+    item: AlbumListTopHits,
+    itemWidth: Dp,
+    onAlbumClick: (Long) -> Unit,
+    onSeeAllClick: (String, String) -> Unit,
+) {
+    Text(
+        item.title,
+        color = Theme.L.textColor,
+        fontSize = 24.sp,
+        fontFamily = Theme.L.fontFamilyKarla,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 4.dp, top = 16.dp)
+    )
+
+    FlowRow(
+        maxItemsInEachRow = 3,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 1.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val albums = remember(item.items) { item.items.take(9) }
+        albums.forEach { album ->
+            TopHitsAlbumItem(
+                album = album,
+                itemWidth = itemWidth,
+                onAlbumClick = onAlbumClick
+            )
+        }
+    }
+    ButtonSeeAll(
+        onClick = remember(item.url, item.title, onSeeAllClick) {
+            { onSeeAllClick(item.url, item.title) }
+        }
+    )
+}
+
+@Composable
+private fun TopHitsAlbumItem(
+    album: Album,
+    itemWidth: Dp,
+    onAlbumClick: (Long) -> Unit,
+) {
+    val onClick = remember(album.id, onAlbumClick) {
+        {
+            val albumId = album.id.toLongOrNull()
+            if (albumId != null) {
+                onAlbumClick(albumId)
+            }
+        }
+    }
+    Box(
+        modifier = Modifier.width(itemWidth).padding(vertical = 2.dp)
+    ) {
+        AlbumListItem(
+            modifier = Modifier.fillMaxWidth(),
+            title = album.title,
+            coverUrl = album.cover?.url.orEmpty(),
+            numberOfAnimatedPictures = album.numberOfAnimatedPictures,
+            numberOfPictures = album.numberOfPictures,
+            onClick = onClick
+        )
     }
 }
 
@@ -228,12 +271,13 @@ class ScreenLAlbumTopHitsSM @Inject constructor(
 
     val state = LazyListState()
 
-    val albumTopHits = MutableStateFlow<AlbumTopHitsImpl?>(null)
+    private val _albumTopHits = MutableStateFlow<AlbumTopHitsImpl?>(null)
+    val albumTopHits: StateFlow<AlbumTopHitsImpl?> = _albumTopHits.asStateFlow()
 
     init {
         Timber.d("iii ScreenLAlbumTopHitsSM init")
         screenModelScope.launch {
-            albumTopHits.value = luscious.getAlbumTopHits()
+            _albumTopHits.value = luscious.getAlbumTopHits()
         }
     }
 

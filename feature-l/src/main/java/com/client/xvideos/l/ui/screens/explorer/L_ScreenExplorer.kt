@@ -88,13 +88,17 @@ class L_ScreenExplorer : Screen {
         val percentDownload by savedL.likes.percentDownload.collectAsStateWithLifecycle()
         val columnGifsTab by Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle()
 
+        val onPop: () -> Unit = remember(navigator) { { navigator.pop() } }
+        val onSkipLogin = remember { { LSession.loginSkipped = true } }
+        val onSavedLogin = remember { {} }
+
         if ((savedLogin.isBlank() || savedPassword.isBlank()) && !LSession.loginSkipped) {
             LLoginContent(
                 initialLogin = savedLogin,
                 initialPassword = savedPassword,
-                onSaved = {},
-                onBack = { navigator.pop() },
-                onSkip = { LSession.loginSkipped = true }
+                onSaved = onSavedLogin,
+                onBack = onPop,
+                onSkip = onSkipLogin
             )
             return
         }
@@ -110,6 +114,10 @@ class L_ScreenExplorer : Screen {
             }
         }
 
+        val renderOverlay0: @Composable () -> Unit = remember(columnGifsTab, vm.screenType) {
+            { TabBarPoints(columnGifsTab, vm.screenType == 0) }
+        }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -120,7 +128,7 @@ class L_ScreenExplorer : Screen {
                     titlesIcon = EXPLORER_ICONS,
                     value = vm.screenType,
                     onChangeState = onTabChange,
-                    overlay0 = { TabBarPoints(columnGifsTab, vm.screenType == 0) },
+                    overlay0 = renderOverlay0,
                     tags = EXPLORER_TAGS
                 )
             }

@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,6 +88,28 @@ internal fun WebServerSettingsSection() {
         }
     }
 
+    val onToggleServer: (Boolean) -> Unit = remember(context, port) {
+        { enable ->
+            if (enable) {
+                val ip = NetworkIpHelper.getLocalIpAddress(context)
+                if (ip == null) {
+                    SnackBar.error("Подключитесь к Wi-Fi или включите точку доступа")
+                } else {
+                    WebServerService.start(context, port)
+                    SnackBar.info("Запуск веб-сервера...")
+                }
+            } else {
+                WebServerService.stop(context)
+                SnackBar.info("Веб-сервер остановлен")
+            }
+        }
+    }
+    val onKeepAwakeChange: (Boolean) -> Unit = remember {
+        {
+            Settings.web_server_keep_awake.setValue(it)
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         SettingsSectionTitle("Веб-сервер Wi-Fi")
 
@@ -96,20 +119,7 @@ internal fun WebServerSettingsSection() {
                 text = "Трансляция на ПК",
                 subtitle = if (isRunning) "Работает: $serverUrl" else "Сервер выключен",
                 value = isRunning,
-                onValueChange = { enable ->
-                    if (enable) {
-                        val ip = NetworkIpHelper.getLocalIpAddress(context)
-                        if (ip == null) {
-                            SnackBar.error("Подключитесь к Wi-Fi или включите точку доступа")
-                        } else {
-                            WebServerService.start(context, port)
-                            SnackBar.info("Запуск веб-сервера...")
-                        }
-                    } else {
-                        WebServerService.stop(context)
-                        SnackBar.info("Веб-сервер остановлен")
-                    }
-                }
+                onValueChange = onToggleServer
             )
 
             SettingsDivider()
@@ -119,9 +129,7 @@ internal fun WebServerSettingsSection() {
                 text = "Не усыплять Wi-Fi и процессор",
                 subtitle = "Стабильный стриминг при заблокированном экране",
                 value = keepAwake,
-                onValueChange = {
-                    Settings.web_server_keep_awake.setValue(it)
-                }
+                onValueChange = onKeepAwakeChange
             )
         }
 
@@ -155,6 +163,13 @@ private fun WebServerConnectionCard(
     qrBitmap: androidx.compose.ui.graphics.ImageBitmap?,
 ) {
     val clipboardManager = LocalClipboardManager.current
+
+    val onCopyUrl: () -> Unit = remember(serverUrl, clipboardManager) {
+        {
+            clipboardManager.setText(AnnotatedString(serverUrl))
+            SnackBar.success("Ссылка скопирована в буфер")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -192,10 +207,7 @@ private fun WebServerConnectionCard(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFF25232A))
-                .clickable {
-                    clipboardManager.setText(AnnotatedString(serverUrl))
-                    SnackBar.success("Ссылка скопирована в буфер")
-                }
+                .clickable(onClick = onCopyUrl)
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             Text(
@@ -257,15 +269,30 @@ private fun WebServerActionButtons(serverUrl: String) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
+    val onCopy: () -> Unit = remember(serverUrl, clipboardManager) {
+        {
+            clipboardManager.setText(AnnotatedString(serverUrl))
+            SnackBar.success("Ссылка скопирована")
+        }
+    }
+    val onShare: () -> Unit = remember(serverUrl, context) {
+        {
+            val sendIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, serverUrl)
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой")
+            context.startActivity(shareIntent)
+        }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Button(
-            onClick = {
-                clipboardManager.setText(AnnotatedString(serverUrl))
-                SnackBar.success("Ссылка скопирована")
-            },
+            onClick = onCopy,
             modifier = Modifier.weight(1f),
             colors = ButtonDefaults.buttonColors(
                 containerColor = SettingsAccentColor,
@@ -279,15 +306,7 @@ private fun WebServerActionButtons(serverUrl: String) {
         }
 
         OutlinedButton(
-            onClick = {
-                val sendIntent = Intent().apply {
-                    action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, serverUrl)
-                    type = "text/plain"
-                }
-                val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой")
-                context.startActivity(shareIntent)
-            },
+            onClick = onShare,
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(12.dp)
         ) {

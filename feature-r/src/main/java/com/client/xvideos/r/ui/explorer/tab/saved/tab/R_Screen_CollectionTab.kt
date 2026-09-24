@@ -104,16 +104,22 @@ object R_Screen_CollectionTab : Screen {
             itemPendingDelete = null
         }
 
-        fun coverOf(name: String): String? =
-            savedRed.collections.collectionList
-                .firstOrNull { it.collection == name }
-                ?.items?.lastOrNull()?.urls?.thumbnail
+        val coverOf: (String) -> String? = remember(savedRed.collections.collectionList) {
+            { name ->
+                savedRed.collections.collectionList
+                    .firstOrNull { it.collection == name }
+                    ?.items?.lastOrNull()?.urls?.thumbnail
+            }
+        }
+        val onDismissAction: () -> Unit = remember { { itemPendingAction = null } }
+        val onDismissRename: () -> Unit = remember { { itemPendingRename = null } }
+        val onDismissDelete: () -> Unit = remember { { itemPendingDelete = null } }
 
         // ---------- Меню действий (long-press) ----------
         itemPendingAction?.let { pending ->
             LavenderDialog(
                 title = "Действие с коллекцией",
-                onDismiss = { itemPendingAction = null },
+                onDismiss = onDismissAction,
                 icon = { CollectionCoverIcon(coverOf(pending)) },
                 content = {
                     androidx.compose.material3.Text(
@@ -155,7 +161,7 @@ object R_Screen_CollectionTab : Screen {
         itemPendingRename?.let { pending ->
             LavenderDialog(
                 title = "Переименовать коллекцию",
-                onDismiss = { itemPendingRename = null },
+                onDismiss = onDismissRename,
                 icon = { CollectionCoverIcon(coverOf(pending)) },
                 content = {
                     OutlinedTextField(
@@ -188,7 +194,7 @@ object R_Screen_CollectionTab : Screen {
         itemPendingDelete?.let { pending ->
             LavenderDialog(
                 title = "Удалить коллекцию?",
-                onDismiss = { itemPendingDelete = null },
+                onDismiss = onDismissDelete,
                 icon = { CollectionCoverIcon(coverOf(pending)) },
                 body = buildAnnotatedString {
                     append("Удалить «")
@@ -207,6 +213,13 @@ object R_Screen_CollectionTab : Screen {
         val onCollectionClick: (String) -> Unit = remember(savedRed) { { savedRed.collections.selectedCollection.value = it } }
         val onCollectionLongClick: (String) -> Unit = remember { { itemPendingAction = it } }
         val onCreateNewCollectionClick: () -> Unit = remember(savedRed) { { savedRed.collections.visibleDialogCreateNew = true } }
+        val navigationContent: @Composable () -> Unit = remember(selectedCollection) {
+            {
+                if (selectedCollection != null) {
+                    Navigator(ScreenCollectionName(selectedCollection))
+                }
+            }
+        }
 
         R_SavedCollectionTabContent(
             selectedCollection = selectedCollection,
@@ -215,11 +228,7 @@ object R_Screen_CollectionTab : Screen {
             onCollectionClick = onCollectionClick,
             onCollectionLongClick = onCollectionLongClick,
             onCreateNewCollectionClick = onCreateNewCollectionClick,
-            navigationContent = {
-                if (selectedCollection != null) {
-                    Navigator(ScreenCollectionName(selectedCollection))
-                }
-            }
+            navigationContent = navigationContent
         )
     }
 }

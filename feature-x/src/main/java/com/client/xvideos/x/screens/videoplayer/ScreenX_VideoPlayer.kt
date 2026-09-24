@@ -83,15 +83,18 @@ class ScreenX_VideoPlayer(
             navigator.pop()
         }
 
+        val onRetryLoad: () -> Unit = remember(vm) { { vm.loadVideo(forceReload = true) } }
+        val onPopBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+
         when {
             vm.isError -> {
                 VideoPlayerErrorView(
-                    onRetry = { vm.loadVideo(forceReload = true) },
-                    onBack = { navigator.pop() }
+                    onRetry = onRetryLoad,
+                    onBack = onPopBack
                 )
             }
             vm.isLoading || vm.passedHLS.isBlank() -> {
-                VideoPlayerLoadingView(onBack = { navigator.pop() })
+                VideoPlayerLoadingView(onBack = onPopBack)
             }
             else -> {
                 VideoPlayerContentView(vm = vm, navigator = navigator)
@@ -284,6 +287,33 @@ private fun VideoPlayerContentView(
         }
     }
 
+    val onOverlayBack: () -> Unit = remember(isZoomed, navigator) {
+        {
+            if (isZoomed) {
+                resetZoomTrigger++
+            } else {
+                navigator.pop()
+            }
+        }
+    }
+    val onTagClick: (String) -> Unit = remember(host, vm, navigator) {
+        { tag ->
+            host.pause()
+            vm.openTag(tag, navigator)
+        }
+    }
+    val onRestartPlayback: () -> Unit = remember(host, vm) {
+        {
+            host.seekTo(0f)
+            vm.restartFromBeginning()
+        }
+    }
+    val onToggleFullScreen: () -> Unit = remember(vm) {
+        {
+            vm.toggleFullScreen()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
         ComposeVideoPlayer(
             playerHost = host,
@@ -300,13 +330,7 @@ private fun VideoPlayerContentView(
                     modifier = Modifier.align(Alignment.TopStart)
                 ) {
                     IconButton(
-                        onClick = {
-                            if (isZoomed) {
-                                resetZoomTrigger++
-                            } else {
-                                navigator.pop()
-                            }
-                        },
+                        onClick = onOverlayBack,
                         modifier = Modifier
                             .windowInsetsPadding(
                                 WindowInsets.displayCutout.only(
@@ -337,10 +361,7 @@ private fun VideoPlayerContentView(
                     ) {
                         ComposeTags(
                             vm.tags,
-                            onClick = {
-                                host.pause()
-                                vm.openTag(it, navigator)
-                            }
+                            onClick = onTagClick
                         )
                     }
                 }
@@ -357,10 +378,7 @@ private fun VideoPlayerContentView(
                     vm.resumeNoticeText?.let { notice ->
                         ResumePlaybackPill(
                             text = notice,
-                            onRestart = {
-                                host.seekTo(0f)
-                                vm.restartFromBeginning()
-                            }
+                            onRestart = onRestartPlayback
                         )
                     }
                 }
@@ -375,9 +393,7 @@ private fun VideoPlayerContentView(
                     X_PlayerBottomBar(
                         host = host,
                         isFullScreen = vm.isFullScreen,
-                        onFullScreen = {
-                            vm.toggleFullScreen()
-                        }
+                        onFullScreen = onToggleFullScreen
                     )
                 }
             }

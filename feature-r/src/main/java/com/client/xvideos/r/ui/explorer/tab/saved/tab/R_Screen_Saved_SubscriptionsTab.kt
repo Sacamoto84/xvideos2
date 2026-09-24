@@ -153,6 +153,20 @@ fun SubscriptionsTabContent(
     onSelectCreator: (String) -> Unit,
     onLongClick : (String) -> Unit = {}
 ) {
+    val renderContentBeforeList: @Composable () -> Unit = remember(
+        listCreatorSelectedCreator,
+        onSelectCreator,
+        onLongClick
+    ) {
+        {
+            CreatorsHeader(
+                listCreators = listCreatorSelectedCreator,
+                onCreatorClick = onSelectCreator,
+                onLongClick = onLongClick
+            )
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -164,23 +178,13 @@ fun SubscriptionsTabContent(
                 modifier = Modifier.fillMaxSize(),
                 onClickOpenProfile = onOpenProfile,
                 contentPadding = PaddingValues(top = getTopInsetDp()),
-                contentBeforeList = {
-                    CreatorsHeader(
-                        listCreators = listCreatorSelectedCreator,
-                        onCreatorClick = onSelectCreator,
-                        onLongClick = onLongClick
-                    )
-                },
+                contentBeforeList = renderContentBeforeList,
                 isRunLike = true
             )
         } else {
             // Fallback for Preview
             Box(modifier = Modifier.padding(top = getTopInsetDp())) {
-                CreatorsHeader(
-                    listCreators = listCreatorSelectedCreator,
-                    onCreatorClick = onSelectCreator,
-                    onLongClick = onLongClick
-                )
+                renderContentBeforeList()
             }
         }
     }

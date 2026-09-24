@@ -135,6 +135,12 @@ class ScreenX_LocalVideoPlayer(
 
         val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
         val onTap: () -> Unit = remember(host) { { host.togglePlayPause() } }
+        val onRestartPlayback: () -> Unit = remember(host) {
+            {
+                host.seekTo(0f)
+                resumeNoticeText = null
+            }
+        }
 
         Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
             ComposeVideoPlayer(
@@ -156,10 +162,7 @@ class ScreenX_LocalVideoPlayer(
                         resumeNoticeText?.let { notice ->
                             ResumePlaybackPill(
                                 text = notice,
-                                onRestart = {
-                                    host.seekTo(0f)
-                                    resumeNoticeText = null
-                                }
+                                onRestart = onRestartPlayback
                             )
                         }
                     }
