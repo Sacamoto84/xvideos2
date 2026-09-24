@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,16 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val COLLECTION_ITEM_SHAPE = RoundedCornerShape(12.dp)
+private val COLLECTION_THUMBNAIL_SIZE = 56.dp
+private val FOLDER_ICON_SIZE = 28.dp
+private val FOLDER_PLACEHOLDER_BG = Color(0xFF3D3949)
+
+private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекцию"
+private const val TEXT_NO_COLLECTIONS = "Нет коллекций"
+private const val TEXT_CREATE = "Создать"
+private const val CONTENT_TYPE_COLLECTION_ITEM = "collection_item"
+
 @Composable
 fun DialogCollection(
     visible: Boolean,
@@ -49,8 +60,15 @@ fun DialogCollection(
 ) {
     if (!visible) return
 
+    val onConfirmCreate = remember(onClickNewCollection, onDismiss) {
+        {
+            onClickNewCollection()
+            onDismiss()
+        }
+    }
+
     LavenderDialog(
-        title = "Добавить в коллекцию",
+        title = TEXT_ADD_TO_COLLECTION,
         onDismiss = onDismiss,
         content = {
             CollectionListContent(
@@ -58,11 +76,8 @@ fun DialogCollection(
                 onSelectCollection = onSelectCollection
             )
         },
-        confirmText = "Создать",
-        onConfirm = {
-            onClickNewCollection()
-            onDismiss()
-        },
+        confirmText = TEXT_CREATE,
+        onConfirm = onConfirmCreate,
     )
 }
 
@@ -79,7 +94,7 @@ private fun ColumnScope.CollectionListContent(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Нет коллекций",
+                text = TEXT_NO_COLLECTIONS,
                 color = Theme.DialogLavande.bodyColor,
                 fontFamily = Theme.R.fontFamilyDMsanss,
                 fontSize = 16.sp
@@ -90,12 +105,16 @@ private fun ColumnScope.CollectionListContent(
             state = rememberLazyListState(),
             modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 420.dp)
         ) {
-            items(collectionList, key = { it.collection }) { item ->
+            items(
+                items = collectionList,
+                key = { it.collection },
+                contentType = { CONTENT_TYPE_COLLECTION_ITEM }
+            ) { item ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp, vertical = 4.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(COLLECTION_ITEM_SHAPE)
                         .clickable(onClick = { onSelectCollection(item.collection) })
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -103,21 +122,21 @@ private fun ColumnScope.CollectionListContent(
                     if (item.items.isNotEmpty()) {
                         UrlImage(
                             url = item.items.last().urls.thumbnail,
-                            modifier = Modifier.clip(RoundedCornerShape(12.dp)).size(56.dp)
+                            modifier = Modifier.clip(COLLECTION_ITEM_SHAPE).size(COLLECTION_THUMBNAIL_SIZE)
                         )
                     } else {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .size(56.dp)
-                                .background(Color(0xFF3D3949)),
+                                .clip(COLLECTION_ITEM_SHAPE)
+                                .size(COLLECTION_THUMBNAIL_SIZE)
+                                .background(FOLDER_PLACEHOLDER_BG),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Folder,
                                 contentDescription = null,
                                 tint = Theme.DialogLavande.dismissTextColor,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(FOLDER_ICON_SIZE)
                             )
                         }
                     }

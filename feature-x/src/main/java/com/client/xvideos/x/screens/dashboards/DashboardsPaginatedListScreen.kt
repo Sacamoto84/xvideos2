@@ -59,6 +59,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+private val ERROR_BADGE_SHAPE = RoundedCornerShape(8.dp)
+private val ERROR_BADGE_BG = Color(0xD9212121)
+private const val GRID_COLUMNS = 2
+private val SPINNER_SIZE = 40.dp
+private val RETRY_BUTTON_HEIGHT = 32.dp
+private val ERROR_SPACER_HEIGHT = 12.dp
+private val ERROR_BADGE_PADDING = 8.dp
+private val ERROR_BADGE_CONTENT_HORIZONTAL = 12.dp
+private val ERROR_BADGE_CONTENT_VERTICAL = 6.dp
+private val ERROR_TEXT_FONT_SIZE = 12.sp
+
+private const val TEXT_LOAD_ERROR = "Не удалось загрузить страницу"
+private const val TEXT_UPDATE_ERROR = "Не удалось обновить страницу"
+private const val TEXT_RETRY = "Повторить"
+private const val CONTENT_TYPE_DASHBOARD_CELL = "dashboard_cell"
+
 private const val DASHBOARD_CARD_ASPECT_RATIO = 352f / 198f
 private val CHANNEL_BADGE_BG = Color(0x60000000)
 
@@ -132,14 +148,14 @@ fun DashboardsPaginatedListScreen(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hasError) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Не удалось загрузить страницу", color = Color.Gray)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(TEXT_LOAD_ERROR, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(ERROR_SPACER_HEIGHT))
                     Button(onClick = onRetry) {
-                        Text("Повторить")
+                        Text(TEXT_RETRY)
                     }
                 }
             } else {
-                CircularProgressIndicator(modifier = Modifier.size(40.dp))
+                CircularProgressIndicator(modifier = Modifier.size(SPINNER_SIZE))
             }
         }
     } else {
@@ -156,33 +172,32 @@ fun DashboardsPaginatedListScreen(
             )
             val topCutout = getTopInsetDp()
             if (hasError) {
-                val errorBadgeShape = remember { RoundedCornerShape(8.dp) }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = topCutout + 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
+                        .padding(top = topCutout + ERROR_BADGE_PADDING, start = ERROR_BADGE_PADDING, end = ERROR_BADGE_PADDING, bottom = ERROR_BADGE_PADDING)
                         .align(Alignment.TopCenter)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xD9212121), errorBadgeShape)
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                            .background(ERROR_BADGE_BG, ERROR_BADGE_SHAPE)
+                            .padding(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = ERROR_BADGE_CONTENT_VERTICAL),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Не удалось обновить страницу",
+                            text = TEXT_UPDATE_ERROR,
                             color = Color.White,
-                            fontSize = 12.sp,
+                            fontSize = ERROR_TEXT_FONT_SIZE,
                             modifier = Modifier.weight(1f)
                         )
                         Button(
                             onClick = onRetry,
-                            modifier = Modifier.height(32.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                            modifier = Modifier.height(RETRY_BUTTON_HEIGHT),
+                            contentPadding = PaddingValues(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = 0.dp)
                         ) {
-                            Text("Повторить", fontSize = 12.sp)
+                            Text(TEXT_RETRY, fontSize = ERROR_TEXT_FONT_SIZE)
                         }
                     }
                 }
@@ -207,7 +222,7 @@ fun DashboardsPaginatedListContent(
     val topCutout = getTopInsetDp()
     val contentPadding = remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(GRID_COLUMNS),
         modifier = Modifier.fillMaxSize(),
         state = gridState,
         contentPadding = contentPadding,
@@ -215,7 +230,7 @@ fun DashboardsPaginatedListContent(
         itemsIndexed(
             items = items,
             key = { index, cell -> "${cell.id}#$index" },
-            contentType = { _, _ -> "dashboard_cell" }
+            contentType = { _, _ -> CONTENT_TYPE_DASHBOARD_CELL }
         ) { _, cell ->
             DashboardGridCell(
                 cell = cell,

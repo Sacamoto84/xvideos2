@@ -33,37 +33,91 @@ import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.Preview as NichePreviewModel
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val NICHE_CARD_SHAPE = RoundedCornerShape(8.dp)
+private val NICHE_THUMBNAIL_SHAPE = RoundedCornerShape(6.dp)
+private val NICHE_CARD_HEIGHT = 80.dp
+private val NICHE_SHADOW_ELEVATION = 10.dp
+private val NICHE_THUMBNAIL_SIZE = 72.dp
+private val STAT_ICON_SIZE = 16.dp
+private val STAT_FONT_SIZE = 16.sp
+private val CARD_HORIZONTAL_PADDING = 4.dp
+private val THUMBNAIL_PADDING = 4.dp
+private val INFO_VERTICAL_PADDING = 4.dp
+private val STAT_TEXT_PADDING = 4.dp
+
 @Composable
 fun NichePreview(niches: () -> Niche, onClick: () -> Unit) {
+    val niche = niches()
 
-    Column(modifier = Modifier.height(80.dp).padding(horizontal = 4.dp)
-        .shadow(10.dp, RoundedCornerShape(8.dp))
-        .clip(RoundedCornerShape(8.dp))
-        .background(Theme.tabLevel3)
-        .clickable{onClick()}
-    )
-    {
+    Column(
+        modifier = Modifier
+            .height(NICHE_CARD_HEIGHT)
+            .padding(horizontal = CARD_HORIZONTAL_PADDING)
+            .shadow(NICHE_SHADOW_ELEVATION, NICHE_CARD_SHAPE)
+            .clip(NICHE_CARD_SHAPE)
+            .background(Theme.tabLevel3)
+            .clickable(onClick = onClick)
+    ) {
+        Row {
+            UrlImage(
+                url = niche.thumbnail,
+                modifier = Modifier
+                    .padding(THUMBNAIL_PADDING)
+                    .clip(NICHE_THUMBNAIL_SHAPE)
+                    .size(NICHE_THUMBNAIL_SIZE)
+            )
 
-        Row(modifier = Modifier) {
-            UrlImage(niches().thumbnail, modifier = Modifier.padding(4.dp).clip(RoundedCornerShape(6.dp)).size(72.dp))
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier
+                    .padding(vertical = INFO_VERTICAL_PADDING)
+                    .fillMaxHeight()
+            ) {
+                Text(
+                    text = niche.name,
+                    modifier = Modifier.padding(end = STAT_TEXT_PADDING),
+                    color = Color.White,
+                    textAlign = TextAlign.Start,
+                )
 
-           Column(verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.Start, modifier = Modifier.padding(vertical = 4.dp).fillMaxHeight()) {
-               Text(text = niches().name, modifier = Modifier.padding(end = 4.dp), color = Color.White, textAlign = TextAlign.Start, )
-
-               Row(verticalAlignment = Alignment.CenterVertically) {
-                   Icon(painter = painterResource(R.drawable.members), contentDescription = null, tint = Color.White,modifier = Modifier.size(16.dp))
-                   Text(text = niches().subscribers.toPrettyCount(), modifier = Modifier.padding(start = 4.dp, end = 4.dp).wrapContentWidth(Alignment.CenterHorizontally), color = Color.White, textAlign = TextAlign.Center, fontSize = 16.sp)
-               }
-               Row(verticalAlignment = Alignment.CenterVertically) {
-                   Icon( painter = painterResource(R.drawable.posts), contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp) )
-                   Text( text = niches().gifs.toPrettyCount(), modifier = Modifier.padding(start = 4.dp, end = 4.dp).wrapContentWidth(Alignment.CenterHorizontally), color = Color.White , textAlign = TextAlign.Center, fontSize = 16.sp)
-               }
-           }
-
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(R.drawable.members),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(STAT_ICON_SIZE)
+                    )
+                    Text(
+                        text = niche.subscribers.toPrettyCount(),
+                        modifier = Modifier
+                            .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
+                            .wrapContentWidth(Alignment.CenterHorizontally),
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = STAT_FONT_SIZE
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(R.drawable.posts),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(STAT_ICON_SIZE)
+                    )
+                    Text(
+                        text = niche.gifs.toPrettyCount(),
+                        modifier = Modifier
+                            .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
+                            .wrapContentWidth(Alignment.CenterHorizontally),
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = STAT_FONT_SIZE
+                    )
+                }
+            }
         }
-
     }
-
 }
 
 

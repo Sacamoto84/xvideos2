@@ -29,20 +29,33 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.element.SettingElementList
 import com.skydoves.compose.stability.runtime.TraceRecomposition
 
+private val ROW_HORIZONTAL_PADDING = 8.dp
+private val ROW_VERTICAL_PADDING = 2.dp
+private val ROW_HEIGHT = 48.dp
+private val LABEL_WIDTH = 64.dp
+private val SEGMENT_START_PADDING = 16.dp
+private val TAB_BAR_SIZE = 24.dp
+private val POINT_SPACING = 2.dp
+private val POINT_SIZE = 4.dp
+private val POINT_ACTIVE_COLOR = Color.White
+private val POINT_INACTIVE_COLOR = Color.Gray
+private val POINT_SHAPE = CircleShape
+
 @Composable
 fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolean>) {
 
     val list by setting.field.collectAsStateWithLifecycle()
     val visibleIndices = remember(list) { list.indices.filter { it in 1..4 } }
 
-    //val selectedOptions = remember { mutableStateListOf(false, false, true, true, false) }
-
     Row(
-        modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 2.dp).height(48.dp).fillMaxWidth(),
+        modifier = Modifier
+            .padding(horizontal = ROW_HORIZONTAL_PADDING, vertical = ROW_VERTICAL_PADDING)
+            .height(ROW_HEIGHT)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text, modifier = Modifier.width(64.dp), style = styleTextConfig)
+        Text(text, modifier = Modifier.width(LABEL_WIDTH), style = styleTextConfig)
 
         val onToggleIndex: (Int) -> Unit = remember(setting, list) {
             { settingIndex ->
@@ -53,7 +66,7 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
         }
 
         MultiChoiceSegmentedButtonRow(
-            modifier = Modifier.padding(start = 16.dp).fillMaxWidth()
+            modifier = Modifier.padding(start = SEGMENT_START_PADDING).fillMaxWidth()
         ) {
             visibleIndices.forEachIndexed { buttonIndex, settingIndex ->
                 SegmentedButton(
@@ -63,9 +76,6 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
                     ),
                     checked = list[settingIndex],
                     onCheckedChange = { onToggleIndex(settingIndex) },
-
-                    //icon = { SegmentedButtonDefaults.Icon(selectedOptions[index]) },
-
                     label = {
                         TabBarPoints(settingIndex, list[settingIndex])
                     }
@@ -75,7 +85,6 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
 
     }
 
-
 }
 
 
@@ -83,17 +92,17 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
 private fun TabBarPoints(count: Int, screenType: Boolean) {
     val safeCount = count.takeIf { it in 1..4 } ?: 2
     Box(
-        modifier = Modifier.size(24.dp),
+        modifier = Modifier.size(TAB_BAR_SIZE),
         contentAlignment = Alignment.Center
     ) {
         Row {
             repeat(safeCount) {
                 Box(
                     modifier = Modifier
-                        .padding(end = 2.dp)
-                        .clip(CircleShape)
-                        .size(4.dp)
-                        .background(if (screenType) Color.White else Color.Gray)
+                        .padding(end = POINT_SPACING)
+                        .clip(POINT_SHAPE)
+                        .size(POINT_SIZE)
+                        .background(if (screenType) POINT_ACTIVE_COLOR else POINT_INACTIVE_COLOR)
                 )
             }
         }

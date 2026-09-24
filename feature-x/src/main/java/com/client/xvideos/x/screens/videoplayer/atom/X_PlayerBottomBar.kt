@@ -38,6 +38,24 @@ import java.util.Locale
 private val FIT_MODE_SHAPE = RoundedCornerShape(4.dp)
 private val BOTTOM_BAR_BG = Color(0x73000000)
 
+private val PLAY_PAUSE_ICON_SIZE = 28.dp
+private val FULLSCREEN_ICON_SIZE = 28.dp
+private val SEEK_BAR_THUMB_RADIUS = 6.dp
+private val SEEK_BAR_TRACK_HEIGHT = 3.dp
+private val BAR_HORIZONTAL_PADDING = 8.dp
+private val BAR_VERTICAL_PADDING = 6.dp
+private val BAR_CONTROL_SPACING = 8.dp
+private val FIT_MODE_HORIZONTAL_PADDING = 4.dp
+private val FIT_MODE_VERTICAL_PADDING = 2.dp
+private val TIME_FONT_SIZE = 11.sp
+
+private const val CD_PLAY = "Play"
+private const val CD_PAUSE = "Pause"
+private const val CD_FULLSCREEN = "Fullscreen"
+private const val CD_EXIT_FULLSCREEN = "Exit Fullscreen"
+private const val LABEL_FIT = "Fit"
+private const val LABEL_FILL = "Fill"
+
 /**
  * Нижняя панель управления X-плеером поверх видео.
  *
@@ -92,18 +110,18 @@ fun X_PlayerBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .background(BOTTOM_BAR_BG)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = BAR_HORIZONTAL_PADDING, vertical = BAR_VERTICAL_PADDING),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(BAR_CONTROL_SPACING)
     ) {
 
         // Play / Pause
         Icon(
             imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
-            contentDescription = if (host.isPaused) "Play" else "Pause",
+            contentDescription = if (host.isPaused) CD_PLAY else CD_PAUSE,
             tint = Color.White,
             modifier = Modifier
-                .size(28.dp)
+                .size(PLAY_PAUSE_ICON_SIZE)
                 .clickable(onClick = onTogglePlayPause)
         )
 
@@ -116,7 +134,7 @@ fun X_PlayerBottomBar(
             text = formatTime(safeCurrentTimeSec),
             color = Color.White,
             fontFamily = FontFamily.SansSerif,
-            fontSize = 11.sp
+            fontSize = TIME_FONT_SIZE
         )
 
         // Прогресс-бар
@@ -133,8 +151,8 @@ fun X_PlayerBottomBar(
             maxProgress = safeMaxProgress,
             onValueChange = onSeekBarValueChange,
             onValueChangeFinished = onSeekBarValueChangeFinished,
-            thumbRadius = 6.dp,
-            trackHeight = 3.dp,
+            thumbRadius = SEEK_BAR_THUMB_RADIUS,
+            trackHeight = SEEK_BAR_TRACK_HEIGHT,
         )
 
         // Общее время
@@ -142,7 +160,7 @@ fun X_PlayerBottomBar(
             text = formattedTotalTime,
             color = Color.White,
             fontFamily = FontFamily.SansSerif,
-            fontSize = 11.sp
+            fontSize = TIME_FONT_SIZE
         )
 
         // Меню выбора скорости воспроизведения
@@ -154,15 +172,15 @@ fun X_PlayerBottomBar(
         // Переключатель режима масштабирования Fit / Fill
         if (isFullScreen) {
             Text(
-                text = if (host.videoFitMode == ScreenResize.FILL) "Fill" else "Fit",
+                text = if (host.videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT,
                 color = Color.White,
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
-                fontSize = 11.sp,
+                fontSize = TIME_FONT_SIZE,
                 modifier = Modifier
                     .clip(FIT_MODE_SHAPE)
                     .clickable(onClick = onToggleFitMode)
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                    .padding(horizontal = FIT_MODE_HORIZONTAL_PADDING, vertical = FIT_MODE_VERTICAL_PADDING)
             )
         }
 
@@ -170,10 +188,10 @@ fun X_PlayerBottomBar(
         if (onFullScreenClick != null) {
             Icon(
                 imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                contentDescription = if (isFullScreen) "Exit Fullscreen" else "Fullscreen",
+                contentDescription = if (isFullScreen) CD_EXIT_FULLSCREEN else CD_FULLSCREEN,
                 tint = Color.White,
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(FULLSCREEN_ICON_SIZE)
                     .clickable(onClick = onFullScreenClick)
             )
         }

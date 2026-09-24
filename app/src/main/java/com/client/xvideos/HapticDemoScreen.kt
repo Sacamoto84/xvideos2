@@ -41,8 +41,45 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
 
-private val hapticButtonShape = RoundedCornerShape(14.dp)
-private val hapticButtonPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+private val ZERO_INSETS = WindowInsets(0, 0, 0, 0)
+private val HAPTIC_BUTTON_SHAPE = RoundedCornerShape(14.dp)
+private val HAPTIC_BUTTON_PADDING = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+
+private val TOP_BAR_BG = Color(0xFF1B1B1B)
+private val SUBTITLE_COLOR = Color(0xFFB0B0B0)
+private val SCREEN_CONTAINER_COLOR = Color(0xFF2A2A2A)
+private val WAVEFORM_CONTAINER_COLOR = Color(0xFF4A3B00)
+private val BUTTON_CONTAINER_COLOR = Color(0xFF3A3A3A)
+private val DESC_COLOR = Color(0xFFBFBFBF)
+
+private const val TITLE_DEMO = "Haptic Feedback — демо"
+private const val LABEL_CUSTOM_WAVEFORM = "Кастомный waveform (мимо Compose, прямой Vibrator)"
+private const val LABEL_WAVEFORM_BTN = "Waveform: 255 → пауза → 127"
+
+private data class HapticItem(
+    val name: String,
+    val desc: String,
+    val type: HapticFeedbackType,
+)
+
+// Порядок — от самых «полезных» к специфичным.
+private val HAPTIC_ITEMS = listOf(
+    HapticItem("Confirm", "Подтверждение / успех действия", HapticFeedbackType.Confirm),
+    HapticItem("Reject", "Отказ / ошибка действия", HapticFeedbackType.Reject),
+    HapticItem("ToggleOn", "Переключатель → ВКЛ", HapticFeedbackType.ToggleOn),
+    HapticItem("ToggleOff", "Переключатель → ВЫКЛ", HapticFeedbackType.ToggleOff),
+    HapticItem("LongPress", "Долгое нажатие → действие", HapticFeedbackType.LongPress),
+    HapticItem("TextHandleMove", "Перемещение хэндла в тексте", HapticFeedbackType.TextHandleMove),
+    HapticItem("ContextClick", "Контекстный клик по объекту", HapticFeedbackType.ContextClick),
+    HapticItem("KeyboardTap", "Нажатие экранной клавиши", HapticFeedbackType.KeyboardTap),
+    HapticItem("VirtualKey", "Нажатие виртуальной кнопки", HapticFeedbackType.VirtualKey),
+    HapticItem("GestureEnd", "Завершение жеста", HapticFeedbackType.GestureEnd),
+    HapticItem("GestureThresholdActivate", "Жест достиг порога активации", HapticFeedbackType.GestureThresholdActivate),
+    HapticItem("SegmentTick", "Шаг по дискретным позициям", HapticFeedbackType.SegmentTick),
+    HapticItem("SegmentFrequentTick", "Шаг по множеству мелких позиций", HapticFeedbackType.SegmentFrequentTick),
+)
+
+private val SUBTITLE_TEXT = "Нажми кнопку, чтобы почувствовать отклик. Доступно ${HAPTIC_ITEMS.size} типов."
 
 /**
  * Демо-экран для тестирования виброоткликов.
@@ -56,12 +93,6 @@ object HapticDemoScreen : Screen {
     private fun readResolve(): Any = HapticDemoScreen
 
     override val key: ScreenKey = "HapticDemoScreen"
-
-    private data class HapticItem(
-        val name: String,
-        val desc: String,
-        val type: HapticFeedbackType,
-    )
 
     @Composable
     override fun Content() {
@@ -78,28 +109,6 @@ object HapticDemoScreen : Screen {
         }
         BackHandler(onBack = onBack)
 
-        // Порядок — от самых «полезных» к специфичным.
-        val items = remember {
-            listOf(
-                HapticItem("Confirm", "Подтверждение / успех действия", HapticFeedbackType.Confirm),
-                HapticItem("Reject", "Отказ / ошибка действия", HapticFeedbackType.Reject),
-                HapticItem("ToggleOn", "Переключатель → ВКЛ", HapticFeedbackType.ToggleOn),
-                HapticItem("ToggleOff", "Переключатель → ВЫКЛ", HapticFeedbackType.ToggleOff),
-                HapticItem("LongPress", "Долгое нажатие → действие", HapticFeedbackType.LongPress),
-                HapticItem("TextHandleMove", "Перемещение хэндла в тексте", HapticFeedbackType.TextHandleMove),
-                HapticItem("ContextClick", "Контекстный клик по объекту", HapticFeedbackType.ContextClick),
-                HapticItem("KeyboardTap", "Нажатие экранной клавиши", HapticFeedbackType.KeyboardTap),
-                HapticItem("VirtualKey", "Нажатие виртуальной кнопки", HapticFeedbackType.VirtualKey),
-                HapticItem("GestureEnd", "Завершение жеста", HapticFeedbackType.GestureEnd),
-                HapticItem("GestureThresholdActivate", "Жест достиг порога активации", HapticFeedbackType.GestureThresholdActivate),
-                HapticItem("SegmentTick", "Шаг по дискретным позициям", HapticFeedbackType.SegmentTick),
-                HapticItem("SegmentFrequentTick", "Шаг по множеству мелких позиций", HapticFeedbackType.SegmentFrequentTick),
-            )
-        }
-
-        val subtitleText = remember(items.size) {
-            "Нажми кнопку, чтобы почувствовать отклик. Доступно ${items.size} типов."
-        }
         val onCustomVibrate: () -> Unit = remember(context) {
             {
                 vibrateWithPatternAndAmplitude(context)
@@ -107,30 +116,30 @@ object HapticDemoScreen : Screen {
         }
 
         Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = ZERO_INSETS,
             topBar = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF1B1B1B))
+                        .background(TOP_BAR_BG)
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
                 ) {
                     Text(
-                        text = "Haptic Feedback — демо",
+                        text = TITLE_DEMO,
                         color = Color.White,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                     Text(
-                        text = subtitleText,
-                        color = Color(0xFFB0B0B0),
+                        text = SUBTITLE_TEXT,
+                        color = SUBTITLE_COLOR,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 10.dp)
                     )
                 }
             },
-            containerColor = Color(0xFF2A2A2A)
+            containerColor = SCREEN_CONTAINER_COLOR
         ) { padding ->
             Column(
                 modifier = Modifier
@@ -140,7 +149,7 @@ object HapticDemoScreen : Screen {
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items.forEachIndexed { index, item ->
+                HAPTIC_ITEMS.forEachIndexed { index, item ->
                     key(item.name) {
                         val handleClick = remember(haptic, item.type) {
                             {
@@ -158,16 +167,16 @@ object HapticDemoScreen : Screen {
 
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Кастомный waveform (мимо Compose, прямой Vibrator)",
-                    color = Color(0xFFB0B0B0),
+                    text = LABEL_CUSTOM_WAVEFORM,
+                    color = SUBTITLE_COLOR,
                     fontSize = 13.sp
                 )
                 Button(
                     onClick = onCustomVibrate,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A3B00))
+                    colors = ButtonDefaults.buttonColors(containerColor = WAVEFORM_CONTAINER_COLOR)
                 ) {
-                    Text("Waveform: 255 → пауза → 127", color = Color.White)
+                    Text(LABEL_WAVEFORM_BTN, color = Color.White)
                 }
                 Spacer(Modifier.height(24.dp))
             }
@@ -185,9 +194,9 @@ private fun HapticButton(
     Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = hapticButtonShape,
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A)),
-        contentPadding = hapticButtonPadding
+        shape = HAPTIC_BUTTON_SHAPE,
+        colors = ButtonDefaults.buttonColors(containerColor = BUTTON_CONTAINER_COLOR),
+        contentPadding = HAPTIC_BUTTON_PADDING
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -202,7 +211,7 @@ private fun HapticButton(
             )
             Text(
                 text = desc,
-                color = Color(0xFFBFBFBF),
+                color = DESC_COLOR,
                 fontSize = 13.sp
             )
         }

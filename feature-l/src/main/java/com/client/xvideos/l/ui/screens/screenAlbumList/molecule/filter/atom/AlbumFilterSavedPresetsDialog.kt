@@ -45,6 +45,30 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private val DIALOG_SHAPE = RoundedCornerShape(16.dp)
+private val PRESET_LIST_SHAPE = RoundedCornerShape(8.dp)
+private val EMPTY_STATE_SHAPE = RoundedCornerShape(8.dp)
+private val PRESET_CARD_SHAPE = RoundedCornerShape(8.dp)
+private val APPLY_BUTTON_SHAPE = RoundedCornerShape(6.dp)
+
+private const val DIALOG_WIDTH_FRACTION = 0.92f
+private val DIALOG_MAX_WIDTH = 460.dp
+private val DIALOG_PADDING = 16.dp
+private val DIALOG_BORDER_WIDTH = 1.dp
+private val EMPTY_STATE_HEIGHT = 140.dp
+private val EMPTY_STATE_PADDING = 16.dp
+private val CARD_PADDING = 10.dp
+private val DELETE_BUTTON_SIZE = 36.dp
+private val DELETE_ICON_SIZE = 20.dp
+private val APPLY_HORIZONTAL_PADDING = 12.dp
+private val APPLY_VERTICAL_PADDING = 5.dp
+
+private const val CD_CLOSE = "Close"
+private const val CD_DELETE_PRESET = "Delete preset"
+private const val TEXT_APPLY = "Apply"
+private const val TEXT_EMPTY_PRESETS = "No saved presets yet.\nConfigure filters and tap 'Save'."
+private const val CONTENT_TYPE_PRESET_ITEM = "saved_preset_card"
+
 @Composable
 fun AlbumFilterSavedPresetsDialog(
     onSelectPreset: (AlbumListFilter) -> Unit,
@@ -64,12 +88,12 @@ fun AlbumFilterSavedPresetsDialog(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .widthIn(max = 460.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(16.dp))
+                .fillMaxWidth(DIALOG_WIDTH_FRACTION)
+                .widthIn(max = DIALOG_MAX_WIDTH)
+                .clip(DIALOG_SHAPE)
+                .border(DIALOG_BORDER_WIDTH, palette.border, DIALOG_SHAPE)
                 .background(palette.surface)
-                .padding(16.dp)
+                .padding(DIALOG_PADDING)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -94,7 +118,7 @@ fun AlbumFilterSavedPresetsDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = CD_CLOSE,
                             tint = palette.textSecondary
                         )
                     }
@@ -109,13 +133,17 @@ fun AlbumFilterSavedPresetsDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = maxListHeight)
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, palette.border, RoundedCornerShape(8.dp))
+                            .clip(PRESET_LIST_SHAPE)
+                            .border(DIALOG_BORDER_WIDTH, palette.border, PRESET_LIST_SHAPE)
                             .background(palette.panelBlack)
                             .padding(vertical = 4.dp, horizontal = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        items(presets, key = { it.id }) { preset ->
+                        items(
+                            items = presets,
+                            key = { it.id },
+                            contentType = { CONTENT_TYPE_PRESET_ITEM }
+                        ) { preset ->
                             val summary = AlbumFilterPresetManager.formatFilterSummary(preset.filter)
                             val dateStr = dateFormat.format(Date(preset.createdAt))
 
@@ -145,14 +173,14 @@ private fun SavedPresetsEmptyState() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .height(EMPTY_STATE_HEIGHT)
+            .clip(EMPTY_STATE_SHAPE)
             .background(palette.panelBlack)
-            .padding(16.dp),
+            .padding(EMPTY_STATE_PADDING),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "No saved presets yet.\nConfigure filters and tap 'Save'.",
+            text = TEXT_EMPTY_PRESETS,
             color = palette.textSecondary,
             style = Theme.L.Type.rowTitle,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -172,11 +200,11 @@ private fun SavedPresetCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, palette.border, RoundedCornerShape(8.dp))
+            .clip(PRESET_CARD_SHAPE)
+            .border(DIALOG_BORDER_WIDTH, palette.border, PRESET_CARD_SHAPE)
             .background(palette.field)
             .clickable(onClick = onSelect)
-            .padding(10.dp)
+            .padding(CARD_PADDING)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -202,13 +230,13 @@ private fun SavedPresetCard(
 
             IconButton(
                 onClick = onDelete,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(DELETE_BUTTON_SIZE)
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete preset",
+                    contentDescription = CD_DELETE_PRESET,
                     tint = palette.excludedBorder,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(DELETE_ICON_SIZE)
                 )
             }
         }
@@ -231,13 +259,13 @@ private fun SavedPresetCard(
         ) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.accent, RoundedCornerShape(6.dp))
+                    .clip(APPLY_BUTTON_SHAPE)
+                    .border(DIALOG_BORDER_WIDTH, palette.accent, APPLY_BUTTON_SHAPE)
                     .background(palette.accentDark)
-                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                    .padding(horizontal = APPLY_HORIZONTAL_PADDING, vertical = APPLY_VERTICAL_PADDING)
             ) {
                 Text(
-                    text = "Apply",
+                    text = TEXT_APPLY,
                     color = androidx.compose.ui.graphics.Color.White,
                     style = Theme.L.Type.button
                 )
