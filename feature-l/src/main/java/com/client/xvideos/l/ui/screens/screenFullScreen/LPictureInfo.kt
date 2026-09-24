@@ -31,6 +31,12 @@ import com.client.xvideos.l.model.lImageMediaUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
 
 private const val TAG_URL = "url"
+private val LINK_TEXT_COLOR = Color(0xFF8AB4F8)
+private val MAX_DIALOG_HEIGHT = 520.dp
+private const val TITLE_INFO = "Информация"
+private const val LABEL_ALBUM = "Альбом: "
+private const val CONFIRM_OK = "OK"
+private const val ERR_OPEN_LINK = "Не удалось открыть ссылку"
 
 /**
  * Диалог «Информация» о картинке и сборка его текста.
@@ -50,16 +56,16 @@ internal fun LPictureInfoDialog(
     val uriHandler = LocalUriHandler.current
 
     LavenderDialog(
-        title = "Информация",
+        title = TITLE_INFO,
         onDismiss = onDismiss,
         content = {
             Column(
                 modifier = Modifier
-                    .heightIn(max = 520.dp)
+                    .heightIn(max = MAX_DIALOG_HEIGHT)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Альбом: ", color = Theme.DialogLavande.dismissTextColor, fontFamily = Theme.L.fontFamilyKarla)
+                    Text(LABEL_ALBUM, color = Theme.DialogLavande.dismissTextColor, fontFamily = Theme.L.fontFamilyKarla)
                     if (albumId != null && onAlbumClick != null) {
                         TextButton(onClick = { onAlbumClick(albumId) }) {
                             Text(albumId.toString())
@@ -76,13 +82,13 @@ internal fun LPictureInfoDialog(
                             uriHandler.openUri(url)
                         }.onFailure { e ->
                             Timber.w(e, "LPictureInfoDialog: не удалось открыть ссылку: $url")
-                            SnackBar.error("Не удалось открыть ссылку")
+                            SnackBar.error(ERR_OPEN_LINK)
                         }
                     }
                 )
             }
         },
-        confirmText = "OK",
+        confirmText = CONFIRM_OK,
         onConfirm = onDismiss,
     )
 }
@@ -128,7 +134,7 @@ private fun String.withClickableHttpsLinks() = buildAnnotatedString {
         addStringAnnotation(TAG_URL, url, annotatedStart, annotatedStart + url.length)
         addStyle(
             SpanStyle(
-                color = Color(0xFF8AB4F8),
+                color = LINK_TEXT_COLOR,
                 textDecoration = TextDecoration.Underline
             ),
             annotatedStart,

@@ -22,6 +22,13 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.r.ui.profile.ScreenRedProfileSM
 import com.client.xvideos.r.ui.profile.TypeGifs
 
+private val DIVIDER_WIDTH = 1.dp
+private val CONTROL_HEIGHT = 48.dp
+private val LABEL_FONT_SIZE = 18.sp
+private val INDICATOR_WIDTH = 48.dp
+private val INDICATOR_HEIGHT = 4.dp
+private val INDICATOR_OFFSET_Y = 16.dp
+private val INDICATOR_OFFSET_X = 0.dp
 
 @Composable
 fun GifTypes_Control(vm: ScreenRedProfileSM) {
@@ -64,7 +71,7 @@ fun GifTypes_Control(
             )
         }
 
-        Box(Modifier.width(1.dp).height(48.dp).background(Theme.R.colorBorderGray))
+        Box(Modifier.width(DIVIDER_WIDTH).height(CONTROL_HEIGHT).background(Theme.R.colorBorderGray))
 
         if (item1 != null) {
             TextAndLine(
@@ -96,7 +103,7 @@ private fun TextAndLine(
 
         Text(
             text = str,
-            fontSize = 18.sp,
+            fontSize = LABEL_FONT_SIZE,
             color = textColor,
             fontFamily = Theme.R.fontFamilyPopinsRegular
         )
@@ -104,9 +111,9 @@ private fun TextAndLine(
         Box(
             Modifier
                 //.align(Alignment.BottomCenter)
-                .offset(0.dp, 16.dp)
-                .width(48.dp)
-                .height(4.dp)
+                .offset(INDICATOR_OFFSET_X, INDICATOR_OFFSET_Y)
+                .width(INDICATOR_WIDTH)
+                .height(INDICATOR_HEIGHT)
                 .background(indicatorColor)
         )
 

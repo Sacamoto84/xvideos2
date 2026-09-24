@@ -34,6 +34,14 @@ import com.client.xvideos.common.videoplayer.ui.VideoPlayerWithMenuContent
 import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lMediaRequestHeaders
 
+private val ERROR_CONTAINER_SHAPE = RoundedCornerShape(8.dp)
+private val ERROR_BG_COLOR = Color(0xBF000000)
+private val POSTER_PLACEHOLDER_BG = Color(0xFF202020)
+private val ERROR_HORIZONTAL_PADDING = 16.dp
+private val ERROR_VERTICAL_PADDING = 10.dp
+private val ERROR_FONT_SIZE = 14.sp
+private const val TEXT_PLAYBACK_ERROR = "Ошибка воспроизведения"
+
 /**
  * Видео на странице полноэкранного просмотра L.
  *
@@ -135,15 +143,15 @@ internal fun LFullScreenVideo(
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Black.copy(alpha = 0.75f))
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .clip(ERROR_CONTAINER_SHAPE)
+                    .background(ERROR_BG_COLOR)
+                    .padding(horizontal = ERROR_HORIZONTAL_PADDING, vertical = ERROR_VERTICAL_PADDING),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Ошибка воспроизведения",
+                    text = TEXT_PLAYBACK_ERROR,
                     color = Color.White,
-                    fontSize = 14.sp
+                    fontSize = ERROR_FONT_SIZE
                 )
             }
         }
@@ -167,7 +175,7 @@ private fun LFullScreenVideoPoster(
         )
     } else {
         Box(
-            modifier = modifier.background(Color(0xFF202020)),
+            modifier = modifier.background(POSTER_PLACEHOLDER_BG),
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)

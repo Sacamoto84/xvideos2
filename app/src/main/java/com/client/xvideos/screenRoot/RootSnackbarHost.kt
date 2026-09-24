@@ -33,7 +33,14 @@ import com.client.xvideos.common.snackbar.UiSnackbarVisuals
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 
-private val snackbarShape = RoundedCornerShape(12.dp)
+private val SNACKBAR_SHAPE = RoundedCornerShape(12.dp)
+private val SNACKBAR_HORIZONTAL_MARGIN = 16.dp
+private val SNACKBAR_BOTTOM_PADDING = 104.dp
+private val SNACKBAR_ELEVATION = 6.dp
+private val SNACKBAR_CONTENT_PADDING = 12.dp
+private val SNACKBAR_ICON_SPACER = 8.dp
+private const val ERROR_SNACKBAR_DURATION_MS = 5000L
+private const val DEFAULT_SNACKBAR_DURATION_MS = 2000L
 
 @Composable
 fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
@@ -52,8 +59,8 @@ fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
 
             LaunchedEffect(data) {
                 val duration = when (uiMsg) {
-                    is UiMessage.Error -> 5000L
-                    else -> 2000L
+                    is UiMessage.Error -> ERROR_SNACKBAR_DURATION_MS
+                    else -> DEFAULT_SNACKBAR_DURATION_MS
                 }
                 delay(duration)
                 data.dismiss()
@@ -68,19 +75,19 @@ fun RootSnackbarHost(snackBarHostState: SnackbarHostState) {
             Surface(
                 modifier = Modifier
                     .wrapContentWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 104.dp),
+                    .padding(start = SNACKBAR_HORIZONTAL_MARGIN, end = SNACKBAR_HORIZONTAL_MARGIN, bottom = SNACKBAR_BOTTOM_PADDING),
                 color = bg,
                 contentColor = fg,
-                shape = snackbarShape,
-                tonalElevation = 6.dp,
-                shadowElevation = 6.dp,
+                shape = SNACKBAR_SHAPE,
+                tonalElevation = SNACKBAR_ELEVATION,
+                shadowElevation = SNACKBAR_ELEVATION,
             ) {
                 Row(
-                    Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                    Modifier.padding(horizontal = SNACKBAR_CONTENT_PADDING, vertical = SNACKBAR_CONTENT_PADDING),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(icon, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(SNACKBAR_ICON_SPACER))
                     Text(data.visuals.message, fontFamily = Theme.R.fontFamilyDMsanss)
                     data.visuals.actionLabel?.let { label ->
                         TextButton(onClick = onAction) {

@@ -60,6 +60,20 @@ import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
+private val ERROR_SPACER_HEIGHT = 12.dp
+private val BUTTON_SPACER_WIDTH = 16.dp
+private val BACK_BUTTON_PADDING = 8.dp
+private val TAGS_START_PADDING = 56.dp
+private val TAGS_END_PADDING = 12.dp
+private val TAGS_TOP_PADDING = 8.dp
+private val RESUME_PILL_BOTTOM_PADDING_FULLSCREEN = 68.dp
+private val RESUME_PILL_BOTTOM_PADDING_PORTRAIT = 84.dp
+private const val PROGRESS_SAVE_INTERVAL_MS = 3000L
+
+private const val TEXT_LOAD_ERROR = "Не удалось загрузить видео"
+private const val TEXT_RETRY = "Повторить"
+private const val TEXT_BACK = "Назад"
+
 class ScreenX_VideoPlayer(
     val url: String,
     val item: ItemsX? = null,
@@ -163,15 +177,15 @@ private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Не удалось загрузить видео", color = Color.White)
-            Spacer(modifier = Modifier.height(12.dp))
+            Text(TEXT_LOAD_ERROR, color = Color.White)
+            Spacer(modifier = Modifier.height(ERROR_SPACER_HEIGHT))
             Row {
                 Button(onClick = onRetry) {
-                    Text("Повторить")
+                    Text(TEXT_RETRY)
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(BUTTON_SPACER_WIDTH))
                 Button(onClick = onBack) {
-                    Text("Назад")
+                    Text(TEXT_BACK)
                 }
             }
         }
@@ -194,11 +208,11 @@ private fun VideoPlayerLoadingView(onBack: () -> Unit) {
                         WindowInsetsSides.Top + WindowInsetsSides.Start
                     )
                 )
-                .padding(8.dp),
+                .padding(BACK_BUTTON_PADDING),
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Назад",
+                contentDescription = TEXT_BACK,
                 tint = Color.White,
             )
         }
@@ -351,7 +365,7 @@ private fun VideoPlayerContentView(
                                     WindowInsetsSides.Top + WindowInsetsSides.Start
                                 )
                             )
-                            .padding(start = 56.dp, end = 12.dp, top = 8.dp)
+                            .padding(start = TAGS_START_PADDING, end = TAGS_END_PADDING, top = TAGS_TOP_PADDING)
                     ) {
                         ComposeTags(
                             vm.tags,
@@ -367,7 +381,7 @@ private fun VideoPlayerContentView(
                     exit = fadeOut(),
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = if (vm.isFullScreen) 68.dp else 84.dp)
+                        .padding(bottom = if (vm.isFullScreen) RESUME_PILL_BOTTOM_PADDING_FULLSCREEN else RESUME_PILL_BOTTOM_PADDING_PORTRAIT)
                 ) {
                     vm.resumeNoticeText?.let { notice ->
                         ResumePlaybackPill(
@@ -405,7 +419,7 @@ private fun RememberHistoryProgressSync(
         if (!host.isPaused) {
             vm.saveProgress(host.currentTime, host.totalTime)
             while (isActive) {
-                delay(3000)
+                delay(PROGRESS_SAVE_INTERVAL_MS)
                 vm.saveProgress(host.currentTime, host.totalTime)
             }
         }

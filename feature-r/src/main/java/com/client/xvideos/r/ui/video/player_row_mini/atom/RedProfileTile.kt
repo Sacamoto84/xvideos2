@@ -25,26 +25,23 @@ import com.client.xvideos.common.util.toMinSec
 import com.client.xvideos.common.util.toPrettyCount
 import com.composables.core.Icon
 
+private val TILE_SHAPE = RoundedCornerShape(8.dp)
+private val SHADOW_OFFSET = 1.dp
+private val PADDING_DEFAULT = 8.dp
+private const val PLACEHOLDER_TEXT = "-"
+
 @Composable
 fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, isVisibleDuration : Boolean = true) {
-    val tileShape = remember { RoundedCornerShape(8.dp) }
     val indexText = remember(index) { index.toString() }
-    val prettyViews = remember(item.views) { item.views?.toPrettyCount() ?: "-" }
-    val prettyDuration = remember(item.duration) { item.duration?.toMinSec() ?: "-" }
+    val prettyViews = remember(item.views) { item.views?.toPrettyCount() ?: PLACEHOLDER_TEXT }
+    val prettyDuration = remember(item.duration) { item.duration?.toMinSec() ?: PLACEHOLDER_TEXT }
 
-    Box(modifier = Modifier.fillMaxSize().clip(tileShape)) {
-
-//        if (item.urls.poster != null) {
-//            UrlImage( url = item.urls.poster!!, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize() )
-//        }
-//        else{
-//            UrlImage( url = item.urls.thumbnail, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize() )
-//        }
+    Box(modifier = Modifier.fillMaxSize().clip(TILE_SHAPE)) {
         //Индекс картинки
         Text(
             indexText,
             color = Color.Gray,
-            modifier = Modifier.padding(start = 8.dp).offset(1.dp, 1.dp),
+            modifier = Modifier.padding(start = PADDING_DEFAULT).offset(SHADOW_OFFSET, SHADOW_OFFSET),
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
 
@@ -57,16 +54,15 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
 
             if (isVisibleView) {
                 Row(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(PADDING_DEFAULT),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
 
                     Box {
                         Icon(
                             painter = painterResource(R.drawable.rg_button),
                             contentDescription = null,
-                            tint = Color.Black, modifier = Modifier.offset(1.dp, 1.dp)
+                            tint = Color.Black, modifier = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET)
                         )
                         Icon(
                             painter = painterResource(R.drawable.rg_button),
@@ -80,8 +76,8 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                             prettyViews,
                             color = Color.Black,
                             modifier = Modifier
-                                .padding(start = 8.dp)
-                                .offset(1.dp, 1.dp),
+                                .padding(start = PADDING_DEFAULT)
+                                .offset(SHADOW_OFFSET, SHADOW_OFFSET),
                             fontFamily = Theme.R.fontFamilyPopinsMedium
                         )
 
@@ -89,7 +85,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                             prettyViews,
                             color = Color.White,
                             modifier = Modifier
-                                .padding(start = 8.dp),
+                                .padding(start = PADDING_DEFAULT),
                             fontFamily = Theme.R.fontFamilyPopinsMedium
                         )
                     }
@@ -104,8 +100,8 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                         prettyDuration,
                         color = Color.Black,
                         modifier = Modifier
-                            .padding(8.dp)
-                            .offset(1.dp, 1.dp),
+                            .padding(PADDING_DEFAULT)
+                            .offset(SHADOW_OFFSET, SHADOW_OFFSET),
                         fontFamily = Theme.R.fontFamilyPopinsMedium
                     )
 
@@ -113,7 +109,7 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
                         prettyDuration,
                         color = Color.White,
                         modifier = Modifier
-                            .padding(8.dp),
+                            .padding(PADDING_DEFAULT),
                         fontFamily = Theme.R.fontFamilyPopinsMedium
                     )
                 }
@@ -121,20 +117,6 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
 
         }
 
-
-
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-

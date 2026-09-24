@@ -55,7 +55,20 @@ import timber.log.Timber
 // Data class для представления страны
 // Страна: Австралия, Ссылка: /change-country/au, Класс флага: flag-au
 @Immutable
-private data class Country(val name: String, val url: String, val flagClass: String)
+private data class Country(
+    val name: String,
+    val url: String,
+    val flagClass: String,
+    val flagEmoji: String = getFlagEmoji(flagClass)
+)
+
+private val EMOJI_FONT = FontFamily(Font(R.font.flag))
+private val COUNTRY_BUTTON_SIZE = 48.dp
+private val MENU_WIDTH = 312.dp
+private val CURRENT_FLAG_FONT_SIZE = 24.sp
+private val LIST_FLAG_FONT_SIZE = 28.sp
+private val BUTTON_BG_COLOR = Color(0xFF151515)
+private const val CONTENT_TYPE_COUNTRY_ITEM = "country_item"
 
 @Preview
 @Composable
@@ -89,98 +102,75 @@ object CountryState {
 @Suppress("DEPRECATION")
 @Composable
 fun ComposeCountry(modifier: Modifier = Modifier) {
-
-    val emojiFont = FontFamily(Font(R.font.flag)) // Убедитесь, что шрифт добавлен в res/font
-
     val state = rememberMenuState(expanded = false)
-
     val stateLazyList = rememberLazyListState()
-
     val scope = rememberCoroutineScope()
 
-    Box(  Modifier.size(48.dp).then(modifier) )
-    {
-
-        Menu( modifier = Modifier, state = state )
-        {
-
-            //Сама кнопка для вызова диалога
-            MenuButton( Modifier.fillMaxSize().background(Color(0xFF151515)) )
-            {
-
+    Box(Modifier.size(COUNTRY_BUTTON_SIZE).then(modifier)) {
+        Menu(modifier = Modifier, state = state) {
+            // Сама кнопка для вызова диалога
+            MenuButton(Modifier.fillMaxSize().background(BUTTON_BG_COLOR)) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     BasicText(
                         CountryState.current,
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
                             color = Color.White,
-                            fontSize = 24.sp
+                            fontSize = CURRENT_FLAG_FONT_SIZE
                         )
                     )
                 }
-
             }
 
             MenuContent(
                 modifier = Modifier
                     .padding(bottom = 0.dp)
-                    .width(312.dp)
-                    //.clip(RoundedCornerShape(26.dp))
+                    .width(MENU_WIDTH)
                     .alpha(0.9F)
                     .background(grayColor(0x35)),
-                // exit = fadeOut()
-                //, enter = fadeIn()
             ) {
-
                 LazyColumn(state = stateLazyList) {
-                    items(countries, key = { it.url }) {
-
+                    items(
+                        items = countries,
+                        key = { it.url },
+                        contentType = { CONTENT_TYPE_COUNTRY_ITEM }
+                    ) { item ->
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth().padding(vertical = 3.dp)
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
                                 .padding(start = 8.dp)
                                 .clickable {
                                     state.expanded = false
-                                    scope.launchCatching(message = "Смена страны не удалась: ${it.name}") {
-
-                                        val htmlContent = readHtmlFromURLWebView(normalizeXUrl(it.url))
-                                        val flag = parseSiteCountryFlag(htmlContent) ?: getFlagEmoji(it.flagClass)
+                                    scope.launchCatching(message = "Смена страны не удалась: ${item.name}") {
+                                        val htmlContent = readHtmlFromURLWebView(normalizeXUrl(item.url))
+                                        val flag = parseSiteCountryFlag(htmlContent) ?: item.flagEmoji
 
                                         withContext(Dispatchers.Main) {
                                             CountryState.onCountrySelected(flag)
                                             Toast.makeText(
                                                 AppContextHolder.applicationContext,
-                                                "${getFlagEmoji(it.flagClass)} ${it.name}",
+                                                "${item.flagEmoji} ${item.name}",
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
-
                                     }
                                 }
                         ) {
-
                             BasicText(
-                                text = "${getFlagEmoji(it.flagClass)}  ${it.name} ",
+                                text = "${item.flagEmoji}  ${item.name} ",
                                 style = TextStyle(
-                                    fontFamily = emojiFont,
-                                    fontSize = 28.sp,
-                                    color = if (getFlagEmoji(it.flagClass) == CountryState.current) PornHubOrange else Color.LightGray
+                                    fontFamily = EMOJI_FONT,
+                                    fontSize = LIST_FLAG_FONT_SIZE,
+                                    color = if (item.flagEmoji == CountryState.current) PornHubOrange else Color.LightGray
                                 )
                             )
-
-
                         }
                     }
-
                 }
-
             }
-
         }
-
     }
-
-
 }
 
 
