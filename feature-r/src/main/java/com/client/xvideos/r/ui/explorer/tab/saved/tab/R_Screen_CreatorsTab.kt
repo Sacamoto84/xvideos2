@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -83,6 +84,26 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
+
+private const val TOP_BAR_TITLE = "Авторы"
+private const val DIALOG_DELETE_TITLE = "Удалить автора?"
+private const val BUTTON_DELETE = "Удалить"
+private const val CD_DELETE_CREATOR = "Удалить автора"
+private const val LABEL_FOLLOWERS = "Подписчики"
+private const val LABEL_VIEWS = "Просмотры"
+private const val LABEL_POSTS = "Посты"
+private const val CONTENT_TYPE_CREATOR_ITEM = "creator_item"
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val TOP_BAR_START_PADDING = 8.dp
+private val TOP_BAR_VERTICAL_PADDING = 8.dp
+private val TOP_BAR_TITLE_SIZE = 18.sp
+private val CREATOR_CARD_SHAPE = RoundedCornerShape(8.dp)
+private val CREATOR_IMAGE_SIZE = 96.dp
+private val CREATOR_METRIC_SHAPE = RoundedCornerShape(6.dp)
+private val CREATOR_METRIC_BG_COLOR = Color(0xFF242424)
+private val CREATOR_USERNAME_COLOR = Color(0xFF9E9DA9)
+private val CREATOR_DELETE_ICON_COLOR = Color(0xFFAAAAAA)
+private val SCROLLBAR_WIDTH = 2.dp
 
 object R_Screen_CreatorsTab : Screen {
 
@@ -121,67 +142,91 @@ object R_Screen_CreatorsTab : Screen {
             onConfirm = onConfirmDelete
         )
 
-        Scaffold(
-            containerColor = Theme.background,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            topBar = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = getTopInsetDp())
-                        .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Авторы",
-                        modifier = Modifier,
-                        color = Theme.R.colorYellow,
-                        fontSize = 18.sp,
-                        fontFamily = Theme.R.fontFamilyPopinsRegular,
-                        textAlign = TextAlign.Center
+        val topInset = getTopInsetDp()
+
+        CreatorsTabContent(
+            creators = savedRed.creators.list,
+            state = state,
+            topInset = topInset,
+            onCreatorClick = onCreatorClick,
+            onDeleteRequest = onDeleteRequest
+        )
+    }
+}
+
+@Composable
+fun CreatorsTabContent(
+    creators: List<UserInfo>,
+    state: LazyListState,
+    topInset: Dp,
+    onCreatorClick: (String) -> Unit,
+    onDeleteRequest: (UserInfo) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Scaffold(
+        modifier = modifier,
+        containerColor = Theme.background,
+        contentWindowInsets = ZERO_WINDOW_INSETS,
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = topInset)
+                    .padding(start = TOP_BAR_START_PADDING, top = TOP_BAR_VERTICAL_PADDING, bottom = TOP_BAR_VERTICAL_PADDING),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    TOP_BAR_TITLE,
+                    modifier = Modifier,
+                    color = Theme.R.colorYellow,
+                    fontSize = TOP_BAR_TITLE_SIZE,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .padding(top = padding.calculateTopPadding())
+                .fillMaxSize()
+        ) {
+            LazyColumn(
+                state = state,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    items = creators,
+                    key = { it.username },
+                    contentType = { CONTENT_TYPE_CREATOR_ITEM }
+                ) { item ->
+                    CreatorListItem(
+                        item = item,
+                        onClick = onCreatorClick,
+                        onDelete = onDeleteRequest
                     )
                 }
             }
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .padding(top = padding.calculateTopPadding())
-                    .fillMaxSize()
-            ) {
-                LazyColumn(
-                    state = state,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(
-                        items = savedRed.creators.list,
-                        key = { it.username },
-                        contentType = { "creator_item" }
-                    ) { item ->
-                        CreatorListItem(
-                            item = item,
-                            onClick = onCreatorClick,
-                            onDelete = onDeleteRequest
-                        )
-                    }
-                }
 
-                CreatorsScrollbar(state)
-            }
+            CreatorsScrollbar(state)
         }
     }
 }
 
 @Composable
-private fun BoxScope.CreatorsScrollbar(state: LazyListState) {
+private fun BoxScope.CreatorsScrollbar(
+    state: LazyListState,
+    modifier: Modifier = Modifier,
+) {
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
         gridState = state, itemsToIgnore = 0
     )
     val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxHeight()
             .align(Alignment.CenterEnd)
-            .width(2.dp)
+            .width(SCROLLBAR_WIDTH)
     ) {
         VerticalScrollbar(scrollPercentProvider)
     }
@@ -191,17 +236,17 @@ private fun BoxScope.CreatorsScrollbar(state: LazyListState) {
 private fun CreatorListItem(
     item: UserInfo,
     onClick: (String) -> Unit,
-    onDelete: (UserInfo) -> Unit
+    onDelete: (UserInfo) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val displayName = remember(item.name, item.username) { item.name.ifBlank { item.username } }
     val handleItemClick = remember(item.username, onClick) { { onClick(item.username) } }
     val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
-    val cardShape = remember { RoundedCornerShape(8.dp) }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(vertical = 2.dp, horizontal = 6.dp)
-            .clip(cardShape)
+            .clip(CREATOR_CARD_SHAPE)
             .fillMaxWidth()
             .background(Theme.tabLevel3)
             .clickable(onClick = handleItemClick),
@@ -211,13 +256,13 @@ private fun CreatorListItem(
         if (item.profileImageUrl != null) {
             UrlImage(
                 item.profileImageUrl,
-                modifier = Modifier.size(96.dp),
+                modifier = Modifier.size(CREATOR_IMAGE_SIZE),
                 contentScale = ContentScale.Crop
             )
         } else {
             Box(
                 modifier = Modifier
-                    .size(96.dp)
+                    .size(CREATOR_IMAGE_SIZE)
                     .background(Color.DarkGray),
                 contentAlignment = Alignment.Center
             ) {
@@ -248,7 +293,7 @@ private fun CreatorListItem(
             if (displayName != item.username) {
                 Text(
                     "@${item.username}",
-                    color = Color(0xFF9E9DA9),
+                    color = CREATOR_USERNAME_COLOR,
                     fontSize = 12.sp,
                     fontFamily = Theme.R.fontFamilyDMsanss,
                     maxLines = 1,
@@ -261,17 +306,17 @@ private fun CreatorListItem(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 CreatorMetric(
-                    label = "Подписчики",
+                    label = LABEL_FOLLOWERS,
                     value = item.followers,
                     modifier = Modifier.weight(1f)
                 )
                 CreatorMetric(
-                    label = "Просмотры",
+                    label = LABEL_VIEWS,
                     value = item.views,
                     modifier = Modifier.weight(1f)
                 )
                 CreatorMetric(
-                    label = "Посты",
+                    label = LABEL_POSTS,
                     value = item.publishedGifs,
                     modifier = Modifier.weight(1f)
                 )
@@ -286,12 +331,11 @@ private fun CreatorListItem(
         ) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "Удалить автора",
-                tint = Color(0xFFAAAAAA),
+                contentDescription = CD_DELETE_CREATOR,
+                tint = CREATOR_DELETE_ICON_COLOR,
                 modifier = Modifier.size(24.dp)
             )
         }
-        //Spacer(modifier = Modifier.width(8.dp))
     }
 }
 
@@ -304,8 +348,8 @@ private fun CreatorMetric(
     val prettyValue = remember(value) { value.toPrettyCount() }
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF242424))
+            .clip(CREATOR_METRIC_SHAPE)
+            .background(CREATOR_METRIC_BG_COLOR)
             .padding(horizontal = 6.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -318,7 +362,7 @@ private fun CreatorMetric(
         )
         Text(
             label,
-            color = Color(0xFF9E9DA9),
+            color = CREATOR_USERNAME_COLOR,
             fontSize = 9.sp,
             fontFamily = Theme.R.fontFamilyDMsanss,
             maxLines = 1,
@@ -338,11 +382,11 @@ private fun DeleteCreatorDialog(
             { onConfirm(pending) }
         }
         LavenderDialog(
-            title = "Удалить автора?",
+            title = DIALOG_DELETE_TITLE,
             onDismiss = onDismiss,
             icon = {
                 pending.profileImageUrl?.let {
-                    UrlImage(it, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(96.dp))
+                    UrlImage(it, modifier = Modifier.clip(CREATOR_CARD_SHAPE).size(CREATOR_IMAGE_SIZE))
                 }
             },
             body = buildAnnotatedString {
@@ -350,7 +394,7 @@ private fun DeleteCreatorDialog(
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
                 append("» из сохранённых?")
             },
-            confirmText = "Удалить",
+            confirmText = BUTTON_DELETE,
             onConfirm = handleConfirm,
             destructive = true,
         )
@@ -411,6 +455,29 @@ private fun CreatorListItemPreview() {
         onClick = {},
         onDelete = {}
     )
+}
+
+@Preview
+@Composable
+private fun CreatorsTabContentPreview() {
+    XvideosTheme(darkTheme = true) {
+        val sampleUser = UserInfo(
+            name = "Sample Creator",
+            username = "samplecreator",
+            profileImageUrl = "https://via.placeholder.com/96",
+            followers = 21_193,
+            views = 32_986_108,
+            publishedGifs = 2_176,
+            url = "https://example.com/samplecreator"
+        )
+        CreatorsTabContent(
+            creators = listOf(sampleUser),
+            state = rememberLazyListState(),
+            topInset = 24.dp,
+            onCreatorClick = {},
+            onDeleteRequest = {}
+        )
+    }
 }
 
 @Preview

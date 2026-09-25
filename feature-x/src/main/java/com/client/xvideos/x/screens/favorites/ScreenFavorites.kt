@@ -76,8 +76,20 @@ private const val TEXT_DOWNLOAD = "Скачать"
 private const val TEXT_IN_GALLERY = "В галерею"
 private const val TEXT_DELETE = "Удалить"
 private const val TEXT_ACTIONS = "Действия"
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
 private val ACTION_ICON_BUTTON_SIZE = 48.dp
 private val ACTION_ICON_SIZE = 24.dp
+private val CARD_PADDING_HORIZONTAL = 1.dp
+private val CARD_PADDING_VERTICAL = 1.dp
+private val DOWNLOAD_ICON_PADDING = 4.dp
+private val HEADER_START_PADDING = 16.dp
+private val HEADER_VERTICAL_PADDING = 8.dp
+private val DURATION_END_PADDING = 8.dp
+private val HEADER_TITLE_SIZE = 24.sp
+private val EMPTY_FONT_SIZE = 16.sp
+private val DURATION_FONT_SIZE = 14.sp
+private val ACTION_ICON_SHADOW_OFFSET = 0.5.dp
+private val DURATION_SHADOW_OFFSET = 1.dp
 private val SEPARATOR_COLOR = Color(0xFF9E9E9E)
 private val durationOffsetY = (-3).dp
 
@@ -131,6 +143,7 @@ private fun FavoritesContent(
     onDownload: (ItemsX) -> Unit,
     onPlayLocal: (String, ItemsX) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
+    modifier: Modifier = Modifier,
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
     // Подтверждение удаления из избранного (диалог).
@@ -163,8 +176,8 @@ private fun FavoritesContent(
     val topCutout = getTopInsetDp()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        modifier = modifier.fillMaxSize(),
+        contentWindowInsets = ZERO_WINDOW_INSETS,
         containerColor = Theme.L.grey6
     ) { padding ->
 
@@ -178,7 +191,7 @@ private fun FavoritesContent(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FavoritesHeader(topCutout = topCutout)
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(TEXT_EMPTY, color = Color.Gray, fontSize = 16.sp)
+                        Text(TEXT_EMPTY, color = Color.Gray, fontSize = EMPTY_FONT_SIZE)
                     }
                 }
             }
@@ -212,18 +225,21 @@ private fun FavoritesContent(
 }
 
 @Composable
-private fun FavoritesHeader(topCutout: Dp) {
+private fun FavoritesHeader(
+    topCutout: Dp,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = topCutout)
     ) {
         Text(
             TEXT_FAVORITES_TITLE,
             color = Color.White,
-            fontSize = 24.sp,
+            fontSize = HEADER_TITLE_SIZE,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+            modifier = Modifier.padding(start = HEADER_START_PADDING, top = HEADER_VERTICAL_PADDING, bottom = HEADER_VERTICAL_PADDING)
         )
         HorizontalSeparator(color = SEPARATOR_COLOR)
     }
@@ -238,6 +254,7 @@ private fun FavoriteRow(
     onDownload: (ItemsX) -> Unit,
     onPlayLocal: (String, ItemsX) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
+    modifier: Modifier = Modifier,
     onSaveToGallery: (ItemsX) -> Unit = {},
 ) {
     val onOpenThisVideo = remember(item, onOpenVideo) { { onOpenVideo(item) } }
@@ -249,10 +266,9 @@ private fun FavoriteRow(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 1.dp)
-            .padding(horizontal = 1.dp)
+            .padding(vertical = CARD_PADDING_VERTICAL, horizontal = CARD_PADDING_HORIZONTAL)
             .aspectRatio(FAVORITE_CARD_ASPECT_RATIO)
             .background(Color.DarkGray)
     ) {
@@ -267,7 +283,7 @@ private fun FavoriteRow(
                 )
                 // Значок «скачано» (как в R — IconSave18).
                 Row(
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(DOWNLOAD_ICON_PADDING)
                 ) {
                     IconSave18()
                 }
@@ -288,7 +304,7 @@ private fun FavoriteRow(
             )
         }
 
-        Row(Modifier.align(Alignment.BottomEnd).padding(end = 8.dp)) { DurationOverlay(item.duration) }
+        Row(Modifier.align(Alignment.BottomEnd).padding(end = DURATION_END_PADDING)) { DurationOverlay(item.duration) }
     }
 }
 
@@ -338,7 +354,7 @@ private fun FavoriteActionsExpandMenu(
                 tint = Color.Black,
                 modifier = Modifier
                     .size(ACTION_ICON_SIZE)
-                    .offset(0.5.dp, 0.5.dp)
+                    .offset(ACTION_ICON_SHADOW_OFFSET, ACTION_ICON_SHADOW_OFFSET)
             )
             Icon(
                 Icons.Default.MoreVert,
@@ -371,9 +387,9 @@ private fun DurationOverlay(duration: String) {
             text = text,
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(1.dp, durationOffsetY + 1.dp),
+                .offset(DURATION_SHADOW_OFFSET, durationOffsetY + DURATION_SHADOW_OFFSET),
             textAlign = TextAlign.Right,
-            fontSize = 14.sp,
+            fontSize = DURATION_FONT_SIZE,
             color = Color.Black
         )
         Text(
@@ -382,7 +398,7 @@ private fun DurationOverlay(duration: String) {
                 .fillMaxWidth()
                 .offset(0.dp, durationOffsetY),
             textAlign = TextAlign.Right,
-            fontSize = 14.sp,
+            fontSize = DURATION_FONT_SIZE,
             color = Color.White
         )
     }

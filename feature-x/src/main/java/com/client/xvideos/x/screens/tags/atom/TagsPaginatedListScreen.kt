@@ -31,7 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import kotlinx.coroutines.CancellationException
@@ -57,16 +59,13 @@ private val MESSAGE_COLOR = Color.Gray
  * Страницу грузит сама — так же, как `DashboardsPaginatedListScreen` в ленте
  * раздела: пейджер отдаёт только номер, а соседние страницы готовятся заранее
  * через `beyondViewportPageCount`.
- *
- * Раньше экран был заглушкой: список создавался пустым, заполнявший его
- * `LaunchedEffect` стоял закомментированным, а разобранные элементы сюда не
- * передавались вовсе.
  */
 @Composable
 fun TagsPaginatedListScreen(
     pageIndex: Int,
     loadPage: suspend (Int) -> List<ItemsX>,
     onOpenVideo: (ItemsX) -> Unit,
+    modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     header: (@Composable () -> Unit)? = null,
 ) {
@@ -99,7 +98,7 @@ fun TagsPaginatedListScreen(
     }
 
     if (loaded == null) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = modifier.fillMaxSize()) {
             header?.invoke()
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (failed) {
@@ -116,7 +115,7 @@ fun TagsPaginatedListScreen(
     }
 
     if (loaded.isEmpty()) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = modifier.fillMaxSize()) {
             header?.invoke()
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 TagsStateMessage(
@@ -136,7 +135,7 @@ fun TagsPaginatedListScreen(
 
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (header != null) {
@@ -211,5 +210,16 @@ private fun TagsStateMessage(
         Button(onClick = onRetry) {
             Text(BUTTON_RETRY_TEXT)
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun TagsStateMessagePreview() {
+    XvideosTheme(darkTheme = true) {
+        TagsStateMessage(
+            message = MSG_FAILED_TO_LOAD,
+            onRetry = {}
+        )
     }
 }

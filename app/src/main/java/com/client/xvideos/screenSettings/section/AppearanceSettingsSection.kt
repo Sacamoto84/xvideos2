@@ -2,6 +2,7 @@ package com.client.xvideos.screenSettings.section
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -83,7 +84,9 @@ private val SCROLL_BUTTONS_END_PADDING = 20.dp
  * Содержит интерактивное превью и переключатель режима кнопок быстрой прокрутки (Заливка, Блюр, Стекло).
  */
 @Composable
-internal fun AppearanceSettingsSection() {
+internal fun AppearanceSettingsSection(
+    modifier: Modifier = Modifier,
+) {
     val effectName by Settings.scroll_buttons_effect.field.collectAsStateWithLifecycle()
     val currentEffect = remember(effectName) { ScrollButtonEffect.fromNameOrDefault(effectName) }
     val previewHazeState = rememberHazeState()
@@ -92,26 +95,28 @@ internal fun AppearanceSettingsSection() {
         { effect -> Settings.scroll_buttons_effect.setValue(effect.name) }
     }
 
-    SettingsSectionTitle(TITLE_PREVIEW)
-    ScrollButtonPreviewCard(
-        hazeState = previewHazeState,
-        currentEffect = currentEffect
-    )
+    Column(modifier = modifier.fillMaxWidth()) {
+        SettingsSectionTitle(TITLE_PREVIEW)
+        ScrollButtonPreviewCard(
+            hazeState = previewHazeState,
+            currentEffect = currentEffect
+        )
 
-    Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
 
-    SettingsSectionTitle(TITLE_SCROLL_BUTTONS)
-    SettingsGroup {
-        ScrollButtonEffect.entries.forEachIndexed { index, effect ->
-            key(effect.name) {
-                if (index > 0) {
-                    SettingsDivider()
+        SettingsSectionTitle(TITLE_SCROLL_BUTTONS)
+        SettingsGroup {
+            ScrollButtonEffect.entries.forEachIndexed { index, effect ->
+                key(effect.name) {
+                    if (index > 0) {
+                        SettingsDivider()
+                    }
+                    ScrollEffectItem(
+                        effect = effect,
+                        isSelected = (currentEffect == effect),
+                        onSelect = onSelectEffect
+                    )
                 }
-                ScrollEffectItem(
-                    effect = effect,
-                    isSelected = (currentEffect == effect),
-                    onSelect = onSelectEffect
-                )
             }
         }
     }

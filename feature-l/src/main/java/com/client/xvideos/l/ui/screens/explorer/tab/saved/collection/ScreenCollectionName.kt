@@ -59,6 +59,16 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import timber.log.Timber
 
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val TOP_BAR_HORIZONTAL_PADDING = 8.dp
+private val TOP_BAR_VERTICAL_PADDING = 4.dp
+private val TOP_BAR_TITLE_SIZE = 18.sp
+private const val CD_BACK = "Назад"
+private const val CD_CLOSE_SEARCH = "Закрыть поиск"
+private const val CD_SEARCH_COLLECTION = "Поиск в коллекции"
+private const val LABEL_SEARCH_COLLECTION = "Поиск в коллекции"
+private const val TAG_L_COLLECTION = "lCollection"
+
 class ScreenCollectionName(
     val collectionName: String,
     private val popOnBack: Boolean = false
@@ -95,6 +105,7 @@ class ScreenCollectionName(
 fun L_CollectionNameContent(
     collectionName: String,
     savedL: SavedL,
+    modifier: Modifier = Modifier,
     host: LazyRowPictureDetailsHost = remember(collectionName) { LazyRowPictureDetailsHost(collectionName) },
     onExitCollection: (() -> Unit)? = null
 ) {
@@ -164,22 +175,24 @@ fun L_CollectionNameContent(
     LaunchedEffect(columnSelect) { host.columns = columnSelect }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        modifier = modifier,
+        contentWindowInsets = ZERO_WINDOW_INSETS,
         topBar = {
-        LCollectionDetailTopBar(
-            collectionName = selectedCollection ?: collectionName,
-            searchQuery = searchQuery,
-            searchVisible = searchVisible,
-            onSearchChange = onSearchChange,
-            onToggleSearch = onToggleSearch,
-            onExitCollection = onExitTopBar
-        )
-    }) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){
+            LCollectionDetailTopBar(
+                collectionName = selectedCollection ?: collectionName,
+                searchQuery = searchQuery,
+                searchVisible = searchVisible,
+                onSearchChange = onSearchChange,
+                onToggleSearch = onToggleSearch,
+                onExitCollection = onExitTopBar
+            )
+        }
+    ) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
             L_LazyRowPictureDetails(
                 host = host,
                 expandMenu = ExpandMenuType.LIKES,
-                tag = "lCollection",
+                tag = TAG_L_COLLECTION,
                 isCollection = true
             )
         }
@@ -193,22 +206,23 @@ private fun LCollectionDetailTopBar(
     searchVisible: Boolean,
     onSearchChange: (String) -> Unit,
     onToggleSearch: () -> Unit,
+    modifier: Modifier = Modifier,
     onExitCollection: (() -> Unit)? = null
 ) {
     val topInset = getTopInsetDp()
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(Theme.background)
             .padding(top = topInset)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = TOP_BAR_HORIZONTAL_PADDING, vertical = TOP_BAR_VERTICAL_PADDING)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (onExitCollection != null) {
                 IconButton(onClick = onExitCollection) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Назад",
+                        contentDescription = CD_BACK,
                         tint = Theme.L.primaryColor
                     )
                 }
@@ -217,13 +231,13 @@ private fun LCollectionDetailTopBar(
                 collectionName,
                 modifier = Modifier.weight(1f),
                 color = Theme.L.primaryColor,
-                fontSize = 18.sp,
+                fontSize = TOP_BAR_TITLE_SIZE,
                 fontFamily = Theme.L.fontFamilyPopinsRegular
             )
             IconButton(onClick = onToggleSearch) {
                 Icon(
                     imageVector = if (searchVisible) Icons.Default.Close else Icons.Default.Search,
-                    contentDescription = if (searchVisible) "Закрыть поиск" else "Поиск в коллекции",
+                    contentDescription = if (searchVisible) CD_CLOSE_SEARCH else CD_SEARCH_COLLECTION,
                     tint = Theme.L.primaryColor
                 )
             }
@@ -236,7 +250,7 @@ private fun LCollectionDetailTopBar(
                 onValueChange = onSearchChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                label = { Text("Поиск в коллекции") },
+                label = { Text(LABEL_SEARCH_COLLECTION) },
                 textStyle = searchTextStyle
             )
         }

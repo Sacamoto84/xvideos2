@@ -65,6 +65,19 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+private const val TITLE_DIALOG_ACTION = "Действие с коллекцией"
+private const val TEXT_RENAME = "Переименовать"
+private const val TEXT_SHARE = "Поделиться (P2P)"
+private const val TEXT_DELETE = "Удалить коллекцию"
+private const val TITLE_RENAME = "Переименовать коллекцию"
+private const val LABEL_COLLECTION_NAME = "Название коллекции"
+private const val BUTTON_SAVE = "Сохранить"
+private const val BUTTON_DELETE = "Удалить"
+private const val TITLE_DELETE = "Удалить коллекцию?"
+private val TEXT_FIELD_BORDER_ALPHA_COLOR = Color(0x66FFFFFF)
+private val COVER_CORNER_RADIUS = 8.dp
+private val COVER_ICON_SHAPE = RoundedCornerShape(COVER_CORNER_RADIUS)
+
 object R_Screen_CollectionTab : Screen {
 
     private fun readResolve(): Any = R_Screen_CollectionTab
@@ -229,7 +242,7 @@ private fun R_CollectionDialogsHost(
         val onShareClick = remember(pending, onShareAction) { { onShareAction(pending) } }
         val onDeleteClick = remember(pending, onDeleteAction) { { onDeleteAction(pending) } }
         LavenderDialog(
-            title = "Действие с коллекцией",
+            title = TITLE_DIALOG_ACTION,
             onDismiss = onDismissAction,
             icon = { CollectionCoverIcon(coverOf(pending)) },
             content = {
@@ -240,17 +253,17 @@ private fun R_CollectionDialogsHost(
                     fontWeight = FontWeight.SemiBold
                 )
                 DropdownMenuItem(
-                    text = { androidx.compose.material3.Text("Переименовать", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    text = { androidx.compose.material3.Text(TEXT_RENAME, style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                     onClick = onRenameClick,
                     leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                 )
                 DropdownMenuItem(
-                    text = { androidx.compose.material3.Text("Поделиться (P2P)", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    text = { androidx.compose.material3.Text(TEXT_SHARE, style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                     onClick = onShareClick,
                     leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                 )
                 DropdownMenuItem(
-                    text = { androidx.compose.material3.Text("Удалить коллекцию", style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    text = { androidx.compose.material3.Text(TEXT_DELETE, style = Theme.L.Type.menuItem.copy(color = Color.White)) },
                     onClick = onDeleteClick,
                     leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
                 )
@@ -264,7 +277,7 @@ private fun R_CollectionDialogsHost(
             { onConfirmRename(pending, dialogData.renameValue) }
         }
         LavenderDialog(
-            title = "Переименовать коллекцию",
+            title = TITLE_RENAME,
             onDismiss = onDismissRename,
             icon = { CollectionCoverIcon(coverOf(pending)) },
             content = {
@@ -273,19 +286,19 @@ private fun R_CollectionDialogsHost(
                     onValueChange = onRenameValueChange,
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { androidx.compose.material3.Text("Название коллекции") },
+                    label = { androidx.compose.material3.Text(LABEL_COLLECTION_NAME) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         cursorColor = Color.White,
                         focusedBorderColor = Theme.DialogLavande.buttonBackground,
-                        unfocusedBorderColor = Color(0x66FFFFFF),
+                        unfocusedBorderColor = TEXT_FIELD_BORDER_ALPHA_COLOR,
                         focusedLabelColor = Theme.DialogLavande.dismissTextColor,
                         unfocusedLabelColor = Theme.DialogLavande.bodyColor,
                     ),
                 )
             },
-            confirmText = "Сохранить",
+            confirmText = BUTTON_SAVE,
             onConfirm = onConfirm,
         )
     }
@@ -303,11 +316,11 @@ private fun R_CollectionDialogsHost(
             }
         }
         LavenderDialog(
-            title = "Удалить коллекцию?",
+            title = TITLE_DELETE,
             onDismiss = onDismissDelete,
             icon = { CollectionCoverIcon(coverOf(pending)) },
             body = dialogBody,
-            confirmText = "Удалить",
+            confirmText = BUTTON_DELETE,
             onConfirm = onConfirm,
             destructive = true,
         )
@@ -322,7 +335,8 @@ fun R_SavedCollectionTabContent(
     onCollectionClick: (String) -> Unit,
     onCollectionLongClick: (String) -> Unit,
     onCreateNewCollectionClick: () -> Unit,
-    navigationContent: @Composable () -> Unit
+    navigationContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val gridItems = remember(collectionList) {
         collectionList.map {
@@ -344,26 +358,30 @@ fun R_SavedCollectionTabContent(
             addButtonBackground = Theme.R.colorYellow
         )
     }
-    com.client.xvideos.common.collectionDB.ui.CollectionsGrid(
-        selectedCollection = selectedCollection,
-        collections = gridItems,
-        gridState = gridState,
-        style = gridStyle,
-        onCollectionClick = onCollectionClick,
-        onCollectionLongClick = onCollectionLongClick,
-        onCreateNewCollectionClick = onCreateNewCollectionClick,
-        navigationContent = navigationContent
-    )
+    Box(modifier = modifier) {
+        com.client.xvideos.common.collectionDB.ui.CollectionsGrid(
+            selectedCollection = selectedCollection,
+            collections = gridItems,
+            gridState = gridState,
+            style = gridStyle,
+            onCollectionClick = onCollectionClick,
+            onCollectionLongClick = onCollectionLongClick,
+            onCreateNewCollectionClick = onCreateNewCollectionClick,
+            navigationContent = navigationContent
+        )
+    }
 }
 
 @Composable
-private fun CollectionCoverIcon(coverUrl: String?) {
+private fun CollectionCoverIcon(
+    coverUrl: String?,
+    modifier: Modifier = Modifier,
+) {
     val size = Theme.DialogLavande.iconSize
-    val iconShape = remember { RoundedCornerShape(8.dp) }
     if (coverUrl != null) {
-        UrlImage(url = coverUrl, modifier = Modifier.clip(iconShape).size(size))
+        UrlImage(url = coverUrl, modifier = modifier.clip(COVER_ICON_SHAPE).size(size))
     } else {
-        Box(Modifier.clip(iconShape).size(size).background(Color.Gray))
+        Box(modifier.clip(COVER_ICON_SHAPE).size(size).background(Color.Gray))
     }
 }
 
