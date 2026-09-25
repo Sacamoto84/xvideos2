@@ -70,10 +70,30 @@ private val TIMEOUT_ITEM_VERTICAL_PADDING = 10.dp
 
 private const val CD_HIDE_CODE = "Скрыть код доступа"
 private const val CD_SHOW_CODE = "Показать код доступа"
+private const val TEXT_APP_LOCK_TITLE = "Блокировка при запуске"
+private const val TEXT_AUTO_LOCK = "Автоблокировка"
+private const val TEXT_ACCESS_CODE = "Код доступа"
+private const val TEXT_DISABLE_APP_LOCK = "Отключить блокировку приложения"
+private const val TEXT_INCOGNITO_KEYBOARD = "Инкогнито-клавиатура"
+private const val TEXT_BLUR_RECENT = "Защита в диспетчере задач"
+private const val TEXT_CAMOUFLAGE = "Маскировка под калькулятор"
+private const val BUTTON_CHANGE = "Изменить"
+private const val BUTTON_SET = "Задать"
+private const val BUTTON_DISABLE = "Отключить"
+private const val SUBTITLE_ENABLED = "Включена"
+private const val SUBTITLE_DISABLED = "Выключена"
+private const val TIMEOUT_IMMEDIATELY = "Сразу при выходе"
+private const val TIMEOUT_NEVER = "Выключена (только при перезапуске)"
+private const val KEYBOARD_INCOGNITO_ACTIVE = "Клавиатура не сохраняет поисковые запросы"
+private const val KEYBOARD_INCOGNITO_INACTIVE = "Стандартный режим ввода"
+private const val BLUR_ACTIVE = "Превью скрыто/размыто в карусели недавних задач"
+private const val BLUR_INACTIVE = "Отображается обычный снимок экрана"
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
-fun AppLockSettingsSection() {
+fun AppLockSettingsSection(
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current.applicationContext
     val appLockEnabled by Settings.app_lock_enabled.field.collectAsStateWithLifecycle()
     val timeoutSeconds by Settings.app_lock_timeout_seconds.field.collectAsStateWithLifecycle()
@@ -157,7 +177,7 @@ fun AppLockSettingsSection() {
     val setOrChangeTrailing: @Composable () -> Unit = remember(enabled, onSetOrChangeLock) {
         {
             Button(onClick = onSetOrChangeLock) {
-                Text(if (enabled) "Изменить" else "Задать")
+                Text(if (enabled) BUTTON_CHANGE else BUTTON_SET)
             }
         }
     }
@@ -165,34 +185,34 @@ fun AppLockSettingsSection() {
     val disableTrailing: @Composable () -> Unit = remember(onDisableLock) {
         {
             TextButton(onClick = onDisableLock) {
-                Text("Отключить", color = appLockDisableColor)
+                Text(BUTTON_DISABLE, color = appLockDisableColor)
             }
         }
     }
 
-    val lockSubtitle = remember(enabled) { if (enabled) "Включена" else "Выключена" }
+    val lockSubtitle = remember(enabled) { if (enabled) SUBTITLE_ENABLED else SUBTITLE_DISABLED }
     val timeoutSubtitle = remember(currentTimeout) {
         when (currentTimeout) {
-            AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
-            AppLockTimeout.NEVER -> "Выключена (только при перезапуске)"
+            AppLockTimeout.IMMEDIATELY -> TIMEOUT_IMMEDIATELY
+            AppLockTimeout.NEVER -> TIMEOUT_NEVER
             else -> "Через ${currentTimeout.displayName.lowercase()} в фоне"
         }
     }
     val keyboardSubtitle = remember(keyboardIncognito) {
-        if (keyboardIncognito) "Клавиатура не сохраняет поисковые запросы" else "Стандартный режим ввода"
+        if (keyboardIncognito) KEYBOARD_INCOGNITO_ACTIVE else KEYBOARD_INCOGNITO_INACTIVE
     }
     val blurSubtitle = remember(blurRecentTasks) {
         if (blurRecentTasks) {
-            "Превью скрыто/размыто в карусели недавних задач"
+            BLUR_ACTIVE
         } else {
-            "Отображается обычный снимок экрана"
+            BLUR_INACTIVE
         }
     }
 
-    SettingsGroup {
+    SettingsGroup(modifier = modifier) {
         SettingsListItem(
             icon = R.drawable.key_24,
-            text = "Блокировка при запуске",
+            text = TEXT_APP_LOCK_TITLE,
             subtitle = lockSubtitle,
             trailing = setOrChangeTrailing
         )
@@ -201,7 +221,7 @@ fun AppLockSettingsSection() {
             SettingsDivider2()
             SettingsListItem(
                 icon = R.drawable.key_24,
-                text = "Автоблокировка",
+                text = TEXT_AUTO_LOCK,
                 subtitle = timeoutSubtitle,
                 onClick = onShowTimeoutClick
             )
@@ -209,8 +229,8 @@ fun AppLockSettingsSection() {
             SettingsDivider2()
             SettingsListItem(
                 icon = R.drawable.key_24,
-                text = "Код доступа",
-                subtitle = "Отключить блокировку приложения",
+                text = TEXT_ACCESS_CODE,
+                subtitle = TEXT_DISABLE_APP_LOCK,
                 trailing = disableTrailing
             )
         }
@@ -226,7 +246,7 @@ fun AppLockSettingsSection() {
 
         SettingsSwitchRow(
             icon = R.drawable.memory_24,
-            text = "Инкогнито-клавиатура",
+            text = TEXT_INCOGNITO_KEYBOARD,
             subtitle = keyboardSubtitle,
             value = keyboardIncognito,
             onValueChange = onToggleIncognito
@@ -236,7 +256,7 @@ fun AppLockSettingsSection() {
 
         SettingsSwitchRow(
             icon = R.drawable.ic_blur_24,
-            text = "Защита в диспетчере задач",
+            text = TEXT_BLUR_RECENT,
             subtitle = blurSubtitle,
             value = blurRecentTasks,
             onValueChange = onToggleBlurRecent
@@ -274,7 +294,7 @@ private fun CamouflageGroup(
 
     SettingsSwitchRow(
         icon = R.drawable.ic_launcher_calculator,
-        text = "Маскировка под калькулятор",
+        text = TEXT_CAMOUFLAGE,
         subtitle = camouflageSubtitle,
         value = isCamouflage && passwordSet,
         enabled = passwordSet,

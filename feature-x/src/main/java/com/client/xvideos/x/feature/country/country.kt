@@ -19,6 +19,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,7 +69,30 @@ private val MENU_WIDTH = 312.dp
 private val CURRENT_FLAG_FONT_SIZE = 24.sp
 private val LIST_FLAG_FONT_SIZE = 28.sp
 private val BUTTON_BG_COLOR = Color(0xFF151515)
+private val ITEM_PADDING_VERTICAL = 3.dp
+private val ITEM_PADDING_START = 8.dp
+private const val MENU_ALPHA = 0.9f
 private const val CONTENT_TYPE_COUNTRY_ITEM = "country_item"
+private const val DEFAULT_COUNTRY_EMOJI = "❓"
+private const val MSG_CHANGE_COUNTRY_FAILED_PREFIX = "Смена страны не удалась: "
+
+private val SELECTED_TEXT_STYLE = TextStyle(
+    fontFamily = EMOJI_FONT,
+    fontSize = LIST_FLAG_FONT_SIZE,
+    color = PornHubOrange
+)
+
+private val UNSELECTED_TEXT_STYLE = TextStyle(
+    fontFamily = EMOJI_FONT,
+    fontSize = LIST_FLAG_FONT_SIZE,
+    color = Color.LightGray
+)
+
+private val CURRENT_FLAG_STYLE = TextStyle(
+    fontWeight = FontWeight.Medium,
+    color = Color.White,
+    fontSize = CURRENT_FLAG_FONT_SIZE
+)
 
 @Preview
 @Composable
@@ -84,7 +108,7 @@ private val countries: List<Country> by lazy { parserCountry() }
  */
 @Stable
 object CountryState {
-    var current: String by mutableStateOf("❓")    // Текущая страна
+    var current: String by mutableStateOf(DEFAULT_COUNTRY_EMOJI)    // Текущая страна
         private set
     var userSelectionEpoch: Int by mutableIntStateOf(0)
         private set
@@ -106,18 +130,33 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
     val stateLazyList = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    Box(Modifier.size(COUNTRY_BUTTON_SIZE).then(modifier)) {
+    val onCountryClick: (Country) -> Unit = remember(scope, state) {
+        { item ->
+            state.expanded = false
+            scope.launchCatching(message = "$MSG_CHANGE_COUNTRY_FAILED_PREFIX${item.name}") {
+                val htmlContent = readHtmlFromURLWebView(normalizeXUrl(item.url))
+                val flag = parseSiteCountryFlag(htmlContent) ?: item.flagEmoji
+
+                withContext(Dispatchers.Main) {
+                    CountryState.onCountrySelected(flag)
+                    Toast.makeText(
+                        AppContextHolder.applicationContext,
+                        "${item.flagEmoji} ${item.name}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    Box(modifier.size(COUNTRY_BUTTON_SIZE)) {
         Menu(modifier = Modifier, state = state) {
             // Сама кнопка для вызова диалога
             MenuButton(Modifier.fillMaxSize().background(BUTTON_BG_COLOR)) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     BasicText(
                         CountryState.current,
-                        style = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White,
-                            fontSize = CURRENT_FLAG_FONT_SIZE
-                        )
+                        style = CURRENT_FLAG_STYLE
                     )
                 }
             }
@@ -126,7 +165,7 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .padding(bottom = 0.dp)
                     .width(MENU_WIDTH)
-                    .alpha(0.9F)
+                    .alpha(MENU_ALPHA)
                     .background(grayColor(0x35)),
             ) {
                 LazyColumn(state = stateLazyList) {
@@ -135,41 +174,37 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                         key = { it.url },
                         contentType = { CONTENT_TYPE_COUNTRY_ITEM }
                     ) { item ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 3.dp)
-                                .padding(start = 8.dp)
-                                .clickable {
-                                    state.expanded = false
-                                    scope.launchCatching(message = "Смена страны не удалась: ${item.name}") {
-                                        val htmlContent = readHtmlFromURLWebView(normalizeXUrl(item.url))
-                                        val flag = parseSiteCountryFlag(htmlContent) ?: item.flagEmoji
-
-                                        withContext(Dispatchers.Main) {
-                                            CountryState.onCountrySelected(flag)
-                                            Toast.makeText(
-                                                AppContextHolder.applicationContext,
-                                                "${item.flagEmoji} ${item.name}",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                }
-                        ) {
-                            BasicText(
-                                text = "${item.flagEmoji}  ${item.name} ",
-                                style = TextStyle(
-                                    fontFamily = EMOJI_FONT,
-                                    fontSize = LIST_FLAG_FONT_SIZE,
-                                    color = if (item.flagEmoji == CountryState.current) PornHubOrange else Color.LightGray
-                                )
-                            )
-                        }
+                        CountryRowItem(
+                            item = item,
+                            isSelected = item.flagEmoji == CountryState.current,
+                            onClick = onCountryClick
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CountryRowItem(
+    item: Country,
+    isSelected: Boolean,
+    onClick: (Country) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val handleClick = remember(item, onClick) { { onClick(item) } }
+    val textStyle = if (isSelected) SELECTED_TEXT_STYLE else UNSELECTED_TEXT_STYLE
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = ITEM_PADDING_VERTICAL, horizontal = ITEM_PADDING_START)
+            .clickable(onClick = handleClick)
+    ) {
+        BasicText(
+            text = "${item.flagEmoji}  ${item.name} ",
+            style = textStyle
+        )
     }
 }
 

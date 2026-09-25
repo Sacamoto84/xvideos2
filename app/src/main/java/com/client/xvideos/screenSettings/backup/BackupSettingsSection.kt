@@ -33,6 +33,7 @@ import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrInvalidPasswordException
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
@@ -63,13 +64,31 @@ import kotlinx.coroutines.withContext
  * `LazyColumn`, то есть только видимые.
  */
 private const val BACKUP_CONSOLE_MAX_LINES = 2000
+private const val BACKUP_HEADER_CREATE = "Создание архива выбранных папок. DB, настройки и кеши не входят в ZIP."
+private const val BACKUP_HEADER_RESTORE = "Восстановление заменяет выбранные папки. Для R Download после restore автоматически проверяются .info."
+private const val BACKUP_OPERATION_IN_PROGRESS = "Идет операция"
+private const val RESTORE_SUBTITLE_PLACEHOLDER = "Сначала выберите архив"
+private const val MSG_WAIT_OPERATION = "Пожалуйста, дождитесь окончания операции"
+private const val MSG_SELECT_AT_LEAST_ONE_FOLDER = "Выберите хотя бы одну папку"
+private const val MSG_UNSUPPORTED_BACKUP_FORMAT = "Неподдерживаемый формат файла: не является бэкапом XLR или ZIP"
+private const val MSG_RESTORE_FIRST_SELECT_ARCHIVE = "Сначала выберите архив"
+private const val RESTORE_HELP_EMPTY_TEXT = "Выберите файл бэкапа (.xlr или .zip), после этого появятся папки X, L и R из архива."
+private const val INVALID_PASSWORD_ERROR_TEXT = "Неверный пароль для расшифровки бэкапа"
+
+private val RESTORE_MIME_TYPES = arrayOf(
+    "application/octet-stream",
+    "application/zip",
+    "application/x-zip-compressed",
+    "*/*"
+)
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun BackupSettingsSection(
     context: Context,
     data: SettingsDataHolders,
-    onDataChanged: () -> Unit
+    onDataChanged: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val downloadRed = data.downloadRed
     val savedL = data.savedL
@@ -102,7 +121,7 @@ internal fun BackupSettingsSection(
     val onBack = remember(isWorking, showCreatePasswordDialog, showRestorePasswordDialog, screen) {
         {
             when {
-                isWorking -> SnackBar.info("Пожалуйста, дождитесь окончания операции")
+                isWorking -> SnackBar.info(MSG_WAIT_OPERATION)
                 showCreatePasswordDialog -> showCreatePasswordDialog = false
                 showRestorePasswordDialog -> {
                     showRestorePasswordDialog = false
@@ -159,7 +178,7 @@ internal fun BackupSettingsSection(
         if (selectedBackupPaths.isEmpty()) {
             password?.fill('\u0000')
             createPassword = null
-            SnackBar.error("Выберите хотя бы одну папку")
+            SnackBar.error(MSG_SELECT_AT_LEAST_ONE_FOLDER)
             return@rememberLauncherForActivityResult
         }
         scope.launch(Dispatchers.Main) {
@@ -234,7 +253,7 @@ internal fun BackupSettingsSection(
                         restorePassword = null
                         restoreItems = emptyList()
                         selectedRestorePaths = emptySet()
-                        SnackBar.error("Неподдерживаемый формат файла: не является бэкапом XLR или ZIP")
+                        SnackBar.error(MSG_UNSUPPORTED_BACKUP_FORMAT)
                     }
                 }
             } finally {
@@ -280,27 +299,32 @@ internal fun BackupSettingsSection(
 
     val backupHeaderValue = remember(screen) {
         if (screen == BackupFlowScreen.CREATE) {
-            "Создание архива выбранных папок. DB, настройки и кеши не входят в ZIP."
+            BACKUP_HEADER_CREATE
         } else {
-            "Восстановление заменяет выбранные папки. Для R Download после restore автоматически проверяются .info."
+            BACKUP_HEADER_RESTORE
         }
     }
     val backupSummaryText = remember(backupReport) { selectionSummaryText(backupReport) }
     val backupValueText = remember(isWorking, backupSummaryText) {
-        if (isWorking) "Идет операция" else backupSummaryText
+        if (isWorking) BACKUP_OPERATION_IN_PROGRESS else backupSummaryText
     }
     val restoreSubtitle = remember(restoreUri) {
-        restoreUri?.lastPathSegment ?: "Сначала выберите архив"
+        restoreUri?.lastPathSegment ?: RESTORE_SUBTITLE_PLACEHOLDER
     }
     val restoreSummaryText = remember(restoreReport) { selectionSummaryText(restoreReport) }
     val restoreValueText = remember(isWorking, restoreSummaryText) {
-        if (isWorking) "Идет операция" else restoreSummaryText
+        if (isWorking) BACKUP_OPERATION_IN_PROGRESS else restoreSummaryText
     }
     val restoreDialogBody = remember(restoreSummaryText) {
         "Выбранные папки будут заменены данными из архива: $restoreSummaryText. DB, настройки и кеши не трогаются."
     }
 
-    SettingsGroup {
+    val actionButtonColors = ButtonDefaults.buttonColors(
+        containerColor = SettingsAccentColor,
+        contentColor = SettingsScreenBackground
+    )
+
+    SettingsGroup(modifier = modifier) {
         SettingsValueRow(
             icon = R.drawable.hard_drive_2_24,
             text = "Backup X/L/R",
@@ -363,10 +387,7 @@ internal fun BackupSettingsSection(
                         Button(
                             enabled = !isWorking && selectedBackupPaths.isNotEmpty(),
                             onClick = onShowCreatePasswordDialog,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = SettingsAccentColor,
-                                contentColor = SettingsScreenBackground
-                            )
+                            colors = actionButtonColors
                         ) {
                             Text("Создать")
                         }
@@ -383,14 +404,9 @@ internal fun BackupSettingsSection(
                         Button(
                             enabled = !isWorking,
                             onClick = {
-                                restoreBackupLauncher.launch(
-                                    arrayOf("application/octet-stream", "application/zip", "application/x-zip-compressed", "*/*")
-                                )
+                                restoreBackupLauncher.launch(RESTORE_MIME_TYPES)
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = SettingsAccentColor,
-                                contentColor = SettingsScreenBackground
-                            )
+                            colors = actionButtonColors
                         ) {
                             Text("Выбрать")
                         }
@@ -402,7 +418,7 @@ internal fun BackupSettingsSection(
                     SettingsValueRow(
                         icon = R.drawable.hard_drive_2_24,
                         text = "Что восстановить",
-                        value = "Выберите файл бэкапа (.xlr или .zip), после этого появятся папки X, L и R из архива."
+                        value = RESTORE_HELP_EMPTY_TEXT
                     )
                 } else {
                     SettingsDivider()
@@ -433,11 +449,11 @@ internal fun BackupSettingsSection(
                         onClick = {
                             val uri = restoreUri
                             if (uri == null) {
-                                SnackBar.error("Сначала выберите архив")
+                                SnackBar.error(MSG_RESTORE_FIRST_SELECT_ARCHIVE)
                                 return@SettingsButtonRowWithDialog
                             }
                             if (selectedRestorePaths.isEmpty()) {
-                                SnackBar.error("Выберите хотя бы одну папку")
+                                SnackBar.error(MSG_SELECT_AT_LEAST_ONE_FOLDER)
                                 return@SettingsButtonRowWithDialog
                             }
                             if (!isWorking) {
@@ -562,7 +578,7 @@ internal fun BackupSettingsSection(
                             .onFailure { error ->
                                 password.fill('\u0000')
                                 val message = if (error is XlrInvalidPasswordException || error.cause is XlrInvalidPasswordException) {
-                                    "Неверный пароль для расшифровки бэкапа"
+                                    INVALID_PASSWORD_ERROR_TEXT
                                 } else {
                                     error.message ?: "Ошибка расшифровки бэкапа"
                                 }

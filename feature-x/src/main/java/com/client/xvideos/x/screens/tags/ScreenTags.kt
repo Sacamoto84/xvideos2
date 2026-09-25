@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +33,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.tags.atom.TagsPaginatedListScreen
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
@@ -44,6 +47,9 @@ private val SUBTITLE_SECONDARY_COLOR = Color(0xFF787878)
 private val HEADER_TOP_PADDING_EXTRA = 8.dp
 private val HEADER_HORIZONTAL_PADDING = 16.dp
 private val HEADER_BOTTOM_PADDING = 8.dp
+private val TAG_TITLE_FONT_SIZE = 20.sp
+private val TAG_SUBTITLE_FONT_SIZE = 12.sp
+private const val BEYOND_VIEWPORT_PAGE_COUNT = 1
 
 class ScreenTags(val tag: String) : Screen {
 
@@ -77,54 +83,82 @@ class ScreenTags(val tag: String) : Screen {
             { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) }
         }
 
-        val renderHeader: @Composable () -> Unit = remember(tag, vm.screen.title0, vm.screen.title1, topCutout) {
-            {
-                TagsHeader(
-                    tag = tag,
-                    title0 = vm.screen.title0,
-                    title1 = vm.screen.title1,
-                    topCutout = topCutout
-                )
-            }
-        }
+        TagsContent(
+            tag = tag,
+            title0 = vm.screen.title0,
+            title1 = vm.screen.title1,
+            lastPage = vm.screen.lastPage,
+            topCutout = topCutout,
+            pagerState = pagerState,
+            listStates = listStates,
+            loadPage = loadPage,
+            onOpenVideo = onOpenVideo,
+            onPageChange = onPageChange
+        )
+    }
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            contentWindowInsets = ZERO_INSETS,
-            containerColor = Theme.L.grey6,
-            bottomBar = {
-                // Без кнопки страны, в отличие от ленты раздела: адрес
-                // /tags/<тег>/N от страны не зависит.
-                BottomListDashBoardNavigationButtons2(
-                    value = pagerState.currentPage,
-                    onChange = onPageChange,
-                    max = vm.screen.lastPage,
-                )
-            },
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = padding.calculateBottomPadding())
-            ) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    beyondViewportPageCount = 1,
-                    key = { pageIndex -> pageIndex }
-                ) { pageIndex ->
-                    TagsPaginatedListScreen(
-                        pageIndex = pageIndex,
-                        loadPage = loadPage,
-                        onOpenVideo = onOpenVideo,
-                        listState = listStates.getOrPut(pageIndex) { LazyListState() },
-                        header = renderHeader
-                    )
-                }
-            }
+}
+
+@Composable
+fun TagsContent(
+    tag: String,
+    title0: String,
+    title1: String,
+    lastPage: Int,
+    topCutout: Dp,
+    pagerState: PagerState,
+    listStates: MutableMap<Int, LazyListState>,
+    loadPage: suspend (Int) -> List<ItemsX>,
+    onOpenVideo: (ItemsX) -> Unit,
+    onPageChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val renderHeader: @Composable () -> Unit = remember(tag, title0, title1, topCutout) {
+        {
+            TagsHeader(
+                tag = tag,
+                title0 = title0,
+                title1 = title1,
+                topCutout = topCutout
+            )
         }
     }
 
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        contentWindowInsets = ZERO_INSETS,
+        containerColor = Theme.L.grey6,
+        bottomBar = {
+            // Без кнопки страны, в отличие от ленты раздела: адрес
+            // /tags/<тег>/N от страны не зависит.
+            BottomListDashBoardNavigationButtons2(
+                value = pagerState.currentPage,
+                onChange = onPageChange,
+                max = lastPage,
+            )
+        },
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = padding.calculateBottomPadding())
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = BEYOND_VIEWPORT_PAGE_COUNT,
+                key = { pageIndex -> pageIndex }
+            ) { pageIndex ->
+                TagsPaginatedListScreen(
+                    pageIndex = pageIndex,
+                    loadPage = loadPage,
+                    onOpenVideo = onOpenVideo,
+                    listState = listStates.getOrPut(pageIndex) { LazyListState() },
+                    header = renderHeader
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -151,7 +185,7 @@ private fun TagsHeader(
         Text(
             text = tag,
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = TAG_TITLE_FONT_SIZE,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -162,18 +196,31 @@ private fun TagsHeader(
                     Text(
                         text = "$title0 ",
                         color = SUBTITLE_PRIMARY_COLOR,
-                        fontSize = 12.sp,
+                        fontSize = TAG_SUBTITLE_FONT_SIZE,
                     )
                 }
                 if (hasTitle1) {
                     Text(
                         text = title1,
                         color = SUBTITLE_SECONDARY_COLOR,
-                        fontSize = 12.sp,
+                        fontSize = TAG_SUBTITLE_FONT_SIZE,
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
+@Composable
+private fun TagsHeaderPreview() {
+    XvideosTheme(darkTheme = true) {
+        TagsHeader(
+            tag = "vr",
+            title0 = "Virtual Reality Videos",
+            title1 = "12,450 results",
+            topCutout = 24.dp
+        )
     }
 }
 

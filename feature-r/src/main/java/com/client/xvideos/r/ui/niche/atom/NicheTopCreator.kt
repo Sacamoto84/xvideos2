@@ -18,13 +18,19 @@ import com.client.xvideos.ui.theme.XvideosTheme
 
 private val TOP_CREATOR_SHAPE = RoundedCornerShape(8.dp)
 private val TOP_CREATOR_SIZE = 96.dp
+private val HORIZONTAL_PADDING = 2.dp
 private const val INNER_SHADOW_RADIUS = 3f
+private const val INNER_SHADOW_SPREAD = 0f
 
 @Composable
-fun NicheTopCreator(creator: TopCreator, onClick: () -> Unit) {
+fun NicheTopCreator(
+    creator: TopCreator,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
-        modifier = Modifier
-            .padding(horizontal = 2.dp)
+        modifier = modifier
+            .padding(horizontal = HORIZONTAL_PADDING)
             .size(TOP_CREATOR_SIZE)
             .clip(TOP_CREATOR_SHAPE)
             .clickable(onClick = onClick)
@@ -41,7 +47,7 @@ fun NicheTopCreator(creator: TopCreator, onClick: () -> Unit) {
                     shape = TOP_CREATOR_SHAPE,
                     block = {
                         radius = INNER_SHADOW_RADIUS
-                        spread = 0f
+                        spread = INNER_SHADOW_SPREAD
                     }
                 )
         )

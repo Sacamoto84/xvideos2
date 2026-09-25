@@ -42,13 +42,26 @@ private val CHALLENGE_WARNING_COLOR = Color(0xFFFFC857)
 private val PANEL_BORDER_WIDTH = 1.dp
 private val REFRESH_ICON_SPACER = 6.dp
 private val HEADER_ICON_SPACER = 8.dp
+private val PANEL_TOP_PADDING = 8.dp
+private val PANEL_BOTTOM_PADDING = 4.dp
+private val PANEL_INNER_PADDING = 10.dp
+private val SUBTITLE_TOP_PADDING = 6.dp
+private val BUTTON_TOP_PADDING = 8.dp
+
 private const val TEXT_RETRYING = "Повторяю..."
 private const val TEXT_RETRY = "Повторить страницы"
+private const val TEXT_SERVER_CHALLENGE_RETRY_PREFIX = "Сервер временно отдаёт защитную страницу, повтор через "
+private const val TEXT_SERVER_CHALLENGE_RETRY_SUFFIX = " сек."
+private const val TEXT_SERVER_CHALLENGE = "Сервер временно отдаёт защитную страницу."
+private const val TEXT_SOME_PAGES_FAILED = "Часть страниц альбома не загрузилась."
+private const val TEXT_CACHED_PAGES_HINT_PREFIX = "Если старая страница была в кэше, она уже показана. Недогруженные страницы: "
+private const val TEXT_FAILED_PAGES_EMPTY = "нет"
 
 @Composable
 internal fun LAlbumNetworkIssuePanel(
     albumPicsDetails: AlbumPicsDetails?,
-    onRetryFailedPages: () -> Unit
+    onRetryFailedPages: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     if (albumPicsDetails == null) return
     val protectionState by albumPicsDetails.protectionUiState.collectAsStateWithLifecycle()
@@ -56,7 +69,8 @@ internal fun LAlbumNetworkIssuePanel(
         failedPages = albumPicsDetails.failedPages.toList(),
         protectionState = protectionState,
         isRetryingFailedPages = albumPicsDetails.isRetryingFailedPages,
-        onRetryFailedPages = onRetryFailedPages
+        onRetryFailedPages = onRetryFailedPages,
+        modifier = modifier
     )
 }
 
@@ -65,7 +79,8 @@ private fun LAlbumNetworkIssuePanel(
     failedPages: List<LAlbumPageLoadIssue>,
     protectionState: LRepositoryProtectionUiState,
     isRetryingFailedPages: Boolean,
-    onRetryFailedPages: () -> Unit
+    onRetryFailedPages: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val shouldShow = failedPages.isNotEmpty() || protectionState.active
     if (!shouldShow) return
@@ -86,21 +101,21 @@ private fun LAlbumNetworkIssuePanel(
         protectionState.active || failedPages.any { it.htmlChallenge }
     }
     val failedPagesText = remember(failedPages) {
-        failedPages.joinToString(", ") { it.page.toString() }.ifBlank { "нет" }
+        failedPages.joinToString(", ") { it.page.toString() }.ifBlank { TEXT_FAILED_PAGES_EMPTY }
     }
     val warningColor = if (htmlChallenge) CHALLENGE_WARNING_COLOR else Theme.L.grey2
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp)
+            .padding(top = PANEL_TOP_PADDING, bottom = PANEL_BOTTOM_PADDING)
             .border(
                 width = PANEL_BORDER_WIDTH,
                 color = warningColor,
                 shape = PANEL_CORNER_SHAPE
             )
             .background(Theme.L.grey5, PANEL_CORNER_SHAPE)
-            .padding(10.dp)
+            .padding(PANEL_INNER_PADDING)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -112,12 +127,12 @@ private fun LAlbumNetworkIssuePanel(
             Text(
                 text = if (htmlChallenge) {
                     if (retryAfterSeconds > 0) {
-                        "Сервер временно отдаёт защитную страницу, повтор через $retryAfterSeconds сек."
+                        "$TEXT_SERVER_CHALLENGE_RETRY_PREFIX$retryAfterSeconds$TEXT_SERVER_CHALLENGE_RETRY_SUFFIX"
                     } else {
-                        "Сервер временно отдаёт защитную страницу."
+                        TEXT_SERVER_CHALLENGE
                     }
                 } else {
-                    "Часть страниц альбома не загрузилась."
+                    TEXT_SOME_PAGES_FAILED
                 },
                 color = Theme.L.textColor,
                 style = Theme.L.Type.rowTitle,
@@ -126,10 +141,10 @@ private fun LAlbumNetworkIssuePanel(
         }
 
         Text(
-            text = "Если старая страница была в кэше, она уже показана. Недогруженные страницы: $failedPagesText",
+            text = "$TEXT_CACHED_PAGES_HINT_PREFIX$failedPagesText",
             color = Theme.L.grey2,
             style = Theme.L.Type.rowSubtitle,
-            modifier = Modifier.padding(top = 6.dp)
+            modifier = Modifier.padding(top = SUBTITLE_TOP_PADDING)
         )
 
         Button(
@@ -137,7 +152,7 @@ private fun LAlbumNetworkIssuePanel(
             enabled = failedPages.isNotEmpty() && !isRetryingFailedPages,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
             shape = PANEL_CORNER_SHAPE,
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(top = BUTTON_TOP_PADDING)
         ) {
             Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Black)
             Spacer(Modifier.width(REFRESH_ICON_SPACER))
@@ -152,11 +167,6 @@ private fun LAlbumNetworkIssuePanel(
 
 // ----------------------------------------------------------------------------
 // PREVIEW
-//
-// ScreenLAlbum.Content() завязан на ScreenModel (getScreenModel) и stateful
-// L_LazyRowPictureDetails(host=...), поэтому реальный экран в @Preview не
-// построить. Ниже — stateless-копия раскладки (Scaffold + нижний прогресс-бар
-// + плашка-шапка альбома) с фейковыми данными. Только для визуальной проверки.
 // ----------------------------------------------------------------------------
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626, widthDp = 360)

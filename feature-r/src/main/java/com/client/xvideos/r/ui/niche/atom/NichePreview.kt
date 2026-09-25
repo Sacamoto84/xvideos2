@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,11 +47,17 @@ private val INFO_VERTICAL_PADDING = 4.dp
 private val STAT_TEXT_PADDING = 4.dp
 
 @Composable
-fun NichePreview(niches: () -> Niche, onClick: () -> Unit) {
+fun NichePreview(
+    niches: () -> Niche,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val niche = niches()
+    val subscribersText = remember(niche.subscribers) { niche.subscribers.toPrettyCount() }
+    val gifsText = remember(niche.gifs) { niche.gifs.toPrettyCount() }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .height(NICHE_CARD_HEIGHT)
             .padding(horizontal = CARD_HORIZONTAL_PADDING)
             .shadow(NICHE_SHADOW_ELEVATION, NICHE_CARD_SHAPE)
@@ -89,7 +96,7 @@ fun NichePreview(niches: () -> Niche, onClick: () -> Unit) {
                         modifier = Modifier.size(STAT_ICON_SIZE)
                     )
                     Text(
-                        text = niche.subscribers.toPrettyCount(),
+                        text = subscribersText,
                         modifier = Modifier
                             .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
                             .wrapContentWidth(Alignment.CenterHorizontally),
@@ -106,7 +113,7 @@ fun NichePreview(niches: () -> Niche, onClick: () -> Unit) {
                         modifier = Modifier.size(STAT_ICON_SIZE)
                     )
                     Text(
-                        text = niche.gifs.toPrettyCount(),
+                        text = gifsText,
                         modifier = Modifier
                             .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
                             .wrapContentWidth(Alignment.CenterHorizontally),
@@ -119,8 +126,6 @@ fun NichePreview(niches: () -> Niche, onClick: () -> Unit) {
         }
     }
 }
-
-
 
 @Preview
 @Composable
