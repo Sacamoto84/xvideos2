@@ -103,10 +103,12 @@ fun ScreenLRootBottomNavigator(
             verticalAlignment = ROW_VERTICAL_ALIGNMENT,
             horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT
         ) {
+            val itemBoxBase = Modifier
+                .height(NAV_ITEM_HEIGHT)
+                .weight(1f)
+
             Box(
-                modifier = Modifier
-                    .height(NAV_ITEM_HEIGHT)
-                    .weight(1f)
+                modifier = itemBoxBase
                     .background(if (selectIndex == SelectIndex.Default) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
                         onClick = onDefaultClick,
@@ -118,9 +120,7 @@ fun ScreenLRootBottomNavigator(
             }
             VerticalDivider()
             Box(
-                modifier = Modifier
-                    .height(NAV_ITEM_HEIGHT)
-                    .weight(1f)
+                modifier = itemBoxBase
                     .background(if (selectIndex == SelectIndex.Manga) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
                         onClick = NO_OP_CLICK,
@@ -135,9 +135,7 @@ fun ScreenLRootBottomNavigator(
             }
             VerticalDivider()
             Box(
-                modifier = Modifier
-                    .height(NAV_ITEM_HEIGHT)
-                    .weight(1f)
+                modifier = itemBoxBase
                     .background(if (selectIndex == SelectIndex.Hentai) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
                         onClick = NO_OP_CLICK,
@@ -152,9 +150,7 @@ fun ScreenLRootBottomNavigator(
             }
             VerticalDivider()
             Box(
-                modifier = Modifier
-                    .height(NAV_ITEM_HEIGHT)
-                    .weight(1f)
+                modifier = itemBoxBase
                     .background(if (selectIndex == SelectIndex.Porn) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
                         onClick = NO_OP_CLICK,

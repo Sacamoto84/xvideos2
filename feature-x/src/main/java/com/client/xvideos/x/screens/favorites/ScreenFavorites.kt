@@ -121,7 +121,6 @@ private val ACTION_ICON_SHADOW_MODIFIER = Modifier
     .offset(ACTION_ICON_SHADOW_OFFSET, ACTION_ICON_SHADOW_OFFSET)
 private val MENU_WIDTH_MODIFIER = Modifier.width(IntrinsicSize.Min)
 private val DOWNLOAD_ICON_PADDING_MODIFIER = Modifier.padding(DOWNLOAD_ICON_PADDING)
-private val DURATION_END_PADDING_MODIFIER = Modifier.padding(end = DURATION_END_PADDING)
 private val DURATION_SHADOW_MODIFIER = Modifier
     .fillMaxWidth()
     .offset(DURATION_SHADOW_OFFSET, durationOffsetY + DURATION_SHADOW_OFFSET)
@@ -347,7 +346,7 @@ private fun FavoriteRow(
             )
         }
 
-        Row(Modifier.align(ALIGN_BOTTOM_END).then(DURATION_END_PADDING_MODIFIER)) { DurationOverlay(item.duration) }
+        Row(Modifier.align(ALIGN_BOTTOM_END).padding(end = DURATION_END_PADDING)) { DurationOverlay(item.duration) }
     }
 }
 
@@ -422,7 +421,7 @@ private fun FavoriteActionsExpandMenu(
 private fun DurationOverlay(duration: String) {
     val text = remember(duration) { duration.trim().removeSuffix(".") }
     if (text.isEmpty()) return
-    Box(modifier = Modifier) {
+    Box {
         Text(
             text = text,
             modifier = DURATION_SHADOW_MODIFIER,

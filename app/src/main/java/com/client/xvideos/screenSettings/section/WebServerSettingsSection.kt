@@ -394,8 +394,10 @@ private fun WebServerActionButtons(
         contentColor = COPY_BUTTON_TEXT_COLOR
     )
 
+    val rowModifier = if (modifier == Modifier) ACTION_BUTTONS_BASE_MODIFIER else modifier.then(ACTION_BUTTONS_BASE_MODIFIER)
+
     Row(
-        modifier = modifier.then(ACTION_BUTTONS_BASE_MODIFIER),
+        modifier = rowModifier,
         horizontalArrangement = ACTION_BUTTONS_HORIZONTAL_ARRANGEMENT
     ) {
         Button(

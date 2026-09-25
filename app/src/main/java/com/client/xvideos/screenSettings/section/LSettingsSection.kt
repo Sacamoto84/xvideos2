@@ -46,8 +46,8 @@ internal fun LSettingsSection(
 
     val isLoginBlank = lLogin.isBlank()
     val loginValueText = if (isLoginBlank) TEXT_NO else TEXT_LOGOUT
-    val logoutDialogBody = remember(isLoginBlank, lLogin) {
-        if (isLoginBlank) {
+    val logoutDialogBody = remember(lLogin) {
+        if (lLogin.isBlank()) {
             TEXT_NOT_AUTHORIZED
         } else {
             "$LOGOUT_CONFIRM_TEMPLATE_PREFIX$lLogin"

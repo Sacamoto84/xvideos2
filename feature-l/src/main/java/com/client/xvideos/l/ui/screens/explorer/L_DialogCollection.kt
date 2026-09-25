@@ -213,9 +213,9 @@ private fun LCollectionRowItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val rowModifier = if (modifier == Modifier) ITEM_ROW_BASE_MODIFIER else modifier.then(ITEM_ROW_BASE_MODIFIER)
     Row(
-        modifier = modifier
-            .then(ITEM_ROW_BASE_MODIFIER)
+        modifier = rowModifier
             .clickable(onClick = onClick)
             .then(ITEM_ROW_CONTENT_PADDING_MODIFIER),
         verticalAlignment = Alignment.CenterVertically

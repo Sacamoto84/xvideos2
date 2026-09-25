@@ -104,6 +104,10 @@ private val CREATOR_METRIC_BG_COLOR = Color(0xFF242424)
 private val CREATOR_USERNAME_COLOR = Color(0xFF9E9DA9)
 private val CREATOR_DELETE_ICON_COLOR = Color(0xFFAAAAAA)
 private val SCROLLBAR_WIDTH = 2.dp
+private val CREATOR_CARD_BASE_MODIFIER = Modifier
+    .padding(vertical = 2.dp, horizontal = 6.dp)
+    .clip(CREATOR_CARD_SHAPE)
+    .fillMaxWidth()
 
 object R_Screen_CreatorsTab : Screen {
 
@@ -243,12 +247,13 @@ private fun CreatorListItem(
     val handleItemClick = remember(item.username, onClick) { { onClick(item.username) } }
     val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
 
+    val styledCardModifier = remember(Theme.tabLevel3) {
+        CREATOR_CARD_BASE_MODIFIER.background(Theme.tabLevel3)
+    }
+    val cardModifier = if (modifier == Modifier) styledCardModifier else modifier.then(styledCardModifier)
+
     Row(
-        modifier = modifier
-            .padding(vertical = 2.dp, horizontal = 6.dp)
-            .clip(CREATOR_CARD_SHAPE)
-            .fillMaxWidth()
-            .background(Theme.tabLevel3)
+        modifier = cardModifier
             .clickable(onClick = handleItemClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

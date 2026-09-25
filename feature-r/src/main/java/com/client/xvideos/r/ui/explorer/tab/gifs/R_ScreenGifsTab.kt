@@ -73,6 +73,12 @@ import javax.inject.Inject
 
 private val rColumnOptions = listOf(2, 3, 4)
 
+private val DEFAULT_ORDERS = persistentListOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP, Order.TRENDING, Order.LATEST)
+private val SEARCH_ORDERS = persistentListOf(
+    Order.RELEVANT, Order.TOP, Order.TOP_WEEK,
+    Order.TOP_MONTH, Order.TRENDING, Order.LATEST
+)
+
 fun normalizeRColumnCount(value: Int): Int {
     return value.takeIf { it in rColumnOptions } ?: rColumnOptions.first()
 }
@@ -187,22 +193,7 @@ private fun StatelessGifsTabBottomBar(
                 enter = expandHorizontally(animationSpec = tween(250)) + fadeIn(tween(250)),
                 exit = shrinkHorizontally(animationSpec = tween(250)) + fadeOut(tween(250)),
             ) {
-                val orders = remember(searchQuery.isEmpty()) {
-                    if (searchQuery.isEmpty()) {
-                        // Order.TOP вместо прежнего TOP_ALLTIME: «топ за всё
-                        // время» у RedGifs так и называется, отдельного
-                        // значения нет. Теперь набор ленты отличается от набора
-                        // поиска ровно на Relevant.
-                        persistentListOf(Order.TOP_WEEK, Order.TOP_MONTH, Order.TOP, Order.TRENDING, Order.LATEST)
-                    } else {
-                        // У поиска свой набор: Relevant есть только здесь, а
-                        // Week и Month сервер понимает как top7 и top28.
-                        persistentListOf(
-                            Order.RELEVANT, Order.TOP, Order.TOP_WEEK,
-                            Order.TOP_MONTH, Order.TRENDING, Order.LATEST
-                        )
-                    }
-                }
+                val orders = if (searchQuery.isEmpty()) DEFAULT_ORDERS else SEARCH_ORDERS
                 SortByOrder(
                     containerColor = Theme.tabLevel0,
                     list = orders,

@@ -117,9 +117,7 @@ fun X_DashboardExpandMenuContent(
             onSaveToGallery()
         }
     }
-    val favoriteIcon = remember(isFavorite) {
-        if (isFavorite) ICON_FAVORITE else ICON_FAVORITE_BORDER
-    }
+    val favoriteIcon = if (isFavorite) ICON_FAVORITE else ICON_FAVORITE_BORDER
 
     val favoriteLeadingIcon: @Composable () -> Unit = remember(favoriteIcon) {
         {
