@@ -44,8 +44,8 @@ internal fun LSettingsSection(
         ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: TEXT_UNKNOWN_SIZE
     }
 
-    val isLoginBlank = remember(lLogin) { lLogin.isBlank() }
-    val loginValueText = remember(isLoginBlank) { if (isLoginBlank) TEXT_NO else TEXT_LOGOUT }
+    val isLoginBlank = lLogin.isBlank()
+    val loginValueText = if (isLoginBlank) TEXT_NO else TEXT_LOGOUT
     val logoutDialogBody = remember(isLoginBlank, lLogin) {
         if (isLoginBlank) {
             TEXT_NOT_AUTHORIZED

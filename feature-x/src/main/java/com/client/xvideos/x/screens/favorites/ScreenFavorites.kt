@@ -284,6 +284,12 @@ private fun FavoritesHeader(
     }
 }
 
+private val FAVORITE_CARD_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(vertical = CARD_PADDING_VERTICAL, horizontal = CARD_PADDING_HORIZONTAL)
+    .aspectRatio(FAVORITE_CARD_ASPECT_RATIO)
+    .background(COLOR_DARK_GRAY)
+
 @Composable
 private fun FavoriteRow(
     item: ItemsX,
@@ -304,12 +310,10 @@ private fun FavoriteRow(
         localUrl?.let { url -> { onPlayLocal(url, item) } }
     }
 
+    val rowModifier = if (modifier == Modifier) FAVORITE_CARD_BASE_MODIFIER else modifier.then(FAVORITE_CARD_BASE_MODIFIER)
+
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = CARD_PADDING_VERTICAL, horizontal = CARD_PADDING_HORIZONTAL)
-            .aspectRatio(FAVORITE_CARD_ASPECT_RATIO)
-            .background(COLOR_DARK_GRAY)
+        modifier = rowModifier
     ) {
         when {
             // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.

@@ -164,6 +164,11 @@ private const val MSG_SERVER_STARTING = "Запуск веб-сервера..."
 private const val MSG_SERVER_STOPPED = "Веб-сервер остановлен"
 private const val MSG_COPIED_TO_CLIPBOARD = "Ссылка скопирована в буфер"
 
+private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
+private const val ICON_MEMORY = R.drawable.memory_24
+
+private val URL_BOX_FULL_MODIFIER = URL_BOX_BASE_MODIFIER.then(URL_BOX_PADDING_MODIFIER)
+
 @Suppress("DEPRECATION")
 @Composable
 internal fun WebServerSettingsSection(
@@ -219,12 +224,12 @@ internal fun WebServerSettingsSection(
         if (isRunning) "$SERVER_RUNNING_PREFIX$serverUrl" else TEXT_SERVER_STOPPED
     }
 
-    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_WEBSERVER)
 
         SettingsGroup {
             SettingsSwitchRow(
-                icon = R.drawable.hard_drive_2_24,
+                icon = ICON_HARD_DRIVE,
                 text = TEXT_STREAM_TO_PC,
                 subtitle = serverSubtitle,
                 value = isRunning,
@@ -234,7 +239,7 @@ internal fun WebServerSettingsSection(
             SettingsDivider()
 
             SettingsSwitchRow(
-                icon = R.drawable.memory_24,
+                icon = ICON_MEMORY,
                 text = TEXT_KEEP_AWAKE,
                 subtitle = TEXT_KEEP_AWAKE_SUBTITLE,
                 value = keepAwake,
@@ -282,8 +287,10 @@ private fun WebServerConnectionCard(
         }
     }
 
+    val networkLabel = remember(networkName) { "$NETWORK_NAME_PREFIX$networkName" }
+
     Column(
-        modifier = modifier.then(CONNECTION_CARD_BASE_MODIFIER),
+        modifier = if (modifier == Modifier) CONNECTION_CARD_BASE_MODIFIER else modifier.then(CONNECTION_CARD_BASE_MODIFIER),
         horizontalAlignment = ALIGN_CENTER_HORIZONTALLY
     ) {
         // Статус сети
@@ -297,7 +304,7 @@ private fun WebServerConnectionCard(
             )
             Spacer(NETWORK_SPACER_MODIFIER)
             Text(
-                text = "$NETWORK_NAME_PREFIX$networkName",
+                text = networkLabel,
                 color = SettingsRowTextSecondary,
                 fontSize = NETWORK_TEXT_FONT_SIZE
             )
@@ -307,9 +314,8 @@ private fun WebServerConnectionCard(
 
         // Кликабельный URL
         Box(
-            modifier = URL_BOX_BASE_MODIFIER
+            modifier = URL_BOX_FULL_MODIFIER
                 .clickable(onClick = onCopyUrl)
-                .then(URL_BOX_PADDING_MODIFIER)
         ) {
             Text(
                 text = serverUrl,

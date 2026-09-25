@@ -146,6 +146,9 @@ private fun ColumnScope.CollectionListContent(
     }
 }
 
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+
 @Composable
 private fun CollectionRowItem(
     item: CollectionEntity<GifsInfo>,
@@ -155,12 +158,21 @@ private fun CollectionRowItem(
     val onClick = remember(item.collection, onSelectCollection) {
         { onSelectCollection(item.collection) }
     }
+    val itemTextStyle = remember(Theme.R.fontFamilyDMsanss) {
+        androidx.compose.ui.text.TextStyle(
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = Theme.R.fontFamilyDMsanss
+        )
+    }
+
+    val baseModifier = if (modifier == Modifier) ITEM_ROW_BASE_MODIFIER else modifier.then(ITEM_ROW_BASE_MODIFIER)
     Row(
-        modifier = modifier
-            .then(ITEM_ROW_BASE_MODIFIER)
+        modifier = baseModifier
             .clickable(onClick = onClick)
             .then(ITEM_ROW_CONTENT_PADDING_MODIFIER),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
     ) {
         if (item.items.isNotEmpty()) {
             UrlImage(
@@ -170,7 +182,7 @@ private fun CollectionRowItem(
         } else {
             Box(
                 modifier = FOLDER_PLACEHOLDER_BASE_MODIFIER,
-                contentAlignment = Alignment.Center
+                contentAlignment = BOX_ALIGNMENT_CENTER
             ) {
                 Icon(
                     imageVector = Icons.Default.Folder,
@@ -183,10 +195,7 @@ private fun CollectionRowItem(
         Spacer(ITEM_SPACER_MODIFIER)
         Text(
             text = item.collection,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            fontFamily = Theme.R.fontFamilyDMsanss
+            style = itemTextStyle
         )
     }
 }

@@ -82,10 +82,21 @@ fun ScreenLRootBottomNavigator(
         }
     }
 
+    val navBarBase = remember(Theme.L.grey4) {
+        NAV_BAR_BASE_MODIFIER.background(Theme.L.grey4)
+    }
+    val boxModifier = if (modifier == Modifier) navBarBase else modifier.then(navBarBase)
+
+    val itemTextStyle = remember(Theme.L.textColor, Theme.L.fontFamilyKarla) {
+        androidx.compose.ui.text.TextStyle(
+            color = Theme.L.textColor,
+            fontSize = NAV_ITEM_FONT_SIZE,
+            fontFamily = Theme.L.fontFamilyKarla
+        )
+    }
+
     Box(
-        modifier = modifier
-            .then(NAV_BAR_BASE_MODIFIER)
-            .background(Theme.L.grey4),
+        modifier = boxModifier,
     ) {
         Row(
             modifier = ROW_BASE_MODIFIER,
@@ -119,9 +130,7 @@ fun ScreenLRootBottomNavigator(
             ) {
                 Text(
                     TITLE_MANGA,
-                    color = Theme.L.textColor,
-                    fontSize = NAV_ITEM_FONT_SIZE,
-                    fontFamily = Theme.L.fontFamilyKarla
+                    style = itemTextStyle
                 )
             }
             VerticalDivider()
@@ -138,9 +147,7 @@ fun ScreenLRootBottomNavigator(
             ) {
                 Text(
                     TITLE_HENTAI,
-                    color = Theme.L.textColor,
-                    fontSize = NAV_ITEM_FONT_SIZE,
-                    fontFamily = Theme.L.fontFamilyKarla
+                    style = itemTextStyle
                 )
             }
             VerticalDivider()
@@ -157,9 +164,7 @@ fun ScreenLRootBottomNavigator(
             ) {
                 Text(
                     TITLE_PORN,
-                    color = Theme.L.textColor,
-                    fontSize = NAV_ITEM_FONT_SIZE,
-                    fontFamily = Theme.L.fontFamilyKarla
+                    style = itemTextStyle
                 )
             }
         }

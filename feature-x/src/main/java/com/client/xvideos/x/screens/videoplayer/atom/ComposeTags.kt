@@ -161,7 +161,8 @@ fun computeVisibleTags(
     collapsedLimit: Int = DEFAULT_COLLAPSED_TAGS_LIMIT,
     expandThreshold: Int = DEFAULT_TAGS_EXPAND_THRESHOLD,
 ): VisibleTagsState {
-    val allItems = ArrayList<TagItem>()
+    val estimatedCapacity = tags.mainUploader.size + tags.pornstars.size + tags.tags.size
+    val allItems = ArrayList<TagItem>(estimatedCapacity)
     for (channel in tags.mainUploader) {
         if (channel.name.isNotBlank()) {
             allItems.add(TagItem.Channel(channel))
@@ -241,10 +242,10 @@ fun ComposeTags(
         Modifier
     }
 
+    val baseModifier = if (modifier == Modifier) containerModifier else modifier.then(containerModifier)
+
     Box(
-        modifier = modifier
-            .animateContentSize()
-            .then(containerModifier)
+        modifier = baseModifier.animateContentSize()
     ) {
         FlowRow(
             verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT,
@@ -315,10 +316,9 @@ private fun TagChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val baseModifier = if (modifier == Modifier) TAG_CHIP_FULL_MODIFIER else modifier.then(TAG_CHIP_FULL_MODIFIER)
     Box(
-        modifier = modifier
-            .then(TAG_CHIP_FULL_MODIFIER)
-            .clickable(onClick = onClick),
+        modifier = baseModifier.clickable(onClick = onClick),
         contentAlignment = ALIGNMENT_CENTER,
     ) {
         Text(
@@ -336,10 +336,9 @@ private fun TagToggleChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val baseModifier = if (modifier == Modifier) TAG_TOGGLE_FULL_MODIFIER else modifier.then(TAG_TOGGLE_FULL_MODIFIER)
     Row(
-        modifier = modifier
-            .then(TAG_TOGGLE_FULL_MODIFIER)
-            .clickable(onClick = onClick),
+        modifier = baseModifier.clickable(onClick = onClick),
         verticalAlignment = ALIGNMENT_CENTER_VERTICALLY,
     ) {
         Text(

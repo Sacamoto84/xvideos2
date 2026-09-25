@@ -59,6 +59,10 @@ fun AlbumInfoGreeting(
         Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = GENRE_FONT_SIZE)
     }
 
+    val chipBorderModifier = remember(Theme.L.secondaryColor) {
+        Modifier.border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
+    }
+
     FlowRow(
         modifier = modifier,
         verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT
@@ -76,6 +80,7 @@ fun AlbumInfoGreeting(
                 GenreChip(
                     item = item,
                     style = genreTextStyle,
+                    borderModifier = chipBorderModifier,
                     onClick = handleClick
                 )
             }
@@ -87,14 +92,15 @@ fun AlbumInfoGreeting(
 private fun GenreChip(
     item: Genre,
     style: TextStyle,
+    borderModifier: Modifier,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val baseModifier = if (modifier == Modifier) GENRE_CHIP_BASE_MODIFIER else modifier.then(GENRE_CHIP_BASE_MODIFIER)
     Text(
         text = item.title,
-        modifier = modifier
-            .then(GENRE_CHIP_BASE_MODIFIER)
-            .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
+        modifier = baseModifier
+            .then(borderModifier)
             .clickable(onClick = onClick)
             .then(GENRE_CHIP_CONTENT_PADDING_MODIFIER),
         color = Theme.L.primaryColor,

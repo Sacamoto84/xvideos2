@@ -66,10 +66,10 @@ fun ButtonUp(
         Modifier.height(BUTTON_UP_HEIGHT).width(width).then(BUTTON_UP_BASE_MODIFIER)
     }
 
+    val resolvedModifier = if (modifier == Modifier) baseModifier else modifier.then(baseModifier)
+
     Box(
-        modifier = modifier
-            .then(baseModifier)
-            .clickable(onClick = onClick),
+        modifier = resolvedModifier.clickable(onClick = onClick),
         contentAlignment = BUTTON_UP_ALIGNMENT
     ) {
         Icon(
@@ -92,10 +92,10 @@ fun ButtonUpCircle(
         Modifier.size(size).then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
     }
 
+    val resolvedModifier = if (modifier == Modifier) baseModifier else modifier.then(baseModifier)
+
     Box(
-        modifier = modifier
-            .then(baseModifier)
-            .clickable(onClick = onClick),
+        modifier = resolvedModifier.clickable(onClick = onClick),
         contentAlignment = BUTTON_UP_ALIGNMENT
     ) {
         Icon(
