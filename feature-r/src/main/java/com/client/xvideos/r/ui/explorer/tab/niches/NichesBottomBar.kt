@@ -22,6 +22,9 @@ import com.client.xvideos.r.ui.ui.atom.ButtonUp
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val BAR_VERTICAL_PADDING = 2.dp
+private val SEARCH_HORIZONTAL_PADDING = 4.dp
+
 private val NICHE_SORT_ORDERS = listOf(
     Order.NICHES_SUBSCRIBERS_D,
     Order.NICHES_SUBSCRIBERS_A,
@@ -37,6 +40,7 @@ fun NichesBottomBar(
     sortType: Order,
     onSortTypeChange: (Order) -> Unit,
     onUpClick: () -> Unit,
+    modifier: Modifier = Modifier,
     searchWidget: @Composable (Modifier) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -47,12 +51,12 @@ fun NichesBottomBar(
         }
     }
 
-    Column(Modifier.background(Theme.tabLevel1)) {
+    Column(modifier = modifier.background(Theme.tabLevel1)) {
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 2.dp),
+                .padding(vertical = BAR_VERTICAL_PADDING),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
@@ -65,7 +69,7 @@ fun NichesBottomBar(
                 )
             }
 
-            searchWidget(Modifier.padding(horizontal = 4.dp).weight(1f))
+            searchWidget(Modifier.padding(horizontal = SEARCH_HORIZONTAL_PADDING).weight(1f))
 
             AnimatedVisibility(visible = !isSearchFocused) {
                 ButtonUp(onClick = handleUpClick)

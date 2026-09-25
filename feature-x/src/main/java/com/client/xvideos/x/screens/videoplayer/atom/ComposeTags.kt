@@ -73,6 +73,7 @@ private const val ROTATION_EXPANDED = 180f
 private const val CD_EXPAND_TAGS = "Развернуть теги"
 private const val CD_COLLAPSE_TAGS = "Свернуть теги"
 private const val TEXT_COLLAPSE = "Свернуть"
+private const val PREFIX_PLUS = "+"
 
 sealed interface TagItem {
     val name: String
@@ -201,7 +202,7 @@ fun ComposeTags(
             horizontalArrangement = Arrangement.Start,
         ) {
             tagsState.visibleItems.forEach { item ->
-                key(item.name) {
+                key("${item::class.simpleName}_${item.name}") {
                     when (item) {
                         is TagItem.Channel -> {
                             val handleChannelClick = remember(item.model.name, onClick) {
@@ -241,7 +242,7 @@ fun ComposeTags(
             if (tagsState.canToggle) {
                 if (!tagsState.isExpanded) {
                     TagToggleChip(
-                        text = "+${tagsState.hiddenCount}",
+                        text = "$PREFIX_PLUS${tagsState.hiddenCount}",
                         isExpanded = false,
                         contentDescription = CD_EXPAND_TAGS,
                         onClick = onExpandTags,
@@ -263,9 +264,10 @@ fun ComposeTags(
 private fun TagChip(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
             .height(TAG_CHIP_HEIGHT)
             .clip(TAG_CHIP_SHAPE)
@@ -291,9 +293,10 @@ private fun TagToggleChip(
     isExpanded: Boolean,
     contentDescription: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
             .height(TAG_CHIP_HEIGHT)
             .clip(TAG_CHIP_SHAPE)

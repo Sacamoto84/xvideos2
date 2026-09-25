@@ -40,6 +40,16 @@ private val COLLECTION_ITEM_SHAPE = RoundedCornerShape(12.dp)
 private val COLLECTION_PREVIEW_SIZE = 56.dp
 private val FOLDER_ICON_SIZE = 28.dp
 private val FOLDER_PLACEHOLDER_BG = Color(0xFF3D3949)
+private val EMPTY_COLLECTIONS_VERTICAL_PADDING = 32.dp
+private val COLLECTION_LIST_MIN_HEIGHT = 120.dp
+private val COLLECTION_LIST_MAX_HEIGHT = 420.dp
+private val ITEM_OUTER_PADDING = 4.dp
+private val ITEM_INNER_HORIZONTAL_PADDING = 8.dp
+private val ITEM_INNER_VERTICAL_PADDING = 6.dp
+private val ITEM_SPACER_WIDTH = 12.dp
+private val EMPTY_TEXT_FONT_SIZE = 16.sp
+private val ITEM_TEXT_FONT_SIZE = 16.sp
+
 private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекцию"
 private const val TEXT_NO_COLLECTIONS = "Нет коллекций"
 private const val TEXT_CREATE = "Создать"
@@ -101,8 +111,9 @@ fun L_DialogCollection(savedL: SavedL) {
         }
     }
     val title = remember(savedL.collection.collectionItemsPendingAdd.size) {
-        if (savedL.collection.collectionItemsPendingAdd.size > 1) {
-            "$TEXT_ADD_TO_COLLECTION (${savedL.collection.collectionItemsPendingAdd.size})"
+        val pendingCount = savedL.collection.collectionItemsPendingAdd.size
+        if (pendingCount > 1) {
+            "$TEXT_ADD_TO_COLLECTION ($pendingCount)"
         } else {
             TEXT_ADD_TO_COLLECTION
         }
@@ -116,36 +127,42 @@ fun L_DialogCollection(savedL: SavedL) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 32.dp),
+                        .padding(vertical = EMPTY_COLLECTIONS_VERTICAL_PADDING),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = TEXT_NO_COLLECTIONS,
                         color = Theme.DialogLavande.bodyColor,
                         fontFamily = Theme.L.fontFamilyDMsanss,
-                        fontSize = 16.sp
+                        fontSize = EMPTY_TEXT_FONT_SIZE
                     )
                 }
             } else {
+                val listState = rememberLazyListState()
                 LazyColumn(
-                    state = rememberLazyListState(),
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 420.dp)
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = COLLECTION_LIST_MIN_HEIGHT, max = COLLECTION_LIST_MAX_HEIGHT)
                 ) {
                     items(
                         count = savedL.collection.collectionList.size,
                         key = { index -> "${savedL.collection.collectionList[index].collection}#$index" },
                     ) { index ->
                         val collectionItem = savedL.collection.collectionList[index]
+                        val handleItemClick = remember(collectionItem.collection, savedL, haptic) {
+                            {
+                                savedL.collection.addPendingToCollection(collectionItem.collection)
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            }
+                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 4.dp, vertical = 4.dp)
+                                .padding(ITEM_OUTER_PADDING)
                                 .clip(COLLECTION_ITEM_SHAPE)
-                                .clickable(onClick = {
-                                    savedL.collection.addPendingToCollection(collectionItem.collection)
-                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                })
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                                .clickable(onClick = handleItemClick)
+                                .padding(horizontal = ITEM_INNER_HORIZONTAL_PADDING, vertical = ITEM_INNER_VERTICAL_PADDING),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (collectionItem.previewUrl != null) {
@@ -169,11 +186,11 @@ fun L_DialogCollection(savedL: SavedL) {
                                     )
                                 }
                             }
-                            Spacer(Modifier.width(12.dp))
+                            Spacer(Modifier.width(ITEM_SPACER_WIDTH))
                             Text(
                                 text = collectionItem.collection,
                                 color = Color.White,
-                                fontSize = 16.sp,
+                                fontSize = ITEM_TEXT_FONT_SIZE,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = Theme.L.fontFamilyDMsanss
                             )

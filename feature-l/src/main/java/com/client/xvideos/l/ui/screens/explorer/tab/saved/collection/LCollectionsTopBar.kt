@@ -30,17 +30,24 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.ui.theme.XvideosTheme
 
+private val BAR_START_PADDING = 8.dp
+private val COLLECTION_TITLE_FONT_SIZE = 18.sp
+private val SORT_ORDER_FONT_SIZE = 12.sp
+private const val CD_COLLECTION_SORT = "Сортировка коллекций"
+private const val COLLECTION_TITLE_PREFIX = ">"
+
 @Composable
 internal fun LCollectionsTopBar(
     selectedCollection: String?,
     sortOrder: LCollectionSortOrder,
     onSortOrderClick: (LCollectionSortOrder) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val onOpenMenu = remember { { menuExpanded = true } }
     val onDismissMenu = remember { { menuExpanded = false } }
     val collectionTitle = remember(selectedCollection) {
-        selectedCollection?.let { ">$it" }
+        selectedCollection?.let { "$COLLECTION_TITLE_PREFIX$it" }
     }
 
     // Топ-бар лежит в Scaffold(topBar = ...) — Material3 не применяет инсет
@@ -50,26 +57,23 @@ internal fun LCollectionsTopBar(
     val topInset = getTopInsetDp()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = topInset)
-    )
-    {
-
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 //.background(Theme.tabLevel1)
-                .padding(start = 8.dp),
+                .padding(start = BAR_START_PADDING),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-
                 if (collectionTitle != null) {
                     Text(
                         collectionTitle,
                         color = Theme.L.primaryColor,
-                        fontSize = 18.sp,
+                        fontSize = COLLECTION_TITLE_FONT_SIZE,
                         fontFamily = Theme.L.fontFamilyPopinsRegular
                     )
                 }
@@ -78,20 +82,18 @@ internal fun LCollectionsTopBar(
                     Text(
                         sortOrder.title,
                         color = Theme.L.grey2,
-                        fontSize = 12.sp,
+                        fontSize = SORT_ORDER_FONT_SIZE,
                         fontFamily = Theme.L.fontFamilyDMsanss
                     )
                 }
-
             }
 
             if (selectedCollection == null) {
-
                 Box {
                     IconButton(onClick = onOpenMenu) {
                         Icon(
                             Icons.Default.FilterList,
-                            contentDescription = "Сортировка коллекций",
+                            contentDescription = CD_COLLECTION_SORT,
                             tint = Theme.L.textColor
                         )
                     }
@@ -101,10 +103,14 @@ internal fun LCollectionsTopBar(
                         onDismissRequest = onDismissMenu,
                         containerColor = Theme.L.grey3
                     ) {
+                        val baseMenuItemStyle = Theme.L.Type.menuItem
                         LCollectionSortOrder.entries.forEach { order ->
                             key(order.name) {
                                 val isSelected = order == sortOrder
                                 val textColor = if (isSelected) Color.White else Theme.L.grey2
+                                val menuItemStyle = remember(baseMenuItemStyle, textColor) {
+                                    baseMenuItemStyle.copy(color = textColor)
+                                }
                                 val handleOrderClick = remember(order, onSortOrderClick) {
                                     {
                                         onSortOrderClick(order)
@@ -115,7 +121,7 @@ internal fun LCollectionsTopBar(
                                     text = {
                                         Text(
                                             order.title,
-                                            style = Theme.L.Type.menuItem.copy(color = textColor)
+                                            style = menuItemStyle
                                         )
                                     },
                                     onClick = handleOrderClick
@@ -128,7 +134,6 @@ internal fun LCollectionsTopBar(
         }
 
         HorizontalDivider()
-
     }
 }
 

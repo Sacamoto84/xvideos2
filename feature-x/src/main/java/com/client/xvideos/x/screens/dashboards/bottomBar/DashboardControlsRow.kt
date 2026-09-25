@@ -20,14 +20,15 @@ import kotlinx.coroutines.launch
 fun DashboardControlsRow(
     isCurrentPage: Int,
     isMax: Int,
-    onChange: suspend (Int) -> Unit
+    onChange: suspend (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val handleChange: (Int) -> Unit = remember(scope, onChange) {
         { page -> scope.launch { onChange(page) } }
     }
 
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = modifier.fillMaxWidth()) {
         ComposeCountry()
         Box(modifier = Modifier.weight(1f)) {
             BottomListDashBoardNavigationButtons2(

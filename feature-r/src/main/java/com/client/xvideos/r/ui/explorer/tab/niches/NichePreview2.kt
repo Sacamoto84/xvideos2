@@ -44,8 +44,29 @@ private val NICHE_BUTTON_SHAPE = RoundedCornerShape(10.dp)
 private const val BUTTON_FOLLOW_TEXT = "Подписаться"
 private const val BUTTON_UNFOLLOW_TEXT = "Выйти"
 
+private val CARD_HORIZONTAL_PADDING = 8.dp
+private val CARD_HEIGHT = 78.dp
+private val IMAGE_START_PADDING = 4.dp
+private val IMAGE_SIZE = 70.dp
+private val CONTENT_START_PADDING = 8.dp
+private val CONTENT_VERTICAL_PADDING = 4.dp
+private val ROW_HEIGHT = 23.dp
+private val STAT_SPACER_PADDING = 4.dp
+private val STAT_ICON_SIZE = 18.dp
+private val BUTTON_WIDTH = 128.dp
+private val BUTTON_HEIGHT = 44.dp
+private val BUTTON_END_PADDING = 6.dp
+private val BUTTON_BORDER_WIDTH = 1.dp
+private val TITLE_FONT_SIZE = 18.sp
+private val STAT_FONT_SIZE = 16.sp
+
 @Composable
-fun NichePreview2(niches: () -> Niche, savedRed: () -> SavedRed, onClick: () -> Unit) {
+fun NichePreview2(
+    niches: () -> Niche,
+    savedRed: () -> SavedRed,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
 
     val niche = niches()
 
@@ -74,7 +95,8 @@ fun NichePreview2(niches: () -> Niche, savedRed: () -> SavedRed, onClick: () -> 
         niche = niche,
         isFollowed = isFollowed,
         onFollowClick = onFollowClick,
-        onClick = onClick
+        onClick = onClick,
+        modifier = modifier,
     )
 }
 
@@ -83,7 +105,8 @@ private fun NichePreview2Content(
     niche: Niche,
     isFollowed: Boolean,
     onFollowClick: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val subscribersText = remember(niche.subscribers) { niche.subscribers.toPrettyCountInt() }
     val gifsText = remember(niche.gifs) { niche.gifs.toPrettyCountInt() }
@@ -91,14 +114,14 @@ private fun NichePreview2Content(
     val buttonTextColor = if (isFollowed) Color.White else Color.Black
     val buttonBgColor = if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow
     val buttonBorderModifier = remember(isFollowed) {
-        if (isFollowed) Modifier.border(1.dp, Color.White, NICHE_BUTTON_SHAPE) else Modifier
+        if (isFollowed) Modifier.border(BUTTON_BORDER_WIDTH, Color.White, NICHE_BUTTON_SHAPE) else Modifier
     }
 
     Row(
-        modifier = Modifier
-            .padding(horizontal = 8.dp)
+        modifier = modifier
+            .padding(horizontal = CARD_HORIZONTAL_PADDING)
             .fillMaxWidth()
-            .height(78.dp)
+            .height(CARD_HEIGHT)
             .clip(NICHE_CARD_SHAPE)
             .background(Theme.tabLevel3)
             .clickable(onClick = onClick),
@@ -109,14 +132,14 @@ private fun NichePreview2Content(
         UrlImage(
             niche.thumbnail,
             modifier = Modifier
-                .padding(start = 4.dp)
-                .size(70.dp)
+                .padding(start = IMAGE_START_PADDING)
+                .size(IMAGE_SIZE)
                 .clip(NICHE_IMAGE_SHAPE)
         )
 
         Column(
             modifier = Modifier
-                .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                .padding(start = CONTENT_START_PADDING, top = CONTENT_VERTICAL_PADDING, bottom = CONTENT_VERTICAL_PADDING)
                 .fillMaxWidth()
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween
@@ -126,9 +149,9 @@ private fun NichePreview2Content(
                 text = niche.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height((70 / 3).dp),
+                    .height(ROW_HEIGHT),
                 color = Color.White,
-                fontSize = 18.sp,
+                fontSize = TITLE_FONT_SIZE,
                 fontFamily = Theme.R.fontFamilyDMsanss
             )
 
@@ -142,38 +165,38 @@ private fun NichePreview2Content(
 
                 Column {
                     Row(
-                        modifier = Modifier.height((70 / 3).dp),
+                        modifier = Modifier.height(ROW_HEIGHT),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             painterResource(R.drawable.members),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(STAT_ICON_SIZE),
                             tint = Color.LightGray,
                         )
                         Text(
                             text = subscribersText,
-                            modifier = Modifier.padding(start = 4.dp),
+                            modifier = Modifier.padding(start = STAT_SPACER_PADDING),
                             color = Color.LightGray,
-                            fontSize = 16.sp,
+                            fontSize = STAT_FONT_SIZE,
                             fontFamily = Theme.R.fontFamilyDMsanss
                         )
                     }
                     Row(
-                        modifier = Modifier.height((70 / 3).dp),
+                        modifier = Modifier.height(ROW_HEIGHT),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             painterResource(R.drawable.posts),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(STAT_ICON_SIZE),
                             tint = Color.LightGray,
                         )
                         Text(
                             text = gifsText,
-                            modifier = Modifier.padding(start = 4.dp),
+                            modifier = Modifier.padding(start = STAT_SPACER_PADDING),
                             color = Color.LightGray,
-                            fontSize = 16.sp,
+                            fontSize = STAT_FONT_SIZE,
                             fontFamily = Theme.R.fontFamilyDMsanss
                         )
                     }
@@ -181,9 +204,9 @@ private fun NichePreview2Content(
 
                 Box(
                     modifier = Modifier
-                        .padding(end = 6.dp)
-                        .width(128.dp)
-                        .height(44.dp)
+                        .padding(end = BUTTON_END_PADDING)
+                        .width(BUTTON_WIDTH)
+                        .height(BUTTON_HEIGHT)
                         .clip(NICHE_BUTTON_SHAPE)
                         .then(buttonBorderModifier)
                         .background(buttonBgColor)

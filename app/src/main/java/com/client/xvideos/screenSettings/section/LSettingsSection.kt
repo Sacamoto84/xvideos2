@@ -5,7 +5,7 @@ import com.client.xvideos.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
@@ -29,9 +29,15 @@ private const val TEXT_UNKNOWN_SIZE = "?"
 private const val TAB_L_GIFS = "L Gifs"
 private const val TAB_L_LIKES = "L Likes"
 private const val TAB_L_COLLECTION = "L Collection"
+private const val LOGOUT_CONFIRM_TEMPLATE_PREFIX = "При следующем открытии L нужно будет снова ввести логин и пароль: "
+private const val SNACK_L_PROFILE_CLOSED = "Профиль L закрыт"
+private const val SNACK_THUMBNAIL_PREFIX = "Размер миниатюры: "
 
 @Composable
-internal fun LSettingsSection(lLogin: String) {
+internal fun LSettingsSection(
+    lLogin: String,
+    modifier: Modifier = Modifier,
+) {
     val thumbnailSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
     val currentDisplayName = remember(thumbnailSize) {
         ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: TEXT_UNKNOWN_SIZE
@@ -43,7 +49,7 @@ internal fun LSettingsSection(lLogin: String) {
         if (isLoginBlank) {
             TEXT_NOT_AUTHORIZED
         } else {
-            "При следующем открытии L нужно будет снова ввести логин и пароль: $lLogin"
+            "$LOGOUT_CONFIRM_TEMPLATE_PREFIX$lLogin"
         }
     }
 
@@ -51,19 +57,19 @@ internal fun LSettingsSection(lLogin: String) {
         {
             Settings.l_login.setValue("")
             Settings.l_pass.setValue("")
-            SnackBar.success("Профиль L закрыт")
+            SnackBar.success(SNACK_L_PROFILE_CLOSED)
         }
     }
     val onSelectThumbnailSize: (String) -> Unit = remember {
         { selectedDisplayName ->
             ThumbnailsSize.fromDisplayName(selectedDisplayName)?.apply {
                 Settings.thumbalistSize.setValue(value)
-                SnackBar.success("Размер миниатюры: $displayName")
+                SnackBar.success("$SNACK_THUMBNAIL_PREFIX$displayName")
             }
         }
     }
 
-    SettingsGroup {
+    SettingsGroup(modifier = modifier) {
         SettingsButtonRowWithDialog(
             icon = R.drawable.icon_luscious,
             text = TEXT_PROFILE_L,

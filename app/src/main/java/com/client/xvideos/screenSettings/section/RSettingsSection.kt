@@ -35,6 +35,8 @@ import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 import com.client.xvideos.r.common.saved.SavedRed
 import kotlinx.coroutines.launch
 
+private val PROGRESS_HORIZONTAL_PADDING = 16.dp
+
 private const val TEXT_RED_ALL_FOLDERS = "Размер всех папок Red"
 private const val TEXT_RED_DOWNLOAD_FOLDER = "Размер папки Download"
 private const val TEXT_CLEAR_DOWNLOAD = "Очистить папку Download"
@@ -47,6 +49,12 @@ private const val TEXT_START = "Старт"
 private const val TEXT_UPDATE = "Обновить"
 private const val TEXT_UPDATING = "Идёт обновление"
 private const val TEXT_NICHES_SUBTITLE_DEFAULT = "Данные для поиска и фильтров R"
+private const val CLEAR_DIALOG_BODY_PREFIX = "Подтвердить очистку: "
+private const val SNACK_DOWNLOAD_CHECKED_OK = "Download проверен: все файлы на месте"
+private const val SNACK_RECOVERY_STARTED_PREFIX = "Запущено: видео "
+private const val SNACK_RECOVERY_PREVIEW_PREFIX = ", превью "
+private const val NICHES_CACHE_SEPARATOR = " \u2022 "
+private const val NICHES_CACHE_HOUR_SUFFIX = "h"
 
 @Composable
 internal fun RSettingsSection(
@@ -58,7 +66,8 @@ internal fun RSettingsSection(
     isNichesCacheDownloading: Boolean,
     nichesCacheProgress: Float,
     nichesCacheSize: Int,
-    nichesCacheLastModifiedHour: Long
+    nichesCacheLastModifiedHour: Long,
+    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     var isRecoveringDownload by remember { mutableStateOf(false) }
@@ -75,10 +84,10 @@ internal fun RSettingsSection(
                             recoveryReport = report
                             isRecoveringDownload = false
                             if (report.incompleteItems == 0) {
-                                SnackBar.success("Download проверен: все файлы на месте")
+                                SnackBar.success(SNACK_DOWNLOAD_CHECKED_OK)
                             } else {
                                 SnackBar.success(
-                                    "Запущено: видео ${report.queuedVideo}, превью ${report.queuedPreview}"
+                                    "$SNACK_RECOVERY_STARTED_PREFIX${report.queuedVideo}$SNACK_RECOVERY_PREVIEW_PREFIX${report.queuedPreview}"
                                 )
                             }
                         }
@@ -116,15 +125,15 @@ internal fun RSettingsSection(
 
     val formattedTotal = remember(sizeRedTotal) { formatBytes(sizeRedTotal) }
     val formattedDownload = remember(sizeRedDownload) { formatBytes(sizeRedDownload) }
-    val clearDialogBody = remember(formattedDownload) { "Подтвердить очистку: $formattedDownload" }
+    val clearDialogBody = remember(formattedDownload) { "$CLEAR_DIALOG_BODY_PREFIX$formattedDownload" }
     val nichesCacheValue = remember(nichesCacheSize, nichesCacheLastModifiedHour) {
-        "$nichesCacheSize \u2022 ${nichesCacheLastModifiedHour}h"
+        "$nichesCacheSize$NICHES_CACHE_SEPARATOR$nichesCacheLastModifiedHour$NICHES_CACHE_HOUR_SUFFIX"
     }
     val nichesSubtitle = remember(isNichesCacheDownloading) {
         if (isNichesCacheDownloading) TEXT_UPDATING else TEXT_NICHES_SUBTITLE_DEFAULT
     }
 
-    SettingsGroup {
+    SettingsGroup(modifier = modifier) {
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = TEXT_RED_ALL_FOLDERS,
@@ -168,7 +177,7 @@ internal fun RSettingsSection(
             LinearProgressIndicator(
                 progress = { nichesCacheProgress },
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = PROGRESS_HORIZONTAL_PADDING)
                     .fillMaxWidth(),
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor,
