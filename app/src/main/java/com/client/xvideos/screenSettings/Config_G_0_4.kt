@@ -68,8 +68,9 @@ fun Config_G_0_4(
     val list by setting.field.collectAsStateWithLifecycle()
     val visibleIndices = remember(list) { list.indices.filter { it in 1..4 } }
 
+    val rowModifier = if (modifier == Modifier) CONFIG_ROW_BASE_MODIFIER else modifier.then(CONFIG_ROW_BASE_MODIFIER)
     Row(
-        modifier = modifier.then(CONFIG_ROW_BASE_MODIFIER),
+        modifier = rowModifier,
         horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
         verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {

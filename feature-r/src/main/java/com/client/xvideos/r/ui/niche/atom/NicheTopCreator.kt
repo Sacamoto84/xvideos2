@@ -44,10 +44,14 @@ fun NicheTopCreator(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val boxModifier = if (modifier == Modifier) {
+        TOP_CREATOR_BASE_MODIFIER
+    } else {
+        modifier.then(TOP_CREATOR_BASE_MODIFIER)
+    }.clickable(onClick = onClick)
+
     Box(
-        modifier = modifier
-            .then(TOP_CREATOR_BASE_MODIFIER)
-            .clickable(onClick = onClick)
+        modifier = boxModifier
     ) {
         UrlImage(
             creator.profileImageUrl,

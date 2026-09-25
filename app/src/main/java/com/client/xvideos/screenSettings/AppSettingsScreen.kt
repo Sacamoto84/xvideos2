@@ -321,8 +321,9 @@ private fun AppSettingsScreenBody(
             )
     }
 
+    val bodyModifier = if (modifier == Modifier) BODY_COLUMN_BASE_MODIFIER else modifier.then(BODY_COLUMN_BASE_MODIFIER)
     Column(
-        modifier = modifier.then(BODY_COLUMN_BASE_MODIFIER)
+        modifier = bodyModifier
     ) {
         Text(
             text = currentPage.title,

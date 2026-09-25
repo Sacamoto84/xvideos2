@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +36,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
+
+private val DIALOG_SHAPE_16 = RoundedCornerShape(16.dp)
+private val LIST_SHAPE_8 = RoundedCornerShape(8.dp)
+private val ROW_SHAPE_6 = RoundedCornerShape(6.dp)
+private val BORDER_WIDTH_1 = 1.dp
+private const val DIALOG_WIDTH_FRACTION = 0.9f
+private val DIALOG_MAX_WIDTH = 420.dp
+private val DIALOG_PADDING = 16.dp
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val DIALOG_PROPERTIES = DialogProperties(usePlatformDefaultWidth = false)
 
 @Composable
 fun <T> AlbumFilterSelectDialog(
@@ -48,6 +60,9 @@ fun <T> AlbumFilterSelectDialog(
     val palette = StyleGenresTags.Palette
     val configuration = LocalConfiguration.current
     val maxListHeight = (configuration.screenHeightDp * 0.6f).dp.coerceIn(240.dp, 480.dp)
+    val headerStyle = remember(palette.textPrimary) {
+        Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+    }
 
     val selectedIndex = items.indexOf(selectedItem)
     val listState = rememberLazyListState(
@@ -56,16 +71,16 @@ fun <T> AlbumFilterSelectDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DIALOG_PROPERTIES
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .widthIn(max = 420.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(16.dp))
+                .fillMaxWidth(DIALOG_WIDTH_FRACTION)
+                .widthIn(max = DIALOG_MAX_WIDTH)
+                .clip(DIALOG_SHAPE_16)
+                .border(BORDER_WIDTH_1, palette.border, DIALOG_SHAPE_16)
                 .background(palette.surface)
-                .padding(16.dp)
+                .padding(DIALOG_PADDING)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -73,13 +88,13 @@ fun <T> AlbumFilterSelectDialog(
                 // Заголовок и кнопка закрытия
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN,
+                    verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
                 ) {
                     Text(
                         text = title,
                         color = palette.textPrimary,
-                        style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
+                        style = headerStyle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -104,53 +119,68 @@ fun <T> AlbumFilterSelectDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = maxListHeight)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, palette.border, RoundedCornerShape(8.dp))
+                        .clip(LIST_SHAPE_8)
+                        .border(BORDER_WIDTH_1, palette.border, LIST_SHAPE_8)
                         .background(palette.panelBlack)
                         .padding(vertical = 4.dp)
                 ) {
                     items(items, key = { itemTitle(it) }) { item ->
                         val isSelected = (item == selectedItem)
-                        val borderColor = if (isSelected) palette.selectedBorder else Color.Transparent
-                        val backgroundColor = if (isSelected) palette.selected else Color.Transparent
-                        val textColor = if (isSelected) palette.selectedText else palette.textPrimary
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 6.dp, vertical = 3.dp)
-                                .clip(RoundedCornerShape(6.dp))
-                                .border(1.dp, borderColor, RoundedCornerShape(6.dp))
-                                .background(backgroundColor)
-                                .clickable {
-                                    onSelect(item)
-                                }
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = itemTitle(item),
-                                color = textColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                style = Theme.L.Type.rowTitle.copy(
-                                    color = textColor,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                ),
-                                modifier = Modifier.weight(1f)
-                            )
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = palette.selectedBorder
-                                )
-                            }
-                        }
+                        SelectDialogRow(
+                            title = itemTitle(item),
+                            isSelected = isSelected,
+                            onClick = { onSelect(item) }
+                        )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SelectDialogRow(
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val palette = StyleGenresTags.Palette
+    val borderColor = if (isSelected) palette.selectedBorder else Color.Transparent
+    val backgroundColor = if (isSelected) palette.selected else Color.Transparent
+    val textColor = if (isSelected) palette.selectedText else palette.textPrimary
+    val titleStyle = remember(textColor, isSelected) {
+        Theme.L.Type.rowTitle.copy(
+            color = textColor,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp, vertical = 3.dp)
+            .clip(ROW_SHAPE_6)
+            .border(BORDER_WIDTH_1, borderColor, ROW_SHAPE_6)
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
+        horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
+    ) {
+        Text(
+            text = title,
+            color = textColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = titleStyle,
+            modifier = Modifier.weight(1f)
+        )
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = palette.selectedBorder
+            )
         }
     }
 }

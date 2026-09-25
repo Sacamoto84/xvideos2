@@ -67,6 +67,12 @@ private val INFO_COLUMN_BASE_MODIFIER = Modifier
     .padding(vertical = INFO_VERTICAL_PADDING)
     .fillMaxHeight()
 
+private val NICHE_CARD_STATIC_MODIFIER = Modifier
+    .height(NICHE_CARD_HEIGHT)
+    .padding(horizontal = CARD_HORIZONTAL_PADDING)
+    .shadow(NICHE_SHADOW_ELEVATION, NICHE_CARD_SHAPE)
+    .clip(NICHE_CARD_SHAPE)
+
 @Composable
 fun NichePreview(
     niches: () -> Niche,
@@ -77,12 +83,14 @@ fun NichePreview(
     val subscribersText = remember(niche.subscribers) { niche.subscribers.toPrettyCount() }
     val gifsText = remember(niche.gifs) { niche.gifs.toPrettyCount() }
 
+    val baseModifier = if (modifier == Modifier) {
+        NICHE_CARD_STATIC_MODIFIER
+    } else {
+        modifier.then(NICHE_CARD_STATIC_MODIFIER)
+    }
+
     Column(
-        modifier = modifier
-            .height(NICHE_CARD_HEIGHT)
-            .padding(horizontal = CARD_HORIZONTAL_PADDING)
-            .shadow(NICHE_SHADOW_ELEVATION, NICHE_CARD_SHAPE)
-            .clip(NICHE_CARD_SHAPE)
+        modifier = baseModifier
             .background(Theme.tabLevel3)
             .clickable(onClick = onClick)
     ) {

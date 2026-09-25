@@ -50,6 +50,7 @@ private val EXIT_FADE_TRANSITION = fadeOut()
 
 private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
 private val CONTAINER_MODIFIER = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)
+private val RESUME_PILL_PADDING_MODIFIER = Modifier.padding(bottom = RESUME_PILL_BOTTOM_PADDING)
 
 /**
  * Плеер локального (скачанного) файла X.
@@ -169,7 +170,7 @@ class ScreenX_LocalVideoPlayer(
                         exit = EXIT_FADE_TRANSITION,
                         modifier = Modifier
                             .align(ALIGN_BOTTOM_CENTER)
-                            .padding(bottom = RESUME_PILL_BOTTOM_PADDING)
+                            .then(RESUME_PILL_PADDING_MODIFIER)
                     ) {
                         resumeNoticeText?.let { notice ->
                             ResumePlaybackPill(

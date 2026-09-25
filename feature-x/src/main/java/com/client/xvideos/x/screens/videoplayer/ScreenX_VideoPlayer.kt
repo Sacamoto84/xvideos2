@@ -96,6 +96,13 @@ private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
 private val BLACK_BG_FULL_SIZE_MODIFIER = Modifier.fillMaxSize().background(COLOR_BLACK)
 private val PLAYER_BG_FULL_SIZE_MODIFIER = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)
 
+private val ERROR_SPACER_MODIFIER = Modifier.height(ERROR_SPACER_HEIGHT)
+private val BUTTON_SPACER_MODIFIER = Modifier.width(BUTTON_SPACER_WIDTH)
+private val BACK_BUTTON_PADDING_MODIFIER = Modifier.padding(BACK_BUTTON_PADDING)
+private val TAGS_BOX_PADDING_MODIFIER = Modifier.padding(start = TAGS_START_PADDING, end = TAGS_END_PADDING, top = TAGS_TOP_PADDING)
+private val RESUME_PILL_FULLSCREEN_PADDING = Modifier.padding(bottom = RESUME_PILL_BOTTOM_PADDING_FULLSCREEN)
+private val RESUME_PILL_PORTRAIT_PADDING = Modifier.padding(bottom = RESUME_PILL_BOTTOM_PADDING_PORTRAIT)
+
 class ScreenX_VideoPlayer(
     val url: String,
     val item: ItemsX? = null,
@@ -198,12 +205,12 @@ private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
     ) {
         Column(horizontalAlignment = ALIGN_CENTER_HORIZONTALLY) {
             Text(TEXT_LOAD_ERROR, color = COLOR_WHITE)
-            Spacer(modifier = Modifier.height(ERROR_SPACER_HEIGHT))
+            Spacer(modifier = ERROR_SPACER_MODIFIER)
             Row {
                 Button(onClick = onRetry) {
                     Text(TEXT_RETRY)
                 }
-                Spacer(modifier = Modifier.width(BUTTON_SPACER_WIDTH))
+                Spacer(modifier = BUTTON_SPACER_MODIFIER)
                 Button(onClick = onBack) {
                     Text(TEXT_BACK)
                 }
@@ -222,7 +229,7 @@ private fun VideoPlayerLoadingView(onBack: () -> Unit) {
             modifier = Modifier
                 .align(ALIGN_TOP_START)
                 .windowInsetsPadding(CutoutTopStartInsets)
-                .padding(BACK_BUTTON_PADDING),
+                .then(BACK_BUTTON_PADDING_MODIFIER),
         ) {
             Icon(
                 imageVector = ICON_BACK,
@@ -355,7 +362,7 @@ private fun VideoPlayerContentView(
                         onClick = onOverlayBack,
                         modifier = Modifier
                             .windowInsetsPadding(CutoutTopStartInsets)
-                            .padding(BACK_BUTTON_PADDING),
+                            .then(BACK_BUTTON_PADDING_MODIFIER),
                     ) {
                         Icon(
                             imageVector = ICON_BACK,
@@ -371,7 +378,7 @@ private fun VideoPlayerContentView(
                         modifier = Modifier
                             .align(ALIGN_TOP_START)
                             .windowInsetsPadding(CutoutTopStartInsets)
-                            .padding(start = TAGS_START_PADDING, end = TAGS_END_PADDING, top = TAGS_TOP_PADDING)
+                            .then(TAGS_BOX_PADDING_MODIFIER)
                     ) {
                         ComposeTags(
                             vm.tags,
@@ -381,13 +388,14 @@ private fun VideoPlayerContentView(
                 }
 
                 // Всплывающее уведомление о возобновлении с кнопкой «С начала»
+                val resumePillPadding = if (vm.isFullScreen) RESUME_PILL_FULLSCREEN_PADDING else RESUME_PILL_PORTRAIT_PADDING
                 AnimatedVisibility(
                     visible = vm.resumeNoticeText != null && (!vm.isFullScreen || areControlsVisible),
                     enter = ENTER_FADE_TRANSITION,
                     exit = EXIT_FADE_TRANSITION,
                     modifier = Modifier
                         .align(ALIGN_BOTTOM_CENTER)
-                        .padding(bottom = if (vm.isFullScreen) RESUME_PILL_BOTTOM_PADDING_FULLSCREEN else RESUME_PILL_BOTTOM_PADDING_PORTRAIT)
+                        .then(resumePillPadding)
                 ) {
                     vm.resumeNoticeText?.let { notice ->
                         ResumePlaybackPill(
