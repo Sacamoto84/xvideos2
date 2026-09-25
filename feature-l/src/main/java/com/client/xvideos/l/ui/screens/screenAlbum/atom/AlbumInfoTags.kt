@@ -74,11 +74,15 @@ private fun AlbumTagChip(
     textStyle: androidx.compose.ui.text.TextStyle,
     modifier: Modifier = Modifier,
 ) {
+    val borderColor = Theme.L.secondaryColor
+    val chipBorderModifier = remember(borderColor) {
+        TAG_CHIP_BASE_MODIFIER.border(TAG_BORDER_WIDTH, borderColor, TAG_CHIP_SHAPE)
+    }
+    val chipModifier = if (modifier == Modifier) chipBorderModifier else modifier.then(chipBorderModifier)
+
     Text(
         text = label,
-        modifier = modifier
-            .then(TAG_CHIP_BASE_MODIFIER)
-            .border(TAG_BORDER_WIDTH, Theme.L.secondaryColor, TAG_CHIP_SHAPE)
+        modifier = chipModifier
             .clickable(onClick = onClick)
             .then(TAG_CHIP_CONTENT_PADDING_MODIFIER),
         color = Theme.L.textColor,

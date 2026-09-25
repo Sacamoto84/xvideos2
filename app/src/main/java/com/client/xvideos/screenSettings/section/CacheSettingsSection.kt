@@ -80,12 +80,8 @@ internal fun CacheSettingsSection(
         }
     }
 
-    val normalizedRam = remember(ramCachePercent) {
-        CoilImageLoaderFactory.normalizedRamCachePercent(ramCachePercent)
-    }
-    val normalizedDisk = remember(diskCacheSizeMb) {
-        CoilImageLoaderFactory.normalizedDiskCacheSizeMb(diskCacheSizeMb)
-    }
+    val normalizedRam = CoilImageLoaderFactory.normalizedRamCachePercent(ramCachePercent)
+    val normalizedDisk = CoilImageLoaderFactory.normalizedDiskCacheSizeMb(diskCacheSizeMb)
     val formattedDiskSize = remember(imageCacheSizeBytes) {
         formatBytes(imageCacheSizeBytes)
     }

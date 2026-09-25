@@ -293,9 +293,10 @@ private fun DashboardGridCell(
     val handleDownload = remember(cell, onDownload) { { onDownload(cell) } }
     val handleSaveToGallery = remember(cell, onSaveToGallery) { { onSaveToGallery(cell) } }
     val durationText = remember(cell.duration) { cell.duration.trim().removeSuffix(".") }
+    val boxModifier = if (modifier == Modifier) CELL_BOX_BASE_MODIFIER else modifier.then(CELL_BOX_BASE_MODIFIER)
 
     Box(
-        modifier = modifier.then(CELL_BOX_BASE_MODIFIER)
+        modifier = boxModifier
     ) {
         UrlVideoImageAndLongClickX(
             cell,
@@ -344,7 +345,8 @@ private fun ShadowedDurationText(
     durationText: String,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.then(SHADOWED_BOX_BASE_MODIFIER)) {
+    val boxModifier = if (modifier == Modifier) SHADOWED_BOX_BASE_MODIFIER else modifier.then(SHADOWED_BOX_BASE_MODIFIER)
+    Box(modifier = boxModifier) {
         Text(
             text = durationText,
             modifier = DURATION_SHADOW_TEXT_MODIFIER,

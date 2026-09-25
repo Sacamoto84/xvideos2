@@ -169,10 +169,13 @@ private fun NichePreview2Content(
     val buttonTextColor = if (isFollowed) COLOR_WHITE else COLOR_BLACK
     val buttonBgColor = if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow
     val currentButtonBase = if (isFollowed) BUTTON_FOLLOWED_BASE_MODIFIER else BUTTON_BASE_MODIFIER
+    val buttonStyledModifier = remember(isFollowed, buttonBgColor) {
+        currentButtonBase.background(buttonBgColor)
+    }
+    val cardModifier = if (modifier == Modifier) CARD_BASE_MODIFIER else modifier.then(CARD_BASE_MODIFIER)
 
     Row(
-        modifier = modifier
-            .then(CARD_BASE_MODIFIER)
+        modifier = cardModifier
             .clickable(onClick = onClick),
         verticalAlignment = CARD_VERTICAL_ALIGNMENT,
         horizontalArrangement = CARD_HORIZONTAL_ARRANGEMENT
@@ -242,8 +245,7 @@ private fun NichePreview2Content(
                 }
 
                 Box(
-                    modifier = currentButtonBase
-                        .background(buttonBgColor)
+                    modifier = buttonStyledModifier
                         .clickable(onClick = onFollowClick),
                     contentAlignment = BUTTON_ALIGNMENT
                 ) {

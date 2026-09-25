@@ -39,7 +39,6 @@ private val ROW_BAR_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .padding(vertical = BAR_VERTICAL_PADDING)
 
-private val SEARCH_WIDGET_BASE_MODIFIER = Modifier.padding(horizontal = SEARCH_HORIZONTAL_PADDING)
 private val ROW_BAR_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
 private val ROW_BAR_VERTICAL_ALIGNMENT = Alignment.Bottom
 private val HAPTIC_CONFIRM = HapticFeedbackType.Confirm
@@ -80,7 +79,7 @@ fun NichesBottomBar(
                 )
             }
 
-            searchWidget(Modifier.weight(1f).then(SEARCH_WIDGET_BASE_MODIFIER))
+            searchWidget(Modifier.weight(1f).padding(horizontal = SEARCH_HORIZONTAL_PADDING))
 
             AnimatedVisibility(visible = !isSearchFocused) {
                 ButtonUp(onClick = handleUpClick)

@@ -84,11 +84,15 @@ private fun AudienceChip(
     modifier: Modifier = Modifier,
 ) {
     val handleClick = remember(item, onClick) { { onClick(item) } }
+    val borderColor = Theme.L.secondaryColor
+    val chipBorderModifier = remember(borderColor) {
+        AUDIENCE_CHIP_BASE_MODIFIER.border(CHIP_BORDER_WIDTH, borderColor, AUDIENCE_CHIP_SHAPE)
+    }
+    val chipModifier = if (modifier == Modifier) chipBorderModifier else modifier.then(chipBorderModifier)
+
     Text(
         text = item.title,
-        modifier = modifier
-            .then(AUDIENCE_CHIP_BASE_MODIFIER)
-            .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, AUDIENCE_CHIP_SHAPE)
+        modifier = chipModifier
             .clickable(onClick = handleClick)
             .then(AUDIENCE_CHIP_CONTENT_PADDING_MODIFIER),
         color = Theme.L.primaryColor,

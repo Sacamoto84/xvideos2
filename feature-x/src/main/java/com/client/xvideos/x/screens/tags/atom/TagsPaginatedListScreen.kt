@@ -137,9 +137,7 @@ fun TagsPaginatedListScreen(
     }
 
     val orientation = LocalConfiguration.current.orientation
-    val itemsPerRow = remember(orientation) {
-        if (orientation == Configuration.ORIENTATION_LANDSCAPE) ITEMS_PER_ROW_LANDSCAPE else ITEMS_PER_ROW_PORTRAIT
-    }
+    val itemsPerRow = if (orientation == Configuration.ORIENTATION_LANDSCAPE) ITEMS_PER_ROW_LANDSCAPE else ITEMS_PER_ROW_PORTRAIT
     val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
     val listModifier = if (modifier == Modifier) BOX_FILL_MAX_SIZE_MODIFIER else modifier.then(BOX_FILL_MAX_SIZE_MODIFIER)

@@ -44,6 +44,8 @@ private const val ICON_DNS = R.drawable.ic_dns_24
 private const val ICON_DIAGNOSTICS = R.drawable.diagnostics_24
 private const val ICON_HARD_DISK = R.drawable.hard_disk_24
 
+private val DOH_PROVIDER_ENTRIES = DohProvider.entries
+
 private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
 private const val DIAGNOSTIC_TEST_HOST = "api.redgifs.com"
 
@@ -194,7 +196,7 @@ private fun DohProviderSelectionGroup(
     Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_PROVIDER)
         SettingsGroup {
-            DohProvider.entries.forEachIndexed { index, provider ->
+            DOH_PROVIDER_ENTRIES.forEachIndexed { index, provider ->
                 key(provider.name) {
                     if (index > 0) SettingsDivider()
 
