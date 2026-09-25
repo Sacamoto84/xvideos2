@@ -75,6 +75,30 @@ private val DELETE_ICON_SIZE = 28.dp
 private val DIALOG_PREVIEW_WIDTH = 160.dp
 private val DIALOG_IMAGE_SHAPE = RoundedCornerShape(8.dp)
 
+private val SAVED_ROW_COLUMN_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(vertical = 2.dp)
+private val SAVED_ROW_MEDIA_BOX_BASE = Modifier
+    .fillMaxWidth()
+    .aspectRatio(VIDEO_ASPECT_RATIO)
+    .background(Color.DarkGray)
+private val SAVED_ROW_ACTIONS_ROW_MODIFIER = Modifier
+    .fillMaxWidth()
+    .background(Theme.L.grey6)
+private val SAVED_ROW_TITLE_MODIFIER = Modifier
+    .padding(horizontal = 8.dp)
+private val SHARE_ICON_MODIFIER = Modifier.size(SHARE_ICON_SIZE)
+private val DELETE_ICON_MODIFIER = Modifier.size(DELETE_ICON_SIZE)
+private val SAVED_HEADER_ROW_MODIFIER = Modifier
+    .fillMaxWidth()
+    .background(Theme.L.grey6)
+private val SAVED_HEADER_TITLE_MODIFIER = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+private val DIALOG_IMAGE_MODIFIER = Modifier
+    .width(DIALOG_PREVIEW_WIDTH)
+    .aspectRatio(VIDEO_ASPECT_RATIO)
+    .clip(DIALOG_IMAGE_SHAPE)
+private val SAVED_ROW_CONTENT_TYPE = { _: ItemsX -> CONTENT_TYPE_SAVED_ROW }
+
 /**
  * Контент экрана «Сохранённое» (загруженные превью-mp4).
  *
@@ -160,7 +184,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 items(
                     items = list,
                     key = { it.id },
-                    contentType = { CONTENT_TYPE_SAVED_ROW }
+                    contentType = SAVED_ROW_CONTENT_TYPE
                 ) { item ->
                     val posterUrl = remember(item.id, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
@@ -189,7 +213,7 @@ private fun SavedHeader(
             .padding(top = topCutout)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().background(Theme.L.grey6),
+            modifier = SAVED_HEADER_ROW_MODIFIER,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -197,7 +221,7 @@ private fun SavedHeader(
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                modifier = SAVED_HEADER_TITLE_MODIFIER
             )
         }
         HorizontalDivider(color = SAVED_DIVIDER_COLOR)
@@ -217,15 +241,10 @@ private fun SavedRow(
     val handleDelete = remember(item, onDelete) { { onDelete(item) } }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp)
+        modifier = SAVED_ROW_COLUMN_MODIFIER
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(VIDEO_ASPECT_RATIO)
-                .background(Color.DarkGray)
+            modifier = SAVED_ROW_MEDIA_BOX_BASE
                 .clickable(onClick = handlePlay)
         ) {
             UrlImage(url = posterUrl, modifier = Modifier.fillMaxSize())
@@ -243,9 +262,7 @@ private fun SavedRow(
         }
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Theme.L.grey6),
+            modifier = SAVED_ROW_ACTIONS_ROW_MODIFIER,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -253,7 +270,7 @@ private fun SavedRow(
                 color = Color.White,
                 fontSize = 13.sp,
                 maxLines = 2,
-                modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                modifier = Modifier.weight(1f).then(SAVED_ROW_TITLE_MODIFIER)
             )
 
             IconButton(onClick = handleShareP2p) {
@@ -261,7 +278,7 @@ private fun SavedRow(
                     imageVector = Icons.Filled.Share,
                     contentDescription = CD_P2P,
                     tint = Color.Gray,
-                    modifier = Modifier.size(SHARE_ICON_SIZE)
+                    modifier = SHARE_ICON_MODIFIER
                 )
             }
 
@@ -270,7 +287,7 @@ private fun SavedRow(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = CD_DELETE,
                     tint = Color.Gray,
-                    modifier = Modifier.size(DELETE_ICON_SIZE)
+                    modifier = DELETE_ICON_MODIFIER
                 )
             }
         }
@@ -291,10 +308,7 @@ fun ConfirmDeleteVideoDialog(
         icon = {
             UrlImage(
                 url = imageUrl,
-                modifier = Modifier
-                    .width(DIALOG_PREVIEW_WIDTH)
-                    .aspectRatio(VIDEO_ASPECT_RATIO)
-                    .clip(DIALOG_IMAGE_SHAPE)
+                modifier = DIALOG_IMAGE_MODIFIER
             )
         },
         confirmText = TEXT_DELETE,

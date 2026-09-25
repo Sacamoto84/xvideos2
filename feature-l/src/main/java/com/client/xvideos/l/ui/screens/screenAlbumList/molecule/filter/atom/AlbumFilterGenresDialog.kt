@@ -47,6 +47,20 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.FilterGenre
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 
+private val DIALOG_SHAPE_16 = RoundedCornerShape(16.dp)
+private val LIST_SHAPE_8 = RoundedCornerShape(8.dp)
+private val CHIP_SHAPE_6 = RoundedCornerShape(6.dp)
+private val BORDER_WIDTH_1 = 1.dp
+private const val DIALOG_WIDTH_FRACTION = 0.92f
+private val DIALOG_MAX_WIDTH = 440.dp
+private val DIALOG_PADDING = 16.dp
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val CHIPS_SPACED_BY_6 = Arrangement.spacedBy(6.dp)
+private val DIALOG_PROPERTIES = DialogProperties(usePlatformDefaultWidth = false)
+private val ACTION_BUTTON_SIZE = 36.dp
+private val ACTION_ICON_PADDING = 6.dp
+
 @Composable
 fun AlbumFilterGenresDialog(
     genresPlus: List<FilterGenre>,
@@ -66,19 +80,22 @@ fun AlbumFilterGenresDialog(
     val genreCountByTitle = remember(genreCounts) {
         genreCounts?.associate { it.term to it.count } ?: emptyMap()
     }
+    val headerStyle = remember(palette.textPrimary) {
+        Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DIALOG_PROPERTIES
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .widthIn(max = 440.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(16.dp))
+                .fillMaxWidth(DIALOG_WIDTH_FRACTION)
+                .widthIn(max = DIALOG_MAX_WIDTH)
+                .clip(DIALOG_SHAPE_16)
+                .border(BORDER_WIDTH_1, palette.border, DIALOG_SHAPE_16)
                 .background(palette.surface)
-                .padding(16.dp)
+                .padding(DIALOG_PADDING)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -86,13 +103,13 @@ fun AlbumFilterGenresDialog(
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN,
+                    verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
                 ) {
                     Text(
                         text = "Genres",
                         color = palette.textPrimary,
-                        style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
+                        style = headerStyle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -127,8 +144,8 @@ fun AlbumFilterGenresDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = maxListHeight)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, palette.border, RoundedCornerShape(8.dp))
+                        .clip(LIST_SHAPE_8)
+                        .border(BORDER_WIDTH_1, palette.border, LIST_SHAPE_8)
                         .background(palette.panelBlack)
                         .padding(vertical = 4.dp)
                 ) {
@@ -173,7 +190,7 @@ private fun GenreSelectedChipsBar(
     val palette = StyleGenresTags.Palette
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = CHIPS_SPACED_BY_6
     ) {
         items(genresPlus, key = { "plus_${it.id.ifBlank { it.title }}" }) { genre ->
             val annotatedTitle = remember(genre.title) {
@@ -213,19 +230,20 @@ private fun GenreChip(
     backgroundColor: Color,
     onClick: () -> Unit
 ) {
+    val chipTextStyle = remember { Theme.L.Type.rowValue.copy(fontWeight = FontWeight.Bold) }
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(6.dp))
+            .clip(CHIP_SHAPE_6)
+            .border(BORDER_WIDTH_1, borderColor, CHIP_SHAPE_6)
             .background(backgroundColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
     ) {
         Text(
             text = text,
             color = textColor,
-            style = Theme.L.Type.rowValue.copy(fontWeight = FontWeight.Bold)
+            style = chipTextStyle
         )
         Spacer(Modifier.width(4.dp))
         Icon(
@@ -247,15 +265,27 @@ private fun SelectableGenreRow(
     val palette = StyleGenresTags.Palette
     val onPlusClick = remember(item, onAddPlus) { { onAddPlus(item) } }
     val onMinusClick = remember(item, onAddMinus) { { onAddMinus(item) } }
+    val titleStyle = remember(palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.textPrimary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    val countStyle = remember(palette.textSecondary) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.textSecondary,
+            fontWeight = FontWeight.Bold
+        )
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 6.dp, vertical = 3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
+        horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
             modifier = Modifier.weight(1f, fill = false)
         ) {
             Icon(
@@ -264,12 +294,12 @@ private fun SelectableGenreRow(
                 tint = palette.selectedBorder,
                 modifier = Modifier
                     .padding(vertical = 2.dp, horizontal = 4.dp)
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.selectedBorder, RoundedCornerShape(6.dp))
+                    .size(ACTION_BUTTON_SIZE)
+                    .clip(CHIP_SHAPE_6)
+                    .border(BORDER_WIDTH_1, palette.selectedBorder, CHIP_SHAPE_6)
                     .background(palette.field)
                     .clickable(onClick = onPlusClick)
-                    .padding(6.dp)
+                    .padding(ACTION_ICON_PADDING)
             )
 
             Spacer(Modifier.width(4.dp))
@@ -280,12 +310,12 @@ private fun SelectableGenreRow(
                 tint = palette.excludedBorder,
                 modifier = Modifier
                     .padding(vertical = 2.dp, horizontal = 4.dp)
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.excludedBorder, RoundedCornerShape(6.dp))
+                    .size(ACTION_BUTTON_SIZE)
+                    .clip(CHIP_SHAPE_6)
+                    .border(BORDER_WIDTH_1, palette.excludedBorder, CHIP_SHAPE_6)
                     .background(palette.field)
                     .clickable(onClick = onMinusClick)
-                    .padding(6.dp)
+                    .padding(ACTION_ICON_PADDING)
             )
 
             Spacer(Modifier.width(8.dp))
@@ -293,10 +323,7 @@ private fun SelectableGenreRow(
             Text(
                 text = item.title,
                 color = palette.textPrimary,
-                style = Theme.L.Type.rowTitle.copy(
-                    color = palette.textPrimary,
-                    fontWeight = FontWeight.Bold
-                ),
+                style = titleStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -306,10 +333,7 @@ private fun SelectableGenreRow(
             Text(
                 text = count.toString(),
                 color = palette.textSecondary,
-                style = Theme.L.Type.rowTitle.copy(
-                    color = palette.textSecondary,
-                    fontWeight = FontWeight.Bold
-                ),
+                style = countStyle,
                 modifier = Modifier.padding(end = 4.dp)
             )
         }

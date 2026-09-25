@@ -52,6 +52,12 @@ import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.ui.theme.XvideosTheme
 import timber.log.Timber
 
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val HORIZONTAL_4DP_PADDING = PaddingValues(horizontal = 4.dp)
+private val SPACER_2DP_MODIFIER = Modifier.height(2.dp)
+private val NICHE_PREVIEW_CONTENT_TYPE = { _: Niche -> "niche_preview" }
+private val TOP_CREATOR_CONTENT_TYPE = { _: TopCreator -> "top_creator" }
+
 class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
 
     override val key: ScreenKey = "RedNiche:$nicheName"
@@ -164,7 +170,7 @@ private fun StatelessScreenNicheContent(
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        contentWindowInsets = ZERO_WINDOW_INSETS,
         containerColor = Theme.background
     ) { padding ->
         Box(Modifier.padding(padding)) {
@@ -211,12 +217,12 @@ private fun NicheHeaderContent(
                 modifier = Modifier
                     .padding(top = 4.dp)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = HORIZONTAL_4DP_PADDING
             ) {
                 items(
                     items = related,
                     key = { item -> item.id },
-                    contentType = { "niche_preview" }
+                    contentType = NICHE_PREVIEW_CONTENT_TYPE
                 ) { item ->
                     NichePreviewItem(item = item, onClick = onNicheClick)
                 }
@@ -233,19 +239,19 @@ private fun NicheHeaderContent(
             )
             LazyRow(
                 modifier = Modifier.padding(vertical = 4.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = HORIZONTAL_4DP_PADDING
             ) {
                 items(
                     items = creators,
                     key = { creator -> creator.username },
-                    contentType = { "top_creator" }
+                    contentType = TOP_CREATOR_CONTENT_TYPE
                 ) { creator ->
                     NicheCreatorItem(creator = creator, onClick = onCreatorClick)
                 }
             }
         }
 
-        Spacer(Modifier.height(2.dp))
+        Spacer(SPACER_2DP_MODIFIER)
 
         NicheBottomBar(niche = niche, currentSort = currentSort, onSortChange = onSortChange, columns = columns)
     }

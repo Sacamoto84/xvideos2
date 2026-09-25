@@ -42,6 +42,20 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
 
+private val DIALOG_SHAPE_16 = RoundedCornerShape(16.dp)
+private val LIST_SHAPE_8 = RoundedCornerShape(8.dp)
+private val CHIP_SHAPE_6 = RoundedCornerShape(6.dp)
+private val BORDER_WIDTH_1 = 1.dp
+private const val DIALOG_WIDTH_FRACTION = 0.92f
+private val DIALOG_MAX_WIDTH = 440.dp
+private val DIALOG_PADDING = 16.dp
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val CHIPS_SPACED_BY_6 = Arrangement.spacedBy(6.dp)
+private val DIALOG_PROPERTIES = DialogProperties(usePlatformDefaultWidth = false)
+private val ACTION_BUTTON_SIZE = 36.dp
+private val ACTION_ICON_PADDING = 6.dp
+
 @Composable
 fun AlbumFilterTagsDialog(
     tagsPlus: List<String>,
@@ -57,19 +71,22 @@ fun AlbumFilterTagsDialog(
     val palette = StyleGenresTags.Palette
     val configuration = LocalConfiguration.current
     val maxListHeight = (configuration.screenHeightDp * 0.6f).dp.coerceIn(240.dp, 520.dp)
+    val headerStyle = androidx.compose.runtime.remember(palette.textPrimary) {
+        Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DIALOG_PROPERTIES
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .widthIn(max = 440.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(16.dp))
+                .fillMaxWidth(DIALOG_WIDTH_FRACTION)
+                .widthIn(max = DIALOG_MAX_WIDTH)
+                .clip(DIALOG_SHAPE_16)
+                .border(BORDER_WIDTH_1, palette.border, DIALOG_SHAPE_16)
                 .background(palette.surface)
-                .padding(16.dp)
+                .padding(DIALOG_PADDING)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -77,13 +94,13 @@ fun AlbumFilterTagsDialog(
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN,
+                    verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
                 ) {
                     Text(
                         text = "Tags",
                         color = palette.textPrimary,
-                        style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
+                        style = headerStyle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -118,8 +135,8 @@ fun AlbumFilterTagsDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = maxListHeight)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, palette.border, RoundedCornerShape(8.dp))
+                        .clip(LIST_SHAPE_8)
+                        .border(BORDER_WIDTH_1, palette.border, LIST_SHAPE_8)
                         .background(palette.panelBlack)
                         .padding(vertical = 4.dp)
                 ) {
@@ -164,13 +181,13 @@ private fun TagsSelectedChipsBar(
     val palette = StyleGenresTags.Palette
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = CHIPS_SPACED_BY_6
     ) {
         itemsIndexed(tagsPlus, key = { index, tag -> "plus_${tag}#$index" }) { _, tag ->
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.selectedBorder, RoundedCornerShape(6.dp))
+                    .clip(CHIP_SHAPE_6)
+                    .border(BORDER_WIDTH_1, palette.selectedBorder, CHIP_SHAPE_6)
                     .background(palette.selected)
                     .clickable { onRemovePlus(tag) }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -193,8 +210,8 @@ private fun TagsSelectedChipsBar(
         itemsIndexed(tagsMinus, key = { index, tag -> "minus_${tag}#$index" }) { _, tag ->
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.excludedBorder, RoundedCornerShape(6.dp))
+                    .clip(CHIP_SHAPE_6)
+                    .border(BORDER_WIDTH_1, palette.excludedBorder, CHIP_SHAPE_6)
                     .background(palette.excluded)
                     .clickable { onRemoveMinus(tag) }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -229,15 +246,27 @@ private fun SelectableTagRow(
     onAddMinus: () -> Unit
 ) {
     val palette = StyleGenresTags.Palette
+    val titleStyle = androidx.compose.runtime.remember(palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.textPrimary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    val countStyle = androidx.compose.runtime.remember(palette.textSecondary) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.textSecondary,
+            fontWeight = FontWeight.Bold
+        )
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 6.dp, vertical = 3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
+        horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
             modifier = Modifier.weight(1f, fill = false)
         ) {
             Icon(
@@ -246,12 +275,12 @@ private fun SelectableTagRow(
                 tint = palette.selectedBorder,
                 modifier = Modifier
                     .padding(vertical = 2.dp, horizontal = 4.dp)
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.selectedBorder, RoundedCornerShape(6.dp))
+                    .size(ACTION_BUTTON_SIZE)
+                    .clip(CHIP_SHAPE_6)
+                    .border(BORDER_WIDTH_1, palette.selectedBorder, CHIP_SHAPE_6)
                     .background(palette.field)
                     .clickable { onAddPlus() }
-                    .padding(6.dp)
+                    .padding(ACTION_ICON_PADDING)
             )
 
             Spacer(Modifier.width(4.dp))
@@ -262,12 +291,12 @@ private fun SelectableTagRow(
                 tint = palette.excludedBorder,
                 modifier = Modifier
                     .padding(vertical = 2.dp, horizontal = 4.dp)
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.excludedBorder, RoundedCornerShape(6.dp))
+                    .size(ACTION_BUTTON_SIZE)
+                    .clip(CHIP_SHAPE_6)
+                    .border(BORDER_WIDTH_1, palette.excludedBorder, CHIP_SHAPE_6)
                     .background(palette.field)
                     .clickable { onAddMinus() }
-                    .padding(6.dp)
+                    .padding(ACTION_ICON_PADDING)
             )
 
             Spacer(Modifier.width(8.dp))
@@ -275,10 +304,7 @@ private fun SelectableTagRow(
             Text(
                 text = item,
                 color = palette.textPrimary,
-                style = Theme.L.Type.rowTitle.copy(
-                    color = palette.textPrimary,
-                    fontWeight = FontWeight.Bold
-                ),
+                style = titleStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -288,10 +314,7 @@ private fun SelectableTagRow(
             Text(
                 text = count.toString(),
                 color = palette.textSecondary,
-                style = Theme.L.Type.rowTitle.copy(
-                    color = palette.textSecondary,
-                    fontWeight = FontWeight.Bold
-                ),
+                style = countStyle,
                 modifier = Modifier.padding(end = 4.dp)
             )
         }

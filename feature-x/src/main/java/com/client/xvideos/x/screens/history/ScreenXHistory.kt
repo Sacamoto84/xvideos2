@@ -87,6 +87,12 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.composables.core.HorizontalSeparator
 
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val HISTORY_GRID_CELLS = GridCells.Fixed(2)
+private val HISTORY_ROW_CONTENT_TYPE = { _: XHistoryItem -> "history_row" }
+private val CARD_SELECTED_BORDER_MODIFIER = Modifier.border(2.dp, Color(0xFFE91E63))
+private const val CARD_ASPECT_RATIO = 352f / 198f
+
 /**
  * Контент экрана «История просмотров» раздела X.
  *
@@ -235,7 +241,7 @@ fun HistoryContent(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        contentWindowInsets = ZERO_WINDOW_INSETS,
         containerColor = Theme.L.grey6,
         topBar = {
             HistoryTopBarHost(
@@ -293,14 +299,14 @@ private fun HistoryGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = HISTORY_GRID_CELLS,
         state = gridState,
         modifier = modifier,
     ) {
         items(
             items = history,
             key = { historyItem -> historyItem.item.id },
-            contentType = { "history_row" }
+            contentType = HISTORY_ROW_CONTENT_TYPE
         ) { historyItem ->
             val isSelected = historyItem.item.id in selectedIds
             val localUrl = remember(historyItem.item, localUrlOf) { localUrlOf(historyItem.item) }
@@ -738,7 +744,7 @@ private fun HistoryRow(
     val handleSaveToGallery = remember(item, actions.onSaveToGallery) { { actions.onSaveToGallery(item) } }
 
     val cardBorderModifier = if (selectionState.isSelected) {
-        Modifier.border(2.dp, Color(0xFFE91E63))
+        CARD_SELECTED_BORDER_MODIFIER
     } else {
         Modifier
     }
@@ -747,7 +753,7 @@ private fun HistoryRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(1.dp)
-            .aspectRatio(352f / 198f)
+            .aspectRatio(CARD_ASPECT_RATIO)
             .background(Color.DarkGray)
             .then(cardBorderModifier)
     ) {
@@ -926,7 +932,7 @@ private fun ConfirmDeleteHistoryDialog(
                 url = posterUrl,
                 modifier = Modifier
                     .width(160.dp)
-                    .aspectRatio(352f / 198f)
+                    .aspectRatio(CARD_ASPECT_RATIO)
                     .clip(historyPosterShape)
             )
         },

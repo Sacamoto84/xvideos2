@@ -138,8 +138,9 @@ internal fun StorageProgressRow(
     val subtitleText = remember(stat.key, stat.fileCount) {
         "${sectionSubtitle(stat.key)}$TEXT_FILES_COUNT_PREFIX${stat.fileCount}"
     }
+    val rowModifier = if (modifier == Modifier) STORAGE_ROW_BASE_MODIFIER else modifier.then(STORAGE_ROW_BASE_MODIFIER)
     Row(
-        modifier = modifier.then(STORAGE_ROW_BASE_MODIFIER),
+        modifier = rowModifier,
         verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         SettingsIcon(storageIcon(stat.key))

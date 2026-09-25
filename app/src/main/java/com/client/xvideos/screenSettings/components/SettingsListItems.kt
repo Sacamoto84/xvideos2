@@ -103,6 +103,42 @@ private val ITEM_ICON_SPACER_MODIFIER = Modifier.width(SETTINGS_ITEM_ICON_SPACER
 private val ITEM_SUBTITLE_SPACER_MODIFIER = Modifier.height(SETTINGS_ITEM_SUBTITLE_SPACER_HEIGHT)
 private val ITEM_TRAILING_SPACER_MODIFIER = Modifier.width(SETTINGS_ITEM_TRAILING_SPACER_WIDTH)
 
+private val SETTINGS_DIVIDER_CONTAINER_IN_GROUP = Modifier
+    .fillMaxWidth()
+    .background(SettingsCardColor)
+private val SETTINGS_DIVIDER_CONTAINER_STANDALONE = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING)
+    .background(SettingsCardColor)
+private val SETTINGS_DEFAULT_DIVIDER_MODIFIER = Modifier.padding(start = SETTINGS_DEFAULT_START_INDENT, end = SETTINGS_GROUP_HORIZONTAL_PADDING)
+
+private val SETTINGS_ITEM_CORE_MODIFIER = Modifier
+    .background(SettingsCardColor)
+    .heightIn(min = SETTINGS_ITEM_MIN_HEIGHT)
+    .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING, vertical = SETTINGS_ITEM_VERTICAL_PADDING)
+
+private val SETTINGS_ITEM_STANDALONE_SHAPE_MODIFIER = Modifier
+    .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING)
+    .clip(settingsCardShape)
+
+private val SETTINGS_ITEM_IN_GROUP_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .then(SETTINGS_ITEM_CORE_MODIFIER)
+
+private val SETTINGS_ITEM_STANDALONE_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .then(SETTINGS_ITEM_STANDALONE_SHAPE_MODIFIER)
+    .then(SETTINGS_ITEM_CORE_MODIFIER)
+
+private val SLIDER_WITH_ICON_MODIFIER = Modifier.padding(
+    start = SETTINGS_SLIDER_WITH_ICON_START_PADDING,
+    end = SETTINGS_SLIDER_END_PADDING
+)
+private val SLIDER_WITHOUT_ICON_MODIFIER = Modifier.padding(
+    start = SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING,
+    end = SETTINGS_SLIDER_END_PADDING
+)
+
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 
 @Composable
@@ -140,14 +176,17 @@ private fun SettingsSectionTitlePreview() = SettingsPreview {
 @Composable
 fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = SETTINGS_DEFAULT_START_INDENT) {
     val inGroup = LocalSettingsInGroup.current
+    val containerModifier = if (inGroup) SETTINGS_DIVIDER_CONTAINER_IN_GROUP else SETTINGS_DIVIDER_CONTAINER_STANDALONE
+    val dividerModifier = if (startIndent == SETTINGS_DEFAULT_START_INDENT) {
+        SETTINGS_DEFAULT_DIVIDER_MODIFIER
+    } else {
+        Modifier.padding(start = startIndent, end = SETTINGS_GROUP_HORIZONTAL_PADDING)
+    }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (inGroup) Modifier else Modifier.padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING))
-            .background(SettingsCardColor)
+        modifier = containerModifier
     ) {
         HorizontalDivider(
-            modifier = Modifier.padding(start = startIndent, end = SETTINGS_GROUP_HORIZONTAL_PADDING),
+            modifier = dividerModifier,
             thickness = SETTINGS_DIVIDER_THICKNESS,
             color = SettingsDividerColor
         )
@@ -217,10 +256,12 @@ fun SettingsListItem(
     modifier: Modifier = Modifier
 ) {
     val inGroup = LocalSettingsInGroup.current
-    val clickableModifier = if (onClick != null) {
-        Modifier.clickable(onClick = onClick)
-    } else {
-        Modifier
+    val baseModifier = if (inGroup) SETTINGS_ITEM_IN_GROUP_BASE_MODIFIER else SETTINGS_ITEM_STANDALONE_BASE_MODIFIER
+    val rowModifier = when {
+        onClick != null && modifier == Modifier -> baseModifier.clickable(onClick = onClick)
+        onClick != null -> modifier.then(baseModifier).clickable(onClick = onClick)
+        modifier == Modifier -> baseModifier
+        else -> modifier.then(baseModifier)
     }
 
     val titleStyle = remember(Theme.L.Type.rowTitle) {
@@ -241,21 +282,7 @@ fun SettingsListItem(
     }
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(
-                if (inGroup) {
-                    Modifier
-                } else {
-                    Modifier
-                        .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING)
-                        .clip(settingsCardShape)
-                }
-            )
-            .background(SettingsCardColor)
-            .then(clickableModifier)
-            .heightIn(min = SETTINGS_ITEM_MIN_HEIGHT)
-            .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING, vertical = SETTINGS_ITEM_VERTICAL_PADDING),
+        modifier = rowModifier,
         verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         if (icon != 0) {
@@ -478,24 +505,23 @@ fun IntSliderSetting(
             text = text,
             subtitle = "$currentValue$suffix"
         )
+        val sliderModifier = if (icon != 0) SLIDER_WITH_ICON_MODIFIER else SLIDER_WITHOUT_ICON_MODIFIER
+        val sliderColors = SliderDefaults.colors(
+            thumbColor = SettingsAccentColor,
+            activeTrackColor = SettingsAccentColor,
+            inactiveTrackColor = SettingsDividerColor
+        )
         Slider(
             value = currentValue.toFloat(),
             onValueChange = { rawValue ->
                 sliderValue = snapSliderValue(rawValue, min, max, step).toFloat()
             },
             onValueChangeFinished = onFinished,
-            modifier = Modifier.padding(
-                start = if (icon != 0) SETTINGS_SLIDER_WITH_ICON_START_PADDING else SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING,
-                end = SETTINGS_SLIDER_END_PADDING
-            ),
+            modifier = sliderModifier,
             valueRange = min.toFloat()..max.toFloat(),
             steps = steps,
             enabled = enabled,
-            colors = SliderDefaults.colors(
-                thumbColor = SettingsAccentColor,
-                activeTrackColor = SettingsAccentColor,
-                inactiveTrackColor = SettingsDividerColor
-            )
+            colors = sliderColors
         )
     }
 }
