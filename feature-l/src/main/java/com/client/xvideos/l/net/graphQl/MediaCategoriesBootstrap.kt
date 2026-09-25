@@ -25,6 +25,8 @@ suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean
     if (res.isFailure) return
 
     val raw = res.getOrNull().orEmpty()
+    if (raw.isBlank()) return
+
     val response = runCatching {
         LJson.decodeFromString<MediaCategoriesBootstrapResponse>(raw)
     }.getOrElse { e ->
@@ -32,8 +34,11 @@ suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean
         return
     }
 
+    val newCategories = response.data.mediaCategories
+    if (mediaCategoriesFlow.value == newCategories) return
+
     withContext(Dispatchers.Main) {
-        mediaCategoriesFlow.value = response.data.mediaCategories
+        mediaCategoriesFlow.value = newCategories
     }
 }
 

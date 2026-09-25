@@ -12,13 +12,17 @@ private const val PLAYER_MARKER = "html5player."
 fun parserItemVideo(document: Document): String? {
     val container = document.selectFirst("#video-player-bg")
     if (container != null) {
-        val script = container.getElementsByTag("script").firstOrNull { it.data().contains(PLAYER_MARKER) }
-        if (script != null) return script.data()
+        for (script in container.getElementsByTag("script")) {
+            val data = script.data()
+            if (data.contains(PLAYER_MARKER)) return data
+        }
     }
 
-    return document.getElementsByTag("script")
-        .firstOrNull { it.data().contains(PLAYER_MARKER) }
-        ?.data()
+    for (script in document.getElementsByTag("script")) {
+        val data = script.data()
+        if (data.contains(PLAYER_MARKER)) return data
+    }
+    return null
 }
 
 /**

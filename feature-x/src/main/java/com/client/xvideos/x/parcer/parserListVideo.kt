@@ -17,7 +17,7 @@ private val VIEWS_TOKEN_REGEX = Regex("""\d[\d., \s]*[KkMmGgКкМмБб]?""")
  * @return emoji-флаг (напр. "🇸🇪") или null, если не удалось определить.
  */
 fun parseSiteCountryFlag(document: Document): String? {
-    val element = document.selectFirst("#site-localisation") ?: return null
+    val element = document.getElementById("site-localisation") ?: return null
     val code = FLAG_CODE_REGEX
         .find(element.outerHtml())
         ?.groupValues?.get(1) ?: return null
@@ -47,7 +47,7 @@ fun parserListVideo(document: Document): List<ItemsX> {
             val titleAnchor = block.selectFirst("p.title a")
             val videoTitle = titleAnchor?.text() ?: "No title"
             val href = titleAnchor?.attr("href")?.trim().orEmpty()
-            if (href.isBlank() || href == "No link") continue
+            if (href.isEmpty() || href == "No link") continue
             val videoDuration = block.selectFirst("span.duration")?.text() ?: "No duration"
 
             // Пусто, а не "null": ItemsX.previewImage — non-null String со значением

@@ -58,6 +58,7 @@ class R_Saved_Subscriptions(
     }
 
     fun add(item: UserInfo) {
+        if (item.username.isBlank()) return
         Timber.i("R_Saved_Subscriptions add() id:$item")
         scope.launch(Dispatchers.IO) {
             creatorDb.insert(item.username, item)
@@ -79,6 +80,7 @@ class R_Saved_Subscriptions(
     }
 
     fun remove(username: String) {
+        if (username.isBlank()) return
         Timber.i("R_Saved_Subscriptions remove() id:$username")
         scope.launch(Dispatchers.IO) {
             creatorDb.delete(username)
@@ -125,9 +127,15 @@ class R_Saved_Subscriptions(
         if (selectedNames.isEmpty()) return emptyList()
 
         val res = ArrayList<GifsInfo>(selectedNames.size * 25)
+        val seenIds = HashSet<String>(selectedNames.size * 25)
         for (name in selectedNames) {
             try {
-                res.addAll(read50LastItem(name))
+                val items = read50LastItem(name)
+                for (item in items) {
+                    if (seenIds.add(item.id)) {
+                        res.add(item)
+                    }
+                }
             } catch (e: CancellationException) {
                 // Иначе отмена гасилась и цикл продолжал дёргать сеть по всем
                 // оставшимся авторам уже на отменённой корутине.
@@ -136,7 +144,7 @@ class R_Saved_Subscriptions(
                 Timber.e(e)
             }
         }
-        return res.distinctBy { it.id }
+        return res
     }
 
 

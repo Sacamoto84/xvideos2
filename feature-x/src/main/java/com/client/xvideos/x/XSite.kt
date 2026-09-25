@@ -18,7 +18,7 @@ const val urlStart = "https://www.xv-ru.com"
  */
 fun normalizeXUrl(href: String): String {
     val trimmed = href.trim()
-    if (trimmed.isBlank()) return ""
+    if (trimmed.isEmpty()) return ""
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
     if (trimmed.startsWith("//")) return "https:$trimmed"
     return "$urlStart/${trimmed.removePrefix("/")}"
@@ -39,14 +39,14 @@ private val SECONDS_REGEX = Regex("""(\d+)\s*(?:sec|сек|s)""")
  * - Современный формат с токеном: `/video.uicfdab07bd/_` -> стабильный детерминированный положительный Long ID
  */
 fun extractXVideoId(href: String): Long? {
-    if (href.isBlank()) return null
+    if (href.isEmpty() || !href.contains("/video")) return null
     // 1. Числовой id: /video12345/ или /video.12345/
     val numericMatch = NUMERIC_VIDEO_ID_REGEX.find(href)?.groupValues?.get(1)?.toLongOrNull()
     if (numericMatch != null && numericMatch > 0L) return numericMatch
 
     // 2. Буквенно-цифровой id (современные ссылки X: /video.uicfdab07bd/_ или /video_uicfdab07bd/):
     val slugMatch = SLUG_VIDEO_ID_REGEX.find(href)?.groupValues?.get(1)
-    if (!slugMatch.isNullOrBlank()) {
+    if (!slugMatch.isNullOrEmpty()) {
         val bits = java.util.UUID.nameUUIDFromBytes(slugMatch.toByteArray(Charsets.UTF_8)).mostSignificantBits
         val positive = bits and Long.MAX_VALUE
         if (positive > 0L) return positive

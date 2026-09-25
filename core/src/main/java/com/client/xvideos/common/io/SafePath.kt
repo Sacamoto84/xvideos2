@@ -25,6 +25,7 @@ import java.io.File
  * @throws IllegalArgumentException если путь небезопасен.
  */
 fun normalizeRelativePath(raw: String): String {
+    require(raw.isNotBlank()) { "Пустое имя пути" }
     val name = raw.replace('\\', '/').trim('/')
     require(name.isNotBlank()) { "Пустое имя пути" }
     require(!name.contains(':') && !name.contains('\u0000') && name.none { it < ' ' }) { "Небезопасный путь: $raw" }
