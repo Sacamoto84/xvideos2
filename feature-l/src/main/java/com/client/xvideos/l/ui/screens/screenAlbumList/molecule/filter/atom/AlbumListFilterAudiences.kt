@@ -33,10 +33,21 @@ import com.client.xvideos.l.model.enum.AudiencesType
 import com.client.xvideos.l.net.graphQl.Audience
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 
+private val DROPDOWN_SHAPE = RoundedCornerShape(6.dp)
+private val DROPDOWN_MIN_WIDTH = 160.dp
+private val DROPDOWN_MAX_WIDTH = 220.dp
+private val DROPDOWN_HEIGHT = 43.dp
+private val DROPDOWN_BORDER_WIDTH = 1.dp
+private val DROPDOWN_HORIZONTAL_PADDING = 8.dp
+private val ROW_HORIZONTAL_PADDING = 4.dp
+private const val TITLE_AUDIENCES = "Audiences"
+private const val TEXT_ALL_AUDIENCES = "All audiences"
+
 @Composable
 fun AlbumListFilterAudiences(
     filter: AlbumListFilter,
-    onChange: (AlbumListFilter) -> Unit
+    modifier: Modifier = Modifier,
+    onChange: (AlbumListFilter) -> Unit,
 ) {
     val palette = StyleGenresTags.Palette
     val mediaCategories by mediaCategoriesFlow.collectAsStateWithLifecycle()
@@ -51,36 +62,52 @@ fun AlbumListFilterAudiences(
 
     val summaryText = remember(isAllSelected, audiences, selectedIds) {
         if (isAllSelected) {
-            "All audiences"
+            TEXT_ALL_AUDIENCES
         } else {
             audiences.filter { it.id in selectedIds }.joinToString { it.title }
         }
     }
 
+    val titleStyle = remember(palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(
+            fontWeight = FontWeight.Bold,
+            color = palette.textPrimary
+        )
+    }
+    val normalValueStyle = remember(palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.textPrimary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    val selectedValueStyle = remember(palette.selectedText) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.selectedText,
+            fontWeight = FontWeight.Bold
+        )
+    }
+
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = ROW_HORIZONTAL_PADDING),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Audiences",
-            style = Theme.L.Type.rowTitle.copy(
-                fontWeight = FontWeight.Bold,
-                color = palette.textPrimary
-            )
+            text = TITLE_AUDIENCES,
+            style = titleStyle
         )
 
         Row(
             modifier = Modifier
-                .widthIn(min = 160.dp, max = 220.dp)
-                .height(43.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                .widthIn(min = DROPDOWN_MIN_WIDTH, max = DROPDOWN_MAX_WIDTH)
+                .height(DROPDOWN_HEIGHT)
+                .clip(DROPDOWN_SHAPE)
+                .border(DROPDOWN_BORDER_WIDTH, palette.border, DROPDOWN_SHAPE)
                 .background(palette.field)
                 .clickable { showDialog = true }
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = DROPDOWN_HORIZONTAL_PADDING),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -89,10 +116,7 @@ fun AlbumListFilterAudiences(
                 modifier = Modifier.weight(1f, fill = false),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = Theme.L.Type.rowTitle.copy(
-                    color = if (isAllSelected) palette.textPrimary else palette.selectedText,
-                    fontWeight = FontWeight.Bold
-                )
+                style = if (isAllSelected) normalValueStyle else selectedValueStyle
             )
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,

@@ -29,9 +29,12 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.util.formatBytes
 import java.io.File
 
+import kotlinx.collections.immutable.persistentListOf
+
 private val PROGRESS_CORNER = 6.dp
 private val PROGRESS_SHAPE = RoundedCornerShape(PROGRESS_CORNER)
 private const val TEXT_TOTAL_DATA = "Всего данных"
+private const val TEXT_FILES_COUNT_PREFIX = " \u2022 файлов: "
 private const val SUBTITLE_X = "XVideos"
 private const val SUBTITLE_L = "Luscious"
 private const val SUBTITLE_R = "RedGifs"
@@ -42,6 +45,13 @@ private val ICON_SPACER_WIDTH = 16.dp
 private val SUBTITLE_SPACER_HEIGHT = 4.dp
 private const val PROGRESS_COERCE_MIN = 0f
 private const val PROGRESS_COERCE_MAX = 1f
+private val PROGRESS_BAR_MODIFIER = Modifier
+    .fillMaxWidth()
+    .height(PROGRESS_BAR_HEIGHT)
+    .clip(PROGRESS_SHAPE)
+private val STORAGE_ROW_TITLE_STYLE = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
+private val STORAGE_ROW_SUBTITLE_STYLE = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
+private val STORAGE_CAPTION_STYLE = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
 
 @Immutable
 internal data class StorageStat(
@@ -57,7 +67,7 @@ internal data class FolderSnapshot(
     val fileCount: Int
 )
 
-internal val EmptyStorageStats = listOf(
+internal val EmptyStorageStats: List<StorageStat> = persistentListOf(
     StorageStat(key = "X", title = "X"),
     StorageStat(key = "L", title = "L"),
     StorageStat(key = "R", title = "R")
@@ -95,7 +105,7 @@ internal fun StorageStatisticsSection(
 @Composable
 private fun StorageStatisticsSectionPreview() = SettingsPreview {
     StorageStatisticsSection(
-        stats = listOf(
+        stats = persistentListOf(
             StorageStat("X", "X", 300_000_000, 120),
             StorageStat("L", "L", 200_000_000, 80),
             StorageStat("R", "R", 500_000_000, 200)
@@ -111,18 +121,8 @@ internal fun StorageProgressRow(
 ) {
     val formattedSize = remember(stat.sizeBytes) { formatBytes(stat.sizeBytes) }
     val subtitleText = remember(stat.key, stat.fileCount) {
-        "${sectionSubtitle(stat.key)} \u2022 файлов: ${stat.fileCount}"
+        "${sectionSubtitle(stat.key)}$TEXT_FILES_COUNT_PREFIX${stat.fileCount}"
     }
-    val rowTitleStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
-    }
-    val rowSubtitleStyle = remember(Theme.L.Type.rowSubtitle) {
-        Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
-    }
-    val captionStyle = remember(Theme.L.Type.caption) {
-        Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
-    }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -141,21 +141,18 @@ internal fun StorageProgressRow(
                 Text(
                     text = stat.title,
                     color = SettingsRowTextPrimary,
-                    style = rowTitleStyle
+                    style = STORAGE_ROW_TITLE_STYLE
                 )
                 Text(
                     text = formattedSize,
                     color = SettingsRowTextSecondary,
-                    style = rowSubtitleStyle
+                    style = STORAGE_ROW_SUBTITLE_STYLE
                 )
             }
             Spacer(Modifier.height(PROGRESS_BAR_HEIGHT))
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(PROGRESS_BAR_HEIGHT)
-                    .clip(PROGRESS_SHAPE),
+                modifier = PROGRESS_BAR_MODIFIER,
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor
             )
@@ -163,7 +160,7 @@ internal fun StorageProgressRow(
             Text(
                 text = subtitleText,
                 color = SettingsRowTextSecondary,
-                style = captionStyle
+                style = STORAGE_CAPTION_STYLE
             )
         }
     }

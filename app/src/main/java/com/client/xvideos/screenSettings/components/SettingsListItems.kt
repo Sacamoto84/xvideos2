@@ -306,12 +306,14 @@ private fun SettingsIconPreview() = SettingsPreview {
 fun SettingsValueRow(
     @DrawableRes icon: Int = 0,
     text: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier,
 ) {
     SettingsListItem(
         icon = icon,
         text = text,
-        subtitle = value
+        subtitle = value,
+        modifier = modifier
     )
 }
 
@@ -332,8 +334,18 @@ fun SettingsSwitchRow(
     subtitle: String,
     value: Boolean,
     enabled: Boolean = true,
-    onValueChange: (Boolean) -> Unit
+    modifier: Modifier = Modifier,
+    onValueChange: (Boolean) -> Unit,
 ) {
+    val switchColors = SwitchDefaults.colors(
+        checkedThumbColor = SettingsOnAccentColor,
+        checkedTrackColor = SettingsAccentColor,
+        checkedBorderColor = Color.Transparent,
+        uncheckedThumbColor = SWITCH_UNCHECKED_THUMB,
+        uncheckedTrackColor = SWITCH_UNCHECKED_TRACK,
+        uncheckedBorderColor = SWITCH_UNCHECKED_BORDER
+    )
+
     SettingsListItem(
         icon = icon,
         text = text,
@@ -343,16 +355,10 @@ fun SettingsSwitchRow(
                 checked = value,
                 enabled = enabled,
                 onCheckedChange = onValueChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = SettingsOnAccentColor,
-                    checkedTrackColor = SettingsAccentColor,
-                    checkedBorderColor = Color.Transparent,
-                    uncheckedThumbColor = SWITCH_UNCHECKED_THUMB,
-                    uncheckedTrackColor = SWITCH_UNCHECKED_TRACK,
-                    uncheckedBorderColor = SWITCH_UNCHECKED_BORDER
-                )
+                colors = switchColors
             )
-        }
+        },
+        modifier = modifier
     )
 }
 

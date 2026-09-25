@@ -20,6 +20,10 @@ private const val POSTER_ASPECT_RATIO = 352f / 198f
 private val POSTER_WIDTH = 160.dp
 private const val DIALOG_TITLE = "Удалить из избранного?"
 private const val CONFIRM_TEXT = "Удалить"
+private val POSTER_MODIFIER = Modifier
+    .width(POSTER_WIDTH)
+    .aspectRatio(POSTER_ASPECT_RATIO)
+    .clip(FAVORITE_POSTER_SHAPE)
 
 /**
  * Диалог подтверждения удаления видео из «Избранного».
@@ -40,10 +44,7 @@ fun ConfirmDeleteFavoriteDialog(
         {
             UrlImage(
                 url = posterUrl,
-                modifier = Modifier
-                    .width(POSTER_WIDTH)
-                    .aspectRatio(POSTER_ASPECT_RATIO)
-                    .clip(FAVORITE_POSTER_SHAPE)
+                modifier = POSTER_MODIFIER
             )
         }
     }

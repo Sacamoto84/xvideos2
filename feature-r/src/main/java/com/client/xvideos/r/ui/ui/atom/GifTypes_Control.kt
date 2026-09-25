@@ -29,9 +29,19 @@ private val INDICATOR_WIDTH = 48.dp
 private val INDICATOR_HEIGHT = 4.dp
 private val INDICATOR_OFFSET_Y = 16.dp
 private val INDICATOR_OFFSET_X = 0.dp
+private val INDICATOR_BASE_MODIFIER = Modifier
+    .offset(INDICATOR_OFFSET_X, INDICATOR_OFFSET_Y)
+    .width(INDICATOR_WIDTH)
+    .height(INDICATOR_HEIGHT)
+private val DIVIDER_MODIFIER = Modifier
+    .width(DIVIDER_WIDTH)
+    .height(CONTROL_HEIGHT)
 
 @Composable
-fun GifTypes_Control(vm: ScreenRedProfileSM) {
+fun GifTypes_Control(
+    vm: ScreenRedProfileSM,
+    modifier: Modifier = Modifier,
+) {
     val handleTypeSelected: (TypeGifs) -> Unit = remember(vm) {
         { type ->
             vm.typeGifs = type
@@ -41,7 +51,8 @@ fun GifTypes_Control(vm: ScreenRedProfileSM) {
     GifTypes_Control(
         typeGifsList = vm.typeGifsList,
         selectedType = vm.typeGifs,
-        onTypeSelected = handleTypeSelected
+        onTypeSelected = handleTypeSelected,
+        modifier = modifier
     )
 }
 
@@ -49,7 +60,8 @@ fun GifTypes_Control(vm: ScreenRedProfileSM) {
 fun GifTypes_Control(
     typeGifsList: List<TypeGifs>,
     selectedType: TypeGifs,
-    onTypeSelected: (TypeGifs) -> Unit
+    onTypeSelected: (TypeGifs) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val item0 = typeGifsList.getOrNull(0)
     val item1 = typeGifsList.getOrNull(1)
@@ -60,8 +72,11 @@ fun GifTypes_Control(
         { item1?.let(onTypeSelected) ?: Unit }
     }
 
-    Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         if (item0 != null) {
             TextAndLine(
                 modifier = Modifier.weight(1f),
@@ -71,7 +86,7 @@ fun GifTypes_Control(
             )
         }
 
-        Box(Modifier.width(DIVIDER_WIDTH).height(CONTROL_HEIGHT).background(Theme.R.colorBorderGray))
+        Box(DIVIDER_MODIFIER.background(Theme.R.colorBorderGray))
 
         if (item1 != null) {
             TextAndLine(
@@ -81,7 +96,6 @@ fun GifTypes_Control(
                 onClick = onSelect1
             )
         }
-
     }
 }
 
@@ -100,7 +114,6 @@ private fun TextAndLine(
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-
         Text(
             text = str,
             fontSize = LABEL_FONT_SIZE,
@@ -109,17 +122,9 @@ private fun TextAndLine(
         )
 
         Box(
-            Modifier
-                //.align(Alignment.BottomCenter)
-                .offset(INDICATOR_OFFSET_X, INDICATOR_OFFSET_Y)
-                .width(INDICATOR_WIDTH)
-                .height(INDICATOR_HEIGHT)
-                .background(indicatorColor)
+            INDICATOR_BASE_MODIFIER.background(indicatorColor)
         )
-
     }
-
-
 }
 
 @Preview

@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -109,26 +109,11 @@ fun BottomListDashBoardNavigationButtons2(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        val canGoBack = value > 0
-        val backBg = if (!canGoBack) COLOR_TEXT_BLACK else COLOR_ACCENT
-        val backTextColor = if (!canGoBack) Color.DarkGray else Color.Black
-
-        Box(
-            modifier = Modifier
-                .padding(horizontal = ITEM_PADDING_HORIZONTAL)
-                .width(NAV_BUTTON_HEIGHT)
-                .height(NAV_BUTTON_HEIGHT)
-                .background(backBg)
-                .clickable(enabled = canGoBack, onClick = onBackClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                ARROW_LEFT,
-                color = backTextColor,
-                fontSize = ARROW_FONT_SIZE,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        ArrowNavigationButton(
+            arrow = ARROW_LEFT,
+            enabled = value > 0,
+            onClick = onBackClick
+        )
 
         LazyRow(
             modifier = Modifier
@@ -153,26 +138,38 @@ fun BottomListDashBoardNavigationButtons2(
             }
         }
 
-        val canGoForward = value < maxPageIndex
-        val forwardBg = if (!canGoForward) COLOR_TEXT_BLACK else COLOR_ACCENT
-        val forwardTextColor = if (!canGoForward) Color.DarkGray else Color.Black
+        ArrowNavigationButton(
+            arrow = ARROW_RIGHT,
+            enabled = value < maxPageIndex,
+            onClick = onForwardClick
+        )
+    }
+}
 
-        Box(
-            modifier = Modifier
-                .padding(horizontal = ITEM_PADDING_HORIZONTAL)
-                .width(NAV_BUTTON_HEIGHT)
-                .height(NAV_BUTTON_HEIGHT)
-                .background(forwardBg)
-                .clickable(enabled = canGoForward, onClick = onForwardClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                ARROW_RIGHT,
-                color = forwardTextColor,
-                fontSize = ARROW_FONT_SIZE,
-                fontWeight = FontWeight.Bold
-            )
-        }
+@Composable
+private fun ArrowNavigationButton(
+    arrow: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val bg = if (!enabled) COLOR_TEXT_BLACK else COLOR_ACCENT
+    val textColor = if (!enabled) Color.DarkGray else Color.Black
+
+    Box(
+        modifier = modifier
+            .padding(horizontal = ITEM_PADDING_HORIZONTAL)
+            .size(NAV_BUTTON_HEIGHT)
+            .background(bg)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = arrow,
+            color = textColor,
+            fontSize = ARROW_FONT_SIZE,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

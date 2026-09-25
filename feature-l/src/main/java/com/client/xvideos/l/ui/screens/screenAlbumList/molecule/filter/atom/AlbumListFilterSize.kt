@@ -26,16 +26,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.enum.PictureCountRank
 import kotlinx.collections.immutable.persistentListOf
 
 private val style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
 private val SIZE_OPTIONS = persistentListOf("Any", "0..25", "25..50", "50..100", "100..200", "200..800", "800..3200", "3200..12800")
+private val DROPDOWN_SHAPE = RoundedCornerShape(6.dp)
+private val DROPDOWN_WIDTH = 160.dp
+private val DROPDOWN_HEIGHT = 43.dp
+private val DROPDOWN_BORDER_WIDTH = 1.dp
+private val DROPDOWN_HORIZONTAL_PADDING = 8.dp
+private val ROW_START_PADDING = 4.dp
+private const val TITLE_ALBUM_SIZE = "Album Size"
 
 @Composable
-fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -> Unit) {
-
+fun AlbumListFilterSize(
+    value: PictureCountRank,
+    modifier: Modifier = Modifier,
+    onChanged: (PictureCountRank) -> Unit,
+) {
     var showDialog by remember { mutableStateOf(false) }
     val palette = StyleGenresTags.Palette
 
@@ -50,24 +61,26 @@ fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -
         PictureCountRank.C3200_12800 -> "3200..12800"
     }
 
+    val titleStyle = remember(palette.textPrimary) { style.copy(color = palette.textPrimary) }
+
     Row(
-        modifier = Modifier
-            .padding(start = 4.dp)
+        modifier = modifier
+            .padding(start = ROW_START_PADDING)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text("Album Size", style = style.copy(color = palette.textPrimary))
+        Text(TITLE_ALBUM_SIZE, style = titleStyle)
 
         Row(
             modifier = Modifier
-                .width(160.dp)
-                .height(43.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                .width(DROPDOWN_WIDTH)
+                .height(DROPDOWN_HEIGHT)
+                .clip(DROPDOWN_SHAPE)
+                .border(DROPDOWN_BORDER_WIDTH, palette.border, DROPDOWN_SHAPE)
                 .background(palette.field)
                 .clickable { showDialog = true }
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = DROPDOWN_HORIZONTAL_PADDING),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -76,7 +89,7 @@ fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -
                 modifier = Modifier.weight(1f, fill = false),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = Theme.L.Type.rowTitle.copy(color = palette.textPrimary, fontWeight = FontWeight.Bold)
+                style = titleStyle
             )
             Icon(
                 Icons.Default.ArrowDropDown,
@@ -88,7 +101,7 @@ fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -
 
     if (showDialog) {
         AlbumFilterSelectDialog(
-            title = "Album Size",
+            title = TITLE_ALBUM_SIZE,
             items = SIZE_OPTIONS,
             selectedItem = currentLabel,
             itemTitle = { it },
@@ -110,4 +123,14 @@ fun AlbumListFilterSize(value: PictureCountRank, onChanged: (PictureCountRank) -
             }
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
+@Composable
+fun AlbumListFilterSizePreview() {
+    var size by remember { mutableStateOf(PictureCountRank.C25_50) }
+    AlbumListFilterSize(
+        value = size,
+        onChanged = { size = it }
+    )
 }
