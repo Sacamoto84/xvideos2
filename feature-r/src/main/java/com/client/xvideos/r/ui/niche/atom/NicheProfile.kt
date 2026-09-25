@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,12 +50,22 @@ private val FOLLOW_BORDER_WIDTH = 1.dp
 private val PADDING_XSMALL = 4.dp
 private val PADDING_SMALL = 8.dp
 
+private val STAT_TEXT_STYLE = TextStyle(
+    color = Color.White,
+    textAlign = TextAlign.Center,
+    fontSize = STAT_FONT_SIZE,
+)
+
 private const val TEXT_UNSUBSCRIBE = "Выйти"
 private const val TEXT_SUBSCRIBE = "Подписаться"
 private const val DEFAULT_PLACEHOLDER_ID = "id"
 
 @Composable
-fun NicheProfile(savedRed: () -> SavedRed, niche: NichesInfo) {
+fun NicheProfile(
+    savedRed: () -> SavedRed,
+    niche: NichesInfo,
+    modifier: Modifier = Modifier,
+) {
     val isFollowed = savedRed().niches.list.any { it.id == niche.id }
 
     val handleFollowClick = remember(niche, isFollowed, savedRed) {
@@ -78,7 +89,8 @@ fun NicheProfile(savedRed: () -> SavedRed, niche: NichesInfo) {
     NicheProfileContent(
         niche = { niche },
         isFollowed = isFollowed,
-        onFollowClick = handleFollowClick
+        onFollowClick = handleFollowClick,
+        modifier = modifier
     )
 }
 
@@ -86,14 +98,15 @@ fun NicheProfile(savedRed: () -> SavedRed, niche: NichesInfo) {
 fun NicheProfileContent(
     niche: () -> NichesInfo,
     isFollowed: Boolean,
-    onFollowClick: () -> Unit
+    onFollowClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val currentNiche = niche()
     val subscribersText = remember(currentNiche.subscribers) { currentNiche.subscribers.toPrettyCount() }
     val gifsText = remember(currentNiche.gifs) { currentNiche.gifs.toPrettyCount() }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(start = PADDING_XSMALL)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -129,9 +142,7 @@ fun NicheProfileContent(
                     modifier = Modifier
                         .padding(start = PADDING_XSMALL, end = PADDING_XSMALL)
                         .wrapContentWidth(Alignment.CenterHorizontally),
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    fontSize = STAT_FONT_SIZE
+                    style = STAT_TEXT_STYLE
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -146,9 +157,7 @@ fun NicheProfileContent(
                     modifier = Modifier
                         .padding(start = PADDING_XSMALL, end = PADDING_XSMALL)
                         .wrapContentWidth(Alignment.CenterHorizontally),
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    fontSize = STAT_FONT_SIZE
+                    style = STAT_TEXT_STYLE
                 )
             }
 
@@ -162,7 +171,8 @@ fun NicheProfileContent(
 @Composable
 private fun ButtonFollowContent(
     isFollowed: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val buttonText = remember(isFollowed) { if (isFollowed) TEXT_UNSUBSCRIBE else TEXT_SUBSCRIBE }
     val buttonTextColor = remember(isFollowed) { if (isFollowed) Color.White else Color.Black }
@@ -170,7 +180,7 @@ private fun ButtonFollowContent(
     val buttonBorderColor = remember(isFollowed) { if (isFollowed) Color.White else Color.Transparent }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(end = PADDING_XSMALL)
             .clip(NICHE_FOLLOW_BUTTON_SHAPE)
             .width(FOLLOW_BUTTON_WIDTH)

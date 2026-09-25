@@ -75,7 +75,8 @@ private const val CD_NEXT_PAGE = "Следующая страница"
 fun AlbumListPageSelector(
     page: Int,
     pageMax: Int,
-    onChange: (Int) -> Unit = {}
+    onChange: (Int) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
 
     val haptic = LocalHapticFeedback.current
@@ -101,7 +102,7 @@ fun AlbumListPageSelector(
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(SELECTOR_HEIGHT),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -167,23 +168,43 @@ fun AlbumListPageSelector(
 
     //-- Диалог --
     if (expanded) {
-
         Dialog(onDismissRequest = onDismissDialog) {
-            Box(
-                modifier = Modifier
-                    .clip(PAGE_SELECTOR_DIALOG_SHAPE)
-                    .border(DIALOG_BORDER_WIDTH, PAGE_SELECTOR_DIALOG_BORDER_COLOR, PAGE_SELECTOR_DIALOG_SHAPE)
-                    .background(PAGE_SELECTOR_DIALOG_BG_COLOR)
-                    .padding(DIALOG_PADDING),
-                contentAlignment = Alignment.Center
-            ) {
-                KeyboardNumber(
-                    theme = DEFAULT_ALBUM_KEYBOARD_THEME,
-                    value = DEFAULT_KEYBOARD_VALUE,
-                    max = pageMax,
-                    onClick = onKeyboardNumberClick
-                )
-            }
+            PageSelectorDialogContent(
+                pageMax = pageMax,
+                onKeyboardNumberClick = onKeyboardNumberClick
+            )
         }
     }
+}
+
+@Composable
+private fun PageSelectorDialogContent(
+    pageMax: Int,
+    onKeyboardNumberClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(PAGE_SELECTOR_DIALOG_SHAPE)
+            .border(DIALOG_BORDER_WIDTH, PAGE_SELECTOR_DIALOG_BORDER_COLOR, PAGE_SELECTOR_DIALOG_SHAPE)
+            .background(PAGE_SELECTOR_DIALOG_BG_COLOR)
+            .padding(DIALOG_PADDING),
+        contentAlignment = Alignment.Center
+    ) {
+        KeyboardNumber(
+            theme = DEFAULT_ALBUM_KEYBOARD_THEME,
+            value = DEFAULT_KEYBOARD_VALUE,
+            max = pageMax,
+            onClick = onKeyboardNumberClick
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PageSelectorDialogContentPreview() {
+    PageSelectorDialogContent(
+        pageMax = 99,
+        onKeyboardNumberClick = {}
+    )
 }

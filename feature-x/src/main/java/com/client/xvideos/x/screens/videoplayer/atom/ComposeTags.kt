@@ -32,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
@@ -66,6 +68,20 @@ private val TAG_TOGGLE_ICON_SIZE = 18.dp
 
 private val TAG_FONT_SIZE = 13.sp
 private val TAG_TOGGLE_FONT_SIZE = 12.sp
+
+private val TAG_CHIP_TEXT_STYLE = TextStyle(
+    color = Color.White,
+    fontSize = TAG_FONT_SIZE,
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Medium,
+)
+
+private val TAG_TOGGLE_TEXT_STYLE = TextStyle(
+    color = Color.White,
+    fontSize = TAG_TOGGLE_FONT_SIZE,
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.SemiBold,
+)
 
 private const val ROTATION_COLLAPSED = 0f
 private const val ROTATION_EXPANDED = 180f
@@ -279,10 +295,7 @@ private fun TagChip(
     ) {
         Text(
             text = text,
-            color = Color.White,
-            fontSize = TAG_FONT_SIZE,
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Medium,
+            style = TAG_CHIP_TEXT_STYLE
         )
     }
 }
@@ -308,10 +321,7 @@ private fun TagToggleChip(
     ) {
         Text(
             text = text,
-            color = Color.White,
-            fontSize = TAG_TOGGLE_FONT_SIZE,
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.SemiBold,
+            style = TAG_TOGGLE_TEXT_STYLE
         )
         Icon(
             imageVector = Icons.Default.ArrowDropDown,
@@ -322,4 +332,23 @@ private fun TagToggleChip(
                 .rotate(if (isExpanded) ROTATION_EXPANDED else ROTATION_COLLAPSED),
         )
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF141418)
+@Composable
+private fun TagChipPreview() {
+    TagChip(text = "sample_tag", onClick = {})
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF141418)
+@Composable
+private fun ComposeTagsPreview() {
+    ComposeTags(
+        tags = TagsModel(
+            tags = listOf("tag1", "tag2", "tag3"),
+            mainUploader = emptyList(),
+            pornstars = emptyList()
+        ),
+        onClick = {}
+    )
 }

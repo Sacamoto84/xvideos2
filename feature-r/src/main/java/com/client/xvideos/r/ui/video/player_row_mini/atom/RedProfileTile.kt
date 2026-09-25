@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.feature.r.R
 import com.client.xvideos.r.model.GifsInfo
@@ -31,13 +32,19 @@ private val PADDING_DEFAULT = 8.dp
 private const val PLACEHOLDER_TEXT = "-"
 
 @Composable
-fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, isVisibleDuration : Boolean = true) {
+fun RedProfileTile(
+    item: GifsInfo,
+    index: Int,
+    isVisibleView: Boolean = true,
+    isVisibleDuration: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
     val indexText = remember(index) { index.toString() }
     val prettyViews = remember(item.views) { item.views?.toPrettyCount() ?: PLACEHOLDER_TEXT }
     val prettyDuration = remember(item.duration) { item.duration?.toMinSec() ?: PLACEHOLDER_TEXT }
 
-    Box(modifier = Modifier.fillMaxSize().clip(TILE_SHAPE)) {
-        //Индекс картинки
+    Box(modifier = modifier.fillMaxSize().clip(TILE_SHAPE)) {
+        // Индекс картинки
         Text(
             indexText,
             color = Color.Gray,
@@ -45,78 +52,83 @@ fun RedProfileTile(item: GifsInfo, index: Int, isVisibleView : Boolean = true, i
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
 
-        //Нижний ряд с лайками и длительностью
+        // Нижний ряд с лайками и длительностью
         Row(
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             if (isVisibleView) {
                 Row(
                     modifier = Modifier.padding(PADDING_DEFAULT),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    Box {
-                        Icon(
-                            painter = painterResource(R.drawable.rg_button),
-                            contentDescription = null,
-                            tint = Color.Black, modifier = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET)
-                        )
-                        Icon(
-                            painter = painterResource(R.drawable.rg_button),
-                            contentDescription = null,
-                            tint = Color.White
-                        )
-                    }
-
-                    Box {
-                        Text(
-                            prettyViews,
-                            color = Color.Black,
-                            modifier = Modifier
-                                .padding(start = PADDING_DEFAULT)
-                                .offset(SHADOW_OFFSET, SHADOW_OFFSET),
-                            fontFamily = Theme.R.fontFamilyPopinsMedium
-                        )
-
-                        Text(
-                            prettyViews,
-                            color = Color.White,
-                            modifier = Modifier
-                                .padding(start = PADDING_DEFAULT),
-                            fontFamily = Theme.R.fontFamilyPopinsMedium
-                        )
-                    }
-
+                    ShadowedIcon()
+                    ShadowedText(
+                        text = prettyViews,
+                        modifier = Modifier.padding(start = PADDING_DEFAULT)
+                    )
                 }
             }
 
             if (isVisibleDuration) {
-                Box {
-
-                    Text(
-                        prettyDuration,
-                        color = Color.Black,
-                        modifier = Modifier
-                            .padding(PADDING_DEFAULT)
-                            .offset(SHADOW_OFFSET, SHADOW_OFFSET),
-                        fontFamily = Theme.R.fontFamilyPopinsMedium
-                    )
-
-                    Text(
-                        prettyDuration,
-                        color = Color.White,
-                        modifier = Modifier
-                            .padding(PADDING_DEFAULT),
-                        fontFamily = Theme.R.fontFamilyPopinsMedium
-                    )
-                }
+                ShadowedText(
+                    text = prettyDuration,
+                    modifier = Modifier.padding(PADDING_DEFAULT)
+                )
             }
-
         }
-
     }
+}
 
+@Composable
+private fun ShadowedIcon(
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        Icon(
+            painter = painterResource(R.drawable.rg_button),
+            contentDescription = null,
+            tint = Color.Black,
+            modifier = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET)
+        )
+        Icon(
+            painter = painterResource(R.drawable.rg_button),
+            contentDescription = null,
+            tint = Color.White
+        )
+    }
+}
+
+@Composable
+private fun ShadowedText(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        Text(
+            text = text,
+            color = Color.Black,
+            modifier = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET),
+            fontFamily = Theme.R.fontFamilyPopinsMedium
+        )
+        Text(
+            text = text,
+            color = Color.White,
+            fontFamily = Theme.R.fontFamilyPopinsMedium
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun RedProfileTilePreview() {
+    RedProfileTile(
+        item = GifsInfo(
+            id = "sample_id",
+            views = 12500,
+            duration = 15.4
+        ),
+        index = 1
+    )
 }

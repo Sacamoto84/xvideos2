@@ -55,6 +55,29 @@ internal fun LPictureInfoDialog(
     val albumId = item.album?.toLongOrNull()
     val uriHandler = LocalUriHandler.current
 
+    val onAlbumClickAction = remember(albumId, onAlbumClick) {
+        if (albumId != null && onAlbumClick != null) {
+            { onAlbumClick(albumId) }
+        } else {
+            null
+        }
+    }
+
+    val infoText = remember(item, position, total) {
+        lPictureInfoText(item, position, total)
+    }
+
+    val onUrlClick: (String) -> Unit = remember(uriHandler) {
+        { url ->
+            try {
+                uriHandler.openUri(url)
+            } catch (e: Exception) {
+                Timber.w(e, "LPictureInfoDialog: не удалось открыть ссылку: $url")
+                SnackBar.error(ERR_OPEN_LINK)
+            }
+        }
+    }
+
     LavenderDialog(
         title = TITLE_INFO,
         onDismiss = onDismiss,
@@ -66,8 +89,8 @@ internal fun LPictureInfoDialog(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(LABEL_ALBUM, color = Theme.DialogLavande.dismissTextColor, fontFamily = Theme.L.fontFamilyKarla)
-                    if (albumId != null && onAlbumClick != null) {
-                        TextButton(onClick = { onAlbumClick(albumId) }) {
+                    if (albumId != null && onAlbumClickAction != null) {
+                        TextButton(onClick = onAlbumClickAction) {
                             Text(albumId.toString())
                         }
                     } else {
@@ -76,15 +99,8 @@ internal fun LPictureInfoDialog(
                 }
 
                 LPictureInfoText(
-                    text = lPictureInfoText(item, position, total),
-                    onUrlClick = { url ->
-                        runCatching {
-                            uriHandler.openUri(url)
-                        }.onFailure { e ->
-                            Timber.w(e, "LPictureInfoDialog: не удалось открыть ссылку: $url")
-                            SnackBar.error(ERR_OPEN_LINK)
-                        }
-                    }
+                    text = infoText,
+                    onUrlClick = onUrlClick
                 )
             }
         },
@@ -96,16 +112,21 @@ internal fun LPictureInfoDialog(
 @Composable
 private fun LPictureInfoText(
     text: String,
-    onUrlClick: (String) -> Unit
+    onUrlClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val annotatedText = remember(text) { text.withClickableHttpsLinks() }
+    val textStyle = remember(Theme.DialogLavande.bodyColor) {
+        TextStyle(
+            color = Theme.DialogLavande.bodyColor,
+            fontFamily = Theme.L.fontFamilyKarla
+        )
+    }
 
     ClickableText(
         text = annotatedText,
-        style = TextStyle(
-            color = Theme.DialogLavande.bodyColor,
-            fontFamily = Theme.L.fontFamilyKarla
-        ),
+        modifier = modifier,
+        style = textStyle,
         onClick = { offset ->
             annotatedText
                 .getStringAnnotations(TAG_URL, offset, offset)

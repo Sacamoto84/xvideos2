@@ -22,12 +22,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
@@ -52,6 +54,19 @@ private val TIME_FONT_SIZE = 11.sp
 private val CONTROL_ICON_TINT = Color.White
 private val TIME_TEXT_COLOR = Color.White
 private const val SAFE_MAX_PROGRESS_FALLBACK = 0.1f
+
+private val TIME_TEXT_STYLE = TextStyle(
+    color = TIME_TEXT_COLOR,
+    fontFamily = FontFamily.SansSerif,
+    fontSize = TIME_FONT_SIZE
+)
+
+private val FIT_MODE_TEXT_STYLE = TextStyle(
+    color = TIME_TEXT_COLOR,
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Bold,
+    fontSize = TIME_FONT_SIZE
+)
 
 private const val CD_PLAY = "Play"
 private const val CD_PAUSE = "Pause"
@@ -136,9 +151,7 @@ fun X_PlayerBottomBar(
             ?: 0
         Text(
             text = formatTime(safeCurrentTimeSec),
-            color = TIME_TEXT_COLOR,
-            fontFamily = FontFamily.SansSerif,
-            fontSize = TIME_FONT_SIZE
+            style = TIME_TEXT_STYLE
         )
 
         // Прогресс-бар
@@ -162,9 +175,7 @@ fun X_PlayerBottomBar(
         // Общее время
         Text(
             text = formattedTotalTime,
-            color = TIME_TEXT_COLOR,
-            fontFamily = FontFamily.SansSerif,
-            fontSize = TIME_FONT_SIZE
+            style = TIME_TEXT_STYLE
         )
 
         // Меню выбора скорости воспроизведения
@@ -175,12 +186,10 @@ fun X_PlayerBottomBar(
 
         // Переключатель режима масштабирования Fit / Fill
         if (isFullScreen) {
+            val fitModeText = if (host.videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT
             Text(
-                text = if (host.videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT,
-                color = TIME_TEXT_COLOR,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Bold,
-                fontSize = TIME_FONT_SIZE,
+                text = fitModeText,
+                style = FIT_MODE_TEXT_STYLE,
                 modifier = Modifier
                     .clip(FIT_MODE_SHAPE)
                     .clickable(onClick = onToggleFitMode)
@@ -216,4 +225,20 @@ internal fun formatTime(totalSeconds: Int): String {
     val seconds = validSeconds % SECONDS_PER_MINUTE
     return if (hours > 0) String.format(Locale.US, TIME_FORMAT_WITH_HOURS, hours, minutes, seconds)
     else String.format(Locale.US, TIME_FORMAT_MINUTES_ONLY, minutes, seconds)
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+private fun X_PlayerBottomBarPreview() {
+    val host = remember {
+        MediaPlayerHost().apply {
+            totalTime = 600
+            currentTime = 125f
+        }
+    }
+    X_PlayerBottomBar(
+        host = host,
+        isFullScreen = true,
+        onFullScreen = {}
+    )
 }

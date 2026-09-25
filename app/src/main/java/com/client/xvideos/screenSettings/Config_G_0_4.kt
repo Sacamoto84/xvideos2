@@ -40,15 +40,23 @@ private val POINT_SIZE = 4.dp
 private val POINT_ACTIVE_COLOR = Color.White
 private val POINT_INACTIVE_COLOR = Color.Gray
 private val POINT_SHAPE = CircleShape
+private val POINT_BASE_MODIFIER = Modifier
+    .padding(end = POINT_SPACING)
+    .clip(POINT_SHAPE)
+    .size(POINT_SIZE)
 
 @Composable
-fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolean>) {
+fun Config_G_0_4(
+    text: String = "123453232",
+    setting: SettingElementList<Boolean>,
+    modifier: Modifier = Modifier,
+) {
 
     val list by setting.field.collectAsStateWithLifecycle()
     val visibleIndices = remember(list) { list.indices.filter { it in 1..4 } }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = ROW_HORIZONTAL_PADDING, vertical = ROW_VERTICAL_PADDING)
             .height(ROW_HEIGHT)
             .fillMaxWidth(),
@@ -89,20 +97,21 @@ fun Config_G_0_4(text: String = "123453232", setting : SettingElementList<Boolea
 
 
 @Composable
-private fun TabBarPoints(count: Int, screenType: Boolean) {
+private fun TabBarPoints(
+    count: Int,
+    screenType: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val safeCount = count.takeIf { it in 1..4 } ?: 2
+    val pointColor = if (screenType) POINT_ACTIVE_COLOR else POINT_INACTIVE_COLOR
     Box(
-        modifier = Modifier.size(TAB_BAR_SIZE),
+        modifier = modifier.size(TAB_BAR_SIZE),
         contentAlignment = Alignment.Center
     ) {
         Row {
             repeat(safeCount) {
                 Box(
-                    modifier = Modifier
-                        .padding(end = POINT_SPACING)
-                        .clip(POINT_SHAPE)
-                        .size(POINT_SIZE)
-                        .background(if (screenType) POINT_ACTIVE_COLOR else POINT_INACTIVE_COLOR)
+                    modifier = POINT_BASE_MODIFIER.background(pointColor)
                 )
             }
         }
