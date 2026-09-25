@@ -21,29 +21,45 @@ import kotlinx.collections.immutable.persistentListOf
 
 private val style = Theme.L.Type.rowValue
 private val ALBUM_TYPE_OPTIONS = persistentListOf("All", "Manga", "Pictures")
+private val BUTTON_ROW_HEIGHT = 48.dp
+private val BASE_SEGMENT_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
-fun AlbumListFilterAlbumType(start : Int, onChange: (Int) -> Unit) {
-
+fun AlbumListFilterAlbumType(
+    start: Int,
+    modifier: Modifier = Modifier,
+    onChange: (Int) -> Unit,
+) {
     var selectedIndex by remember(start) { mutableIntStateOf(start) }
     val palette = StyleGenresTags.Palette
+    val buttonColors = SegmentedButtonDefaults.colors(
+        activeContainerColor = palette.selected,
+        activeContentColor = palette.selectedText,
+        activeBorderColor = palette.selectedBorder,
+        inactiveContainerColor = palette.field,
+        inactiveContentColor = palette.textSecondary,
+        inactiveBorderColor = palette.border,
+    )
+    val activeStyle = remember(palette.selectedText) {
+        style.copy(color = palette.selectedText)
+    }
+    val inactiveStyle = remember(palette.textSecondary) {
+        style.copy(color = palette.textSecondary)
+    }
 
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(48.dp)) {
+    SingleChoiceSegmentedButtonRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(BUTTON_ROW_HEIGHT)
+    ) {
         ALBUM_TYPE_OPTIONS.forEachIndexed { index, label ->
-            SegmentedButton(modifier = Modifier.height(48.dp),
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = palette.selected,
-                    activeContentColor = palette.selectedText,
-                    activeBorderColor = palette.selectedBorder,
-                    inactiveContainerColor = palette.field,
-                    inactiveContentColor = palette.textSecondary,
-                    inactiveBorderColor = palette.border,
-                ),
-
+            SegmentedButton(
+                modifier = Modifier.height(BUTTON_ROW_HEIGHT),
+                colors = buttonColors,
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
                     count = ALBUM_TYPE_OPTIONS.size,
-                    baseShape = RoundedCornerShape(4.dp)
+                    baseShape = BASE_SEGMENT_SHAPE
                 ),
                 onClick = {
                     selectedIndex = index
@@ -53,15 +69,12 @@ fun AlbumListFilterAlbumType(start : Int, onChange: (Int) -> Unit) {
                 label = {
                     Text(
                         label,
-                        style = style.copy(
-                            color = if (index == selectedIndex) palette.selectedText else palette.textSecondary
-                        )
+                        style = if (index == selectedIndex) activeStyle else inactiveStyle
                     )
                 }
             )
         }
     }
-
 }
 
 @Preview

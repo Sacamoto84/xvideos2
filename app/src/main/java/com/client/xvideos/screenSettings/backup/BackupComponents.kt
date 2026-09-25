@@ -94,6 +94,32 @@ private const val TEXT_CONSOLE_DEFAULT_SUBTITLE = "Здесь будет про�
 private const val TEXT_CONSOLE_CLEAR = "Очистить"
 private const val MODE_TITLE_MINI = "Мини"
 private const val MODE_TITLE_FULL = "Полный"
+private const val TEXT_SELECT_ALL = "Все X/L/R"
+private const val TEXT_DESELECT_ALL = "Снять"
+private const val TEXT_FOLDERS = "Папки"
+private const val TEXT_NO_DATA_FOR_BACKUP = "Нет данных для backup"
+private const val CONSOLE_SUMMARY_PREFIX = "---------"
+private const val CONSOLE_KEYWORD_TOTAL = "итог"
+
+private const val CHEVRON_ROTATION_EXPANDED = 90f
+private const val CHEVRON_ROTATION_COLLAPSED = 0f
+private const val TEXT_COLLAPSE = "Свернуть"
+private const val TEXT_EXPAND = "Развернуть"
+private const val TEXT_NO_CHILD_FOLDERS = "Нет вложенных папок"
+
+private const val MIN_PASSWORD_LENGTH = 4
+private const val TEXT_CREATE_PASSWORD_TITLE = "Шифрование бэкапа"
+private const val TEXT_CREATE_PASSWORD_CONFIRM = "Создать"
+private const val TEXT_CREATE_PASSWORD_DESCRIPTION = "Задайте пароль для шифрования архива. Без этого пароля восстановить данные будет невозможно."
+private const val TEXT_PASSWORD_LABEL = "Пароль архива"
+private const val TEXT_PASSWORD_CONFIRM_LABEL = "Подтверждение пароля"
+private const val TEXT_PASSWORD_TOO_SHORT = "Пароль должен быть не короче 4 символов"
+private const val TEXT_PASSWORDS_DO_NOT_MATCH = "Пароли не совпадают"
+private const val TEXT_PASSWORD_HIDE = "Скрыть пароль"
+private const val TEXT_PASSWORD_SHOW = "Показать пароль"
+private const val TEXT_RESTORE_PASSWORD_TITLE = "Ввод пароля бэкапа"
+private const val TEXT_RESTORE_PASSWORD_CONFIRM = "Открыть"
+private const val TEXT_RESTORE_PASSWORD_DESCRIPTION = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого."
 
 @Composable
 internal fun BackupModeSelector(
@@ -237,9 +263,12 @@ internal fun BackupConsole(
 }
 
 @Composable
-internal fun BackupConsoleLine(line: String) {
+internal fun BackupConsoleLine(
+    line: String,
+    modifier: Modifier = Modifier,
+) {
     val lower = line.lowercase()
-    val isSummary = line.startsWith("---------") || lower.contains("итог")
+    val isSummary = line.startsWith(CONSOLE_SUMMARY_PREFIX) || lower.contains(CONSOLE_KEYWORD_TOTAL)
     val isError = lower.contains("ошиб") ||
             lower.contains("бит") ||
             lower.contains("не скачан") ||
@@ -268,7 +297,7 @@ internal fun BackupConsoleLine(line: String) {
         text = line,
         color = color,
         style = style,
-        modifier = Modifier.padding(vertical = if (isSummary) BACKUP_CONSOLE_SUMMARY_PADDING else BACKUP_CONSOLE_REGULAR_PADDING)
+        modifier = modifier.padding(vertical = if (isSummary) BACKUP_CONSOLE_SUMMARY_PADDING else BACKUP_CONSOLE_REGULAR_PADDING)
     )
 }
 
@@ -276,10 +305,11 @@ internal fun BackupConsoleLine(line: String) {
 internal fun BackupSelectionActions(
     enabled: Boolean,
     onSelectAll: () -> Unit,
-    onSelectNone: () -> Unit
+    onSelectNone: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(
                 start = BACKUP_SELECTION_START_PADDING,
@@ -293,14 +323,14 @@ internal fun BackupSelectionActions(
             enabled = enabled,
             onClick = onSelectAll
         ) {
-            Text("Все X/L/R")
+            Text(TEXT_SELECT_ALL)
         }
         Spacer(Modifier.width(BACKUP_SELECTION_SPACER_WIDTH))
         TextButton(
             enabled = enabled,
             onClick = onSelectNone
         ) {
-            Text("Снять", color = SettingsAccentColor)
+            Text(TEXT_DESELECT_ALL, color = SettingsAccentColor)
         }
     }
 }
@@ -310,14 +340,17 @@ internal fun BackupFolderList(
     items: List<XlrBackupItem>,
     selectedPaths: Set<String>,
     enabled: Boolean,
-    onToggle: (String) -> Unit
+    onToggle: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     if (items.isEmpty()) {
-        SettingsValueRow(
-            icon = R.drawable.hard_drive_2_24,
-            text = "Папки",
-            value = "Нет данных для backup"
-        )
+        Column(modifier = modifier) {
+            SettingsValueRow(
+                icon = R.drawable.hard_drive_2_24,
+                text = TEXT_FOLDERS,
+                value = TEXT_NO_DATA_FOR_BACKUP
+            )
+        }
         return
     }
 
@@ -328,25 +361,27 @@ internal fun BackupFolderList(
         items.filter { it.parentPath != null }.groupBy { it.parentPath }
     }
 
-    rootItems.forEachIndexed { index, section ->
-        val children = childrenByParent[section.path].orEmpty()
-        if (index > 0) SettingsDivider()
-        BackupSectionGroup(
-            section = section,
-            children = children,
-            items = items,
-            selectedPaths = selectedPaths,
-            expanded = section.path in expandedSections,
-            enabled = enabled,
-            onToggleExpanded = {
-                expandedSections = if (section.path in expandedSections) {
-                    expandedSections - section.path
-                } else {
-                    expandedSections + section.path
-                }
-            },
-            onToggle = onToggle
-        )
+    Column(modifier = modifier) {
+        rootItems.forEachIndexed { index, section ->
+            val children = childrenByParent[section.path].orEmpty()
+            if (index > 0) SettingsDivider()
+            BackupSectionGroup(
+                section = section,
+                children = children,
+                items = items,
+                selectedPaths = selectedPaths,
+                expanded = section.path in expandedSections,
+                enabled = enabled,
+                onToggleExpanded = {
+                    expandedSections = if (section.path in expandedSections) {
+                        expandedSections - section.path
+                    } else {
+                        expandedSections + section.path
+                    }
+                },
+                onToggle = onToggle
+            )
+        }
     }
 }
 
@@ -359,65 +394,68 @@ internal fun BackupSectionGroup(
     expanded: Boolean,
     enabled: Boolean,
     onToggleExpanded: () -> Unit,
-    onToggle: (String) -> Unit
+    onToggle: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val state = backupSectionToggleState(items, selectedPaths, section)
 
-    SettingsListItem(
-        icon = backupItemIcon(section.section),
-        text = section.title,
-        subtitle = "${section.files} файлов • ${formatBytes(section.bytes)}",
-        trailing = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TriStateCheckbox(
-                    state = state,
-                    enabled = enabled,
-                    onClick = { onToggle(section.path) }
-                )
-                TextButton(
-                    enabled = enabled,
-                    onClick = onToggleExpanded
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.exo_ic_chevron_right),
-                        contentDescription = if (expanded) "Свернуть" else "Развернуть",
-                        tint = SettingsAccentColor,
-                        modifier = Modifier.rotate(if (expanded) 90f else 0f)
+    Column(modifier = modifier) {
+        SettingsListItem(
+            icon = backupItemIcon(section.section),
+            text = section.title,
+            subtitle = "${section.files} файлов • ${formatBytes(section.bytes)}",
+            trailing = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TriStateCheckbox(
+                        state = state,
+                        enabled = enabled,
+                        onClick = { onToggle(section.path) }
                     )
+                    TextButton(
+                        enabled = enabled,
+                        onClick = onToggleExpanded
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.exo_ic_chevron_right),
+                            contentDescription = if (expanded) TEXT_COLLAPSE else TEXT_EXPAND,
+                            tint = SettingsAccentColor,
+                            modifier = Modifier.rotate(if (expanded) CHEVRON_ROTATION_EXPANDED else CHEVRON_ROTATION_COLLAPSED)
+                        )
+                    }
                 }
-            }
-        },
-        onClick = { if (enabled) onToggleExpanded() }
-    )
+            },
+            onClick = { if (enabled) onToggleExpanded() }
+        )
 
-    AnimatedVisibility(
-        visible = expanded,
-        enter = expandVertically(expandFrom = Alignment.Top),
-        exit = shrinkVertically(shrinkTowards = Alignment.Top)
-    ) {
-        Column {
-            if (children.isEmpty()) {
-                SettingsValueRow(
-                    icon = backupItemIcon(section.section),
-                    text = section.title,
-                    value = "Нет вложенных папок"
-                )
-            } else {
-                children.forEach { child ->
-                    SettingsDivider()
-                    SettingsListItem(
-                        icon = backupItemIcon(child.section),
-                        text = backupItemTitle(child),
-                        subtitle = "${child.path} • ${child.files} файлов • ${formatBytes(child.bytes)}",
-                        trailing = {
-                            Checkbox(
-                                checked = isBackupPathChecked(items, selectedPaths, child),
-                                enabled = enabled,
-                                onCheckedChange = { onToggle(child.path) }
-                            )
-                        },
-                        onClick = { if (enabled) onToggle(child.path) }
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(expandFrom = Alignment.Top),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top)
+        ) {
+            Column {
+                if (children.isEmpty()) {
+                    SettingsValueRow(
+                        icon = backupItemIcon(section.section),
+                        text = section.title,
+                        value = TEXT_NO_CHILD_FOLDERS
                     )
+                } else {
+                    children.forEach { child ->
+                        SettingsDivider()
+                        SettingsListItem(
+                            icon = backupItemIcon(child.section),
+                            text = backupItemTitle(child),
+                            subtitle = "${child.path} • ${child.files} файлов • ${formatBytes(child.bytes)}",
+                            trailing = {
+                                Checkbox(
+                                    checked = isBackupPathChecked(items, selectedPaths, child),
+                                    enabled = enabled,
+                                    onCheckedChange = { onToggle(child.path) }
+                                )
+                            },
+                            onClick = { if (enabled) onToggle(child.path) }
+                        )
+                    }
                 }
             }
         }
@@ -427,25 +465,25 @@ internal fun BackupSectionGroup(
 @Composable
 internal fun BackupCreatePasswordDialog(
     onDismiss: () -> Unit,
-    onConfirm: (password: CharArray) -> Unit
+    onConfirm: (password: CharArray) -> Unit,
 ) {
     var password by remember { mutableStateOf("") }
     var passwordConfirm by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var passwordConfirmVisible by remember { mutableStateOf(false) }
 
-    val isLengthValid = password.length >= 4
+    val isLengthValid = password.length >= MIN_PASSWORD_LENGTH
     val isMatching = password == passwordConfirm
     val isValid = isLengthValid && isMatching
 
     LavenderDialog(
-        title = "Шифрование бэкапа",
+        title = TEXT_CREATE_PASSWORD_TITLE,
         onDismiss = {
             password = ""
             passwordConfirm = ""
             onDismiss()
         },
-        confirmText = "Создать",
+        confirmText = TEXT_CREATE_PASSWORD_CONFIRM,
         confirmEnabled = isValid,
         onConfirm = {
             if (isValid) {
@@ -459,7 +497,7 @@ internal fun BackupCreatePasswordDialog(
             DisableAppLockAutofill()
             val dialogTheme = Theme.DialogLavande
             Text(
-                text = "Задайте пароль для шифрования архива. Без этого пароля восстановить данные будет невозможно.",
+                text = TEXT_CREATE_PASSWORD_DESCRIPTION,
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -468,7 +506,7 @@ internal fun BackupCreatePasswordDialog(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Пароль архива") },
+                label = { Text(TEXT_PASSWORD_LABEL) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -476,7 +514,7 @@ internal fun BackupCreatePasswordDialog(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
+                            contentDescription = if (passwordVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
                             tint = dialogTheme.bodyColor
                         )
                     }
@@ -493,7 +531,7 @@ internal fun BackupCreatePasswordDialog(
             OutlinedTextField(
                 value = passwordConfirm,
                 onValueChange = { passwordConfirm = it },
-                label = { Text("Подтверждение пароля") },
+                label = { Text(TEXT_PASSWORD_CONFIRM_LABEL) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -501,7 +539,7 @@ internal fun BackupCreatePasswordDialog(
                     IconButton(onClick = { passwordConfirmVisible = !passwordConfirmVisible }) {
                         Icon(
                             imageVector = if (passwordConfirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordConfirmVisible) "Скрыть пароль" else "Показать пароль",
+                            contentDescription = if (passwordConfirmVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
                             tint = dialogTheme.bodyColor
                         )
                     }
@@ -516,14 +554,14 @@ internal fun BackupCreatePasswordDialog(
             if (password.isNotEmpty() && !isLengthValid) {
                 Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_SMALL))
                 Text(
-                    text = "Пароль должен быть не короче 4 символов",
+                    text = TEXT_PASSWORD_TOO_SHORT,
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
             } else if (passwordConfirm.isNotEmpty() && !isMatching) {
                 Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_SMALL))
                 Text(
-                    text = "Пароли не совпадают",
+                    text = TEXT_PASSWORDS_DO_NOT_MATCH,
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -536,7 +574,7 @@ internal fun BackupCreatePasswordDialog(
 internal fun BackupRestorePasswordDialog(
     errorMessage: String?,
     onDismiss: () -> Unit,
-    onConfirm: (password: CharArray) -> Unit
+    onConfirm: (password: CharArray) -> Unit,
 ) {
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -544,12 +582,12 @@ internal fun BackupRestorePasswordDialog(
     val isValid = password.isNotEmpty()
 
     LavenderDialog(
-        title = "Ввод пароля бэкапа",
+        title = TEXT_RESTORE_PASSWORD_TITLE,
         onDismiss = {
             password = ""
             onDismiss()
         },
-        confirmText = "Открыть",
+        confirmText = TEXT_RESTORE_PASSWORD_CONFIRM,
         confirmEnabled = isValid,
         onConfirm = {
             if (isValid) {
@@ -562,7 +600,7 @@ internal fun BackupRestorePasswordDialog(
             DisableAppLockAutofill()
             val dialogTheme = Theme.DialogLavande
             Text(
-                text = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого.",
+                text = TEXT_RESTORE_PASSWORD_DESCRIPTION,
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -571,7 +609,7 @@ internal fun BackupRestorePasswordDialog(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Пароль архива") },
+                label = { Text(TEXT_PASSWORD_LABEL) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -579,7 +617,7 @@ internal fun BackupRestorePasswordDialog(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
+                            contentDescription = if (passwordVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
                             tint = dialogTheme.bodyColor
                         )
                     }

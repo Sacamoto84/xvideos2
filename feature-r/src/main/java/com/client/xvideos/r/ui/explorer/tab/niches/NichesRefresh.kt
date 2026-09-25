@@ -49,10 +49,22 @@ private val REFRESH_MINI_FONT_SIZE = 14.sp
 
 private const val TEXT_NO_NICHES = "Отсутствует список Niches"
 private const val TEXT_DOWNLOAD_LIST = "Скачать список "
+private const val TEXT_OLD_NICHES_PREFIX = "Старый список Niches, возраст "
+private const val TEXT_OLD_NICHES_SUFFIX = " часов"
 private const val CD_REFRESH = "Refresh"
 
 private val NICHES_MESSAGE_STYLE = TextStyle(
     fontSize = REFRESH_TITLE_FONT_SIZE,
+    color = Color.White,
+    fontFamily = Theme.R.fontFamilyDMsanss
+)
+private val NICHES_BUTTON_STYLE = TextStyle(
+    fontSize = REFRESH_BUTTON_FONT_SIZE,
+    color = Color.White,
+    fontFamily = Theme.R.fontFamilyDMsanss
+)
+private val NICHES_MINI_STYLE = TextStyle(
+    fontSize = REFRESH_MINI_FONT_SIZE,
     color = Color.White,
     fontFamily = Theme.R.fontFamilyDMsanss
 )
@@ -78,6 +90,8 @@ fun Refresh(
         }
     }
 
+    val buttonColors = ButtonDefaults.buttonColors(containerColor = Theme.R.colorBlue)
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -90,9 +104,9 @@ fun Refresh(
         Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_8))
         Button(
             onClick = onRefreshNichesCacheClick,
-            colors = ButtonDefaults.buttonColors(containerColor = Theme.R.colorBlue)
+            colors = buttonColors
         ) {
-            Text(TEXT_DOWNLOAD_LIST, style = NICHES_MESSAGE_STYLE.copy(fontSize = REFRESH_BUTTON_FONT_SIZE))
+            Text(TEXT_DOWNLOAD_LIST, style = NICHES_BUTTON_STYLE)
         }
         Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_16))
         LinearWavyProgressIndicator(
@@ -128,7 +142,7 @@ fun RefreshMini(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text("Старый список Niches, возраст $cacheHour часов", style = NICHES_MESSAGE_STYLE.copy(fontSize = REFRESH_MINI_FONT_SIZE))
+        Text("$TEXT_OLD_NICHES_PREFIX$cacheHour$TEXT_OLD_NICHES_SUFFIX", style = NICHES_MINI_STYLE)
 
         Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_8))
 
@@ -176,6 +190,30 @@ fun RefreshPreview() {
             Refresh(
                 onRefreshNichesCacheClick = {},
                 nichesCacheProgress = 0.45f,
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF282828)
+@Composable
+fun RefreshMiniPreview() {
+    XvideosTheme {
+        Column(
+            modifier = Modifier
+                .background(Theme.tabLevel1)
+                .padding(8.dp)
+        ) {
+            RefreshMini(
+                onRefreshNichesCacheClick = {},
+                nichesCacheProgress = 0f,
+                cacheHour = 2L,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            RefreshMini(
+                onRefreshNichesCacheClick = {},
+                nichesCacheProgress = 0.5f,
+                cacheHour = 5L,
             )
         }
     }

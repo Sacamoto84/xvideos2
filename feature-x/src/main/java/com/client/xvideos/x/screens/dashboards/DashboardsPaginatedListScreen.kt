@@ -77,6 +77,12 @@ private const val CONTENT_TYPE_DASHBOARD_CELL = "dashboard_cell"
 
 private const val DASHBOARD_CARD_ASPECT_RATIO = 352f / 198f
 private val CHANNEL_BADGE_BG = Color(0x60000000)
+private val DURATION_FONT_SIZE = 14.sp
+private val DURATION_OFFSET_Y = (-3).dp
+private val DURATION_SHADOW_OFFSET_X = 0.5.dp
+private val DURATION_SHADOW_OFFSET_Y = (-2.5).dp
+private val CHANNEL_BADGE_FONT_SIZE = 14.sp
+private val FAVORITE_ICON_PADDING = 6.dp
 
 internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
@@ -114,6 +120,7 @@ fun DashboardsPaginatedListScreen(
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
 
     var videoItems by remember(pageIndex) { mutableStateOf<ImmutableList<ItemsX>>(persistentListOf()) }
@@ -145,7 +152,7 @@ fun DashboardsPaginatedListScreen(
     val onRetry: () -> Unit = remember(pageIndex) { { retryTrigger++ } }
 
     if (videoItems.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hasError) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(TEXT_LOAD_ERROR, color = Color.Gray)
@@ -159,7 +166,7 @@ fun DashboardsPaginatedListScreen(
             }
         }
     } else {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = modifier.fillMaxSize()) {
             DashboardsPaginatedListContent(
                 items = videoItems,
                 isFavorite = isFavorite,
@@ -218,12 +225,13 @@ fun DashboardsPaginatedListContent(
     openVideoPlayer: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
     gridState: LazyGridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
+    modifier: Modifier = Modifier,
 ) {
     val topCutout = getTopInsetDp()
     val contentPadding = remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
         columns = GridCells.Fixed(GRID_COLUMNS),
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = gridState,
         contentPadding = contentPadding,
     ) {
@@ -276,29 +284,7 @@ private fun DashboardGridCell(
             onDoubleClick = handleOpen,
         ) {
             if (durationText.isNotEmpty()) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    val offsetY = (-3).dp
-
-                    Text(
-                        text = durationText,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .offset(0.5.dp, offsetY + 0.5.dp),
-                        textAlign = TextAlign.Right,
-                        fontSize = 14.sp,
-                        color = Color.Black
-                    )
-
-                    Text(
-                        text = durationText,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .offset(0.dp, offsetY),
-                        textAlign = TextAlign.Right,
-                        fontSize = 14.sp,
-                        color = Color.White
-                    )
-                }
+                ShadowedDurationText(durationText = durationText)
             }
 
             Box(
@@ -310,14 +296,14 @@ private fun DashboardGridCell(
                 Text(
                     text = cell.channel,
                     modifier = Modifier.align(Alignment.Center),
-                    fontSize = 14.sp,
+                    fontSize = CHANNEL_BADGE_FONT_SIZE,
                     color = Color.White
                 )
             }
 
             Row(modifier = Modifier.align(Alignment.BottomEnd), horizontalArrangement = Arrangement.End) {
                 if (isFavorite) {
-                    Box(modifier = Modifier) { IconFavorite18(Modifier.padding(bottom = 6.dp, end = 6.dp)) }
+                    IconFavorite18(Modifier.padding(bottom = FAVORITE_ICON_PADDING, end = FAVORITE_ICON_PADDING))
                 }
             }
 
@@ -331,6 +317,34 @@ private fun DashboardGridCell(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ShadowedDurationText(
+    durationText: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Text(
+            text = durationText,
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(DURATION_SHADOW_OFFSET_X, DURATION_SHADOW_OFFSET_Y),
+            textAlign = TextAlign.Right,
+            fontSize = DURATION_FONT_SIZE,
+            color = Color.Black
+        )
+
+        Text(
+            text = durationText,
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(0.dp, DURATION_OFFSET_Y),
+            textAlign = TextAlign.Right,
+            fontSize = DURATION_FONT_SIZE,
+            color = Color.White
+        )
     }
 }
 

@@ -21,11 +21,12 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.atom.ButtonUp
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
+import kotlinx.collections.immutable.persistentListOf
 
 private val BAR_VERTICAL_PADDING = 2.dp
 private val SEARCH_HORIZONTAL_PADDING = 4.dp
 
-private val NICHE_SORT_ORDERS = listOf(
+private val NICHE_SORT_ORDERS = persistentListOf(
     Order.NICHES_SUBSCRIBERS_D,
     Order.NICHES_SUBSCRIBERS_A,
     Order.NICHES_POST_D,

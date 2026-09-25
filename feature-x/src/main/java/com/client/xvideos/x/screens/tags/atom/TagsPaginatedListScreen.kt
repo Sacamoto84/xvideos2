@@ -98,31 +98,25 @@ fun TagsPaginatedListScreen(
     }
 
     if (loaded == null) {
-        Column(modifier = modifier.fillMaxSize()) {
-            header?.invoke()
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (failed) {
-                    TagsStateMessage(
-                        message = MSG_FAILED_TO_LOAD,
-                        onRetry = onRetry
-                    )
-                } else {
-                    CircularProgressIndicator(modifier = Modifier.size(SPINNER_SIZE))
-                }
+        TagsStatusLayout(modifier = modifier, header = header) {
+            if (failed) {
+                TagsStateMessage(
+                    message = MSG_FAILED_TO_LOAD,
+                    onRetry = onRetry
+                )
+            } else {
+                CircularProgressIndicator(modifier = Modifier.size(SPINNER_SIZE))
             }
         }
         return
     }
 
     if (loaded.isEmpty()) {
-        Column(modifier = modifier.fillMaxSize()) {
-            header?.invoke()
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                TagsStateMessage(
-                    message = MSG_NO_VIDEOS,
-                    onRetry = onRetry
-                )
-            }
+        TagsStatusLayout(modifier = modifier, header = header) {
+            TagsStateMessage(
+                message = MSG_NO_VIDEOS,
+                onRetry = onRetry
+            )
         }
         return
     }
@@ -168,6 +162,20 @@ fun TagsPaginatedListScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TagsStatusLayout(
+    modifier: Modifier = Modifier,
+    header: (@Composable () -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        header?.invoke()
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            content()
         }
     }
 }
@@ -220,6 +228,41 @@ private fun TagsStateMessagePreview() {
         TagsStateMessage(
             message = MSG_FAILED_TO_LOAD,
             onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun TagsPaginatedListScreenPreview() {
+    XvideosTheme(darkTheme = true) {
+        TagsPaginatedListScreen(
+            pageIndex = 0,
+            loadPage = {
+                listOf(
+                    ItemsX(
+                        id = 101L,
+                        title = "Sample Tag Video 1",
+                        duration = "08:15",
+                        views = "250K",
+                        channel = "Studio1",
+                        href = "/video101",
+                        nameProfile = "Studio1",
+                        linkProfile = "/studio1",
+                    ),
+                    ItemsX(
+                        id = 102L,
+                        title = "Sample Tag Video 2",
+                        duration = "14:20",
+                        views = "500K",
+                        channel = "Studio2",
+                        href = "/video102",
+                        nameProfile = "Studio2",
+                        linkProfile = "/studio2",
+                    )
+                )
+            },
+            onOpenVideo = {}
         )
     }
 }
