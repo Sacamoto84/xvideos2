@@ -22,16 +22,23 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.ui.theme.XvideosTheme
 
 private val BUTTON_ICON_BORDER_COLOR = Color(0x80757575)
-private val BUTTON_ICON_SHAPE = RoundedCornerShape(8.dp)
+private val BUTTON_ICON_CORNER = 8.dp
+private val BUTTON_ICON_SHAPE = RoundedCornerShape(BUTTON_ICON_CORNER)
 private val BUTTON_ICON_SIZE = 46.dp
+private val BUTTON_ICON_BORDER_WIDTH = 1.dp
+private val BUTTON_ICON_TINT = Color.LightGray
 
 @Composable
-fun ButtonIcon(imageVector: ImageVector, onClick: () -> Unit) {
+fun ButtonIcon(
+    imageVector: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(BUTTON_ICON_SIZE)
             .clip(BUTTON_ICON_SHAPE)
-            .border(1.dp, BUTTON_ICON_BORDER_COLOR, BUTTON_ICON_SHAPE)
+            .border(BUTTON_ICON_BORDER_WIDTH, BUTTON_ICON_BORDER_COLOR, BUTTON_ICON_SHAPE)
             .background(Theme.R.colorCommonBackground)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -39,7 +46,7 @@ fun ButtonIcon(imageVector: ImageVector, onClick: () -> Unit) {
         Icon(
             imageVector = imageVector,
             contentDescription = null,
-            tint = Color.LightGray
+            tint = BUTTON_ICON_TINT
         )
     }
 }

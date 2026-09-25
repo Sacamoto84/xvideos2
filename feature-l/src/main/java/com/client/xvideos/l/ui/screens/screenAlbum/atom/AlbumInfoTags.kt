@@ -20,17 +20,29 @@ import com.client.xvideos.common.util.capitalizeEachWord
 import com.client.xvideos.l.model.Tag
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val TAG_CHIP_SHAPE = RoundedCornerShape(4.dp)
+private val TAG_CHIP_CORNER = 4.dp
+private val TAG_CHIP_SHAPE = RoundedCornerShape(TAG_CHIP_CORNER)
+private val TAG_BORDER_WIDTH = 1.dp
+private val TAG_VERTICAL_PADDING = 2.dp
+private val TAG_CONTENT_PADDING = 4.dp
+private val TAG_FONT_SIZE = 14.sp
 
 @Composable
-fun AlbumInfoTags(tags: () -> (List<Tag>), onClick: (String) -> Unit) {
+fun AlbumInfoTags(
+    tags: () -> (List<Tag>),
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val tagTextStyle = remember(Theme.L.Type.caption, Theme.L.textColor) {
-        Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
+        Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = TAG_FONT_SIZE)
     }
 
     val tagList = tags()
 
-    FlowRow(verticalArrangement = Arrangement.Center) {
+    FlowRow(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center
+    ) {
         tagList.forEach { tag ->
             key(tag.id) {
                 val label = remember(tag.text, tag.count) {
@@ -41,11 +53,11 @@ fun AlbumInfoTags(tags: () -> (List<Tag>), onClick: (String) -> Unit) {
                 Text(
                     text = label,
                     modifier = Modifier
-                        .padding(vertical = 2.dp)
-                        .border(1.dp, Theme.L.secondaryColor, TAG_CHIP_SHAPE)
+                        .padding(vertical = TAG_VERTICAL_PADDING)
+                        .border(TAG_BORDER_WIDTH, Theme.L.secondaryColor, TAG_CHIP_SHAPE)
                         .clip(TAG_CHIP_SHAPE)
                         .clickable(onClick = handleClick)
-                        .padding(4.dp),
+                        .padding(TAG_CONTENT_PADDING),
                     color = Theme.L.textColor,
                     style = tagTextStyle
                 )

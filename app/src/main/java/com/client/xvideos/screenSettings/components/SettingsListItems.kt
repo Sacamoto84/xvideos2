@@ -66,21 +66,52 @@ private val SETTINGS_ICON_SIZE = 24.dp
 private val SETTINGS_ITEM_MIN_HEIGHT = 60.dp
 private val SETTINGS_DIVIDER_THICKNESS = 0.5.dp
 private val SETTINGS_DIVIDER2_HEIGHT = 2.dp
+private val SETTINGS_GROUP_HORIZONTAL_PADDING = 16.dp
+private val SETTINGS_SECTION_TITLE_START_PADDING = 24.dp
+private val SETTINGS_SECTION_TITLE_TOP_PADDING = 20.dp
+private val SETTINGS_SECTION_TITLE_BOTTOM_PADDING = 8.dp
+private val SETTINGS_SECTION_TITLE_END_PADDING = 24.dp
+private val SETTINGS_SECTION_TITLE_FONT_SIZE = 14.sp
+private val SETTINGS_SECTION_TITLE_LETTER_SPACING = 0.1.sp
+private val SETTINGS_DEFAULT_START_INDENT = 56.dp
+private val SETTINGS_ROW_TITLE_FONT_SIZE = 16.sp
+private val SETTINGS_ROW_TITLE_LINE_HEIGHT = 22.sp
+private val SETTINGS_ROW_SUBTITLE_FONT_SIZE = 14.sp
+private val SETTINGS_ROW_SUBTITLE_LINE_HEIGHT = 18.sp
+private val SETTINGS_ITEM_HORIZONTAL_PADDING = 16.dp
+private val SETTINGS_ITEM_VERTICAL_PADDING = 13.dp
+private val SETTINGS_ITEM_ICON_SPACER_WIDTH = 16.dp
+private val SETTINGS_ITEM_SUBTITLE_SPACER_HEIGHT = 3.dp
+private val SETTINGS_ITEM_TRAILING_SPACER_WIDTH = 12.dp
+private val SETTINGS_SLIDER_WITH_ICON_START_PADDING = 56.dp
+private val SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING = 16.dp
+private val SETTINGS_SLIDER_END_PADDING = 16.dp
 
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 
 @Composable
-fun SettingsSectionTitle(text: String) {
+fun SettingsSectionTitle(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    val style = remember(Theme.L.Type.caption) {
+        Theme.L.Type.caption.copy(
+            color = SettingsAccentColor,
+            fontSize = SETTINGS_SECTION_TITLE_FONT_SIZE,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = SETTINGS_SECTION_TITLE_LETTER_SPACING
+        )
+    }
     Text(
         text = text,
-        modifier = Modifier.padding(start = 24.dp, top = 20.dp, bottom = 8.dp, end = 24.dp),
+        modifier = modifier.padding(
+            start = SETTINGS_SECTION_TITLE_START_PADDING,
+            top = SETTINGS_SECTION_TITLE_TOP_PADDING,
+            bottom = SETTINGS_SECTION_TITLE_BOTTOM_PADDING,
+            end = SETTINGS_SECTION_TITLE_END_PADDING
+        ),
         color = SettingsAccentColor,
-        style = Theme.L.Type.caption.copy(
-            color = SettingsAccentColor,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = 0.1.sp
-        )
+        style = style
     )
 }
 
@@ -91,16 +122,16 @@ private fun SettingsSectionTitlePreview() = SettingsPreview {
 }
 
 @Composable
-fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
+fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = SETTINGS_DEFAULT_START_INDENT) {
     val inGroup = LocalSettingsInGroup.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (inGroup) Modifier else Modifier.padding(horizontal = 16.dp))
+            .then(if (inGroup) Modifier else Modifier.padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING))
             .background(SettingsCardColor)
     ) {
         HorizontalDivider(
-            modifier = Modifier.padding(start = startIndent, end = 16.dp),
+            modifier = Modifier.padding(start = startIndent, end = SETTINGS_GROUP_HORIZONTAL_PADDING),
             thickness = SETTINGS_DIVIDER_THICKNESS,
             color = SettingsDividerColor
         )
@@ -113,11 +144,14 @@ fun SettingsDivider2() {
 }
 
 @Composable
-fun SettingsGroup(content: @Composable () -> Unit) {
+fun SettingsGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING)
             .clip(settingsCardShape)
             .background(SettingsCardColor)
     ) {
@@ -163,7 +197,8 @@ fun SettingsListItem(
     text: String,
     subtitle: String? = null,
     trailing: @Composable (() -> Unit)? = null,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val inGroup = LocalSettingsInGroup.current
     val clickableModifier = if (onClick != null) {
@@ -175,41 +210,41 @@ fun SettingsListItem(
     val titleStyle = remember(Theme.L.Type.rowTitle) {
         Theme.L.Type.rowTitle.copy(
             color = SettingsRowTextPrimary,
-            fontSize = 16.sp,
+            fontSize = SETTINGS_ROW_TITLE_FONT_SIZE,
             fontWeight = FontWeight.Normal,
-            lineHeight = 22.sp
+            lineHeight = SETTINGS_ROW_TITLE_LINE_HEIGHT
         )
     }
     val subtitleStyle = remember(Theme.L.Type.rowSubtitle) {
         Theme.L.Type.rowSubtitle.copy(
             color = SettingsRowTextSecondary,
-            fontSize = 14.sp,
+            fontSize = SETTINGS_ROW_SUBTITLE_FONT_SIZE,
             fontWeight = FontWeight.Normal,
-            lineHeight = 18.sp
+            lineHeight = SETTINGS_ROW_SUBTITLE_LINE_HEIGHT
         )
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .then(
                 if (inGroup) {
                     Modifier
                 } else {
                     Modifier
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING)
                         .clip(settingsCardShape)
                 }
             )
             .background(SettingsCardColor)
             .then(clickableModifier)
             .heightIn(min = SETTINGS_ITEM_MIN_HEIGHT)
-            .padding(horizontal = 16.dp, vertical = 13.dp),
+            .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING, vertical = SETTINGS_ITEM_VERTICAL_PADDING),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != 0) {
             SettingsIcon(icon)
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(SETTINGS_ITEM_ICON_SPACER_WIDTH))
         }
         Column(
             modifier = Modifier.weight(1f),
@@ -221,7 +256,7 @@ fun SettingsListItem(
                 style = titleStyle
             )
             if (subtitle != null) {
-                Spacer(Modifier.height(3.dp))
+                Spacer(Modifier.height(SETTINGS_ITEM_SUBTITLE_SPACER_HEIGHT))
                 Text(
                     text = subtitle,
                     color = SettingsRowTextSecondary,
@@ -230,7 +265,7 @@ fun SettingsListItem(
             }
         }
         if (trailing != null) {
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(SETTINGS_ITEM_TRAILING_SPACER_WIDTH))
             trailing()
         }
     }
@@ -419,7 +454,10 @@ fun IntSliderSetting(
                 sliderValue = snapSliderValue(rawValue, min, max, step).toFloat()
             },
             onValueChangeFinished = onFinished,
-            modifier = Modifier.padding(start = if (icon != 0) 56.dp else 16.dp, end = 16.dp),
+            modifier = Modifier.padding(
+                start = if (icon != 0) SETTINGS_SLIDER_WITH_ICON_START_PADDING else SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING,
+                end = SETTINGS_SLIDER_END_PADDING
+            ),
             valueRange = min.toFloat()..max.toFloat(),
             steps = steps,
             enabled = enabled,

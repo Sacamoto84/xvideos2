@@ -68,7 +68,25 @@ import com.client.xvideos.screenSettings.components.SettingsTopBarColor
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.util.formatBytes
 
-private val backupComponentShape = RoundedCornerShape(8.dp)
+private val BACKUP_COMPONENT_CORNER = 8.dp
+private val BACKUP_COMPONENT_SHAPE = RoundedCornerShape(BACKUP_COMPONENT_CORNER)
+private val BACKUP_SELECTOR_HEIGHT = 56.dp
+private val BACKUP_SELECTOR_HORIZONTAL_PADDING = 16.dp
+private val BACKUP_SELECTOR_VERTICAL_PADDING = 6.dp
+private val BACKUP_CONSOLE_HEIGHT = 260.dp
+private val BACKUP_CONSOLE_HORIZONTAL_PADDING = 16.dp
+private val BACKUP_CONSOLE_VERTICAL_PADDING = 8.dp
+private val BACKUP_CONSOLE_INNER_PADDING = 10.dp
+private val BACKUP_CONSOLE_SUMMARY_PADDING = 2.dp
+private val BACKUP_CONSOLE_REGULAR_PADDING = 1.dp
+private val BACKUP_SELECTION_START_PADDING = 72.dp
+private val BACKUP_SELECTION_END_PADDING = 16.dp
+private val BACKUP_SELECTION_TOP_PADDING = 4.dp
+private val BACKUP_SELECTION_BOTTOM_PADDING = 8.dp
+private val BACKUP_SELECTION_SPACER_WIDTH = 8.dp
+private val BACKUP_DIALOG_SPACER_LARGE = 12.dp
+private val BACKUP_DIALOG_SPACER_MEDIUM = 8.dp
+private val BACKUP_DIALOG_SPACER_SMALL = 6.dp
 
 @Composable
 internal fun BackupModeSelector(
@@ -79,8 +97,8 @@ internal fun BackupModeSelector(
     SingleChoiceSegmentedButtonRow(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .height(BACKUP_SELECTOR_HEIGHT)
+            .padding(horizontal = BACKUP_SELECTOR_HORIZONTAL_PADDING, vertical = BACKUP_SELECTOR_VERTICAL_PADDING)
     ) {
         BackupFlowScreen.entries.forEachIndexed { index, item ->
             SegmentedButton(
@@ -90,7 +108,7 @@ internal fun BackupModeSelector(
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
                     count = BackupFlowScreen.entries.size,
-                    baseShape = backupComponentShape
+                    baseShape = BACKUP_COMPONENT_SHAPE
                 ),
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = SettingsAccentColor,
@@ -128,8 +146,8 @@ internal fun BackupContentModeSelector(
     SingleChoiceSegmentedButtonRow(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .height(BACKUP_SELECTOR_HEIGHT)
+            .padding(horizontal = BACKUP_SELECTOR_HORIZONTAL_PADDING, vertical = BACKUP_SELECTOR_VERTICAL_PADDING)
     ) {
         XlrBackupContentMode.entries.forEachIndexed { index, mode ->
             SegmentedButton(
@@ -194,10 +212,10 @@ internal fun BackupConsole(
         state = listState,
         modifier = Modifier
             .fillMaxWidth()
-            .height(260.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(SettingsTopBarColor, backupComponentShape)
-            .padding(10.dp)
+            .height(BACKUP_CONSOLE_HEIGHT)
+            .padding(horizontal = BACKUP_CONSOLE_HORIZONTAL_PADDING, vertical = BACKUP_CONSOLE_VERTICAL_PADDING)
+            .background(SettingsTopBarColor, BACKUP_COMPONENT_SHAPE)
+            .padding(BACKUP_CONSOLE_INNER_PADDING)
     ) {
         items(
             count = visibleLines.size,
@@ -240,7 +258,7 @@ internal fun BackupConsoleLine(line: String) {
         text = line,
         color = color,
         style = style,
-        modifier = Modifier.padding(vertical = if (isSummary) 2.dp else 1.dp)
+        modifier = Modifier.padding(vertical = if (isSummary) BACKUP_CONSOLE_SUMMARY_PADDING else BACKUP_CONSOLE_REGULAR_PADDING)
     )
 }
 
@@ -253,7 +271,12 @@ internal fun BackupSelectionActions(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 72.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+            .padding(
+                start = BACKUP_SELECTION_START_PADDING,
+                end = BACKUP_SELECTION_END_PADDING,
+                top = BACKUP_SELECTION_TOP_PADDING,
+                bottom = BACKUP_SELECTION_BOTTOM_PADDING
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
@@ -262,7 +285,7 @@ internal fun BackupSelectionActions(
         ) {
             Text("Все X/L/R")
         }
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(BACKUP_SELECTION_SPACER_WIDTH))
         TextButton(
             enabled = enabled,
             onClick = onSelectNone
@@ -430,7 +453,7 @@ internal fun BackupCreatePasswordDialog(
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_LARGE))
 
             OutlinedTextField(
                 value = password,
@@ -455,7 +478,7 @@ internal fun BackupCreatePasswordDialog(
                 )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_MEDIUM))
 
             OutlinedTextField(
                 value = passwordConfirm,
@@ -481,14 +504,14 @@ internal fun BackupCreatePasswordDialog(
             )
 
             if (password.isNotEmpty() && !isLengthValid) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_SMALL))
                 Text(
                     text = "Пароль должен быть не короче 4 символов",
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
             } else if (passwordConfirm.isNotEmpty() && !isMatching) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_SMALL))
                 Text(
                     text = "Пароли не совпадают",
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
@@ -533,7 +556,7 @@ internal fun BackupRestorePasswordDialog(
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_LARGE))
 
             OutlinedTextField(
                 value = password,
@@ -566,7 +589,7 @@ internal fun BackupRestorePasswordDialog(
             )
 
             if (!errorMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(BACKUP_DIALOG_SPACER_SMALL))
                 Text(
                     text = errorMessage,
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),

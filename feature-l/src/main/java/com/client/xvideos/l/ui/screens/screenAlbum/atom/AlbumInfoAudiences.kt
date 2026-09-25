@@ -21,29 +21,39 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 
-private val AUDIENCE_CHIP_SHAPE = RoundedCornerShape(4.dp)
+private val AUDIENCE_CHIP_CORNER = 4.dp
+private val AUDIENCE_CHIP_SHAPE = RoundedCornerShape(AUDIENCE_CHIP_CORNER)
+private val CHIP_BORDER_WIDTH = 1.dp
+private val CHIP_HORIZONTAL_PADDING = 2.dp
+private val CHIP_VERTICAL_PADDING = 2.dp
+private val CHIP_CONTENT_PADDING = 4.dp
+private val HEADER_VERTICAL_PADDING = 4.dp
+private val HEADER_FONT_SIZE = 16.sp
+private val AUDIENCE_FONT_SIZE = 14.sp
 private const val LABEL_AUDIENCES = "Audiences: "
 
 @Composable
 fun AlbumInfoAudiences(
     parsed: AlbumDetails,
-    onAudienceClick: (Audience) -> Unit = {}
+    onAudienceClick: (Audience) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     val headerStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = HEADER_FONT_SIZE)
     }
     val audienceTextStyle = remember(Theme.L.Type.rowValue, Theme.L.primaryColor) {
-        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = 14.sp)
+        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = AUDIENCE_FONT_SIZE)
     }
 
     FlowRow(
+        modifier = modifier,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = LABEL_AUDIENCES,
             color = Theme.L.textColor,
             style = headerStyle,
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = HEADER_VERTICAL_PADDING)
         )
         parsed.audiences.forEach { item ->
             key(item.id) {
@@ -51,11 +61,11 @@ fun AlbumInfoAudiences(
                 Text(
                     text = item.title,
                     modifier = Modifier
-                        .padding(horizontal = 2.dp, vertical = 2.dp)
-                        .border(1.dp, Theme.L.secondaryColor, AUDIENCE_CHIP_SHAPE)
+                        .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
+                        .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, AUDIENCE_CHIP_SHAPE)
                         .clip(AUDIENCE_CHIP_SHAPE)
                         .clickable(onClick = handleClick)
-                        .padding(4.dp),
+                        .padding(CHIP_CONTENT_PADDING),
                     color = Theme.L.primaryColor,
                     style = audienceTextStyle
                 )

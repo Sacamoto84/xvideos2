@@ -45,6 +45,11 @@ private const val CONTENT_TYPE_TAG_ROW = "tag_row"
 private const val MSG_FAILED_TO_LOAD = "Страница не загрузилась"
 private const val MSG_NO_VIDEOS = "Видео не найдены"
 private const val BUTTON_RETRY_TEXT = "Повторить"
+private val SPINNER_SIZE = 40.dp
+private val CELL_PADDING = 1.dp
+private val SPACER_HEIGHT = 12.dp
+private val CELL_BG_COLOR = Color.DarkGray
+private val MESSAGE_COLOR = Color.Gray
 
 /**
  * Одна страница выдачи по тегу.
@@ -103,7 +108,7 @@ fun TagsPaginatedListScreen(
                         onRetry = onRetry
                     )
                 } else {
-                    CircularProgressIndicator(modifier = Modifier.size(40.dp))
+                    CircularProgressIndicator(modifier = Modifier.size(SPINNER_SIZE))
                 }
             }
         }
@@ -178,8 +183,8 @@ private fun TagGridCell(
     Box(
         modifier = modifier
             .aspectRatio(TAG_CARD_ASPECT_RATIO)
-            .padding(1.dp)
-            .background(Color.DarkGray)
+            .padding(CELL_PADDING)
+            .background(CELL_BG_COLOR)
     ) {
         // Жесты как в ленте раздела: тап — превью, долгий тап и
         // двойной — открыть плеер.
@@ -201,8 +206,8 @@ private fun TagsStateMessage(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(message, color = Color.Gray)
-        Spacer(modifier = Modifier.height(12.dp))
+        Text(message, color = MESSAGE_COLOR)
+        Spacer(modifier = Modifier.height(SPACER_HEIGHT))
         Button(onClick = onRetry) {
             Text(BUTTON_RETRY_TEXT)
         }

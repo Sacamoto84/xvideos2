@@ -39,6 +39,13 @@ import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
 
+private const val SEEK_INCREMENT_MS = 10_000L
+private const val TEXT_LOAD_ERROR = "Не удалось загрузить видео"
+private const val TEXT_RETRY = "Повторить"
+private const val TEXT_BACK = "Назад"
+private val ERROR_SPACER_HEIGHT = 12.dp
+private val BUTTON_SPACER_WIDTH = 16.dp
+
 /**
  * Полноэкранный плеер X.
  *
@@ -111,15 +118,15 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Не удалось загрузить видео", color = Color.White)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(TEXT_LOAD_ERROR, color = Color.White)
+                    Spacer(modifier = Modifier.height(ERROR_SPACER_HEIGHT))
                     Row {
                         Button(onClick = onReloadVideo) {
-                            Text("Повторить")
+                            Text(TEXT_RETRY)
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(BUTTON_SPACER_WIDTH))
                         Button(onClick = onExitDirect) {
-                            Text("Назад")
+                            Text(TEXT_BACK)
                         }
                     }
                 }
@@ -149,8 +156,8 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             drmConfig = null,
             error = { vm.onPlaybackError() },
             selectedQuality = null,
-            seekBackIncrementMs = 10_000L,    // Перемотка назад на ±10 сек
-            seekForwardIncrementMs = 10_000L, // Перемотка вперёд на ±10 сек
+            seekBackIncrementMs = SEEK_INCREMENT_MS,    // Перемотка назад на ±10 сек
+            seekForwardIncrementMs = SEEK_INCREMENT_MS, // Перемотка вперёд на ±10 сек
         )
 
         // Без звука + старт с переданной позиции, когда медиа готово.
