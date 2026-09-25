@@ -325,7 +325,7 @@ internal fun BackupSettingsSection(
     )
 
     val isCreateEnabled = !isWorking && selectedBackupPaths.isNotEmpty()
-    val createButtonTrailing: @Composable () -> Unit = remember(isCreateEnabled, onShowCreatePasswordDialog, actionButtonColors) {
+    val createButtonTrailing: @Composable () -> Unit = remember(isCreateEnabled, onShowCreatePasswordDialog) {
         {
             Button(
                 enabled = isCreateEnabled,
@@ -340,7 +340,7 @@ internal fun BackupSettingsSection(
     val onLaunchRestoreBackup = remember(restoreBackupLauncher) {
         { restoreBackupLauncher.launch(RESTORE_MIME_TYPES) }
     }
-    val restoreButtonTrailing: @Composable () -> Unit = remember(isWorking, onLaunchRestoreBackup, actionButtonColors) {
+    val restoreButtonTrailing: @Composable () -> Unit = remember(isWorking, onLaunchRestoreBackup) {
         {
             Button(
                 enabled = !isWorking,

@@ -63,6 +63,14 @@ private data class NicheScrollSnapshot(
     val offset: Int
 )
 
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val ANIM_FADE_IN = fadeIn()
+private val ANIM_FADE_OUT = fadeOut()
+private const val CONTENT_TYPE_REFRESH_MINI = "refresh_mini"
+private const val CONTENT_TYPE_EMPTY_PLACEHOLDER = "empty_placeholder"
+private const val CONTENT_TYPE_NICHE = "niche"
+private val NICHE_ITEM_PADDING_MODIFIER = Modifier.padding(vertical = 2.dp)
+
 internal fun filterAndSortNiches(
     niches: List<Niche>,
     query: String,
@@ -220,7 +228,7 @@ fun NichesTabContent(
         )
     } else {
         Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = ZERO_WINDOW_INSETS,
             bottomBar = {
                 NichesBottomBar(
                     isSearchFocused = isSearchFocused,
@@ -240,8 +248,8 @@ fun NichesTabContent(
                 LazyColumn( state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(top = getTopInsetDp()) )
                 {
 
-                    item(key = "refresh_mini", contentType = "refresh_mini") {
-                        AnimatedVisibility(cacheHour > 72, enter = fadeIn(), exit = fadeOut()) {
+                    item(key = CONTENT_TYPE_REFRESH_MINI, contentType = CONTENT_TYPE_REFRESH_MINI) {
+                        AnimatedVisibility(cacheHour > 72, enter = ANIM_FADE_IN, exit = ANIM_FADE_OUT) {
                             RefreshMini(
                                 onRefreshNichesCacheClick = onRefreshNichesCacheClick,
                                 nichesCacheProgress = nichesCacheProgress,
@@ -251,7 +259,7 @@ fun NichesTabContent(
                     }
 
                     if (niches.isEmpty()) {
-                        item(key = "empty_placeholder", contentType = "empty_placeholder") {
+                        item(key = CONTENT_TYPE_EMPTY_PLACEHOLDER, contentType = CONTENT_TYPE_EMPTY_PLACEHOLDER) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -267,13 +275,13 @@ fun NichesTabContent(
                         }
                     } else {
                         val currentRed = savedRed()
-                        items(items = niches, key = { it.id }, contentType = { "niche" }) { item ->
+                        items(items = niches, key = { it.id }, contentType = { CONTENT_TYPE_NICHE }) { item ->
                             if (currentRed != null) {
                                 NicheItemRow(
                                     item = item,
                                     savedRed = currentRed,
                                     onNicheClick = onNicheClick,
-                                    modifier = Modifier.padding(vertical = 2.dp)
+                                    modifier = NICHE_ITEM_PADDING_MODIFIER
                                 )
                             } else {
                                 // Placeholder for Preview

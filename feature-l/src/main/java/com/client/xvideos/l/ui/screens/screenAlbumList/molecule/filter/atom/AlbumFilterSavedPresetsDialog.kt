@@ -69,6 +69,16 @@ private const val TEXT_APPLY = "Apply"
 private const val TEXT_EMPTY_PRESETS = "No saved presets yet.\nConfigure filters and tap 'Save'."
 private const val CONTENT_TYPE_PRESET_ITEM = "saved_preset_card"
 
+private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+private val ROW_ARRANGEMENT_END = Arrangement.End
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val LAZY_COLUMN_SPACED_BY_6 = Arrangement.spacedBy(6.dp)
+private val LAZY_COLUMN_PADDING = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp, horizontal = 4.dp)
+private val DIALOG_PROPERTIES = DialogProperties(usePlatformDefaultWidth = false)
+private val COLOR_WHITE = androidx.compose.ui.graphics.Color.White
+private val TEXT_ALIGN_CENTER = androidx.compose.ui.text.style.TextAlign.Center
+
 @Composable
 fun AlbumFilterSavedPresetsDialog(
     onSelectPreset: (AlbumListFilter) -> Unit,
@@ -81,10 +91,13 @@ fun AlbumFilterSavedPresetsDialog(
 
     val presets by AlbumFilterPresetManager.presets.collectAsStateWithLifecycle()
     val dateFormat = remember { SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()) }
+    val headerStyle = remember(palette.textPrimary) {
+        Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DIALOG_PROPERTIES
     ) {
         Box(
             modifier = Modifier
@@ -101,13 +114,13 @@ fun AlbumFilterSavedPresetsDialog(
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN,
+                    verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
                 ) {
                     Text(
                         text = "Saved Filters (${presets.size})",
                         color = palette.textPrimary,
-                        style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
+                        style = headerStyle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -136,8 +149,8 @@ fun AlbumFilterSavedPresetsDialog(
                             .clip(PRESET_LIST_SHAPE)
                             .border(DIALOG_BORDER_WIDTH, palette.border, PRESET_LIST_SHAPE)
                             .background(palette.panelBlack)
-                            .padding(vertical = 4.dp, horizontal = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                            .padding(LAZY_COLUMN_PADDING),
+                        verticalArrangement = LAZY_COLUMN_SPACED_BY_6
                     ) {
                         items(
                             items = presets,
@@ -177,13 +190,13 @@ private fun SavedPresetsEmptyState() {
             .clip(EMPTY_STATE_SHAPE)
             .background(palette.panelBlack)
             .padding(EMPTY_STATE_PADDING),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Text(
             text = TEXT_EMPTY_PRESETS,
             color = palette.textSecondary,
             style = Theme.L.Type.rowTitle,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TEXT_ALIGN_CENTER
         )
     }
 }
@@ -197,6 +210,7 @@ private fun SavedPresetCard(
     onDelete: () -> Unit
 ) {
     val palette = StyleGenresTags.Palette
+    val titleStyle = remember { Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -208,14 +222,14 @@ private fun SavedPresetCard(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN,
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = preset.name,
                     color = palette.textPrimary,
-                    style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold),
+                    style = titleStyle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -255,7 +269,7 @@ private fun SavedPresetCard(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = ROW_ARRANGEMENT_END
         ) {
             Box(
                 modifier = Modifier
@@ -266,7 +280,7 @@ private fun SavedPresetCard(
             ) {
                 Text(
                     text = TEXT_APPLY,
-                    color = androidx.compose.ui.graphics.Color.White,
+                    color = COLOR_WHITE,
                     style = Theme.L.Type.button
                 )
             }

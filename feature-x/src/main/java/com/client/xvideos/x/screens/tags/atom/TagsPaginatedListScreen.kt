@@ -142,9 +142,11 @@ fun TagsPaginatedListScreen(
     }
     val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
+    val listModifier = if (modifier == Modifier) BOX_FILL_MAX_SIZE_MODIFIER else modifier.then(BOX_FILL_MAX_SIZE_MODIFIER)
+
     LazyColumn(
         state = listState,
-        modifier = modifier.then(BOX_FILL_MAX_SIZE_MODIFIER),
+        modifier = listModifier,
         horizontalAlignment = ALIGNMENT_CENTER_HORIZONTALLY
     ) {
         if (header != null) {
@@ -187,7 +189,8 @@ private fun TagsStatusLayout(
     header: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(modifier = modifier.then(BOX_FILL_MAX_SIZE_MODIFIER)) {
+    val layoutModifier = if (modifier == Modifier) BOX_FILL_MAX_SIZE_MODIFIER else modifier.then(BOX_FILL_MAX_SIZE_MODIFIER)
+    Column(modifier = layoutModifier) {
         header?.invoke()
         Box(modifier = BOX_FILL_MAX_SIZE_MODIFIER, contentAlignment = ALIGNMENT_CENTER) {
             content()
@@ -202,8 +205,9 @@ private fun TagGridCell(
     modifier: Modifier = Modifier,
 ) {
     val handleOpen = remember(cell, onOpenVideo) { { onOpenVideo(cell) } }
+    val boxModifier = if (modifier == Modifier) CELL_BOX_BASE_MODIFIER else modifier.then(CELL_BOX_BASE_MODIFIER)
     Box(
-        modifier = modifier.then(CELL_BOX_BASE_MODIFIER)
+        modifier = boxModifier
     ) {
         // Жесты как в ленте раздела: тап — превью, долгий тап и
         // двойной — открыть плеер.

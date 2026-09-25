@@ -39,6 +39,20 @@ import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumListFilter
 
+private val DIALOG_SHAPE_16 = RoundedCornerShape(16.dp)
+private val BUTTON_SHAPE_8 = RoundedCornerShape(8.dp)
+private val SUMMARY_SHAPE_6 = RoundedCornerShape(6.dp)
+private val BORDER_WIDTH_1 = 1.dp
+private val DIALOG_PADDING = 16.dp
+private const val DIALOG_WIDTH_FRACTION = 0.92f
+private val DIALOG_MAX_WIDTH = 420.dp
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val ROW_ARRANGEMENT_END = Arrangement.End
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val BOX_ALIGNMENT_CENTER_START = Alignment.CenterStart
+private val DIALOG_PROPERTIES = DialogProperties(usePlatformDefaultWidth = false)
+
 @Composable
 fun AlbumFilterSaveDialog(
     filter: AlbumListFilter,
@@ -50,19 +64,24 @@ fun AlbumFilterSaveDialog(
         mutableStateOf(AlbumFilterPresetManager.generateDefaultName(filter))
     }
     val summary = remember(filter) { AlbumFilterPresetManager.formatFilterSummary(filter) }
+    val titleStyle = remember { Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold) }
+    val rowValueStyle = remember(palette.textPrimary) { Theme.L.Type.rowValue.copy(color = palette.textPrimary) }
+    val placeholderStyle = remember(palette.textSecondary) {
+        Theme.L.Type.rowValue.copy(color = palette.textSecondary.copy(alpha = 0.5f))
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DIALOG_PROPERTIES
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .widthIn(max = 420.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(16.dp))
+                .fillMaxWidth(DIALOG_WIDTH_FRACTION)
+                .widthIn(max = DIALOG_MAX_WIDTH)
+                .clip(DIALOG_SHAPE_16)
+                .border(BORDER_WIDTH_1, palette.border, DIALOG_SHAPE_16)
                 .background(palette.surface)
-                .padding(16.dp)
+                .padding(DIALOG_PADDING)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 SaveDialogHeader(
@@ -80,7 +99,7 @@ fun AlbumFilterSaveDialog(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(SUMMARY_SHAPE_6)
                         .background(palette.panelBlack)
                         .padding(8.dp)
                 )
@@ -90,7 +109,7 @@ fun AlbumFilterSaveDialog(
                 Text(
                     text = "Preset name:",
                     color = palette.textPrimary,
-                    style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
+                    style = titleStyle
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -99,24 +118,24 @@ fun AlbumFilterSaveDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(44.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, palette.border, RoundedCornerShape(8.dp))
+                        .clip(BUTTON_SHAPE_8)
+                        .border(BORDER_WIDTH_1, palette.border, BUTTON_SHAPE_8)
                         .background(palette.field)
                         .padding(horizontal = 10.dp),
-                    contentAlignment = Alignment.CenterStart
+                    contentAlignment = BOX_ALIGNMENT_CENTER_START
                 ) {
                     if (presetName.isEmpty()) {
                         Text(
                             text = "Preset name",
                             color = palette.textSecondary.copy(alpha = 0.5f),
-                            style = Theme.L.Type.rowValue
+                            style = placeholderStyle
                         )
                     }
                     BasicTextField(
                         value = presetName,
                         onValueChange = { presetName = it },
                         singleLine = true,
-                        textStyle = Theme.L.Type.rowValue.copy(color = palette.textPrimary),
+                        textStyle = rowValueStyle,
                         cursorBrush = SolidColor(palette.accent),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -143,15 +162,18 @@ private fun SaveDialogHeader(
     onDismiss: () -> Unit
 ) {
     val palette = StyleGenresTags.Palette
+    val headerStyle = remember(palette.textPrimary) {
+        Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN,
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
     ) {
         Text(
             text = title,
             color = palette.textPrimary,
-            style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold),
+            style = headerStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -176,17 +198,18 @@ private fun SaveDialogActions(
     onSave: () -> Unit
 ) {
     val palette = StyleGenresTags.Palette
+    val saveButtonStyle = remember { Theme.L.Type.button.copy(fontWeight = FontWeight.Bold) }
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = ROW_ARRANGEMENT_END,
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
     ) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
+                .clip(BUTTON_SHAPE_8)
                 .clickable(onClick = onCancel)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = BOX_ALIGNMENT_CENTER
         ) {
             Text(
                 text = "Cancel",
@@ -199,17 +222,17 @@ private fun SaveDialogActions(
 
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, if (canSave) palette.accent else palette.border, RoundedCornerShape(8.dp))
+                .clip(BUTTON_SHAPE_8)
+                .border(BORDER_WIDTH_1, if (canSave) palette.accent else palette.border, BUTTON_SHAPE_8)
                 .background(if (canSave) palette.accentDark else palette.field)
                 .clickable(enabled = canSave, onClick = onSave)
                 .padding(horizontal = 20.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = BOX_ALIGNMENT_CENTER
         ) {
             Text(
                 text = "Save",
                 color = if (canSave) Color.White else palette.textSecondary,
-                style = Theme.L.Type.button.copy(fontWeight = FontWeight.Bold)
+                style = saveButtonStyle
             )
         }
     }

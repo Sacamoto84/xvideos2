@@ -68,6 +68,10 @@ import com.composables.core.HorizontalSeparator
 
 private const val FAVORITE_CARD_ASPECT_RATIO = 352f / 198f
 private const val GRID_COLUMNS = 2
+private val GRID_CELLS_FIXED = GridCells.Fixed(GRID_COLUMNS)
+private val HEADER_GRID_SPAN: androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope.() -> GridItemSpan = {
+    GridItemSpan(maxLineSpan)
+}
 private const val CONTENT_TYPE_HEADER = "header"
 private const val CONTENT_TYPE_FAVORITE_ROW = "favorite_row"
 private const val TEXT_EMPTY = "Пусто"
@@ -232,13 +236,13 @@ private fun FavoritesContent(
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(GRID_COLUMNS),
+                columns = GRID_CELLS_FIXED,
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = padding.calculateBottomPadding())
             ) {
-                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER, span = { GridItemSpan(maxLineSpan) }) {
+                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER, span = HEADER_GRID_SPAN) {
                     FavoritesHeader(topCutout = topCutout)
                 }
 

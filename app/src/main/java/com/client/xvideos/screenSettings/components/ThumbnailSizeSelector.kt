@@ -23,6 +23,7 @@ private val SELECTOR_VERTICAL_PADDING = 4.dp
 private val SELECTOR_BOX_MODIFIER = Modifier
     .fillMaxWidth()
     .padding(horizontal = SELECTOR_HORIZONTAL_PADDING, vertical = SELECTOR_VERTICAL_PADDING)
+private val THUMBNAIL_SIZE_ITEMS = ThumbnailsSize.displayNames
 
 @Composable
 fun ThumbnailSizeSelector(
@@ -31,12 +32,12 @@ fun ThumbnailSizeSelector(
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val items = ThumbnailsSize.displayNames
 
     val onOpen = remember { { expanded = true } }
     val onDismiss = remember { { expanded = false } }
+    val boxModifier = if (modifier == Modifier) SELECTOR_BOX_MODIFIER else modifier.then(SELECTOR_BOX_MODIFIER)
 
-    Box(modifier = modifier.then(SELECTOR_BOX_MODIFIER)) {
+    Box(modifier = boxModifier) {
         Button(onClick = onOpen) {
             Text(currentValue)
         }
@@ -44,7 +45,7 @@ fun ThumbnailSizeSelector(
             expanded = expanded,
             onDismissRequest = onDismiss
         ) {
-            items.forEach { name ->
+            THUMBNAIL_SIZE_ITEMS.forEach { name ->
                 key(name) {
                     val handleSelect = remember(name, onSelected) {
                         {

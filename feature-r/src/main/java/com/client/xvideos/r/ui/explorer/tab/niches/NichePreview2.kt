@@ -108,6 +108,7 @@ private val BUTTON_BASE_MODIFIER = Modifier
     .clip(NICHE_BUTTON_SHAPE)
 
 private val BUTTON_BORDER_MODIFIER = Modifier.border(BUTTON_BORDER_WIDTH, Color.White, NICHE_BUTTON_SHAPE)
+private val BUTTON_FOLLOWED_BASE_MODIFIER = BUTTON_BASE_MODIFIER.then(BUTTON_BORDER_MODIFIER)
 private val BUTTON_ALIGNMENT = Alignment.Center
 
 private val COLOR_LIGHT_GRAY = Color.LightGray
@@ -167,7 +168,7 @@ private fun NichePreview2Content(
     val buttonText = if (isFollowed) BUTTON_UNFOLLOW_TEXT else BUTTON_FOLLOW_TEXT
     val buttonTextColor = if (isFollowed) COLOR_WHITE else COLOR_BLACK
     val buttonBgColor = if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow
-    val buttonBorderMod = if (isFollowed) BUTTON_BORDER_MODIFIER else Modifier
+    val currentButtonBase = if (isFollowed) BUTTON_FOLLOWED_BASE_MODIFIER else BUTTON_BASE_MODIFIER
 
     Row(
         modifier = modifier
@@ -241,8 +242,7 @@ private fun NichePreview2Content(
                 }
 
                 Box(
-                    modifier = BUTTON_BASE_MODIFIER
-                        .then(buttonBorderMod)
+                    modifier = currentButtonBase
                         .background(buttonBgColor)
                         .clickable(onClick = onFollowClick),
                     contentAlignment = BUTTON_ALIGNMENT
