@@ -71,6 +71,29 @@ private val ERROR_TEXT_COLOR = Color(0xFFFF5252)
 private val COPY_BUTTON_TEXT_COLOR = Color(0xFF2E2961)
 private val QR_BOX_SIZE = 210.dp
 
+private val ERROR_SPACER_HEIGHT = 8.dp
+private val SECTION_SPACER_HEIGHT = 16.dp
+private val ERROR_HORIZONTAL_PADDING = 24.dp
+private val ERROR_FONT_SIZE = 13.sp
+private val CONNECTION_CARD_HORIZONTAL_PADDING = 16.dp
+private val CONNECTION_CARD_INNER_PADDING = 20.dp
+private val NETWORK_INDICATOR_SIZE = 10.dp
+private val NETWORK_TEXT_FONT_SIZE = 13.sp
+private val NETWORK_SPACER_WIDTH = 8.dp
+private val NETWORK_BOTTOM_SPACER_HEIGHT = 14.dp
+private val URL_BOX_HORIZONTAL_PADDING = 16.dp
+private val URL_BOX_VERTICAL_PADDING = 10.dp
+private val URL_TEXT_FONT_SIZE = 17.sp
+private val QR_PADDING = 12.dp
+private val QR_BOTTOM_SPACER_HEIGHT = 12.dp
+private val QR_HINT_FONT_SIZE = 12.sp
+private val ACTION_BUTTONS_SPACING = 10.dp
+private val ACTION_ICON_SIZE = 16.dp
+private val ACTION_ICON_SPACER_WIDTH = 6.dp
+private val ACTION_BUTTON_FONT_SIZE = 13.sp
+private val FOOTER_HINT_FONT_SIZE = 12.sp
+private val FOOTER_HINT_LINE_HEIGHT = 16.sp
+
 private const val TITLE_WEBSERVER = "Веб-сервер Wi-Fi"
 private const val TITLE_CONNECTION = "Подключение"
 private const val TEXT_STREAM_TO_PC = "Трансляция на ПК"
@@ -80,10 +103,22 @@ private const val TEXT_SERVER_STOPPED = "Сервер выключен"
 private const val TEXT_COPY = "Скопировать"
 private const val TEXT_SHARE = "Поделиться"
 private const val TEXT_SHARE_CHOOSER = "Поделиться ссылкой"
+private const val SERVER_RUNNING_PREFIX = "Работает: "
+private const val ERROR_TEXT_PREFIX = "Ошибка: "
+private const val NETWORK_NAME_PREFIX = "Сеть: "
+private const val QR_CD = "QR-код для подключения"
+private const val QR_HINT = "Отсканируйте камерой на планшете/ПК"
+private const val FOOTER_HINT_TEXT = "Компьютер или планшет должен быть подключен к этой же сети Wi-Fi. В браузере будет доступен просмотр видео и скачивание файлов."
+private const val MSG_CONNECT_WIFI = "Подключитесь к Wi-Fi или включите точку доступа"
+private const val MSG_SERVER_STARTING = "Запуск веб-сервера..."
+private const val MSG_SERVER_STOPPED = "Веб-сервер остановлен"
+private const val MSG_COPIED_TO_CLIPBOARD = "Ссылка скопирована в буфер"
 
 @Suppress("DEPRECATION")
 @Composable
-internal fun WebServerSettingsSection() {
+internal fun WebServerSettingsSection(
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
 
     val isRunning by WebServerState.isRunning.collectAsStateWithLifecycle()
@@ -113,14 +148,14 @@ internal fun WebServerSettingsSection() {
             if (enable) {
                 val ip = NetworkIpHelper.getLocalIpAddress(context)
                 if (ip == null) {
-                    SnackBar.error("Подключитесь к Wi-Fi или включите точку доступа")
+                    SnackBar.error(MSG_CONNECT_WIFI)
                 } else {
                     WebServerService.start(context, port)
-                    SnackBar.info("Запуск веб-сервера...")
+                    SnackBar.info(MSG_SERVER_STARTING)
                 }
             } else {
                 WebServerService.stop(context)
-                SnackBar.info("Веб-сервер остановлен")
+                SnackBar.info(MSG_SERVER_STOPPED)
             }
         }
     }
@@ -131,10 +166,10 @@ internal fun WebServerSettingsSection() {
     }
 
     val serverSubtitle = remember(isRunning, serverUrl) {
-        if (isRunning) "Работает: $serverUrl" else TEXT_SERVER_STOPPED
+        if (isRunning) "$SERVER_RUNNING_PREFIX$serverUrl" else TEXT_SERVER_STOPPED
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         SettingsSectionTitle(TITLE_WEBSERVER)
 
         SettingsGroup {
@@ -158,18 +193,18 @@ internal fun WebServerSettingsSection() {
         }
 
         if (lastError != null) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(ERROR_SPACER_HEIGHT))
             Text(
-                text = "Ошибка: $lastError",
+                text = "$ERROR_TEXT_PREFIX$lastError",
                 color = ERROR_TEXT_COLOR,
-                fontSize = 13.sp,
-                modifier = Modifier.padding(horizontal = 24.dp)
+                fontSize = ERROR_FONT_SIZE,
+                modifier = Modifier.padding(horizontal = ERROR_HORIZONTAL_PADDING)
             )
         }
 
         val currentServerUrl = serverUrl
         if (isRunning && currentServerUrl != null) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
             SettingsSectionTitle(TITLE_CONNECTION)
             WebServerConnectionCard(
                 serverUrl = currentServerUrl,
@@ -186,23 +221,24 @@ private fun WebServerConnectionCard(
     serverUrl: String,
     networkName: String,
     qrBitmap: androidx.compose.ui.graphics.ImageBitmap?,
+    modifier: Modifier = Modifier,
 ) {
     val clipboardManager = LocalClipboardManager.current
 
     val onCopyUrl: () -> Unit = remember(serverUrl, clipboardManager) {
         {
             clipboardManager.setText(AnnotatedString(serverUrl))
-            SnackBar.success("Ссылка скопирована в буфер")
+            SnackBar.success(MSG_COPIED_TO_CLIPBOARD)
         }
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = CONNECTION_CARD_HORIZONTAL_PADDING)
             .clip(CONNECTION_CARD_SHAPE)
             .background(SettingsCardColor)
-            .padding(20.dp),
+            .padding(CONNECTION_CARD_INNER_PADDING),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Статус сети
@@ -213,19 +249,19 @@ private fun WebServerConnectionCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(10.dp)
+                    .size(NETWORK_INDICATOR_SIZE)
                     .clip(NETWORK_INDICATOR_SHAPE)
                     .background(NETWORK_ACTIVE_COLOR)
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(NETWORK_SPACER_WIDTH))
             Text(
-                text = "Сеть: $networkName",
+                text = "$NETWORK_NAME_PREFIX$networkName",
                 color = SettingsRowTextSecondary,
-                fontSize = 13.sp
+                fontSize = NETWORK_TEXT_FONT_SIZE
             )
         }
 
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(NETWORK_BOTTOM_SPACER_HEIGHT))
 
         // Кликабельный URL
         Box(
@@ -233,18 +269,18 @@ private fun WebServerConnectionCard(
                 .clip(URL_BOX_SHAPE)
                 .background(URL_BOX_BG_COLOR)
                 .clickable(onClick = onCopyUrl)
-                .padding(horizontal = 16.dp, vertical = 10.dp)
+                .padding(horizontal = URL_BOX_HORIZONTAL_PADDING, vertical = URL_BOX_VERTICAL_PADDING)
         ) {
             Text(
                 text = serverUrl,
                 color = SettingsAccentColor,
-                fontSize = 17.sp,
+                fontSize = URL_TEXT_FONT_SIZE,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
 
         // QR-код
         if (qrBitmap != null) {
@@ -253,24 +289,24 @@ private fun WebServerConnectionCard(
                     .size(QR_BOX_SIZE)
                     .clip(QR_BOX_SHAPE)
                     .background(Color.White)
-                    .padding(12.dp),
+                    .padding(QR_PADDING),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     bitmap = qrBitmap,
-                    contentDescription = "QR-код для подключения",
+                    contentDescription = QR_CD,
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(QR_BOTTOM_SPACER_HEIGHT))
             Text(
-                text = "Отсканируйте камерой на планшете/ПК",
+                text = QR_HINT,
                 color = SettingsRowTextSecondary,
-                fontSize = 12.sp
+                fontSize = QR_HINT_FONT_SIZE
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
 
         // Кнопки действий: Копировать и Поделиться
         WebServerActionButtons(
@@ -278,15 +314,15 @@ private fun WebServerConnectionCard(
             onCopy = onCopyUrl
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
 
         // Пояснение
         Text(
-            text = "Компьютер или планшет должен быть подключен к этой же сети Wi-Fi. В браузере будет доступен просмотр видео и скачивание файлов.",
+            text = FOOTER_HINT_TEXT,
             color = SettingsRowTextSecondary,
-            fontSize = 12.sp,
+            fontSize = FOOTER_HINT_FONT_SIZE,
             textAlign = TextAlign.Center,
-            lineHeight = 16.sp
+            lineHeight = FOOTER_HINT_LINE_HEIGHT
         )
     }
 }
@@ -294,7 +330,8 @@ private fun WebServerConnectionCard(
 @Composable
 private fun WebServerActionButtons(
     serverUrl: String,
-    onCopy: () -> Unit
+    onCopy: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
 
@@ -316,8 +353,8 @@ private fun WebServerActionButtons(
     )
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(ACTION_BUTTONS_SPACING)
     ) {
         Button(
             onClick = onCopy,
@@ -325,9 +362,9 @@ private fun WebServerActionButtons(
             colors = copyButtonColors,
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(TEXT_COPY, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(ACTION_ICON_SIZE))
+            Spacer(Modifier.width(ACTION_ICON_SPACER_WIDTH))
+            Text(TEXT_COPY, fontSize = ACTION_BUTTON_FONT_SIZE, fontWeight = FontWeight.Medium)
         }
 
         OutlinedButton(
@@ -335,9 +372,9 @@ private fun WebServerActionButtons(
             modifier = Modifier.weight(1f),
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = SettingsRowTextPrimary)
-            Spacer(Modifier.width(6.dp))
-            Text(TEXT_SHARE, fontSize = 13.sp, color = SettingsRowTextPrimary)
+            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(ACTION_ICON_SIZE), tint = SettingsRowTextPrimary)
+            Spacer(Modifier.width(ACTION_ICON_SPACER_WIDTH))
+            Text(TEXT_SHARE, fontSize = ACTION_BUTTON_FONT_SIZE, color = SettingsRowTextPrimary)
         }
     }
 }

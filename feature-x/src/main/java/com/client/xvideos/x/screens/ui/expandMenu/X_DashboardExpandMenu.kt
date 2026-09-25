@@ -43,6 +43,7 @@ fun X_DashboardExpandMenu(
     onFavoriteAdd: () -> Unit,
     onFavoriteRemove: () -> Unit,
     onDownload: () -> Unit,
+    modifier: Modifier = Modifier,
     onSaveToGallery: () -> Unit = {},
     isExpanded: Boolean = false
 ) {
@@ -51,7 +52,7 @@ fun X_DashboardExpandMenu(
     val onDismissMenu = remember { { expanded = false } }
 
     Box(
-        modifier = Modifier,
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         ButtonMoveVert(BUTTON_VERT_SIZE, onOpen)

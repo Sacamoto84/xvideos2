@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,9 +21,9 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,7 +37,25 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
-import androidx.compose.material3.Text
+
+private val PREVIEW_CORNER = 8.dp
+private val PREVIEW_CORNER_SHAPE = RoundedCornerShape(PREVIEW_CORNER)
+private val ADD_BUTTON_PADDING_START = 8.dp
+private val ADD_BUTTON_PADDING_TOP = 4.dp
+private val ADD_BUTTON_SIZE = 72.dp
+private val ADD_ICON_SIZE = 24.dp
+private val CELL_HORIZONTAL_PADDING = 8.dp
+private val CELL_VERTICAL_PADDING = 4.dp
+private val PREVIEW_SIZE = 72.dp
+private val TEXT_SPACER_WIDTH = 8.dp
+private val COUNT_FONT_SIZE = 12.sp
+private const val GRID_COLUMNS = 2
+
+private const val CONTENT_TYPE_COLLECTION_ITEM = "collection_item"
+private const val KEY_ADD_BUTTON = "add_button"
+private const val CONTENT_TYPE_ADD_BUTTON = "add_button"
+private const val COUNT_PREFIX = "Элементов: "
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
 
 /**
  * Сетка коллекций: список + заголовок ([topBar]) + кнопка «+».
@@ -53,12 +72,12 @@ fun CollectionsGrid(
     onCollectionClick: (String) -> Unit,
     onCollectionLongClick: (String) -> Unit,
     onCreateNewCollectionClick: () -> Unit,
+    modifier: Modifier = Modifier,
     topBar: @Composable (() -> Unit)? = null
 ) {
-    val previewCornerShape = remember { RoundedCornerShape(8.dp) }
-
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        modifier = modifier,
+        contentWindowInsets = ZERO_WINDOW_INSETS,
         topBar = { topBar?.invoke() },
         containerColor = style.backgroundColor
     ) { padding ->
@@ -67,29 +86,29 @@ fun CollectionsGrid(
                 .fillMaxSize()
                 .padding(padding),
             state = gridState,
-            columns = GridCells.Fixed(2)
+            columns = GridCells.Fixed(GRID_COLUMNS)
         ) {
             itemsIndexed(
                 items = collections,
                 key = { index, item -> "${item.name}#$index" },
-                contentType = { _, _ -> "collection_item" }
+                contentType = { _, _ -> CONTENT_TYPE_COLLECTION_ITEM }
             ) { _, collection ->
                 CollectionGridCell(
                     collection = collection,
                     style = style,
-                    shape = previewCornerShape,
+                    shape = PREVIEW_CORNER_SHAPE,
                     onClick = onCollectionClick,
                     onLongClick = onCollectionLongClick
                 )
             }
 
-            item(key = "add_button", contentType = "add_button") {
+            item(key = KEY_ADD_BUTTON, contentType = CONTENT_TYPE_ADD_BUTTON) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Box(
                         modifier = Modifier
-                            .padding(start = 8.dp, top = 4.dp)
-                            .size(72.dp)
-                            .clip(previewCornerShape)
+                            .padding(start = ADD_BUTTON_PADDING_START, top = ADD_BUTTON_PADDING_TOP)
+                            .size(ADD_BUTTON_SIZE)
+                            .clip(PREVIEW_CORNER_SHAPE)
                             .background(style.addButtonBackground)
                             .clickable(onClick = onCreateNewCollectionClick),
                         contentAlignment = Alignment.Center
@@ -98,7 +117,7 @@ fun CollectionsGrid(
                             Icons.Default.Add,
                             contentDescription = null,
                             tint = style.addButtonIconColor,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(ADD_ICON_SIZE)
                         )
                     }
                 }
@@ -114,17 +133,18 @@ private fun CollectionGridCell(
     shape: RoundedCornerShape,
     onClick: (String) -> Unit,
     onLongClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val handleClick = remember(collection.name, onClick) { { onClick(collection.name) } }
     val handleLongClick = remember(collection.name, onLongClick) { { onLongClick(collection.name) } }
     val countText = remember(collection.itemsCount) {
-        collection.itemsCount?.let { "Элементов: $it" }
+        collection.itemsCount?.let { "$COUNT_PREFIX$it" }
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = CELL_HORIZONTAL_PADDING, vertical = CELL_VERTICAL_PADDING)
             .combinedClickable(
                 onClick = handleClick,
                 onLongClick = handleLongClick
@@ -137,17 +157,17 @@ private fun CollectionGridCell(
                 url = previewUrl,
                 modifier = Modifier
                     .clip(shape)
-                    .size(72.dp)
+                    .size(PREVIEW_SIZE)
             )
         } else {
             Box(
                 modifier = Modifier
                     .clip(shape)
-                    .size(72.dp)
+                    .size(PREVIEW_SIZE)
                     .background(style.placeholderColor)
             )
         }
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(TEXT_SPACER_WIDTH))
         Column {
             Text(
                 collection.name,
@@ -158,7 +178,7 @@ private fun CollectionGridCell(
                 Text(
                     countText,
                     color = style.itemSecondaryColor,
-                    fontSize = 12.sp,
+                    fontSize = COUNT_FONT_SIZE,
                     fontFamily = style.itemFontFamily
                 )
             }

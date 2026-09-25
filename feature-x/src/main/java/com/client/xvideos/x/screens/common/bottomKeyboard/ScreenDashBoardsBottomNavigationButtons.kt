@@ -70,6 +70,8 @@ private const val CONTENT_TYPE_PAGE_NUMBER = "page_number_item"
 private const val ARROW_LEFT = "<"
 private const val ARROW_RIGHT = ">"
 
+private val SELECTED_BORDER_MODIFIER = Modifier.border(SELECTED_BORDER_WIDTH, SELECTED_BORDER_COLOR)
+
 /**
  * Bottom navigation buttons
  * Навигация для переключения экранов, возвращает которая будет выбирать номер экрана
@@ -77,7 +79,12 @@ private const val ARROW_RIGHT = ">"
  * onChange - Функция вызывается при изменении экрана и передается номер экрана
  */
 @Composable
-fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, max: Int) {
+fun BottomListDashBoardNavigationButtons2(
+    value: Int,
+    onChange: (Int) -> Unit,
+    max: Int,
+    modifier: Modifier = Modifier,
+) {
 
     val safeMax = max.coerceAtLeast(1)
     val maxPageIndex = safeMax - 1
@@ -97,7 +104,7 @@ fun BottomListDashBoardNavigationButtons2(value: Int, onChange: (Int) -> Unit, m
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .height(NAV_BUTTON_HEIGHT)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -176,11 +183,7 @@ private fun PageNumberButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val borderModifier = if (isSelected) {
-        Modifier.border(SELECTED_BORDER_WIDTH, SELECTED_BORDER_COLOR)
-    } else {
-        Modifier
-    }
+    val borderModifier = if (isSelected) SELECTED_BORDER_MODIFIER else Modifier
 
     Box(
         modifier = modifier

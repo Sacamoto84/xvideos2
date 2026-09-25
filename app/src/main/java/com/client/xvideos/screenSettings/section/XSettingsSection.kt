@@ -5,7 +5,7 @@ import com.client.xvideos.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
@@ -20,7 +20,9 @@ private const val TEXT_ENABLED = "Включено"
 private const val TEXT_DISABLED = "Выключено"
 
 @Composable
-internal fun XSettingsSection() {
+internal fun XSettingsSection(
+    modifier: Modifier = Modifier,
+) {
     val xvideosRow2 by Settings.xvideos_row2.field.collectAsStateWithLifecycle()
     val xvideosShemale by Settings.xvideos_shemale.field.collectAsStateWithLifecycle()
 
@@ -30,7 +32,7 @@ internal fun XSettingsSection() {
     val row2Subtitle = remember(xvideosRow2) { if (xvideosRow2) TEXT_ENABLED else TEXT_DISABLED }
     val shemaleSubtitle = remember(xvideosShemale) { if (xvideosShemale) TEXT_ENABLED else TEXT_DISABLED }
 
-    SettingsGroup {
+    SettingsGroup(modifier = modifier) {
         SettingsSwitchRow(
             icon = R.drawable.icon_xvideos_white,
             text = TEXT_TWO_COLUMNS,

@@ -55,9 +55,16 @@ private val VERIFIED_BADGE_SIZE = 26.dp
 private val ROW_HEADER_HEIGHT = 48.dp
 private val BUTTON_HEIGHT = 48.dp
 private val BUTTON_BORDER_WIDTH = 1.dp
+private val BUTTON_START_PADDING = 8.dp
 private val BUTTON_END_PADDING = 64.dp
 private val USERNAME_SPACER_WIDTH = 8.dp
 private val VERIFIED_OFFSET_Y = 8.dp
+
+private val ROOT_HORIZONTAL_PADDING = 4.dp
+private val TOP_ROW_PADDING_TOP = 2.dp
+private val STATS_ROW_VERTICAL_PADDING = 8.dp
+private val DESCRIPTION_SPACER_HEIGHT = 4.dp
+private val BOTTOM_SPACER_HEIGHT = 8.dp
 
 private val USERNAME_FONT_SIZE = 28.sp
 private val BUTTON_FONT_SIZE = 18.sp
@@ -69,9 +76,15 @@ private const val TEXT_SUBSCRIBERS = "Подписчиков"
 private const val TEXT_VIEWS = "Просмотров"
 private const val TEXT_POSTS = "Постов"
 private const val CD_VERIFIED_CREATOR = "Verified Creator"
+private const val ABOUT_TITLE_PREFIX = "About "
+private const val ABOUT_TITLE_SUFFIX = ":"
 
 @Composable
-fun RedProfileCreaterInfo(item: UserInfo, savedRed: () -> SavedRed) {
+fun RedProfileCreaterInfo(
+    item: UserInfo,
+    savedRed: () -> SavedRed,
+    modifier: Modifier = Modifier,
+) {
     val isFollow by remember(item.username) {
         derivedStateOf {
             savedRed().creators.list.any { it.username == item.username }
@@ -89,7 +102,8 @@ fun RedProfileCreaterInfo(item: UserInfo, savedRed: () -> SavedRed) {
     RedProfileCreaterInfo(
         item = item,
         isFollow = isFollow,
-        onFollowClick = onFollowClick
+        onFollowClick = onFollowClick,
+        modifier = modifier,
     )
 }
 
@@ -97,148 +111,27 @@ fun RedProfileCreaterInfo(item: UserInfo, savedRed: () -> SavedRed) {
 fun RedProfileCreaterInfo(
     item: UserInfo,
     isFollow: Boolean,
-    onFollowClick: () -> Unit
+    onFollowClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val followersPretty = remember(item.followers) { item.followers.toPrettyCount() }
     val viewsPretty = remember(item.views) { item.views.toPrettyCount() }
     val publishedGifsPretty = remember(item.publishedGifs) { item.publishedGifs.toPrettyCount() }
-    val aboutTitle = remember(item.username) { "About ${item.username}:" }
+    val aboutTitle = remember(item.username) { "$ABOUT_TITLE_PREFIX${item.username}$ABOUT_TITLE_SUFFIX" }
     val descriptionTrimmed = remember(item.description) { item.description?.trimMargin() }
 
-    val followButtonText = if (isFollow) TEXT_UNFOLLOW else TEXT_FOLLOW
-    val followButtonTextColor = if (isFollow) Color.White else Color.Black
-    val followButtonBgColor = if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow
-    val followButtonBorderModifier = remember(isFollow) {
-        if (isFollow) Modifier.border(BUTTON_BORDER_WIDTH, Color.White, PROFILE_FOLLOW_BUTTON_SHAPE) else Modifier
-    }
+    Column(modifier = modifier.padding(horizontal = ROOT_HORIZONTAL_PADDING).fillMaxWidth()) {
+        CreatorTopInfoRow(
+            item = item,
+            isFollow = isFollow,
+            onFollowClick = onFollowClick
+        )
 
-    Column(modifier = Modifier.padding(horizontal = 4.dp).fillMaxWidth()) {
-
-        // Top info
-        Row(
-            modifier = Modifier.padding(top = 2.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (item.profileImageUrl != null) {
-                UrlImage(
-                    item.profileImageUrl,
-                    modifier = Modifier.clip(PROFILE_AVATAR_SHAPE).size(AVATAR_SIZE)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .clip(PROFILE_AVATAR_SHAPE)
-                        .size(AVATAR_SIZE)
-                        .background(Color.DarkGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(PERSON_ICON_SIZE),
-                        tint = Color.White
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth().height(AVATAR_SIZE),
-                verticalArrangement = Arrangement.SpaceAround
-            ) {
-                Row(
-                    modifier = Modifier.height(ROW_HEADER_HEIGHT),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
-                    Text(
-                        item.username,
-                        color = Color.White,
-                        fontFamily = Theme.R.fontFamilyPopinsMedium,
-                        fontSize = USERNAME_FONT_SIZE,
-                        modifier = Modifier
-                    )
-                    if (item.verified) {
-                        Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
-                        Image(
-                            painter = painterResource(id = R.drawable.verificed),
-                            contentDescription = CD_VERIFIED_CREATOR,
-                            modifier = Modifier.size(VERIFIED_BADGE_SIZE).offset(y = VERIFIED_OFFSET_Y)
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .padding(start = 8.dp, end = BUTTON_END_PADDING)
-                        .fillMaxWidth()
-                        .height(BUTTON_HEIGHT)
-                        .clip(PROFILE_FOLLOW_BUTTON_SHAPE)
-                        .background(followButtonBgColor)
-                        .then(followButtonBorderModifier)
-                        .clickable(onClick = onFollowClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        followButtonText,
-                        color = followButtonTextColor,
-                        fontFamily = Theme.R.fontFamilyDMsanss,
-                        fontSize = BUTTON_FONT_SIZE,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth().weight(1f)
-            ) {
-                Text(followersPretty, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium)
-                Text(TEXT_SUBSCRIBERS, color = PROFILE_STAT_LABEL_COLOR, fontFamily = Theme.R.fontFamilyPopinsRegular)
-            }
-
-            Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth().weight(1f)
-            ) {
-                Text(
-                    viewsPretty,
-                    color = Color.White,
-                    fontFamily = Theme.R.fontFamilyPopinsMedium
-                )
-                Text(
-                    TEXT_VIEWS,
-                    color = PROFILE_STAT_LABEL_COLOR,
-                    fontFamily = Theme.R.fontFamilyPopinsRegular
-                )
-            }
-
-            Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth().weight(1f)
-            ) {
-                Text(
-                    publishedGifsPretty,
-                    color = Color.White,
-                    fontFamily = Theme.R.fontFamilyPopinsMedium
-                )
-                Text(
-                    TEXT_POSTS,
-                    color = PROFILE_STAT_LABEL_COLOR,
-                    fontFamily = Theme.R.fontFamilyPopinsRegular
-                )
-            }
-        }
+        CreatorStatsRow(
+            followersPretty = followersPretty,
+            viewsPretty = viewsPretty,
+            publishedGifsPretty = publishedGifsPretty
+        )
 
         if (descriptionTrimmed != null) {
             Text(
@@ -248,7 +141,7 @@ fun RedProfileCreaterInfo(
                 fontFamily = Theme.R.fontFamilyPopinsRegular
             )
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(DESCRIPTION_SPACER_HEIGHT))
 
             Text(
                 descriptionTrimmed,
@@ -258,7 +151,155 @@ fun RedProfileCreaterInfo(
             )
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(BOTTOM_SPACER_HEIGHT))
+    }
+}
+
+@Composable
+private fun CreatorTopInfoRow(
+    item: UserInfo,
+    isFollow: Boolean,
+    onFollowClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val followButtonText = if (isFollow) TEXT_UNFOLLOW else TEXT_FOLLOW
+    val followButtonTextColor = if (isFollow) Color.White else Color.Black
+    val followButtonBgColor = if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow
+    val followButtonBorderModifier = remember(isFollow) {
+        if (isFollow) Modifier.border(BUTTON_BORDER_WIDTH, Color.White, PROFILE_FOLLOW_BUTTON_SHAPE) else Modifier
+    }
+
+    Row(
+        modifier = modifier.padding(top = TOP_ROW_PADDING_TOP).fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (item.profileImageUrl != null) {
+            UrlImage(
+                item.profileImageUrl,
+                modifier = Modifier.clip(PROFILE_AVATAR_SHAPE).size(AVATAR_SIZE)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .clip(PROFILE_AVATAR_SHAPE)
+                    .size(AVATAR_SIZE)
+                    .background(Color.DarkGray),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(PERSON_ICON_SIZE),
+                    tint = Color.White
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth().height(AVATAR_SIZE),
+            verticalArrangement = Arrangement.SpaceAround
+        ) {
+            Row(
+                modifier = Modifier.height(ROW_HEADER_HEIGHT),
+                verticalAlignment = Alignment.Top
+            ) {
+                Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
+                Text(
+                    item.username,
+                    color = Color.White,
+                    fontFamily = Theme.R.fontFamilyPopinsMedium,
+                    fontSize = USERNAME_FONT_SIZE,
+                    modifier = Modifier
+                )
+                if (item.verified) {
+                    Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
+                    Image(
+                        painter = painterResource(id = R.drawable.verificed),
+                        contentDescription = CD_VERIFIED_CREATOR,
+                        modifier = Modifier.size(VERIFIED_BADGE_SIZE).offset(y = VERIFIED_OFFSET_Y)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(start = BUTTON_START_PADDING, end = BUTTON_END_PADDING)
+                    .fillMaxWidth()
+                    .height(BUTTON_HEIGHT)
+                    .clip(PROFILE_FOLLOW_BUTTON_SHAPE)
+                    .background(followButtonBgColor)
+                    .then(followButtonBorderModifier)
+                    .clickable(onClick = onFollowClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    followButtonText,
+                    color = followButtonTextColor,
+                    fontFamily = Theme.R.fontFamilyDMsanss,
+                    fontSize = BUTTON_FONT_SIZE,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CreatorStatsRow(
+    followersPretty: String,
+    viewsPretty: String,
+    publishedGifsPretty: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.padding(vertical = STATS_ROW_VERTICAL_PADDING).fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) {
+            Text(followersPretty, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium)
+            Text(TEXT_SUBSCRIBERS, color = PROFILE_STAT_LABEL_COLOR, fontFamily = Theme.R.fontFamilyPopinsRegular)
+        }
+
+        Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) {
+            Text(
+                viewsPretty,
+                color = Color.White,
+                fontFamily = Theme.R.fontFamilyPopinsMedium
+            )
+            Text(
+                TEXT_VIEWS,
+                color = PROFILE_STAT_LABEL_COLOR,
+                fontFamily = Theme.R.fontFamilyPopinsRegular
+            )
+        }
+
+        Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) {
+            Text(
+                publishedGifsPretty,
+                color = Color.White,
+                fontFamily = Theme.R.fontFamilyPopinsMedium
+            )
+            Text(
+                TEXT_POSTS,
+                color = PROFILE_STAT_LABEL_COLOR,
+                fontFamily = Theme.R.fontFamilyPopinsRegular
+            )
+        }
     }
 }
 

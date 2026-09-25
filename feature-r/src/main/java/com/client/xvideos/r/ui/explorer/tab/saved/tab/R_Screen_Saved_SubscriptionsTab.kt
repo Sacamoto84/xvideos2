@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -195,16 +194,28 @@ fun SubscriptionsTabContent(
     }
 }
 
+private val CREATOR_CHIP_SHAPE = CircleShape
+private val CREATOR_CHIP_OUTER_PADDING = 4.dp
+private val CREATOR_CHIP_INNER_PADDING = 4.dp
+private val CREATOR_CHIP_BORDER_WIDTH = 1.dp
+private val CREATOR_CHIP_AVATAR_SIZE = 48.dp
+private val CREATOR_CHIP_ICON_SIZE = 24.dp
+private val CREATOR_CHIP_TEXT_START_SPACER = 8.dp
+private val CREATOR_CHIP_TEXT_END_SPACER = 4.dp
+private val CREATOR_CHIP_FONT_SIZE = 16.sp
+private val CREATORS_HEADER_PADDING = 4.dp
+
 @Composable
 fun CreatorsHeader(
     listCreators: List<SelectedCreator>,
     onCreatorClick: (String) -> Unit,
-    onLongClick : (String) -> Unit = {}
+    modifier: Modifier = Modifier,
+    onLongClick: (String) -> Unit = {}
 ) {
     FlowRow(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(4.dp)
+            .padding(CREATORS_HEADER_PADDING)
     ) {
         listCreators.forEach { creator ->
             key(creator.name) {
@@ -241,16 +252,17 @@ fun CreatorChip(
     url: String? = null,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     onLongClick: () -> Unit = {}
 ) {
     Row(
-        modifier = Modifier
-            .padding(4.dp)
-            .clip(RoundedCornerShape(50))
-            .border(1.dp, Color.Gray, RoundedCornerShape(50))
+        modifier = modifier
+            .padding(CREATOR_CHIP_OUTER_PADDING)
+            .clip(CREATOR_CHIP_SHAPE)
+            .border(CREATOR_CHIP_BORDER_WIDTH, Color.Gray, CREATOR_CHIP_SHAPE)
             .background(
                 if (isSelected) Color.Gray else Color.Transparent,
-                RoundedCornerShape(50)
+                CREATOR_CHIP_SHAPE
             )
             .combinedClickable(
                 onClick = onClick,
@@ -258,12 +270,12 @@ fun CreatorChip(
                 indication = null,
                 interactionSource = null,
             )
-            .padding(4.dp),
+            .padding(CREATOR_CHIP_INNER_PADDING),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(CREATOR_CHIP_AVATAR_SIZE)
                 .clip(CircleShape)
                 .background(Color.DarkGray),
             contentAlignment = Alignment.Center
@@ -275,20 +287,20 @@ fun CreatorChip(
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(CREATOR_CHIP_ICON_SIZE),
                     tint = Color.White
                 )
             }
         }
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(CREATOR_CHIP_TEXT_START_SPACER))
         Text(
             text = creator,
-            fontSize = 16.sp,
+            fontSize = CREATOR_CHIP_FONT_SIZE,
             color = Color.White,
             fontFamily = Theme.R.fontFamilyPopinsRegular
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(CREATOR_CHIP_TEXT_END_SPACER))
     }
 }
 
