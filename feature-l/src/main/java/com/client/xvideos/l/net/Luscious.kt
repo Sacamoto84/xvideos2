@@ -40,9 +40,13 @@ class Luscious(
         requestScope: CoroutineScope = scope
     ): AlbumInfo {
         val id = when (albumInput) {
-            is Int -> albumInput
-            is Long -> if (albumInput in 0..Int.MAX_VALUE) albumInput.toInt() else null
-            is String -> (extractIdFromUrl(albumInput) ?: albumInput.trim()).toIntOrNull()
+            is Int -> if (albumInput > 0) albumInput else null
+            is Long -> if (albumInput in 1..Int.MAX_VALUE) albumInput.toInt() else null
+            is String -> {
+                val trimmed = albumInput.trim()
+                if (trimmed.isEmpty()) null
+                else (trimmed.toIntOrNull() ?: extractIdFromUrl(trimmed)?.toIntOrNull())?.takeIf { it > 0 }
+            }
             else -> throw IllegalArgumentException("albumInput must be Int, Long or String: $albumInput")
         } ?: throw IllegalArgumentException("Invalid album ID: $albumInput")
 
@@ -74,6 +78,7 @@ private val ALBUM_ID_REGEX = Regex("(?:^|/)albums/(?:[^/]*_)?(\\d+)")
 
 // Вспомогательная функция для извлечения ID из URL
 internal fun extractIdFromUrl(url: String): String? {
+    if (url.length < 8) return null
     val trimmed = url.trim()
     if (!trimmed.contains("albums/")) return null
     return ALBUM_ID_REGEX.find(trimmed)?.groupValues?.getOrNull(1)

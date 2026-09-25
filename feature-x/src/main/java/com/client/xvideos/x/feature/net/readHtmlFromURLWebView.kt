@@ -34,12 +34,17 @@ private const val WEB_VIEW_LOAD_TIMEOUT_MS = 45_000L
  * продолжал жить после его отмены.
  */
 suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): String {
-    if (url.isBlank()) return ""
+    val trimmed = url.trim()
+    if (trimmed.isEmpty()) return ""
+    if (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true)) {
+        Timber.w("readHtmlFromURLWebView: invalid scheme for url: $trimmed")
+        return ""
+    }
     return withContext(Dispatchers.Main) {
         withTimeoutOrNull(WEB_VIEW_LOAD_TIMEOUT_MS) {
-            loadHtmlInWebView(url)
+            loadHtmlInWebView(trimmed)
         } ?: run {
-            Timber.w("!!!..readHtmlFromURL timeout $url")
+            Timber.w("!!!..readHtmlFromURL timeout $trimmed")
             ""
         }
     }
@@ -134,6 +139,12 @@ private suspend fun loadHtmlInWebView(url: String): String =
                 ) { html ->
 
                     Timber.d("readHtmlFromURL end %s", url)
+
+                    if (html.isNullOrEmpty() || html == "null") {
+                        if (continuation.isActive) continuation.resume("")
+                        destroyWebView()
+                        return@evaluateJavascript
+                    }
 
                     val result = html.trim('"')
                         .replace("\\u003C", "<")

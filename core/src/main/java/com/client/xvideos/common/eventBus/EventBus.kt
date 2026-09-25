@@ -44,7 +44,9 @@ object EventBus {
 
     fun postEvent(event: Event) {
         Timber.i("!!! ~~~ EventBus.postEvent $event")
-        scope.launch { _events.emit(event) }
+        if (!_events.tryEmit(event)) {
+            scope.launch { _events.emit(event) }
+        }
     }
 
 }

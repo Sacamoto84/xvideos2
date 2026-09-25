@@ -10,8 +10,14 @@ import androidx.compose.runtime.Immutable
  */
 @Immutable
 data class ModelScreenTag(
-    val title0: String,
-    val title1: String,
-    val items: List<ItemsX>,
+    val title0: String = "",
+    val title1: String = "",
+    val items: List<ItemsX> = emptyList(),
     val lastPage: Int = 1,
-)
+) {
+    val isEmpty: Boolean get() = items.isEmpty()
+
+    companion object {
+        val EMPTY = ModelScreenTag()
+    }
+}

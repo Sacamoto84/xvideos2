@@ -47,14 +47,19 @@ private val htmlClient: HttpClient by lazy {
  * все вызывающие ([SavedX_Downloads], `ScreenTagsViewModel`, плееры X).
  */
 suspend fun readHtmlFromURLDirect(url: String = "https://www.xvideos.com"): String {
-    if (url.isBlank()) return ""
+    val trimmed = url.trim()
+    if (trimmed.isEmpty()) return ""
+    if (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true)) {
+        Timber.w("readHtmlFromURLDirect: invalid scheme for url: $trimmed")
+        return ""
+    }
 
-    Timber.d("readHtmlFromURLDirect %s", url)
+    Timber.d("readHtmlFromURLDirect %s", trimmed)
 
     return try {
-        val response = htmlClient.get(url)
+        val response = htmlClient.get(trimmed)
         if (!response.status.isSuccess()) {
-            Timber.w("readHtmlFromURLDirect: HTTP ${response.status.value} for $url")
+            Timber.w("readHtmlFromURLDirect: HTTP ${response.status.value} for $trimmed")
             ""
         } else {
             response.bodyAsText()

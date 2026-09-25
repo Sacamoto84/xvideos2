@@ -49,3 +49,13 @@ data class Content(
     @SerialName("title") val title: String = "",
     @SerialName("url") val url: String = ""
 )
+
+/**
+ * Возвращает URL обложки альбома при наличии.
+ */
+fun AlbumDetails.coverUrl(): String? = cover?.url?.takeIf { it.isNotBlank() }
+
+/**
+ * Проверяет, что у альбома валидный числовой ID.
+ */
+fun AlbumDetails.hasValidId(): Boolean = id.isNotBlank() && id.toLongOrNull() != null

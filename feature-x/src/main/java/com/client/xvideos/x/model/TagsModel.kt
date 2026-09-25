@@ -31,4 +31,11 @@ data class TagsModel(
     val mainUploader: List<TagsMainUploaderPornstar> = emptyList(),
     val pornstars: List<TagsMainUploaderPornstar> = emptyList(),
     val tags: List<String> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = mainUploader.isEmpty() && pornstars.isEmpty() && tags.isEmpty()
+    val isNotEmpty: Boolean get() = !isEmpty
+
+    companion object {
+        val EMPTY = TagsModel()
+    }
+}

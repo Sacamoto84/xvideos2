@@ -26,20 +26,26 @@ import java.io.IOException
  */
 fun File.writeTextAtomically(text: String) {
     val parent = parentFile ?: throw IOException("Cannot create atomic file without parent: $absolutePath")
-    parent.mkdirs()
+    if (!parent.exists()) {
+        parent.mkdirs()
+    }
     val temp = File.createTempFile("atomic-", ".tmp", parent)
     try {
-        temp.writeText(text, Charsets.UTF_8)
+        if (text.isEmpty()) {
+            temp.writeBytes(byteArrayOf())
+        } else {
+            temp.writeText(text, Charsets.UTF_8)
+        }
         if (!temp.renameTo(this)) {
             // На некоторых ФС renameTo не перезаписывает существующий файл.
             delete()
             if (!temp.renameTo(this)) {
-                temp.delete()
+                runCatching { temp.delete() }
                 throw IOException("Не удалось записать файл: $absolutePath")
             }
         }
     } catch (e: Throwable) {
-        temp.delete()
+        runCatching { temp.delete() }
         throw e
     }
 }

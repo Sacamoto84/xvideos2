@@ -17,23 +17,27 @@ import java.util.zip.ZipOutputStream
  */
 object ZipUtils {
 
+    private const val ZIP_BUFFER_SIZE = 32 * 1024
+
     fun zipDirectory(sourceDir: File, zipFile: File) {
-        zipFile.parentFile?.mkdirs()
+        require(sourceDir.exists()) { "Source directory does not exist: ${sourceDir.absolutePath}" }
+        require(sourceDir.isDirectory) { "Source is not a directory: ${sourceDir.absolutePath}" }
+        zipFile.parentFile?.let { if (!it.exists()) it.mkdirs() }
         val prefix = sourceDir.name
-        ZipOutputStream(BufferedOutputStream(zipFile.outputStream())).use { zip ->
+        ZipOutputStream(BufferedOutputStream(zipFile.outputStream(), ZIP_BUFFER_SIZE)).use { zip ->
             zip.putNextEntry(ZipEntry("$prefix/"))
             zip.closeEntry()
             sourceDir.walkTopDown().forEach { file ->
                 if (file == sourceDir) return@forEach
                 val rel = file.relativeTo(sourceDir).invariantSeparatorsPath.trim('/')
-                if (rel.isBlank()) return@forEach
+                if (rel.isEmpty()) return@forEach
                 val entryName = "$prefix/$rel"
                 if (file.isDirectory) {
                     zip.putNextEntry(ZipEntry("$entryName/"))
                     zip.closeEntry()
                 } else {
                     zip.putNextEntry(ZipEntry(entryName))
-                    BufferedInputStream(file.inputStream()).use { it.copyTo(zip) }
+                    BufferedInputStream(file.inputStream(), ZIP_BUFFER_SIZE).use { it.copyTo(zip, ZIP_BUFFER_SIZE) }
                     zip.closeEntry()
                 }
             }
@@ -41,9 +45,11 @@ object ZipUtils {
     }
 
     fun unzip(zipFile: File, destDir: File) {
+        require(zipFile.exists() && zipFile.isFile) { "Zip file does not exist or is not a file: ${zipFile.absolutePath}" }
+        if (zipFile.length() == 0L) return
         val root = destDir.canonicalFile
-        root.mkdirs()
-        ZipInputStream(BufferedInputStream(zipFile.inputStream())).use { zip ->
+        if (!root.exists()) root.mkdirs()
+        ZipInputStream(BufferedInputStream(zipFile.inputStream(), ZIP_BUFFER_SIZE)).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
                 val name = normalizeRelativePath(entry.name)
@@ -52,8 +58,10 @@ object ZipUtils {
                 if (entry.isDirectory || entry.name.endsWith("/")) {
                     target.mkdirs()
                 } else {
-                    target.parentFile?.mkdirs()
-                    BufferedOutputStream(target.outputStream()).use { out -> zip.copyTo(out) }
+                    target.parentFile?.let { if (!it.exists()) it.mkdirs() }
+                    BufferedOutputStream(target.outputStream(), ZIP_BUFFER_SIZE).use { out ->
+                        zip.copyTo(out, ZIP_BUFFER_SIZE)
+                    }
                 }
                 zip.closeEntry()
             }

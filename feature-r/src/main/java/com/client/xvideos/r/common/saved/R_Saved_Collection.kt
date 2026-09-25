@@ -12,6 +12,7 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.model.sanitizeOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -38,6 +39,8 @@ class R_Saved_Collection(
     val selectedCollection = MutableStateFlow<String?>(null)
     //-------------------------------------------
 
+    private var refreshJob: Job? = null
+
     override fun addCollection(item: GifsInfo, collectionName: String) {
         val safeItem = item.sanitizeOrNull() ?: run {
             SnackBar.error("Collection add error: empty id")
@@ -54,6 +57,7 @@ class R_Saved_Collection(
     }
 
     override fun deleteItemFromCollection(itemId: String, collectionName: String) {
+        if (itemId.isBlank() || collectionName.isBlank()) return
         Timber.i("R_Saved_Collection deleteItemFromCollection() item:${itemId} collectionName:$collectionName")
         scope.launch(Dispatchers.IO) {
             collectionDb.deleteItem(itemId, collectionName)
@@ -66,6 +70,7 @@ class R_Saved_Collection(
     }
 
     override fun deleteCollection(collectionName: String) {
+        if (collectionName.isBlank()) return
         scope.launch(Dispatchers.IO) {
             collectionDb.deleteCollection(collectionName)
                 .onSuccess {
@@ -77,6 +82,7 @@ class R_Saved_Collection(
     }
 
     override fun createCollection(collectionName: String) {
+        if (collectionName.isBlank()) return
         Timber.i("R_Saved_Collection createCollection() collectionName:$collectionName")
         scope.launch(Dispatchers.IO) {
             collectionDb.create(collectionName)
@@ -92,11 +98,18 @@ class R_Saved_Collection(
 
     override fun refreshCollectionList() {
         val seq = nextLoadSeq()
-        scope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch(Dispatchers.IO) {
             val collectionsResult = collectionDb.readAllCollections()
             if (collectionsResult.isSuccess) {
-                val items = collectionsResult.getOrThrow().map { collection ->
-                    collection.copy(items = collection.items.sanitizeGifsInfoList())
+                val collections = collectionsResult.getOrThrow()
+                val items = if (collections.isEmpty()) {
+                    emptyList()
+                } else {
+                    collections.map { collection ->
+                        if (collection.items.isEmpty()) collection
+                        else collection.copy(items = collection.items.sanitizeGifsInfoList())
+                    }
                 }
                 withContext(Dispatchers.Main) {
                     publish(seq, items)
@@ -106,5 +119,4 @@ class R_Saved_Collection(
             }
         }
     }
-
 }
