@@ -111,23 +111,28 @@ class R_Saved_Subscriptions(
     }
 
 
-    suspend fun refreshSubscription() : List<GifsInfo>{
-        val res  = mutableListOf<GifsInfo>()
-
-        withContext(Dispatchers.Main) {
+    suspend fun refreshSubscription() : List<GifsInfo> {
+        val selectedNames = withContext(Dispatchers.Main) {
             syncSelectedList()
-        }
-
-        selectedListCreator.filter { it.select }.forEach {
-            try {
-                res.addAll(read50LastItem(it.name))
+            val names = ArrayList<String>(selectedListCreator.size)
+            for (creator in selectedListCreator) {
+                if (creator.select) {
+                    names.add(creator.name)
+                }
             }
-            catch (e: CancellationException){
+            names
+        }
+        if (selectedNames.isEmpty()) return emptyList()
+
+        val res = ArrayList<GifsInfo>(selectedNames.size * 25)
+        for (name in selectedNames) {
+            try {
+                res.addAll(read50LastItem(name))
+            } catch (e: CancellationException) {
                 // Иначе отмена гасилась и цикл продолжал дёргать сеть по всем
                 // оставшимся авторам уже на отменённой корутине.
                 throw e
-            }
-            catch (e: Exception){
+            } catch (e: Exception) {
                 Timber.e(e)
             }
         }

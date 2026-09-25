@@ -41,24 +41,55 @@ fun GifsInfo.sanitizeOrNull(): GifsInfo? {
     val safeUserName: String? = userName
     val safeUrls: URL1? = urls
 
+    val sanitizedTags = sanitizeTagsList(safeTags)
+    val sanitizedUrls = safeUrls?.sanitize() ?: URL1()
+
+    val stringsValid = safeContentType != null && safeDescription != null && safeUserName != null
+    if (stringsValid && sanitizedTags === safeTags && sanitizedUrls === safeUrls) {
+        return this
+    }
+
     return copy(
         id = safeId,
         contentType = safeContentType ?: "Solo Female",
-        tags = safeTags.orEmpty().mapNotNull { tag ->
-            val safeTag: String? = tag
-            safeTag?.takeIf { it.isNotBlank() }
-        },
+        tags = sanitizedTags,
         description = safeDescription.orEmpty(),
         userName = safeUserName.orEmpty(),
-        urls = safeUrls?.sanitize() ?: URL1()
+        urls = sanitizedUrls
     )
 }
 
-fun List<GifsInfo>?.sanitizeGifsInfoList(): List<GifsInfo> {
-    return orEmpty()
-        .mapNotNull { item ->
-            val safeItem: GifsInfo? = item
-            safeItem?.sanitizeOrNull()
+private fun sanitizeTagsList(safeTags: List<String>?): List<String> {
+    if (safeTags == null || safeTags.isEmpty()) return emptyList()
+    var hasInvalid = false
+    for (tag in safeTags) {
+        val s: String? = tag
+        if (s.isNullOrBlank()) {
+            hasInvalid = true
+            break
         }
-        .distinctBy { it.id }
+    }
+    if (!hasInvalid) return safeTags
+    val out = ArrayList<String>(safeTags.size)
+    for (tag in safeTags) {
+        val s: String? = tag
+        if (!s.isNullOrBlank()) {
+            out.add(s)
+        }
+    }
+    return out
+}
+
+fun List<GifsInfo>?.sanitizeGifsInfoList(): List<GifsInfo> {
+    if (this.isNullOrEmpty()) return emptyList()
+    val seenIds = HashSet<String>(this.size)
+    val result = ArrayList<GifsInfo>(this.size)
+    for (item in this) {
+        val safeItem: GifsInfo? = item
+        val sanitized = safeItem?.sanitizeOrNull() ?: continue
+        if (seenIds.add(sanitized.id)) {
+            result.add(sanitized)
+        }
+    }
+    return result
 }

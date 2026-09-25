@@ -72,11 +72,11 @@ private val TOP_HITS_QUERY = """
     }
 """.trimIndent().replace("\n", "\\n")
 
-fun getAlbumListTopHitsQuery(
-    display: String = "date_newest",
-    albumType: AlbumType = AlbumType.Pictures,
-    contentId: ContentId = ContentId.Hentai,
-    hitsFrom: String = "genre_ids"
+private fun buildAlbumListTopHitsPayload(
+    display: String,
+    albumType: AlbumType,
+    contentId: ContentId,
+    hitsFrom: String
 ): String {
     return """
         {
@@ -101,5 +101,25 @@ fun getAlbumListTopHitsQuery(
           }
         }
     """.trimIndent()
+}
+
+private val DEFAULT_ALBUM_LIST_TOP_HITS_QUERY = buildAlbumListTopHitsPayload(
+    display = "date_newest",
+    albumType = AlbumType.Pictures,
+    contentId = ContentId.Hentai,
+    hitsFrom = "genre_ids"
+)
+
+fun getAlbumListTopHitsQuery(
+    display: String = "date_newest",
+    albumType: AlbumType = AlbumType.Pictures,
+    contentId: ContentId = ContentId.Hentai,
+    hitsFrom: String = "genre_ids"
+): String {
+    val isDefaultFilter = albumType == AlbumType.Pictures && contentId == ContentId.Hentai
+    if (isDefaultFilter && display == "date_newest" && hitsFrom == "genre_ids") {
+        return DEFAULT_ALBUM_LIST_TOP_HITS_QUERY
+    }
+    return buildAlbumListTopHitsPayload(display, albumType, contentId, hitsFrom)
 }
 

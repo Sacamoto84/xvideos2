@@ -49,7 +49,11 @@ class BlockRed @Inject constructor(
 
     fun refreshListAndBlock(list: MutableStateFlow<List<GifsInfo>>) {
         val blocked = blockedIds.value
-        list.value = list.value.filterNot { it.id in blocked }
+        if (blocked.isEmpty()) return
+        val current = list.value
+        if (current.any { it.id in blocked }) {
+            list.value = current.filterNot { it.id in blocked }
+        }
     }
 
     fun blockItem(item: GifsInfo) {

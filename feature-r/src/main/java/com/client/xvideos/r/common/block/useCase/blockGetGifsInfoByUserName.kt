@@ -20,19 +20,22 @@ fun blockGetGifsInfoByUserName(userName: String): List<GifsInfo> {
         return emptyList()
     }
 
-    val blockedGifs = mutableListOf<GifsInfo>()
+    val blockedGifs = ArrayList<GifsInfo>()
+    readBlockedGifsFromDir(blockDir, blockedGifs)
+    return blockedGifs
+}
 
-    blockDir.listFiles { file ->
-        file.isFile && file.name.endsWith(".block")
-    }?.forEach { file ->
-        try {
-            val json = file.readText(Charsets.UTF_8)
-            val gifInfo = AppJson.decodeFromString<GifsInfo>(json)
-            blockedGifs.add(gifInfo)
-        } catch (e: Exception) {
-            Timber.e(e, "Ошибка чтения файла блокировки: ${file.name}")
+internal fun readBlockedGifsFromDir(blockDir: File, out: MutableList<GifsInfo>) {
+    val files = blockDir.listFiles() ?: return
+    for (file in files) {
+        if (file.isFile && file.name.endsWith(".block")) {
+            try {
+                val json = file.readText(Charsets.UTF_8)
+                val gifInfo = AppJson.decodeFromString<GifsInfo>(json)
+                out.add(gifInfo)
+            } catch (e: Exception) {
+                Timber.e(e, "Ошибка чтения файла блокировки: ${file.name}")
+            }
         }
     }
-
-    return blockedGifs
 }

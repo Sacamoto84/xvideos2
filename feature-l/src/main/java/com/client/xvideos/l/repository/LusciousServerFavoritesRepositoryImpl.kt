@@ -203,37 +203,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             anchorType = anchorType,
             favoriteType = favoriteType
         )
-        if (rawResult.isFailure) {
-            return Result.failure(rawResult.exceptionOrNull() ?: IllegalStateException("Request failed"))
-        }
-
-        return runCatching {
-            val raw = rawResult.getOrThrow()
-            val json = LJson.parseToJsonElement(raw).jsonObject
-
-            val rootErrors = json["errors"]?.jsonArray
-            if (!rootErrors.isNullOrEmpty()) {
-                val msg = rootErrors.joinToString {
-                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "GraphQL error"
-                }
-                throw IllegalStateException(msg)
-            }
-
-            val addFavoriteObj = json["data"]?.jsonObject
-                ?.get("favorite")?.jsonObject
-                ?.get("add_favorite")?.jsonObject
-
-            val mutationErrors = addFavoriteObj?.get("errors")?.jsonArray
-            if (!mutationErrors.isNullOrEmpty()) {
-                val msg = mutationErrors.joinToString {
-                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "Mutation error"
-                }
-                throw IllegalStateException(msg)
-            }
-            Unit
-        }.onFailure { e ->
-            Timber.e(e, "Failed to parse FavoriteAdd response")
-        }
+        return parseFavoriteMutationResult(rawResult, "add_favorite", "FavoriteAdd")
     }
 
     override suspend fun resolvePictureId(
@@ -246,6 +216,9 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
 
         val targetSlug = extractSlugCandidate(mediaUrlOrFileName)
         Timber.d("resolvePictureId: albumId=$cleanAlbumId, targetSlug='$targetSlug' from '$mediaUrlOrFileName'")
+        if (targetSlug.isBlank()) {
+            return Result.failure(IllegalStateException("Picture ID not found in album $albumId"))
+        }
 
         var page = 1
         var totalPages = 1
@@ -276,15 +249,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
                 val picId = picObj["id"]?.jsonPrimitive?.contentOrNull?.trim()
                 if (picId.isNullOrBlank()) continue
 
-                val picUrl = picObj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
-                val picOrig = picObj["url_to_original"]?.jsonPrimitive?.contentOrNull.orEmpty()
-                val picVideo = picObj["url_to_video"]?.jsonPrimitive?.contentOrNull.orEmpty()
-                val thumbUrls = picObj["thumbnails"]?.jsonArray.orEmpty().mapNotNull {
-                    it.jsonObject["url"]?.jsonPrimitive?.contentOrNull
-                }
-
-                val allPicUrls = listOf(picUrl, picOrig, picVideo) + thumbUrls
-                if (targetSlug.isNotBlank() && allPicUrls.any { it.contains(targetSlug, ignoreCase = true) }) {
+                if (pictureMatchesSlug(picObj, targetSlug)) {
                     Timber.d("resolvePictureId: matched slug '$targetSlug' with picture id: $picId")
                     return Result.success(picId)
                 }
@@ -309,6 +274,14 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             anchorType = anchorType,
             favoriteType = favoriteType
         )
+        return parseFavoriteMutationResult(rawResult, "remove_favorite", "FavoriteRemove")
+    }
+
+    private fun parseFavoriteMutationResult(
+        rawResult: Result<String>,
+        mutationField: String,
+        operationLabel: String
+    ): Result<Unit> {
         if (rawResult.isFailure) {
             return Result.failure(rawResult.exceptionOrNull() ?: IllegalStateException("Request failed"))
         }
@@ -325,11 +298,11 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
                 throw IllegalStateException(msg)
             }
 
-            val removeFavoriteObj = json["data"]?.jsonObject
+            val mutationObj = json["data"]?.jsonObject
                 ?.get("favorite")?.jsonObject
-                ?.get("remove_favorite")?.jsonObject
+                ?.get(mutationField)?.jsonObject
 
-            val mutationErrors = removeFavoriteObj?.get("errors")?.jsonArray
+            val mutationErrors = mutationObj?.get("errors")?.jsonArray
             if (!mutationErrors.isNullOrEmpty()) {
                 val msg = mutationErrors.joinToString {
                     it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "Mutation error"
@@ -338,9 +311,23 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             }
             Unit
         }.onFailure { e ->
-            Timber.e(e, "Failed to parse FavoriteRemove response")
+            Timber.e(e, "Failed to parse $operationLabel response")
         }
     }
+}
+
+private fun pictureMatchesSlug(picObj: JsonObject, targetSlug: String): Boolean {
+    if (picObj["url"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
+    if (picObj["url_to_original"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
+    if (picObj["url_to_video"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
+    val thumbnails = picObj["thumbnails"]?.jsonArray ?: return false
+    for (thumb in thumbnails) {
+        val url = thumb.jsonObject["url"]?.jsonPrimitive?.contentOrNull
+        if (url != null && url.contains(targetSlug, ignoreCase = true)) {
+            return true
+        }
+    }
+    return false
 }
 
 private val ULID_REGEX = Regex("""[0-9A-HJKMNP-TV-Z]{26}""")

@@ -74,7 +74,7 @@ open class Repository(
         return KtorRequestHandler(
             timeoutMillis = 5000,
             maxRetries = 5,
-            retryStatusCodes = setOf(413, 429, 500, 502, 503, 504),
+            retryStatusCodes = RETRY_STATUS_CODES,
             backoffFactor = 1000
         )
     }
@@ -112,7 +112,7 @@ open class Repository(
                         }
                     }
                 }
-                Result.success(Unit)
+                SUCCESS_UNIT
             }
         } catch (e: CancellationException) {
             throw e
@@ -139,7 +139,7 @@ open class Repository(
                 }
                 cacheUrlStringRomDao.delete(cacheKey)
             }
-            val checkedResponse = postJsonValidated(data)
+            val checkedResponse = postJsonValidated(data, cacheKey)
             if (checkedResponse.isFailure) return checkedResponse
 
             cacheUrlStringRomDao.put(cacheKey, checkedResponse.getOrThrow())
@@ -164,7 +164,7 @@ open class Repository(
                 Timber.w("openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
                 deleteRamCache(cacheKey)
             }
-            val checkedResponse = postJsonValidated(data)
+            val checkedResponse = postJsonValidated(data, cacheKey)
             if (checkedResponse.isFailure) return checkedResponse
 
             putRamCache(cacheKey, checkedResponse.getOrThrow())
@@ -195,9 +195,11 @@ open class Repository(
         }
     }
 
-    private suspend fun postJsonValidated(data: String): Result<String> {
+    private suspend fun postJsonValidated(
+        data: String,
+        requestHash: String = data.toMD5()
+    ): Result<String> {
         var lastFailure: Result<String>? = null
-        val requestHash = data.toMD5()
 
         for (attempt in 0 until HTML_CHALLENGE_RETRY_ATTEMPTS) {
             val response = try {
@@ -358,6 +360,8 @@ open class Repository(
 
 
     private companion object {
+        val SUCCESS_UNIT = Result.success(Unit)
+        val RETRY_STATUS_CODES = setOf(413, 429, 500, 502, 503, 504)
         val LOG_PREVIEW_WHITESPACE_REGEX = Regex("\\s+")
         const val MIN_NETWORK_REQUEST_INTERVAL_MS = 300L
         const val HTML_CHALLENGE_RETRY_ATTEMPTS = 3

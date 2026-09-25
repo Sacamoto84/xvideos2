@@ -4,7 +4,6 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.model.sanitizeGifsInfoList
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
@@ -16,8 +15,6 @@ class ItemSubscriptionsPagingSource (val savedRed: SavedRed): PagingSource<Int, 
         return try {
             Timber.d("!!! >>>ItemSubscriptionsPagingSource::load()")
             val res = savedRed.subscriptions.refreshSubscription()
-                .sanitizeGifsInfoList()
-                .distinctBy { it.id }
                 .sortedByDescending { it.createDate }
             LoadResult.Page( data = res, prevKey = null,   nextKey = null )
 

@@ -83,9 +83,9 @@ typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
 
     suspend fun getAlbumListAggregationsImpl(page: Int, filterIn: AlbumListFilter?, repository: Repository): Result<getAlbumListAggregationsResult> {
 
-        val filterGenreStateCount = mutableListOf<AlbumListFilterGenreCountResponse>()
-        val filterTaggedStateCount = mutableListOf<AlbumListFilterGenreCountResponse>()
-        val filterPictureCountStateCount = mutableListOf<AlbumListFilterGenreCountResponse>()
+        var filterGenreStateCount: List<AlbumListFilterGenreCountResponse> = emptyList()
+        var filterTaggedStateCount: List<AlbumListFilterGenreCountResponse> = emptyList()
+        var filterPictureCountStateCount: List<AlbumListFilterGenreCountResponse> = emptyList()
 
         val filter = filterIn ?: AlbumListFilter()
 
@@ -105,45 +105,24 @@ typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
             val get = json["data"]?.jsonObject?.get("album")?.jsonObject?.get("list_with_aggregations")?.jsonObject
             val aggregations = get?.get("aggregations")?.jsonArray
 
-            val indexGenre = aggregations?.indexOfFirst { el ->
-                (el as? JsonObject)?.get("field")?.jsonObject?.get("short_name")?.jsonPrimitive?.contentOrNull == "genre_ids"
-            }?.takeIf { it >= 0 }
-
-            if (indexGenre != null) {
-                val genreValues = aggregations[indexGenre].jsonObject["values"]?.jsonArray
-                val list = genreValues?.mapNotNull { element ->
-                    runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
-                }.orEmpty()
-
-                filterGenreStateCount.addAll(list)
-                Timber.d("getAlbumListAggregations list size: ${list.size}")
-            }
-
-            val indexTagged = aggregations?.indexOfFirst { el ->
-                (el as? JsonObject)?.get("field")?.jsonObject?.get("short_name")?.jsonPrimitive?.contentOrNull == "tagged"
-            }?.takeIf { it >= 0 }
-
-            if (indexTagged != null) {
-                val taggedValues = aggregations[indexTagged].jsonObject["values"]?.jsonArray
-                val list = taggedValues?.mapNotNull { element ->
-                    runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
-                }.orEmpty()
-                filterTaggedStateCount.addAll(list)
-                Timber.d("getAlbumListAggregations list Tagged size: ${list.size}")
-            }
-
-            val indexPicture = aggregations?.indexOfFirst { el ->
-                (el as? JsonObject)?.get("field")?.jsonObject?.get("short_name")?.jsonPrimitive?.contentOrNull == "picture_count_rank"
-            }?.takeIf { it >= 0 }
-
-            if (indexPicture != null) {
-                val pictureValues = aggregations[indexPicture].jsonObject["values"]?.jsonArray
-                val list = pictureValues?.mapNotNull { element ->
-                    runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }.getOrNull()
-                }.orEmpty()
-
-                filterPictureCountStateCount.addAll(list)
-                Timber.d("getAlbumListAggregations list filterPictureCountStateCount size: ${list.size}")
+            if (aggregations != null) {
+                for (el in aggregations) {
+                    val obj = el as? JsonObject ?: continue
+                    when (obj["field"]?.jsonObject?.get("short_name")?.jsonPrimitive?.contentOrNull) {
+                        "genre_ids" -> {
+                            filterGenreStateCount = decodeAggregationValues(obj)
+                            Timber.d("getAlbumListAggregations list size: ${filterGenreStateCount.size}")
+                        }
+                        "tagged" -> {
+                            filterTaggedStateCount = decodeAggregationValues(obj)
+                            Timber.d("getAlbumListAggregations list Tagged size: ${filterTaggedStateCount.size}")
+                        }
+                        "picture_count_rank" -> {
+                            filterPictureCountStateCount = decodeAggregationValues(obj)
+                            Timber.d("getAlbumListAggregations list filterPictureCountStateCount size: ${filterPictureCountStateCount.size}")
+                        }
+                    }
+                }
             }
         } catch (e: CancellationException) {
             // Отмена корутины не должна превращаться в Result.failure: вызывающий
@@ -152,7 +131,6 @@ typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
         } catch (e: Exception) {
             Timber.w("getAlbumListAggregations Exception ${e.localizedMessage}")
             return Result.failure(e)
-
         }
 
         return Result.success(
@@ -164,7 +142,18 @@ typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
                 filter
             )
         )
+    }
 
+    private fun decodeAggregationValues(obj: JsonObject): List<AlbumListFilterGenreCountResponse> {
+        val values = obj["values"]?.jsonArray ?: return emptyList()
+        if (values.isEmpty()) return emptyList()
+        val result = ArrayList<AlbumListFilterGenreCountResponse>(values.size)
+        for (element in values) {
+            runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }
+                .getOrNull()
+                ?.let { result.add(it) }
+        }
+        return result
     }
 
 
@@ -177,7 +166,6 @@ typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
         repository: Repository,
     ): Result<AlbumListImplInfoAndList>
     {
-        val items = mutableListOf<Album>()
         try {
             Timber.d("getAlbumList $page")
             val filter = filterIn ?: AlbumListFilter()
@@ -197,17 +185,7 @@ typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
                 return Result.failure(parsed.exceptionOrNull() ?: IllegalStateException("getAlbumList parse error"))
             }
 
-            val parsedResult = parsed.getOrThrow()
-            val info = parsedResult.info
-            items.addAll(parsedResult.items)
-            return Result.success(
-                AlbumListImplInfoAndList(
-                    info = info,
-                    items = items,
-                    filter = filter,
-                    page = page
-                )
-            )
+            return parsed
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -239,8 +217,11 @@ private fun parseAlbumListResponse(
         ?: error("AlbumList response missing data.album.list.items")
 
     val info = LJson.decodeFromJsonElement<FacetCollectionInfo>(infoJson)
-    val items = itemsJson.mapNotNull { itemJson ->
-        runCatching { LJson.decodeFromJsonElement<Album>(itemJson) }.getOrNull()
+    val items = ArrayList<Album>(itemsJson.size)
+    for (itemJson in itemsJson) {
+        runCatching { LJson.decodeFromJsonElement<Album>(itemJson) }
+            .getOrNull()
+            ?.let { items.add(it) }
     }
 
     AlbumListImplInfoAndList(

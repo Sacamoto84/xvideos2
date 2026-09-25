@@ -19,8 +19,12 @@ fun blockGetAllBlockedGifsInfo(): List<GifsInfo> {
         return emptyList()
     }
 
-    return rootDir.listFiles { file -> file.isDirectory }
-        ?.flatMap { userDir ->
-            blockGetGifsInfoByUserName(userDir.name)
-        } ?: emptyList()
+    val dirs = rootDir.listFiles() ?: return emptyList()
+    val result = ArrayList<GifsInfo>()
+    for (userDir in dirs) {
+        if (userDir.isDirectory && !com.client.xvideos.common.io.isUnsafeItemName(userDir.name)) {
+            readBlockedGifsFromDir(userDir, result)
+        }
+    }
+    return result
 }

@@ -19,6 +19,7 @@ data class URL1(
 fun URL1.sanitize(): URL1 {
     val safeThumbnail: String? = thumbnail
     val safeSd: String? = sd
+    if (safeThumbnail != null && safeSd != null) return this
 
     return copy(
         thumbnail = safeThumbnail.orEmpty(),

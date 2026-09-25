@@ -181,33 +181,35 @@ class DownloadRed @Inject constructor(
         refreshJob = scope.launch(Dispatchers.IO) {
             val rootDir = File(AppPath.r_cache_download)
 
-            // Один обход на оба результата: раньше папка обходилась ради `.info`,
-            // а скачанность видео проверялась потом по одному File.exists() на
-            // элемент — и делалось это на главном потоке.
-            val allFiles = if (rootDir.exists() && rootDir.isDirectory) {
-                rootDir.walkTopDown().filter { it.isFile }.toList()
-            } else {
-                emptyList()
-            }
-
-            val result = mutableListOf<GifsInfo>()
-
-            allFiles
-                .filter { it.extension == "info" && it.length() > 0L }
-                .sortedByDescending { it.lastModified() }
-                .forEach { file ->
-                    try {
-                        val content = file.readText()
-                        val obj = AppJson.decodeFromString<GifsInfo>(content)
-                        result.add(obj)
-                    } catch (e: Exception) {
-                        // Битый .info пропускаем, но в лог приложения, а не в stdout.
-                        Timber.w(e, "Ошибка при чтении файла ${file.absolutePath}")
+            // Один обход на оба результата: собираем .info и .mp4 сразу без
+            // промежуточного списка всех файлов и двойной фильтрации.
+            val infoFiles = ArrayList<File>()
+            val mp4Files = ArrayList<File>()
+            if (rootDir.exists() && rootDir.isDirectory) {
+                for (f in rootDir.walkTopDown()) {
+                    if (!f.isFile || f.length() <= 0L) continue
+                    when (f.extension) {
+                        "info" -> infoFiles.add(f)
+                        "mp4" -> mp4Files.add(f)
                     }
                 }
+            }
+
+            infoFiles.sortByDescending { it.lastModified() }
+            val result = ArrayList<GifsInfo>(infoFiles.size)
+            for (file in infoFiles) {
+                try {
+                    val content = file.readText()
+                    val obj = AppJson.decodeFromString<GifsInfo>(content)
+                    result.add(obj)
+                } catch (e: Exception) {
+                    // Битый .info пропускаем, но в лог приложения, а не в stdout.
+                    Timber.w(e, "Ошибка при чтении файла ${file.absolutePath}")
+                }
+            }
 
             _downloadList.emit(result)
-            _downloadedVideoKeys.emit(downloadedVideoKeys(allFiles.filter { it.extension == "mp4" && it.length() > 0L }))
+            _downloadedVideoKeys.emit(downloadedVideoKeys(mp4Files))
         }
     }
 
@@ -369,7 +371,9 @@ internal fun downloadedVideoKey(userName: String, id: String): String = "$userNa
  * Отдельная функция, а не лямбда внутри обхода: это единственная арифметика в
  * этом пути, и она проверяется обычным JVM-тестом.
  */
-internal fun downloadedVideoKeys(videoFiles: List<File>): Set<String> =
-    videoFiles.mapTo(mutableSetOf()) {
+internal fun downloadedVideoKeys(videoFiles: List<File>): Set<String> {
+    if (videoFiles.isEmpty()) return emptySet()
+    return videoFiles.mapTo(HashSet(videoFiles.size)) {
         downloadedVideoKey(it.parentFile?.name.orEmpty(), it.nameWithoutExtension)
     }
+}
