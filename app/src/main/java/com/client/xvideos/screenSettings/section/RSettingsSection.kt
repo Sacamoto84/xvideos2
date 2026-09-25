@@ -56,6 +56,10 @@ private const val SNACK_RECOVERY_PREVIEW_PREFIX = ", превью "
 private const val NICHES_CACHE_SEPARATOR = " \u2022 "
 private const val NICHES_CACHE_HOUR_SUFFIX = "h"
 
+private val PROGRESS_INDICATOR_BASE_MODIFIER = Modifier
+    .padding(horizontal = PROGRESS_HORIZONTAL_PADDING)
+    .fillMaxWidth()
+
 @Composable
 internal fun RSettingsSection(
     sizeRedTotal: Long,
@@ -101,25 +105,18 @@ internal fun RSettingsSection(
         { savedRed?.nichesCache?.refresh() }
     }
 
-    val recoveryTrailing: @Composable () -> Unit = remember(downloadRed, isRecoveringDownload, onStartRecovery) {
+    val isRecoveryEnabled = downloadRed != null && !isRecoveringDownload
+    val isNichesEnabled = savedRed != null && !isNichesCacheDownloading
+
+    val recoveryTrailing: @Composable () -> Unit = remember(isRecoveryEnabled, onStartRecovery) {
         {
-            Button(
-                enabled = downloadRed != null && !isRecoveringDownload,
-                onClick = onStartRecovery
-            ) {
-                Text(TEXT_START)
-            }
+            RecoveryTrailingButton(enabled = isRecoveryEnabled, onClick = onStartRecovery)
         }
     }
 
-    val nichesTrailing: @Composable () -> Unit = remember(savedRed, isNichesCacheDownloading, onRefreshNichesCache) {
+    val nichesTrailing: @Composable () -> Unit = remember(isNichesEnabled, onRefreshNichesCache) {
         {
-            Button(
-                enabled = savedRed != null && !isNichesCacheDownloading,
-                onClick = onRefreshNichesCache
-            ) {
-                Text(TEXT_UPDATE)
-            }
+            NichesTrailingButton(enabled = isNichesEnabled, onClick = onRefreshNichesCache)
         }
     }
 
@@ -176,9 +173,7 @@ internal fun RSettingsSection(
         if (isNichesCacheDownloading) {
             LinearProgressIndicator(
                 progress = { nichesCacheProgress },
-                modifier = Modifier
-                    .padding(horizontal = PROGRESS_HORIZONTAL_PADDING)
-                    .fillMaxWidth(),
+                modifier = PROGRESS_INDICATOR_BASE_MODIFIER,
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor,
                 strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
@@ -192,6 +187,36 @@ internal fun RSettingsSection(
             subtitle = nichesSubtitle,
             trailing = nichesTrailing
         )
+    }
+}
+
+@Composable
+private fun RecoveryTrailingButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        enabled = enabled,
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Text(TEXT_START)
+    }
+}
+
+@Composable
+private fun NichesTrailingButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        enabled = enabled,
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Text(TEXT_UPDATE)
     }
 }
 

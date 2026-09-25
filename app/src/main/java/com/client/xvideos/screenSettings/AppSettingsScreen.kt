@@ -276,6 +276,13 @@ private val SCREEN_BOTTOM_PADDING = 24.dp
 private val SECTION_SPACER_HEIGHT = 16.dp
 private val DETAIL_PAGE_TOP_SPACER_HEIGHT = 4.dp
 
+private val SECTION_SPACER_MODIFIER = Modifier.height(SECTION_SPACER_HEIGHT)
+private val DETAIL_PAGE_TOP_SPACER_MODIFIER = Modifier.height(DETAIL_PAGE_TOP_SPACER_HEIGHT)
+private val BODY_COLUMN_BASE_MODIFIER = Modifier
+    .background(SettingsScreenBackground)
+    .fillMaxWidth()
+    .padding(bottom = SCREEN_BOTTOM_PADDING)
+
 @Composable
 private fun AppSettingsScreenBody(
     modifier: Modifier = Modifier,
@@ -302,10 +309,7 @@ private fun AppSettingsScreenBody(
     }
 
     Column(
-        modifier = modifier
-            .background(SettingsScreenBackground)
-            .fillMaxWidth()
-            .padding(bottom = SCREEN_BOTTOM_PADDING)
+        modifier = modifier.then(BODY_COLUMN_BASE_MODIFIER)
     ) {
         Text(
             text = currentPage.title,
@@ -336,7 +340,7 @@ private fun AppSettingsScreenBody(
                 }
             }
 
-            Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+            Spacer(SECTION_SPACER_MODIFIER)
             SettingsSectionTitle(SECTION_TITLE_SECTIONS)
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
@@ -397,7 +401,7 @@ private fun SettingsDetailPage(
     val nichesCacheSize = params.data.savedRed?.nichesCache?.list?.size ?: 0
     val nichesCacheLastModifiedHour = params.data.savedRed?.nichesCache?.lastModifiedHour ?: 0L
 
-    Spacer(Modifier.height(DETAIL_PAGE_TOP_SPACER_HEIGHT))
+    Spacer(DETAIL_PAGE_TOP_SPACER_MODIFIER)
     when (params.currentPage) {
         SettingsPage.Main -> Unit
         SettingsPage.Privacy -> AppLockSettingsSection(modifier = modifier)

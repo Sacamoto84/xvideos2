@@ -27,6 +27,13 @@ private val TAG_VERTICAL_PADDING = 2.dp
 private val TAG_CONTENT_PADDING = 4.dp
 private val TAG_FONT_SIZE = 14.sp
 
+private val TAG_CHIP_BASE_MODIFIER = Modifier
+    .padding(vertical = TAG_VERTICAL_PADDING)
+    .clip(TAG_CHIP_SHAPE)
+
+private val TAG_CHIP_CONTENT_PADDING_MODIFIER = Modifier.padding(TAG_CONTENT_PADDING)
+private val FLOW_ROW_VERTICAL_ARRANGEMENT = Arrangement.Center
+
 @Composable
 fun AlbumInfoTags(
     tags: () -> (List<Tag>),
@@ -41,7 +48,7 @@ fun AlbumInfoTags(
 
     FlowRow(
         modifier = modifier,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT
     ) {
         tagList.forEach { tag ->
             key(tag.id) {
@@ -50,20 +57,33 @@ fun AlbumInfoTags(
                 }
                 val handleClick = remember(tag.text, onClick) { { onClick(tag.text) } }
 
-                Text(
-                    text = label,
-                    modifier = Modifier
-                        .padding(vertical = TAG_VERTICAL_PADDING)
-                        .border(TAG_BORDER_WIDTH, Theme.L.secondaryColor, TAG_CHIP_SHAPE)
-                        .clip(TAG_CHIP_SHAPE)
-                        .clickable(onClick = handleClick)
-                        .padding(TAG_CONTENT_PADDING),
-                    color = Theme.L.textColor,
-                    style = tagTextStyle
+                AlbumTagChip(
+                    label = label,
+                    onClick = handleClick,
+                    textStyle = tagTextStyle
                 )
             }
         }
     }
+}
+
+@Composable
+private fun AlbumTagChip(
+    label: String,
+    onClick: () -> Unit,
+    textStyle: androidx.compose.ui.text.TextStyle,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = label,
+        modifier = modifier
+            .then(TAG_CHIP_BASE_MODIFIER)
+            .border(TAG_BORDER_WIDTH, Theme.L.secondaryColor, TAG_CHIP_SHAPE)
+            .clickable(onClick = onClick)
+            .then(TAG_CHIP_CONTENT_PADDING_MODIFIER),
+        color = Theme.L.textColor,
+        style = textStyle
+    )
 }
 
 @Preview

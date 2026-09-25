@@ -32,6 +32,14 @@ private val HEADER_FONT_SIZE = 16.sp
 private val AUDIENCE_FONT_SIZE = 14.sp
 private const val LABEL_AUDIENCES = "Audiences: "
 
+private val AUDIENCE_CHIP_BASE_MODIFIER = Modifier
+    .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
+    .clip(AUDIENCE_CHIP_SHAPE)
+
+private val AUDIENCE_CHIP_CONTENT_PADDING_MODIFIER = Modifier.padding(CHIP_CONTENT_PADDING)
+private val HEADER_TEXT_MODIFIER = Modifier.padding(vertical = HEADER_VERTICAL_PADDING)
+private val FLOW_ROW_VERTICAL_ARRANGEMENT = Arrangement.Center
+
 @Composable
 fun AlbumInfoAudiences(
     parsed: AlbumDetails,
@@ -47,31 +55,44 @@ fun AlbumInfoAudiences(
 
     FlowRow(
         modifier = modifier,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT
     ) {
         Text(
             text = LABEL_AUDIENCES,
             color = Theme.L.textColor,
             style = headerStyle,
-            modifier = Modifier.padding(vertical = HEADER_VERTICAL_PADDING)
+            modifier = HEADER_TEXT_MODIFIER
         )
         parsed.audiences.forEach { item ->
             key(item.id) {
-                val handleClick = remember(item, onAudienceClick) { { onAudienceClick(item) } }
-                Text(
-                    text = item.title,
-                    modifier = Modifier
-                        .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
-                        .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, AUDIENCE_CHIP_SHAPE)
-                        .clip(AUDIENCE_CHIP_SHAPE)
-                        .clickable(onClick = handleClick)
-                        .padding(CHIP_CONTENT_PADDING),
-                    color = Theme.L.primaryColor,
-                    style = audienceTextStyle
+                AudienceChip(
+                    item = item,
+                    onClick = onAudienceClick,
+                    textStyle = audienceTextStyle
                 )
             }
         }
     }
+}
+
+@Composable
+private fun AudienceChip(
+    item: Audience,
+    onClick: (Audience) -> Unit,
+    textStyle: androidx.compose.ui.text.TextStyle,
+    modifier: Modifier = Modifier,
+) {
+    val handleClick = remember(item, onClick) { { onClick(item) } }
+    Text(
+        text = item.title,
+        modifier = modifier
+            .then(AUDIENCE_CHIP_BASE_MODIFIER)
+            .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, AUDIENCE_CHIP_SHAPE)
+            .clickable(onClick = handleClick)
+            .then(AUDIENCE_CHIP_CONTENT_PADDING_MODIFIER),
+        color = Theme.L.primaryColor,
+        style = textStyle
+    )
 }
 
 @Preview

@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -26,13 +26,29 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.common.ui.atom.TabBarPoints
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
+import kotlinx.collections.immutable.persistentListOf
 
-private val NICHE_SORT_ORDERS = listOf(Order.TRENDING, Order.TOP, Order.LATEST)
+private val NICHE_SORT_ORDERS = persistentListOf(Order.TRENDING, Order.TOP, Order.LATEST)
 private val BAR_HEIGHT = 48.dp
 private val INDICATOR_CONTAINER_SIZE = 44.dp
 private val INDICATOR_BORDER_WIDTH = 1.dp
+private val INDICATOR_BORDER_COLOR = Color.DarkGray
 private val INNER_HORIZONTAL_SPACER = 4.dp
 private val EDGE_HORIZONTAL_SPACER = 2.dp
+
+private val ROW_BAR_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .height(BAR_HEIGHT)
+
+private val ROW_BAR_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+
+private val EDGE_SPACER_MODIFIER = Modifier.width(EDGE_HORIZONTAL_SPACER)
+private val INNER_SPACER_MODIFIER = Modifier.width(INNER_HORIZONTAL_SPACER)
+
+private val INDICATOR_CONTAINER_BASE_MODIFIER = Modifier
+    .size(INDICATOR_CONTAINER_SIZE)
+    .clip(CircleShape)
+    .border(INDICATOR_BORDER_WIDTH, INDICATOR_BORDER_COLOR, CircleShape)
 
 @Composable
 fun NicheBottomBar(
@@ -40,17 +56,16 @@ fun NicheBottomBar(
     currentSort: Order,
     onSortChange: (Order) -> Unit,
     columns: Int,
+    modifier: Modifier = Modifier,
 ) {
-    Column {
+    Column(modifier = modifier) {
         Row(
-            modifier = Modifier
-                .height(BAR_HEIGHT)
-                .padding(horizontal = 0.dp),
+            modifier = ROW_BAR_BASE_MODIFIER,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = ROW_BAR_HORIZONTAL_ARRANGEMENT
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Spacer(modifier = Modifier.width(EDGE_HORIZONTAL_SPACER))
+                Spacer(modifier = EDGE_SPACER_MODIFIER)
 
                 SortByOrder(
                     NICHE_SORT_ORDERS,
@@ -60,23 +75,19 @@ fun NicheBottomBar(
                     circle = true
                 )
 
-                Spacer(modifier = Modifier.width(INNER_HORIZONTAL_SPACER))
+                Spacer(modifier = INNER_SPACER_MODIFIER)
             }
-            Spacer(modifier = Modifier.width(INNER_HORIZONTAL_SPACER))
+            Spacer(modifier = INNER_SPACER_MODIFIER)
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(INDICATOR_CONTAINER_SIZE)
-                        .clip(CircleShape)
-                        .border(INDICATOR_BORDER_WIDTH, Color.DarkGray, CircleShape)
-                        .background(Theme.tabLevel0),
+                    modifier = INDICATOR_CONTAINER_BASE_MODIFIER.background(Theme.tabLevel0),
                     contentAlignment = Alignment.Center
                 ) {
                     TabBarPoints(columns, true)
                 }
 
-                Spacer(modifier = Modifier.width(EDGE_HORIZONTAL_SPACER))
+                Spacer(modifier = EDGE_SPACER_MODIFIER)
             }
         }
     }

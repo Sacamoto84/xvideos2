@@ -12,6 +12,8 @@ import com.client.xvideos.x.feature.country.ComposeCountry
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import kotlinx.coroutines.launch
 
+private val CONTROLS_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
+
 /**
  * Второй ряд дашборда: кнопка страны + выбор текущей страницы.
  * Объединяет в одну строку бывший `TopBarDashboard` (страна) и ряд навигации страниц.
@@ -28,7 +30,7 @@ fun DashboardControlsRow(
         { page -> scope.launch { onChange(page) } }
     }
 
-    Row(modifier = modifier.fillMaxWidth()) {
+    Row(modifier = modifier.then(CONTROLS_ROW_BASE_MODIFIER)) {
         ComposeCountry()
         Box(modifier = Modifier.weight(1f)) {
             BottomListDashBoardNavigationButtons2(

@@ -35,6 +35,13 @@ private val NICHE_SORT_ORDERS = persistentListOf(
     Order.NICHES_NAME_Z_A
 )
 
+private val ROW_BAR_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(vertical = BAR_VERTICAL_PADDING)
+
+private val SEARCH_WIDGET_BASE_MODIFIER = Modifier.padding(horizontal = SEARCH_HORIZONTAL_PADDING)
+private val ROW_BAR_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+
 @Composable
 fun NichesBottomBar(
     isSearchFocused: Boolean,
@@ -55,10 +62,8 @@ fun NichesBottomBar(
     Column(modifier = modifier.background(Theme.tabLevel1)) {
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = BAR_VERTICAL_PADDING),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = ROW_BAR_BASE_MODIFIER,
+            horizontalArrangement = ROW_BAR_HORIZONTAL_ARRANGEMENT,
             verticalAlignment = Alignment.Bottom
         ) {
             AnimatedVisibility(visible = !isSearchFocused) {
@@ -70,7 +75,7 @@ fun NichesBottomBar(
                 )
             }
 
-            searchWidget(Modifier.padding(horizontal = SEARCH_HORIZONTAL_PADDING).weight(1f))
+            searchWidget(SEARCH_WIDGET_BASE_MODIFIER.weight(1f))
 
             AnimatedVisibility(visible = !isSearchFocused) {
                 ButtonUp(onClick = handleUpClick)

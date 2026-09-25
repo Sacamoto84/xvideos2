@@ -72,6 +72,21 @@ private const val ARROW_RIGHT = ">"
 
 private val SELECTED_BORDER_MODIFIER = Modifier.border(SELECTED_BORDER_WIDTH, SELECTED_BORDER_COLOR)
 
+private val NAV_ROW_BASE_MODIFIER = Modifier
+    .height(NAV_BUTTON_HEIGHT)
+    .fillMaxWidth()
+
+private val NAV_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+
+private val ARROW_BUTTON_BASE_MODIFIER = Modifier
+    .padding(horizontal = ITEM_PADDING_HORIZONTAL)
+    .size(NAV_BUTTON_HEIGHT)
+
+private val PAGE_BUTTON_BASE_MODIFIER = Modifier
+    .padding(horizontal = ITEM_PADDING_HORIZONTAL)
+    .height(NAV_BUTTON_HEIGHT)
+    .background(COLOR_BLACK_BACKGROUND)
+
 /**
  * Bottom navigation buttons
  * Навигация для переключения экранов, возвращает которая будет выбирать номер экрана
@@ -104,10 +119,8 @@ fun BottomListDashBoardNavigationButtons2(
     }
 
     Row(
-        modifier = modifier
-            .height(NAV_BUTTON_HEIGHT)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = modifier.then(NAV_ROW_BASE_MODIFIER),
+        horizontalArrangement = NAV_ROW_HORIZONTAL_ARRANGEMENT
     ) {
         ArrowNavigationButton(
             arrow = ARROW_LEFT,
@@ -158,8 +171,7 @@ private fun ArrowNavigationButton(
 
     Box(
         modifier = modifier
-            .padding(horizontal = ITEM_PADDING_HORIZONTAL)
-            .size(NAV_BUTTON_HEIGHT)
+            .then(ARROW_BUTTON_BASE_MODIFIER)
             .background(bg)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
@@ -181,17 +193,16 @@ private fun PageNumberButton(
     modifier: Modifier = Modifier,
 ) {
     val borderModifier = if (isSelected) SELECTED_BORDER_MODIFIER else Modifier
+    val pageText = remember(pageNumber) { pageNumber.toString() }
 
     Box(
         modifier = modifier
-            .padding(horizontal = ITEM_PADDING_HORIZONTAL)
-            .height(NAV_BUTTON_HEIGHT)
+            .then(PAGE_BUTTON_BASE_MODIFIER)
             .then(borderModifier)
-            .background(COLOR_BLACK_BACKGROUND)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = pageNumber.toString(), color = COLOR_TEXT_WHITE)
+        Text(text = pageText, color = COLOR_TEXT_WHITE)
     }
 }
 
