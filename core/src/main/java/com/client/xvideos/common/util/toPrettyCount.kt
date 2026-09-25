@@ -14,6 +14,7 @@ private fun Long.absSafe(): Long = if (this == Long.MIN_VALUE) Long.MAX_VALUE el
  * 900     -> "900"
  */
 fun Long.toPrettyCount(): String {
+    if (this == 0L) return "0"
     val absValue = absSafe()
 
     return when {
@@ -37,6 +38,7 @@ fun Long.toPrettyCount(): String {
 }
 
 fun Long.toPrettyCount2(): String {
+    if (this == 0L) return "0"
     val absValue = absSafe()
 
     return when {
@@ -60,6 +62,7 @@ fun Long.toPrettyCount2(): String {
 }
 
 fun Long.toPrettyCount3(): String {
+    if (this == 0L) return "0"
     val absValue = absSafe()
 
     return when {
@@ -83,6 +86,7 @@ fun Long.toPrettyCount3(): String {
 }
 
 fun Long.toPrettyCountInt(): String {
+    if (this == 0L) return "0"
     val absValue = absSafe()
 
     return when {

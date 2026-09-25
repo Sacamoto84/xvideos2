@@ -8,15 +8,17 @@ fun PicsDetails.isAnimatedMedia(): Boolean {
     val orig = url_to_original
     if (!orig.isNullOrBlank()) {
         val cleanOrig = orig.substringBefore('?').substringBefore('#')
-        if (cleanOrig.endsWith(".gif", ignoreCase = true) || orig.isLVideoFileUrl()) {
+        if (cleanOrig.endsWith(".gif", ignoreCase = true) || cleanOrig.isLVideoFilePath()) {
             return true
         }
     }
-    return thumbnails?.any { thumb ->
+    val thumbs = thumbnails
+    if (thumbs.isNullOrEmpty()) return false
+    return thumbs.any { thumb ->
         val url = thumb.url ?: return@any false
         val cleanUrl = url.substringBefore('?').substringBefore('#')
-        cleanUrl.endsWith(".gif", ignoreCase = true) || url.isLVideoFileUrl()
-    } == true
+        cleanUrl.endsWith(".gif", ignoreCase = true) || cleanUrl.isLVideoFilePath()
+    }
 }
 
 fun PicsDetails.lAnimationVideoUrl(): String? {
@@ -87,8 +89,9 @@ fun PicsDetails.lBestThumbnailImageUrl(): String? {
 }
 
 fun PicsDetails.lThumbnailImageUrlsBySize(): List<String> {
-    return thumbnails
-        .orEmpty()
+    val thumbs = thumbnails
+    if (thumbs.isNullOrEmpty()) return emptyList()
+    return thumbs
         .asSequence()
         .filter {
             val url = it.url
@@ -100,8 +103,8 @@ fun PicsDetails.lThumbnailImageUrlsBySize(): List<String> {
             if (it.size == ThumbnailsSize.XMAX.value) 1 else 0
         })
         .mapNotNull { it.url }
-        .toList()
         .distinct()
+        .toList()
 }
 
 fun PicsDetails.lSavedFileName(): String? {
@@ -124,14 +127,15 @@ fun lMediaDownloadHeaders(): HashMap<String, List<String>> = HashMap(L_MEDIA_DOW
 
 fun lMediaUserAgent(): String = L_MEDIA_USER_AGENT
 
-fun String.isLVideoFileUrl(): Boolean {
-    val path = substringBefore('?').substringBefore('#')
-    return path.endsWith(".mp4", ignoreCase = true) ||
-            path.endsWith(".webm", ignoreCase = true) ||
-            path.endsWith(".m3u8", ignoreCase = true) ||
-            path.endsWith(".m4v", ignoreCase = true) ||
-            path.endsWith(".mov", ignoreCase = true)
-}
+internal fun String.isLVideoFilePath(): Boolean =
+    endsWith(".mp4", ignoreCase = true) ||
+    endsWith(".webm", ignoreCase = true) ||
+    endsWith(".m3u8", ignoreCase = true) ||
+    endsWith(".m4v", ignoreCase = true) ||
+    endsWith(".mov", ignoreCase = true)
+
+fun String.isLVideoFileUrl(): Boolean =
+    substringBefore('?').substringBefore('#').isLVideoFilePath()
 
 fun String.lUrlFileName(): String {
     return substringBefore('?').substringBefore('#').substringAfterLast('/')

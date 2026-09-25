@@ -40,11 +40,13 @@ class RedApi_Explorer(val api: ApiClient) {
         count: Int = 100,
         page: Int = 1
     ): Result<NichesResponse> {
+        val validPage = page.coerceAtLeast(1)
+        val validCount = count.coerceIn(1, 100)
         val route = Route(
             method = "GET",
             path = PATH_EXPLORER_NICHES,
-            "page" to page,
-            "count" to count
+            "page" to validPage,
+            "count" to validCount
         )
 
         return api.request(route)

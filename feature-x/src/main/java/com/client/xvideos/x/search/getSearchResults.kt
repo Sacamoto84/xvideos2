@@ -46,9 +46,11 @@ private val searchHttpClient: HttpClient by lazy {
 
 @Deprecated("Не используется в проекте; оставлен для возможной интеграции search-suggest")
 suspend fun getSearchResults(query: String): String? {
-    if (query.isBlank()) return null
+    val trimmed = query.trim()
+    if (trimmed.isEmpty()) return null
     // Кодируем пользовательский ввод: пробелы/спецсимволы не должны ломать URL.
-    val encodedQuery = URLEncoder.encode(query.trim(), Charsets.UTF_8.name()).replace("+", "%20")
+    val rawEncoded = URLEncoder.encode(trimmed, Charsets.UTF_8.name())
+    val encodedQuery = if (rawEncoded.contains('+')) rawEncoded.replace("+", "%20") else rawEncoded
     val url = "$urlStart/search-suggest/$encodedQuery"
 
     return try {

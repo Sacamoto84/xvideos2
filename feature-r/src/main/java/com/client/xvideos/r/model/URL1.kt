@@ -16,7 +16,10 @@ data class URL1(
     @SerialName("hd") val hd: String? = null,         // * HD-ссылка на медиафайл (может отсутствовать). Со звуком 21MB
 ) : Serializable
 
+private val EMPTY_URL1 = URL1()
+
 fun URL1.sanitize(): URL1 {
+    if (this == EMPTY_URL1) return this
     val safeThumbnail: String? = thumbnail
     val safeSd: String? = sd
     if (safeThumbnail != null && safeSd != null) return this

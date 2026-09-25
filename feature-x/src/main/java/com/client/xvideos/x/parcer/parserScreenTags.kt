@@ -43,9 +43,14 @@ private fun parseLastPage(document: Document): Int {
     val lastPage = pagination.selectFirst("a.last-page")?.text()?.trim()?.toIntOrNull()
     if (lastPage != null) return lastPage.coerceAtLeast(1)
 
-    return pagination.getElementsByTag("a").fold(1) { acc, el ->
-        maxOf(acc, el.text().trim().toIntOrNull() ?: 1)
-    }.coerceAtLeast(1)
+    var maxPage = 1
+    for (el in pagination.getElementsByTag("a")) {
+        val p = el.text().trim().toIntOrNull()
+        if (p != null && p > maxPage) {
+            maxPage = p
+        }
+    }
+    return maxPage
 }
 
 private fun parseTagItemVideo(video: Element): ItemsX? {
@@ -53,7 +58,7 @@ private fun parseTagItemVideo(video: Element): ItemsX? {
         val titleElement = video.selectFirst("p.title a")
         val title = titleElement?.attr("title") ?: "Без названия"
         val href = titleElement?.attr("href")?.trim().orEmpty()
-        if (href.isBlank() || href == "Нет ссылки") return null
+        if (href.isEmpty() || href == "Нет ссылки") return null
         val duration = video.selectFirst("p.title .duration")?.text() ?: "Нет информации"
 
         val channelName = video.selectFirst("p.metadata .name")?.text() ?: "Нет имени канала"
