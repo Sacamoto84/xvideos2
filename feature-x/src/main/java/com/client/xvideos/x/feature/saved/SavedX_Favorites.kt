@@ -89,7 +89,9 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             favoritesDb.refresh()
             withContext(Dispatchers.Main) {
                 favoriteIds.clear()
-                favoriteIds.addAll(list.map { it.id })
+                for (item in list) {
+                    favoriteIds.add(item.id)
+                }
             }
         }
     }

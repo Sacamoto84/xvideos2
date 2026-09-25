@@ -1,11 +1,6 @@
 package com.client.xvideos.l.net.graphQl
 
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonObject
-
-private val LIST_ALBUM_PICTURES_QUERY = """
+private val LIST_ALBUM_PICTURES_QUERY_ESCAPED = """
 query ListAlbumPictures(${'$'}input: PictureListInput!) {
     picture {
         list(input: ${'$'}input) {
@@ -38,24 +33,8 @@ fragment PicUrls on Picture {
        url
    }
 }
-""".trimIndent()
+""".trimIndent().replace("\n", "\\n")
 
 fun getPicturesJson(albumId: Int, page: Int = 1): String {
-    val json = buildJsonObject {
-        put("query", LIST_ALBUM_PICTURES_QUERY)
-        putJsonObject("variables") {
-            putJsonObject("input") {
-                put("display", "position")
-                put("filters", buildJsonArray {
-                    add(buildJsonObject {
-                        put("name", "album_id")
-                        put("value", albumId.toString())
-                    })
-                })
-                put("page", page)
-            }
-        }
-    }
-
-    return json.toString()
+    return """{"query":"$LIST_ALBUM_PICTURES_QUERY_ESCAPED","variables":{"input":{"display":"position","filters":[{"name":"album_id","value":"$albumId"}],"page":$page}}}"""
 }

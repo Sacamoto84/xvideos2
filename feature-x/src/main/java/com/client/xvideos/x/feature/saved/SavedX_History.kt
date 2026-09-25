@@ -140,7 +140,7 @@ class SavedX_History(
     fun deleteBatchByIds(ids: Collection<Long>) {
         if (ids.isEmpty()) return
         scope.launch(ioDispatcher) {
-            val deletedIds = HashSet<Long>()
+            val deletedIds = HashSet<Long>(ids.size)
             ids.forEach { id ->
                 if (id > 0L) {
                     historyDb.delete(id.toString())
@@ -164,6 +164,7 @@ class SavedX_History(
      * Пакетное удаление записей из истории по списку элементов.
      */
     fun deleteBatch(items: Collection<ItemsX>) {
+        if (items.isEmpty()) return
         deleteBatchByIds(items.map { it.id })
     }
 
@@ -192,6 +193,7 @@ class SavedX_History(
         refreshJob = scope.launch(ioDispatcher) {
             historyDb.refresh()
             withContext(Dispatchers.Main) {
+                if (list.isEmpty()) return@withContext
                 // Сортировка по времени последнего просмотра от новых к старым
                 val sorted = list.sortedByDescending { it.updatedAt }
                 list.clear()
@@ -207,7 +209,9 @@ class SavedX_History(
     private fun pruneExcessItemsLocked() {
         if (list.size <= MAX_HISTORY_ITEMS) return
         val excess = list.subList(MAX_HISTORY_ITEMS, list.size).toList()
-        list.removeAll(excess)
+        while (list.size > MAX_HISTORY_ITEMS) {
+            list.removeAt(list.lastIndex)
+        }
         scope.launch(ioDispatcher) {
             excess.forEach { entry ->
                 historyMap.remove(entry.item.id)

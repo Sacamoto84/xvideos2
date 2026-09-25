@@ -8,9 +8,10 @@ import timber.log.Timber
 private val searchJson = Json { ignoreUnknownKeys = true }
 
 fun parseJson(json: String): SearchResult? {
-    if (json.isBlank()) return null
+    val trimmed = json.trim()
+    if (trimmed.isEmpty() || !trimmed.startsWith('{')) return null
     return try {
-        searchJson.decodeFromString(SearchResult.serializer(), json)
+        searchJson.decodeFromString(SearchResult.serializer(), trimmed)
     } catch (e: Exception) {
         Timber.e(e, "parseJson: не удалось разобрать ответ поиска")
         null

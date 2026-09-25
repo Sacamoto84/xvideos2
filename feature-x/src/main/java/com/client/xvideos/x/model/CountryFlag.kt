@@ -11,6 +11,7 @@ package com.client.xvideos.x.model
  * предупреждения, и ронять из-за этого разбор страницы незачем.
  */
 fun getFlagEmoji(countryCode: String): String {
+    if (countryCode.length < 2) return "❓"
     val raw = if (countryCode.startsWith("flag-", ignoreCase = true)) countryCode.substring(5) else countryCode
     val code = raw.uppercase()
     if (code.length != 2 || code[0] !in 'A'..'Z' || code[1] !in 'A'..'Z') return "❓"

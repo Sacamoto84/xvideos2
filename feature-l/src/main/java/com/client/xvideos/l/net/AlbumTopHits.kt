@@ -32,7 +32,9 @@ class AlbumTopHitsImpl(
                 val query = getAlbumListTopHitsQuery()
                 val res = repository.openURI(query)
                 if (res.isFailure) return@launch
-                val json = LJson.parseToJsonElement(res.getOrNull().orEmpty()).jsonObject
+                val raw = res.getOrNull().orEmpty()
+                if (raw.isBlank()) return@launch
+                val json = LJson.parseToJsonElement(raw).jsonObject
                 val get =
                     json["data"]?.jsonObject?.get("album")?.jsonObject?.get("list_top_hits")?.jsonArray
                 get?.mapNotNull { element ->

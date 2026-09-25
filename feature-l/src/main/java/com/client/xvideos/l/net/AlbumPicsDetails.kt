@@ -315,7 +315,7 @@ class AlbumPicsDetails(
 
     suspend fun retryFailedPages() = withContext(Dispatchers.Default) {
         val pagesToRetry = stateMutex.withLock {
-            failedPages.map { it.page }.distinct().sorted()
+            if (failedPages.isEmpty()) emptyList() else failedPages.mapTo(java.util.TreeSet<Int>()) { it.page }.toList()
         }
         if (pagesToRetry.isEmpty()) return@withContext
 
