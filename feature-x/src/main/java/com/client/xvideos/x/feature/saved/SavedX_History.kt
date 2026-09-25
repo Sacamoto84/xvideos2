@@ -121,7 +121,10 @@ class SavedX_History(
                 .onSuccess {
                     withContext(Dispatchers.Main) {
                         historyMap.remove(item.id)
-                        list.removeAll { it.item.id == item.id }
+                        val existingIndex = list.indexOfFirst { it.item.id == item.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                     }
                     SnackBar.info("Удалено из истории")
                 }
@@ -135,16 +138,17 @@ class SavedX_History(
      * Пакетное удаление записей из истории по ID роликов.
      */
     fun deleteBatchByIds(ids: Collection<Long>) {
-        val validIds = ids.filter { it > 0L }
-        if (validIds.isEmpty()) return
+        if (ids.isEmpty()) return
         scope.launch(ioDispatcher) {
             val deletedIds = HashSet<Long>()
-            validIds.forEach { id ->
-                historyDb.delete(id.toString())
-                    .onSuccess { deletedIds.add(id) }
-                    .onFailure { e ->
-                        Timber.e(e, "SavedX_History: не удалось удалить %d", id)
-                    }
+            ids.forEach { id ->
+                if (id > 0L) {
+                    historyDb.delete(id.toString())
+                        .onSuccess { deletedIds.add(id) }
+                        .onFailure { e ->
+                            Timber.e(e, "SavedX_History: не удалось удалить %d", id)
+                        }
+                }
             }
             if (deletedIds.isNotEmpty()) {
                 withContext(Dispatchers.Main) {

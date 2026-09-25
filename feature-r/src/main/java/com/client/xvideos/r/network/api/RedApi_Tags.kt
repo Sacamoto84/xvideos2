@@ -4,13 +4,15 @@ import com.client.xvideos.r.model.tag.TagsResponse
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
+private val ROUTE_TAGS = Route("GET", "/v1/tags")
+
 class RedApi_Tags(val api: ApiClient) {
 
     /**
      * #### Возвращает список всех существующих тегов. 7к штук (имя, количество)
      */
     suspend fun getTags(): Result<TagsResponse> {
-        return api.request(Route("GET", "/v1/tags"))
+        return api.request(ROUTE_TAGS)
     }
 
     // Здесь был getTrendingTags() на /v2/search/trending. Вызовов не имел, а

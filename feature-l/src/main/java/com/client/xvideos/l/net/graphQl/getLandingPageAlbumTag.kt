@@ -4,9 +4,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
-fun getLandingPageAlbumTag(tag: String): String {
-    val query = """
-    query LandingPageAlbumTag(${'$'}id: ID!, ${'$'}limit: Int) {
+private val LANDING_PAGE_TAG_QUERY = """
+query LandingPageAlbumTag(${'$'}id: ID!, ${'$'}limit: Int) {
   landing_page_album {
     tag(id: ${'$'}id, limit: ${'$'}limit) {
       ... on LandingPage {
@@ -32,8 +31,8 @@ fun getLandingPageAlbumTag(tag: String): String {
     }
   }
 }
-    
-    fragment AlbumInSearchList on Album {
+
+fragment AlbumInSearchList on Album {
   __typename
   id
   title
@@ -85,11 +84,12 @@ fun getLandingPageAlbumTag(tag: String): String {
     url
   }
 }
-    """.trimIndent()
+""".trimIndent()
 
+fun getLandingPageAlbumTag(tag: String): String {
     return buildJsonObject {
         put("operationName", "LandingPageAlbumTag")
-        put("query", query)
+        put("query", LANDING_PAGE_TAG_QUERY)
         putJsonObject("variables") {
             put("id", tag)
         }

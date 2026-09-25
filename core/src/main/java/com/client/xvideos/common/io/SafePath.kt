@@ -28,9 +28,31 @@ fun normalizeRelativePath(raw: String): String {
     val name = raw.replace('\\', '/').trim('/')
     require(name.isNotBlank()) { "Пустое имя пути" }
     require(!name.contains(':') && !name.contains('\u0000') && name.none { it < ' ' }) { "Небезопасный путь: $raw" }
-    val parts = name.split('/').filter { it.isNotBlank() }
-    require(parts.none { it == "." || it == ".." }) { "Небезопасный путь: $raw" }
-    return parts.joinToString("/")
+
+    val sb = StringBuilder(name.length)
+    var start = 0
+    val len = name.length
+    while (start < len) {
+        var end = name.indexOf('/', start)
+        if (end == -1) end = len
+        if (end > start) {
+            require(!isDotSegment(name, start, end)) { "Небезопасный путь: $raw" }
+            if (sb.isNotEmpty()) {
+                sb.append('/')
+            }
+            sb.append(name, start, end)
+        }
+        start = end + 1
+    }
+    require(sb.isNotEmpty()) { "Пустое имя пути" }
+    return sb.toString()
+}
+
+private fun isDotSegment(name: String, start: Int, end: Int): Boolean {
+    val len = end - start
+    if (len == 1) return name[start] == '.'
+    if (len == 2) return name[start] == '.' && name[start + 1] == '.'
+    return false
 }
 
 /**

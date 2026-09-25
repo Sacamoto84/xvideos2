@@ -58,17 +58,37 @@ fun extractXVideoId(href: String): Long? {
  * Разбирает текстовую длительность видео (например, "10 мин.", "15 min", "1 hr 12 min", "12:34")
  * в миллисекунды. При невозможности разбора возвращает 0L.
  */
+private fun parseColonDuration(text: String): Long {
+    val firstColon = text.indexOf(':')
+    if (firstColon == -1) return 0L
+
+    val secondColon = text.indexOf(':', firstColon + 1)
+    if (secondColon != -1) {
+        val thirdColon = text.indexOf(':', secondColon + 1)
+        if (thirdColon == -1) {
+            val p1 = text.substring(0, firstColon).trim().toLongOrNull()
+            val p2 = text.substring(firstColon + 1, secondColon).trim().toLongOrNull()
+            val p3 = text.substring(secondColon + 1).trim().toLongOrNull()
+            if (p1 != null && p2 != null && p3 != null) {
+                return (p1 * 3600 + p2 * 60 + p3) * 1000L
+            }
+        }
+    } else {
+        val p1 = text.substring(0, firstColon).trim().toLongOrNull()
+        val p2 = text.substring(firstColon + 1).trim().toLongOrNull()
+        if (p1 != null && p2 != null) {
+            return (p1 * 60 + p2) * 1000L
+        }
+    }
+    return 0L
+}
+
 fun parseDurationToMs(raw: String): Long {
     val text = raw.trim().lowercase()
     if (text.isBlank()) return 0L
 
-    if (text.contains(":")) {
-        val parts = text.split(":").mapNotNull { it.trim().toLongOrNull() }
-        return when (parts.size) {
-            2 -> (parts[0] * 60 + parts[1]) * 1000L
-            3 -> (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000L
-            else -> 0L
-        }
+    if (text.contains(':')) {
+        return parseColonDuration(text)
     }
 
     var totalMs = 0L
@@ -83,8 +103,18 @@ fun parseDurationToMs(raw: String): Long {
     }
 
     if (totalMs == 0L) {
-        val digitsOnly = text.filter { it.isDigit() }.toLongOrNull() ?: 0L
-        if (digitsOnly > 0L) {
+        var digitsOnly = 0L
+        var hasDigits = false
+        for (i in 0 until text.length) {
+            val c = text[i]
+            if (c in '0'..'9') {
+                hasDigits = true
+                if (digitsOnly < Long.MAX_VALUE / 10) {
+                    digitsOnly = digitsOnly * 10L + (c - '0')
+                }
+            }
+        }
+        if (hasDigits && digitsOnly > 0L) {
             totalMs = if (digitsOnly <= 180) digitsOnly * 60_000L else digitsOnly * 1000L
         }
     }

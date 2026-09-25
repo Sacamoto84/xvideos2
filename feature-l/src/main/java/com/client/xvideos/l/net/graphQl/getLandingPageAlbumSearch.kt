@@ -4,9 +4,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
-fun getLandingPageAlbumSearch(search: String, limit: Int = 9): String {
-    val query = """
-    query LandingPageAlbumSearch(${'$'}id: String!, ${'$'}limit: Int) {
+private val LANDING_PAGE_SEARCH_QUERY = """
+query LandingPageAlbumSearch(${'$'}id: String!, ${'$'}limit: Int) {
   landing_page_album {
     search(search_string: ${'$'}id, limit: ${'$'}limit) {
       ... on LandingPage {
@@ -34,8 +33,8 @@ fun getLandingPageAlbumSearch(search: String, limit: Int = 9): String {
     }
   }
 }
-    
-    fragment AlbumInSearchList on Album {
+
+fragment AlbumInSearchList on Album {
   __typename
   id
   title
@@ -87,11 +86,12 @@ fun getLandingPageAlbumSearch(search: String, limit: Int = 9): String {
     acts_as_warning
   }
 }
-    """.trimIndent()
+""".trimIndent()
 
+fun getLandingPageAlbumSearch(search: String, limit: Int = 9): String {
     return buildJsonObject {
         put("operationName", "LandingPageAlbumSearch")
-        put("query", query)
+        put("query", LANDING_PAGE_SEARCH_QUERY)
         putJsonObject("variables") {
             put("id", search)
             put("limit", limit.coerceAtLeast(1))

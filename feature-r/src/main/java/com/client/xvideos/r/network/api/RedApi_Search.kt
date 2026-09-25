@@ -7,6 +7,10 @@ import com.client.xvideos.r.model.search.SearchCreatorsResponse
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
+private val EMPTY_CREATORS_RESPONSE = SearchCreatorsResponse()
+private const val SEARCH_GIFS_PATH = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}"
+private const val SEARCH_GIFS_VERIFIED_PATH = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes"
+
 class RedApi_Search(val api: ApiClient) {
 
     //https://api.redgifs.com/v2/creators/suggest?query=Ana
@@ -14,7 +18,7 @@ class RedApi_Search(val api: ApiClient) {
     suspend fun searchCreatorsShort(text: String): Result<SearchCreatorsResponse> {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) {
-            return Result.success(SearchCreatorsResponse())
+            return Result.success(EMPTY_CREATORS_RESPONSE)
         }
         val route =
             Route(method = "GET", path = "/v2/creators/suggest?query={text}", "text" to trimmed)
@@ -48,27 +52,16 @@ class RedApi_Search(val api: ApiClient) {
         verified: Boolean = false,
     ): Result <MediaResponse> {
 
-        val route = if (!verified) {
-            Route(
-                method = "GET",
-                path = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}",
-                "search_text" to searchText,
-                "order" to order.value,
-                "count" to count,
-                "page" to page,
-                "type" to MediaType.GIF.value,
-            )
-        } else {
-            Route(
-                method = "GET",
-                path = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes",
-                "search_text" to searchText,
-                "order" to order.value,
-                "count" to count,
-                "page" to page,
-                "type" to MediaType.GIF.value,
-            )
-        }
+        val path = if (!verified) SEARCH_GIFS_PATH else SEARCH_GIFS_VERIFIED_PATH
+        val route = Route(
+            method = "GET",
+            path = path,
+            "search_text" to searchText,
+            "order" to order.value,
+            "count" to count,
+            "page" to page,
+            "type" to MediaType.GIF.value,
+        )
         //return cacheMediaResponse(route)
         return api.request(route)
     }

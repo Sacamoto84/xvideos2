@@ -52,26 +52,28 @@ object LocalMediaResolver {
         val safeFolder = sanitizeFolderName(folderName) ?: return null
         val safeFile = sanitizeFileName(fileName) ?: return null
 
-        val searchDirs = listOf(File(AppPath.l_likes), File(AppPath.l_albums))
+        val searchDirs = arrayOf(File(AppPath.l_likes), File(AppPath.l_albums))
         for (baseDir in searchDirs) {
-            val folder = File(baseDir, safeFolder)
-            if (isSafeInside(folder, baseDir) && folder.exists() && folder.isDirectory) {
-                val targetFile = File(folder, safeFile)
-                if (isSafeInside(targetFile, folder) && targetFile.exists() && targetFile.isFile) {
-                    return Pair(targetFile, safeFile)
-                }
-            }
+            resolveMediaInBaseDir(baseDir, safeFolder, safeFile)?.let { return it }
         }
         val colRoot = File(AppPath.l_collection)
         if (colRoot.exists() && colRoot.isDirectory) {
-            return colRoot.listFiles()?.filter { it.isDirectory }?.firstNotNullOfOrNull { colDir ->
-                val folder = File(colDir, safeFolder)
-                if (isSafeInside(folder, colDir) && folder.exists() && folder.isDirectory) {
-                    val targetFile = File(folder, safeFile)
-                    if (isSafeInside(targetFile, folder) && targetFile.exists() && targetFile.isFile) {
-                        Pair(targetFile, safeFile)
-                    } else null
-                } else null
+            val colDirs = colRoot.listFiles() ?: return null
+            for (colDir in colDirs) {
+                if (colDir.isDirectory) {
+                    resolveMediaInBaseDir(colDir, safeFolder, safeFile)?.let { return it }
+                }
+            }
+        }
+        return null
+    }
+
+    private fun resolveMediaInBaseDir(baseDir: File, safeFolder: String, safeFile: String): Pair<File, String>? {
+        val folder = File(baseDir, safeFolder)
+        if (isSafeInside(folder, baseDir) && folder.exists() && folder.isDirectory) {
+            val targetFile = File(folder, safeFile)
+            if (isSafeInside(targetFile, folder) && targetFile.exists() && targetFile.isFile) {
+                return Pair(targetFile, safeFile)
             }
         }
         return null
@@ -90,8 +92,9 @@ object LocalMediaResolver {
         val colDir = File(AppPath.r_collection, collectionName)
         if (!isSafeInside(colDir, File(AppPath.r_collection)) || !colDir.exists()) return null
 
-        val files = colDir.listFiles()?.filter { it.isFile && it.extension == "collection" }.orEmpty()
+        val files = colDir.listFiles() ?: return null
         for (file in files) {
+            if (!file.isFile || file.extension != "collection") continue
             val id = runCatching {
                 val json = AppJson.parseToJsonElement(file.readText(Charsets.UTF_8)).jsonObject
                 json["id"]?.jsonPrimitive?.contentOrNull ?: file.nameWithoutExtension
@@ -191,10 +194,13 @@ object LocalMediaResolver {
         val direct = File(rDownloadDir, "$id.mp4")
         if (isSafeInside(direct, rDownloadDir) && direct.exists() && direct.isFile) return direct
 
-        return rDownloadDir.listFiles()?.filter { it.isDirectory }?.firstNotNullOfOrNull { userFolder ->
+        val subDirs = rDownloadDir.listFiles() ?: return null
+        for (userFolder in subDirs) {
+            if (!userFolder.isDirectory) continue
             val nested = File(userFolder, "$id.mp4")
-            if (isSafeInside(nested, rDownloadDir) && nested.exists() && nested.isFile) nested else null
+            if (isSafeInside(nested, rDownloadDir) && nested.exists() && nested.isFile) return nested
         }
+        return null
     }
 
     internal fun resolveRPosterFile(id: String): File? {
@@ -204,15 +210,18 @@ object LocalMediaResolver {
         val direct = File(rDownloadDir, "$id.jpg")
         if (isSafeInside(direct, rDownloadDir) && direct.exists() && direct.isFile) return direct
 
-        return rDownloadDir.listFiles()?.filter { it.isDirectory }?.firstNotNullOfOrNull { userFolder ->
+        val subDirs = rDownloadDir.listFiles() ?: return null
+        for (userFolder in subDirs) {
+            if (!userFolder.isDirectory) continue
             val nested = File(userFolder, "$id.jpg")
-            if (isSafeInside(nested, rDownloadDir) && nested.exists() && nested.isFile) nested else null
+            if (isSafeInside(nested, rDownloadDir) && nested.exists() && nested.isFile) return nested
         }
+        return null
     }
 
     internal fun encodePathSegment(raw: String): String {
         return runCatching {
-            URLEncoder.encode(raw, "UTF-8").replace("+", "%20")
+            URLEncoder.encode(raw, Charsets.UTF_8.name()).replace("+", "%20")
         }.getOrDefault(raw)
     }
 
