@@ -8,12 +8,12 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import timber.log.Timber
 
+private val EMPTY_MODEL_SCREEN_TAG = ModelScreenTag(title0 = "?", title1 = "?", items = emptyList(), lastPage = 1)
+
 fun parserScreenTags(html: String): ModelScreenTag {
     if (html.isBlank()) {
-        return ModelScreenTag(title0 = "?", title1 = "?", items = emptyList(), lastPage = 1)
+        return EMPTY_MODEL_SCREEN_TAG
     }
-
-    val listItems = mutableListOf<ItemsX>()
 
     val document: Document = Jsoup.parse(html)
 
@@ -27,13 +27,16 @@ fun parserScreenTags(html: String): ModelScreenTag {
     // тогда берём наибольшую числовую метку. Нет блока вовсе — одна страница.
     val pagination = document.selectFirst("div.pagination")
     val lastPage = (pagination?.selectFirst("a.last-page")?.text()?.trim()?.toIntOrNull()
-        ?: pagination?.select("a")?.mapNotNull { it.text().trim().toIntOrNull() }?.maxOrNull()
+        ?: pagination?.select("a")?.fold(1) { acc, el ->
+            maxOf(acc, el.text().trim().toIntOrNull() ?: 1)
+        }
         ?: 1).coerceAtLeast(1)
 
-    val container = document.selectFirst("#content > div.mozaique.cust-nb-cols")
-    val videos = container?.select("div.frame-block.thumb-block")
+    val container = document.selectFirst("#content > div.mozaique.cust-nb-cols") ?: document.selectFirst("div.mozaique")
+    val videos = container?.select("div.frame-block.thumb-block") ?: document.select("div.frame-block.thumb-block")
+    val listItems = ArrayList<ItemsX>(videos.size)
 
-    videos?.forEach { video ->
+    videos.forEach { video ->
         try {
             val titleElement = video.selectFirst("p.title a")
             val title = titleElement?.attr("title") ?: "Без названия"

@@ -25,7 +25,10 @@ class R_Saved_Niches(
             nichesDb.insert(item.id, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.id == item.id }
+                        val existingIndex = list.indexOfFirst { it.id == item.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                         list.add(item)
                     }
                     SnackBar.info("Группа добавлена")
@@ -42,7 +45,10 @@ class R_Saved_Niches(
             nichesDb.delete(item.id)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.id == item.id }
+                        val existingIndex = list.indexOfFirst { it.id == item.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                     }
                     SnackBar.info("Группа удалена")
                 }

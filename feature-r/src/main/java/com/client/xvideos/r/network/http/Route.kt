@@ -40,7 +40,10 @@ private val PLACEHOLDER = Regex("""\{(\w+)\}""")
  */
 class Route(val method: String, val path: String, vararg parameters: Pair<String, Any>) {
 
-    val url: String = BASE + path.fillPlaceholders(parameters.toMap())
+    val url: String = when {
+        parameters.isEmpty() || !path.contains('{') -> BASE + path
+        else -> BASE + path.fillPlaceholders(parameters.toMap())
+    }
 
     private fun String.fillPlaceholders(params: Map<String, Any>): String =
         PLACEHOLDER.replace(this) { match ->

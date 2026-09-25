@@ -36,7 +36,10 @@ class R_Saved_Likes(
             likesDb.insert(safeItem.id, safeItem)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.id == safeItem.id }
+                        val existingIndex = list.indexOfFirst { it.id == safeItem.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                         list.add(safeItem)
                     }
                     SnackBar.success("Like")
@@ -53,7 +56,10 @@ class R_Saved_Likes(
             likesDb.delete(item.id)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.id == item.id }
+                        val existingIndex = list.indexOfFirst { it.id == item.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                     }
                     SnackBar.info("Unlike")
                 }

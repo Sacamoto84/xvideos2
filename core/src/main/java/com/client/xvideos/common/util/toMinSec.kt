@@ -1,7 +1,5 @@
 package com.client.xvideos.common.util
 
-import java.util.Locale
-
 /**
  *  68.7   → "01:08"
  * 134.0   → "02:14"
@@ -12,7 +10,9 @@ fun Double.toMinSec(): String {
     val totalSec = if (this > Int.MAX_VALUE) Int.MAX_VALUE else this.toInt()
     val minutes = totalSec / 60
     val seconds = totalSec % 60
-    return String.format(Locale.US, "%02d:%02d", minutes, seconds)     // ведущие нули
+    val mStr = if (minutes < 10) "0$minutes" else minutes.toString()
+    val sStr = if (seconds < 10) "0$seconds" else seconds.toString()
+    return "$mStr:$sStr"
 }
 
 fun Float.toMinSec(): String = this.toDouble().toMinSec()

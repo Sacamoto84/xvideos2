@@ -26,7 +26,10 @@ class R_Saved_Creator(
             creatorDb.insert(item.username, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.username == item.username }
+                        val existingIndex = list.indexOfFirst { it.username == item.username }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                         list.add(item)
                     }
                     SnackBar.success("Автор добавлен")
@@ -43,7 +46,10 @@ class R_Saved_Creator(
             creatorDb.delete(username)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.username == username }
+                        val existingIndex = list.indexOfFirst { it.username == username }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                     }
                     SnackBar.info("Автор удален")
                 }

@@ -31,6 +31,17 @@ private val GROUP_ID_REGEX = Regex("GROUP-ID=\"(.*?)\"")
 private val URI_REGEX = Regex("URI=\"(.*?)\"")
 private val DEFAULT_REGEX = Regex("DEFAULT=(YES|NO)")
 
+private val REDGIFS_REQUEST_HEADERS = mapOf(
+    "Referer" to "https://www.redgifs.com/",
+    "Origin" to "https://www.redgifs.com",
+    HttpHeaders.UserAgent to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36",
+    HttpHeaders.Accept to "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    HttpHeaders.AcceptEncoding to "identity",
+    HttpHeaders.AcceptLanguage to "ru,en;q=0.9"
+)
+
+private val EMPTY_M3U8_DATA = M3U8Data(emptyList(), emptyList(), emptyList())
+
 private val sharedM3U8Client: HttpClient by lazy {
     HttpClient(OkHttp) {
         engine {
@@ -51,7 +62,7 @@ class M3U8Helper {
         val m3u8Content = withContext(Dispatchers.IO) {
             try {
                 val response = sharedM3U8Client.get(url) {
-                    (requestHeaders ?: redgifsRequestHeaders()).forEach { (name, value) ->
+                    (requestHeaders ?: REDGIFS_REQUEST_HEADERS).forEach { (name, value) ->
                         headers.append(name, value)
                     }
                 }
@@ -71,28 +82,16 @@ class M3U8Helper {
         return parseM3U8Content(m3u8Content, url)
     }
 
-    private fun redgifsRequestHeaders(): Map<String, String> {
-        return mapOf(
-            "Referer" to "https://www.redgifs.com/",
-            "Origin" to "https://www.redgifs.com",
-            HttpHeaders.UserAgent to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36",
-            HttpHeaders.Accept to "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            HttpHeaders.AcceptEncoding to "identity",
-            HttpHeaders.AcceptLanguage to "ru,en;q=0.9"
-        )
-    }
-
     internal fun parseM3U8Content(m3u8Content: String, baseUrl: String): M3U8Data {
         if (m3u8Content.isBlank()) {
-            return M3U8Data(emptyList(), emptyList(), emptyList())
+            return EMPTY_M3U8_DATA
         }
         val videoQualities = mutableListOf<VideoQuality>()
         val audioTracks = mutableListOf<AudioTrack>()
         val subtitleTracks = mutableListOf<SubtitleTrack>()
-        val lines = m3u8Content.lines()
 
         var lastQualityLine: String? = null
-        for (line in lines) {
+        for (line in m3u8Content.lineSequence()) {
             when {
                 line.startsWith("#EXT-X-STREAM-INF") -> lastQualityLine = line
                 lastQualityLine != null && !line.startsWith("#") -> {
@@ -150,6 +149,7 @@ class M3U8Helper {
     }
 
     private fun formatResolution(resolution: String): String {
-        return resolution.split("x").getOrNull(1)?.plus("p") ?: "Unknown"
+        val height = resolution.substringAfter('x', "")
+        return if (height.isNotEmpty()) "${height}p" else "Unknown"
     }
 }

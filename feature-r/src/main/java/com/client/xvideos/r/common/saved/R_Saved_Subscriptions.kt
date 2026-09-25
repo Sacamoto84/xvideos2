@@ -41,13 +41,19 @@ class R_Saved_Subscriptions(
     }
 
     private fun syncSelectedList() {
-        val currentNames = selectedListCreator.map { it.name }.toSet()
+        val currentNames = HashSet<String>(selectedListCreator.size)
+        for (sc in selectedListCreator) {
+            currentNames.add(sc.name)
+        }
+        val creatorsSet = HashSet<String>(listCreators.size)
         // Добавляем новых, которых нет в списке
-        listCreators.map{it.username}.filter { it !in currentNames }.forEach {
-            selectedListCreator.add(SelectedCreator(it, true, listCreators.firstOrNull{ itt -> itt.username  ==  it}?.profileImageUrl ))
+        for (creator in listCreators) {
+            creatorsSet.add(creator.username)
+            if (creator.username !in currentNames) {
+                selectedListCreator.add(SelectedCreator(creator.username, true, creator.profileImageUrl))
+            }
         }
         // Удаляем тех, кого больше нет в подписках
-        val creatorsSet = listCreators.map{it.username}.toSet()
         selectedListCreator.removeAll { it.name !in creatorsSet }
     }
 
@@ -57,7 +63,10 @@ class R_Saved_Subscriptions(
             creatorDb.insert(item.username, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        listCreators.removeAll { it.username == item.username }
+                        val existingIndex = listCreators.indexOfFirst { it.username == item.username }
+                        if (existingIndex >= 0) {
+                            listCreators.removeAt(existingIndex)
+                        }
                         listCreators.add(item)
                         syncSelectedList()
                     }
@@ -75,7 +84,10 @@ class R_Saved_Subscriptions(
             creatorDb.delete(username)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        listCreators.removeAll { it.username == username }
+                        val existingIndex = listCreators.indexOfFirst { it.username == username }
+                        if (existingIndex >= 0) {
+                            listCreators.removeAt(existingIndex)
+                        }
                         syncSelectedList()
                     }
                     SnackBar.info("Автор удален")

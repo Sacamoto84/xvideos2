@@ -6,11 +6,9 @@ import com.client.xvideos.common.kdownloader.httpclient.DefaultHttpClient
 import com.client.xvideos.common.kdownloader.httpclient.HttpClient
 import java.io.File
 import java.io.IOException
-import java.io.UnsupportedEncodingException
 import java.net.HttpURLConnection
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import kotlin.experimental.and
 
 private const val MAX_REDIRECTION = 10
 
@@ -85,22 +83,22 @@ fun getRedirectedConnectionIfAny(
     return httpClient
 }
 
+private val HEX_DIGITS = "0123456789abcdef".toCharArray()
+
 fun getUniqueId(url: String, dirPath: String, fileName: String): Int {
     val string = url + File.separator + dirPath + File.separator + fileName
     val hash: ByteArray = try {
-        MessageDigest.getInstance("MD5").digest(string.toByteArray(charset("UTF-8")))
+        MessageDigest.getInstance("MD5").digest(string.toByteArray(Charsets.UTF_8))
     } catch (e: NoSuchAlgorithmException) {
         throw RuntimeException("NoSuchAlgorithmException", e)
-    } catch (e: UnsupportedEncodingException) {
-        throw RuntimeException("UnsupportedEncodingException", e)
     }
-    val hex = StringBuilder(hash.size * 2)
-    for (b in hash) {
-        val v = b.toInt() and 0xFF
-        if (v < 0x10) hex.append("0")
-        hex.append(Integer.toHexString(v))
+    val hex = CharArray(hash.size * 2)
+    for (i in hash.indices) {
+        val v = hash[i].toInt() and 0xFF
+        hex[i * 2] = HEX_DIGITS[v ushr 4]
+        hex[i * 2 + 1] = HEX_DIGITS[v and 0x0F]
     }
-    return hex.toString().hashCode()
+    return String(hex).hashCode()
 }
 
 fun deleteFile(req: DownloadRequest) {
