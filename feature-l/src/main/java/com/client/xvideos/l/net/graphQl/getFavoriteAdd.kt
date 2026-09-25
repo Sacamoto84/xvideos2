@@ -4,6 +4,19 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
+private val FAVORITE_ADD_QUERY = """
+    mutation FavoriteAdd(${'$'}input: FavoriteInput!) {
+      favorite {
+        add_favorite(input: ${'$'}input) {
+          errors {
+            code
+            message
+          }
+        }
+      }
+    }
+""".trimIndent()
+
 /**
  * Генерирует тело GraphQL POST-запроса для FavoriteAdd (добавление лайка на сервер Luscious).
  *
@@ -17,26 +30,12 @@ fun getFavoriteAdd(
     favoriteType: String = "like"
 ): String {
     val cleanAnchorId = anchorId.trim()
-
-    val query = """
-    mutation FavoriteAdd(${'$'}input: FavoriteInput!) {
-      favorite {
-        add_favorite(input: ${'$'}input) {
-          errors {
-            code
-            message
-          }
-        }
-      }
-    }
-    """.trimIndent()
-
     val id = if (anchorType == "album") "32" else "51"
 
     return buildJsonObject {
         put("id", id)
         put("operationName", "FavoriteAdd")
-        put("query", query)
+        put("query", FAVORITE_ADD_QUERY)
         putJsonObject("variables") {
             putJsonObject("input") {
                 put("anchor_id", cleanAnchorId)

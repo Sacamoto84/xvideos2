@@ -4,17 +4,18 @@ import android.content.Context
 import java.io.File
 
 object VideoDiskCacheCleaner {
-    private val legacyCacheDirs = listOf("video", "video_cache")
-    private val legacyCacheDatabases = listOf("media3_cache.db", "exoplayer_internal.db")
+    private val legacyCacheDirs = arrayOf("video", "video_cache")
+    private val legacyCacheDatabases = arrayOf("media3_cache.db", "exoplayer_internal.db")
 
     fun clearLegacyCaches(context: Context) {
         val appContext = context.applicationContext
+        val cacheDir = appContext.cacheDir
 
-        legacyCacheDirs.forEach { dirName ->
-            File(appContext.cacheDir, dirName).deleteRecursively()
+        for (dirName in legacyCacheDirs) {
+            File(cacheDir, dirName).deleteRecursively()
         }
 
-        legacyCacheDatabases.forEach { databaseName ->
+        for (databaseName in legacyCacheDatabases) {
             appContext.deleteDatabase(databaseName)
         }
     }

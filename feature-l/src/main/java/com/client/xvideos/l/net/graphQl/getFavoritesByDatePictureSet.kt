@@ -4,23 +4,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
-/**
- * Генерирует тело GraphQL POST-запроса для FavoritesByDatePictureSet.
- *
- * @param userId ID пользователя. Если null или пустой, генерируется вариант запроса
- *               без аргумента user_id для проверки, умеет ли бэкенд брать пользователя
- *               из текущей авторизованной сессии/куки.
- * @param page Номер страницы (начиная с 1).
- * @param showLikes Показывать ли лайки (по умолчанию true).
- */
-fun getFavoritesByDatePictureSet(
-    userId: String? = null,
-    page: Int = 1,
-    showLikes: Boolean = true
-): String {
-    val cleanUserId = userId?.trim()
-    val hasUserId = !cleanUserId.isNullOrBlank()
-
+private fun buildFavoritesByDatePictureSetQuery(hasUserId: Boolean): String {
     val queryHeader = if (hasUserId) {
         "query FavoritesByDatePictureSet(\$user_id: ID!, \$page: Int!, \$show_likes: Boolean!)"
     } else {
@@ -33,7 +17,7 @@ fun getFavoritesByDatePictureSet(
         "list_by_date(show_likes: \$show_likes)"
     }
 
-    val query = """
+    return """
     $queryHeader {
       favorite {
         $listByDateCall {
@@ -121,6 +105,28 @@ fun getFavoritesByDatePictureSet(
       }
     }
     """.trimIndent()
+}
+
+private val FAVORITES_SET_WITH_USER_QUERY = buildFavoritesByDatePictureSetQuery(hasUserId = true)
+private val FAVORITES_SET_NO_USER_QUERY = buildFavoritesByDatePictureSetQuery(hasUserId = false)
+
+/**
+ * Генерирует тело GraphQL POST-запроса для FavoritesByDatePictureSet.
+ *
+ * @param userId ID пользователя. Если null или пустой, генерируется вариант запроса
+ *               без аргумента user_id для проверки, умеет ли бэкенд брать пользователя
+ *               из текущей авторизованной сессии/куки.
+ * @param page Номер страницы (начиная с 1).
+ * @param showLikes Показывать ли лайки (по умолчанию true).
+ */
+fun getFavoritesByDatePictureSet(
+    userId: String? = null,
+    page: Int = 1,
+    showLikes: Boolean = true
+): String {
+    val cleanUserId = userId?.trim()
+    val hasUserId = !cleanUserId.isNullOrBlank()
+    val query = if (hasUserId) FAVORITES_SET_WITH_USER_QUERY else FAVORITES_SET_NO_USER_QUERY
 
     return buildJsonObject {
         put("id", "30")

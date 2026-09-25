@@ -4,21 +4,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
-/**
- * Генерирует тело GraphQL POST-запроса для FavoritesByDatePicture (лайкнутые картинки).
- *
- * @param userId ID пользователя.
- * @param page Номер страницы (начиная с 1).
- * @param showLikes Показывать ли лайки (по умолчанию true).
- */
-fun getFavoritesByDatePicture(
-    userId: String? = null,
-    page: Int = 1,
-    showLikes: Boolean = true
-): String {
-    val cleanUserId = userId?.trim()
-    val hasUserId = !cleanUserId.isNullOrBlank()
-
+private fun buildFavoritesByDatePictureQuery(hasUserId: Boolean): String {
     val queryHeader = if (hasUserId) {
         "query FavoritesByDatePicture(\$user_id: ID!, \$page: Int!, \$show_likes: Boolean!)"
     } else {
@@ -31,7 +17,7 @@ fun getFavoritesByDatePicture(
         "list_by_date(show_likes: \$show_likes)"
     }
 
-    val query = """
+    return """
     $queryHeader {
       favorite {
         $listByDateCall {
@@ -92,6 +78,26 @@ fun getFavoritesByDatePicture(
       items_per_page
     }
     """.trimIndent()
+}
+
+private val FAVORITES_PICTURE_WITH_USER_QUERY = buildFavoritesByDatePictureQuery(hasUserId = true)
+private val FAVORITES_PICTURE_NO_USER_QUERY = buildFavoritesByDatePictureQuery(hasUserId = false)
+
+/**
+ * Генерирует тело GraphQL POST-запроса для FavoritesByDatePicture (лайкнутые картинки).
+ *
+ * @param userId ID пользователя.
+ * @param page Номер страницы (начиная с 1).
+ * @param showLikes Показывать ли лайки (по умолчанию true).
+ */
+fun getFavoritesByDatePicture(
+    userId: String? = null,
+    page: Int = 1,
+    showLikes: Boolean = true
+): String {
+    val cleanUserId = userId?.trim()
+    val hasUserId = !cleanUserId.isNullOrBlank()
+    val query = if (hasUserId) FAVORITES_PICTURE_WITH_USER_QUERY else FAVORITES_PICTURE_NO_USER_QUERY
 
     return buildJsonObject {
         put("id", "31")

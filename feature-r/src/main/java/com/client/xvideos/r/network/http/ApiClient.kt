@@ -11,7 +11,6 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
-import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
@@ -25,6 +24,7 @@ import kotlinx.serialization.Serializable
 import timber.log.Timber
 import okhttp3.ConnectionSpec
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 object ApiClient {
 
@@ -74,6 +74,10 @@ object ApiClient {
     var bearerToken: String? = null
         private set
 
+    @PublishedApi
+    internal val bearerHeaderRef = AtomicReference<String?>(null)
+
+    private val SUCCESS_UNIT = Result.success(Unit)
     private val tokenMutex = Mutex()
 
     @Serializable
@@ -85,9 +89,9 @@ object ApiClient {
      */
     @PublishedApi
     internal suspend fun ensureToken(): Result<Unit> {
-        if (bearerToken != null) return Result.success(Unit)
+        if (bearerToken != null) return SUCCESS_UNIT
         return tokenMutex.withLock {
-            if (bearerToken != null) Result.success(Unit)
+            if (bearerToken != null) SUCCESS_UNIT
             else loginLocked().map { }
         }
     }
@@ -101,9 +105,10 @@ object ApiClient {
     internal suspend fun refreshToken(previousToken: String?): Result<Unit> {
         return tokenMutex.withLock {
             if (bearerToken != previousToken) {
-                Result.success(Unit)
+                SUCCESS_UNIT
             } else {
                 bearerToken = null
+                bearerHeaderRef.set(null)
                 loginLocked().map { }
             }
         }
@@ -115,7 +120,9 @@ object ApiClient {
             Timber.d("Red ApiClient login()")
             val tokenResponse =
                 client.get("https://api.redgifs.com/v2/auth/temporary").body<TokenResponse>()
-            bearerToken = tokenResponse.token
+            val token = tokenResponse.token
+            bearerToken = token
+            bearerHeaderRef.set("Bearer $token")
             Timber.d("Red ApiClient login() SUCCESS - token received")
             Result.success(true)
         } catch (e: CancellationException) {
@@ -172,8 +179,9 @@ object ApiClient {
         url: String,
         params: Map<String, String> = emptyMap(),
     ): Result<T> = withAuth { token ->
+        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(url) {
-            token?.let { headers { append(HttpHeaders.Authorization, "Bearer $it") } }
+            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
             params.forEach { (key, value) -> parameter(key, value) }
         }.body()
     }
@@ -182,9 +190,10 @@ object ApiClient {
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
     ): Result<T> = withAuth { token ->
+        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(route.url) {
-            token?.let { headers { append(HttpHeaders.Authorization, "Bearer $it") } }
-            params.forEach { (key, value) -> parameter(key, value) }
+            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
+            for ((key, value) in params) parameter(key, value)
         }.body()
     }
 
@@ -192,9 +201,10 @@ object ApiClient {
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
     ): Result<String> = withAuth { token ->
+        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(route.url) {
-            token?.let { headers { append(HttpHeaders.Authorization, "Bearer $it") } }
-            params.forEach { (key, value) -> parameter(key, value) }
+            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
+            for ((key, value) in params) parameter(key, value)
         }.bodyAsText()
     }
 
@@ -202,9 +212,10 @@ object ApiClient {
         url: String,
         vararg params: Pair<String, Any> = emptyArray(),
     ): Result<String> = withAuth { token ->
+        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(url) {
-            token?.let { headers { append(HttpHeaders.Authorization, "Bearer $it") } }
-            params.forEach { (key, value) -> parameter(key, value) }
+            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
+            for ((key, value) in params) parameter(key, value)
         }.bodyAsText()
     }
 }

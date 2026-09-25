@@ -31,10 +31,11 @@ fun parserListVideo(html: String): List<ItemsX> =
     if (html.isBlank()) emptyList() else parserListVideo(Jsoup.parse(html))
 
 fun parserListVideo(document: Document): List<ItemsX> {
-    val list = mutableListOf<ItemsX>()
-
     // Находим все видео-блоки
     val videoBlocks = document.select("div.frame-block")
+    if (videoBlocks.isEmpty()) return emptyList()
+
+    val list = ArrayList<ItemsX>(videoBlocks.size)
 
     for (block: Element in videoBlocks) {
         try {
@@ -43,8 +44,9 @@ fun parserListVideo(document: Document): List<ItemsX> {
             val videoId = block.attr("data-id").toLongOrNull() ?: continue
             if (videoId <= 0L) continue
 
-            val videoTitle = block.selectFirst("p.title a")?.text() ?: "No title"
-            val href = block.selectFirst("p.title a")?.attr("href")?.trim().orEmpty()
+            val titleAnchor = block.selectFirst("p.title a")
+            val videoTitle = titleAnchor?.text() ?: "No title"
+            val href = titleAnchor?.attr("href")?.trim().orEmpty()
             if (href.isBlank() || href == "No link") continue
             val videoDuration = block.selectFirst("span.duration")?.text() ?: "No duration"
 
@@ -53,9 +55,10 @@ fun parserListVideo(document: Document): List<ItemsX> {
             val dataSrc: String = block.selectFirst("img[data-src]")?.attr("data-src").orEmpty()
             val videoPreviewUrl = parserVideoPreviewFromImageUrl(dataSrc).orEmpty()
 
-            val channelName = block.selectFirst("p.metadata .name")?.text() ?: "No channel"
-            val views = extractViews(block.selectFirst("p.metadata")?.text())
-            val channelLink = block.selectFirst("p.metadata a")?.attr("href") ?: "No channel link"
+            val metadataEl = block.selectFirst("p.metadata")
+            val channelName = metadataEl?.selectFirst(".name")?.text() ?: "No channel"
+            val views = extractViews(metadataEl?.text())
+            val channelLink = metadataEl?.selectFirst("a")?.attr("href") ?: "No channel link"
 
             list.add(
                 ItemsX(
@@ -87,9 +90,12 @@ fun parserListVideo(document: Document): List<ItemsX> {
  */
 private fun extractViews(metadata: String?): String {
     if (metadata.isNullOrBlank()) return "No views"
-    val token = VIEWS_TOKEN_REGEX
-        .findAll(metadata)
-        .map { it.value.trim() }
-        .lastOrNull { it.isNotBlank() }
-    return token ?: metadata.trim()
+    var lastToken: String? = null
+    for (match in VIEWS_TOKEN_REGEX.findAll(metadata)) {
+        val candidate = match.value.trim()
+        if (candidate.isNotBlank()) {
+            lastToken = candidate
+        }
+    }
+    return lastToken ?: metadata.trim()
 }

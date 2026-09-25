@@ -2,6 +2,9 @@ package com.client.xvideos.common.util
 
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.roundToLong
+
+private fun Long.absSafe(): Long = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
 
 /**
  * 1_250   -> "1.2k"
@@ -11,10 +14,10 @@ import kotlin.math.abs
  * 900     -> "900"
  */
 fun Long.toPrettyCount(): String {
-    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
+    val absValue = absSafe()
 
     return when {
-        absValue < 1_000 -> "$absValue"                             // 0-999
+        absValue < 1_000 -> absValue.toString()                     // 0-999
 
         absValue < 1_000_000 -> {                                   // 1.0k-999.9k
             val value = absValue / 1_000.0
@@ -34,10 +37,10 @@ fun Long.toPrettyCount(): String {
 }
 
 fun Long.toPrettyCount2(): String {
-    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
+    val absValue = absSafe()
 
     return when {
-        absValue < 1_000 -> "$absValue"                             // 0-999
+        absValue < 1_000 -> absValue.toString()                     // 0-999
 
         absValue < 1_000_000 -> {                                   // 1.0k-999.9k
             val value = absValue / 1_000.0
@@ -57,10 +60,10 @@ fun Long.toPrettyCount2(): String {
 }
 
 fun Long.toPrettyCount3(): String {
-    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
+    val absValue = absSafe()
 
     return when {
-        absValue < 1_000 -> "$absValue"                             // 0-999
+        absValue < 1_000 -> absValue.toString()                     // 0-999
 
         absValue < 1_000_000 -> {                                   // 1.0k-999.9k
             val value = absValue / 1_000.0
@@ -80,24 +83,12 @@ fun Long.toPrettyCount3(): String {
 }
 
 fun Long.toPrettyCountInt(): String {
-    val absValue = if (this == Long.MIN_VALUE) Long.MAX_VALUE else abs(this)
+    val absValue = absSafe()
 
     return when {
-        absValue < 1_000 -> "$absValue"                             // 0-999
-
-        absValue < 1_000_000 -> {                                   // 1.0k-999.9k
-            val value = absValue / 1_000.0
-            String.format(Locale.US, "%.0fK", value)
-        }
-
-        absValue < 1_000_000_000 -> {                               // 1.0M-999.9M
-            val value = absValue / 1_000_000.0
-            String.format(Locale.US, "%.0fM", value)
-        }
-
-        else -> {                                                   // 1.0B+
-            val value = absValue / 1_000_000_000.0
-            String.format(Locale.US, "%.0fB", value)
-        }
+        absValue < 1_000 -> absValue.toString()                     // 0-999
+        absValue < 1_000_000 -> "${(absValue / 1_000.0).roundToLong()}K"
+        absValue < 1_000_000_000 -> "${(absValue / 1_000_000.0).roundToLong()}M"
+        else -> "${(absValue / 1_000_000_000.0).roundToLong()}B"
     }
 }

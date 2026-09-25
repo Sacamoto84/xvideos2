@@ -47,6 +47,9 @@ class FileDB<T>(
 
     val list = mutableStateListOf<T>()
 
+    private val dir = File(dirPath)
+    private val dotExtension = ".$extension"
+
     /** Сериализует операции с каталогом: два параллельных refresh() не переплетаются. */
     private val lock = Any()
 
@@ -67,12 +70,11 @@ class FileDB<T>(
         if (isUnsafeItemName(nameFile)) return unsafeName(nameFile)
         return try {
             synchronized(lock) {
-                val dir = File(dirPath)
                 if (!dir.exists()) {
                     if (!dir.mkdirs()) { throw IOException("Не удалось создать директорию: ${dir.absolutePath}") }
                 }
 
-                val file = File(dirPath, "${nameFile}.${extension}")
+                val file = File(dir, "$nameFile$dotExtension")
 
                 val jsonString = json.encodeToString(serializer, value)
                 file.writeTextAtomically(jsonString)
@@ -89,7 +91,7 @@ class FileDB<T>(
         if (isUnsafeItemName(nameFile)) return unsafeName(nameFile)
         return try {
             synchronized(lock) {
-                val file = File(dirPath, "$nameFile.$extension")
+                val file = File(dir, "$nameFile$dotExtension")
                 if (!file.exists()) {
                     return Result.failure(FileNotFoundException("File not found: ${file.absolutePath}"))
                 }
@@ -109,7 +111,7 @@ class FileDB<T>(
         if (isUnsafeItemName(name)) return unsafeName(name)
         return try {
             synchronized(lock) {
-                val file = File(dirPath, "$name.$extension")
+                val file = File(dir, "$name$dotExtension")
                 if (file.exists()) {
                     if (!file.delete()) {
                         return Result.failure(IOException("!!! Не удалось удалить файл: ${file.absolutePath}"))
@@ -126,10 +128,15 @@ class FileDB<T>(
     fun clear(): Result<Boolean> {
         return try {
             val seq = synchronized(lock) {
-                val dir = File(dirPath)
                 if (dir.exists() && dir.isDirectory) {
-                    dir.listFiles { file -> file.extension == extension || file.name.endsWith(".tmp") }
-                        ?.forEach { it.delete() }
+                    val allFiles = dir.listFiles()
+                    if (allFiles != null) {
+                        for (file in allFiles) {
+                            if (file.extension == extension || file.name.endsWith(".tmp")) {
+                                file.delete()
+                            }
+                        }
+                    }
                 }
                 loadSeq.incrementAndGet()
             }
@@ -153,7 +160,7 @@ class FileDB<T>(
         if (isUnsafeItemName(nameFile)) return unsafeName(nameFile)
         return try {
             synchronized(lock) {
-                val file = File(dirPath, "$nameFile.$extension")
+                val file = File(dir, "$nameFile$dotExtension")
                 if (!file.exists() || file.length() == 0L) {
                     return Result.failure(FileNotFoundException("!!! Файл не найден или пуст: ${file.absolutePath}"))
                 }
@@ -174,16 +181,22 @@ class FileDB<T>(
             // присваивание внешней val изнутри лямбды: так не приходится
             // полагаться на definite-assignment сквозь inline-функцию.
             val (seq, loaded) = synchronized(lock) {
-                val dir = File(dirPath)
                 if (!dir.exists() || !dir.isDirectory) {
                     return Result.failure(IOException("!!! Директория не существует: $dirPath"))
                 }
 
-                cleanupTempFiles(dir)
-
-                val files = dir.listFiles { file -> file.extension == extension }
-                    ?.sortedByDescending { it.lastModified() }
-                    ?: emptyList()
+                val rawFiles = dir.listFiles()
+                val files = ArrayList<File>()
+                if (rawFiles != null) {
+                    for (file in rawFiles) {
+                        if (file.name.endsWith(".tmp")) {
+                            runCatching { file.delete() }
+                        } else if (file.extension == extension) {
+                            files.add(file)
+                        }
+                    }
+                }
+                files.sortByDescending { it.lastModified() }
 
                 loadSeq.incrementAndGet() to files.mapNotNull { file ->
                     if (file.length() == 0L) return@mapNotNull null
@@ -209,16 +222,6 @@ class FileDB<T>(
         } catch (e: Exception) {
             Timber.e(e, "!!! Ошибка при обновлении списка из директории $dirPath")
             Result.failure(e)
-        }
-    }
-
-    /** Подчищает временные файлы, оставшиеся от прерванной записи. */
-    private fun cleanupTempFiles(dir: File) {
-        runCatching {
-            // Суффикс общий для writeTextAtomically, а не «расширение.tmp»:
-            // tmp-имя теперь случайное и целевое расширение в него не входит.
-            dir.listFiles { file -> file.name.endsWith(".tmp") }
-                ?.forEach { it.delete() }
         }
     }
 

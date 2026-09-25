@@ -47,6 +47,7 @@ class CollectionDB<T>(
      * в фолбэк-ветке атомарной записи.
      */
     private val lock = Any()
+    private val rootDir = File(path)
 
     fun create(collectionName: String): Result<Boolean> {
         return try {
@@ -55,7 +56,7 @@ class CollectionDB<T>(
             Timber.i("!!! Создать коллекцию  collectionCreateToDisk() collectionName:$safeName")
             synchronized(lock) {
                 // Создаем директорию <userName>/block, если её нет
-                val dir = File(path, safeName)
+                val dir = File(rootDir, safeName)
                 if (!dir.exists()) {
                     val created = dir.mkdirs()
                     if (!created && !dir.exists()) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
@@ -73,7 +74,7 @@ class CollectionDB<T>(
         runCatching {
             val safeName = CollectionName.normalizeOrNull(collectionName)
                 ?: throw IOException("Недопустимое имя коллекции: $collectionName")
-            val dir = File(path, safeName)
+            val dir = File(rootDir, safeName)
 
             val deleted = synchronized(lock) {
                 if (!dir.exists()) {
@@ -103,8 +104,8 @@ class CollectionDB<T>(
             if (safeOldName == trimmed) {
                 return Result.success(true)
             }
-            val oldDir = File(path, safeOldName)
-            val newDir = File(path, trimmed)
+            val oldDir = File(rootDir, safeOldName)
+            val newDir = File(rootDir, trimmed)
             synchronized(lock) {
                 if (!oldDir.exists()) {
                     Timber.w("Коллекция \"$safeOldName\" не найдена: ${oldDir.absolutePath}")
@@ -143,7 +144,7 @@ class CollectionDB<T>(
             Timber.i("!!! удалить лайк GIFS -> deleteItem() id:$itemId из коллекции:$safeName")
 
             // Папка с коллекцией
-            val dir = File(path, safeName)
+            val dir = File(rootDir, safeName)
 
             // Файл-блокировка, созданный при сохранении
             val likesFile = File(dir, "$itemId.collection")
@@ -177,7 +178,7 @@ class CollectionDB<T>(
             Timber.i("!!! сохранить лайк GIFS -> likesItem() name:${name}")
 
             // Создаем директорию <userName>/block, если её нет
-            val dir = File(path, safeName)
+            val dir = File(rootDir, safeName)
 
             synchronized(lock) {
                 if (!dir.exists()) {
@@ -201,28 +202,18 @@ class CollectionDB<T>(
     }
 
     fun readAllCollections(): Result<List<CollectionEntity<T>>> = try {
-        val root = File(path)
-        if (!root.exists()) return Result.success(emptyList())
+        if (!rootDir.exists()) return Result.success(emptyList())
 
         val collections: List<CollectionEntity<T>> = synchronized(lock) {
-            cleanupTempFiles(root)
-
-            root.listFiles { f -> f.isDirectory }?.map { dir ->
-                val itemsInDir: List<T> = dir.listFiles { f -> f.isFile && f.extension == "collection" }
-                    ?.sortedByDescending { it.lastModified() }
-                    ?.mapNotNull { file ->
-                        if (file.length() == 0L) return@mapNotNull null
-                        try {
-                            val text = file.readText(Charsets.UTF_8)
-                            if (text.isBlank()) return@mapNotNull null
-                            json.decodeFromString(serializer, text)
-                        } catch (ex: Exception) {
-                            Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
-                            null
-                        }
-                    } ?: emptyList()
-                CollectionEntity(dir.name, itemsInDir) // itemsInDir is now explicitly List<T>
-            }?.sortedBy { it.collection } ?: emptyList()
+            val entries = rootDir.listFiles() ?: return@synchronized emptyList()
+            val result = ArrayList<CollectionEntity<T>>(entries.size)
+            for (dir in entries) {
+                if (dir.isDirectory) {
+                    result.add(loadCollectionDir(dir))
+                }
+            }
+            result.sortBy { it.collection }
+            result
         }
 
         Result.success(collections)
@@ -231,21 +222,32 @@ class CollectionDB<T>(
         Result.failure(e)
     }
 
-    /**
-     * Подчищает `.tmp`, оставшиеся от прерванной записи.
-     *
-     * На чтение они не влияют — фильтр идёт по расширению `collection`, — но
-     * копятся в папке пользователя. `FileDB` делает то же самое в `refresh()`.
-     */
-    private fun cleanupTempFiles(root: File) {
-        runCatching {
-            // Суффикс общий для writeTextAtomically: tmp-имя теперь случайное
-            // и «.collection.tmp» больше не образуется.
-            root.listFiles { f -> f.isDirectory }?.forEach { dir ->
-                dir.listFiles { f -> f.isFile && f.name.endsWith(".tmp") }
-                    ?.forEach { it.delete() }
+    private fun loadCollectionDir(dir: File): CollectionEntity<T> {
+        val rawFiles = dir.listFiles() ?: return CollectionEntity(dir.name, emptyList())
+        val collectionFiles = ArrayList<File>(rawFiles.size)
+        for (f in rawFiles) {
+            if (!f.isFile) continue
+            val name = f.name
+            if (name.endsWith(".tmp")) {
+                runCatching { f.delete() }
+            } else if (name.endsWith(".collection") && name.length > ".collection".length) {
+                collectionFiles.add(f)
             }
         }
+        collectionFiles.sortByDescending { it.lastModified() }
+        val itemsInDir = ArrayList<T>(collectionFiles.size)
+        for (file in collectionFiles) {
+            if (file.length() == 0L) continue
+            try {
+                val text = file.readText(Charsets.UTF_8)
+                if (text.isNotBlank()) {
+                    itemsInDir.add(json.decodeFromString(serializer, text))
+                }
+            } catch (ex: Exception) {
+                Timber.e(ex, "!!! Не удалось проанализировать элемент коллекции: ${file.name} in ${dir.name}")
+            }
+        }
+        return CollectionEntity(dir.name, itemsInDir)
     }
 
     /**

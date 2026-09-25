@@ -32,6 +32,9 @@ import java.util.concurrent.atomic.AtomicReference
 
 object LocalWebServer {
 
+    private val HTML_UTF8 = ContentType.Text.Html.withCharset(Charsets.UTF_8)
+    private val cachedIndexHtml = AtomicReference<ByteArray?>(null)
+
     private val serverRef = AtomicReference<EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>?>(null)
 
     fun isRunning(): Boolean = serverRef.get() != null
@@ -102,12 +105,12 @@ object LocalWebServer {
 
     private fun Routing.configureWebRoutes(appContext: Context) {
         get("/") {
-            val html = runCatching {
+            val html = cachedIndexHtml.get() ?: runCatching {
                 appContext.assets.open("web/index.html").use { it.readBytes() }
-            }.getOrNull()
+            }.getOrNull()?.also { cachedIndexHtml.set(it) }
 
             if (html != null) {
-                call.respondBytes(html, ContentType.Text.Html.withCharset(Charsets.UTF_8))
+                call.respondBytes(html, HTML_UTF8)
             } else {
                 call.respondText(
                     "<h3>Веб-интерфейс не найден в assets/web/</h3>",
