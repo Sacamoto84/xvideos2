@@ -46,21 +46,32 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
         .takeIf { it.isNotBlank() }
         ?: return null
 
-    val folders = if (parts.size > videosIndex + 4) {
-        parts.subList(videosIndex + 2, videosIndex + 5)
+    val f0: String
+    val f1: String
+    val f2: String
+    if (parts.size > videosIndex + 4) {
+        f0 = parts[videosIndex + 2]
+        f1 = parts[videosIndex + 3]
+        f2 = parts[videosIndex + 4]
     } else if (hash.length >= 6) {
-        listOf(hash.substring(0, 2), hash.substring(2, 4), hash.substring(4, 6))
+        f0 = hash.substring(0, 2)
+        f1 = hash.substring(2, 4)
+        f2 = hash.substring(4, 6)
     } else {
         return null
     }
 
-    val previewParts = buildList {
-        addAll(parts.take(videosIndex + 1))
-        add("videopreview")
-        addAll(folders)
-        add("${hash}_169.mp4")
+    val sb = StringBuilder(url.length + 20)
+    for (i in 0..videosIndex) {
+        if (i > 0) sb.append('/')
+        sb.append(parts[i])
     }
-    return previewParts.joinToString("/")
+    sb.append("/videopreview/")
+        .append(f0).append('/')
+        .append(f1).append('/')
+        .append(f2).append('/')
+        .append(hash).append("_169.mp4")
+    return sb.toString()
 }
 
 private fun parserNewCdnPreviewUrl(url: String, parts: List<String>): String? {
@@ -78,8 +89,7 @@ private fun parserNewCdnPreviewUrl(url: String, parts: List<String>): String? {
         return null
     }
 
-    val pathParts = parts.drop(hostIndex + 1)
-    if (pathParts.size < 3) return null
+    if (parts.size - (hostIndex + 1) < 3) return null
 
     return url.substringBeforeLast('/') + "/preview.mp4"
 }

@@ -1,6 +1,6 @@
 package com.client.xvideos.common.util
 
-import java.util.Locale
+import kotlin.math.round
 
 /**
  * Форматирует Float до двух знаков после разделителя (который будет заменен на двоеточие),
@@ -16,8 +16,8 @@ import java.util.Locale
  */
 fun Float.toTwoDecimalPlacesWithColon(): String {
     if (this.isNaN() || this.isInfinite() || this <= 0f) return "0:00"
-    // Сначала форматируем с точкой как разделителем
-    val formattedWithDot = String.format(Locale.US, "%.2f", this)
-    // Затем заменяем точку на двоеточие
-    return formattedWithDot.replace('.', ':')
+    val totalHundredths = round(this * 100f).toLong()
+    val whole = totalHundredths / 100L
+    val frac = (totalHundredths % 100L).toInt()
+    return if (frac < 10) "$whole:0$frac" else "$whole:$frac"
 }

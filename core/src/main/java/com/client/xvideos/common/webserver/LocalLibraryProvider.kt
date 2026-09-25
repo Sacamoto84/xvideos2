@@ -30,11 +30,13 @@ data class WebMediaItem(
     val tags: List<String> = emptyList()
 )
 
+private val DEFAULT_SECTIONS = listOf("ALL", "X", "R", "L", "COLLECTIONS")
+
 @Serializable
 data class WebLibraryResponse(
     val items: List<WebMediaItem>,
     val totalCount: Int,
-    val sections: List<String> = listOf("ALL", "X", "R", "L", "COLLECTIONS")
+    val sections: List<String> = DEFAULT_SECTIONS
 )
 
 @Serializable
@@ -298,11 +300,18 @@ object LocalLibraryProvider {
         val dir = File(AppPath.x_cache_download)
         if (!dir.exists() || !dir.isDirectory) return emptyList()
 
-        val files = dir.listFiles().orEmpty()
-        val mp4Files = files.filter { it.isFile && it.extension.equals("mp4", ignoreCase = true) && it.length() > 0L }
-            .associateBy { it.nameWithoutExtension }
-
-        val infoFiles = files.filter { it.isFile && it.extension.equals("info", ignoreCase = true) && it.length() > 0L }
+        val files = dir.listFiles() ?: return emptyList()
+        val mp4Files = HashMap<String, File>()
+        val infoFiles = ArrayList<File>()
+        for (f in files) {
+            if (!f.isFile || f.length() == 0L) continue
+            val ext = f.extension
+            if (ext.equals("mp4", ignoreCase = true)) {
+                mp4Files[f.nameWithoutExtension] = f
+            } else if (ext.equals("info", ignoreCase = true)) {
+                infoFiles.add(f)
+            }
+        }
 
         return infoFiles.mapNotNull { infoFile ->
             parseXInfoFile(infoFile, dir, mp4Files)
@@ -402,9 +411,10 @@ object LocalLibraryProvider {
 
     private fun loadRFromLikes(rLikesDir: File, existingIds: Set<String>): List<WebMediaItem> {
         val result = mutableListOf<WebMediaItem>()
-        val likesFiles = rLikesDir.listFiles()?.filter { it.isFile && it.extension == "likes" }.orEmpty()
+        val likesFiles = rLikesDir.listFiles() ?: return emptyList()
 
         for (likesFile in likesFiles) {
+            if (!likesFile.isFile || likesFile.extension != "likes") continue
             val idStr = likesFile.nameWithoutExtension
             if (existingIds.contains(idStr)) continue
 
@@ -443,30 +453,31 @@ object LocalLibraryProvider {
     // --- Загрузка L ---
     private fun loadLItems(): List<WebMediaItem> {
         val result = mutableListOf<WebMediaItem>()
-
-        val likesDir = File(AppPath.l_likes)
-        if (likesDir.exists() && likesDir.isDirectory) {
-            likesDir.listFiles()?.filter { it.isDirectory }?.forEach { folder ->
-                parseLFolder(folder, null)?.let { result.add(it) }
-            }
-        }
-
-        val albumsDir = File(AppPath.l_albums)
-        if (albumsDir.exists() && albumsDir.isDirectory) {
-            albumsDir.listFiles()?.filter { it.isDirectory }?.forEach { folder ->
-                parseLFolder(folder, null)?.let { result.add(it) }
-            }
-        }
-
-        val colRoot = File(AppPath.l_collection)
-        if (colRoot.exists() && colRoot.isDirectory) {
-            colRoot.listFiles()?.filter { it.isDirectory }?.forEach { colDir ->
-                colDir.listFiles()?.filter { it.isDirectory }?.forEach { itemDir ->
-                    parseLFolder(itemDir, colDir.name)?.let { result.add(it) }
-                }
-            }
-        }
+        loadFoldersInDir(File(AppPath.l_likes), result)
+        loadFoldersInDir(File(AppPath.l_albums), result)
+        loadLCollectionsItems(result)
         return result
+    }
+
+    private fun loadFoldersInDir(dir: File, result: MutableList<WebMediaItem>, collectionName: String? = null) {
+        if (!dir.exists() || !dir.isDirectory) return
+        val folders = dir.listFiles() ?: return
+        for (folder in folders) {
+            if (folder.isDirectory) {
+                parseLFolder(folder, collectionName)?.let { result.add(it) }
+            }
+        }
+    }
+
+    private fun loadLCollectionsItems(result: MutableList<WebMediaItem>) {
+        val colRoot = File(AppPath.l_collection)
+        if (!colRoot.exists() || !colRoot.isDirectory) return
+        val colDirs = colRoot.listFiles() ?: return
+        for (colDir in colDirs) {
+            if (colDir.isDirectory) {
+                loadFoldersInDir(colDir, result, colDir.name)
+            }
+        }
     }
 
     private data class LResolvedUrls(
@@ -535,7 +546,13 @@ object LocalLibraryProvider {
                 collectionName = collectionName
             )
 
-            val sizeBytes = folder.listFiles()?.filter { it.isFile }?.sumOf { it.length() } ?: 0L
+            var sizeBytes = 0L
+            val files = folder.listFiles()
+            if (files != null) {
+                for (f in files) {
+                    if (f.isFile) sizeBytes += f.length()
+                }
+            }
             val id = if (collectionName != null) "${collectionName}_${folder.name}" else folder.name
 
             WebMediaItem(

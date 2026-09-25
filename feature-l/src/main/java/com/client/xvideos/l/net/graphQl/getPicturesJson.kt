@@ -5,45 +5,44 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
-fun getPicturesJson(albumId: Int, page: Int = 1): String {
-    val query = """
-        query ListAlbumPictures(${'$'}input: PictureListInput!) {
-            picture {
-                list(input: ${'$'}input) {
-                    info { ...pageInfo }
-                    items { ...PicUrls }
-                }
-            }
+private val LIST_ALBUM_PICTURES_QUERY = """
+query ListAlbumPictures(${'$'}input: PictureListInput!) {
+    picture {
+        list(input: ${'$'}input) {
+            info { ...pageInfo }
+            items { ...PicUrls }
         }
-        
-        fragment pageInfo on FacetCollectionInfo {
-           page
-           total_items
-           total_pages
-           items_per_page
-           url_complete
-        }
-        
-        fragment PicUrls on Picture {
-           id
-           url
-           height
-           width
-           is_animated
-           url_to_original
-           url_to_video
-           thumbnails {
-               width
-               height
-               size
-               url
-           }
-        }
-        
-    """.trimIndent()
+    }
+}
 
+fragment pageInfo on FacetCollectionInfo {
+   page
+   total_items
+   total_pages
+   items_per_page
+   url_complete
+}
+
+fragment PicUrls on Picture {
+   id
+   url
+   height
+   width
+   is_animated
+   url_to_original
+   url_to_video
+   thumbnails {
+       width
+       height
+       size
+       url
+   }
+}
+""".trimIndent()
+
+fun getPicturesJson(albumId: Int, page: Int = 1): String {
     val json = buildJsonObject {
-        put("query", query)
+        put("query", LIST_ALBUM_PICTURES_QUERY)
         putJsonObject("variables") {
             putJsonObject("input") {
                 put("display", "position")

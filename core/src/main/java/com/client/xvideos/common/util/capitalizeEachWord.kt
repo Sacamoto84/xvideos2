@@ -16,7 +16,22 @@ import java.util.Locale
  *
  * @return Новая строка, в которой каждое слово начинается с заглавной буквы.
  */
-fun String.capitalizeEachWord(): String =
-    lowercase(Locale.getDefault())
-        .split(" ")
-        .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
+fun String.capitalizeEachWord(): String {
+    if (isEmpty()) return ""
+    val lower = lowercase(Locale.getDefault())
+    val sb = StringBuilder(lower.length)
+    var capitalizeNext = true
+    for (i in 0 until lower.length) {
+        val c = lower[i]
+        if (c == ' ') {
+            sb.append(' ')
+            capitalizeNext = true
+        } else if (capitalizeNext) {
+            sb.append(c.uppercaseChar())
+            capitalizeNext = false
+        } else {
+            sb.append(c)
+        }
+    }
+    return sb.toString()
+}

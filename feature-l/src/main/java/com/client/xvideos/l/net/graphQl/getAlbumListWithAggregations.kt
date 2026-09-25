@@ -5,60 +5,58 @@ import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import java.util.Locale.getDefault
 
+private val ALBUM_LIST_WITH_AGGREGATIONS_QUERY = """
+query AlbumListWithAggregations(${'$'}input: AlbumListInput!, ${'$'}aggregations: [AlbumAggregationNames!]!) {
+  album {
+    list_with_aggregations(input: ${'$'}input, aggregations: ${'$'}aggregations) {
+      active_filters {
+        field {
+          short_name
+          url_name
+          long_name
+          supports_intersection
+          supports_summation
+        }
+        terms_in_search
+        values {
+          term
+          url_to_remove
+          description
+          neg_in_search
+        }
+      }
+      aggregations {
+        field {
+          short_name
+          url_name
+          long_name
+          supports_intersection
+          supports_summation
+        }
+        values {
+          count
+          term
+          is_active
+        }
+      }
+    }
+  }
+}
+""".trimIndent()
+    .replace("\n", "\\n")
+    .replace("\"", "\\\"")
+
 fun getAlbumListWithAggregations(
     page: Int = 1,
     filter: AlbumListFilter,
 ): String {
-
-    val query = """
-        query AlbumListWithAggregations(${'$'}input: AlbumListInput!, ${'$'}aggregations: [AlbumAggregationNames!]!) {
-          album {
-            list_with_aggregations(input: ${'$'}input, aggregations: ${'$'}aggregations) {
-              active_filters {
-                field {
-                  short_name
-                  url_name
-                  long_name
-                  supports_intersection
-                  supports_summation
-                }
-                terms_in_search
-                values {
-                  term
-                  url_to_remove
-                  description
-                  neg_in_search
-                }
-              }
-              aggregations {
-                field {
-                  short_name
-                  url_name
-                  long_name
-                  supports_intersection
-                  supports_summation
-                }
-                values {
-                  count
-                  term
-                  is_active
-                }
-              }
-            }
-          }
-        }
-    """.trimIndent()
-        .replace("\n", "\\n")  // превращаем новые строки в \n для JSON
-        .replace("\"", "\\\"")  // экранируем кавычки
-
-    val str = StringBuilder()
-
+    val str = StringBuilder(1024)
 
     str.append(
         """
         {
           "operationName": "AlbumListWithAggregations",
-          "query": "$query",
+          "query": "$ALBUM_LIST_WITH_AGGREGATIONS_QUERY",
           "variables": {
             "input": {
              "display": "${filter.display}",
@@ -79,24 +77,24 @@ fun getAlbumListWithAggregations(
         str.append("""{ "name": "search_query", "value": "${filter.searchQuery}" },""")
     }
 
-    if (filter.tagPlus.isNotEmpty() or filter.tagMinus.isNotEmpty()) {
+    if (filter.tagPlus.isNotEmpty() || filter.tagMinus.isNotEmpty()) {
         val tags = StringBuilder()
         filter.tagPlus.forEach {
-            tags.append("+${it.replace(" ", "_").lowercase(getDefault())}")
+            tags.append('+').append(it.replace(' ', '_').lowercase(getDefault()))
         }
         filter.tagMinus.forEach {
-            tags.append("-${it.replace(" ", "_").lowercase(getDefault())}")
+            tags.append('-').append(it.replace(' ', '_').lowercase(getDefault()))
         }
         str.append("""{ "name": "tagged", "value": "$tags" },""")
     }
 
-    if (filter.genresPlus.isNotEmpty() or filter.genresMinus.isNotEmpty()) {
+    if (filter.genresPlus.isNotEmpty() || filter.genresMinus.isNotEmpty()) {
         val genres = StringBuilder()
         filter.genresPlus.forEach {
-            genres.append("+${it.id}")
+            genres.append('+').append(it.id)
         }
         filter.genresMinus.forEach {
-            genres.append("-${it.id}")
+            genres.append('-').append(it.id)
         }
         str.append("""{ "name": "genre_ids", "value": "$genres" },""")
     }
@@ -124,6 +122,4 @@ fun getAlbumListWithAggregations(
     )
 
     return str.toString()
-
-
 }

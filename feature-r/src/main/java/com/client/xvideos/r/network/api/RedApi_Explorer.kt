@@ -4,6 +4,8 @@ import com.client.xvideos.r.model.NichesResponse
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
+private const val PATH_EXPLORER_NICHES = "/v2/niches?order=subscribers&previews=yes&sort=desc&page={page}&count={count}"
+
 class RedApi_Explorer(val api: ApiClient) {
 
     /**
@@ -40,7 +42,7 @@ class RedApi_Explorer(val api: ApiClient) {
     ): Result<NichesResponse> {
         val route = Route(
             method = "GET",
-            path = "/v2/niches?order=subscribers&previews=yes&sort=desc&page={page}&count={count}",
+            path = PATH_EXPLORER_NICHES,
             "page" to page,
             "count" to count
         )

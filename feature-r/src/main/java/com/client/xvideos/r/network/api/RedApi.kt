@@ -23,6 +23,16 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val PATH_TOP7 = "/v2/gifs/search?order=top7&count={count}&page={page}&type={type}"
+private const val PATH_TOP28 = "/v2/gifs/search?order=top28&count={count}&page={page}&type={type}"
+private const val PATH_TOP = "/v2/gifs/search?order=top&count={count}&page={page}&type={type}"
+private const val PATH_TRENDING = "/v2/gifs/search?order=trending&count={count}&page={page}&type={type}"
+private const val PATH_LATEST = "/v2/gifs/search?order=latest&count={count}&page={page}&type={type}"
+private const val PATH_USER_SEARCH_TAGS = "/v2/users/{username}/search?order={order}&page={page}&count={count}&tags={tags}"
+private const val PATH_USER_SEARCH = "/v2/users/{username}/search?page={page}&count={count}&order={order}"
+private const val PATH_USER_SEARCH_TYPE_TAGS = "/v2/users/{username}/search?order={order}&page={page}&count={count}&type={type}&tags={tags}"
+private const val PATH_USER_SEARCH_TYPE = "/v2/users/{username}/search?page={page}&count={count}&order={order}&type={type}"
+
 @Singleton
 class RedApi @Inject constructor(
    db: AppFileDatabase
@@ -56,7 +66,7 @@ class RedApi @Inject constructor(
     ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
-            path = "/v2/gifs/search?order=top7&count={count}&page={page}&type={type}",
+            path = PATH_TOP7,
             "count" to count,
             "page" to page,
             "type" to type.value,
@@ -72,7 +82,7 @@ class RedApi @Inject constructor(
     ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
-            path = "/v2/gifs/search?order=top28&count={count}&page={page}&type={type}",
+            path = PATH_TOP28,
             "count" to count,
             "page" to page,
             "type" to type.value
@@ -97,7 +107,7 @@ class RedApi @Inject constructor(
     ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
-            path = "/v2/gifs/search?order=top&count={count}&page={page}&type={type}",
+            path = PATH_TOP,
             "count" to count,
             "page" to page,
             "type" to type.value
@@ -113,7 +123,7 @@ class RedApi @Inject constructor(
     ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
-            path = "/v2/gifs/search?order=trending&count={count}&page={page}&type={type}",
+            path = PATH_TRENDING,
             "count" to count,
             "page" to page,
             "type" to type.value
@@ -130,7 +140,7 @@ class RedApi @Inject constructor(
     ): Result<MediaResponse> {
         val route = Route(
             method = "GET",
-            path = "/v2/gifs/search?order=latest&count={count}&page={page}&type={type}",
+            path = PATH_LATEST,
             "count" to count,
             "page" to page,
             "type" to type.value
@@ -180,7 +190,7 @@ class RedApi @Inject constructor(
 
             if (tags.isNotEmpty()) Route(
                 method = "GET",
-                path = "/v2/users/{username}/search?order={order}&page={page}&count={count}&tags={tags}",
+                path = PATH_USER_SEARCH_TAGS,
                 "username" to userName,
                 "page" to page,
                 "count" to count,
@@ -189,7 +199,7 @@ class RedApi @Inject constructor(
             )
             else Route(
                 method = "GET",
-                path = "/v2/users/{username}/search?page={page}&count={count}&order={order}",
+                path = PATH_USER_SEARCH,
                 "username" to userName,
                 "page" to page,
                 "count" to count,
@@ -198,7 +208,7 @@ class RedApi @Inject constructor(
         } else {
             if (tags.isNotEmpty()) Route(
                 method = "GET",
-                path = "/v2/users/{username}/search?order={order}&page={page}&count={count}&type={type}&tags={tags}",
+                path = PATH_USER_SEARCH_TYPE_TAGS,
                 "username" to userName,
                 "page" to page,
                 "count" to count,
@@ -208,7 +218,7 @@ class RedApi @Inject constructor(
             )
             else Route(
                 method = "GET",
-                path = "/v2/users/{username}/search?page={page}&count={count}&order={order}&type={type}",
+                path = PATH_USER_SEARCH_TYPE,
                 "username" to userName,
                 "page" to page,
                 "count" to count,
