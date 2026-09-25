@@ -36,6 +36,13 @@ private val CONTENT_SPACING = 8.dp
 private val ICON_SIZE = 20.dp
 private const val TEXT_SAVE_ALBUM = "Сохранить альбом"
 private const val TEXT_REMOVE_ALBUM = "Удалить из сохранённых"
+private val SAVE_ALBUM_BUTTON_BASE_MODIFIER = Modifier
+    .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
+    .height(BUTTON_HEIGHT)
+    .fillMaxWidth()
+    .clip(SAVE_ALBUM_BUTTON_SHAPE)
+private val CONTENT_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(CONTENT_SPACING)
+private val ICON_MODIFIER = Modifier.size(ICON_SIZE)
 
 @Composable
 fun AlbumInfoButtonSaveAlbum(
@@ -61,24 +68,21 @@ fun AlbumInfoButtonSaveAlbum(
 
     Box(
         modifier = modifier
-            .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
-            .height(BUTTON_HEIGHT)
-            .fillMaxWidth()
-            .clip(SAVE_ALBUM_BUTTON_SHAPE)
+            .then(SAVE_ALBUM_BUTTON_BASE_MODIFIER)
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SAVE_ALBUM_BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(CONTENT_SPACING),
+            horizontalArrangement = CONTENT_ROW_HORIZONTAL_ARRANGEMENT,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = iconVector,
-                contentDescription = null,
+                contentDescription = buttonText,
                 tint = iconTint,
-                modifier = Modifier.size(ICON_SIZE)
+                modifier = ICON_MODIFIER
             )
             Text(
                 text = buttonText,

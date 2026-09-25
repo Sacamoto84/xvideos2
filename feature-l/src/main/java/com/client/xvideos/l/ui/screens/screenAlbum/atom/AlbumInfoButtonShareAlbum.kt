@@ -26,19 +26,25 @@ private val BUTTON_BOTTOM_PADDING = 4.dp
 private val BUTTON_BORDER_WIDTH = 1.dp
 private const val TEXT_SHARE_ALBUM = "Share Album (P2P)"
 
+private val SHARE_ALBUM_BUTTON_BASE_MODIFIER = Modifier
+    .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
+    .height(BUTTON_HEIGHT)
+    .fillMaxWidth()
+    .clip(SHARE_ALBUM_BUTTON_SHAPE)
+
 /** Кнопка «поделиться альбомом по P2P» в шапке ScreenLAlbum. */
 @Composable
-fun AlbumInfoButtonShareAlbum(onClick: () -> Unit) {
-    val buttonTextStyle = remember {
+fun AlbumInfoButtonShareAlbum(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val buttonTextStyle = remember(Theme.L.Type.button) {
         Theme.L.Type.button.copy(color = Color.White)
     }
 
     Box(
-        modifier = Modifier
-            .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
-            .height(BUTTON_HEIGHT)
-            .fillMaxWidth()
-            .clip(SHARE_ALBUM_BUTTON_SHAPE)
+        modifier = modifier
+            .then(SHARE_ALBUM_BUTTON_BASE_MODIFIER)
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SHARE_ALBUM_BUTTON_SHAPE)
             .background(Theme.L.grey6)
             .clickable(onClick = onClick),

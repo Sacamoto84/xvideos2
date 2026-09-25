@@ -49,6 +49,15 @@ private val PROGRESS_BAR_MODIFIER = Modifier
     .fillMaxWidth()
     .height(PROGRESS_BAR_HEIGHT)
     .clip(PROGRESS_SHAPE)
+private val STORAGE_ROW_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .background(SettingsCardColor)
+    .padding(horizontal = STORAGE_ROW_HORIZONTAL_PADDING, vertical = STORAGE_ROW_VERTICAL_PADDING)
+private val ICON_SPACER_MODIFIER = Modifier.width(ICON_SPACER_WIDTH)
+private val PROGRESS_BAR_SPACER_MODIFIER = Modifier.height(PROGRESS_BAR_HEIGHT)
+private val SUBTITLE_SPACER_MODIFIER = Modifier.height(SUBTITLE_SPACER_HEIGHT)
+private val INNER_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val INNER_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
 private val STORAGE_ROW_TITLE_STYLE = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
 private val STORAGE_ROW_SUBTITLE_STYLE = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
 private val STORAGE_CAPTION_STYLE = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
@@ -124,18 +133,15 @@ internal fun StorageProgressRow(
         "${sectionSubtitle(stat.key)}$TEXT_FILES_COUNT_PREFIX${stat.fileCount}"
     }
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(SettingsCardColor)
-            .padding(horizontal = STORAGE_ROW_HORIZONTAL_PADDING, vertical = STORAGE_ROW_VERTICAL_PADDING),
+        modifier = modifier.then(STORAGE_ROW_BASE_MODIFIER),
         verticalAlignment = Alignment.CenterVertically
     ) {
         SettingsIcon(storageIcon(stat.key))
-        Spacer(Modifier.width(ICON_SPACER_WIDTH))
+        Spacer(ICON_SPACER_MODIFIER)
         Column(modifier = Modifier.weight(1f)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = INNER_ROW_BASE_MODIFIER,
+                horizontalArrangement = INNER_ROW_HORIZONTAL_ARRANGEMENT,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -149,14 +155,14 @@ internal fun StorageProgressRow(
                     style = STORAGE_ROW_SUBTITLE_STYLE
                 )
             }
-            Spacer(Modifier.height(PROGRESS_BAR_HEIGHT))
+            Spacer(PROGRESS_BAR_SPACER_MODIFIER)
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = PROGRESS_BAR_MODIFIER,
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor
             )
-            Spacer(Modifier.height(SUBTITLE_SPACER_HEIGHT))
+            Spacer(SUBTITLE_SPACER_MODIFIER)
             Text(
                 text = subtitleText,
                 color = SettingsRowTextSecondary,

@@ -120,7 +120,7 @@ fun X_DashboardExpandMenuContent(
         {
             Icon(
                 imageVector = favoriteIcon,
-                contentDescription = null
+                contentDescription = TEXT_FAVORITE
             )
         }
     }
@@ -128,7 +128,7 @@ fun X_DashboardExpandMenuContent(
         {
             Icon(
                 Icons.Outlined.Save,
-                contentDescription = null
+                contentDescription = TEXT_SAVE
             )
         }
     }
@@ -136,7 +136,7 @@ fun X_DashboardExpandMenuContent(
         {
             Icon(
                 Icons.Outlined.SaveAlt,
-                contentDescription = null
+                contentDescription = TEXT_SAVE_TO_GALLERY
             )
         }
     }

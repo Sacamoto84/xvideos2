@@ -30,6 +30,11 @@ private val SUBSCRIPTION_AVATAR_PLACEHOLDER_BG = Color.DarkGray
 private val AVATAR_BOX_SIZE = 96.dp
 private val PERSON_ICON_SIZE = 32.dp
 private val PERSON_ICON_TINT = Color.White
+private val AVATAR_BOX_BASE_MODIFIER = Modifier
+    .clip(SUBSCRIPTION_AVATAR_SHAPE)
+    .size(AVATAR_BOX_SIZE)
+    .background(SUBSCRIPTION_AVATAR_PLACEHOLDER_BG)
+private val PERSON_ICON_MODIFIER = Modifier.size(PERSON_ICON_SIZE)
 private const val DIALOG_TITLE = "Удалить подписку?"
 private const val CONFIRM_TEXT = "Удалить"
 private const val TEXT_DELETE_AUTHOR_PREFIX = "Удалить автора «"
@@ -55,10 +60,7 @@ fun DialogSubscriptionDelete(
         val iconContent: @Composable () -> Unit = remember(pending.urlProfile) {
             {
                 Box(
-                    modifier = Modifier
-                        .clip(SUBSCRIPTION_AVATAR_SHAPE)
-                        .size(AVATAR_BOX_SIZE)
-                        .background(SUBSCRIPTION_AVATAR_PLACEHOLDER_BG),
+                    modifier = AVATAR_BOX_BASE_MODIFIER,
                     contentAlignment = Alignment.Center
                 ) {
                     val url = pending.urlProfile
@@ -68,7 +70,7 @@ fun DialogSubscriptionDelete(
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            modifier = Modifier.size(PERSON_ICON_SIZE),
+                            modifier = PERSON_ICON_MODIFIER,
                             tint = PERSON_ICON_TINT
                         )
                     }

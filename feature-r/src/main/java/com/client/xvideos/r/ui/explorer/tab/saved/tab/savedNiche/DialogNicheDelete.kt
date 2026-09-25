@@ -20,6 +20,9 @@ import com.client.xvideos.ui.theme.XvideosTheme
 private val NICHE_ICON_CORNER = 8.dp
 private val NICHE_ICON_SHAPE = RoundedCornerShape(NICHE_ICON_CORNER)
 private val NICHE_ICON_SIZE = 96.dp
+private val NICHE_ICON_BASE_MODIFIER = Modifier
+    .clip(NICHE_ICON_SHAPE)
+    .size(NICHE_ICON_SIZE)
 private const val DIALOG_TITLE = "Удалить группу?"
 private const val CONFIRM_TEXT = "Удалить"
 private const val TEXT_DELETE_NICHE_PREFIX = "Удалить «"
@@ -46,9 +49,7 @@ fun DialogNicheDelete(
             {
                 UrlImage(
                     url = pending.thumbnail,
-                    modifier = Modifier
-                        .clip(NICHE_ICON_SHAPE)
-                        .size(NICHE_ICON_SIZE)
+                    modifier = NICHE_ICON_BASE_MODIFIER
                 )
             }
         }

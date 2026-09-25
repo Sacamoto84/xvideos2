@@ -37,9 +37,6 @@ fun ConfirmDeleteFavoriteDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val handleConfirm = remember(onConfirm) { { onConfirm() } }
-    val handleDismiss = remember(onDismiss) { { onDismiss() } }
-
     val iconContent: @Composable () -> Unit = remember(posterUrl) {
         {
             UrlImage(
@@ -51,10 +48,10 @@ fun ConfirmDeleteFavoriteDialog(
 
     LavenderDialog(
         title = DIALOG_TITLE,
-        onDismiss = handleDismiss,
+        onDismiss = onDismiss,
         icon = iconContent,
         confirmText = CONFIRM_TEXT,
-        onConfirm = handleConfirm,
+        onConfirm = onConfirm,
         destructive = true,
     )
 }
