@@ -66,6 +66,12 @@ private val TITLE_START_PADDING = 4.dp
 private val TITLE_FONT_SIZE = 18.sp
 private const val CD_BACK = "Назад"
 private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val TOP_BAR_HORIZONTAL_PADDING_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(start = TOP_BAR_START_PADDING, end = TOP_BAR_END_PADDING)
+private val TITLE_MODIFIER = Modifier.padding(start = TITLE_START_PADDING)
+private val CONTENT_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
+private val LAZY_ROW_MODIFIER = Modifier.fillMaxSize()
 
 class ScreenCollectionName(
     val collectionName: String,
@@ -112,9 +118,8 @@ class ScreenCollectionName(
             topBar = {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(top = getTopInsetDp())
-                        .padding(start = TOP_BAR_START_PADDING, end = TOP_BAR_END_PADDING),
+                        .then(TOP_BAR_HORIZONTAL_PADDING_MODIFIER),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = closeCollection) {
@@ -126,7 +131,7 @@ class ScreenCollectionName(
                     }
                     Text(
                         text = titleText,
-                        modifier = Modifier.padding(start = TITLE_START_PADDING),
+                        modifier = TITLE_MODIFIER,
                         color = Theme.R.colorYellow,
                         fontSize = TITLE_FONT_SIZE,
                         fontFamily = Theme.R.fontFamilyPopinsRegular
@@ -135,14 +140,12 @@ class ScreenCollectionName(
             }
         ) { padding ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier = CONTENT_BOX_BASE_MODIFIER.padding(padding),
                 contentAlignment = Alignment.Center
             ) {
                 LazyRow123(
                     host = vm.likedHost,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = LAZY_ROW_MODIFIER,
                     onClickOpenProfile = onClickOpenProfile
                 )
             }

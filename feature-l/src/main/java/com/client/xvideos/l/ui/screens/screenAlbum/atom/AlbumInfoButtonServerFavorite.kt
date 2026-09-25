@@ -38,6 +38,14 @@ private val PROGRESS_INDICATOR_SIZE = 20.dp
 private val PROGRESS_STROKE_WIDTH = 2.dp
 private const val TEXT_REMOVE_FROM_SERVER = "Удалить альбом с сервера"
 private const val TEXT_ADD_TO_SERVER = "Добавить альбом на сервер"
+private val SERVER_FAVORITE_BUTTON_BASE_MODIFIER = Modifier
+    .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
+    .height(BUTTON_HEIGHT)
+    .fillMaxWidth()
+    .clip(SERVER_FAVORITE_BUTTON_SHAPE)
+private val CONTENT_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(CONTENT_SPACING)
+private val ICON_MODIFIER = Modifier.size(ICON_SIZE)
+private val PROGRESS_INDICATOR_MODIFIER = Modifier.size(PROGRESS_INDICATOR_SIZE)
 
 /**
  * Кнопка «добавить/удалить альбом из избранного на сервере Luscious» в шапке ScreenLAlbum.
@@ -67,10 +75,7 @@ fun AlbumInfoButtonServerFavorite(
 
     Box(
         modifier = modifier
-            .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
-            .height(BUTTON_HEIGHT)
-            .fillMaxWidth()
-            .clip(SERVER_FAVORITE_BUTTON_SHAPE)
+            .then(SERVER_FAVORITE_BUTTON_BASE_MODIFIER)
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SERVER_FAVORITE_BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(enabled = !isLoading, onClick = onClick),
@@ -78,20 +83,20 @@ fun AlbumInfoButtonServerFavorite(
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(PROGRESS_INDICATOR_SIZE),
+                modifier = PROGRESS_INDICATOR_MODIFIER,
                 color = Color.White,
                 strokeWidth = PROGRESS_STROKE_WIDTH
             )
         } else {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(CONTENT_SPACING),
+                horizontalArrangement = CONTENT_ROW_HORIZONTAL_ARRANGEMENT,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = iconVector,
-                    contentDescription = null,
+                    contentDescription = buttonText,
                     tint = iconTint,
-                    modifier = Modifier.size(ICON_SIZE)
+                    modifier = ICON_MODIFIER
                 )
                 Text(
                     text = buttonText,

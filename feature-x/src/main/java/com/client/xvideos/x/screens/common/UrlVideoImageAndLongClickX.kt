@@ -21,9 +21,12 @@ import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parserVideoPreviewFromImageUrl
+import kotlinx.collections.immutable.persistentListOf
 import timber.log.Timber
 
 private const val NULL_STRING = "null"
+private val VIDEO_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
+private val POSTER_IMAGE_MODIFIER = Modifier.fillMaxWidth()
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -44,9 +47,9 @@ fun UrlVideoImageAndLongClickX(
     }
     val fallbackUrls = remember(item.previewVideo) {
         if (item.previewVideo.isNotBlank() && !item.previewVideo.equals(NULL_STRING, ignoreCase = true)) {
-            listOf(item.previewVideo)
+            persistentListOf(item.previewVideo)
         } else {
-            emptyList()
+            persistentListOf()
         }
     }
 
@@ -94,7 +97,7 @@ fun UrlVideoImageAndLongClickX(
 
     Box(
         modifier = modifier
-            .fillMaxSize()
+            .then(VIDEO_BOX_BASE_MODIFIER)
             .combinedClickable(
                 onDoubleClick = handleDoubleClick,
                 onLongClick = handleLongClick,
@@ -105,12 +108,12 @@ fun UrlVideoImageAndLongClickX(
             UrlVideoLite(
                 url = previewVideoUrl.orEmpty(),
                 posterUrl = item.previewImage,
-                modifier = Modifier.fillMaxSize(),
+                modifier = VIDEO_BOX_BASE_MODIFIER,
                 fallbackUrls = fallbackUrls,
                 onClick = handleVideoClick
             )
         } else {
-            UrlImage(item.previewImage, modifier = Modifier.fillMaxWidth())
+            UrlImage(item.previewImage, modifier = POSTER_IMAGE_MODIFIER)
             overlay()
         }
     }

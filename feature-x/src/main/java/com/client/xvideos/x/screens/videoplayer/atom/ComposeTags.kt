@@ -107,6 +107,12 @@ private val TAG_CONTAINER_EXPANDED_MODIFIER = Modifier
     .padding(horizontal = TAG_CONTAINER_PADDING, vertical = TAG_CONTAINER_PADDING)
     .heightIn(max = TAG_CONTAINER_MAX_HEIGHT)
 
+private val TAG_CHIP_CONTENT_PADDING_MODIFIER = Modifier.padding(horizontal = TAG_CHIP_CONTENT_PADDING)
+private val TAG_TOGGLE_PADDING_MODIFIER = Modifier.padding(start = TAG_TOGGLE_START_PADDING, end = TAG_TOGGLE_END_PADDING)
+private val TAG_TOGGLE_ICON_MODIFIER = Modifier.size(TAG_TOGGLE_ICON_SIZE)
+private val FLOW_ROW_VERTICAL_ARRANGEMENT = Arrangement.Center
+private val FLOW_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.Start
+
 private const val CD_EXPAND_TAGS = "Развернуть теги"
 private const val CD_COLLAPSE_TAGS = "Свернуть теги"
 private const val TEXT_COLLAPSE = "Свернуть"
@@ -230,8 +236,8 @@ fun ComposeTags(
             .then(containerModifier)
     ) {
         FlowRow(
-            verticalArrangement = Arrangement.Center,
-            horizontalArrangement = Arrangement.Start,
+            verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT,
+            horizontalArrangement = FLOW_ROW_HORIZONTAL_ARRANGEMENT,
         ) {
             tagsState.visibleItems.forEach { item ->
                 key("${item::class.simpleName}_${item.name}") {
@@ -302,7 +308,7 @@ private fun TagChip(
         modifier = modifier
             .then(TAG_CHIP_BASE_MODIFIER)
             .clickable(onClick = onClick)
-            .padding(horizontal = TAG_CHIP_CONTENT_PADDING),
+            .then(TAG_CHIP_CONTENT_PADDING_MODIFIER),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -324,7 +330,7 @@ private fun TagToggleChip(
         modifier = modifier
             .then(TAG_TOGGLE_BASE_MODIFIER)
             .clickable(onClick = onClick)
-            .padding(start = TAG_TOGGLE_START_PADDING, end = TAG_TOGGLE_END_PADDING),
+            .then(TAG_TOGGLE_PADDING_MODIFIER),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -335,8 +341,7 @@ private fun TagToggleChip(
             imageVector = Icons.Default.ArrowDropDown,
             contentDescription = contentDescription,
             tint = Color.White,
-            modifier = Modifier
-                .size(TAG_TOGGLE_ICON_SIZE)
+            modifier = TAG_TOGGLE_ICON_MODIFIER
                 .rotate(if (isExpanded) ROTATION_EXPANDED else ROTATION_COLLAPSED),
         )
     }

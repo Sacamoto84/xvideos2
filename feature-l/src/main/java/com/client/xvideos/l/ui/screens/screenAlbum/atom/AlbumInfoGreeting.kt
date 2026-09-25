@@ -14,6 +14,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,14 @@ private val HEADER_FONT_SIZE = 16.sp
 private val GENRE_FONT_SIZE = 14.sp
 private const val LABEL_GENRES = "Genres: "
 
+private val GENRE_CHIP_BASE_MODIFIER = Modifier
+    .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
+    .clip(GENRE_CHIP_SHAPE)
+
+private val GENRE_CHIP_CONTENT_PADDING_MODIFIER = Modifier.padding(CHIP_CONTENT_PADDING)
+private val HEADER_TEXT_MODIFIER = Modifier.padding(vertical = HEADER_VERTICAL_PADDING)
+private val FLOW_ROW_VERTICAL_ARRANGEMENT = Arrangement.Center
+
 @Composable
 fun AlbumInfoGreeting(
     parsed: AlbumDetails,
@@ -51,32 +60,45 @@ fun AlbumInfoGreeting(
 
     FlowRow(
         modifier = modifier,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT
     ) {
         Text(
             text = LABEL_GENRES,
             color = Theme.L.textColor,
             style = headerStyle,
-            modifier = Modifier.padding(vertical = HEADER_VERTICAL_PADDING)
+            modifier = HEADER_TEXT_MODIFIER
         )
 
         parsed.genres.forEach { item ->
             key(item.id) {
                 val handleClick = remember(item, onGenreClick) { { onGenreClick(item) } }
-                Text(
-                    text = item.title,
-                    modifier = Modifier
-                        .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
-                        .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
-                        .clip(GENRE_CHIP_SHAPE)
-                        .clickable(onClick = handleClick)
-                        .padding(CHIP_CONTENT_PADDING),
-                    color = Theme.L.primaryColor,
-                    style = genreTextStyle
+                GenreChip(
+                    item = item,
+                    style = genreTextStyle,
+                    onClick = handleClick
                 )
             }
         }
     }
+}
+
+@Composable
+private fun GenreChip(
+    item: Genre,
+    style: TextStyle,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = item.title,
+        modifier = modifier
+            .then(GENRE_CHIP_BASE_MODIFIER)
+            .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
+            .clickable(onClick = onClick)
+            .then(GENRE_CHIP_CONTENT_PADDING_MODIFIER),
+        color = Theme.L.primaryColor,
+        style = style
+    )
 }
 
 @Preview

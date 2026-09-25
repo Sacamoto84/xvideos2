@@ -74,6 +74,9 @@ private const val BUTTON_SAVE = "Сохранить"
 private const val TEXT_CUSTOM_URL_DESCRIPTION = "Введите HTTPS URL эндпоинта DoH резолвера (поддерживаются серверы с JSON API, RFC 8427):"
 private const val PLACEHOLDER_URL = "https://dns.example.com/dns-query"
 private val DIALOG_SPACER_HEIGHT = 8.dp
+private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val DIALOG_SPACER_MODIFIER = Modifier.height(DIALOG_SPACER_HEIGHT)
+private val DIALOG_FIELD_MODIFIER = Modifier.fillMaxWidth()
 
 @Composable
 internal fun NetworkSettingsSection(
@@ -132,7 +135,7 @@ internal fun NetworkSettingsSection(
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_DOH)
         SettingsGroup {
             SettingsSwitchRow(
@@ -182,7 +185,7 @@ private fun DohProviderSelectionGroup(
         if (customUrl.isNotBlank()) customUrl else HINT_ENTER_URL
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_PROVIDER)
         SettingsGroup {
             DohProvider.entries.forEachIndexed { index, provider ->
@@ -281,7 +284,7 @@ private fun NetworkParamsGroup(
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_NETWORK_PARAMS)
         SettingsGroup {
             SettingsSwitchRow(
@@ -334,7 +337,7 @@ private fun DohDiagnosticsGroup(
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_DIAGNOSTICS)
         SettingsGroup {
             SettingsListItem(
@@ -363,6 +366,9 @@ private fun CustomDohUrlDialog(
     var tempUrl by remember(initialUrl) { mutableStateOf(initialUrl) }
     val onConfirmSave: () -> Unit = remember(onSave) { { onSave(tempUrl.trim()) } }
     val onUrlChange: (String) -> Unit = remember { { newUrl -> tempUrl = newUrl } }
+    val placeholderContent: @Composable () -> Unit = remember {
+        { Text(PLACEHOLDER_URL) }
+    }
 
     LavenderDialog(
         title = TITLE_CUSTOM_URL_DIALOG,
@@ -375,13 +381,13 @@ private fun CustomDohUrlDialog(
                 style = Theme.L.Type.caption,
                 color = Theme.L.grey1
             )
-            Spacer(Modifier.height(DIALOG_SPACER_HEIGHT))
+            Spacer(DIALOG_SPACER_MODIFIER)
             OutlinedTextField(
                 value = tempUrl,
                 onValueChange = onUrlChange,
-                placeholder = { Text(PLACEHOLDER_URL) },
+                placeholder = placeholderContent,
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = DIALOG_FIELD_MODIFIER
             )
         }
     )

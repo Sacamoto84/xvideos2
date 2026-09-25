@@ -29,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -64,9 +65,20 @@ private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
 
 private val RADIO_SPACER_WIDTH = 12.dp
 private val DIALOG_ITEM_SPACING = 10.dp
+private val DIALOG_COLUMN_VERTICAL_ARRANGEMENT = Arrangement.spacedBy(DIALOG_ITEM_SPACING)
 private val TIMEOUT_ITEM_SPACING = 4.dp
 private val TIMEOUT_ITEM_HORIZONTAL_PADDING = 8.dp
 private val TIMEOUT_ITEM_VERTICAL_PADDING = 10.dp
+
+private val TIMEOUT_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val TIMEOUT_COLUMN_VERTICAL_ARRANGEMENT = Arrangement.spacedBy(TIMEOUT_ITEM_SPACING)
+private val TIMEOUT_ITEM_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .clip(TIMEOUT_ITEM_SHAPE)
+private val TIMEOUT_ITEM_PADDING_MODIFIER = Modifier
+    .padding(horizontal = TIMEOUT_ITEM_HORIZONTAL_PADDING, vertical = TIMEOUT_ITEM_VERTICAL_PADDING)
+private val RADIO_SPACER_MODIFIER = Modifier.width(RADIO_SPACER_WIDTH)
+private val PASSWORD_FIELD_BASE_MODIFIER = Modifier.fillMaxWidth()
 
 private const val CD_HIDE_CODE = "Скрыть код доступа"
 private const val CD_SHOW_CODE = "Показать код доступа"
@@ -267,7 +279,8 @@ fun AppLockSettingsSection(
 @Composable
 private fun CamouflageGroup(
     passwordSet: Boolean,
-    onEnableRequested: () -> Unit
+    onEnableRequested: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current.applicationContext
     val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
@@ -293,6 +306,7 @@ private fun CamouflageGroup(
     }
 
     SettingsSwitchRow(
+        modifier = modifier,
         icon = R.drawable.ic_launcher_calculator,
         text = TEXT_CAMOUFLAGE,
         subtitle = camouflageSubtitle,
@@ -516,7 +530,7 @@ internal fun AppLockPasswordDialog(
         onDismiss = onDismiss,
         content = {
             DisableAppLockAutofill()
-            Column(verticalArrangement = Arrangement.spacedBy(DIALOG_ITEM_SPACING)) {
+            Column(verticalArrangement = DIALOG_COLUMN_VERTICAL_ARRANGEMENT) {
                 if (needsCurrentPassword) {
                     PasswordSettingField(
                         value = currentPassword,
@@ -588,7 +602,8 @@ fun PasswordSettingField(
     onValueChange: (String) -> Unit,
     label: String,
     onDone: () -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    modifier: Modifier = Modifier
 ) {
     DisableAppLockAutofill()
 
@@ -608,7 +623,7 @@ fun PasswordSettingField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.then(PASSWORD_FIELD_BASE_MODIFIER),
         label = { Text(label) },
         singleLine = true,
         visualTransformation =
@@ -662,15 +677,17 @@ internal fun AppLockTimeoutDialog(
         dismissText = "Отмена",
         content = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(TIMEOUT_ITEM_SPACING)
+                modifier = TIMEOUT_COLUMN_BASE_MODIFIER,
+                verticalArrangement = TIMEOUT_COLUMN_VERTICAL_ARRANGEMENT
             ) {
                 AppLockTimeout.entries.forEach { timeout ->
-                    AppLockTimeoutItem(
-                        timeout = timeout,
-                        isSelected = (timeout == currentTimeout),
-                        onSelect = onSelect
-                    )
+                    key(timeout) {
+                        AppLockTimeoutItem(
+                            timeout = timeout,
+                            isSelected = (timeout == currentTimeout),
+                            onSelect = onSelect
+                        )
+                    }
                 }
             }
         }
@@ -681,7 +698,8 @@ internal fun AppLockTimeoutDialog(
 private fun AppLockTimeoutItem(
     timeout: AppLockTimeout,
     isSelected: Boolean,
-    onSelect: (AppLockTimeout) -> Unit
+    onSelect: (AppLockTimeout) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val onClick = remember(timeout, onSelect) { { onSelect(timeout) } }
     val label = remember(timeout) {
@@ -693,11 +711,10 @@ private fun AppLockTimeoutItem(
     }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(TIMEOUT_ITEM_SHAPE)
+        modifier = modifier
+            .then(TIMEOUT_ITEM_BASE_MODIFIER)
             .clickable(onClick = onClick)
-            .padding(horizontal = TIMEOUT_ITEM_HORIZONTAL_PADDING, vertical = TIMEOUT_ITEM_VERTICAL_PADDING),
+            .then(TIMEOUT_ITEM_PADDING_MODIFIER),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
@@ -708,7 +725,7 @@ private fun AppLockTimeoutItem(
                 unselectedColor = RADIO_UNSELECTED_COLOR
             )
         )
-        Spacer(Modifier.width(RADIO_SPACER_WIDTH))
+        Spacer(RADIO_SPACER_MODIFIER)
         Text(
             text = label,
             style = Theme.L.Type.dialogBody.copy(

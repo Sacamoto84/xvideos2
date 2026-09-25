@@ -58,6 +58,49 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
+private val NICHE_ROW_CORNER = 8.dp
+private val NICHE_ROW_SHAPE = RoundedCornerShape(NICHE_ROW_CORNER)
+private val NICHE_ROW_VERTICAL_PADDING = 2.dp
+private val NICHE_ROW_HORIZONTAL_PADDING = 6.dp
+private val NICHE_THUMBNAIL_SIZE = 96.dp
+private val NICHE_SPACER_WIDTH = 8.dp
+private val DELETE_BUTTON_WIDTH = 96.dp
+private val DELETE_BUTTON_HEIGHT = 48.dp
+private val DELETE_BUTTON_BORDER_WIDTH = 1.dp
+private val TOP_BAR_PADDING = 8.dp
+private val TOP_BAR_TITLE_FONT_SIZE = 18.sp
+private val NICHE_NAME_FONT_SIZE = 20.sp
+private val DELETE_TEXT_FONT_SIZE = 18.sp
+private val SCROLLBAR_WIDTH = 2.dp
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private const val TEXT_NICHES_TITLE = "Группы"
+private const val TEXT_LEAVE_NICHE = "Выйти"
+
+private val TOP_BAR_HORIZONTAL_PADDING_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(start = TOP_BAR_PADDING, top = TOP_BAR_PADDING, bottom = TOP_BAR_PADDING)
+
+private val LAZY_COLUMN_MODIFIER = Modifier.fillMaxSize()
+private val SCROLLBAR_CONTAINER_MODIFIER = Modifier
+    .fillMaxHeight()
+    .width(SCROLLBAR_WIDTH)
+
+private val NICHE_ROW_BASE_MODIFIER = Modifier
+    .padding(vertical = NICHE_ROW_VERTICAL_PADDING, horizontal = NICHE_ROW_HORIZONTAL_PADDING)
+    .fillMaxWidth()
+    .clip(NICHE_ROW_SHAPE)
+
+private val NICHE_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val NICHE_THUMBNAIL_MODIFIER = Modifier.size(NICHE_THUMBNAIL_SIZE)
+private val NICHE_SPACER_MODIFIER = Modifier.width(NICHE_SPACER_WIDTH)
+
+private val DELETE_BUTTON_BASE_MODIFIER = Modifier
+    .width(DELETE_BUTTON_WIDTH)
+    .height(DELETE_BUTTON_HEIGHT)
+    .clip(NICHE_ROW_SHAPE)
+    .border(DELETE_BUTTON_BORDER_WIDTH, Color.White, NICHE_ROW_SHAPE)
+    .background(Color.Black)
+
 object SavedNichesTab : Screen {
 
     private fun readResolve(): Any = SavedNichesTab
@@ -102,19 +145,18 @@ object SavedNichesTab : Screen {
         val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
         Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = ZERO_WINDOW_INSETS,
             topBar = {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(top = getTopInsetDp())
-                        .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        .then(TOP_BAR_HORIZONTAL_PADDING_MODIFIER),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Группы",
+                        TEXT_NICHES_TITLE,
                         color = Theme.R.colorYellow,
-                        fontSize = 18.sp,
+                        fontSize = TOP_BAR_TITLE_FONT_SIZE,
                         fontFamily = Theme.R.fontFamilyPopinsRegular
                     )
                 }
@@ -130,7 +172,7 @@ object SavedNichesTab : Screen {
 
                 LazyColumn(
                     state = state,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = LAZY_COLUMN_MODIFIER
                 ) {
                     items(vm.savedRed.niches.list, key = { it.id }, contentType = { "saved_niche" }) { item ->
                         SavedNicheRow(
@@ -142,10 +184,8 @@ object SavedNichesTab : Screen {
                 }
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
+                    modifier = SCROLLBAR_CONTAINER_MODIFIER
                         .align(Alignment.CenterEnd)
-                        .width(2.dp)
                 ) {
                     VerticalScrollbar(scrollPercentProvider)
                 }
@@ -158,27 +198,26 @@ object SavedNichesTab : Screen {
 private fun SavedNicheRow(
     item: NichesInfo,
     onClick: (NichesInfo) -> Unit,
-    onDeleteClick: (NichesInfo) -> Unit
+    onDeleteClick: (NichesInfo) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val onRowClick = remember(item, onClick) { { onClick(item) } }
     val onRowDelete = remember(item, onDeleteClick) { { onDeleteClick(item) } }
 
     Row(
-        modifier = Modifier
-            .padding(vertical = 2.dp, horizontal = 6.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+        modifier = modifier
+            .then(NICHE_ROW_BASE_MODIFIER)
             .background(Theme.tabLevel3)
             .clickable(onClick = onRowClick),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = NICHE_ROW_HORIZONTAL_ARRANGEMENT
     ) {
-        UrlImage(item.thumbnail, modifier = Modifier.size(96.dp))
-        Spacer(modifier = Modifier.width(8.dp))
+        UrlImage(item.thumbnail, modifier = NICHE_THUMBNAIL_MODIFIER)
+        Spacer(modifier = NICHE_SPACER_MODIFIER)
         Text(
             item.name,
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = NICHE_NAME_FONT_SIZE,
             fontFamily = Theme.R.fontFamilyDMsanss,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
@@ -186,24 +225,18 @@ private fun SavedNicheRow(
         )
 
         Box(
-            modifier = Modifier
-                .width(96.dp)
-                .height(48.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color.White, RoundedCornerShape(8.dp))
-                .background(Color.Black)
-                .clickable(onClick = onRowDelete),
+            modifier = DELETE_BUTTON_BASE_MODIFIER.clickable(onClick = onRowDelete),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                "Выйти",
+                TEXT_LEAVE_NICHE,
                 fontFamily = Theme.R.fontFamilyDMsanss,
-                fontSize = 18.sp,
+                fontSize = DELETE_TEXT_FONT_SIZE,
                 color = Color.White
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = NICHE_SPACER_MODIFIER)
     }
 }
 
