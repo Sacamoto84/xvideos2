@@ -38,6 +38,12 @@ private val PROGRESS_INDICATOR_SIZE = 20.dp
 private val PROGRESS_STROKE_WIDTH = 2.dp
 private const val TEXT_REMOVE_FROM_SERVER = "Удалить альбом с сервера"
 private const val TEXT_ADD_TO_SERVER = "Добавить альбом на сервер"
+private val ICON_FAVORITE_FILLED = Icons.Filled.Favorite
+private val ICON_FAVORITE_BORDER = Icons.Outlined.FavoriteBorder
+private val CONTENT_ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val COLOR_WHITE = Color.White
+
 private val SERVER_FAVORITE_BUTTON_BASE_MODIFIER = Modifier
     .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
     .height(BUTTON_HEIGHT)
@@ -61,16 +67,16 @@ fun AlbumInfoButtonServerFavorite(
         if (isFavorite) TEXT_REMOVE_FROM_SERVER else TEXT_ADD_TO_SERVER
     }
     val iconVector = remember(isFavorite) {
-        if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+        if (isFavorite) ICON_FAVORITE_FILLED else ICON_FAVORITE_BORDER
     }
     val iconTint = remember(isFavorite, Theme.L.red) {
-        if (isFavorite) Theme.L.red else Color.White
+        if (isFavorite) Theme.L.red else COLOR_WHITE
     }
     val backgroundColor = remember(isFavorite, Theme.L.grey6, Theme.L.red) {
         if (isFavorite) Theme.L.grey6 else Theme.L.red
     }
     val buttonTextStyle = remember(Theme.L.Type.button) {
-        Theme.L.Type.button.copy(color = Color.White)
+        Theme.L.Type.button.copy(color = COLOR_WHITE)
     }
 
     Box(
@@ -79,18 +85,18 @@ fun AlbumInfoButtonServerFavorite(
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SERVER_FAVORITE_BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(enabled = !isLoading, onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = PROGRESS_INDICATOR_MODIFIER,
-                color = Color.White,
+                color = COLOR_WHITE,
                 strokeWidth = PROGRESS_STROKE_WIDTH
             )
         } else {
             Row(
                 horizontalArrangement = CONTENT_ROW_HORIZONTAL_ARRANGEMENT,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = CONTENT_ROW_VERTICAL_ALIGNMENT
             ) {
                 Icon(
                     imageVector = iconVector,
@@ -100,7 +106,7 @@ fun AlbumInfoButtonServerFavorite(
                 )
                 Text(
                     text = buttonText,
-                    color = Color.White,
+                    color = COLOR_WHITE,
                     style = buttonTextStyle
                 )
             }

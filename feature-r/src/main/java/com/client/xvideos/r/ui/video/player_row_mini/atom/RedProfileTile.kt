@@ -30,6 +30,15 @@ private val TILE_SHAPE = RoundedCornerShape(8.dp)
 private val SHADOW_OFFSET = 1.dp
 private val PADDING_DEFAULT = 8.dp
 private const val PLACEHOLDER_TEXT = "-"
+private const val CD_VIEWS = "Просмотры"
+private const val ICON_RESOURCE = R.drawable.rg_button
+
+private val BOTTOM_ROW_ALIGNMENT = Alignment.BottomCenter
+private val BOTTOM_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val COLOR_BLACK = Color.Black
+private val COLOR_WHITE = Color.White
+private val COLOR_GRAY = Color.Gray
 
 private val TILE_BOX_BASE_MODIFIER = Modifier
     .fillMaxSize()
@@ -63,21 +72,21 @@ fun RedProfileTile(
         // Индекс картинки
         Text(
             indexText,
-            color = Color.Gray,
+            color = COLOR_GRAY,
             modifier = INDEX_TEXT_MODIFIER,
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
 
         // Нижний ряд с лайками и длительностью
         Row(
-            modifier = BOTTOM_ROW_BASE_MODIFIER.align(Alignment.BottomCenter),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = BOTTOM_ROW_BASE_MODIFIER.align(BOTTOM_ROW_ALIGNMENT),
+            horizontalArrangement = BOTTOM_ROW_HORIZONTAL_ARRANGEMENT,
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT
         ) {
             if (isVisibleView) {
                 Row(
                     modifier = VIEWS_ROW_MODIFIER,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = ROW_VERTICAL_ALIGNMENT
                 ) {
                     ShadowedIcon()
                     ShadowedText(
@@ -101,18 +110,18 @@ fun RedProfileTile(
 private fun ShadowedIcon(
     modifier: Modifier = Modifier,
 ) {
-    val painter = painterResource(R.drawable.rg_button)
+    val painter = painterResource(ICON_RESOURCE)
     Box(modifier = modifier) {
         Icon(
             painter = painter,
             contentDescription = null,
-            tint = Color.Black,
+            tint = COLOR_BLACK,
             modifier = SHADOW_OFFSET_MODIFIER
         )
         Icon(
             painter = painter,
-            contentDescription = null,
-            tint = Color.White
+            contentDescription = CD_VIEWS,
+            tint = COLOR_WHITE
         )
     }
 }
@@ -125,13 +134,13 @@ private fun ShadowedText(
     Box(modifier = modifier) {
         Text(
             text = text,
-            color = Color.Black,
+            color = COLOR_BLACK,
             modifier = SHADOW_OFFSET_MODIFIER,
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
         Text(
             text = text,
-            color = Color.White,
+            color = COLOR_WHITE,
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
     }

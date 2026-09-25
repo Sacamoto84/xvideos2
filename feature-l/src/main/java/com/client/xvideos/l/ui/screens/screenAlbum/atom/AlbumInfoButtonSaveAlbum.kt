@@ -36,6 +36,12 @@ private val CONTENT_SPACING = 8.dp
 private val ICON_SIZE = 20.dp
 private const val TEXT_SAVE_ALBUM = "Сохранить альбом"
 private const val TEXT_REMOVE_ALBUM = "Удалить из сохранённых"
+private val ICON_BOOKMARK_FILLED = Icons.Filled.Bookmark
+private val ICON_BOOKMARK_BORDER = Icons.Outlined.BookmarkBorder
+private val CONTENT_ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val COLOR_WHITE = Color.White
+
 private val SAVE_ALBUM_BUTTON_BASE_MODIFIER = Modifier
     .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
     .height(BUTTON_HEIGHT)
@@ -54,16 +60,16 @@ fun AlbumInfoButtonSaveAlbum(
         if (!saved) TEXT_SAVE_ALBUM else TEXT_REMOVE_ALBUM
     }
     val iconVector = remember(saved) {
-        if (saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder
+        if (saved) ICON_BOOKMARK_FILLED else ICON_BOOKMARK_BORDER
     }
     val iconTint = remember(saved, Theme.L.red) {
-        if (saved) Theme.L.red else Color.White
+        if (saved) Theme.L.red else COLOR_WHITE
     }
     val backgroundColor = remember(saved, Theme.L.red, Theme.L.grey6) {
         if (!saved) Theme.L.red else Theme.L.grey6
     }
     val buttonTextStyle = remember(Theme.L.Type.button) {
-        Theme.L.Type.button.copy(color = Color.White)
+        Theme.L.Type.button.copy(color = COLOR_WHITE)
     }
 
     Box(
@@ -72,11 +78,11 @@ fun AlbumInfoButtonSaveAlbum(
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SAVE_ALBUM_BUTTON_SHAPE)
             .background(backgroundColor)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Row(
             horizontalArrangement = CONTENT_ROW_HORIZONTAL_ARRANGEMENT,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = CONTENT_ROW_VERTICAL_ALIGNMENT
         ) {
             Icon(
                 imageVector = iconVector,
@@ -86,7 +92,7 @@ fun AlbumInfoButtonSaveAlbum(
             )
             Text(
                 text = buttonText,
-                color = Color.White,
+                color = COLOR_WHITE,
                 style = buttonTextStyle
             )
         }

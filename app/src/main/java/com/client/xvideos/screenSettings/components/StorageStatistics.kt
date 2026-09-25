@@ -61,6 +61,11 @@ private val INNER_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
 private val STORAGE_ROW_TITLE_STYLE = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
 private val STORAGE_ROW_SUBTITLE_STYLE = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
 private val STORAGE_CAPTION_STYLE = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+
+private const val ICON_X = R.drawable.icon_xvideos_mini
+private const val ICON_L = R.drawable.icon_luscious
+private const val ICON_RED = R.drawable.icon_red
 
 @Immutable
 internal data class StorageStat(
@@ -91,7 +96,7 @@ internal fun StorageStatisticsSection(
     val formattedTotal = remember(totalBytes) { formatBytes(totalBytes) }
     SettingsGroup(modifier = modifier) {
         SettingsValueRow(
-            icon = R.drawable.icon_red,
+            icon = ICON_RED,
             text = TEXT_TOTAL_DATA,
             value = formattedTotal
         )
@@ -118,7 +123,8 @@ private fun StorageStatisticsSectionPreview() = SettingsPreview {
             StorageStat("X", "X", 300_000_000, 120),
             StorageStat("L", "L", 200_000_000, 80),
             StorageStat("R", "R", 500_000_000, 200)
-        )
+        ),
+        modifier = Modifier
     )
 }
 
@@ -134,7 +140,7 @@ internal fun StorageProgressRow(
     }
     Row(
         modifier = modifier.then(STORAGE_ROW_BASE_MODIFIER),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         SettingsIcon(storageIcon(stat.key))
         Spacer(ICON_SPACER_MODIFIER)
@@ -142,7 +148,7 @@ internal fun StorageProgressRow(
             Row(
                 modifier = INNER_ROW_BASE_MODIFIER,
                 horizontalArrangement = INNER_ROW_HORIZONTAL_ARRANGEMENT,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = ROW_VERTICAL_ALIGNMENT
             ) {
                 Text(
                     text = stat.title,
@@ -177,16 +183,17 @@ internal fun StorageProgressRow(
 private fun StorageProgressRowPreview() = SettingsPreview {
     StorageProgressRow(
         stat = StorageStat("R", "R", 500_000_000, 200),
-        progress = 0.5f
+        progress = 0.5f,
+        modifier = Modifier
     )
 }
 
 @DrawableRes
 private fun storageIcon(key: String): Int {
     return when (key) {
-        "X" -> R.drawable.icon_xvideos_mini
-        "L" -> R.drawable.icon_luscious
-        else -> R.drawable.icon_red
+        "X" -> ICON_X
+        "L" -> ICON_L
+        else -> ICON_RED
     }
 }
 

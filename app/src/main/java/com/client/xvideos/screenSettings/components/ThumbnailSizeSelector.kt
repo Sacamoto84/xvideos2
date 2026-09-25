@@ -68,6 +68,7 @@ fun ThumbnailSizeSelector(
 private fun ThumbnailSizeSelectorPreview() = SettingsPreview {
     ThumbnailSizeSelector(
         currentValue = "Medium",
-        onSelected = {}
+        onSelected = {},
+        modifier = Modifier
     )
 }

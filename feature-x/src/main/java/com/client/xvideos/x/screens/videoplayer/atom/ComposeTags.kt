@@ -69,15 +69,20 @@ private val TAG_TOGGLE_ICON_SIZE = 18.dp
 private val TAG_FONT_SIZE = 13.sp
 private val TAG_TOGGLE_FONT_SIZE = 12.sp
 
+private val COLOR_WHITE = Color.White
+private val ARROW_DROP_DOWN_ICON = Icons.Default.ArrowDropDown
+private val ALIGNMENT_CENTER = Alignment.Center
+private val ALIGNMENT_CENTER_VERTICALLY = Alignment.CenterVertically
+
 private val TAG_CHIP_TEXT_STYLE = TextStyle(
-    color = Color.White,
+    color = COLOR_WHITE,
     fontSize = TAG_FONT_SIZE,
     fontFamily = FontFamily.SansSerif,
     fontWeight = FontWeight.Medium,
 )
 
 private val TAG_TOGGLE_TEXT_STYLE = TextStyle(
-    color = Color.White,
+    color = COLOR_WHITE,
     fontSize = TAG_TOGGLE_FONT_SIZE,
     fontFamily = FontFamily.SansSerif,
     fontWeight = FontWeight.SemiBold,
@@ -309,7 +314,7 @@ private fun TagChip(
             .then(TAG_CHIP_BASE_MODIFIER)
             .clickable(onClick = onClick)
             .then(TAG_CHIP_CONTENT_PADDING_MODIFIER),
-        contentAlignment = Alignment.Center,
+        contentAlignment = ALIGNMENT_CENTER,
     ) {
         Text(
             text = text,
@@ -331,16 +336,16 @@ private fun TagToggleChip(
             .then(TAG_TOGGLE_BASE_MODIFIER)
             .clickable(onClick = onClick)
             .then(TAG_TOGGLE_PADDING_MODIFIER),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = ALIGNMENT_CENTER_VERTICALLY,
     ) {
         Text(
             text = text,
             style = TAG_TOGGLE_TEXT_STYLE
         )
         Icon(
-            imageVector = Icons.Default.ArrowDropDown,
+            imageVector = ARROW_DROP_DOWN_ICON,
             contentDescription = contentDescription,
-            tint = Color.White,
+            tint = COLOR_WHITE,
             modifier = TAG_TOGGLE_ICON_MODIFIER
                 .rotate(if (isExpanded) ROTATION_EXPANDED else ROTATION_COLLAPSED),
         )

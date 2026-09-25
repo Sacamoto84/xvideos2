@@ -69,6 +69,8 @@ private val COUNT_BADGE_MODIFIER = Modifier
 
 private val TEXT_MODIFIER_WITH_COUNT = Modifier.padding(start = TEXT_PADDING_START, end = TEXT_PADDING_END_WITH_COUNT)
 private val TEXT_MODIFIER_NO_COUNT = Modifier.padding(start = TEXT_PADDING_START, end = TEXT_PADDING_END_NO_COUNT)
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val BADGE_BOX_ALIGNMENT = Alignment.Center
 
 /**
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
@@ -90,7 +92,7 @@ fun ScreenItemTagsModelPornostars(
 
     Row(
         modifier = rowModifier,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         Text(
             text = text,
@@ -101,7 +103,7 @@ fun ScreenItemTagsModelPornostars(
         if (hasCount) {
             Box(
                 modifier = COUNT_BADGE_MODIFIER,
-                contentAlignment = Alignment.Center
+                contentAlignment = BADGE_BOX_ALIGNMENT
             ) {
                 Text(
                     text = count,

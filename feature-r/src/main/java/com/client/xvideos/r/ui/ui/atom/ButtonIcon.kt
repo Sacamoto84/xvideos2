@@ -27,6 +27,8 @@ private val BUTTON_ICON_SHAPE = RoundedCornerShape(BUTTON_ICON_CORNER)
 private val BUTTON_ICON_SIZE = 46.dp
 private val BUTTON_ICON_BORDER_WIDTH = 1.dp
 private val BUTTON_ICON_TINT = Color.LightGray
+private val BUTTON_ICON_ALIGNMENT = Alignment.Center
+private val PREVIEW_ICON = Icons.Filled.Favorite
 
 private val BUTTON_ICON_BASE_MODIFIER = Modifier
     .size(BUTTON_ICON_SIZE)
@@ -38,17 +40,18 @@ private val BUTTON_ICON_BASE_MODIFIER = Modifier
 fun ButtonIcon(
     imageVector: ImageVector,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
 ) {
     Box(
         modifier = modifier
             .then(BUTTON_ICON_BASE_MODIFIER)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BUTTON_ICON_ALIGNMENT
     ) {
         Icon(
             imageVector = imageVector,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = BUTTON_ICON_TINT
         )
     }
@@ -59,7 +62,7 @@ fun ButtonIcon(
 private fun ButtonIconPreview() {
     XvideosTheme {
         ButtonIcon(
-            imageVector = Icons.Filled.Favorite,
+            imageVector = PREVIEW_ICON,
             onClick = {}
         )
     }
