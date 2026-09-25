@@ -44,6 +44,35 @@ private val COLLECTION_ITEM_SHAPE = RoundedCornerShape(12.dp)
 private val COLLECTION_THUMBNAIL_SIZE = 56.dp
 private val FOLDER_ICON_SIZE = 28.dp
 private val FOLDER_PLACEHOLDER_BG = Color(0xFF3D3949)
+private val ITEM_OUTER_PADDING = 4.dp
+private val ITEM_INNER_HORIZONTAL_PADDING = 8.dp
+private val ITEM_INNER_VERTICAL_PADDING = 6.dp
+private val ITEM_SPACER_WIDTH = 12.dp
+private val EMPTY_BOX_VERTICAL_PADDING = 32.dp
+private val LAZY_COLUMN_MIN_HEIGHT = 120.dp
+private val LAZY_COLUMN_MAX_HEIGHT = 420.dp
+
+private val EMPTY_BOX_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(vertical = EMPTY_BOX_VERTICAL_PADDING)
+private val LAZY_COLUMN_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .heightIn(min = LAZY_COLUMN_MIN_HEIGHT, max = LAZY_COLUMN_MAX_HEIGHT)
+private val ITEM_ROW_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(ITEM_OUTER_PADDING)
+    .clip(COLLECTION_ITEM_SHAPE)
+private val ITEM_ROW_CONTENT_PADDING_MODIFIER = Modifier
+    .padding(horizontal = ITEM_INNER_HORIZONTAL_PADDING, vertical = ITEM_INNER_VERTICAL_PADDING)
+private val THUMBNAIL_BASE_MODIFIER = Modifier
+    .clip(COLLECTION_ITEM_SHAPE)
+    .size(COLLECTION_THUMBNAIL_SIZE)
+private val FOLDER_PLACEHOLDER_BASE_MODIFIER = Modifier
+    .clip(COLLECTION_ITEM_SHAPE)
+    .size(COLLECTION_THUMBNAIL_SIZE)
+    .background(FOLDER_PLACEHOLDER_BG)
+private val FOLDER_ICON_MODIFIER = Modifier.size(FOLDER_ICON_SIZE)
+private val ITEM_SPACER_MODIFIER = Modifier.width(ITEM_SPACER_WIDTH)
 
 private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекцию"
 private const val TEXT_NO_COLLECTIONS = "Нет коллекций"
@@ -88,9 +117,7 @@ private fun ColumnScope.CollectionListContent(
 ) {
     if (collectionList.isEmpty()) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 32.dp),
+            modifier = EMPTY_BOX_BASE_MODIFIER,
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -103,54 +130,64 @@ private fun ColumnScope.CollectionListContent(
     } else {
         LazyColumn(
             state = rememberLazyListState(),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 420.dp)
+            modifier = LAZY_COLUMN_BASE_MODIFIER
         ) {
             items(
                 items = collectionList,
                 key = { it.collection },
                 contentType = { CONTENT_TYPE_COLLECTION_ITEM }
             ) { item ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 4.dp)
-                        .clip(COLLECTION_ITEM_SHAPE)
-                        .clickable(onClick = { onSelectCollection(item.collection) })
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (item.items.isNotEmpty()) {
-                        UrlImage(
-                            url = item.items.last().urls.thumbnail,
-                            modifier = Modifier.clip(COLLECTION_ITEM_SHAPE).size(COLLECTION_THUMBNAIL_SIZE)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .clip(COLLECTION_ITEM_SHAPE)
-                                .size(COLLECTION_THUMBNAIL_SIZE)
-                                .background(FOLDER_PLACEHOLDER_BG),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Folder,
-                                contentDescription = null,
-                                tint = Theme.DialogLavande.dismissTextColor,
-                                modifier = Modifier.size(FOLDER_ICON_SIZE)
-                            )
-                        }
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = item.collection,
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = Theme.R.fontFamilyDMsanss
-                    )
-                }
+                CollectionRowItem(
+                    item = item,
+                    onSelectCollection = onSelectCollection
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun CollectionRowItem(
+    item: CollectionEntity<GifsInfo>,
+    onSelectCollection: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val onClick = remember(item.collection, onSelectCollection) {
+        { onSelectCollection(item.collection) }
+    }
+    Row(
+        modifier = modifier
+            .then(ITEM_ROW_BASE_MODIFIER)
+            .clickable(onClick = onClick)
+            .then(ITEM_ROW_CONTENT_PADDING_MODIFIER),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (item.items.isNotEmpty()) {
+            UrlImage(
+                url = item.items.last().urls.thumbnail,
+                modifier = THUMBNAIL_BASE_MODIFIER
+            )
+        } else {
+            Box(
+                modifier = FOLDER_PLACEHOLDER_BASE_MODIFIER,
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = item.collection,
+                    tint = Theme.DialogLavande.dismissTextColor,
+                    modifier = FOLDER_ICON_MODIFIER
+                )
+            }
+        }
+        Spacer(ITEM_SPACER_MODIFIER)
+        Text(
+            text = item.collection,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = Theme.R.fontFamilyDMsanss
+        )
     }
 }
 

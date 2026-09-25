@@ -67,6 +67,45 @@ private val STATS_ROW_VERTICAL_PADDING = 8.dp
 private val DESCRIPTION_SPACER_HEIGHT = 4.dp
 private val BOTTOM_SPACER_HEIGHT = 8.dp
 
+private val ROOT_COLUMN_BASE_MODIFIER = Modifier
+    .padding(horizontal = ROOT_HORIZONTAL_PADDING)
+    .fillMaxWidth()
+private val TOP_ROW_BASE_MODIFIER = Modifier
+    .padding(top = TOP_ROW_PADDING_TOP)
+    .fillMaxWidth()
+private val AVATAR_IMAGE_MODIFIER = Modifier
+    .clip(PROFILE_AVATAR_SHAPE)
+    .size(AVATAR_SIZE)
+private val AVATAR_FALLBACK_BOX_MODIFIER = Modifier
+    .clip(PROFILE_AVATAR_SHAPE)
+    .size(AVATAR_SIZE)
+    .background(Color.DarkGray)
+private val PERSON_ICON_MODIFIER = Modifier.size(PERSON_ICON_SIZE)
+private val COLUMN_INFO_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .height(AVATAR_SIZE)
+private val COLUMN_INFO_VERTICAL_ARRANGEMENT = Arrangement.SpaceAround
+private val ROW_HEADER_BASE_MODIFIER = Modifier.height(ROW_HEADER_HEIGHT)
+private val USERNAME_SPACER_MODIFIER = Modifier.width(USERNAME_SPACER_WIDTH)
+private val VERIFIED_BADGE_MODIFIER = Modifier
+    .size(VERIFIED_BADGE_SIZE)
+    .offset(y = VERIFIED_OFFSET_Y)
+private val FOLLOW_BUTTON_BASE_MODIFIER = Modifier
+    .padding(start = BUTTON_START_PADDING, end = BUTTON_END_PADDING)
+    .fillMaxWidth()
+    .height(BUTTON_HEIGHT)
+    .clip(PROFILE_FOLLOW_BUTTON_SHAPE)
+private val STATS_ROW_BASE_MODIFIER = Modifier
+    .padding(vertical = STATS_ROW_VERTICAL_PADDING)
+    .fillMaxWidth()
+private val STATS_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceAround
+private val DESCRIPTION_SPACER_MODIFIER = Modifier.height(DESCRIPTION_SPACER_HEIGHT)
+private val BOTTOM_SPACER_MODIFIER = Modifier.height(BOTTOM_SPACER_HEIGHT)
+private val STAT_DIVIDER_BASE_MODIFIER = Modifier
+    .width(STAT_DIVIDER_WIDTH)
+    .height(STAT_DIVIDER_HEIGHT)
+    .background(PROFILE_STAT_DIVIDER_COLOR)
+
 private val USERNAME_FONT_SIZE = 28.sp
 private val BUTTON_FONT_SIZE = 18.sp
 private val DESCRIPTION_FONT_SIZE = 14.sp
@@ -121,7 +160,7 @@ fun RedProfileCreaterInfo(
     val aboutTitle = remember(item.username) { "$ABOUT_TITLE_PREFIX${item.username}$ABOUT_TITLE_SUFFIX" }
     val descriptionTrimmed = remember(item.description) { item.description?.trimMargin() }
 
-    Column(modifier = modifier.padding(horizontal = ROOT_HORIZONTAL_PADDING).fillMaxWidth()) {
+    Column(modifier = modifier.then(ROOT_COLUMN_BASE_MODIFIER)) {
         CreatorTopInfoRow(
             item = item,
             isFollow = isFollow,
@@ -142,7 +181,7 @@ fun RedProfileCreaterInfo(
                 fontFamily = Theme.R.fontFamilyPopinsRegular
             )
 
-            Spacer(Modifier.height(DESCRIPTION_SPACER_HEIGHT))
+            Spacer(DESCRIPTION_SPACER_MODIFIER)
 
             Text(
                 descriptionTrimmed,
@@ -152,7 +191,7 @@ fun RedProfileCreaterInfo(
             )
         }
 
-        Spacer(Modifier.height(BOTTOM_SPACER_HEIGHT))
+        Spacer(BOTTOM_SPACER_MODIFIER)
     }
 }
 
@@ -169,40 +208,37 @@ private fun CreatorTopInfoRow(
     val followButtonBorderModifier = if (isFollow) FOLLOW_BUTTON_BORDER_MODIFIER else Modifier
 
     Row(
-        modifier = modifier.padding(top = TOP_ROW_PADDING_TOP).fillMaxWidth(),
+        modifier = modifier.then(TOP_ROW_BASE_MODIFIER),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (item.profileImageUrl != null) {
             UrlImage(
                 item.profileImageUrl,
-                modifier = Modifier.clip(PROFILE_AVATAR_SHAPE).size(AVATAR_SIZE)
+                modifier = AVATAR_IMAGE_MODIFIER
             )
         } else {
             Box(
-                modifier = Modifier
-                    .clip(PROFILE_AVATAR_SHAPE)
-                    .size(AVATAR_SIZE)
-                    .background(Color.DarkGray),
+                modifier = AVATAR_FALLBACK_BOX_MODIFIER,
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(PERSON_ICON_SIZE),
+                    contentDescription = item.username,
+                    modifier = PERSON_ICON_MODIFIER,
                     tint = Color.White
                 )
             }
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth().height(AVATAR_SIZE),
-            verticalArrangement = Arrangement.SpaceAround
+            modifier = COLUMN_INFO_BASE_MODIFIER,
+            verticalArrangement = COLUMN_INFO_VERTICAL_ARRANGEMENT
         ) {
             Row(
-                modifier = Modifier.height(ROW_HEADER_HEIGHT),
+                modifier = ROW_HEADER_BASE_MODIFIER,
                 verticalAlignment = Alignment.Top
             ) {
-                Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
+                Spacer(USERNAME_SPACER_MODIFIER)
                 Text(
                     item.username,
                     color = Color.White,
@@ -211,11 +247,11 @@ private fun CreatorTopInfoRow(
                     modifier = Modifier
                 )
                 if (item.verified) {
-                    Spacer(Modifier.width(USERNAME_SPACER_WIDTH))
+                    Spacer(USERNAME_SPACER_MODIFIER)
                     Image(
                         painter = painterResource(id = R.drawable.verificed),
                         contentDescription = CD_VERIFIED_CREATOR,
-                        modifier = Modifier.size(VERIFIED_BADGE_SIZE).offset(y = VERIFIED_OFFSET_Y)
+                        modifier = VERIFIED_BADGE_MODIFIER
                     )
                 }
             }
@@ -223,10 +259,7 @@ private fun CreatorTopInfoRow(
             Box(
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .padding(start = BUTTON_START_PADDING, end = BUTTON_END_PADDING)
-                    .fillMaxWidth()
-                    .height(BUTTON_HEIGHT)
-                    .clip(PROFILE_FOLLOW_BUTTON_SHAPE)
+                    .then(FOLLOW_BUTTON_BASE_MODIFIER)
                     .background(followButtonBgColor)
                     .then(followButtonBorderModifier)
                     .clickable(onClick = onFollowClick),
@@ -252,9 +285,9 @@ private fun CreatorStatsRow(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.padding(vertical = STATS_ROW_VERTICAL_PADDING).fillMaxWidth(),
+        modifier = modifier.then(STATS_ROW_BASE_MODIFIER),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceAround
+        horizontalArrangement = STATS_ROW_HORIZONTAL_ARRANGEMENT
     ) {
         StatItem(
             count = followersPretty,
@@ -300,10 +333,7 @@ private fun StatDivider(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .width(STAT_DIVIDER_WIDTH)
-            .height(STAT_DIVIDER_HEIGHT)
-            .background(PROFILE_STAT_DIVIDER_COLOR)
+        modifier = modifier.then(STAT_DIVIDER_BASE_MODIFIER)
     )
 }
 

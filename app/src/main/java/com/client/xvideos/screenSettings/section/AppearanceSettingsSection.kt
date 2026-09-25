@@ -110,6 +110,10 @@ private val CIRCLE_CYAN_BASE_MODIFIER = Modifier
 private val PREVIEW_LABEL_BASE_MODIFIER = Modifier.padding(PREVIEW_LABEL_PADDING)
 
 private val SCROLL_BUTTONS_BASE_MODIFIER = Modifier.padding(end = SCROLL_BUTTONS_END_PADDING)
+private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val PREVIEW_GRADIENT_BASE_MODIFIER = Modifier
+    .fillMaxSize()
+    .background(PREVIEW_GRADIENT)
 
 /**
  * Экран настроек «Отображение» (Appearance).
@@ -127,7 +131,7 @@ internal fun AppearanceSettingsSection(
         { effect -> Settings.scroll_buttons_effect.setValue(effect.name) }
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_PREVIEW)
         ScrollButtonPreviewCard(
             hazeState = previewHazeState,
@@ -200,10 +204,7 @@ private fun ScrollButtonPreviewCard(
     ) {
         // Цветной имитационный фон галереи, помеченный как hazeSource
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSource(hazeState)
-                .background(PREVIEW_GRADIENT)
+            modifier = PREVIEW_GRADIENT_BASE_MODIFIER.hazeSource(hazeState)
         ) {
             // Декоративные цветные круги для проверки преломления и размытия
             Box(

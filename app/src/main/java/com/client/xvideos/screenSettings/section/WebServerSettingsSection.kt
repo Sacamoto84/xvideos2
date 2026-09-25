@@ -94,6 +94,46 @@ private val ACTION_BUTTON_FONT_SIZE = 13.sp
 private val FOOTER_HINT_FONT_SIZE = 12.sp
 private val FOOTER_HINT_LINE_HEIGHT = 16.sp
 
+private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val ERROR_SPACER_MODIFIER = Modifier.height(ERROR_SPACER_HEIGHT)
+private val ERROR_TEXT_MODIFIER = Modifier.padding(horizontal = ERROR_HORIZONTAL_PADDING)
+private val SECTION_SPACER_MODIFIER = Modifier.height(SECTION_SPACER_HEIGHT)
+
+private val CONNECTION_CARD_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = CONNECTION_CARD_HORIZONTAL_PADDING)
+    .clip(CONNECTION_CARD_SHAPE)
+    .background(SettingsCardColor)
+    .padding(CONNECTION_CARD_INNER_PADDING)
+
+private val NETWORK_STATUS_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val NETWORK_STATUS_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.Center
+private val NETWORK_INDICATOR_BASE_MODIFIER = Modifier
+    .size(NETWORK_INDICATOR_SIZE)
+    .clip(NETWORK_INDICATOR_SHAPE)
+    .background(NETWORK_ACTIVE_COLOR)
+private val NETWORK_SPACER_MODIFIER = Modifier.width(NETWORK_SPACER_WIDTH)
+private val NETWORK_BOTTOM_SPACER_MODIFIER = Modifier.height(NETWORK_BOTTOM_SPACER_HEIGHT)
+
+private val URL_BOX_BASE_MODIFIER = Modifier
+    .clip(URL_BOX_SHAPE)
+    .background(URL_BOX_BG_COLOR)
+private val URL_BOX_PADDING_MODIFIER = Modifier
+    .padding(horizontal = URL_BOX_HORIZONTAL_PADDING, vertical = URL_BOX_VERTICAL_PADDING)
+
+private val QR_BOX_BASE_MODIFIER = Modifier
+    .size(QR_BOX_SIZE)
+    .clip(QR_BOX_SHAPE)
+    .background(Color.White)
+    .padding(QR_PADDING)
+private val QR_IMAGE_MODIFIER = Modifier.fillMaxSize()
+private val QR_BOTTOM_SPACER_MODIFIER = Modifier.height(QR_BOTTOM_SPACER_HEIGHT)
+
+private val ACTION_BUTTONS_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val ACTION_BUTTONS_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(ACTION_BUTTONS_SPACING)
+private val ACTION_ICON_MODIFIER = Modifier.size(ACTION_ICON_SIZE)
+private val ACTION_ICON_SPACER_MODIFIER = Modifier.width(ACTION_ICON_SPACER_WIDTH)
+
 private const val TITLE_WEBSERVER = "Веб-сервер Wi-Fi"
 private const val TITLE_CONNECTION = "Подключение"
 private const val TEXT_STREAM_TO_PC = "Трансляция на ПК"
@@ -169,7 +209,7 @@ internal fun WebServerSettingsSection(
         if (isRunning) "$SERVER_RUNNING_PREFIX$serverUrl" else TEXT_SERVER_STOPPED
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_WEBSERVER)
 
         SettingsGroup {
@@ -193,18 +233,18 @@ internal fun WebServerSettingsSection(
         }
 
         if (lastError != null) {
-            Spacer(Modifier.height(ERROR_SPACER_HEIGHT))
+            Spacer(ERROR_SPACER_MODIFIER)
             Text(
                 text = "$ERROR_TEXT_PREFIX$lastError",
                 color = ERROR_TEXT_COLOR,
                 fontSize = ERROR_FONT_SIZE,
-                modifier = Modifier.padding(horizontal = ERROR_HORIZONTAL_PADDING)
+                modifier = ERROR_TEXT_MODIFIER
             )
         }
 
         val currentServerUrl = serverUrl
         if (isRunning && currentServerUrl != null) {
-            Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+            Spacer(SECTION_SPACER_MODIFIER)
             SettingsSectionTitle(TITLE_CONNECTION)
             WebServerConnectionCard(
                 serverUrl = currentServerUrl,
@@ -233,27 +273,19 @@ private fun WebServerConnectionCard(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CONNECTION_CARD_HORIZONTAL_PADDING)
-            .clip(CONNECTION_CARD_SHAPE)
-            .background(SettingsCardColor)
-            .padding(CONNECTION_CARD_INNER_PADDING),
+        modifier = modifier.then(CONNECTION_CARD_BASE_MODIFIER),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Статус сети
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+            horizontalArrangement = NETWORK_STATUS_ROW_HORIZONTAL_ARRANGEMENT,
+            modifier = NETWORK_STATUS_ROW_BASE_MODIFIER
         ) {
             Box(
-                modifier = Modifier
-                    .size(NETWORK_INDICATOR_SIZE)
-                    .clip(NETWORK_INDICATOR_SHAPE)
-                    .background(NETWORK_ACTIVE_COLOR)
+                modifier = NETWORK_INDICATOR_BASE_MODIFIER
             )
-            Spacer(Modifier.width(NETWORK_SPACER_WIDTH))
+            Spacer(NETWORK_SPACER_MODIFIER)
             Text(
                 text = "$NETWORK_NAME_PREFIX$networkName",
                 color = SettingsRowTextSecondary,
@@ -261,15 +293,13 @@ private fun WebServerConnectionCard(
             )
         }
 
-        Spacer(Modifier.height(NETWORK_BOTTOM_SPACER_HEIGHT))
+        Spacer(NETWORK_BOTTOM_SPACER_MODIFIER)
 
         // Кликабельный URL
         Box(
-            modifier = Modifier
-                .clip(URL_BOX_SHAPE)
-                .background(URL_BOX_BG_COLOR)
+            modifier = URL_BOX_BASE_MODIFIER
                 .clickable(onClick = onCopyUrl)
-                .padding(horizontal = URL_BOX_HORIZONTAL_PADDING, vertical = URL_BOX_VERTICAL_PADDING)
+                .then(URL_BOX_PADDING_MODIFIER)
         ) {
             Text(
                 text = serverUrl,
@@ -280,25 +310,21 @@ private fun WebServerConnectionCard(
             )
         }
 
-        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+        Spacer(SECTION_SPACER_MODIFIER)
 
         // QR-код
         if (qrBitmap != null) {
             Box(
-                modifier = Modifier
-                    .size(QR_BOX_SIZE)
-                    .clip(QR_BOX_SHAPE)
-                    .background(Color.White)
-                    .padding(QR_PADDING),
+                modifier = QR_BOX_BASE_MODIFIER,
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     bitmap = qrBitmap,
                     contentDescription = QR_CD,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = QR_IMAGE_MODIFIER
                 )
             }
-            Spacer(Modifier.height(QR_BOTTOM_SPACER_HEIGHT))
+            Spacer(QR_BOTTOM_SPACER_MODIFIER)
             Text(
                 text = QR_HINT,
                 color = SettingsRowTextSecondary,
@@ -306,7 +332,7 @@ private fun WebServerConnectionCard(
             )
         }
 
-        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+        Spacer(SECTION_SPACER_MODIFIER)
 
         // Кнопки действий: Копировать и Поделиться
         WebServerActionButtons(
@@ -314,7 +340,7 @@ private fun WebServerConnectionCard(
             onCopy = onCopyUrl
         )
 
-        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+        Spacer(SECTION_SPACER_MODIFIER)
 
         // Пояснение
         Text(
@@ -353,8 +379,8 @@ private fun WebServerActionButtons(
     )
 
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ACTION_BUTTONS_SPACING)
+        modifier = modifier.then(ACTION_BUTTONS_BASE_MODIFIER),
+        horizontalArrangement = ACTION_BUTTONS_HORIZONTAL_ARRANGEMENT
     ) {
         Button(
             onClick = onCopy,
@@ -362,8 +388,8 @@ private fun WebServerActionButtons(
             colors = copyButtonColors,
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(ACTION_ICON_SIZE))
-            Spacer(Modifier.width(ACTION_ICON_SPACER_WIDTH))
+            Icon(Icons.Default.ContentCopy, contentDescription = TEXT_COPY, modifier = ACTION_ICON_MODIFIER)
+            Spacer(ACTION_ICON_SPACER_MODIFIER)
             Text(TEXT_COPY, fontSize = ACTION_BUTTON_FONT_SIZE, fontWeight = FontWeight.Medium)
         }
 
@@ -372,8 +398,8 @@ private fun WebServerActionButtons(
             modifier = Modifier.weight(1f),
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(ACTION_ICON_SIZE), tint = SettingsRowTextPrimary)
-            Spacer(Modifier.width(ACTION_ICON_SPACER_WIDTH))
+            Icon(Icons.Default.Share, contentDescription = TEXT_SHARE, modifier = ACTION_ICON_MODIFIER, tint = SettingsRowTextPrimary)
+            Spacer(ACTION_ICON_SPACER_MODIFIER)
             Text(TEXT_SHARE, fontSize = ACTION_BUTTON_FONT_SIZE, color = SettingsRowTextPrimary)
         }
     }

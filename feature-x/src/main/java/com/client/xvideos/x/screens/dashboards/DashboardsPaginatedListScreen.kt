@@ -83,6 +83,23 @@ private val DURATION_SHADOW_OFFSET_X = 0.5.dp
 private val DURATION_SHADOW_OFFSET_Y = (-2.5).dp
 private val CHANNEL_BADGE_FONT_SIZE = 14.sp
 private val FAVORITE_ICON_PADDING = 6.dp
+private val CELL_CARD_PADDING = 1.dp
+
+private val CELL_BOX_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .aspectRatio(DASHBOARD_CARD_ASPECT_RATIO)
+    .padding(CELL_CARD_PADDING)
+    .background(Color.DarkGray)
+
+private val CHANNEL_BADGE_BASE_MODIFIER = Modifier.background(CHANNEL_BADGE_BG)
+private val FAVORITE_ICON_MODIFIER = Modifier.padding(bottom = FAVORITE_ICON_PADDING, end = FAVORITE_ICON_PADDING)
+private val SHADOWED_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
+private val DURATION_SHADOW_TEXT_MODIFIER = Modifier
+    .fillMaxWidth()
+    .offset(DURATION_SHADOW_OFFSET_X, DURATION_SHADOW_OFFSET_Y)
+private val DURATION_TEXT_MODIFIER = Modifier
+    .fillMaxWidth()
+    .offset(0.dp, DURATION_OFFSET_Y)
 
 internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
@@ -272,11 +289,7 @@ private fun DashboardGridCell(
     val durationText = remember(cell.duration) { cell.duration.trim().removeSuffix(".") }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(DASHBOARD_CARD_ASPECT_RATIO)
-            .padding(1.dp)
-            .background(Color.DarkGray)
+        modifier = modifier.then(CELL_BOX_BASE_MODIFIER)
     ) {
         UrlVideoImageAndLongClickX(
             cell,
@@ -290,7 +303,7 @@ private fun DashboardGridCell(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .background(CHANNEL_BADGE_BG),
+                    .then(CHANNEL_BADGE_BASE_MODIFIER),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -303,7 +316,7 @@ private fun DashboardGridCell(
 
             Row(modifier = Modifier.align(Alignment.BottomEnd), horizontalArrangement = Arrangement.End) {
                 if (isFavorite) {
-                    IconFavorite18(Modifier.padding(bottom = FAVORITE_ICON_PADDING, end = FAVORITE_ICON_PADDING))
+                    IconFavorite18(FAVORITE_ICON_MODIFIER)
                 }
             }
 
@@ -325,12 +338,10 @@ private fun ShadowedDurationText(
     durationText: String,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.then(SHADOWED_BOX_BASE_MODIFIER)) {
         Text(
             text = durationText,
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(DURATION_SHADOW_OFFSET_X, DURATION_SHADOW_OFFSET_Y),
+            modifier = DURATION_SHADOW_TEXT_MODIFIER,
             textAlign = TextAlign.Right,
             fontSize = DURATION_FONT_SIZE,
             color = Color.Black
@@ -338,9 +349,7 @@ private fun ShadowedDurationText(
 
         Text(
             text = durationText,
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(0.dp, DURATION_OFFSET_Y),
+            modifier = DURATION_TEXT_MODIFIER,
             textAlign = TextAlign.Right,
             fontSize = DURATION_FONT_SIZE,
             color = Color.White

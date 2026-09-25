@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.AlbumDetails
 
 private val FILTER_SPACER_WIDTH = 4.dp
+private val FILTER_SPACER_MODIFIER = Modifier.width(FILTER_SPACER_WIDTH)
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.End
 private const val LABEL_SHOW_ONLY_ANIMATED = "Show only animated"
 
 @Composable
@@ -33,19 +36,19 @@ fun AlbumInfoFilterButton(
 
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT,
+        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT
     ) {
         Text(
             text = LABEL_SHOW_ONLY_ANIMATED,
             color = textColor,
             style = titleStyle
         )
-        Spacer(modifier = Modifier.width(FILTER_SPACER_WIDTH))
+        Spacer(modifier = FILTER_SPACER_MODIFIER)
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
         )
-        Spacer(modifier = Modifier.width(FILTER_SPACER_WIDTH))
+        Spacer(modifier = FILTER_SPACER_MODIFIER)
     }
 }

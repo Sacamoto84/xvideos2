@@ -94,6 +94,18 @@ private val CURRENT_FLAG_STYLE = TextStyle(
     fontSize = CURRENT_FLAG_FONT_SIZE
 )
 
+private val COUNTRY_BOX_BASE_MODIFIER = Modifier.size(COUNTRY_BUTTON_SIZE)
+private val MENU_BUTTON_BASE_MODIFIER = Modifier.fillMaxSize().background(BUTTON_BG_COLOR)
+private val FLAG_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
+private val MENU_CONTENT_BASE_MODIFIER = Modifier
+    .padding(bottom = 0.dp)
+    .width(MENU_WIDTH)
+    .alpha(MENU_ALPHA)
+    .background(grayColor(0x35))
+private val COUNTRY_ROW_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(vertical = ITEM_PADDING_VERTICAL, horizontal = ITEM_PADDING_START)
+
 @Preview
 @Composable
 fun PreviewComposeCountry() {
@@ -149,11 +161,11 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
         }
     }
 
-    Box(modifier.size(COUNTRY_BUTTON_SIZE)) {
+    Box(modifier.then(COUNTRY_BOX_BASE_MODIFIER)) {
         Menu(modifier = Modifier, state = state) {
             // Сама кнопка для вызова диалога
-            MenuButton(Modifier.fillMaxSize().background(BUTTON_BG_COLOR)) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            MenuButton(MENU_BUTTON_BASE_MODIFIER) {
+                Box(modifier = FLAG_BOX_BASE_MODIFIER, contentAlignment = Alignment.Center) {
                     BasicText(
                         CountryState.current,
                         style = CURRENT_FLAG_STYLE
@@ -162,11 +174,7 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
             }
 
             MenuContent(
-                modifier = Modifier
-                    .padding(bottom = 0.dp)
-                    .width(MENU_WIDTH)
-                    .alpha(MENU_ALPHA)
-                    .background(grayColor(0x35)),
+                modifier = MENU_CONTENT_BASE_MODIFIER,
             ) {
                 LazyColumn(state = stateLazyList) {
                     items(
@@ -195,14 +203,14 @@ private fun CountryRowItem(
 ) {
     val handleClick = remember(item, onClick) { { onClick(item) } }
     val textStyle = if (isSelected) SELECTED_TEXT_STYLE else UNSELECTED_TEXT_STYLE
+    val label = remember(item.flagEmoji, item.name) { "${item.flagEmoji}  ${item.name} " }
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = ITEM_PADDING_VERTICAL, horizontal = ITEM_PADDING_START)
+            .then(COUNTRY_ROW_BASE_MODIFIER)
             .clickable(onClick = handleClick)
     ) {
         BasicText(
-            text = "${item.flagEmoji}  ${item.name} ",
+            text = label,
             style = textStyle
         )
     }
