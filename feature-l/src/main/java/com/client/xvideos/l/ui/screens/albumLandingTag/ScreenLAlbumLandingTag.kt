@@ -92,6 +92,31 @@ import timber.log.Timber
 
 
 
+private val ICON_BACK = Icons.AutoMirrored.Filled.ArrowBack
+private val FONT_WEIGHT_BOLD = FontWeight.Bold
+private val FONT_WEIGHT_MEDIUM = FontWeight.Medium
+private val ALIGN_CENTER = Alignment.Center
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val FLOW_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val SEE_ALL_BORDER_SHAPE = RoundedCornerShape(8.dp)
+private val TEXT_ALIGN_CENTER = TextAlign.Center
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val BOTTOM_SPACER_MODIFIER = Modifier.height(64.dp)
+private val TOP_BAR_ICON_SPACER_MODIFIER = Modifier.width(4.dp)
+private val FLOW_ROW_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = 2.dp)
+private val SEE_ALL_BOX_BASE_MODIFIER = Modifier
+    .padding(top = 4.dp, start = 4.dp, end = 4.dp)
+    .fillMaxWidth()
+    .height(40.dp)
+private val ALBUM_ITEM_PADDING = Modifier.padding(vertical = 2.dp)
+private val ALBUM_LIST_ITEM_MODIFIER = Modifier.fillMaxWidth()
+private val SECTION_TITLE_PADDING = Modifier.padding(start = 4.dp, top = 16.dp)
+
+private val CutoutTopInsets: WindowInsets
+    @Composable get() = WindowInsets.displayCutout.only(WindowInsetsSides.Top)
+
 class ScreenLAlbumLandingTag(val tag: String) : Screen {
 
     override val key: ScreenKey = "ScreenLAlbumLandingTag:$tag"
@@ -100,13 +125,13 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
-        BackHandler { navigator.pop() }
         val albumTopHits by vm.albumTopHits.collectAsStateWithLifecycle()
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
         val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+        BackHandler(onBack = onBack)
         val onAlbumClick: (Long) -> Unit = remember(navigator) {
             { albumId -> navigator.push(ScreenLAlbum(albumId)) }
         }
@@ -121,24 +146,24 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                 )
             }
         }
+        val topBarTitle = remember(title, tag) { "Tag: ${title ?: tag}" }
 
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
+            modifier = FULL_SIZE_MODIFIER,
             containerColor = Theme.background,
             topBar = {
                 LandingTagTopBar(
-                    title = "Tag: ${title ?: tag}",
+                    title = topBarTitle,
                     onBack = onBack
                 )
             }
         ) { padding ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = FULL_SIZE_MODIFIER
                     .padding(padding)
                     .background(Theme.background)
             ) {
-                LazyColumn(state = vm.state, modifier = Modifier.fillMaxSize()) {
+                LazyColumn(state = vm.state, modifier = FULL_SIZE_MODIFIER) {
                     items(
                         items = items.orEmpty(),
                         key = { it.title }
@@ -152,7 +177,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
                     }
 
                     item {
-                        Spacer(Modifier.height(64.dp))
+                        Spacer(BOTTOM_SPACER_MODIFIER)
                     }
                 }
             }
@@ -169,24 +194,24 @@ private fun LandingTagTopBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(Theme.background)
-            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
+            .windowInsetsPadding(CutoutTopInsets)
             .padding(horizontal = 4.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         IconButton(onClick = onBack) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = ICON_BACK,
                 contentDescription = "Назад",
                 tint = Theme.L.textColor
             )
         }
-        Spacer(Modifier.width(4.dp))
+        Spacer(TOP_BAR_ICON_SPACER_MODIFIER)
         Text(
             text = title,
             color = Theme.L.textColor,
             fontSize = 24.sp,
             fontFamily = Theme.L.fontFamilyKarla,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FONT_WEIGHT_BOLD,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -209,16 +234,14 @@ private fun LandingTagSectionItem(
         color = Theme.L.textColor,
         fontSize = 24.sp,
         fontFamily = Theme.L.fontFamilyKarla,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(start = 4.dp, top = 16.dp)
+        fontWeight = FONT_WEIGHT_BOLD,
+        modifier = SECTION_TITLE_PADDING
     )
 
     FlowRow(
         maxItemsInEachRow = 3,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = FLOW_ROW_MODIFIER,
+        horizontalArrangement = FLOW_ROW_HORIZONTAL_ARRANGEMENT
     ) {
         displayAlbums.forEach { album ->
             LandingTagAlbumItem(
@@ -230,22 +253,18 @@ private fun LandingTagSectionItem(
     }
 
     Box(
-        modifier = Modifier
-            .padding(top = 4.dp)
-            .padding(horizontal = 4.dp)
-            .fillMaxWidth()
-            .height(40.dp)
-            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
+        modifier = SEE_ALL_BOX_BASE_MODIFIER
+            .border(2.dp, Theme.L.grey3, SEE_ALL_BORDER_SHAPE)
             .clickable(onClick = onSeeAll),
-        contentAlignment = Alignment.Center
+        contentAlignment = ALIGN_CENTER
     ) {
         Text(
             "See All >",
             color = Theme.L.textColor,
-            textAlign = TextAlign.Center,
+            textAlign = TEXT_ALIGN_CENTER,
             fontSize = 22.sp,
             fontFamily = Theme.L.fontFamilyKarla,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FONT_WEIGHT_MEDIUM,
         )
     }
 }
@@ -263,10 +282,10 @@ private fun LandingTagAlbumItem(
     Box(
         modifier = Modifier
             .width(itemWidth)
-            .padding(vertical = 2.dp)
+            .then(ALBUM_ITEM_PADDING)
     ) {
         AlbumListItem(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = ALBUM_LIST_ITEM_MODIFIER,
             title = album.title,
             coverUrl = album.cover?.url.orEmpty(),
             numberOfAnimatedPictures = album.numberOfAnimatedPictures,

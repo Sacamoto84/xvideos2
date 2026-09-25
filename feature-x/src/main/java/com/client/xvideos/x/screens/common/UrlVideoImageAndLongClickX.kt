@@ -27,6 +27,8 @@ import timber.log.Timber
 private const val NULL_STRING = "null"
 private val VIDEO_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
 private val POSTER_IMAGE_MODIFIER = Modifier.fillMaxWidth()
+private val EMPTY_FALLBACK_URLS = persistentListOf<String>()
+private val HAPTIC_FEEDBACK_CONFIRM = HapticFeedbackType.Confirm
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -49,7 +51,7 @@ fun UrlVideoImageAndLongClickX(
         if (item.previewVideo.isNotBlank() && !item.previewVideo.equals(NULL_STRING, ignoreCase = true)) {
             persistentListOf(item.previewVideo)
         } else {
-            persistentListOf()
+            EMPTY_FALLBACK_URLS
         }
     }
 
@@ -84,14 +86,14 @@ fun UrlVideoImageAndLongClickX(
                     """.trimIndent()
                 )
             }
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            haptic.performHapticFeedback(HAPTIC_FEEDBACK_CONFIRM)
         }
     }
 
     val handleVideoClick: () -> Unit = remember(haptic) {
         {
             isVideo = !isVideo
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            haptic.performHapticFeedback(HAPTIC_FEEDBACK_CONFIRM)
         }
     }
 

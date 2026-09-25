@@ -96,6 +96,13 @@ private val DIVIDER2_MODIFIER = Modifier
 private val SLIDER_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
 private val ICON_SIZE_MODIFIER = Modifier.size(SETTINGS_ICON_SIZE)
 
+private val FONT_WEIGHT_NORMAL = FontWeight.Normal
+private val FONT_WEIGHT_MEDIUM = FontWeight.Medium
+private val COLOR_TRANSPARENT = Color.Transparent
+private val ITEM_ICON_SPACER_MODIFIER = Modifier.width(SETTINGS_ITEM_ICON_SPACER_WIDTH)
+private val ITEM_SUBTITLE_SPACER_MODIFIER = Modifier.height(SETTINGS_ITEM_SUBTITLE_SPACER_HEIGHT)
+private val ITEM_TRAILING_SPACER_MODIFIER = Modifier.width(SETTINGS_ITEM_TRAILING_SPACER_WIDTH)
+
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 
 @Composable
@@ -107,7 +114,7 @@ fun SettingsSectionTitle(
         Theme.L.Type.caption.copy(
             color = SettingsAccentColor,
             fontSize = SETTINGS_SECTION_TITLE_FONT_SIZE,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FONT_WEIGHT_MEDIUM,
             letterSpacing = SETTINGS_SECTION_TITLE_LETTER_SPACING
         )
     }
@@ -220,7 +227,7 @@ fun SettingsListItem(
         Theme.L.Type.rowTitle.copy(
             color = SettingsRowTextPrimary,
             fontSize = SETTINGS_ROW_TITLE_FONT_SIZE,
-            fontWeight = FontWeight.Normal,
+            fontWeight = FONT_WEIGHT_NORMAL,
             lineHeight = SETTINGS_ROW_TITLE_LINE_HEIGHT
         )
     }
@@ -228,7 +235,7 @@ fun SettingsListItem(
         Theme.L.Type.rowSubtitle.copy(
             color = SettingsRowTextSecondary,
             fontSize = SETTINGS_ROW_SUBTITLE_FONT_SIZE,
-            fontWeight = FontWeight.Normal,
+            fontWeight = FONT_WEIGHT_NORMAL,
             lineHeight = SETTINGS_ROW_SUBTITLE_LINE_HEIGHT
         )
     }
@@ -253,7 +260,7 @@ fun SettingsListItem(
     ) {
         if (icon != 0) {
             SettingsIcon(icon)
-            Spacer(Modifier.width(SETTINGS_ITEM_ICON_SPACER_WIDTH))
+            Spacer(ITEM_ICON_SPACER_MODIFIER)
         }
         Column(
             modifier = Modifier.weight(1f),
@@ -265,7 +272,7 @@ fun SettingsListItem(
                 style = titleStyle
             )
             if (subtitle != null) {
-                Spacer(Modifier.height(SETTINGS_ITEM_SUBTITLE_SPACER_HEIGHT))
+                Spacer(ITEM_SUBTITLE_SPACER_MODIFIER)
                 Text(
                     text = subtitle,
                     color = SettingsRowTextSecondary,
@@ -274,7 +281,7 @@ fun SettingsListItem(
             }
         }
         if (trailing != null) {
-            Spacer(Modifier.width(SETTINGS_ITEM_TRAILING_SPACER_WIDTH))
+            Spacer(ITEM_TRAILING_SPACER_MODIFIER)
             trailing()
         }
     }
@@ -349,7 +356,7 @@ fun SettingsSwitchRow(
     val switchColors = SwitchDefaults.colors(
         checkedThumbColor = SettingsOnAccentColor,
         checkedTrackColor = SettingsAccentColor,
-        checkedBorderColor = Color.Transparent,
+        checkedBorderColor = COLOR_TRANSPARENT,
         uncheckedThumbColor = SWITCH_UNCHECKED_THUMB,
         uncheckedTrackColor = SWITCH_UNCHECKED_TRACK,
         uncheckedBorderColor = SWITCH_UNCHECKED_BORDER
@@ -416,7 +423,7 @@ fun SettingsButtonRowWithDialog(
     val trailingContent: @Composable () -> Unit = remember(onOpen, value) {
         {
             TextButton(onClick = onOpen) {
-                Text(value, color = SettingsAccentColor, fontWeight = FontWeight.Medium)
+                Text(value, color = SettingsAccentColor, fontWeight = FONT_WEIGHT_MEDIUM)
             }
         }
     }

@@ -44,6 +44,11 @@ import kotlinx.coroutines.launch
 private val ZERO_INSETS = WindowInsets(0, 0, 0, 0)
 private val SUBTITLE_PRIMARY_COLOR = Color(0xFFB0B0B0)
 private val SUBTITLE_SECONDARY_COLOR = Color(0xFF787878)
+private val COLOR_WHITE = Color.White
+private val FONT_WEIGHT_BOLD = FontWeight.Bold
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val PAGE_INDEX_KEY: (Int) -> Any = { pageIndex -> pageIndex }
+
 private val HEADER_TOP_PADDING_EXTRA = 8.dp
 private val HEADER_HORIZONTAL_PADDING = 16.dp
 private val HEADER_BOTTOM_PADDING = 8.dp
@@ -124,30 +129,31 @@ fun TagsContent(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        contentWindowInsets = ZERO_INSETS,
-        containerColor = Theme.L.grey6,
-        bottomBar = {
-            // Без кнопки страны, в отличие от ленты раздела: адрес
-            // /tags/<тег>/N от страны не зависит.
+    val bottomBarContent: @Composable () -> Unit = remember(pagerState.currentPage, onPageChange, lastPage) {
+        {
             BottomListDashBoardNavigationButtons2(
                 value = pagerState.currentPage,
                 onChange = onPageChange,
                 max = lastPage,
             )
-        },
+        }
+    }
+
+    Scaffold(
+        modifier = modifier.then(FULL_SIZE_MODIFIER),
+        contentWindowInsets = ZERO_INSETS,
+        containerColor = Theme.L.grey6,
+        bottomBar = bottomBarContent,
     ) { padding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = FULL_SIZE_MODIFIER
                 .padding(bottom = padding.calculateBottomPadding())
         ) {
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = FULL_SIZE_MODIFIER,
                 beyondViewportPageCount = BEYOND_VIEWPORT_PAGE_COUNT,
-                key = { pageIndex -> pageIndex }
+                key = PAGE_INDEX_KEY
             ) { pageIndex ->
                 TagsPaginatedListScreen(
                     pageIndex = pageIndex,
@@ -184,9 +190,9 @@ private fun TagsHeader(
     ) {
         Text(
             text = tag,
-            color = Color.White,
+            color = COLOR_WHITE,
             fontSize = TAG_TITLE_FONT_SIZE,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FONT_WEIGHT_BOLD,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

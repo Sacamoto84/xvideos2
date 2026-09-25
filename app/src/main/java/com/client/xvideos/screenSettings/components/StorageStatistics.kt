@@ -162,8 +162,9 @@ internal fun StorageProgressRow(
                 )
             }
             Spacer(PROGRESS_BAR_SPACER_MODIFIER)
+            val progressProvider: () -> Float = remember(progress) { { progress } }
             LinearProgressIndicator(
-                progress = { progress },
+                progress = progressProvider,
                 modifier = PROGRESS_BAR_MODIFIER,
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor

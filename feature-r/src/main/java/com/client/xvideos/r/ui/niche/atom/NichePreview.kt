@@ -46,6 +46,27 @@ private val THUMBNAIL_PADDING = 4.dp
 private val INFO_VERTICAL_PADDING = 4.dp
 private val STAT_TEXT_PADDING = 4.dp
 
+private val COLOR_WHITE = Color.White
+private val ALIGN_START = Alignment.Start
+private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val TEXT_ALIGN_START = TextAlign.Start
+private val TEXT_ALIGN_CENTER = TextAlign.Center
+
+private val STAT_ICON_SIZE_MODIFIER = Modifier.size(STAT_ICON_SIZE)
+private val THUMBNAIL_BASE_MODIFIER = Modifier
+    .padding(THUMBNAIL_PADDING)
+    .clip(NICHE_THUMBNAIL_SHAPE)
+    .size(NICHE_THUMBNAIL_SIZE)
+private val NAME_TEXT_PADDING = Modifier.padding(end = STAT_TEXT_PADDING)
+private val STAT_TEXT_PADDING_MODIFIER = Modifier
+    .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
+    .wrapContentWidth(ALIGN_CENTER_HORIZONTALLY)
+private val INFO_COLUMN_BASE_MODIFIER = Modifier
+    .padding(vertical = INFO_VERTICAL_PADDING)
+    .fillMaxHeight()
+
 @Composable
 fun NichePreview(
     niches: () -> Niche,
@@ -68,57 +89,48 @@ fun NichePreview(
         Row {
             UrlImage(
                 url = niche.thumbnail,
-                modifier = Modifier
-                    .padding(THUMBNAIL_PADDING)
-                    .clip(NICHE_THUMBNAIL_SHAPE)
-                    .size(NICHE_THUMBNAIL_SIZE)
+                modifier = THUMBNAIL_BASE_MODIFIER
             )
 
             Column(
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.Start,
-                modifier = Modifier
-                    .padding(vertical = INFO_VERTICAL_PADDING)
-                    .fillMaxHeight()
+                verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT,
+                horizontalAlignment = ALIGN_START,
+                modifier = INFO_COLUMN_BASE_MODIFIER
             ) {
                 Text(
                     text = niche.name,
-                    modifier = Modifier.padding(end = STAT_TEXT_PADDING),
-                    color = Color.White,
-                    textAlign = TextAlign.Start,
+                    modifier = NAME_TEXT_PADDING,
+                    color = COLOR_WHITE,
+                    textAlign = TEXT_ALIGN_START,
                 )
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
                     Icon(
                         painter = painterResource(R.drawable.members),
                         contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(STAT_ICON_SIZE)
+                        tint = COLOR_WHITE,
+                        modifier = STAT_ICON_SIZE_MODIFIER
                     )
                     Text(
                         text = subscribersText,
-                        modifier = Modifier
-                            .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
-                            .wrapContentWidth(Alignment.CenterHorizontally),
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
+                        modifier = STAT_TEXT_PADDING_MODIFIER,
+                        color = COLOR_WHITE,
+                        textAlign = TEXT_ALIGN_CENTER,
                         fontSize = STAT_FONT_SIZE
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
                     Icon(
                         painter = painterResource(R.drawable.posts),
                         contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(STAT_ICON_SIZE)
+                        tint = COLOR_WHITE,
+                        modifier = STAT_ICON_SIZE_MODIFIER
                     )
                     Text(
                         text = gifsText,
-                        modifier = Modifier
-                            .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
-                            .wrapContentWidth(Alignment.CenterHorizontally),
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
+                        modifier = STAT_TEXT_PADDING_MODIFIER,
+                        color = COLOR_WHITE,
+                        textAlign = TEXT_ALIGN_CENTER,
                         fontSize = STAT_FONT_SIZE
                     )
                 }

@@ -22,6 +22,22 @@ private val HORIZONTAL_PADDING = 2.dp
 private const val INNER_SHADOW_RADIUS = 3f
 private const val INNER_SHADOW_SPREAD = 0f
 
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val TOP_CREATOR_BASE_MODIFIER = Modifier
+    .padding(horizontal = HORIZONTAL_PADDING)
+    .size(TOP_CREATOR_SIZE)
+    .clip(TOP_CREATOR_SHAPE)
+
+private val SHADOW_BOX_MODIFIER = Modifier
+    .size(TOP_CREATOR_SIZE)
+    .innerShadow(
+        shape = TOP_CREATOR_SHAPE,
+        block = {
+            radius = INNER_SHADOW_RADIUS
+            spread = INNER_SHADOW_SPREAD
+        }
+    )
+
 @Composable
 fun NicheTopCreator(
     creator: TopCreator,
@@ -30,27 +46,15 @@ fun NicheTopCreator(
 ) {
     Box(
         modifier = modifier
-            .padding(horizontal = HORIZONTAL_PADDING)
-            .size(TOP_CREATOR_SIZE)
-            .clip(TOP_CREATOR_SHAPE)
+            .then(TOP_CREATOR_BASE_MODIFIER)
             .clickable(onClick = onClick)
     ) {
         UrlImage(
             creator.profileImageUrl,
-            modifier = Modifier.fillMaxSize()
+            modifier = FULL_SIZE_MODIFIER
         )
 
-        Box(
-            modifier = Modifier
-                .size(TOP_CREATOR_SIZE)
-                .innerShadow(
-                    shape = TOP_CREATOR_SHAPE,
-                    block = {
-                        radius = INNER_SHADOW_RADIUS
-                        spread = INNER_SHADOW_SPREAD
-                    }
-                )
-        )
+        Box(modifier = SHADOW_BOX_MODIFIER)
     }
 }
 

@@ -84,6 +84,34 @@ import kotlinx.parcelize.Parcelize
 // рекомпозилась на каждом кадре прокрутки. Если понадобится анимация перехода —
 // читать offset только внутри graphicsLayer { } (фаза отрисовки).
 
+private val ENTER_FADE = fadeIn()
+private val EXIT_FADE = fadeOut()
+
+private val COLOR_WHITE = Color.White
+private val COLOR_GRAY = Color.Gray
+private val COLOR_YELLOW = Color.Yellow
+private val COLOR_TRANSPARENT = Color.Transparent
+private val COLOR_DARK_SURFACE = Color(0xFF202020)
+private val THUMB_CORNER_SHAPE = RoundedCornerShape(4.dp)
+
+private val ICON_SCREEN_ROTATION = Icons.Default.ScreenRotation
+private val ICON_SWAP_VERT = Icons.Default.SwapVert
+private val ICON_SWAP_HORIZ = Icons.Default.SwapHoriz
+private val ICON_VOLUME_OFF = Icons.AutoMirrored.Filled.VolumeOff
+private val ICON_VOLUME_UP = Icons.AutoMirrored.Filled.VolumeUp
+private val ICON_INFO = Icons.Default.Info
+private val ICON_PLAY_ARROW = Icons.Default.PlayArrow
+
+private val ALIGN_TOP_START = Alignment.TopStart
+private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
+private val ALIGN_CENTER = Alignment.Center
+private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val TOP_ROW_MODIFIER = Modifier.fillMaxWidth().offset(y = 4.dp)
+private val LAZY_ROW_MODIFIER = Modifier.height(72.dp)
+private val INDEX_TEXT_PADDING = Modifier.padding(start = 8.dp)
+
 @Parcelize
 class L_FullScreenImage(
     val item: PicsDetails,
@@ -237,7 +265,7 @@ class L_FullScreenImage(
             if (verticalPager) {
                 VerticalPager(
                     state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = FULL_SIZE_MODIFIER,
                     userScrollEnabled = !isCurrentPageZoomed,
                     pageSpacing = 0.dp,
                     beyondViewportPageCount = 1,
@@ -264,7 +292,7 @@ class L_FullScreenImage(
             } else {
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = FULL_SIZE_MODIFIER,
                 userScrollEnabled = !isCurrentPageZoomed,
                 pageSpacing = 0.dp,
                 beyondViewportPageCount = 1,
@@ -291,22 +319,27 @@ class L_FullScreenImage(
             }
             }
 
-            Box(modifier = Modifier.align(Alignment.TopStart)) { Text( currentIndex.toString(), color = Color.Gray, modifier = Modifier.padding(start = 8.dp), fontFamily = Theme.L.fontFamilyKarla )}
+            val onRotateToggle = remember { { rotate = !rotate } }
+            val onVerticalPagerToggle = remember(verticalPager) { { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) } }
+            val onVideoMutedToggle = remember(videoMuted) { { Settings.l_fullscreen_video_muted.setValue(!videoMuted) } }
+            val onShowInfoDialog = remember { { showInfoDialog = true } }
 
-            AnimatedVisibility(visible = !isFullScreen, enter = fadeIn(), exit = fadeOut())
+            Box(modifier = Modifier.align(ALIGN_TOP_START)) { Text( currentIndex.toString(), color = COLOR_GRAY, modifier = INDEX_TEXT_PADDING, fontFamily = Theme.L.fontFamilyKarla )}
+
+            AnimatedVisibility(visible = !isFullScreen, enter = ENTER_FADE, exit = EXIT_FADE)
             {
                 //Верхние кнопки
-                Row(modifier = Modifier.fillMaxWidth().align(Alignment.TopStart).offset(y = 4.dp), horizontalArrangement = Arrangement.SpaceBetween)
+                Row(modifier = Modifier.align(ALIGN_TOP_START).then(TOP_ROW_MODIFIER), horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT)
                 {
                     Row {
-                        IconButton(onClick = { rotate = rotate.not() }) { Icon(Icons.Default.ScreenRotation, contentDescription = "Повернуть изображение", tint = Color.White) }
-                        IconButton(onClick = { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) }) { Icon( if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz, contentDescription = if (verticalPager) "Листать по горизонтали" else "Листать по вертикали", tint = Color.White) }
+                        IconButton(onClick = onRotateToggle) { Icon(ICON_SCREEN_ROTATION, contentDescription = "Повернуть изображение", tint = COLOR_WHITE) }
+                        IconButton(onClick = onVerticalPagerToggle) { Icon( if (verticalPager) ICON_SWAP_VERT else ICON_SWAP_HORIZ, contentDescription = if (verticalPager) "Листать по горизонтали" else "Листать по вертикали", tint = COLOR_WHITE) }
                         // Звук был зашит в mute без единой кнопки включить.
-                        IconButton(onClick = { Settings.l_fullscreen_video_muted.setValue(!videoMuted) }) { Icon( if (videoMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = if (videoMuted) "Включить звук" else "Выключить звук", tint = Color.White) }
+                        IconButton(onClick = onVideoMutedToggle) { Icon( if (videoMuted) ICON_VOLUME_OFF else ICON_VOLUME_UP, contentDescription = if (videoMuted) "Включить звук" else "Выключить звук", tint = COLOR_WHITE) }
                     }
 
                     Row {
-                        IconButton(onClick = { showInfoDialog = true }) { Icon( Icons.Default.Info, contentDescription = "Информация о картинке", tint = Color.White ) }
+                        IconButton(onClick = onShowInfoDialog) { Icon( ICON_INFO, contentDescription = "Информация о картинке", tint = COLOR_WHITE ) }
                         expandMenuViewModel.ExpandMenu( expandMenu, filteredPic.getOrNull(pagerState.currentPage) ?: item, idAlbum, isCollection )
                     }
                 }
@@ -319,12 +352,12 @@ class L_FullScreenImage(
             AnimatedVisibility(
                 visible = !isFullScreen,
                 // Панель выезжает снизу и уезжает вниз ({ it } = на полную свою высоту).
-                enter = fadeIn(),
-                exit  = fadeOut(),
+                enter = ENTER_FADE,
+                exit  = EXIT_FADE,
             ) {
                 SwipeableBottomPanel {
-                    Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                        LazyRow( state = lazyRowState, modifier = Modifier.height(72.dp) )
+                    Box(modifier = Modifier.align(ALIGN_BOTTOM_CENTER)) {
+                        LazyRow( state = lazyRowState, modifier = LAZY_ROW_MODIFIER )
                         {
                             itemsIndexed(
                                 filteredPic,
@@ -333,34 +366,34 @@ class L_FullScreenImage(
                                 Box(
                                     modifier = Modifier
                                         .padding(horizontal = 1.dp)
-                                        .clip(RoundedCornerShape(4.dp))
+                                        .clip(THUMB_CORNER_SHAPE)
                                         .aspectRatio(it1.safeAspectRatio())
                                         // Раньше клик выставлял dataItem, а обратный
                                         // indexOf(dataItem) на дубликатах картинки
                                         // возвращал чужой индекс и пейджер прыгал назад.
                                         .clickable(onClick = {
-                                            coroutineScope.launch { pagerState.scrollToPage(index) }
-                                            corruptCancel = true
-                                        })
-                                        .border(2.dp, if (index == currentIndex) Color.Yellow else Color.Transparent, RoundedCornerShape(4.dp)).padding(2.dp)
+                                             coroutineScope.launch { pagerState.scrollToPage(index) }
+                                             corruptCancel = true
+                                         })
+                                        .border(2.dp, if (index == currentIndex) COLOR_YELLOW else COLOR_TRANSPARENT, THUMB_CORNER_SHAPE).padding(2.dp)
                                 ) {
                                     val thumbUrl = it1.lPreviewImageUrl("large_thumbnail")
                                     if (thumbUrl.isNotBlank() && !thumbUrl.isLVideoFileUrl()) {
                                         UrlImage(
                                             url = thumbUrl,
-                                            modifier = Modifier.clip(RoundedCornerShape(4.dp)).fillMaxSize(),
+                                            modifier = Modifier.clip(THUMB_CORNER_SHAPE).fillMaxSize(),
                                             contentScale = ContentScale.FillBounds,
                                             onSuccess = { }, albumName = albumName, autoPlay = false, isAnimated = false, sizeButton = 20.dp, sizeButtonIcon = 12.dp
                                         )
                                     } else {
                                         Box(
                                             modifier = Modifier
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(Color(0xFF202020))
+                                                .clip(THUMB_CORNER_SHAPE)
+                                                .background(COLOR_DARK_SURFACE)
                                                 .fillMaxSize(),
-                                            contentAlignment = Alignment.Center
+                                            contentAlignment = ALIGN_CENTER
                                         ) {
-                                            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+                                            Icon(ICON_PLAY_ARROW, contentDescription = null, tint = COLOR_WHITE)
                                         }
                                     }
                                 }
