@@ -182,7 +182,9 @@ object ApiClient {
         val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            params.forEach { (key, value) -> parameter(key, value) }
+            if (params.isNotEmpty()) {
+                params.forEach { (key, value) -> parameter(key, value) }
+            }
         }.body()
     }
 
@@ -193,7 +195,9 @@ object ApiClient {
         val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(route.url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            for ((key, value) in params) parameter(key, value)
+            if (params.isNotEmpty()) {
+                for ((key, value) in params) parameter(key, value)
+            }
         }.body()
     }
 
@@ -204,7 +208,9 @@ object ApiClient {
         val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(route.url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            for ((key, value) in params) parameter(key, value)
+            if (params.isNotEmpty()) {
+                for ((key, value) in params) parameter(key, value)
+            }
         }.bodyAsText()
     }
 
@@ -215,7 +221,9 @@ object ApiClient {
         val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
         client.get(url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            for ((key, value) in params) parameter(key, value)
+            if (params.isNotEmpty()) {
+                for ((key, value) in params) parameter(key, value)
+            }
         }.bodyAsText()
     }
 }

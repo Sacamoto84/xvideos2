@@ -198,17 +198,24 @@ class FileDB<T>(
                 }
                 files.sortByDescending { it.lastModified() }
 
-                loadSeq.incrementAndGet() to files.mapNotNull { file ->
-                    if (file.length() == 0L) return@mapNotNull null
-                    try {
-                        val jsonString = file.readText(Charsets.UTF_8)
-                        if (jsonString.isBlank()) return@mapNotNull null
-                        json.decodeFromString(serializer, jsonString)
-                    } catch (e: Exception) {
-                        Timber.e(e, "!!! FileDB refresh Ошибка при чтении файла $dirPath ${file.name}")
-                        null
+                val loadedList = if (files.isEmpty()) {
+                    emptyList()
+                } else {
+                    val result = ArrayList<T>(files.size)
+                    for (file in files) {
+                        if (file.length() == 0L) continue
+                        try {
+                            val jsonString = file.readText(Charsets.UTF_8)
+                            if (jsonString.isBlank()) continue
+                            result.add(json.decodeFromString(serializer, jsonString))
+                        } catch (e: Exception) {
+                            Timber.e(e, "!!! FileDB refresh Ошибка при чтении файла $dirPath ${file.name}")
+                        }
                     }
+                    result
                 }
+
+                loadSeq.incrementAndGet() to loadedList
             }
 
             synchronized(publishLock) {

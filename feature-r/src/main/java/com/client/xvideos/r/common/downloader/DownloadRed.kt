@@ -298,7 +298,7 @@ class DownloadRed @Inject constructor(
             // Проверяем, осталась ли папка пользователя пустой
             if (userDir.exists() && userDir.isDirectory) {
                 val files = userDir.listFiles()
-                if (files == null || files.isEmpty()) {
+                if (files.isNullOrEmpty()) {
                     userDir.delete()  // папка пустая → удаляем
                 }
             }

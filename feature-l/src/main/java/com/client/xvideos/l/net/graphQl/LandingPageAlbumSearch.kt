@@ -32,6 +32,9 @@ suspend fun LandingPageAlbumSearch(
             return Result.failure(error)
         }
         val rawJson = res.getOrThrow()
+        if (rawJson.isBlank()) {
+            return Result.failure(IllegalStateException("Empty response searching albums: $cleanQuery"))
+        }
         val json = LJson.parseToJsonElement(rawJson).jsonObject
         val errors = json["errors"]?.takeIf { it !is JsonNull }?.jsonArray
         if (!errors.isNullOrEmpty()) {

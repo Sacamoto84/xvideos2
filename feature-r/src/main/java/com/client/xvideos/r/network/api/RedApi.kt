@@ -303,7 +303,9 @@ class RedApi @Inject constructor(
      * сети отсюда прилетал NPE вместо ошибки сети.
      */
     suspend fun searchNichesShort(text: String): Result<List<SearchItemNichesResponse>> {
-        val route = Route(method = "GET", path = "/v2/niches/search?query={text}", "text" to text)
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return Result.success(emptyList())
+        val route = Route(method = "GET", path = "/v2/niches/search?query={text}", "text" to trimmed)
         return api.request<SearchNichesShortResponse>(route).map { it.niches }
     }
 
@@ -318,6 +320,7 @@ class RedApi @Inject constructor(
      * ## Получить подсказки (suggest) по тегам.
      */
     suspend fun getTagSuggestions(query: String): Result <List<TagSuggestion>> {
+        if (query.isEmpty()) return Result.success(emptyList())
         val route =
             Route(method = "GET", path = "/v2/search/suggest?query={query}", "query" to query)
         return api.request(route)

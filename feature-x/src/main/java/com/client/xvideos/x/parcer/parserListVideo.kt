@@ -90,12 +90,6 @@ fun parserListVideo(document: Document): List<ItemsX> {
  */
 private fun extractViews(metadata: String?): String {
     if (metadata.isNullOrBlank()) return "No views"
-    var lastToken: String? = null
-    for (match in VIEWS_TOKEN_REGEX.findAll(metadata)) {
-        val candidate = match.value.trim()
-        if (candidate.isNotBlank()) {
-            lastToken = candidate
-        }
-    }
-    return lastToken ?: metadata.trim()
+    val lastToken = VIEWS_TOKEN_REGEX.findAll(metadata).lastOrNull()?.value?.trim()
+    return if (!lastToken.isNullOrEmpty()) lastToken else metadata.trim()
 }
