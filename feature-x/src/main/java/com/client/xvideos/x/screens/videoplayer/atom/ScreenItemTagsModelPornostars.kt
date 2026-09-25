@@ -55,6 +55,21 @@ private val COUNT_TEXT_STYLE = TextStyle(
     fontWeight = FontWeight.SemiBold
 )
 
+private val TAG_BASE_MODIFIER = Modifier
+    .padding(horizontal = TAG_PADDING_HORIZONTAL, vertical = TAG_PADDING_VERTICAL)
+    .height(TAG_HEIGHT)
+    .clip(PORNOSTAR_TAG_SHAPE)
+
+private val COUNT_BADGE_MODIFIER = Modifier
+    .padding(end = BADGE_PADDING_END)
+    .height(BADGE_HEIGHT)
+    .clip(COUNT_BADGE_SHAPE)
+    .background(COUNT_BADGE_BG)
+    .padding(horizontal = BADGE_PADDING_HORIZONTAL)
+
+private val TEXT_MODIFIER_WITH_COUNT = Modifier.padding(start = TEXT_PADDING_START, end = TEXT_PADDING_END_WITH_COUNT)
+private val TEXT_MODIFIER_NO_COUNT = Modifier.padding(start = TEXT_PADDING_START, end = TEXT_PADDING_END_NO_COUNT)
+
 /**
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
  */
@@ -67,11 +82,9 @@ fun ScreenItemTagsModelPornostars(
     modifier: Modifier = Modifier
 ) {
     val hasCount = remember(count) { count.isNotBlank() }
-    val endPadding = if (hasCount) TEXT_PADDING_END_WITH_COUNT else TEXT_PADDING_END_NO_COUNT
+    val textModifier = if (hasCount) TEXT_MODIFIER_WITH_COUNT else TEXT_MODIFIER_NO_COUNT
     val baseModifier = modifier
-        .padding(horizontal = TAG_PADDING_HORIZONTAL, vertical = TAG_PADDING_VERTICAL)
-        .height(TAG_HEIGHT)
-        .clip(PORNOSTAR_TAG_SHAPE)
+        .then(TAG_BASE_MODIFIER)
         .background(color)
     val rowModifier = if (onClick != null) baseModifier.clickable(onClick = onClick) else baseModifier
 
@@ -81,18 +94,13 @@ fun ScreenItemTagsModelPornostars(
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(start = TEXT_PADDING_START, end = endPadding),
+            modifier = textModifier,
             style = PORNOSTAR_TEXT_STYLE
         )
 
         if (hasCount) {
             Box(
-                modifier = Modifier
-                    .padding(end = BADGE_PADDING_END)
-                    .height(BADGE_HEIGHT)
-                    .clip(COUNT_BADGE_SHAPE)
-                    .background(COUNT_BADGE_BG)
-                    .padding(horizontal = BADGE_PADDING_HORIZONTAL),
+                modifier = COUNT_BADGE_MODIFIER,
                 contentAlignment = Alignment.Center
             ) {
                 Text(

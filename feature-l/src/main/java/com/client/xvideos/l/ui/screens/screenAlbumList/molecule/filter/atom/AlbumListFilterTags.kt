@@ -36,11 +36,30 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
+import androidx.compose.runtime.key
+import androidx.compose.ui.tooling.preview.Preview
+
+private val DROPDOWN_CORNER = 6.dp
+private val DROPDOWN_SHAPE = RoundedCornerShape(DROPDOWN_CORNER)
+private val DROPDOWN_MIN_WIDTH = 160.dp
+private val DROPDOWN_MAX_WIDTH = 220.dp
+private val DROPDOWN_HEIGHT = 43.dp
+private val DROPDOWN_BORDER_WIDTH = 1.dp
+private val DROPDOWN_HORIZONTAL_PADDING = 8.dp
+private val ROW_HORIZONTAL_PADDING = 4.dp
+private val CHIPS_TOP_SPACING = 6.dp
+private val REMOVE_ICON_SIZE = 16.dp
+private const val TITLE_TAGS = "Tags"
+private const val TEXT_ANY = "Any"
+private const val TEXT_SELECTED_SUFFIX = " selected"
+private const val CD_REMOVE = "Remove"
+private const val PREFIX_NOT = "NOT"
 
 @Composable
 fun AlbumListFilterTags(
     filter: AlbumListFilter,
     filterTagStateCount: List<AlbumListFilterGenreCountResponse>?,
+    modifier: Modifier = Modifier,
     onChange: (AlbumListFilter) -> Unit
 ) {
     val tagCountItems = filterTagStateCount.orEmpty()
@@ -52,10 +71,10 @@ fun AlbumListFilterTags(
 
     var showDialog by remember { mutableStateOf(false) }
     val totalSelected = tagsPlus.size + tagsMinus.size
-    val selectorText = if (totalSelected == 0) "Any" else "$totalSelected selected"
+    val selectorText = if (totalSelected == 0) TEXT_ANY else "$totalSelected$TEXT_SELECTED_SUFFIX"
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(palette.surface)
     ) {
@@ -94,33 +113,53 @@ fun AlbumListFilterTags(
 private fun TagsTriggerRow(
     selectorText: String,
     totalSelected: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val palette = StyleGenresTags.Palette
+    val titleStyle = remember(Theme.L.Type.rowTitle, palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(
+            fontWeight = FontWeight.Bold,
+            color = palette.textPrimary
+        )
+    }
+    val normalValueStyle = remember(Theme.L.Type.rowTitle, palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.textPrimary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    val selectedValueStyle = remember(Theme.L.Type.rowTitle, palette.selectedText) {
+        Theme.L.Type.rowTitle.copy(
+            color = palette.selectedText,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    val dropdownBoxModifier = remember(palette.border, palette.field) {
+        Modifier
+            .widthIn(min = DROPDOWN_MIN_WIDTH, max = DROPDOWN_MAX_WIDTH)
+            .height(DROPDOWN_HEIGHT)
+            .clip(DROPDOWN_SHAPE)
+            .border(DROPDOWN_BORDER_WIDTH, palette.border, DROPDOWN_SHAPE)
+            .background(palette.field)
+    }
+
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = ROW_HORIZONTAL_PADDING),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Tags",
-            style = Theme.L.Type.rowTitle.copy(
-                fontWeight = FontWeight.Bold,
-                color = palette.textPrimary
-            )
+            text = TITLE_TAGS,
+            style = titleStyle
         )
 
         Row(
-            modifier = Modifier
-                .widthIn(min = 160.dp, max = 220.dp)
-                .height(43.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
-                .background(palette.field)
+            modifier = dropdownBoxModifier
                 .clickable { onClick() }
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = DROPDOWN_HORIZONTAL_PADDING),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -129,10 +168,7 @@ private fun TagsTriggerRow(
                 modifier = Modifier.weight(1f, fill = false),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = Theme.L.Type.rowTitle.copy(
-                    color = if (totalSelected == 0) palette.textPrimary else palette.selectedText,
-                    fontWeight = FontWeight.Bold
-                )
+                style = if (totalSelected == 0) normalValueStyle else selectedValueStyle
             )
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
@@ -148,70 +184,84 @@ private fun ActiveTagsChips(
     tagsPlus: List<String>,
     tagsMinus: List<String>,
     onRemovePlus: (String) -> Unit,
-    onRemoveMinus: (String) -> Unit
+    onRemoveMinus: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val palette = StyleGenresTags.Palette
-    Spacer(modifier = Modifier.height(6.dp))
-    Column(modifier = Modifier.fillMaxWidth()) {
+    val chipTextStyle = remember(Theme.L.Type.bodyLarge) {
+        Theme.L.Type.bodyLarge.copy(
+            color = StyleGenresTags.colorSelectTextItem,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    val excludedChipTextStyle = remember(Theme.L.Type.bodyLarge) {
+        Theme.L.Type.bodyLarge.copy(
+            color = StyleGenresTags.colorExcludedTextItem,
+            fontWeight = FontWeight.Bold
+        )
+    }
+
+    Spacer(modifier = Modifier.height(CHIPS_TOP_SPACING))
+    Column(modifier = modifier.fillMaxWidth()) {
         tagsPlus.forEach { item ->
-            Row(
-                modifier = Modifier
-                    .then(StyleGenresTags.modifierSelectTextItem)
-                    .clickable { onRemovePlus(item) },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = item,
-                    color = StyleGenresTags.colorSelectTextItem,
-                    style = Theme.L.Type.bodyLarge.copy(
+            key(item) {
+                Row(
+                    modifier = Modifier
+                        .then(StyleGenresTags.modifierSelectTextItem)
+                        .clickable { onRemovePlus(item) },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = item,
                         color = StyleGenresTags.colorSelectTextItem,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = palette.selectedBorder,
-                    modifier = Modifier.size(16.dp)
-                )
+                        style = chipTextStyle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = CD_REMOVE,
+                        tint = palette.selectedBorder,
+                        modifier = Modifier.size(REMOVE_ICON_SIZE)
+                    )
+                }
             }
         }
 
         tagsMinus.forEach { item ->
-            val annotatedText = buildAnnotatedString {
-                withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) {
-                    append("NOT")
+            key(item) {
+                val annotatedText = remember(item, palette.excludedBorder) {
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) {
+                            append(PREFIX_NOT)
+                        }
+                        append(" $item")
+                    }
                 }
-                append(" $item")
-            }
-            Row(
-                modifier = Modifier
-                    .then(StyleGenresTags.modifierExcludedTextItem)
-                    .clickable { onRemoveMinus(item) },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = annotatedText,
-                    color = StyleGenresTags.colorExcludedTextItem,
-                    style = Theme.L.Type.bodyLarge.copy(
+                Row(
+                    modifier = Modifier
+                        .then(StyleGenresTags.modifierExcludedTextItem)
+                        .clickable { onRemoveMinus(item) },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = annotatedText,
                         color = StyleGenresTags.colorExcludedTextItem,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = palette.excludedBorder,
-                    modifier = Modifier.size(16.dp)
-                )
+                        style = excludedChipTextStyle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = CD_REMOVE,
+                        tint = palette.excludedBorder,
+                        modifier = Modifier.size(REMOVE_ICON_SIZE)
+                    )
+                }
             }
         }
     }
@@ -235,3 +285,14 @@ private fun rememberTagCountIndex(
 ): Map<String, Int> = remember(tagCountItems) {
     tagCountItems.associate { it.term to it.count }
 }
+
+@Preview(showBackground = true, backgroundColor = 0xFF141418)
+@Composable
+private fun AlbumListFilterTagsPreview() {
+    AlbumListFilterTags(
+        filter = AlbumListFilter(),
+        filterTagStateCount = emptyList(),
+        onChange = {}
+    )
+}
+

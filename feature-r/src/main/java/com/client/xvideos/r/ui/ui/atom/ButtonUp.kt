@@ -32,19 +32,38 @@ private val DEFAULT_BUTTON_UP_WIDTH = 32.dp
 private val DEFAULT_BUTTON_UP_CIRCLE_SIZE = 46.dp
 private val BUTTON_UP_ICON_TINT = Color.LightGray
 
+private val BUTTON_UP_BASE_MODIFIER = Modifier
+    .clip(BUTTON_UP_ROUNDED_SHAPE)
+    .border(BUTTON_UP_BORDER_WIDTH, BUTTON_UP_BORDER_COLOR, BUTTON_UP_ROUNDED_SHAPE)
+    .background(Theme.tabLevel0)
+
+private val BUTTON_UP_DEFAULT_SIZE_MODIFIER = Modifier
+    .height(BUTTON_UP_HEIGHT)
+    .width(DEFAULT_BUTTON_UP_WIDTH)
+
+private val BUTTON_UP_CIRCLE_BASE_MODIFIER = Modifier
+    .clip(CircleShape)
+    .border(BUTTON_UP_BORDER_WIDTH, BUTTON_UP_BORDER_COLOR, CircleShape)
+    .background(Theme.tabLevel0)
+
+private val BUTTON_UP_CIRCLE_DEFAULT_SIZE_MODIFIER = Modifier.size(DEFAULT_BUTTON_UP_CIRCLE_SIZE)
+
 @Composable
 fun ButtonUp(
     width: Dp = DEFAULT_BUTTON_UP_WIDTH,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val sizeModifier = if (width == DEFAULT_BUTTON_UP_WIDTH) {
+        BUTTON_UP_DEFAULT_SIZE_MODIFIER
+    } else {
+        Modifier.height(BUTTON_UP_HEIGHT).width(width)
+    }
+
     Box(
         modifier = modifier
-            .height(BUTTON_UP_HEIGHT)
-            .width(width)
-            .clip(BUTTON_UP_ROUNDED_SHAPE)
-            .border(BUTTON_UP_BORDER_WIDTH, BUTTON_UP_BORDER_COLOR, BUTTON_UP_ROUNDED_SHAPE)
-            .background(Theme.tabLevel0)
+            .then(sizeModifier)
+            .then(BUTTON_UP_BASE_MODIFIER)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -62,12 +81,16 @@ fun ButtonUpCircle(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val sizeModifier = if (size == DEFAULT_BUTTON_UP_CIRCLE_SIZE) {
+        BUTTON_UP_CIRCLE_DEFAULT_SIZE_MODIFIER
+    } else {
+        Modifier.size(size)
+    }
+
     Box(
         modifier = modifier
-            .size(size)
-            .clip(CircleShape)
-            .border(BUTTON_UP_BORDER_WIDTH, BUTTON_UP_BORDER_COLOR, CircleShape)
-            .background(Theme.tabLevel0)
+            .then(sizeModifier)
+            .then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

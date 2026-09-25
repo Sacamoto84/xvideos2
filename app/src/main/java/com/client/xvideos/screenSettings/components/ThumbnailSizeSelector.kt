@@ -20,6 +20,9 @@ import com.client.xvideos.common.settings.ThumbnailsSize
 
 private val SELECTOR_HORIZONTAL_PADDING = 72.dp
 private val SELECTOR_VERTICAL_PADDING = 4.dp
+private val SELECTOR_BOX_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = SELECTOR_HORIZONTAL_PADDING, vertical = SELECTOR_VERTICAL_PADDING)
 
 @Composable
 fun ThumbnailSizeSelector(
@@ -33,7 +36,7 @@ fun ThumbnailSizeSelector(
     val onOpen = remember { { expanded = true } }
     val onDismiss = remember { { expanded = false } }
 
-    Box(modifier = modifier.fillMaxWidth().padding(horizontal = SELECTOR_HORIZONTAL_PADDING, vertical = SELECTOR_VERTICAL_PADDING)) {
+    Box(modifier = modifier.then(SELECTOR_BOX_MODIFIER)) {
         Button(onClick = onOpen) {
             Text(currentValue)
         }

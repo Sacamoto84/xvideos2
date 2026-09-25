@@ -29,6 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.element.SettingElementList
 import com.skydoves.compose.stability.runtime.TraceRecomposition
 
+import androidx.compose.runtime.key
+
 private val ROW_HORIZONTAL_PADDING = 8.dp
 private val ROW_VERTICAL_PADDING = 2.dp
 private val ROW_HEIGHT = 48.dp
@@ -40,6 +42,8 @@ private val POINT_SIZE = 4.dp
 private val POINT_ACTIVE_COLOR = Color.White
 private val POINT_INACTIVE_COLOR = Color.Gray
 private val POINT_SHAPE = CircleShape
+private val LABEL_TEXT_MODIFIER = Modifier.width(LABEL_WIDTH)
+private val SEGMENT_ROW_MODIFIER = Modifier.padding(start = SEGMENT_START_PADDING).fillMaxWidth()
 private val POINT_BASE_MODIFIER = Modifier
     .padding(end = POINT_SPACING)
     .clip(POINT_SHAPE)
@@ -63,7 +67,7 @@ fun Config_G_0_4(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text, modifier = Modifier.width(LABEL_WIDTH), style = styleTextConfig)
+        Text(text, modifier = LABEL_TEXT_MODIFIER, style = styleTextConfig)
 
         val onToggleIndex: (Int) -> Unit = remember(setting, list) {
             { settingIndex ->
@@ -74,20 +78,26 @@ fun Config_G_0_4(
         }
 
         MultiChoiceSegmentedButtonRow(
-            modifier = Modifier.padding(start = SEGMENT_START_PADDING).fillMaxWidth()
+            modifier = SEGMENT_ROW_MODIFIER
         ) {
             visibleIndices.forEachIndexed { buttonIndex, settingIndex ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = buttonIndex,
-                        count = visibleIndices.size
-                    ),
-                    checked = list[settingIndex],
-                    onCheckedChange = { onToggleIndex(settingIndex) },
-                    label = {
-                        TabBarPoints(settingIndex, list[settingIndex])
+                key(settingIndex) {
+                    val isChecked = list[settingIndex]
+                    val onCheckedChange = remember(onToggleIndex, settingIndex) {
+                        { onToggleIndex(settingIndex) }
                     }
-                )
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = buttonIndex,
+                            count = visibleIndices.size
+                        ),
+                        checked = isChecked,
+                        onCheckedChange = { onCheckedChange() },
+                        label = {
+                            TabBarPoints(settingIndex, isChecked)
+                        }
+                    )
+                }
             }
         }
 

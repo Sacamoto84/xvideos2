@@ -86,6 +86,27 @@ private val TAG_TOGGLE_TEXT_STYLE = TextStyle(
 private const val ROTATION_COLLAPSED = 0f
 private const val ROTATION_EXPANDED = 180f
 
+private val TAG_CHIP_BASE_MODIFIER = Modifier
+    .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
+    .height(TAG_CHIP_HEIGHT)
+    .clip(TAG_CHIP_SHAPE)
+    .background(TAG_BG_COLOR)
+    .border(TAG_BORDER_WIDTH, TAG_BORDER_COLOR, TAG_CHIP_SHAPE)
+
+private val TAG_TOGGLE_BASE_MODIFIER = Modifier
+    .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
+    .height(TAG_CHIP_HEIGHT)
+    .clip(TAG_CHIP_SHAPE)
+    .background(TAG_ACTION_BG_COLOR)
+    .border(TAG_BORDER_WIDTH, TAG_ACTION_BORDER_COLOR, TAG_CHIP_SHAPE)
+
+private val TAG_CONTAINER_EXPANDED_MODIFIER = Modifier
+    .clip(TAG_CONTAINER_SHAPE)
+    .background(TAG_CONTAINER_EXPANDED_BG)
+    .border(TAG_BORDER_WIDTH, TAG_BORDER_COLOR, TAG_CONTAINER_SHAPE)
+    .padding(horizontal = TAG_CONTAINER_PADDING, vertical = TAG_CONTAINER_PADDING)
+    .heightIn(max = TAG_CONTAINER_MAX_HEIGHT)
+
 private const val CD_EXPAND_TAGS = "Развернуть теги"
 private const val CD_COLLAPSE_TAGS = "Свернуть теги"
 private const val TEXT_COLLAPSE = "Свернуть"
@@ -196,22 +217,17 @@ fun ComposeTags(
     val onExpandTags = remember { { isExpanded = true } }
     val onCollapseTags = remember { { isExpanded = false } }
 
+    val scrollState = rememberScrollState()
+    val containerModifier = if (tagsState.isExpanded) {
+        TAG_CONTAINER_EXPANDED_MODIFIER.verticalScroll(scrollState)
+    } else {
+        Modifier
+    }
+
     Box(
         modifier = modifier
             .animateContentSize()
-            .then(
-                if (tagsState.isExpanded) {
-                    Modifier
-                        .clip(TAG_CONTAINER_SHAPE)
-                        .background(TAG_CONTAINER_EXPANDED_BG)
-                        .border(TAG_BORDER_WIDTH, TAG_BORDER_COLOR, TAG_CONTAINER_SHAPE)
-                        .padding(horizontal = TAG_CONTAINER_PADDING, vertical = TAG_CONTAINER_PADDING)
-                        .heightIn(max = TAG_CONTAINER_MAX_HEIGHT)
-                        .verticalScroll(rememberScrollState())
-                } else {
-                    Modifier
-                }
-            )
+            .then(containerModifier)
     ) {
         FlowRow(
             verticalArrangement = Arrangement.Center,
@@ -284,11 +300,7 @@ private fun TagChip(
 ) {
     Box(
         modifier = modifier
-            .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
-            .height(TAG_CHIP_HEIGHT)
-            .clip(TAG_CHIP_SHAPE)
-            .background(TAG_BG_COLOR)
-            .border(TAG_BORDER_WIDTH, TAG_BORDER_COLOR, TAG_CHIP_SHAPE)
+            .then(TAG_CHIP_BASE_MODIFIER)
             .clickable(onClick = onClick)
             .padding(horizontal = TAG_CHIP_CONTENT_PADDING),
         contentAlignment = Alignment.Center,
@@ -310,11 +322,7 @@ private fun TagToggleChip(
 ) {
     Row(
         modifier = modifier
-            .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
-            .height(TAG_CHIP_HEIGHT)
-            .clip(TAG_CHIP_SHAPE)
-            .background(TAG_ACTION_BG_COLOR)
-            .border(TAG_BORDER_WIDTH, TAG_ACTION_BORDER_COLOR, TAG_CHIP_SHAPE)
+            .then(TAG_TOGGLE_BASE_MODIFIER)
             .clickable(onClick = onClick)
             .padding(start = TAG_TOGGLE_START_PADDING, end = TAG_TOGGLE_END_PADDING),
         verticalAlignment = Alignment.CenterVertically,

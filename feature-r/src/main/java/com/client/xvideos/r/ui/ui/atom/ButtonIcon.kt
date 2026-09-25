@@ -28,6 +28,12 @@ private val BUTTON_ICON_SIZE = 46.dp
 private val BUTTON_ICON_BORDER_WIDTH = 1.dp
 private val BUTTON_ICON_TINT = Color.LightGray
 
+private val BUTTON_ICON_BASE_MODIFIER = Modifier
+    .size(BUTTON_ICON_SIZE)
+    .clip(BUTTON_ICON_SHAPE)
+    .border(BUTTON_ICON_BORDER_WIDTH, BUTTON_ICON_BORDER_COLOR, BUTTON_ICON_SHAPE)
+    .background(Theme.R.colorCommonBackground)
+
 @Composable
 fun ButtonIcon(
     imageVector: ImageVector,
@@ -36,10 +42,7 @@ fun ButtonIcon(
 ) {
     Box(
         modifier = modifier
-            .size(BUTTON_ICON_SIZE)
-            .clip(BUTTON_ICON_SHAPE)
-            .border(BUTTON_ICON_BORDER_WIDTH, BUTTON_ICON_BORDER_COLOR, BUTTON_ICON_SHAPE)
-            .background(Theme.R.colorCommonBackground)
+            .then(BUTTON_ICON_BASE_MODIFIER)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
