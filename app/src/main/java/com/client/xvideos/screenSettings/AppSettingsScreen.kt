@@ -216,7 +216,8 @@ private fun AppSettingsScreenContent(
     data: SettingsDataHolders,
     context: Context,
     onBackupDataChanged: () -> Unit,
-    onRefreshFileStats: () -> Unit
+    onRefreshFileStats: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var currentPage by rememberSaveable { mutableStateOf(SettingsPage.Main) }
     val scrollState = rememberScrollState()
@@ -239,6 +240,7 @@ private fun AppSettingsScreenContent(
     val topCutout = getTopInsetDp()
 
     Scaffold(
+        modifier = modifier,
         contentWindowInsets = settingsWindowInsets,
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
@@ -265,6 +267,15 @@ private fun AppSettingsScreenContent(
 
 private val settingsWindowInsets = WindowInsets(0, 0, 0, 0)
 
+private const val SECTION_TITLE_MAIN = "Основное"
+private const val SECTION_TITLE_SECTIONS = "Разделы"
+private val SCREEN_TITLE_FONT_SIZE = 24.sp
+private val SCREEN_TITLE_VERTICAL_PADDING = 12.dp
+private val SCREEN_TITLE_HORIZONTAL_PADDING = 16.dp
+private val SCREEN_BOTTOM_PADDING = 24.dp
+private val SECTION_SPACER_HEIGHT = 16.dp
+private val DETAIL_PAGE_TOP_SPACER_HEIGHT = 4.dp
+
 @Composable
 private fun AppSettingsScreenBody(
     modifier: Modifier = Modifier,
@@ -283,7 +294,7 @@ private fun AppSettingsScreenBody(
 ) {
     val titleStyle = remember(Theme.L.Type.screenTitle) {
         Theme.L.Type.screenTitle.copy(
-            fontSize = 24.sp,
+            fontSize = SCREEN_TITLE_FONT_SIZE,
             fontWeight = FontWeight.Bold,
             color = SettingsRowTextPrimary,
             textAlign = TextAlign.Start
@@ -294,19 +305,24 @@ private fun AppSettingsScreenBody(
         modifier = modifier
             .background(SettingsScreenBackground)
             .fillMaxWidth()
-            .padding(bottom = 24.dp)
+            .padding(bottom = SCREEN_BOTTOM_PADDING)
     ) {
         Text(
             text = currentPage.title,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = topCutout + 12.dp, bottom = 12.dp, start = 16.dp, end = 16.dp),
+                .padding(
+                    top = topCutout + SCREEN_TITLE_VERTICAL_PADDING,
+                    bottom = SCREEN_TITLE_VERTICAL_PADDING,
+                    start = SCREEN_TITLE_HORIZONTAL_PADDING,
+                    end = SCREEN_TITLE_HORIZONTAL_PADDING
+                ),
             color = SettingsRowTextPrimary,
             style = titleStyle
         )
 
         if (currentPage == SettingsPage.Main) {
-            SettingsSectionTitle("Основное")
+            SettingsSectionTitle(SECTION_TITLE_MAIN)
 
             SettingsGroup {
                 SettingsPage.primaryPages.forEachIndexed { index, page ->
@@ -320,8 +336,8 @@ private fun AppSettingsScreenBody(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-            SettingsSectionTitle("Разделы")
+            Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+            SettingsSectionTitle(SECTION_TITLE_SECTIONS)
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
                     key(page) {
@@ -367,7 +383,10 @@ private data class SettingsDetailParams(
 )
 
 @Composable
-private fun SettingsDetailPage(params: SettingsDetailParams) {
+private fun SettingsDetailPage(
+    params: SettingsDetailParams,
+    modifier: Modifier = Modifier,
+) {
     val ramCachePercent by Settings.image_cache_ram_percent.field.collectAsStateWithLifecycle()
     val diskCacheEnabled by Settings.image_cache_disk_enabled.field.collectAsStateWithLifecycle()
     val diskCacheSizeMb by Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle()
@@ -378,20 +397,21 @@ private fun SettingsDetailPage(params: SettingsDetailParams) {
     val nichesCacheSize = params.data.savedRed?.nichesCache?.list?.size ?: 0
     val nichesCacheLastModifiedHour = params.data.savedRed?.nichesCache?.lastModifiedHour ?: 0L
 
-    Spacer(Modifier.height(4.dp))
+    Spacer(Modifier.height(DETAIL_PAGE_TOP_SPACER_HEIGHT))
     when (params.currentPage) {
         SettingsPage.Main -> Unit
-        SettingsPage.Privacy -> AppLockSettingsSection()
-        SettingsPage.Network -> NetworkSettingsSection()
+        SettingsPage.Privacy -> AppLockSettingsSection(modifier = modifier)
+        SettingsPage.Network -> NetworkSettingsSection(modifier = modifier)
         SettingsPage.Cache -> CacheSettingsSection(
             ramCachePercent = ramCachePercent,
             diskCacheEnabled = diskCacheEnabled,
             diskCacheSizeMb = diskCacheSizeMb,
             imageCacheSizeBytes = params.imageCacheSizeBytes,
             onClearImageCache = params.onClearImageCache,
-            context = params.context
+            context = params.context,
+            modifier = modifier
         )
-        SettingsPage.L -> LSettingsSection(lLogin = lLogin)
+        SettingsPage.L -> LSettingsSection(lLogin = lLogin, modifier = modifier)
         SettingsPage.Red -> RSettingsSection(
             sizeRedTotal = params.sizeRedTotal,
             sizeRedDownload = params.sizeRedDownload,
@@ -401,18 +421,20 @@ private fun SettingsDetailPage(params: SettingsDetailParams) {
             isNichesCacheDownloading = isNichesCacheDownloading,
             nichesCacheProgress = nichesCacheProgress,
             nichesCacheSize = nichesCacheSize,
-            nichesCacheLastModifiedHour = nichesCacheLastModifiedHour
+            nichesCacheLastModifiedHour = nichesCacheLastModifiedHour,
+            modifier = modifier
         )
-        SettingsPage.X -> XSettingsSection()
-        SettingsPage.Appearance -> AppearanceSettingsSection()
-        SettingsPage.Storage -> StorageStatisticsSection(params.storageStats)
+        SettingsPage.X -> XSettingsSection(modifier = modifier)
+        SettingsPage.Appearance -> AppearanceSettingsSection(modifier = modifier)
+        SettingsPage.Storage -> StorageStatisticsSection(params.storageStats, modifier = modifier)
         SettingsPage.Backup -> BackupSettingsSection(
             context = params.context,
             data = params.data,
-            onDataChanged = params.onBackupDataChanged
+            onDataChanged = params.onBackupDataChanged,
+            modifier = modifier
         )
         SettingsPage.P2P -> P2PSettingsSection()
-        SettingsPage.WebServer -> WebServerSettingsSection()
+        SettingsPage.WebServer -> WebServerSettingsSection(modifier = modifier)
     }
 }
 
@@ -493,27 +515,31 @@ internal enum class SettingsPage(
 @Composable
 private fun SettingsNavigationItem(
     page: SettingsPage,
-    onOpenPage: (SettingsPage) -> Unit
+    onOpenPage: (SettingsPage) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val onClick = remember(page, onOpenPage) { { onOpenPage(page) } }
     SettingsListItem(
         icon = page.icon,
         text = page.title,
         subtitle = page.subtitle,
-        onClick = onClick
+        onClick = onClick,
+        modifier = modifier
     )
 }
 
 @Composable
 private fun SettingsNavigationRow(
     page: SettingsPage,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     SettingsListItem(
         icon = page.icon,
         text = page.title,
         subtitle = page.subtitle,
-        onClick = onClick
+        onClick = onClick,
+        modifier = modifier
     )
 }
 

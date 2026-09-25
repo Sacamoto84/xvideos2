@@ -55,6 +55,7 @@ private val VERIFIED_BADGE_SIZE = 26.dp
 private val ROW_HEADER_HEIGHT = 48.dp
 private val BUTTON_HEIGHT = 48.dp
 private val BUTTON_BORDER_WIDTH = 1.dp
+private val FOLLOW_BUTTON_BORDER_MODIFIER = Modifier.border(BUTTON_BORDER_WIDTH, Color.White, PROFILE_FOLLOW_BUTTON_SHAPE)
 private val BUTTON_START_PADDING = 8.dp
 private val BUTTON_END_PADDING = 64.dp
 private val USERNAME_SPACER_WIDTH = 8.dp
@@ -165,9 +166,7 @@ private fun CreatorTopInfoRow(
     val followButtonText = if (isFollow) TEXT_UNFOLLOW else TEXT_FOLLOW
     val followButtonTextColor = if (isFollow) Color.White else Color.Black
     val followButtonBgColor = if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow
-    val followButtonBorderModifier = remember(isFollow) {
-        if (isFollow) Modifier.border(BUTTON_BORDER_WIDTH, Color.White, PROFILE_FOLLOW_BUTTON_SHAPE) else Modifier
-    }
+    val followButtonBorderModifier = if (isFollow) FOLLOW_BUTTON_BORDER_MODIFIER else Modifier
 
     Row(
         modifier = modifier.padding(top = TOP_ROW_PADDING_TOP).fillMaxWidth(),
@@ -257,50 +256,55 @@ private fun CreatorStatsRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        StatItem(
+            count = followersPretty,
+            label = TEXT_SUBSCRIBERS,
             modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
-            Text(followersPretty, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium)
-            Text(TEXT_SUBSCRIBERS, color = PROFILE_STAT_LABEL_COLOR, fontFamily = Theme.R.fontFamilyPopinsRegular)
-        }
+        )
 
-        Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
+        StatDivider()
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        StatItem(
+            count = viewsPretty,
+            label = TEXT_VIEWS,
             modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
-            Text(
-                viewsPretty,
-                color = Color.White,
-                fontFamily = Theme.R.fontFamilyPopinsMedium
-            )
-            Text(
-                TEXT_VIEWS,
-                color = PROFILE_STAT_LABEL_COLOR,
-                fontFamily = Theme.R.fontFamilyPopinsRegular
-            )
-        }
+        )
 
-        Box(Modifier.width(STAT_DIVIDER_WIDTH).height(STAT_DIVIDER_HEIGHT).background(PROFILE_STAT_DIVIDER_COLOR))
+        StatDivider()
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        StatItem(
+            count = publishedGifsPretty,
+            label = TEXT_POSTS,
             modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
-            Text(
-                publishedGifsPretty,
-                color = Color.White,
-                fontFamily = Theme.R.fontFamilyPopinsMedium
-            )
-            Text(
-                TEXT_POSTS,
-                color = PROFILE_STAT_LABEL_COLOR,
-                fontFamily = Theme.R.fontFamilyPopinsRegular
-            )
-        }
+        )
     }
+}
+
+@Composable
+private fun StatItem(
+    count: String,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Text(count, color = Color.White, fontFamily = Theme.R.fontFamilyPopinsMedium)
+        Text(label, color = PROFILE_STAT_LABEL_COLOR, fontFamily = Theme.R.fontFamilyPopinsRegular)
+    }
+}
+
+@Composable
+private fun StatDivider(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .width(STAT_DIVIDER_WIDTH)
+            .height(STAT_DIVIDER_HEIGHT)
+            .background(PROFILE_STAT_DIVIDER_COLOR)
+    )
 }
 
 @Preview

@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,7 +30,12 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.albumFilterDisplay
 
 private val UNIQUE_PRIMARY_LIST = albumFilterDisplay.map { it.primary }.distinct()
-private val filterFieldShape = RoundedCornerShape(6.dp)
+private val FILTER_FIELD_SHAPE = RoundedCornerShape(6.dp)
+private val FILTER_FIELD_HEIGHT = 48.dp
+private val FILTER_FIELD_BORDER_WIDTH = 1.dp
+private val FILTER_FIELD_PADDING_HORIZONTAL = 8.dp
+private val FILTER_ROW_SPACING = 8.dp
+private const val TITLE_SORT_BY = "Sort by"
 
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
 @Composable
@@ -39,8 +45,11 @@ fun PreviewAlbumFilterDisplay() {
 }
 
 @Composable
-fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
-
+fun AlbumFilterDisplay(
+    startString: String,
+    onRequestApply: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val list = albumFilterDisplay
     val palette = StyleGenresTags.Palette
 
@@ -61,79 +70,31 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(FILTER_ROW_SPACING)
     ) {
-        // --- Первое поле (Primary) ---
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(48.dp)
-                .clip(filterFieldShape)
-                .border(1.dp, palette.border, filterFieldShape)
-                .background(palette.field)
-                .clickable(onClick = onOpenPrimary)
-                .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = selected.primary,
-                    modifier = Modifier.weight(1f, fill = false),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = valueTextStyle
-                )
-                Icon(
-                    Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = palette.textSecondary
-                )
-            }
-        }
+        FilterDropdownField(
+            text = selected.primary,
+            style = valueTextStyle,
+            palette = palette,
+            onClick = onOpenPrimary,
+            modifier = Modifier.weight(1f)
+        )
 
-        // --- Второе поле (Secondary) ---
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(48.dp)
-                .clip(filterFieldShape)
-                .border(1.dp, palette.border, filterFieldShape)
-                .background(palette.field)
-                .clickable(onClick = onOpenSecondary)
-                .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = selected.secondary,
-                    modifier = Modifier.weight(1f, fill = false),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = valueTextStyle
-                )
-                Icon(
-                    Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = palette.textSecondary
-                )
-            }
-        }
+        FilterDropdownField(
+            text = selected.secondary,
+            style = valueTextStyle,
+            palette = palette,
+            onClick = onOpenSecondary,
+            modifier = Modifier.weight(1f)
+        )
     }
 
     // --- Диалог выбора Primary ---
     if (showPrimaryDialog) {
         AlbumFilterSelectDialog(
-            title = "Sort by",
+            title = TITLE_SORT_BY,
             items = UNIQUE_PRIMARY_LIST,
             selectedItem = selected.primary,
             itemTitle = { it },
@@ -164,5 +125,44 @@ fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -> Unit) {
                 onRequestApply(item.request)
             }
         )
+    }
+}
+
+@Composable
+private fun FilterDropdownField(
+    text: String,
+    style: TextStyle,
+    palette: StyleGenresTags.Palette,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .height(FILTER_FIELD_HEIGHT)
+            .clip(FILTER_FIELD_SHAPE)
+            .border(FILTER_FIELD_BORDER_WIDTH, palette.border, FILTER_FIELD_SHAPE)
+            .background(palette.field)
+            .clickable(onClick = onClick)
+            .padding(horizontal = FILTER_FIELD_PADDING_HORIZONTAL),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = text,
+                modifier = Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = style
+            )
+            Icon(
+                Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                tint = palette.textSecondary
+            )
+        }
     }
 }

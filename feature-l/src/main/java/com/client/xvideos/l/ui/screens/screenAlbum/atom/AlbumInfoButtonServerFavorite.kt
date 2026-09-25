@@ -46,7 +46,8 @@ private const val TEXT_ADD_TO_SERVER = "Добавить альбом на се�
 fun AlbumInfoButtonServerFavorite(
     isFavorite: Boolean,
     isLoading: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val buttonText = remember(isFavorite) {
         if (isFavorite) TEXT_REMOVE_FROM_SERVER else TEXT_ADD_TO_SERVER
@@ -54,18 +55,18 @@ fun AlbumInfoButtonServerFavorite(
     val iconVector = remember(isFavorite) {
         if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
     }
-    val iconTint = remember(isFavorite) {
+    val iconTint = remember(isFavorite, Theme.L.red) {
         if (isFavorite) Theme.L.red else Color.White
     }
-    val backgroundColor = remember(isFavorite) {
+    val backgroundColor = remember(isFavorite, Theme.L.grey6, Theme.L.red) {
         if (isFavorite) Theme.L.grey6 else Theme.L.red
     }
-    val buttonTextStyle = remember {
+    val buttonTextStyle = remember(Theme.L.Type.button) {
         Theme.L.Type.button.copy(color = Color.White)
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
             .height(BUTTON_HEIGHT)
             .fillMaxWidth()

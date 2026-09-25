@@ -14,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -39,6 +41,20 @@ private val BADGE_PADDING_HORIZONTAL = 5.dp
 private val TEXT_FONT_SIZE = 13.sp
 private val COUNT_FONT_SIZE = 11.sp
 
+private val PORNOSTAR_TEXT_STYLE = TextStyle(
+    color = Color.White,
+    fontSize = TEXT_FONT_SIZE,
+    fontWeight = FontWeight.Medium
+)
+
+private val COUNT_TEXT_STYLE = TextStyle(
+    color = Color.White,
+    fontSize = COUNT_FONT_SIZE,
+    fontFamily = FontFamily.SansSerif,
+    textAlign = TextAlign.Center,
+    fontWeight = FontWeight.SemiBold
+)
+
 /**
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
  */
@@ -51,6 +67,7 @@ fun ScreenItemTagsModelPornostars(
     modifier: Modifier = Modifier
 ) {
     val hasCount = remember(count) { count.isNotBlank() }
+    val endPadding = if (hasCount) TEXT_PADDING_END_WITH_COUNT else TEXT_PADDING_END_NO_COUNT
     val baseModifier = modifier
         .padding(horizontal = TAG_PADDING_HORIZONTAL, vertical = TAG_PADDING_VERTICAL)
         .height(TAG_HEIGHT)
@@ -63,11 +80,9 @@ fun ScreenItemTagsModelPornostars(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text,
-            modifier = Modifier.padding(start = TEXT_PADDING_START, end = if (hasCount) TEXT_PADDING_END_WITH_COUNT else TEXT_PADDING_END_NO_COUNT),
-            color = Color.White,
-            fontSize = TEXT_FONT_SIZE,
-            fontWeight = FontWeight.Medium
+            text = text,
+            modifier = Modifier.padding(start = TEXT_PADDING_START, end = endPadding),
+            style = PORNOSTAR_TEXT_STYLE
         )
 
         if (hasCount) {
@@ -81,15 +96,33 @@ fun ScreenItemTagsModelPornostars(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    count,
-                    color = Color.White,
-                    fontSize = COUNT_FONT_SIZE,
-                    fontFamily = FontFamily.SansSerif,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold
+                    text = count,
+                    style = COUNT_TEXT_STYLE
                 )
             }
         }
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF141418)
+@Composable
+private fun ScreenItemTagsModelPornostarsWithCountPreview() {
+    ScreenItemTagsModelPornostars(
+        text = "Sweetie Fox",
+        color = Color(0xFFE91E63),
+        count = "120K",
+        onClick = {}
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF141418)
+@Composable
+private fun ScreenItemTagsModelPornostarsWithoutCountPreview() {
+    ScreenItemTagsModelPornostars(
+        text = "Verified Channel",
+        color = Color(0xFF3F51B5),
+        count = "",
+        onClick = {}
+    )
 }
 

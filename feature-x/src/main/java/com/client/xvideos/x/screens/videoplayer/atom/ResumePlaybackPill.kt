@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,17 @@ private val PILL_BUTTON_HORIZONTAL_PADDING = 4.dp
 private val PILL_BUTTON_VERTICAL_PADDING = 2.dp
 private const val BUTTON_RESTART_TEXT = "С начала"
 
+private val PILL_TEXT_STYLE = TextStyle(
+    color = Color.White,
+    fontSize = PILL_FONT_SIZE
+)
+
+private val PILL_RESTART_TEXT_STYLE = TextStyle(
+    color = PILL_RESTART_COLOR,
+    fontWeight = FontWeight.Bold,
+    fontSize = PILL_FONT_SIZE
+)
+
 /**
  * Плашка с уведомлением о возобновлении воспроизведения и кнопкой «С начала».
  */
@@ -56,15 +68,12 @@ fun ResumePlaybackPill(
         ) {
             Text(
                 text = text,
-                color = Color.White,
-                fontSize = PILL_FONT_SIZE,
+                style = PILL_TEXT_STYLE
             )
             Spacer(modifier = Modifier.width(PILL_SPACER_WIDTH))
             Text(
                 text = BUTTON_RESTART_TEXT,
-                color = PILL_RESTART_COLOR,
-                fontWeight = FontWeight.Bold,
-                fontSize = PILL_FONT_SIZE,
+                style = PILL_RESTART_TEXT_STYLE,
                 modifier = Modifier
                     .clip(PILL_BUTTON_SHAPE)
                     .clickable(onClick = onRestart)

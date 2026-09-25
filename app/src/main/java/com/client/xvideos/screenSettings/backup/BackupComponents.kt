@@ -88,14 +88,22 @@ private val BACKUP_DIALOG_SPACER_LARGE = 12.dp
 private val BACKUP_DIALOG_SPACER_MEDIUM = 8.dp
 private val BACKUP_DIALOG_SPACER_SMALL = 6.dp
 
+private const val TEXT_BACKUP_CONSOLE = "Консоль backup"
+private const val TEXT_CONSOLE_EMPTY = "Пока пусто"
+private const val TEXT_CONSOLE_DEFAULT_SUBTITLE = "Здесь будет процесс восстановления файлов из сети"
+private const val TEXT_CONSOLE_CLEAR = "Очистить"
+private const val MODE_TITLE_MINI = "Мини"
+private const val MODE_TITLE_FULL = "Полный"
+
 @Composable
 internal fun BackupModeSelector(
     selected: BackupFlowScreen,
     enabled: Boolean,
-    onSelected: (BackupFlowScreen) -> Unit
+    onSelected: (BackupFlowScreen) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     SingleChoiceSegmentedButtonRow(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(BACKUP_SELECTOR_HEIGHT)
             .padding(horizontal = BACKUP_SELECTOR_HORIZONTAL_PADDING, vertical = BACKUP_SELECTOR_VERTICAL_PADDING)
@@ -136,7 +144,8 @@ internal fun BackupContentModeSelector(
     value: XlrBackupContentMode,
     enabled: Boolean,
     description: String,
-    onValueChange: (XlrBackupContentMode) -> Unit
+    onValueChange: (XlrBackupContentMode) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     SettingsValueRow(
         icon = R.drawable.hard_drive_2_24,
@@ -144,7 +153,7 @@ internal fun BackupContentModeSelector(
         value = "${backupContentModeTitle(value)} • $description"
     )
     SingleChoiceSegmentedButtonRow(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(BACKUP_SELECTOR_HEIGHT)
             .padding(horizontal = BACKUP_SELECTOR_HORIZONTAL_PADDING, vertical = BACKUP_SELECTOR_VERTICAL_PADDING)
@@ -166,19 +175,20 @@ internal fun BackupContentModeSelector(
 
 internal fun backupContentModeTitle(mode: XlrBackupContentMode): String {
     return when (mode) {
-        XlrBackupContentMode.MINI -> "Мини"
-        XlrBackupContentMode.FULL -> "Полный"
+        XlrBackupContentMode.MINI -> MODE_TITLE_MINI
+        XlrBackupContentMode.FULL -> MODE_TITLE_FULL
     }
 }
 
 @Composable
 internal fun BackupConsole(
     lines: List<String>,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val visibleLines = remember(lines) {
         lines
-            .ifEmpty { listOf("Пока пусто") }
+            .ifEmpty { listOf(TEXT_CONSOLE_EMPTY) }
             .flatMap { entry -> entry.lineSequence().toList() }
     }
 
@@ -197,20 +207,20 @@ internal fun BackupConsole(
 
     SettingsListItem(
         icon = R.drawable.hard_drive_2_24,
-        text = "Консоль backup",
-        subtitle = if (lines.isEmpty()) "Здесь будет процесс восстановления файлов из сети" else "${visibleLines.size} строк",
+        text = TEXT_BACKUP_CONSOLE,
+        subtitle = if (lines.isEmpty()) TEXT_CONSOLE_DEFAULT_SUBTITLE else "${visibleLines.size} строк",
         trailing = {
             TextButton(
                 enabled = lines.isNotEmpty(),
                 onClick = onClear
             ) {
-                Text("Очистить", color = SettingsAccentColor)
+                Text(TEXT_CONSOLE_CLEAR, color = SettingsAccentColor)
             }
         }
     )
     LazyColumn(
         state = listState,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(BACKUP_CONSOLE_HEIGHT)
             .padding(horizontal = BACKUP_CONSOLE_HORIZONTAL_PADDING, vertical = BACKUP_CONSOLE_VERTICAL_PADDING)

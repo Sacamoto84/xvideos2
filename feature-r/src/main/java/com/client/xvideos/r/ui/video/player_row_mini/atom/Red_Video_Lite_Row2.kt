@@ -28,6 +28,14 @@ import com.client.xvideos.common.videoplayer.ui.StaticPlayer
 import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
 
 
+private val CLICK_OVERLAY_BOTTOM_PADDING = 48.dp
+private val TIMELINE_HORIZONTAL_PADDING = 2.dp
+private val TIMELINE_OFFSET_Y = 5.dp
+private const val FADE_DURATION_MS = 300
+
+private val ENTER_FADE = fadeIn(animationSpec = tween(FADE_DURATION_MS))
+private val EXIT_FADE = fadeOut(animationSpec = tween(FADE_DURATION_MS))
+
 /**
  * Превьюшка для режима в два столбика
  */
@@ -37,15 +45,14 @@ fun Red_Video_Lite_Row2(
     play: Boolean = true,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    poster : (Boolean)->Unit
+    poster: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
     var time by remember { mutableFloatStateOf(0f) }
     var duration by remember { mutableIntStateOf(0) }
 
     var isBuffering by remember { mutableStateOf(false) }
-    
-    //if (AppBuildInfo.debug) { SideEffect { Timber.i("@@@ Red_Video_Lite_2Rrow() play = $play, url = $url time = $time, duration = $duration") } }
 
     val playerHost = remember(url) { MediaPlayerHost(mediaUrl = url, isPaused = !play, isMuted = true) }
 
@@ -57,7 +64,7 @@ fun Red_Video_Lite_Row2(
             when (event) {
                 is MediaPlayerEvent.CurrentTimeChange -> { time = event.currentTime }
                 is MediaPlayerEvent.TotalTimeChange -> { duration = event.totalTime }
-                is MediaPlayerEvent.BufferChange -> {isBuffering = event.isBuffering}
+                is MediaPlayerEvent.BufferChange -> { isBuffering = event.isBuffering }
                 else -> {}
             }
         }
@@ -71,19 +78,22 @@ fun Red_Video_Lite_Row2(
     val onSeekFinished: () -> Unit = remember(playerHost) {
         { playerHost.play() }
     }
-    val enterFade = remember { fadeIn(animationSpec = tween(300)) }
-    val exitFade = remember { fadeOut(animationSpec = tween(300)) }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth()) {
 
         StaticPlayer(playerHost, false)
 
-        Box(modifier = Modifier.padding(bottom = 48.dp).fillMaxSize().combinedClickable(onClick = onClick, onLongClick = onLongClick))
+        Box(
+            modifier = Modifier
+                .padding(bottom = CLICK_OVERLAY_BOTTOM_PADDING)
+                .fillMaxSize()
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+        )
 
         AnimatedVisibility(
             visible = !playerHost.poster,
-            enter = enterFade,
-            exit = exitFade,
+            enter = ENTER_FADE,
+            exit = EXIT_FADE,
             modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(),
         ) {
             Box(
@@ -100,7 +110,10 @@ fun Red_Video_Lite_Row2(
                     play = play,
                     onSeek = onSeek,
                     onSeekFinished = onSeekFinished,
-                    modifier = Modifier.padding(start = 2.dp, end = 2.dp).fillMaxWidth().offset(y = 5.dp),
+                    modifier = Modifier
+                        .padding(horizontal = TIMELINE_HORIZONTAL_PADDING)
+                        .fillMaxWidth()
+                        .offset(y = TIMELINE_OFFSET_Y),
                     isVisibleTime = true,
                     isVisibleStep = false,
                     isBuffering = isBuffering
