@@ -285,7 +285,17 @@ class AlbumPicsDetails(
             // Заполнение пропуска / ретрай страницы — пересобираем по порядку.
             // Собираем результат до входа в снапшот, чтобы под ним осталась
             // только публикация.
-            val merged = if (isContiguousTail) null else (1..pages).flatMap { loadedPages[it].orEmpty() }
+            val merged = if (isContiguousTail) null else {
+                val totalLoaded = loadedPages.values.sumOf { it.size }
+                val mergedList = ArrayList<PicsDetails>(totalLoaded)
+                for (i in 1..pages) {
+                    val pagePics = loadedPages[i]
+                    if (pagePics != null) {
+                        mergedList.addAll(pagePics)
+                    }
+                }
+                mergedList
+            }
 
             val successfulPages = loadedPages.count { it.value.isNotEmpty() }
             val progress = (successfulPages.toFloat() / pages.coerceAtLeast(1)).coerceIn(0f, 1f)
@@ -378,7 +388,10 @@ class AlbumPicsDetails(
 }
 
 internal fun normalizePictureUrls(l: List<PicsDetails>): List<PicsDetails> {
-    return l.map { item ->
+    if (l.isEmpty()) return emptyList()
+    var modified = false
+    val result = ArrayList<PicsDetails>(l.size)
+    for (item in l) {
         val isAnimated = item.isAnimatedMedia()
         val thumbnailUrl = item.lBestThumbnailImageUrl()
 
@@ -393,11 +406,19 @@ internal fun normalizePictureUrls(l: List<PicsDetails>): List<PicsDetails> {
             else -> item.url_to_original
         }
 
-        item.copy(
-            is_animated = isAnimated,
-            url_to_original = normalizedOriginal
-        )
+        if (item.is_animated == isAnimated && item.url_to_original == normalizedOriginal) {
+            result.add(item)
+        } else {
+            modified = true
+            result.add(
+                item.copy(
+                    is_animated = isAnimated,
+                    url_to_original = normalizedOriginal
+                )
+            )
+        }
     }
+    return if (modified) result else l
 }
 
 internal fun calculateAlbumPages(totalPagesFromInfo: Int?, totalItems: Int?, itemsPerPage: Int?): Int {

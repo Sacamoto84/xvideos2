@@ -10,11 +10,13 @@ private const val PLAYER_MARKER = "html5player."
  * Достаёт из DOM страницы скрипт с конфигом html5-плеера. `null` — не нашёлся.
  */
 fun parserItemVideo(document: Document): String? {
-    val inContainer = document.select("#video-player-bg script")
-        .firstOrNull { it.data().contains(PLAYER_MARKER) }
-    if (inContainer != null) return inContainer.data()
+    val container = document.selectFirst("#video-player-bg")
+    if (container != null) {
+        val script = container.getElementsByTag("script").firstOrNull { it.data().contains(PLAYER_MARKER) }
+        if (script != null) return script.data()
+    }
 
-    return document.select("script")
+    return document.getElementsByTag("script")
         .firstOrNull { it.data().contains(PLAYER_MARKER) }
         ?.data()
 }

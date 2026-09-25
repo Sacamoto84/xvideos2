@@ -9,7 +9,7 @@ object UsersRed {
 
     /** Получить "снимок" всех пользователей. Быстрое чтение. */
     val listAllUsers: List<UserInfo>
-        get() = usersMap.values.toList()
+        get() = if (usersMap.isEmpty()) emptyList() else ArrayList(usersMap.values)
 
     /** Добавить пользователя, исключая дубликаты по username. */
     fun addUser(user: UserInfo) {

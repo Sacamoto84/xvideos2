@@ -42,15 +42,16 @@ class Route(val method: String, val path: String, vararg parameters: Pair<String
 
     val url: String = when {
         parameters.isEmpty() || !path.contains('{') -> BASE + path
-        else -> BASE + path.fillPlaceholders(parameters.toMap())
+        else -> BASE + path.fillPlaceholders(parameters)
     }
 
-    private fun String.fillPlaceholders(params: Map<String, Any>): String =
+    private fun String.fillPlaceholders(params: Array<out Pair<String, Any>>): String =
         PLACEHOLDER.replace(this) { match ->
             // Нет такого параметра — оставляем шаблон нетронутым: так вели себя
             // и прежние replace. Молча подставлять пустоту хуже — неверный
             // адрес виден в логе, пустой параметр незаметен.
-            val value = params[match.groupValues[1]] ?: return@replace match.value
+            val key = match.groupValues[1]
+            val value = params.firstOrNull { it.first == key }?.second ?: return@replace match.value
             when (value) {
                 // Числа и флаги кодировать не в чем; строки — всегда.
                 is String -> value.encodeURLParameter()

@@ -25,8 +25,9 @@ import java.io.IOException
  * @throws IOException если записать файл не удалось.
  */
 fun File.writeTextAtomically(text: String) {
-    parentFile?.mkdirs()
-    val temp = File.createTempFile("atomic-", ".tmp", parentFile)
+    val parent = parentFile ?: throw IOException("Cannot create atomic file without parent: $absolutePath")
+    parent.mkdirs()
+    val temp = File.createTempFile("atomic-", ".tmp", parent)
     try {
         temp.writeText(text, Charsets.UTF_8)
         if (!temp.renameTo(this)) {

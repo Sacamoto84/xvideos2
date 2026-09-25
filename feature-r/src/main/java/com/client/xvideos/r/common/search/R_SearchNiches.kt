@@ -51,23 +51,22 @@ class R_SearchNiches @Inject constructor(
         return try {
             // Сеть. Отказ — не повод остаться совсем без подсказок: ниже есть
             // локальный кеш, по нему и ищем.
-            val remoteResults = redApi.searchNichesShort(query)
+            val remoteList = redApi.searchNichesShort(query)
                 .onFailure { Timber.w(it, "R_SearchNiches: подсказки ниш не пришли") }
                 .getOrDefault(emptyList())
-                .map { SuggestionItem(text = it.name, count = it.gifs) }
 
-            val localResults = savedRed.nichesCache.list
-                .filter { it.name.contains(query, ignoreCase = true) }
-                .map { SuggestionItem(text = it.name, count = it.gifs) }
+            val localList = savedRed.nichesCache.list
 
             // distinctBy гарантирует уникальность по тексту, даже если count
             // немного отличается.
-            val combinedMap = LinkedHashMap<String, SuggestionItem>(remoteResults.size + localResults.size)
-            for (item in remoteResults) {
-                combinedMap.putIfAbsent(item.text.lowercase(), item)
+            val combinedMap = LinkedHashMap<String, SuggestionItem>(remoteList.size + localList.size)
+            for (item in remoteList) {
+                combinedMap.putIfAbsent(item.name.lowercase(), SuggestionItem(text = item.name, count = item.gifs))
             }
-            for (item in localResults) {
-                combinedMap.putIfAbsent(item.text.lowercase(), item)
+            for (item in localList) {
+                if (item.name.contains(query, ignoreCase = true)) {
+                    combinedMap.putIfAbsent(item.name.lowercase(), SuggestionItem(text = item.name, count = item.gifs))
+                }
             }
             combinedMap.values.sortedByDescending { it.count }
         } catch (e: CancellationException) {

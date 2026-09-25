@@ -90,6 +90,7 @@ private fun extractValue(script: String, pattern: Pattern): String? {
 
 // X6: "https:\/\/cdn\/x.mp4" -> "https://cdn/x.mp4"; "//cdn..." -> "https://cdn..."; null -> "".
 private fun String?.unescapeUrl(): String {
-    val unescaped = this?.replace("\\/", "/")?.trim() ?: return ""
+    if (this == null) return ""
+    val unescaped = if (contains("\\/")) replace("\\/", "/").trim() else trim()
     return if (unescaped.isBlank()) "" else normalizeXUrl(unescaped)
 }
