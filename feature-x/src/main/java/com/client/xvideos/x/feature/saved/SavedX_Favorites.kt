@@ -26,8 +26,6 @@ class SavedX_Favorites(val scope: CoroutineScope) {
      */
     val favoriteIds = mutableStateSetOf<Long>()
 
-    private var mutationJob: Job? = null
-
     init {
         refresh()
     }
@@ -38,12 +36,14 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             SnackBar.error("Недопустимый ID видео")
             return
         }
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             favoritesDb.insert(item.id.toString(), item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.id == item.id }
+                        val existingIndex = list.indexOfFirst { it.id == item.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                         list.add(item)
                         favoriteIds.add(item.id)
                     }
@@ -60,12 +60,14 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             SnackBar.error("Недопустимый ID видео")
             return
         }
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             favoritesDb.delete(item.id.toString())
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.id == item.id }
+                        val existingIndex = list.indexOfFirst { it.id == item.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                         favoriteIds.remove(item.id)
                     }
                     SnackBar.info("Удалён из избранного")

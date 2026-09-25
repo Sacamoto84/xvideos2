@@ -41,7 +41,9 @@ class KtorRequestHandler(
     password: String? = null
 ) {
     private val userAgent = UserAgentProvider.randomDesktopBrowser()
+    @Volatile
     private var username: String? = username
+    @Volatile
     private var password: String? = password
 
     val client = HttpClient(OkHttp) {
@@ -127,15 +129,17 @@ class KtorRequestHandler(
     }
 
     suspend fun login(): Boolean {
-        if (username.isNullOrBlank() || password.isNullOrBlank()) {
+        val currentUsername = username
+        val currentPassword = password
+        if (currentUsername.isNullOrBlank() || currentPassword.isNullOrBlank()) {
             Timber.w("L login: username or password not provided")
             loggedIn = false
             return false
         }
 
         val formData = mapOf(
-            "login" to username.orEmpty(),
-            "password" to password.orEmpty(),
+            "login" to currentUsername,
+            "password" to currentPassword,
             "remember" to "on"
         )
 

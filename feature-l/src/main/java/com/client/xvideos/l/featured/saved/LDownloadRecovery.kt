@@ -131,16 +131,17 @@ private fun scanLIncompleteSavedMedia(): Pair<LDownloadRecoveryReport, List<LRec
 }
 
 private fun lRecoveryMetadataFiles(): List<File> {
-    return listOf(File(AppPath.l_likes), File(AppPath.l_collection))
-        .flatMap { root ->
-            if (!root.exists() || !root.isDirectory) {
-                emptyList()
-            } else {
-                root.walkTopDown()
-                    .filter { it.isFile && it.name.equals(L_METADATA_FILE_NAME, ignoreCase = true) }
-                    .toList()
+    val results = mutableListOf<File>()
+    val roots = arrayOf(File(AppPath.l_likes), File(AppPath.l_collection))
+    for (root in roots) {
+        if (!root.exists() || !root.isDirectory) continue
+        root.walkTopDown().forEach { file ->
+            if (file.isFile && file.name.equals(L_METADATA_FILE_NAME, ignoreCase = true)) {
+                results.add(file)
             }
         }
+    }
+    return results
 }
 
 private fun LSavedLikeMetadata.previewRecoveryFiles(folder: File): List<LRecoveryFile> {

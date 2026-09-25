@@ -23,6 +23,6 @@ fun parserItemVideo(document: Document): String? {
  * Достаёт из HTML строки скрипт с конфигом html5-плеера. `null` — не нашёлся.
  */
 fun parserItemVideo(html: String): String? {
-    if (html.isBlank()) return null
+    if (html.isBlank() || !html.contains(PLAYER_MARKER)) return null
     return parserItemVideo(Jsoup.parse(html))
 }

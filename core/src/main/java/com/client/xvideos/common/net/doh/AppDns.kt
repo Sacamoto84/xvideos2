@@ -308,7 +308,7 @@ object AppDns : Dns {
             Result.success(
                 DohDiagnosticResult(
                     host = hostname,
-                    addresses = addresses.map { it.hostAddress ?: "" }.filter { it.isNotEmpty() },
+                    addresses = addresses.mapNotNull { it.hostAddress?.takeIf { s -> s.isNotEmpty() } },
                     elapsedMs = elapsedMs,
                     providerTitle = providerTitle,
                     isDoh = isDohEnabled

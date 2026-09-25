@@ -53,7 +53,7 @@ class Downloader @Inject constructor(
     fun downloadRedName(item: GifsInfo, onComplete: () -> Unit = {}) {
 
         val videoUrl = item.downloadVideoUrl()
-        if ((videoUrl == null) || (item.userName == "") || (item.id == "")) {
+        if (videoUrl == null || item.userName.isBlank() || item.id.isBlank()) {
             //Toast("Ошибка в названии файла или креатор")
             percent.value = -3f
             return

@@ -97,7 +97,10 @@ class SavedX_History(
             historyDb.insert(item.id.toString(), entry)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.removeAll { it.item.id == item.id }
+                        val existingIndex = list.indexOfFirst { it.item.id == item.id }
+                        if (existingIndex >= 0) {
+                            list.removeAt(existingIndex)
+                        }
                         list.add(0, entry)
                         pruneExcessItemsLocked()
                     }
@@ -135,7 +138,7 @@ class SavedX_History(
         val validIds = ids.filter { it > 0L }
         if (validIds.isEmpty()) return
         scope.launch(ioDispatcher) {
-            val deletedIds = mutableListOf<Long>()
+            val deletedIds = HashSet<Long>()
             validIds.forEach { id ->
                 historyDb.delete(id.toString())
                     .onSuccess { deletedIds.add(id) }
@@ -144,10 +147,9 @@ class SavedX_History(
                     }
             }
             if (deletedIds.isNotEmpty()) {
-                val set = deletedIds.toSet()
                 withContext(Dispatchers.Main) {
                     deletedIds.forEach { historyMap.remove(it) }
-                    list.removeAll { it.item.id in set }
+                    list.removeAll { it.item.id in deletedIds }
                 }
                 SnackBar.info("Удалено ${deletedIds.size} из истории")
             }

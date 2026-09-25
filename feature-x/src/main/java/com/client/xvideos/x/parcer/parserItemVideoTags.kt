@@ -11,10 +11,9 @@ fun parserItemVideoTags(document: Document): TagsModel {
     val listPornstar = document.select("li.model").mapNotNull { it.parseUploaderOrModel() }
 
     val tags = document.select("li a.is-keyword")
-        .map { it.text().trim() }
-        .filter { it.isNotEmpty() }
-        .distinct()
-        .sorted()
+        .mapNotNull { it.text().trim().takeIf { s -> s.isNotEmpty() } }
+        .toSortedSet()
+        .toList()
 
     return TagsModel(listMain, listPornstar, tags)
 }

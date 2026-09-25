@@ -3,12 +3,11 @@ package com.client.xvideos.common.util
 import java.io.File
 
 fun getFolderSize(dir: File): Long {
+    if (!dir.exists() || !dir.isDirectory) return 0L
     var size = 0L
-    dir.listFiles()?.forEach { file ->
-        size += if (file.isFile) {
-            file.length()
-        } else {
-            getFolderSize(file)
+    dir.walkTopDown().forEach { file ->
+        if (file.isFile) {
+            size += file.length()
         }
     }
     return size

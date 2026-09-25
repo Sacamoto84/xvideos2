@@ -31,7 +31,7 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
 
     val url = source.substringBefore('?').substringBefore('#')
     val parts = url.split("/")
-    val newCdnPreview = parserNewCdnPreviewUrl(parts)
+    val newCdnPreview = parserNewCdnPreviewUrl(url, parts)
     if (newCdnPreview != null) {
         return newCdnPreview
     }
@@ -63,7 +63,7 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
     return previewParts.joinToString("/")
 }
 
-private fun parserNewCdnPreviewUrl(parts: List<String>): String? {
+private fun parserNewCdnPreviewUrl(url: String, parts: List<String>): String? {
     val hostIndex = parts.indexOfFirst { it.contains("xvideos-cdn.com", ignoreCase = true) }
     if (hostIndex < 0) return null
 
@@ -81,5 +81,5 @@ private fun parserNewCdnPreviewUrl(parts: List<String>): String? {
     val pathParts = parts.drop(hostIndex + 1)
     if (pathParts.size < 3) return null
 
-    return parts.dropLast(1).joinToString("/") + "/preview.mp4"
+    return url.substringBeforeLast('/') + "/preview.mp4"
 }

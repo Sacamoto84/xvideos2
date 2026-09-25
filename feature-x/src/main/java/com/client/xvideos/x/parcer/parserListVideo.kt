@@ -17,8 +17,9 @@ private val VIEWS_TOKEN_REGEX = Regex("""\d[\d., \s]*[KkMmGgКкМмБб]?""")
  * @return emoji-флаг (напр. "🇸🇪") или null, если не удалось определить.
  */
 fun parseSiteCountryFlag(document: Document): String? {
+    val element = document.selectFirst("#site-localisation") ?: return null
     val code = FLAG_CODE_REGEX
-        .find(document.select("#site-localisation").toString())
+        .find(element.outerHtml())
         ?.groupValues?.get(1) ?: return null
     return getFlagEmoji("flag-$code")
 }

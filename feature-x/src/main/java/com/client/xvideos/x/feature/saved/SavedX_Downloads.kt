@@ -216,13 +216,19 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             emptyArray()
         }
 
-        val videoIds = allFiles.filter { it.isFile && it.extension == "mp4" && it.length() > 0L }
-            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
-        val posterIds = allFiles.filter { it.isFile && it.extension == "jpg" && it.length() > 0L }
-            .mapNotNull { it.nameWithoutExtension.toLongOrNull() }.toSet()
+        val videoIds = HashSet<Long>()
+        val posterIds = HashSet<Long>()
+        val infos = ArrayList<File>()
 
-        val infos = allFiles.filter { it.isFile && it.extension == "info" && it.length() > 0L }
-            .sortedByDescending { it.lastModified() }
+        for (file in allFiles) {
+            if (!file.isFile || file.length() == 0L) continue
+            when (file.extension) {
+                "mp4" -> file.nameWithoutExtension.toLongOrNull()?.let { videoIds.add(it) }
+                "jpg" -> file.nameWithoutExtension.toLongOrNull()?.let { posterIds.add(it) }
+                "info" -> infos.add(file)
+            }
+        }
+        infos.sortByDescending { it.lastModified() }
 
         val result = infos.mapNotNull { f ->
             runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
