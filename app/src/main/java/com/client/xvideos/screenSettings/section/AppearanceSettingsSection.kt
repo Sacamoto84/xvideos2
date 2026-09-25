@@ -118,6 +118,7 @@ private val PREVIEW_GRADIENT_BASE_MODIFIER = Modifier
 private val ALIGN_TOP_START = Alignment.TopStart
 private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
 private val ALIGN_CENTER_END = Alignment.CenterEnd
+private val SCROLL_BUTTON_EFFECT_ENTRIES = ScrollButtonEffect.entries
 
 private const val ICON_BLUR = R.drawable.ic_blur_24
 
@@ -148,7 +149,7 @@ internal fun AppearanceSettingsSection(
 
         SettingsSectionTitle(TITLE_SCROLL_BUTTONS)
         SettingsGroup {
-            ScrollButtonEffect.entries.forEachIndexed { index, effect ->
+            SCROLL_BUTTON_EFFECT_ENTRIES.forEachIndexed { index, effect ->
                 key(effect.name) {
                     if (index > 0) {
                         SettingsDivider()

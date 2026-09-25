@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,8 +30,8 @@ fun AlbumInfoFilterButton(
 ) {
     if ((parsed?.number_of_animated_pictures ?: 0) <= 0 && !hasAnimatedItems) return
 
-    val titleStyle = remember(Theme.L.Type.rowTitle) { Theme.L.Type.rowTitle }
-    val textColor = remember(Theme.L.textColor) { Theme.L.textColor }
+    val titleStyle = Theme.L.Type.rowTitle
+    val textColor = Theme.L.textColor
 
     Row(
         modifier = modifier,

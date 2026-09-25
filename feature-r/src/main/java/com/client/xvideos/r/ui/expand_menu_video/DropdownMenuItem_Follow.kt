@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PermIdentity
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.snackbar.SnackBar
@@ -15,38 +16,47 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+private const val TEXT_FOLLOW = "Follow"
+private const val TEXT_UNFOLLOW = "Unfollow"
+private const val FOLLOW_ACTION_DELAY_MS = 200L
+private val ICON_PERSON = Icons.Default.Person
+private val ICON_PERM_IDENTITY = Icons.Default.PermIdentity
+
 @Composable
 fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi: () -> RedApi, savedRed: () -> SavedRed, onDismiss: () -> Unit) {
     val isFollowed = item?.userName?.takeIf { it.isNotBlank() }?.let { name ->
         savedRed.invoke().creators.list.any { it.username == name }
     } ?: false
-    DropdownMenuItem_FollowContent(
-        isFollowed = isFollowed,
-        onClick = {
+    val handleClick = remember(item, isFollowed, redApi, savedRed, onDismiss) {
+        {
             if (item == null || item.userName.isBlank()) {
                 onDismiss.invoke()
-                return@DropdownMenuItem_FollowContent
-            }
-            // см. комментарий в DropdownMenuItem_Like: управляемый scope из
-            // SavedRed вместо GlobalScope, переживающий закрытие меню.
-            savedRed.invoke().scope.launch {
-                delay(200)
-                if (!isFollowed) {
-                    // Раньше здесь было `creators.add(getOrNull()!!)` внутри
-                    // `catch { printStackTrace() }` молча проглатывал NPE
-                    // при любой сетевой ошибке: подписка не срабатывала.
-                    redApi.invoke().readCreator(item.userName)
-                        .onSuccess { savedRed.invoke().creators.add(it) }
-                        .onFailure { e ->
-                            Timber.e(e, "Follow: не удалось получить профиль ${item.userName}")
-                            SnackBar.error("Не удалось подписаться: ${e.message ?: "нет сети"}")
-                        }
-                } else {
-                    savedRed.invoke().creators.remove(item.userName)
+            } else {
+                // см. комментарий в DropdownMenuItem_Like: управляемый scope из
+                // SavedRed вместо GlobalScope, переживающий закрытие меню.
+                savedRed.invoke().scope.launch {
+                    delay(FOLLOW_ACTION_DELAY_MS)
+                    if (!isFollowed) {
+                        // Раньше здесь было `creators.add(getOrNull()!!)` внутри
+                        // `catch { printStackTrace() }` молча проглатывал NPE
+                        // при любой сетевой ошибке: подписка не срабатывала.
+                        redApi.invoke().readCreator(item.userName)
+                            .onSuccess { savedRed.invoke().creators.add(it) }
+                            .onFailure { e ->
+                                Timber.e(e, "Follow: не удалось получить профиль ${item.userName}")
+                                SnackBar.error("Не удалось подписаться: ${e.message ?: "нет сети"}")
+                            }
+                    } else {
+                        savedRed.invoke().creators.remove(item.userName)
+                    }
                 }
+                onDismiss.invoke()
             }
-            onDismiss.invoke()
         }
+    }
+    DropdownMenuItem_FollowContent(
+        isFollowed = isFollowed,
+        onClick = handleClick
     )
 }
 
@@ -56,8 +66,8 @@ fun DropdownMenuItem_FollowContent(
     onClick: () -> Unit
 ) {
     ExpandMenuActionItem(
-        icon = if (isFollowed) Icons.Default.Person else Icons.Default.PermIdentity,
-        text = if (isFollowed) "Unfollow" else "Follow",
+        icon = if (isFollowed) ICON_PERSON else ICON_PERM_IDENTITY,
+        text = if (isFollowed) TEXT_UNFOLLOW else TEXT_FOLLOW,
         onClick = onClick
     )
 }

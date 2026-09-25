@@ -90,7 +90,7 @@ fun UrlVideoImageAndLongClickX(
         }
     }
 
-    val handleVideoClick: () -> Unit = remember(haptic) {
+    val handleVideoClick: () -> Unit = remember(item.id, haptic) {
         {
             isVideo = !isVideo
             haptic.performHapticFeedback(HAPTIC_FEEDBACK_CONFIRM)

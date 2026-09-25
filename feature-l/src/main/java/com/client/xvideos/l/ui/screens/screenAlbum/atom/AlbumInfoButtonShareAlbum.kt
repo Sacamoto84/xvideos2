@@ -43,12 +43,15 @@ fun AlbumInfoButtonShareAlbum(
     val buttonTextStyle = remember(Theme.L.Type.button) {
         Theme.L.Type.button.copy(color = COLOR_WHITE)
     }
-
-    Box(
-        modifier = modifier
-            .then(SHARE_ALBUM_BUTTON_BASE_MODIFIER)
+    val styledBase = remember(Theme.L.grey3, Theme.L.grey6) {
+        SHARE_ALBUM_BUTTON_BASE_MODIFIER
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SHARE_ALBUM_BUTTON_SHAPE)
             .background(Theme.L.grey6)
+    }
+    val boxModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
+
+    Box(
+        modifier = boxModifier
             .clickable(onClick = onClick),
         contentAlignment = BOX_ALIGNMENT_CENTER
     ) {

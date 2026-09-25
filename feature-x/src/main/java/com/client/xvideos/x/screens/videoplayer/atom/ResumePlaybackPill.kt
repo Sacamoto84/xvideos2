@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,6 +72,10 @@ fun ResumePlaybackPill(
     onRestart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val restartModifier = remember(onRestart) {
+        PILL_BUTTON_FULL_MODIFIER.clickable(onClick = onRestart)
+    }
+
     Surface(
         modifier = if (modifier == Modifier) PILL_SURFACE_BASE_MODIFIER else modifier.then(PILL_SURFACE_BASE_MODIFIER),
         color = PILL_BG_COLOR,
@@ -89,7 +94,7 @@ fun ResumePlaybackPill(
             Text(
                 text = BUTTON_RESTART_TEXT,
                 style = PILL_RESTART_TEXT_STYLE,
-                modifier = PILL_BUTTON_FULL_MODIFIER.clickable(onClick = onRestart)
+                modifier = restartModifier
             )
         }
     }

@@ -174,8 +174,9 @@ internal fun RSettingsSection(
         )
 
         if (isNichesCacheDownloading) {
+            val progressProvider = remember(nichesCacheProgress) { { nichesCacheProgress } }
             LinearProgressIndicator(
-                progress = { nichesCacheProgress },
+                progress = progressProvider,
                 modifier = PROGRESS_INDICATOR_BASE_MODIFIER,
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor,
