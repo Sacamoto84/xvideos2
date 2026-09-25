@@ -31,6 +31,7 @@ private val HEADER_VERTICAL_PADDING = 4.dp
 private val HEADER_FONT_SIZE = 16.sp
 private val AUDIENCE_FONT_SIZE = 14.sp
 private const val LABEL_AUDIENCES = "Audiences: "
+private val HEADER_FONT_WEIGHT = FontWeight.ExtraBold
 
 private val AUDIENCE_CHIP_BASE_MODIFIER = Modifier
     .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
@@ -47,7 +48,7 @@ fun AlbumInfoAudiences(
     modifier: Modifier = Modifier
 ) {
     val headerStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = HEADER_FONT_SIZE)
+        Theme.L.Type.rowTitle.copy(fontWeight = HEADER_FONT_WEIGHT, fontSize = HEADER_FONT_SIZE)
     }
     val audienceTextStyle = remember(Theme.L.Type.rowValue, Theme.L.primaryColor) {
         Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = AUDIENCE_FONT_SIZE)

@@ -59,6 +59,44 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import timber.log.Timber
 
+private val BACKGROUND_COLOR = Color(0xFF212121)
+private val CONTAINER_FOCUSED_COLOR = Color(0xFF484848)
+private val CONTAINER_UNFOCUSED_COLOR = Color(0xFF3A3A3A)
+private val TEXT_COLOR_MUTED = Color(0xFFB8B7B7)
+private val INDICATOR_COLOR = Color(0xFF888888)
+private val DIVIDER_COLOR = Color.DarkGray
+
+private val ICON_PASSWORD_VISIBLE = Icons.Default.VisibilityOff
+private val ICON_PASSWORD_HIDDEN = Icons.Default.Visibility
+
+private val BUTTON_CORNER_RADIUS = 8.dp
+private val BUTTON_SHAPE = RoundedCornerShape(BUTTON_CORNER_RADIUS)
+
+private val FIELD_TEXT_STYLE = TextStyle(fontSize = 24.sp)
+
+private val KEYBOARD_OPTIONS_EMAIL = KeyboardOptions(
+    keyboardType = KeyboardType.Email,
+    imeAction = ImeAction.Next
+)
+private val KEYBOARD_OPTIONS_PASSWORD = KeyboardOptions(
+    keyboardType = KeyboardType.Password,
+    imeAction = ImeAction.Done
+)
+
+private val COLUMN_HORIZONTAL_ALIGNMENT = Alignment.CenterHorizontally
+private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.Center
+
+private val BUTTON_BASE_MODIFIER = Modifier.fillMaxWidth().height(64.dp)
+private val SKIP_BUTTON_MODIFIER = Modifier.padding(top = 24.dp).fillMaxWidth().height(64.dp)
+
+private val SPACER_HEIGHT_8_MODIFIER = Modifier.height(8.dp)
+private val SPACER_HEIGHT_16_MODIFIER = Modifier.height(16.dp)
+private val SPACER_HEIGHT_32_MODIFIER = Modifier.height(32.dp)
+
+private const val URL_LUSCIOUS = "https://www.luscious.net"
+private const val DESC_SHOW_PASSWORD = "Показать пароль"
+private const val DESC_HIDE_PASSWORD = "Скрыть пароль"
+
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +138,7 @@ fun LLoginContent(
     val onOpenWebsite: () -> Unit = remember(uriHandler) {
         {
             runCatching {
-                uriHandler.openUri("https://www.luscious.net")
+                uriHandler.openUri(URL_LUSCIOUS)
             }.onFailure { e ->
                 Timber.w(e, "L_ScreenLogin: не удалось открыть ссылку Luscious")
                 SnackBar.error("Не удалось открыть ссылку")
@@ -112,21 +150,41 @@ fun LLoginContent(
         KeyboardActions(onDone = { onSaveCredentials() })
     }
 
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = CONTAINER_FOCUSED_COLOR,
+        unfocusedContainerColor = CONTAINER_UNFOCUSED_COLOR,
+        focusedTextColor = TEXT_COLOR_MUTED,
+        unfocusedTextColor = TEXT_COLOR_MUTED,
+        focusedIndicatorColor = INDICATOR_COLOR,
+    )
+
+    val passwordTrailingIcon: @Composable () -> Unit = remember(passwordVisible) {
+        {
+            IconButton(onClick = onTogglePasswordVisible) {
+                Icon(
+                    imageVector = if (passwordVisible) ICON_PASSWORD_VISIBLE else ICON_PASSWORD_HIDDEN,
+                    contentDescription = if (passwordVisible) DESC_HIDE_PASSWORD else DESC_SHOW_PASSWORD,
+                    tint = TEXT_COLOR_MUTED
+                )
+            }
+        }
+    }
+
     val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
-            .background(Color(0xFF212121))
+            .background(BACKGROUND_COLOR)
             .fillMaxSize()
             .imePadding()
             .verticalScroll(scrollState)
             .padding(horizontal = 16.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = COLUMN_HORIZONTAL_ALIGNMENT,
+        verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT
     ) {
 
         Text(
-            text = "https://www.luscious.net",
+            text = URL_LUSCIOUS,
             fontStyle = FontStyle.Italic,
             textDecoration = TextDecoration.Underline,
             color = Theme.L.b0,
@@ -134,7 +192,7 @@ fun LLoginContent(
             fontSize = 24.sp
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = SPACER_HEIGHT_32_MODIFIER)
 
         Text(
             text = "Авторизация",
@@ -142,7 +200,7 @@ fun LLoginContent(
             color = Theme.L.textColor
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = SPACER_HEIGHT_32_MODIFIER)
 
         Text(
             "Логин",
@@ -151,7 +209,7 @@ fun LLoginContent(
             fontFamily = Theme.L.fontFamilyKarla
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = SPACER_HEIGHT_8_MODIFIER)
 
         OutlinedTextField(
             value = login,
@@ -160,23 +218,12 @@ fun LLoginContent(
                 .fillMaxWidth()
                 .semantics { contentType = ContentType.Username },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFF484848),
-                unfocusedContainerColor = Color(0xFF3A3A3A),
-                focusedTextColor = Color(0xFFB8B7B7),
-                unfocusedTextColor = Color(0xFFB8B7B7),
-                focusedIndicatorColor = Color(0xFF888888),
-            ),
-            textStyle = TextStyle(
-                fontSize = 24.sp
-            )
+            keyboardOptions = KEYBOARD_OPTIONS_EMAIL,
+            colors = textFieldColors,
+            textStyle = FIELD_TEXT_STYLE
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = SPACER_HEIGHT_16_MODIFIER)
 
         Text(
             "Пароль",
@@ -185,7 +232,7 @@ fun LLoginContent(
             fontFamily = Theme.L.fontFamilyKarla
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = SPACER_HEIGHT_8_MODIFIER)
 
         OutlinedTextField(
             value = password,
@@ -194,44 +241,25 @@ fun LLoginContent(
                 .fillMaxWidth()
                 .semantics { contentType = ContentType.Password },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = onTogglePasswordVisible) {
-                    Icon(
-                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
-                        tint = Color(0xFFB8B7B7)
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
+            trailingIcon = passwordTrailingIcon,
+            keyboardOptions = KEYBOARD_OPTIONS_PASSWORD,
             keyboardActions = keyboardActions,
             singleLine = true,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFF484848),
-                unfocusedContainerColor = Color(0xFF3A3A3A),
-                focusedTextColor = Color(0xFFB8B7B7),
-                unfocusedTextColor = Color(0xFFB8B7B7),
-                focusedIndicatorColor = Color(0xFF888888),
-            ),
-            textStyle = TextStyle(
-                fontSize = 24.sp
-            )
+            colors = textFieldColors,
+            textStyle = FIELD_TEXT_STYLE
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = SPACER_HEIGHT_32_MODIFIER)
 
-        HorizontalDivider(color = Color.DarkGray)
+        HorizontalDivider(color = DIVIDER_COLOR)
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = SPACER_HEIGHT_32_MODIFIER)
 
         Button(
             onClick = onSaveCredentials,
-            modifier = Modifier.fillMaxWidth().height(64.dp),
+            modifier = BUTTON_BASE_MODIFIER,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
-            shape = RoundedCornerShape(8.dp)
+            shape = BUTTON_SHAPE
         ) {
             Text(
                 "Сохранить",
@@ -239,13 +267,13 @@ fun LLoginContent(
                 fontFamily = Theme.L.fontFamilyKarla
             )
         }
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = SPACER_HEIGHT_32_MODIFIER)
 
         Button(
             onClick = onBack,
-            modifier = Modifier.fillMaxWidth().height(64.dp),
+            modifier = BUTTON_BASE_MODIFIER,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.b0),
-            shape = RoundedCornerShape(8.dp)
+            shape = BUTTON_SHAPE
         ) {
             Text(
                 "Назад",
@@ -254,12 +282,10 @@ fun LLoginContent(
             )
         }
 
-
         TextButton(
             onClick = onSkip,
-            modifier = Modifier.padding(top = 24.dp).fillMaxWidth().height(64.dp),
-            //colors = ButtonDefaults.buttonColors(containerColor = Theme.L.b0),
-            shape = RoundedCornerShape(8.dp)
+            modifier = SKIP_BUTTON_MODIFIER,
+            shape = BUTTON_SHAPE
         ) {
             Text(
                 text = "Пропустить",
@@ -268,9 +294,6 @@ fun LLoginContent(
                 color = Theme.L.b0,
             )
         }
-
-
-
     }
 }
 

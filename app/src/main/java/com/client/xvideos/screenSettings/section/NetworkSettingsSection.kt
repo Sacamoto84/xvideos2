@@ -231,15 +231,16 @@ private fun DohProviderItem(
     modifier: Modifier = Modifier,
 ) {
     val onClick = remember(provider, onSelect) { { onSelect(provider) } }
-    val trailingContent: @Composable () -> Unit = remember(isSelected) {
+    val radioColors = RadioButtonDefaults.colors(
+        selectedColor = SettingsAccentColor,
+        unselectedColor = RADIO_UNSELECTED_COLOR
+    )
+    val trailingContent: @Composable () -> Unit = remember(isSelected, radioColors) {
         {
             RadioButton(
                 selected = isSelected,
                 onClick = null,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = SettingsAccentColor,
-                    unselectedColor = RADIO_UNSELECTED_COLOR
-                )
+                colors = radioColors
             )
         }
     }
@@ -369,27 +370,31 @@ private fun CustomDohUrlDialog(
     val placeholderContent: @Composable () -> Unit = remember {
         { Text(PLACEHOLDER_URL) }
     }
+    val dialogContent: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit =
+        remember(tempUrl, onUrlChange, placeholderContent) {
+            {
+                Text(
+                    TEXT_CUSTOM_URL_DESCRIPTION,
+                    style = Theme.L.Type.caption,
+                    color = Theme.L.grey1
+                )
+                Spacer(DIALOG_SPACER_MODIFIER)
+                OutlinedTextField(
+                    value = tempUrl,
+                    onValueChange = onUrlChange,
+                    placeholder = placeholderContent,
+                    singleLine = true,
+                    modifier = DIALOG_FIELD_MODIFIER
+                )
+            }
+        }
 
     LavenderDialog(
         title = TITLE_CUSTOM_URL_DIALOG,
         onDismiss = onDismiss,
         confirmText = BUTTON_SAVE,
         onConfirm = onConfirmSave,
-        content = {
-            Text(
-                TEXT_CUSTOM_URL_DESCRIPTION,
-                style = Theme.L.Type.caption,
-                color = Theme.L.grey1
-            )
-            Spacer(DIALOG_SPACER_MODIFIER)
-            OutlinedTextField(
-                value = tempUrl,
-                onValueChange = onUrlChange,
-                placeholder = placeholderContent,
-                singleLine = true,
-                modifier = DIALOG_FIELD_MODIFIER
-            )
-        }
+        content = dialogContent
     )
 }
 

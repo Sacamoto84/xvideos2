@@ -324,6 +324,34 @@ internal fun BackupSettingsSection(
         contentColor = SettingsScreenBackground
     )
 
+    val isCreateEnabled = !isWorking && selectedBackupPaths.isNotEmpty()
+    val createButtonTrailing: @Composable () -> Unit = remember(isCreateEnabled, onShowCreatePasswordDialog, actionButtonColors) {
+        {
+            Button(
+                enabled = isCreateEnabled,
+                onClick = onShowCreatePasswordDialog,
+                colors = actionButtonColors
+            ) {
+                Text("Создать")
+            }
+        }
+    }
+
+    val onLaunchRestoreBackup = remember(restoreBackupLauncher) {
+        { restoreBackupLauncher.launch(RESTORE_MIME_TYPES) }
+    }
+    val restoreButtonTrailing: @Composable () -> Unit = remember(isWorking, onLaunchRestoreBackup, actionButtonColors) {
+        {
+            Button(
+                enabled = !isWorking,
+                onClick = onLaunchRestoreBackup,
+                colors = actionButtonColors
+            ) {
+                Text("Выбрать")
+            }
+        }
+    }
+
     SettingsGroup(modifier = modifier) {
         SettingsValueRow(
             icon = R.drawable.hard_drive_2_24,
@@ -383,15 +411,7 @@ internal fun BackupSettingsSection(
                     icon = R.drawable.hard_drive_2_24,
                     text = "Создать бэкап",
                     subtitle = backupSummaryText,
-                    trailing = {
-                        Button(
-                            enabled = !isWorking && selectedBackupPaths.isNotEmpty(),
-                            onClick = onShowCreatePasswordDialog,
-                            colors = actionButtonColors
-                        ) {
-                            Text("Создать")
-                        }
-                    }
+                    trailing = createButtonTrailing
                 )
             }
 
@@ -400,17 +420,7 @@ internal fun BackupSettingsSection(
                     icon = R.drawable.hard_drive_2_24,
                     text = "Открыть архив",
                     subtitle = restoreSubtitle,
-                    trailing = {
-                        Button(
-                            enabled = !isWorking,
-                            onClick = {
-                                restoreBackupLauncher.launch(RESTORE_MIME_TYPES)
-                            },
-                            colors = actionButtonColors
-                        ) {
-                            Text("Выбрать")
-                        }
-                    }
+                    trailing = restoreButtonTrailing
                 )
 
                 if (restoreItems.isEmpty()) {

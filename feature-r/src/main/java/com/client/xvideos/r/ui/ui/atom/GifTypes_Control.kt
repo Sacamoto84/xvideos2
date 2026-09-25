@@ -37,6 +37,12 @@ private val DIVIDER_MODIFIER = Modifier
     .width(DIVIDER_WIDTH)
     .height(CONTROL_HEIGHT)
 
+private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val COLOR_WHITE = Color.White
+private val COLOR_TRANSPARENT = Color.Transparent
+
 @Composable
 fun GifTypes_Control(
     vm: ScreenRedProfileSM,
@@ -74,8 +80,8 @@ fun GifTypes_Control(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         if (item0 != null) {
             TextAndLine(
@@ -106,13 +112,13 @@ private fun TextAndLine(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val textColor = if (select) Color.White else Theme.R.colorTextGray
-    val indicatorColor = if (select) Theme.R.colorRed else Color.Transparent
+    val textColor = if (select) COLOR_WHITE else Theme.R.colorTextGray
+    val indicatorColor = if (select) Theme.R.colorRed else COLOR_TRANSPARENT
 
     Box(
         modifier = modifier
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Text(
             text = str,

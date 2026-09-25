@@ -44,6 +44,13 @@ private const val RESUME_NOTICE_AUTO_HIDE_MS = 4000L
 private const val PROGRESS_SAVE_INTERVAL_MS = 3000L
 private const val RESUME_NOTICE_PREFIX = "Возобновлено с "
 
+private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
+private val ENTER_FADE_TRANSITION = fadeIn()
+private val EXIT_FADE_TRANSITION = fadeOut()
+
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val CONTAINER_MODIFIER = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)
+
 /**
  * Плеер локального (скачанного) файла X.
  *
@@ -147,10 +154,10 @@ class ScreenX_LocalVideoPlayer(
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)) {
+        Box(modifier = CONTAINER_MODIFIER) {
             ComposeVideoPlayer(
                 playerHost = host,
-                modifier = Modifier.fillMaxSize(),
+                modifier = FULL_SIZE_MODIFIER,
                 resetZoomTrigger = resetZoomTrigger,
                 onZoomChanged = onZoomChanged,
                 onTap = onTap,
@@ -158,10 +165,10 @@ class ScreenX_LocalVideoPlayer(
                     // Плашка возобновления
                     AnimatedVisibility(
                         visible = resumeNoticeText != null,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
+                        enter = ENTER_FADE_TRANSITION,
+                        exit = EXIT_FADE_TRANSITION,
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
+                            .align(ALIGN_BOTTOM_CENTER)
                             .padding(bottom = RESUME_PILL_BOTTOM_PADDING)
                     ) {
                         resumeNoticeText?.let { notice ->
@@ -172,7 +179,7 @@ class ScreenX_LocalVideoPlayer(
                         }
                     }
 
-                    Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                    Box(modifier = Modifier.align(ALIGN_BOTTOM_CENTER)) {
                         // Локальный файл — отдельный полноэкранный режим не требуется
                         X_PlayerBottomBar(host = host)
                     }

@@ -35,6 +35,11 @@ private val SELECTOR_DIVIDER_MODIFIER = Modifier
     .width(SELECTOR_DIVIDER_WIDTH)
     .height(SELECTOR_BUTTON_SIZE)
 
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val COLOR_WHITE = Color.White
+private val BUTTON_SIZE_MODIFIER = Modifier.size(SELECTOR_BUTTON_SIZE)
+private val ICON_SIZE_MODIFIER = Modifier.size(SELECTOR_ICON_SIZE)
+
 @Preview
 @Composable
 fun DefaultPreview() {
@@ -81,20 +86,20 @@ private fun SelectorButton(
     modifier: Modifier = Modifier,
 ) {
     val bg = if (isSelected) Theme.R.colorBorderSelect else Theme.background
-    val tint = if (isSelected) Color.White else Theme.R.colorTextGray
+    val tint = if (isSelected) COLOR_WHITE else Theme.R.colorTextGray
 
     Box(
         modifier = modifier
-            .size(SELECTOR_BUTTON_SIZE)
+            .then(BUTTON_SIZE_MODIFIER)
             .background(bg)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(SELECTOR_ICON_SIZE)
+            modifier = ICON_SIZE_MODIFIER
         )
     }
 }

@@ -74,6 +74,28 @@ private const val TEXT_LOAD_ERROR = "Не удалось загрузить ви
 private const val TEXT_RETRY = "Повторить"
 private const val TEXT_BACK = "Назад"
 
+private val PLAYER_BG_COLOR = Color(0xFF040404)
+private val COLOR_BLACK = Color.Black
+private val COLOR_WHITE = Color.White
+private val ICON_BACK = Icons.AutoMirrored.Filled.ArrowBack
+
+private val ALIGN_CENTER = Alignment.Center
+private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
+private val ALIGN_TOP_START = Alignment.TopStart
+private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
+
+private val CutoutTopStartInsets: WindowInsets
+    @Composable get() = WindowInsets.displayCutout.only(
+        WindowInsetsSides.Top + WindowInsetsSides.Start
+    )
+
+private val ENTER_FADE_TRANSITION = fadeIn()
+private val EXIT_FADE_TRANSITION = fadeOut()
+
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val BLACK_BG_FULL_SIZE_MODIFIER = Modifier.fillMaxSize().background(COLOR_BLACK)
+private val PLAYER_BG_FULL_SIZE_MODIFIER = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)
+
 class ScreenX_VideoPlayer(
     val url: String,
     val item: ItemsX? = null,
@@ -171,13 +193,11 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
 @Composable
 private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black),
-        contentAlignment = Alignment.Center
+        modifier = BLACK_BG_FULL_SIZE_MODIFIER,
+        contentAlignment = ALIGN_CENTER
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(TEXT_LOAD_ERROR, color = Color.White)
+        Column(horizontalAlignment = ALIGN_CENTER_HORIZONTALLY) {
+            Text(TEXT_LOAD_ERROR, color = COLOR_WHITE)
             Spacer(modifier = Modifier.height(ERROR_SPACER_HEIGHT))
             Row {
                 Button(onClick = onRetry) {
@@ -195,32 +215,26 @@ private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
 @Composable
 private fun VideoPlayerLoadingView(onBack: () -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black),
+        modifier = BLACK_BG_FULL_SIZE_MODIFIER,
     ) {
         IconButton(
             onClick = onBack,
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .windowInsetsPadding(
-                    WindowInsets.displayCutout.only(
-                        WindowInsetsSides.Top + WindowInsetsSides.Start
-                    )
-                )
+                .align(ALIGN_TOP_START)
+                .windowInsetsPadding(CutoutTopStartInsets)
                 .padding(BACK_BUTTON_PADDING),
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = ICON_BACK,
                 contentDescription = TEXT_BACK,
-                tint = Color.White,
+                tint = COLOR_WHITE,
             )
         }
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            modifier = FULL_SIZE_MODIFIER,
+            contentAlignment = ALIGN_CENTER
         ) {
-            CircularProgressIndicator(color = Color.White)
+            CircularProgressIndicator(color = COLOR_WHITE)
         }
     }
 }
@@ -322,10 +336,10 @@ private fun VideoPlayerContentView(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
+    Box(modifier = PLAYER_BG_FULL_SIZE_MODIFIER) {
         ComposeVideoPlayer(
             playerHost = host,
-            modifier = Modifier.fillMaxSize(),
+            modifier = FULL_SIZE_MODIFIER,
             resetZoomTrigger = resetZoomTrigger,
             onZoomChanged = onZoomChanged,
             onTap = onTap,
@@ -333,24 +347,20 @@ private fun VideoPlayerContentView(
                 // Кнопка возврата (только в обычном режиме; в полном экране используются системные жесты/кнопки Android)
                 AnimatedVisibility(
                     visible = !vm.isFullScreen,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier.align(Alignment.TopStart)
+                    enter = ENTER_FADE_TRANSITION,
+                    exit = EXIT_FADE_TRANSITION,
+                    modifier = Modifier.align(ALIGN_TOP_START)
                 ) {
                     IconButton(
                         onClick = onOverlayBack,
                         modifier = Modifier
-                            .windowInsetsPadding(
-                                WindowInsets.displayCutout.only(
-                                    WindowInsetsSides.Top + WindowInsetsSides.Start
-                                )
-                            )
-                            .padding(8.dp),
+                            .windowInsetsPadding(CutoutTopStartInsets)
+                            .padding(BACK_BUTTON_PADDING),
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = Color.White,
+                            imageVector = ICON_BACK,
+                            contentDescription = TEXT_BACK,
+                            tint = COLOR_WHITE,
                         )
                     }
                 }
@@ -359,12 +369,8 @@ private fun VideoPlayerContentView(
                 if (!vm.isFullScreen) {
                     Box(
                         modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .windowInsetsPadding(
-                                WindowInsets.displayCutout.only(
-                                    WindowInsetsSides.Top + WindowInsetsSides.Start
-                                )
-                            )
+                            .align(ALIGN_TOP_START)
+                            .windowInsetsPadding(CutoutTopStartInsets)
                             .padding(start = TAGS_START_PADDING, end = TAGS_END_PADDING, top = TAGS_TOP_PADDING)
                     ) {
                         ComposeTags(
@@ -377,10 +383,10 @@ private fun VideoPlayerContentView(
                 // Всплывающее уведомление о возобновлении с кнопкой «С начала»
                 AnimatedVisibility(
                     visible = vm.resumeNoticeText != null && (!vm.isFullScreen || areControlsVisible),
-                    enter = fadeIn(),
-                    exit = fadeOut(),
+                    enter = ENTER_FADE_TRANSITION,
+                    exit = EXIT_FADE_TRANSITION,
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
+                        .align(ALIGN_BOTTOM_CENTER)
                         .padding(bottom = if (vm.isFullScreen) RESUME_PILL_BOTTOM_PADDING_FULLSCREEN else RESUME_PILL_BOTTOM_PADDING_PORTRAIT)
                 ) {
                     vm.resumeNoticeText?.let { notice ->
@@ -394,9 +400,9 @@ private fun VideoPlayerContentView(
                 // Панель управления снизу с автоскрытием в полноэкранном режиме
                 AnimatedVisibility(
                     visible = !vm.isFullScreen || areControlsVisible,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier.align(Alignment.BottomCenter)
+                    enter = ENTER_FADE_TRANSITION,
+                    exit = EXIT_FADE_TRANSITION,
+                    modifier = Modifier.align(ALIGN_BOTTOM_CENTER)
                 ) {
                     X_PlayerBottomBar(
                         host = host,
