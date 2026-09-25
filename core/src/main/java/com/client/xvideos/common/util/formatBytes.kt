@@ -12,9 +12,9 @@ private const val GB_DOUBLE = 1024.0 * 1024.0 * 1024.0
 
 // Функция для форматирования объема данных
 fun formatBytes(bytes: Long): String {
+    if (bytes <= 0L) return "0 B"
+    if (bytes < ONE_KB) return "$bytes B"
     return when {
-        bytes <= 0L -> "0 B"
-        bytes < ONE_KB -> "$bytes B"
         bytes < ONE_MB -> "${(bytes / KB_DOUBLE).roundToInt()} KB"
         bytes < ONE_GB -> "${(bytes / MB_DOUBLE * 10).roundToInt() / 10.0} MB"
         else -> "${(bytes / GB_DOUBLE * 100).roundToInt() / 100.0} GB"

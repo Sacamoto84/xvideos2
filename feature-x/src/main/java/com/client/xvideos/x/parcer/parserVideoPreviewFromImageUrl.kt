@@ -21,11 +21,11 @@ private val TRAILING_INDEX_REGEX = Regex("-\\d+$")
  * композиции — рантайм-проверкой Kotlin на входе в функцию.
  */
 fun parserVideoPreviewFromImageUrl(s: String?): String? {
-
-    val source = s?.trim().orEmpty()
+    if (s == null) return null
+    val source = s.trim()
     // Строку "null" продолжаем узнавать на входе: она уже записана в файлы
     // избранного прошлыми версиями и приходит оттуда через Gson.
-    if (source.isBlank() || source.equals("null", ignoreCase = true)) {
+    if (source.isEmpty() || source.equals("null", ignoreCase = true)) {
         return null
     }
 
@@ -43,11 +43,10 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
     if (videosIndex < 0) return null
 
     val fileName = parts.lastOrNull().orEmpty()
-    val hash = fileName
-        .substringBefore('.')
-        .replace(TRAILING_INDEX_REGEX, "")
-        .takeIf { it.isNotBlank() }
-        ?: return null
+    val rawHash = fileName.substringBefore('.')
+    if (rawHash.isEmpty()) return null
+    val hash = if (rawHash.contains('-')) rawHash.replace(TRAILING_INDEX_REGEX, "") else rawHash
+    if (hash.isEmpty()) return null
 
     val f0: String
     val f1: String

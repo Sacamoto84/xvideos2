@@ -36,7 +36,13 @@ object AppLockThrottle {
         val attempts: Int,
         val lockoutUntilWall: Long,
         val lockoutUntilElapsed: Long,
-    )
+    ) {
+        val isLocked: Boolean get() = lockoutUntilWall > 0L || lockoutUntilElapsed > 0L
+
+        companion object {
+            val INITIAL = State(attempts = 0, lockoutUntilWall = 0L, lockoutUntilElapsed = 0L)
+        }
+    }
 
     /**
      * Регистрирует неудачную попытку.
@@ -44,7 +50,8 @@ object AppLockThrottle {
      * @param attempts сколько ошибок было ДО этой.
      */
     fun onFailedAttempt(attempts: Int, wallNow: Long, elapsedNow: Long): State {
-        val total = attempts + 1
+        val safeAttempts = if (attempts < 0) 0 else attempts
+        val total = safeAttempts + 1
         if (total <= FREE_ATTEMPTS) {
             return State(attempts = total, lockoutUntilWall = 0L, lockoutUntilElapsed = 0L)
         }
@@ -66,6 +73,7 @@ object AppLockThrottle {
      * сохранённый срок оказывается «в будущем» навсегда.
      */
     fun remainingMillis(state: State, wallNow: Long, elapsedNow: Long): Long {
+        if (state.lockoutUntilWall <= 0L && state.lockoutUntilElapsed <= 0L) return 0L
         val byWall = (state.lockoutUntilWall - wallNow).coerceAtLeast(0L)
         val byElapsedRaw = (state.lockoutUntilElapsed - elapsedNow).coerceAtLeast(0L)
         val byElapsed = if (byElapsedRaw > MAX_LOCKOUT_MS) 0L else byElapsedRaw

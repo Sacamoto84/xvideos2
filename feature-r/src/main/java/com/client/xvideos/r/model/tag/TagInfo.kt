@@ -9,6 +9,12 @@ import kotlinx.serialization.Serializable
 data class TagInfo(
     @SerialName("name") val name: String = "",
     @SerialName("count") val count: Long = 0L
-)
+) {
+    val isValid: Boolean get() = name.isNotBlank()
+
+    companion object {
+        val EMPTY = TagInfo()
+    }
+}
 
 

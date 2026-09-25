@@ -1,5 +1,7 @@
 package com.client.xvideos.common.util
 
+private val DIGIT_STRINGS = Array(60) { if (it < 10) "0$it" else it.toString() }
+
 /**
  *  68.7   → "01:08"
  * 134.0   → "02:14"
@@ -11,8 +13,8 @@ fun Double.toMinSec(): String {
     if (totalSec <= 0) return "00:00"
     val minutes = totalSec / 60
     val seconds = totalSec % 60
-    val mStr = if (minutes < 10) "0$minutes" else minutes.toString()
-    val sStr = if (seconds < 10) "0$seconds" else seconds.toString()
+    val mStr = if (minutes < 60) DIGIT_STRINGS[minutes] else minutes.toString()
+    val sStr = if (seconds < 60) DIGIT_STRINGS[seconds] else seconds.toString()
     return "$mStr:$sStr"
 }
 
@@ -22,7 +24,7 @@ fun Float.toMinSec(): String {
     if (totalSec <= 0) return "00:00"
     val minutes = totalSec / 60
     val seconds = totalSec % 60
-    val mStr = if (minutes < 10) "0$minutes" else minutes.toString()
-    val sStr = if (seconds < 10) "0$seconds" else seconds.toString()
+    val mStr = if (minutes < 60) DIGIT_STRINGS[minutes] else minutes.toString()
+    val sStr = if (seconds < 60) DIGIT_STRINGS[seconds] else seconds.toString()
     return "$mStr:$sStr"
 }

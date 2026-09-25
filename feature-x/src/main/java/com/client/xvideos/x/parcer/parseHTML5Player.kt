@@ -34,29 +34,30 @@ private val PATTERN_VIEW_DATA = Pattern.compile("html5player\\.setViewData\\('(.
  * отсутствовать на законных основаниях и разбор не отменяет.
  */
 fun parseHTML5Player(script: String): HTML5PlayerConfig? {
-    if (script.isBlank()) return null
+    val trimmed = script.trim()
+    if (trimmed.isEmpty() || !trimmed.contains("html5player")) return null
 
-    val videoUrlLow = extractValue(script, PATTERN_URL_LOW)
-    val videoUrlHigh = extractValue(script, PATTERN_URL_HIGH)
-    val videoHLS = extractValue(script, PATTERN_URL_HLS)
+    val videoUrlLow = extractValue(trimmed, PATTERN_URL_LOW)
+    val videoUrlHigh = extractValue(trimmed, PATTERN_URL_HIGH)
+    val videoHLS = extractValue(trimmed, PATTERN_URL_HLS)
 
     val hasAnySource = !videoUrlLow.isNullOrBlank() || !videoUrlHigh.isNullOrBlank() || !videoHLS.isNullOrBlank()
     if (!hasAnySource) return null
 
-    val videoTitle = extractValue(script, PATTERN_VIDEO_TITLE)
-    val encodedIdVideo = extractValue(script, PATTERN_ENCODED_ID)
-    val thumbUrl = extractValue(script, PATTERN_THUMB_URL)
-    val thumbUrl169 = extractValue(script, PATTERN_THUMB_URL_169)
-    val thumbSlide = extractValue(script, PATTERN_THUMB_SLIDE)
-    val thumbSlideBig = extractValue(script, PATTERN_THUMB_SLIDE_BIG)
-    val thumbSlideMinute = extractValue(script, PATTERN_THUMB_SLIDE_MINUTE)
-    val idCDN = extractValue(script, PATTERN_ID_CDN)
-    val idCdnHLS = extractValue(script, PATTERN_ID_CDN_HLS)
-    val seekBarColor = extractValue(script, PATTERN_SEEK_BAR_COLOR)
-    val uploaderName = extractValue(script, PATTERN_UPLOADER_NAME)
-    val videoURL = extractValue(script, PATTERN_VIDEO_URL)
-    val staticPath = extractValue(script, PATTERN_STATIC_PATH)
-    val viewData = extractValue(script, PATTERN_VIEW_DATA)
+    val videoTitle = extractValue(trimmed, PATTERN_VIDEO_TITLE)
+    val encodedIdVideo = extractValue(trimmed, PATTERN_ENCODED_ID)
+    val thumbUrl = extractValue(trimmed, PATTERN_THUMB_URL)
+    val thumbUrl169 = extractValue(trimmed, PATTERN_THUMB_URL_169)
+    val thumbSlide = extractValue(trimmed, PATTERN_THUMB_SLIDE)
+    val thumbSlideBig = extractValue(trimmed, PATTERN_THUMB_SLIDE_BIG)
+    val thumbSlideMinute = extractValue(trimmed, PATTERN_THUMB_SLIDE_MINUTE)
+    val idCDN = extractValue(trimmed, PATTERN_ID_CDN)
+    val idCdnHLS = extractValue(trimmed, PATTERN_ID_CDN_HLS)
+    val seekBarColor = extractValue(trimmed, PATTERN_SEEK_BAR_COLOR)
+    val uploaderName = extractValue(trimmed, PATTERN_UPLOADER_NAME)
+    val videoURL = extractValue(trimmed, PATTERN_VIDEO_URL)
+    val staticPath = extractValue(trimmed, PATTERN_STATIC_PATH)
+    val viewData = extractValue(trimmed, PATTERN_VIEW_DATA)
 
     return HTML5PlayerConfig(
         videoTitle = videoTitle ?: "",

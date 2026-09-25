@@ -72,3 +72,13 @@ data class OnlyContent(
     @SerialName("url")
     val url: String = ""
 ) : Serializable
+
+/**
+ * Валиден ли жанр (непустой id и title).
+ */
+val FilterGenre.isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+/**
+ * Название жанра для отображения (title или slug).
+ */
+val FilterGenre.displayTitle: String get() = title.ifBlank { slug }
