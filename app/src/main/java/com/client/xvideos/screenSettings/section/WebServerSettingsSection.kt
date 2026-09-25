@@ -69,7 +69,17 @@ private val NETWORK_ACTIVE_COLOR = Color(0xFF00E676)
 private val URL_BOX_BG_COLOR = Color(0xFF25232A)
 private val ERROR_TEXT_COLOR = Color(0xFFFF5252)
 private val COPY_BUTTON_TEXT_COLOR = Color(0xFF2E2961)
+private val COLOR_WHITE = Color.White
 private val QR_BOX_SIZE = 210.dp
+
+private val ICON_COPY = Icons.Default.ContentCopy
+private val ICON_SHARE = Icons.Default.Share
+private val FONT_WEIGHT_MEDIUM = FontWeight.Medium
+private val FONT_WEIGHT_BOLD = FontWeight.Bold
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val TEXT_ALIGN_CENTER = TextAlign.Center
 
 private val ERROR_SPACER_HEIGHT = 8.dp
 private val SECTION_SPACER_HEIGHT = 16.dp
@@ -124,7 +134,7 @@ private val URL_BOX_PADDING_MODIFIER = Modifier
 private val QR_BOX_BASE_MODIFIER = Modifier
     .size(QR_BOX_SIZE)
     .clip(QR_BOX_SHAPE)
-    .background(Color.White)
+    .background(COLOR_WHITE)
     .padding(QR_PADDING)
 private val QR_IMAGE_MODIFIER = Modifier.fillMaxSize()
 private val QR_BOTTOM_SPACER_MODIFIER = Modifier.height(QR_BOTTOM_SPACER_HEIGHT)
@@ -274,11 +284,11 @@ private fun WebServerConnectionCard(
 
     Column(
         modifier = modifier.then(CONNECTION_CARD_BASE_MODIFIER),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = ALIGN_CENTER_HORIZONTALLY
     ) {
         // Статус сети
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
             horizontalArrangement = NETWORK_STATUS_ROW_HORIZONTAL_ARRANGEMENT,
             modifier = NETWORK_STATUS_ROW_BASE_MODIFIER
         ) {
@@ -305,7 +315,7 @@ private fun WebServerConnectionCard(
                 text = serverUrl,
                 color = SettingsAccentColor,
                 fontSize = URL_TEXT_FONT_SIZE,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FONT_WEIGHT_BOLD,
                 fontFamily = FontFamily.Monospace
             )
         }
@@ -316,7 +326,7 @@ private fun WebServerConnectionCard(
         if (qrBitmap != null) {
             Box(
                 modifier = QR_BOX_BASE_MODIFIER,
-                contentAlignment = Alignment.Center
+                contentAlignment = BOX_ALIGNMENT_CENTER
             ) {
                 Image(
                     bitmap = qrBitmap,
@@ -347,7 +357,7 @@ private fun WebServerConnectionCard(
             text = FOOTER_HINT_TEXT,
             color = SettingsRowTextSecondary,
             fontSize = FOOTER_HINT_FONT_SIZE,
-            textAlign = TextAlign.Center,
+            textAlign = TEXT_ALIGN_CENTER,
             lineHeight = FOOTER_HINT_LINE_HEIGHT
         )
     }
@@ -388,9 +398,9 @@ private fun WebServerActionButtons(
             colors = copyButtonColors,
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(Icons.Default.ContentCopy, contentDescription = TEXT_COPY, modifier = ACTION_ICON_MODIFIER)
+            Icon(ICON_COPY, contentDescription = TEXT_COPY, modifier = ACTION_ICON_MODIFIER)
             Spacer(ACTION_ICON_SPACER_MODIFIER)
-            Text(TEXT_COPY, fontSize = ACTION_BUTTON_FONT_SIZE, fontWeight = FontWeight.Medium)
+            Text(TEXT_COPY, fontSize = ACTION_BUTTON_FONT_SIZE, fontWeight = FONT_WEIGHT_MEDIUM)
         }
 
         OutlinedButton(
@@ -398,7 +408,7 @@ private fun WebServerActionButtons(
             modifier = Modifier.weight(1f),
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(Icons.Default.Share, contentDescription = TEXT_SHARE, modifier = ACTION_ICON_MODIFIER, tint = SettingsRowTextPrimary)
+            Icon(ICON_SHARE, contentDescription = TEXT_SHARE, modifier = ACTION_ICON_MODIFIER, tint = SettingsRowTextPrimary)
             Spacer(ACTION_ICON_SPACER_MODIFIER)
             Text(TEXT_SHARE, fontSize = ACTION_BUTTON_FONT_SIZE, color = SettingsRowTextPrimary)
         }

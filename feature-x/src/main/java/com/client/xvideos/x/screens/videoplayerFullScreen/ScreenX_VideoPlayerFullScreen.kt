@@ -37,6 +37,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
+import com.client.xvideos.common.videoplayer.host.MediaPlayerError
 import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
 
 private const val SEEK_INCREMENT_MS = 10_000L
@@ -45,6 +46,19 @@ private const val TEXT_RETRY = "Повторить"
 private const val TEXT_BACK = "Назад"
 private val ERROR_SPACER_HEIGHT = 12.dp
 private val BUTTON_SPACER_WIDTH = 16.dp
+
+private val COLOR_BLACK = Color.Black
+private val COLOR_WHITE = Color.White
+private val ALIGN_CENTER = Alignment.Center
+private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
+
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val FULL_SIZE_BLACK_MODIFIER = Modifier
+    .fillMaxSize()
+    .background(COLOR_BLACK)
+private val ERROR_SPACER_MODIFIER = Modifier.height(ERROR_SPACER_HEIGHT)
+private val BUTTON_SPACER_MODIFIER = Modifier.width(BUTTON_SPACER_WIDTH)
+private val RELEASE_PLAYER_VIEW: (PlayerView) -> Unit = { it.player = null }
 
 /**
  * Полноэкранный плеер X.
@@ -112,19 +126,17 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
 
         if (vm.isError) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-                contentAlignment = Alignment.Center
+                modifier = FULL_SIZE_BLACK_MODIFIER,
+                contentAlignment = ALIGN_CENTER
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(TEXT_LOAD_ERROR, color = Color.White)
-                    Spacer(modifier = Modifier.height(ERROR_SPACER_HEIGHT))
+                Column(horizontalAlignment = ALIGN_CENTER_HORIZONTALLY) {
+                    Text(TEXT_LOAD_ERROR, color = COLOR_WHITE)
+                    Spacer(modifier = ERROR_SPACER_MODIFIER)
                     Row {
                         Button(onClick = onReloadVideo) {
                             Text(TEXT_RETRY)
                         }
-                        Spacer(modifier = Modifier.width(BUTTON_SPACER_WIDTH))
+                        Spacer(modifier = BUTTON_SPACER_MODIFIER)
                         Button(onClick = onExitDirect) {
                             Text(TEXT_BACK)
                         }
@@ -136,15 +148,15 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
 
         if (vm.isLoading || vm.passedString.isBlank()) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-                contentAlignment = Alignment.Center
+                modifier = FULL_SIZE_BLACK_MODIFIER,
+                contentAlignment = ALIGN_CENTER
             ) {
-                CircularProgressIndicator(color = Color.White)
+                CircularProgressIndicator(color = COLOR_WHITE)
             }
             return
         }
+
+        val onPlaybackError: (MediaPlayerError) -> Unit = remember(vm) { { _ -> vm.onPlaybackError() } }
 
         val exo = rememberExoPlayerWithLifecycle(
             url = vm.passedString,
@@ -154,7 +166,7 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
             isLooping = false,
             headers = null,
             drmConfig = null,
-            error = { vm.onPlaybackError() },
+            error = onPlaybackError,
             selectedQuality = null,
             seekBackIncrementMs = SEEK_INCREMENT_MS,    // Перемотка назад на ±10 сек
             seekForwardIncrementMs = SEEK_INCREMENT_MS, // Перемотка вперёд на ±10 сек
@@ -210,10 +222,10 @@ class ScreenX_VideoPlayerFullScreen(val url: String, val position: Long = -1L) :
                     setFullscreenButtonClickListener { onExitWithExo() }
                 }
             },
-            modifier = Modifier.fillMaxSize(),
+            modifier = FULL_SIZE_MODIFIER,
             // PlayerView создаётся здесь и держит ссылку на exo (а плеер — на view).
             // Без отвязки view переживает уход с экрана вместе с контекстом Activity.
-            onRelease = { it.player = null }
+            onRelease = RELEASE_PLAYER_VIEW
         )
     }
 }

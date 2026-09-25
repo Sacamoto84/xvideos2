@@ -50,6 +50,9 @@ private val INDICATOR_CONTAINER_BASE_MODIFIER = Modifier
     .clip(CircleShape)
     .border(INDICATOR_BORDER_WIDTH, INDICATOR_BORDER_COLOR, CircleShape)
 
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+
 @Composable
 fun NicheBottomBar(
     niche: NichesInfo,
@@ -61,10 +64,10 @@ fun NicheBottomBar(
     Column(modifier = modifier) {
         Row(
             modifier = ROW_BAR_BASE_MODIFIER,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
             horizontalArrangement = ROW_BAR_HORIZONTAL_ARRANGEMENT
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
                 Spacer(modifier = EDGE_SPACER_MODIFIER)
 
                 SortByOrder(
@@ -79,10 +82,10 @@ fun NicheBottomBar(
             }
             Spacer(modifier = INNER_SPACER_MODIFIER)
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
                 Box(
                     modifier = INDICATOR_CONTAINER_BASE_MODIFIER.background(Theme.tabLevel0),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = BOX_ALIGNMENT_CENTER
                 ) {
                     TabBarPoints(columns, true)
                 }

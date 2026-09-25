@@ -37,6 +37,17 @@ private const val TITLE_MANGA = "Manga"
 private const val TITLE_HENTAI = "Hentai"
 private const val TITLE_PORN = "Porn"
 
+private val ICON_MENU = Icons.Filled.Menu
+private val COLOR_TRANSPARENT = Color.Transparent
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val NAV_BAR_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .height(NAV_BAR_HEIGHT)
+private val ROW_BASE_MODIFIER = Modifier.fillMaxSize()
+private val NO_OP_CLICK: () -> Unit = {}
+
 @Composable
 fun ScreenLRootBottomNavigator(
     selectIndex: SelectIndex,
@@ -73,39 +84,38 @@ fun ScreenLRootBottomNavigator(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(NAV_BAR_HEIGHT)
+            .then(NAV_BAR_BASE_MODIFIER)
             .background(Theme.L.grey4),
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = ROW_BASE_MODIFIER,
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
+            horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT
         ) {
             Box(
                 modifier = Modifier
                     .height(NAV_ITEM_HEIGHT)
                     .weight(1f)
-                    .background(if (selectIndex == SelectIndex.Default) colorSelect else Color.Transparent)
+                    .background(if (selectIndex == SelectIndex.Default) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
                         onClick = onDefaultClick,
-                        onLongClick = {}
+                        onLongClick = NO_OP_CLICK
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = BOX_ALIGNMENT_CENTER
             ) {
-                Icon(Icons.Filled.Menu, contentDescription = CD_MENU, tint = Theme.L.textColor)
+                Icon(ICON_MENU, contentDescription = CD_MENU, tint = Theme.L.textColor)
             }
             VerticalDivider()
             Box(
                 modifier = Modifier
                     .height(NAV_ITEM_HEIGHT)
                     .weight(1f)
-                    .background(if (selectIndex == SelectIndex.Manga) colorSelect else Color.Transparent)
+                    .background(if (selectIndex == SelectIndex.Manga) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
-                        onClick = {},
+                        onClick = NO_OP_CLICK,
                         onLongClick = onMangaLongClick
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = BOX_ALIGNMENT_CENTER
             ) {
                 Text(
                     TITLE_MANGA,
@@ -119,12 +129,12 @@ fun ScreenLRootBottomNavigator(
                 modifier = Modifier
                     .height(NAV_ITEM_HEIGHT)
                     .weight(1f)
-                    .background(if (selectIndex == SelectIndex.Hentai) colorSelect else Color.Transparent)
+                    .background(if (selectIndex == SelectIndex.Hentai) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
-                        onClick = {},
+                        onClick = NO_OP_CLICK,
                         onLongClick = onHentaiLongClick
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = BOX_ALIGNMENT_CENTER
             ) {
                 Text(
                     TITLE_HENTAI,
@@ -138,12 +148,12 @@ fun ScreenLRootBottomNavigator(
                 modifier = Modifier
                     .height(NAV_ITEM_HEIGHT)
                     .weight(1f)
-                    .background(if (selectIndex == SelectIndex.Porn) colorSelect else Color.Transparent)
+                    .background(if (selectIndex == SelectIndex.Porn) colorSelect else COLOR_TRANSPARENT)
                     .combinedClickable(
-                        onClick = {},
+                        onClick = NO_OP_CLICK,
                         onLongClick = onPornLongClick
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = BOX_ALIGNMENT_CENTER
             ) {
                 Text(
                     TITLE_PORN,

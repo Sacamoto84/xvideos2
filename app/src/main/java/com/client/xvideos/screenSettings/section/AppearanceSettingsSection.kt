@@ -79,6 +79,7 @@ private val PREVIEW_LABEL_FONT_SIZE = 13.sp
 private const val PREVIEW_LABEL_ALPHA = 0.9f
 private val SCROLL_BUTTONS_END_PADDING = 20.dp
 private val PREVIEW_LABEL_COLOR = Color.White.copy(alpha = PREVIEW_LABEL_ALPHA)
+private val PREVIEW_LABEL_FONT_WEIGHT = FontWeight.Medium
 private val ON_SCROLL_NOOP: () -> Unit = {}
 
 private val SECTION_SPACER_MODIFIER = Modifier.height(SECTION_SPACER_HEIGHT)
@@ -169,15 +170,16 @@ private fun ScrollEffectItem(
     modifier: Modifier = Modifier
 ) {
     val onClick = remember(effect, onSelect) { { onSelect(effect) } }
-    val trailingContent: @Composable () -> Unit = remember(isSelected) {
+    val radioColors = RadioButtonDefaults.colors(
+        selectedColor = SettingsAccentColor,
+        unselectedColor = RADIO_UNSELECTED_COLOR
+    )
+    val trailingContent: @Composable () -> Unit = remember(isSelected, radioColors) {
         {
             RadioButton(
                 selected = isSelected,
                 onClick = null,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = SettingsAccentColor,
-                    unselectedColor = RADIO_UNSELECTED_COLOR
-                )
+                colors = radioColors
             )
         }
     }
@@ -229,7 +231,7 @@ private fun ScrollButtonPreviewCard(
 
         val previewLabelStyle = remember(Theme.L.Type.caption) {
             Theme.L.Type.caption.copy(
-                fontWeight = FontWeight.Medium,
+                fontWeight = PREVIEW_LABEL_FONT_WEIGHT,
                 fontSize = PREVIEW_LABEL_FONT_SIZE
             )
         }

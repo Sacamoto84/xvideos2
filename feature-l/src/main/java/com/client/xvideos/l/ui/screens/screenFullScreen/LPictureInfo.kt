@@ -32,11 +32,19 @@ import com.client.xvideos.l.model.lPreviewImageUrl
 
 private const val TAG_URL = "url"
 private val LINK_TEXT_COLOR = Color(0xFF8AB4F8)
+private val COLOR_WHITE = Color.White
 private val MAX_DIALOG_HEIGHT = 520.dp
 private const val TITLE_INFO = "Информация"
 private const val LABEL_ALBUM = "Альбом: "
 private const val CONFIRM_OK = "OK"
 private const val ERR_OPEN_LINK = "Не удалось открыть ссылку"
+
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val COLUMN_BASE_MODIFIER = Modifier.heightIn(max = MAX_DIALOG_HEIGHT)
+private val LINK_SPAN_STYLE = SpanStyle(
+    color = LINK_TEXT_COLOR,
+    textDecoration = TextDecoration.Underline
+)
 
 /**
  * Диалог «Информация» о картинке и сборка его текста.
@@ -83,18 +91,17 @@ internal fun LPictureInfoDialog(
         onDismiss = onDismiss,
         content = {
             Column(
-                modifier = Modifier
-                    .heightIn(max = MAX_DIALOG_HEIGHT)
+                modifier = COLUMN_BASE_MODIFIER
                     .verticalScroll(rememberScrollState())
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
                     Text(LABEL_ALBUM, color = Theme.DialogLavande.dismissTextColor, fontFamily = Theme.L.fontFamilyKarla)
                     if (albumId != null && onAlbumClickAction != null) {
                         TextButton(onClick = onAlbumClickAction) {
                             Text(albumId.toString())
                         }
                     } else {
-                        Text(item.album ?: "-", color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
+                        Text(item.album ?: "-", color = COLOR_WHITE, fontFamily = Theme.L.fontFamilyKarla)
                     }
                 }
 
@@ -123,17 +130,21 @@ private fun LPictureInfoText(
         )
     }
 
-    ClickableText(
-        text = annotatedText,
-        modifier = modifier,
-        style = textStyle,
-        onClick = { offset ->
+    val onAnnotatedClick: (Int) -> Unit = remember(annotatedText, onUrlClick) {
+        { offset ->
             annotatedText
                 .getStringAnnotations(TAG_URL, offset, offset)
                 .firstOrNull()
                 ?.item
                 ?.let(onUrlClick)
         }
+    }
+
+    ClickableText(
+        text = annotatedText,
+        modifier = modifier,
+        style = textStyle,
+        onClick = onAnnotatedClick
     )
 }
 
@@ -154,10 +165,7 @@ private fun String.withClickableHttpsLinks() = buildAnnotatedString {
         append(url)
         addStringAnnotation(TAG_URL, url, annotatedStart, annotatedStart + url.length)
         addStyle(
-            SpanStyle(
-                color = LINK_TEXT_COLOR,
-                textDecoration = TextDecoration.Underline
-            ),
+            LINK_SPAN_STYLE,
             annotatedStart,
             annotatedStart + url.length
         )

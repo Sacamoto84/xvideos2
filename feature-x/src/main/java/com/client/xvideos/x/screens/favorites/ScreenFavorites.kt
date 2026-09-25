@@ -93,6 +93,41 @@ private val DURATION_SHADOW_OFFSET = 1.dp
 private val SEPARATOR_COLOR = Color(0xFF9E9E9E)
 private val durationOffsetY = (-3).dp
 
+private val ICON_MORE_VERT = Icons.Default.MoreVert
+private val ICON_DOWNLOAD = Icons.Filled.ArrowCircleDown
+private val ICON_SAVE_ALT = Icons.Filled.SaveAlt
+private val ICON_DELETE = Icons.Filled.Delete
+
+private val COLOR_BLACK = Color.Black
+private val COLOR_WHITE = Color.White
+private val COLOR_DARK_GRAY = Color.DarkGray
+private val COLOR_GRAY = Color.Gray
+
+private val FONT_WEIGHT_BOLD = FontWeight.Bold
+
+private val ALIGN_TOP_CENTER = Alignment.TopCenter
+private val ALIGN_CENTER = Alignment.Center
+private val ALIGN_TOP_END = Alignment.TopEnd
+private val ALIGN_BOTTOM_END = Alignment.BottomEnd
+
+private val ACTION_BUTTON_SIZE_MODIFIER = Modifier.size(ACTION_ICON_BUTTON_SIZE)
+private val ACTION_ICON_SIZE_MODIFIER = Modifier.size(ACTION_ICON_SIZE)
+private val ACTION_ICON_SHADOW_MODIFIER = Modifier
+    .size(ACTION_ICON_SIZE)
+    .offset(ACTION_ICON_SHADOW_OFFSET, ACTION_ICON_SHADOW_OFFSET)
+private val MENU_WIDTH_MODIFIER = Modifier.width(IntrinsicSize.Min)
+private val DOWNLOAD_ICON_PADDING_MODIFIER = Modifier.padding(DOWNLOAD_ICON_PADDING)
+private val DURATION_END_PADDING_MODIFIER = Modifier.padding(end = DURATION_END_PADDING)
+private val DURATION_SHADOW_MODIFIER = Modifier
+    .fillMaxWidth()
+    .offset(DURATION_SHADOW_OFFSET, durationOffsetY + DURATION_SHADOW_OFFSET)
+private val DURATION_TEXT_MODIFIER = Modifier
+    .fillMaxWidth()
+    .offset(0.dp, durationOffsetY)
+private val HEADER_TEXT_PADDING = Modifier.padding(start = HEADER_START_PADDING, top = HEADER_VERTICAL_PADDING, bottom = HEADER_VERTICAL_PADDING)
+private val TEXT_ALIGN_RIGHT = TextAlign.Right
+private val NO_OP_CLICK: () -> Unit = {}
+
 class ScreenFavorites : Screen {
 
     override val key: ScreenKey = "ScreenFavorites"
@@ -186,12 +221,12 @@ private fun FavoritesContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = padding.calculateBottomPadding()),
-                contentAlignment = Alignment.TopCenter
+                contentAlignment = ALIGN_TOP_CENTER
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FavoritesHeader(topCutout = topCutout)
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(TEXT_EMPTY, color = Color.Gray, fontSize = EMPTY_FONT_SIZE)
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = ALIGN_CENTER) {
+                        Text(TEXT_EMPTY, color = COLOR_GRAY, fontSize = EMPTY_FONT_SIZE)
                     }
                 }
             }
@@ -236,10 +271,10 @@ private fun FavoritesHeader(
     ) {
         Text(
             TEXT_FAVORITES_TITLE,
-            color = Color.White,
+            color = COLOR_WHITE,
             fontSize = HEADER_TITLE_SIZE,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = HEADER_START_PADDING, top = HEADER_VERTICAL_PADDING, bottom = HEADER_VERTICAL_PADDING)
+            fontWeight = FONT_WEIGHT_BOLD,
+            modifier = HEADER_TEXT_PADDING
         )
         HorizontalSeparator(color = SEPARATOR_COLOR)
     }
@@ -270,7 +305,7 @@ private fun FavoriteRow(
             .fillMaxWidth()
             .padding(vertical = CARD_PADDING_VERTICAL, horizontal = CARD_PADDING_HORIZONTAL)
             .aspectRatio(FAVORITE_CARD_ASPECT_RATIO)
-            .background(Color.DarkGray)
+            .background(COLOR_DARK_GRAY)
     ) {
         when {
             // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.
@@ -283,7 +318,7 @@ private fun FavoriteRow(
                 )
                 // Значок «скачано» (как в R — IconSave18).
                 Row(
-                    modifier = Modifier.padding(DOWNLOAD_ICON_PADDING)
+                    modifier = DOWNLOAD_ICON_PADDING_MODIFIER
                 ) {
                     IconSave18()
                 }
@@ -296,7 +331,7 @@ private fun FavoriteRow(
             )
         }
 
-        Row(Modifier.align(Alignment.TopEnd)) {
+        Row(Modifier.align(ALIGN_TOP_END)) {
             FavoriteActionsExpandMenu(
                 onDelete = onDeleteThis,
                 onDownload = onDownloadThis,
@@ -304,7 +339,7 @@ private fun FavoriteRow(
             )
         }
 
-        Row(Modifier.align(Alignment.BottomEnd).padding(end = DURATION_END_PADDING)) { DurationOverlay(item.duration) }
+        Row(Modifier.align(ALIGN_BOTTOM_END).then(DURATION_END_PADDING_MODIFIER)) { DurationOverlay(item.duration) }
     }
 }
 
@@ -343,36 +378,33 @@ private fun FavoriteActionsExpandMenu(
         onExpandedChange = onExpandedChange
     ) {
         IconButton(
-            modifier = Modifier
-                .size(ACTION_ICON_BUTTON_SIZE)
+            modifier = ACTION_BUTTON_SIZE_MODIFIER
                 .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
-            onClick = {}
+            onClick = NO_OP_CLICK
         ) {
             Icon(
-                Icons.Default.MoreVert,
+                ICON_MORE_VERT,
                 contentDescription = TEXT_ACTIONS,
-                tint = Color.Black,
-                modifier = Modifier
-                    .size(ACTION_ICON_SIZE)
-                    .offset(ACTION_ICON_SHADOW_OFFSET, ACTION_ICON_SHADOW_OFFSET)
+                tint = COLOR_BLACK,
+                modifier = ACTION_ICON_SHADOW_MODIFIER
             )
             Icon(
-                Icons.Default.MoreVert,
+                ICON_MORE_VERT,
                 contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(ACTION_ICON_SIZE)
+                tint = COLOR_WHITE,
+                modifier = ACTION_ICON_SIZE_MODIFIER
             )
         }
 
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = onDismissMenu,
-            modifier = Modifier.width(IntrinsicSize.Min),
+            modifier = MENU_WIDTH_MODIFIER,
             containerColor = Theme.ExpandMenu.backgroundColor
         ) {
-            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, TEXT_DOWNLOAD, onClick = handleDownload)
-            ExpandMenuActionItem(Icons.Filled.SaveAlt, TEXT_IN_GALLERY, onClick = handleSaveToGallery)
-            ExpandMenuActionItem(Icons.Filled.Delete, TEXT_DELETE, onClick = handleDelete)
+            ExpandMenuActionItem(ICON_DOWNLOAD, TEXT_DOWNLOAD, onClick = handleDownload)
+            ExpandMenuActionItem(ICON_SAVE_ALT, TEXT_IN_GALLERY, onClick = handleSaveToGallery)
+            ExpandMenuActionItem(ICON_DELETE, TEXT_DELETE, onClick = handleDelete)
         }
     }
 }
@@ -385,21 +417,17 @@ private fun DurationOverlay(duration: String) {
     Box(modifier = Modifier) {
         Text(
             text = text,
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(DURATION_SHADOW_OFFSET, durationOffsetY + DURATION_SHADOW_OFFSET),
-            textAlign = TextAlign.Right,
+            modifier = DURATION_SHADOW_MODIFIER,
+            textAlign = TEXT_ALIGN_RIGHT,
             fontSize = DURATION_FONT_SIZE,
-            color = Color.Black
+            color = COLOR_BLACK
         )
         Text(
             text = text,
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(0.dp, durationOffsetY),
-            textAlign = TextAlign.Right,
+            modifier = DURATION_TEXT_MODIFIER,
+            textAlign = TEXT_ALIGN_RIGHT,
             fontSize = DURATION_FONT_SIZE,
-            color = Color.White
+            color = COLOR_WHITE
         )
     }
 }
