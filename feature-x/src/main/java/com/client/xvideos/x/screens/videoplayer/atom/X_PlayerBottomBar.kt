@@ -146,7 +146,7 @@ fun X_PlayerBottomBar(
     val formattedTotalTime = remember(host.totalTime) { formatTime(host.totalTime) }
 
     Row(
-        modifier = modifier.then(BOTTOM_BAR_BASE_MODIFIER),
+        modifier = if (modifier == Modifier) BOTTOM_BAR_BASE_MODIFIER else modifier.then(BOTTOM_BAR_BASE_MODIFIER),
         verticalAlignment = ROW_VERTICAL_ALIGNMENT,
         horizontalArrangement = BAR_HORIZONTAL_ARRANGEMENT
     ) {
@@ -226,12 +226,11 @@ private fun FitModeToggle(
     modifier: Modifier = Modifier,
 ) {
     val fitModeText = if (videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT
+    val baseModifier = if (modifier == Modifier) FIT_MODE_FULL_MODIFIER else modifier.then(FIT_MODE_FULL_MODIFIER)
     Text(
         text = fitModeText,
         style = FIT_MODE_TEXT_STYLE,
-        modifier = modifier
-            .then(FIT_MODE_FULL_MODIFIER)
-            .clickable(onClick = onToggleFitMode)
+        modifier = baseModifier.clickable(onClick = onToggleFitMode)
     )
 }
 

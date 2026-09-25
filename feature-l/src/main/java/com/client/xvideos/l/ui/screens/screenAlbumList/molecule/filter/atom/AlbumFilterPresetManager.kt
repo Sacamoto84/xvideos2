@@ -91,8 +91,22 @@ object AlbumFilterPresetManager {
         }
     }
 
+    private const val DEFAULT_NAME_SEPARATOR = " • "
+    private const val FILTER_SUMMARY_SEPARATOR = " | "
+
+    private fun PictureCountRank.formatSizeLabel(): String = when (this) {
+        PictureCountRank.All -> "Any"
+        PictureCountRank.C0_25 -> "0..25"
+        PictureCountRank.C25_50 -> "25..50"
+        PictureCountRank.C50_100 -> "50..100"
+        PictureCountRank.C100_200 -> "100..200"
+        PictureCountRank.C200_800 -> "200..800"
+        PictureCountRank.C800_3200 -> "800..3200"
+        PictureCountRank.C3200_12800 -> "3200..12800"
+    }
+
     fun generateDefaultName(filter: AlbumListFilter): String {
-        val parts = mutableListOf<String>()
+        val parts = ArrayList<String>(6)
         if (filter.searchQuery.isNotBlank()) {
             parts.add(filter.searchQuery.take(20))
         }
@@ -111,27 +125,17 @@ object AlbumFilterPresetManager {
         if (filter.selection == "animated") {
             parts.add("Animated")
         }
-        return if (parts.isEmpty()) "Preset ${_presets.value.size + 1}" else parts.joinToString(" • ")
+        return if (parts.isEmpty()) "Preset ${_presets.value.size + 1}" else parts.joinToString(DEFAULT_NAME_SEPARATOR)
     }
 
     fun formatFilterSummary(filter: AlbumListFilter): String {
-        val items = mutableListOf<String>()
+        val items = ArrayList<String>(8)
         items.add("Type: ${filter.album_type.name}")
         if (filter.content_id != ContentId.All) {
             items.add("Content: ${filter.content_id.name}")
         }
         if (filter.picture_count_rank != PictureCountRank.All) {
-            val sizeLabel = when (filter.picture_count_rank) {
-                PictureCountRank.All -> "Any"
-                PictureCountRank.C0_25 -> "0..25"
-                PictureCountRank.C25_50 -> "25..50"
-                PictureCountRank.C50_100 -> "50..100"
-                PictureCountRank.C100_200 -> "100..200"
-                PictureCountRank.C200_800 -> "200..800"
-                PictureCountRank.C800_3200 -> "800..3200"
-                PictureCountRank.C3200_12800 -> "3200..12800"
-            }
-            items.add("Size: $sizeLabel")
+            items.add("Size: ${filter.picture_count_rank.formatSizeLabel()}")
         }
         if (filter.genresPlus.isNotEmpty()) {
             items.add("+${filter.genresPlus.joinToString { it.title }}")
@@ -148,6 +152,6 @@ object AlbumFilterPresetManager {
         if (filter.selection == "animated") {
             items.add("Animated")
         }
-        return items.joinToString(" | ")
+        return items.joinToString(FILTER_SUMMARY_SEPARATOR)
     }
 }

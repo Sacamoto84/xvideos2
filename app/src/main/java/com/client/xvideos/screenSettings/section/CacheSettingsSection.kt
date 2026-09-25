@@ -39,6 +39,11 @@ private const val RAM_CACHE_SUFFIX = "%"
 private const val DISK_CACHE_STEP_MB = 50
 private const val DISK_CACHE_SUFFIX_MB = " MB"
 
+private const val MIN_RAM_CACHE_PERCENT = CoilImageLoaderFactory.MIN_RAM_CACHE_PERCENT
+private const val MAX_RAM_CACHE_PERCENT = CoilImageLoaderFactory.MAX_RAM_CACHE_PERCENT
+private const val MIN_DISK_CACHE_SIZE_MB = CoilImageLoaderFactory.MIN_DISK_CACHE_SIZE_MB
+private const val MAX_DISK_CACHE_SIZE_MB = CoilImageLoaderFactory.MAX_DISK_CACHE_SIZE_MB
+
 private const val ICON_HARD_DISK = R.drawable.hard_disk_24
 private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
 private const val ICON_MEMORY = R.drawable.memory_24
@@ -84,9 +89,7 @@ internal fun CacheSettingsSection(
     val formattedDiskSize = remember(imageCacheSizeBytes) {
         formatBytes(imageCacheSizeBytes)
     }
-    val diskCacheSubtitle = remember(diskCacheEnabled) {
-        if (diskCacheEnabled) TEXT_ENABLED else TEXT_DISABLED
-    }
+    val diskCacheSubtitle = if (diskCacheEnabled) TEXT_ENABLED else TEXT_DISABLED
     val clearDialogBody = remember(formattedDiskSize) {
         "$DIALOG_BODY_PREFIX$formattedDiskSize"
     }
@@ -95,8 +98,8 @@ internal fun CacheSettingsSection(
         IntSliderSetting(
             text = TEXT_RAM_CACHE,
             value = normalizedRam,
-            min = CoilImageLoaderFactory.MIN_RAM_CACHE_PERCENT,
-            max = CoilImageLoaderFactory.MAX_RAM_CACHE_PERCENT,
+            min = MIN_RAM_CACHE_PERCENT,
+            max = MAX_RAM_CACHE_PERCENT,
             step = RAM_CACHE_STEP,
             suffix = RAM_CACHE_SUFFIX,
             icon = ICON_MEMORY,
@@ -116,8 +119,8 @@ internal fun CacheSettingsSection(
         IntSliderSetting(
             text = TEXT_DISK_CACHE_LIMIT,
             value = normalizedDisk,
-            min = CoilImageLoaderFactory.MIN_DISK_CACHE_SIZE_MB,
-            max = CoilImageLoaderFactory.MAX_DISK_CACHE_SIZE_MB,
+            min = MIN_DISK_CACHE_SIZE_MB,
+            max = MAX_DISK_CACHE_SIZE_MB,
             step = DISK_CACHE_STEP_MB,
             suffix = DISK_CACHE_SUFFIX_MB,
             icon = ICON_HARD_DRIVE,

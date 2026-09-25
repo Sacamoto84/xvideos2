@@ -55,6 +55,8 @@ private const val SNACK_RECOVERY_STARTED_PREFIX = "Запущено: видео 
 private const val SNACK_RECOVERY_PREVIEW_PREFIX = ", превью "
 private const val NICHES_CACHE_SEPARATOR = " \u2022 "
 private const val NICHES_CACHE_HOUR_SUFFIX = "h"
+private const val ICON_RED = R.drawable.icon_red
+private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
 
 private val PROGRESS_INDICATOR_BASE_MODIFIER = Modifier
     .padding(horizontal = PROGRESS_HORIZONTAL_PADDING)
@@ -126,27 +128,28 @@ internal fun RSettingsSection(
     val nichesCacheValue = remember(nichesCacheSize, nichesCacheLastModifiedHour) {
         "$nichesCacheSize$NICHES_CACHE_SEPARATOR$nichesCacheLastModifiedHour$NICHES_CACHE_HOUR_SUFFIX"
     }
-    val nichesSubtitle = remember(isNichesCacheDownloading) {
-        if (isNichesCacheDownloading) TEXT_UPDATING else TEXT_NICHES_SUBTITLE_DEFAULT
+    val nichesSubtitle = if (isNichesCacheDownloading) TEXT_UPDATING else TEXT_NICHES_SUBTITLE_DEFAULT
+    val recoverySubtitle = remember(recoveryReport, isRecoveringDownload) {
+        redDownloadRecoveryText(recoveryReport, isRecoveringDownload)
     }
 
     SettingsGroup(modifier = modifier) {
         SettingsValueRow(
-            icon = R.drawable.icon_red,
+            icon = ICON_RED,
             text = TEXT_RED_ALL_FOLDERS,
             value = formattedTotal
         )
         SettingsDivider()
 
         SettingsValueRow(
-            icon = R.drawable.icon_red,
+            icon = ICON_RED,
             text = TEXT_RED_DOWNLOAD_FOLDER,
             value = formattedDownload
         )
         SettingsDivider()
 
         SettingsButtonRowWithDialog(
-            icon = R.drawable.icon_red,
+            icon = ICON_RED,
             text = TEXT_CLEAR_DOWNLOAD,
             value = TEXT_CLEAR,
             textDialogTitle = TEXT_CLEAR_DIALOG_TITLE,
@@ -157,15 +160,15 @@ internal fun RSettingsSection(
         SettingsDivider()
 
         SettingsListItem(
-            icon = R.drawable.hard_drive_2_24,
+            icon = ICON_HARD_DRIVE,
             text = TEXT_RECOVER_DOWNLOAD,
-            subtitle = redDownloadRecoveryText(recoveryReport, isRecoveringDownload),
+            subtitle = recoverySubtitle,
             trailing = recoveryTrailing
         )
         SettingsDivider()
 
         SettingsValueRow(
-            icon = R.drawable.icon_red,
+            icon = ICON_RED,
             text = TEXT_NICHES_CACHE,
             value = nichesCacheValue
         )
@@ -182,7 +185,7 @@ internal fun RSettingsSection(
         SettingsDivider()
 
         SettingsListItem(
-            icon = R.drawable.icon_red,
+            icon = ICON_RED,
             text = TEXT_UPDATE_NICHES_CACHE,
             subtitle = nichesSubtitle,
             trailing = nichesTrailing

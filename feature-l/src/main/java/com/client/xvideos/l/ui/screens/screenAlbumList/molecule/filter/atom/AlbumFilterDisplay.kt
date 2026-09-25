@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.l.model.DataAlbumFilterDisplay
 import com.client.xvideos.l.model.albumFilterDisplay
 
 private val UNIQUE_PRIMARY_LIST = albumFilterDisplay.map { it.primary }.distinct()
@@ -36,6 +37,11 @@ private val FILTER_FIELD_BORDER_WIDTH = 1.dp
 private val FILTER_FIELD_PADDING_HORIZONTAL = 8.dp
 private val FILTER_ROW_SPACING = 8.dp
 private const val TITLE_SORT_BY = "Sort by"
+private val FILTER_ROW_ARRANGEMENT = Arrangement.spacedBy(FILTER_ROW_SPACING)
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val PRIMARY_ITEM_TITLE: (String) -> String = { it }
+private val SECONDARY_ITEM_TITLE: (DataAlbumFilterDisplay) -> String = { it.secondary }
 
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
 @Composable
@@ -69,10 +75,26 @@ fun AlbumFilterDisplay(
         Theme.L.Type.rowValue.copy(color = palette.textPrimary)
     }
 
+    val onSelectPrimary: (String) -> Unit = remember(list, onRequestApply) {
+        { primary ->
+            val newSelected = list.firstOrNull { it.primary == primary } ?: list.first()
+            selected = newSelected
+            showPrimaryDialog = false
+            onRequestApply(newSelected.request)
+        }
+    }
+    val onSelectSecondary: (DataAlbumFilterDisplay) -> Unit = remember(onRequestApply) {
+        { item ->
+            selected = item
+            showSecondaryDialog = false
+            onRequestApply(item.request)
+        }
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(FILTER_ROW_SPACING)
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
+        horizontalArrangement = FILTER_ROW_ARRANGEMENT
     ) {
         FilterDropdownField(
             text = selected.primary,
@@ -97,14 +119,9 @@ fun AlbumFilterDisplay(
             title = TITLE_SORT_BY,
             items = UNIQUE_PRIMARY_LIST,
             selectedItem = selected.primary,
-            itemTitle = { it },
+            itemTitle = PRIMARY_ITEM_TITLE,
             onDismiss = onDismissPrimary,
-            onSelect = { primary ->
-                val newSelected = list.firstOrNull { it.primary == primary } ?: list.first()
-                selected = newSelected
-                showPrimaryDialog = false
-                onRequestApply(newSelected.request)
-            }
+            onSelect = onSelectPrimary
         )
     }
 
@@ -117,13 +134,9 @@ fun AlbumFilterDisplay(
             title = selected.primary,
             items = secondaryItems,
             selectedItem = selected,
-            itemTitle = { it.secondary },
+            itemTitle = SECONDARY_ITEM_TITLE,
             onDismiss = onDismissSecondary,
-            onSelect = { item ->
-                selected = item
-                showSecondaryDialog = false
-                onRequestApply(item.request)
-            }
+            onSelect = onSelectSecondary
         )
     }
 }
@@ -148,8 +161,8 @@ private fun FilterDropdownField(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
+            horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
         ) {
             Text(
                 text = text,

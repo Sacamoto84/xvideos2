@@ -76,6 +76,12 @@ private val FOLLOW_BUTTON_BASE_MODIFIER = Modifier
     .width(FOLLOW_BUTTON_WIDTH)
     .height(FOLLOW_BUTTON_HEIGHT)
 
+private val ROW_BASE_MODIFIER = Modifier
+    .padding(start = PADDING_XSMALL)
+    .fillMaxWidth()
+private val FOLLOWED_BORDER_MODIFIER = Modifier.border(FOLLOW_BORDER_WIDTH, COLOR_WHITE, NICHE_FOLLOW_BUTTON_SHAPE)
+private val UNFOLLOWED_BORDER_MODIFIER = Modifier.border(FOLLOW_BORDER_WIDTH, COLOR_TRANSPARENT, NICHE_FOLLOW_BUTTON_SHAPE)
+
 private val STAT_TEXT_STYLE = TextStyle(
     color = COLOR_WHITE,
     textAlign = TextAlign.Center,
@@ -132,9 +138,7 @@ fun NicheProfileContent(
     val gifsText = remember(currentNiche.gifs) { currentNiche.gifs.toPrettyCount() }
 
     Row(
-        modifier = modifier
-            .padding(start = PADDING_XSMALL)
-            .fillMaxWidth(),
+        modifier = if (modifier == Modifier) ROW_BASE_MODIFIER else modifier.then(ROW_BASE_MODIFIER),
         horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
         verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
@@ -191,15 +195,15 @@ private fun ButtonFollowContent(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val buttonText = remember(isFollowed) { if (isFollowed) TEXT_UNSUBSCRIBE else TEXT_SUBSCRIBE }
-    val buttonTextColor = remember(isFollowed) { if (isFollowed) COLOR_WHITE else COLOR_BLACK }
-    val buttonBgColor = remember(isFollowed) { if (isFollowed) Theme.tabLevel1 else Theme.R.colorYellow }
-    val buttonBorderColor = remember(isFollowed) { if (isFollowed) COLOR_WHITE else COLOR_TRANSPARENT }
+    val buttonText = if (isFollowed) TEXT_UNSUBSCRIBE else TEXT_SUBSCRIBE
+    val buttonTextColor = if (isFollowed) COLOR_WHITE else COLOR_BLACK
+    val buttonBgColor = if (isFollowed) Theme.tabLevel1 else Theme.R.colorYellow
+    val borderModifier = if (isFollowed) FOLLOWED_BORDER_MODIFIER else UNFOLLOWED_BORDER_MODIFIER
+    val baseModifier = if (modifier == Modifier) FOLLOW_BUTTON_BASE_MODIFIER else modifier.then(FOLLOW_BUTTON_BASE_MODIFIER)
 
     Box(
-        modifier = modifier
-            .then(FOLLOW_BUTTON_BASE_MODIFIER)
-            .border(FOLLOW_BORDER_WIDTH, buttonBorderColor, NICHE_FOLLOW_BUTTON_SHAPE)
+        modifier = baseModifier
+            .then(borderModifier)
             .background(buttonBgColor)
             .clickable(onClick = onClick),
         contentAlignment = ALIGN_CENTER

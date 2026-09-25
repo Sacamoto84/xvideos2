@@ -72,7 +72,7 @@ fun ResumePlaybackPill(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.then(PILL_SURFACE_BASE_MODIFIER),
+        modifier = if (modifier == Modifier) PILL_SURFACE_BASE_MODIFIER else modifier.then(PILL_SURFACE_BASE_MODIFIER),
         color = PILL_BG_COLOR,
         shadowElevation = PILL_SHADOW_ELEVATION,
         tonalElevation = PILL_TONAL_ELEVATION,
