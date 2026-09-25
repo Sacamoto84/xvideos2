@@ -35,10 +35,11 @@ private val PILL_SPACER_WIDTH = 10.dp
 private val PILL_BUTTON_HORIZONTAL_PADDING = 4.dp
 private val PILL_BUTTON_VERTICAL_PADDING = 2.dp
 private const val BUTTON_RESTART_TEXT = "С начала"
+private val COLOR_WHITE = Color.White
 private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
 
 private val PILL_TEXT_STYLE = TextStyle(
-    color = Color.White,
+    color = COLOR_WHITE,
     fontSize = PILL_FONT_SIZE
 )
 
@@ -48,16 +49,18 @@ private val PILL_RESTART_TEXT_STYLE = TextStyle(
     fontSize = PILL_FONT_SIZE
 )
 
+private val PILL_SURFACE_BASE_MODIFIER = Modifier.clip(PILL_SHAPE)
 private val PILL_ROW_MODIFIER = Modifier.padding(
     horizontal = PILL_ROW_HORIZONTAL_PADDING,
     vertical = PILL_ROW_VERTICAL_PADDING
 )
 private val PILL_SPACER_MODIFIER = Modifier.width(PILL_SPACER_WIDTH)
-private val PILL_BUTTON_BASE_MODIFIER = Modifier.clip(PILL_BUTTON_SHAPE)
-private val PILL_BUTTON_PADDING_MODIFIER = Modifier.padding(
-    horizontal = PILL_BUTTON_HORIZONTAL_PADDING,
-    vertical = PILL_BUTTON_VERTICAL_PADDING
-)
+private val PILL_BUTTON_FULL_MODIFIER = Modifier
+    .clip(PILL_BUTTON_SHAPE)
+    .padding(
+        horizontal = PILL_BUTTON_HORIZONTAL_PADDING,
+        vertical = PILL_BUTTON_VERTICAL_PADDING
+    )
 
 /**
  * Плашка с уведомлением о возобновлении воспроизведения и кнопкой «С начала».
@@ -69,7 +72,7 @@ fun ResumePlaybackPill(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.clip(PILL_SHAPE),
+        modifier = modifier.then(PILL_SURFACE_BASE_MODIFIER),
         color = PILL_BG_COLOR,
         shadowElevation = PILL_SHADOW_ELEVATION,
         tonalElevation = PILL_TONAL_ELEVATION,
@@ -86,9 +89,7 @@ fun ResumePlaybackPill(
             Text(
                 text = BUTTON_RESTART_TEXT,
                 style = PILL_RESTART_TEXT_STYLE,
-                modifier = PILL_BUTTON_BASE_MODIFIER
-                    .clickable(onClick = onRestart)
-                    .then(PILL_BUTTON_PADDING_MODIFIER)
+                modifier = PILL_BUTTON_FULL_MODIFIER.clickable(onClick = onRestart)
             )
         }
     }

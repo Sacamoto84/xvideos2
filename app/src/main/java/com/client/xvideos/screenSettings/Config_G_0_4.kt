@@ -49,6 +49,15 @@ private val POINT_BASE_MODIFIER = Modifier
     .clip(POINT_SHAPE)
     .size(POINT_SIZE)
 
+private val CONFIG_ROW_BASE_MODIFIER = Modifier
+    .padding(horizontal = ROW_HORIZONTAL_PADDING, vertical = ROW_VERTICAL_PADDING)
+    .height(ROW_HEIGHT)
+    .fillMaxWidth()
+
+private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+
 @Composable
 fun Config_G_0_4(
     text: String = "123453232",
@@ -60,12 +69,9 @@ fun Config_G_0_4(
     val visibleIndices = remember(list) { list.indices.filter { it in 1..4 } }
 
     Row(
-        modifier = modifier
-            .padding(horizontal = ROW_HORIZONTAL_PADDING, vertical = ROW_VERTICAL_PADDING)
-            .height(ROW_HEIGHT)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.then(CONFIG_ROW_BASE_MODIFIER),
+        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         Text(text, modifier = LABEL_TEXT_MODIFIER, style = styleTextConfig)
 
@@ -83,8 +89,11 @@ fun Config_G_0_4(
             visibleIndices.forEachIndexed { buttonIndex, settingIndex ->
                 key(settingIndex) {
                     val isChecked = list[settingIndex]
-                    val onCheckedChange = remember(onToggleIndex, settingIndex) {
-                        { onToggleIndex(settingIndex) }
+                    val handleCheckedChange: (Boolean) -> Unit = remember(onToggleIndex, settingIndex) {
+                        { _ -> onToggleIndex(settingIndex) }
+                    }
+                    val labelContent: @Composable () -> Unit = remember(settingIndex, isChecked) {
+                        { TabBarPoints(settingIndex, isChecked) }
                     }
                     SegmentedButton(
                         shape = SegmentedButtonDefaults.itemShape(
@@ -92,10 +101,8 @@ fun Config_G_0_4(
                             count = visibleIndices.size
                         ),
                         checked = isChecked,
-                        onCheckedChange = { onCheckedChange() },
-                        label = {
-                            TabBarPoints(settingIndex, isChecked)
-                        }
+                        onCheckedChange = handleCheckedChange,
+                        label = labelContent
                     )
                 }
             }
@@ -116,7 +123,7 @@ private fun TabBarPoints(
     val pointColor = if (screenType) POINT_ACTIVE_COLOR else POINT_INACTIVE_COLOR
     Box(
         modifier = modifier.size(TAB_BAR_SIZE),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Row {
             repeat(safeCount) {

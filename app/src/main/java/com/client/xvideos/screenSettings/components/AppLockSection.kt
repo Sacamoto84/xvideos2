@@ -72,10 +72,9 @@ private val TIMEOUT_ITEM_VERTICAL_PADDING = 10.dp
 
 private val TIMEOUT_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
 private val TIMEOUT_COLUMN_VERTICAL_ARRANGEMENT = Arrangement.spacedBy(TIMEOUT_ITEM_SPACING)
-private val TIMEOUT_ITEM_BASE_MODIFIER = Modifier
+private val TIMEOUT_ITEM_FULL_MODIFIER = Modifier
     .fillMaxWidth()
     .clip(TIMEOUT_ITEM_SHAPE)
-private val TIMEOUT_ITEM_PADDING_MODIFIER = Modifier
     .padding(horizontal = TIMEOUT_ITEM_HORIZONTAL_PADDING, vertical = TIMEOUT_ITEM_VERTICAL_PADDING)
 private val RADIO_SPACER_MODIFIER = Modifier.width(RADIO_SPACER_WIDTH)
 private val PASSWORD_FIELD_BASE_MODIFIER = Modifier.fillMaxWidth()
@@ -679,6 +678,11 @@ internal fun AppLockTimeoutDialog(
     onDismiss: () -> Unit,
     onSelect: (AppLockTimeout) -> Unit
 ) {
+    val radioColors = RadioButtonDefaults.colors(
+        selectedColor = SettingsAccentColor,
+        unselectedColor = RADIO_UNSELECTED_COLOR
+    )
+
     LavenderDialog(
         title = "Автоблокировка",
         onDismiss = onDismiss,
@@ -693,6 +697,7 @@ internal fun AppLockTimeoutDialog(
                         AppLockTimeoutItem(
                             timeout = timeout,
                             isSelected = (timeout == currentTimeout),
+                            radioColors = radioColors,
                             onSelect = onSelect
                         )
                     }
@@ -706,6 +711,7 @@ internal fun AppLockTimeoutDialog(
 private fun AppLockTimeoutItem(
     timeout: AppLockTimeout,
     isSelected: Boolean,
+    radioColors: androidx.compose.material3.RadioButtonColors,
     onSelect: (AppLockTimeout) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -720,18 +726,14 @@ private fun AppLockTimeoutItem(
 
     Row(
         modifier = modifier
-            .then(TIMEOUT_ITEM_BASE_MODIFIER)
-            .clickable(onClick = onClick)
-            .then(TIMEOUT_ITEM_PADDING_MODIFIER),
+            .then(TIMEOUT_ITEM_FULL_MODIFIER)
+            .clickable(onClick = onClick),
         verticalAlignment = ROW_CENTER_VERTICAL
     ) {
         RadioButton(
             selected = isSelected,
             onClick = null,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = SettingsAccentColor,
-                unselectedColor = RADIO_UNSELECTED_COLOR
-            )
+            colors = radioColors
         )
         Spacer(RADIO_SPACER_MODIFIER)
         Text(

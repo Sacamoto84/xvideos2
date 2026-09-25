@@ -93,6 +93,8 @@ private val SELECTOR_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
 private val SELECTOR_ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
 private val PAGE_CENTER_BOX_BASE_MODIFIER = Modifier.fillMaxHeight()
 
+private val HAPTIC_CONFIRM = HapticFeedbackType.Confirm
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumListPageSelector(
@@ -109,14 +111,14 @@ fun AlbumListPageSelector(
     val onNextPage = remember(page, pageMax, onChange) { { onChange(calculateNextAlbumPage(page, pageMax)) } }
     val onOpenDialog = remember(haptic) {
         {
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            haptic.performHapticFeedback(HAPTIC_CONFIRM)
             expanded = true
         }
     }
     val onDismissDialog = remember { { expanded = false } }
 
     val pageText = remember(page, pageMax) { "Page ${page + 1} of ${pageMax.coerceAtLeast(1)}" }
-    val pageTextStyle = remember { Theme.L.Type.rowTitle.copy(textAlign = TextAlign.Center) }
+    val pageTextStyle = remember(Theme.L.Type.rowTitle) { Theme.L.Type.rowTitle.copy(textAlign = TextAlign.Center) }
     val onKeyboardNumberClick = remember(onChange) {
         { selectedNumber: Int ->
             onChange(selectedNumber - 1)
@@ -125,6 +127,25 @@ fun AlbumListPageSelector(
     }
 
     val borderLineColor = Theme.L.grey3
+    val centerBoxModifier = remember(borderLineColor, onOpenDialog) {
+        PAGE_CENTER_BOX_BASE_MODIFIER
+            .drawBehind {
+                val strokeWidth = BORDER_LINE_WIDTH.toPx()
+                drawLine(
+                    color = borderLineColor,
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width, 0f),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = borderLineColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = strokeWidth
+                )
+            }
+            .clickable(onClick = onOpenDialog)
+    }
 
     Row(
         modifier = modifier.then(SELECTOR_ROW_BASE_MODIFIER),
@@ -142,26 +163,7 @@ fun AlbumListPageSelector(
         Box(
             modifier = Modifier
                 .weight(2f)
-                .then(PAGE_CENTER_BOX_BASE_MODIFIER)
-                .drawBehind {
-                    val strokeWidth = BORDER_LINE_WIDTH.toPx()
-
-                    // верхняя линия
-                    drawLine(
-                        color = borderLineColor,
-                        start = Offset(0f, 0f),
-                        end = Offset(size.width, 0f),
-                        strokeWidth = strokeWidth
-                    )
-                    // нижняя линия
-                    drawLine(
-                        color = borderLineColor,
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = strokeWidth
-                    )
-                }
-                .clickable(onClick = onOpenDialog),
+                .then(centerBoxModifier),
             contentAlignment = BOX_CENTER_ALIGNMENT
         ) {
             Text(

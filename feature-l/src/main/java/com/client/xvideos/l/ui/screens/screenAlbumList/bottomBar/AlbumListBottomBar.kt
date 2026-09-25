@@ -35,13 +35,19 @@ private val FILTER_START_PADDING = 2.dp
 private val FILTER_END_PADDING = 2.dp
 private const val CD_FILTER_BUTTON = "Фильтры"
 
+private val COLOR_WHITE = Color.White
+private val ICON_FILTER_LIST = Icons.Default.FilterList
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+
 private val FILTER_BUTTON_BASE_MODIFIER = Modifier
     .size(FILTER_BUTTON_SIZE)
     .border(FILTER_BUTTON_BORDER_WIDTH, FILTER_BUTTON_BORDER_COLOR, FILTER_BUTTON_SHAPE)
     .background(FILTER_BUTTON_BG_COLOR)
 
-private val FILTER_BUTTON_START_MODIFIER = Modifier.padding(start = FILTER_START_PADDING)
-private val FILTER_BUTTON_END_MODIFIER = Modifier.padding(end = FILTER_END_PADDING)
+private val FILTER_BUTTON_START_BASE_MODIFIER = FILTER_BUTTON_BASE_MODIFIER.padding(start = FILTER_START_PADDING)
+private val FILTER_BUTTON_END_BASE_MODIFIER = FILTER_BUTTON_BASE_MODIFIER.padding(end = FILTER_END_PADDING)
 private val ROW_BAR_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .height(ROW_BAR_HEIGHT)
@@ -59,11 +65,11 @@ fun AlbumListBottomBar(
 
         Row(
             modifier = ROW_BAR_BASE_MODIFIER.background(Theme.tabLevel1),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
+            horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT
         ) {
             FilterButton(
-                modifier = FILTER_BUTTON_END_MODIFIER,
+                baseModifier = FILTER_BUTTON_END_BASE_MODIFIER,
                 onClick = onClickVisibleFilter
             )
 
@@ -76,7 +82,7 @@ fun AlbumListBottomBar(
             }
 
             FilterButton(
-                modifier = FILTER_BUTTON_START_MODIFIER,
+                baseModifier = FILTER_BUTTON_START_BASE_MODIFIER,
                 onClick = onClickVisibleFilter
             )
         }
@@ -89,14 +95,15 @@ fun AlbumListBottomBar(
 private fun FilterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    baseModifier: Modifier = FILTER_BUTTON_BASE_MODIFIER,
 ) {
     Box(
         modifier = modifier
-            .then(FILTER_BUTTON_BASE_MODIFIER)
+            .then(baseModifier)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
-        Icon(Icons.Default.FilterList, contentDescription = CD_FILTER_BUTTON, tint = Color.White)
+        Icon(ICON_FILTER_LIST, contentDescription = CD_FILTER_BUTTON, tint = COLOR_WHITE)
     }
 }
 

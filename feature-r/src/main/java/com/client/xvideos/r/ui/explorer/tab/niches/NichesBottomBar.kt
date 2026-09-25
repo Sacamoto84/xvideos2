@@ -42,6 +42,7 @@ private val ROW_BAR_BASE_MODIFIER = Modifier
 private val SEARCH_WIDGET_BASE_MODIFIER = Modifier.padding(horizontal = SEARCH_HORIZONTAL_PADDING)
 private val ROW_BAR_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
 private val ROW_BAR_VERTICAL_ALIGNMENT = Alignment.Bottom
+private val HAPTIC_CONFIRM = HapticFeedbackType.Confirm
 
 @Composable
 fun NichesBottomBar(
@@ -55,7 +56,7 @@ fun NichesBottomBar(
     val haptic = LocalHapticFeedback.current
     val handleUpClick = remember(haptic, onUpClick) {
         {
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            haptic.performHapticFeedback(HAPTIC_CONFIRM)
             onUpClick()
         }
     }

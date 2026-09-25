@@ -83,6 +83,8 @@ private val NICHES_MINI_STYLE = TextStyle(
     fontFamily = Theme.R.fontFamilyDMsanss
 )
 
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+
 /**
  * Заглушки списка ниш: предложение скачать список и подсказка, что он устарел.
  *
@@ -108,7 +110,7 @@ fun Refresh(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .then(FULL_SIZE_MODIFIER)
             .background(Theme.tabLevel1),
         verticalArrangement = COLUMN_CENTER_VERTICAL,
         horizontalAlignment = COLUMN_CENTER_HORIZONTAL
@@ -125,9 +127,9 @@ fun Refresh(
         Spacer(SPACER_HEIGHT_16_MODIFIER)
         LinearWavyProgressIndicator(
             progress = { nichesCacheProgress },
-            Modifier.graphicsLayer(
+            modifier = Modifier.graphicsLayer {
                 alpha = if (nichesCacheProgress > 0f) 1f else 0f
-            )
+            }
         )
     }
 }
@@ -175,9 +177,9 @@ fun RefreshMini(
 
             CircularWavyProgressIndicator(
                 progress = { nichesCacheProgress },
-                modifier = INDICATOR_SIZE_MODIFIER.graphicsLayer(
+                modifier = INDICATOR_SIZE_MODIFIER.graphicsLayer {
                     alpha = if (nichesCacheProgress > 0f) 1f else 0f
-                )
+                }
             )
         }
     }

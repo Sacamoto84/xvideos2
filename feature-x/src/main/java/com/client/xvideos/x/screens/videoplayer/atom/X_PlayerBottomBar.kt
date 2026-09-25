@@ -87,11 +87,12 @@ private val BOTTOM_BAR_BASE_MODIFIER = Modifier
 
 private val PLAY_PAUSE_ICON_MODIFIER = Modifier.size(PLAY_PAUSE_ICON_SIZE)
 private val FULLSCREEN_ICON_MODIFIER = Modifier.size(FULLSCREEN_ICON_SIZE)
-private val FIT_MODE_BASE_MODIFIER = Modifier.clip(FIT_MODE_SHAPE)
-private val FIT_MODE_PADDING_MODIFIER = Modifier.padding(
-    horizontal = FIT_MODE_HORIZONTAL_PADDING,
-    vertical = FIT_MODE_VERTICAL_PADDING
-)
+private val FIT_MODE_FULL_MODIFIER = Modifier
+    .clip(FIT_MODE_SHAPE)
+    .padding(
+        horizontal = FIT_MODE_HORIZONTAL_PADDING,
+        vertical = FIT_MODE_VERTICAL_PADDING
+    )
 private val BAR_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(BAR_CONTROL_SPACING)
 
 /**
@@ -229,9 +230,8 @@ private fun FitModeToggle(
         text = fitModeText,
         style = FIT_MODE_TEXT_STYLE,
         modifier = modifier
-            .then(FIT_MODE_BASE_MODIFIER)
+            .then(FIT_MODE_FULL_MODIFIER)
             .clickable(onClick = onToggleFitMode)
-            .then(FIT_MODE_PADDING_MODIFIER)
     )
 }
 
