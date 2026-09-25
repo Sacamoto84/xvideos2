@@ -63,28 +63,22 @@ fun AlbumInfoButtonServerFavorite(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val buttonText = remember(isFavorite) {
-        if (isFavorite) TEXT_REMOVE_FROM_SERVER else TEXT_ADD_TO_SERVER
-    }
-    val iconVector = remember(isFavorite) {
-        if (isFavorite) ICON_FAVORITE_FILLED else ICON_FAVORITE_BORDER
-    }
-    val iconTint = remember(isFavorite, Theme.L.red) {
-        if (isFavorite) Theme.L.red else COLOR_WHITE
-    }
-    val backgroundColor = remember(isFavorite, Theme.L.grey6, Theme.L.red) {
-        if (isFavorite) Theme.L.grey6 else Theme.L.red
-    }
+    val buttonText = if (isFavorite) TEXT_REMOVE_FROM_SERVER else TEXT_ADD_TO_SERVER
+    val iconVector = if (isFavorite) ICON_FAVORITE_FILLED else ICON_FAVORITE_BORDER
+    val iconTint = if (isFavorite) Theme.L.red else COLOR_WHITE
+    val backgroundColor = if (isFavorite) Theme.L.grey6 else Theme.L.red
     val buttonTextStyle = remember(Theme.L.Type.button) {
         Theme.L.Type.button.copy(color = COLOR_WHITE)
     }
-
-    Box(
-        modifier = modifier
-            .then(SERVER_FAVORITE_BUTTON_BASE_MODIFIER)
+    val styledBase = remember(Theme.L.grey3, backgroundColor) {
+        SERVER_FAVORITE_BUTTON_BASE_MODIFIER
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SERVER_FAVORITE_BUTTON_SHAPE)
             .background(backgroundColor)
-            .clickable(enabled = !isLoading, onClick = onClick),
+    }
+    val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
+
+    Box(
+        modifier = baseModifier.clickable(enabled = !isLoading, onClick = onClick),
         contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         if (isLoading) {

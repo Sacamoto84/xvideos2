@@ -56,28 +56,22 @@ fun AlbumInfoButtonSaveAlbum(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val buttonText = remember(saved) {
-        if (!saved) TEXT_SAVE_ALBUM else TEXT_REMOVE_ALBUM
-    }
-    val iconVector = remember(saved) {
-        if (saved) ICON_BOOKMARK_FILLED else ICON_BOOKMARK_BORDER
-    }
-    val iconTint = remember(saved, Theme.L.red) {
-        if (saved) Theme.L.red else COLOR_WHITE
-    }
-    val backgroundColor = remember(saved, Theme.L.red, Theme.L.grey6) {
-        if (!saved) Theme.L.red else Theme.L.grey6
-    }
+    val buttonText = if (!saved) TEXT_SAVE_ALBUM else TEXT_REMOVE_ALBUM
+    val iconVector = if (saved) ICON_BOOKMARK_FILLED else ICON_BOOKMARK_BORDER
+    val iconTint = if (saved) Theme.L.red else COLOR_WHITE
+    val backgroundColor = if (!saved) Theme.L.red else Theme.L.grey6
     val buttonTextStyle = remember(Theme.L.Type.button) {
         Theme.L.Type.button.copy(color = COLOR_WHITE)
     }
-
-    Box(
-        modifier = modifier
-            .then(SAVE_ALBUM_BUTTON_BASE_MODIFIER)
+    val styledBase = remember(Theme.L.grey3, backgroundColor) {
+        SAVE_ALBUM_BUTTON_BASE_MODIFIER
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SAVE_ALBUM_BUTTON_SHAPE)
             .background(backgroundColor)
-            .clickable(onClick = onClick),
+    }
+    val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
+
+    Box(
+        modifier = baseModifier.clickable(onClick = onClick),
         contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Row(

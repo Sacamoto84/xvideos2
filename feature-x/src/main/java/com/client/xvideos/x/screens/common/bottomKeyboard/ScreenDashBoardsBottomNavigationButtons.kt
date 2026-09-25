@@ -85,10 +85,15 @@ private val ARROW_BUTTON_BASE_MODIFIER = Modifier
     .padding(horizontal = ITEM_PADDING_HORIZONTAL)
     .size(NAV_BUTTON_HEIGHT)
 
+private val ARROW_BUTTON_DISABLED_MODIFIER = ARROW_BUTTON_BASE_MODIFIER.background(COLOR_TEXT_BLACK)
+private val ARROW_BUTTON_ENABLED_MODIFIER = ARROW_BUTTON_BASE_MODIFIER.background(COLOR_ACCENT)
+
 private val PAGE_BUTTON_BASE_MODIFIER = Modifier
     .padding(horizontal = ITEM_PADDING_HORIZONTAL)
     .height(NAV_BUTTON_HEIGHT)
     .background(COLOR_BLACK_BACKGROUND)
+
+private val PAGE_BUTTON_SELECTED_MODIFIER = PAGE_BUTTON_BASE_MODIFIER.then(SELECTED_BORDER_MODIFIER)
 
 private val LAZY_ROW_MODIFIER = Modifier.fillMaxWidth()
 private val BOX_ALIGNMENT_CENTER = Alignment.Center
@@ -124,8 +129,10 @@ fun BottomListDashBoardNavigationButtons2(
         { onChange((value + 1).coerceIn(0, maxPageIndex)) }
     }
 
+    val rowModifier = if (modifier == Modifier) NAV_ROW_BASE_MODIFIER else modifier.then(NAV_ROW_BASE_MODIFIER)
+
     Row(
-        modifier = modifier.then(NAV_ROW_BASE_MODIFIER),
+        modifier = rowModifier,
         horizontalArrangement = NAV_ROW_HORIZONTAL_ARRANGEMENT
     ) {
         ArrowNavigationButton(
@@ -172,13 +179,12 @@ private fun ArrowNavigationButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val bg = if (!enabled) COLOR_TEXT_BLACK else COLOR_ACCENT
+    val base = if (!enabled) ARROW_BUTTON_DISABLED_MODIFIER else ARROW_BUTTON_ENABLED_MODIFIER
     val textColor = if (!enabled) COLOR_DISABLED_TEXT else COLOR_ENABLED_TEXT
+    val boxModifier = if (modifier == Modifier) base else modifier.then(base)
 
     Box(
-        modifier = modifier
-            .then(ARROW_BUTTON_BASE_MODIFIER)
-            .background(bg)
+        modifier = boxModifier
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
@@ -198,13 +204,12 @@ private fun PageNumberButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val borderModifier = if (isSelected) SELECTED_BORDER_MODIFIER else Modifier
+    val base = if (isSelected) PAGE_BUTTON_SELECTED_MODIFIER else PAGE_BUTTON_BASE_MODIFIER
+    val boxModifier = if (modifier == Modifier) base else modifier.then(base)
     val pageText = remember(pageNumber) { pageNumber.toString() }
 
     Box(
-        modifier = modifier
-            .then(PAGE_BUTTON_BASE_MODIFIER)
-            .then(borderModifier)
+        modifier = boxModifier
             .clickable(onClick = onClick),
         contentAlignment = BOX_ALIGNMENT_CENTER
     ) {

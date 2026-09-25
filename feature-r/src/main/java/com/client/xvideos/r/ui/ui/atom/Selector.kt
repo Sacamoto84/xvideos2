@@ -55,10 +55,19 @@ fun Selector(
     val onSelect1 = remember(onSelect) { { onSelect(INDEX_SINGLE) } }
     val onSelect2 = remember(onSelect) { { onSelect(INDEX_DOUBLE) } }
 
-    Row(
-        modifier = modifier
+    val borderColor = Theme.R.colorBorderGray
+    val borderModifier = remember(borderColor) {
+        Modifier
             .clip(SELECTOR_SHAPE)
-            .border(SELECTOR_BORDER_WIDTH, Theme.R.colorBorderGray, SELECTOR_SHAPE)
+            .border(SELECTOR_BORDER_WIDTH, borderColor, SELECTOR_SHAPE)
+    }
+    val dividerModifier = remember(borderColor) {
+        SELECTOR_DIVIDER_MODIFIER.background(borderColor)
+    }
+    val rowModifier = if (modifier == Modifier) borderModifier else modifier.then(borderModifier)
+
+    Row(
+        modifier = rowModifier
     ) {
         SelectorButton(
             iconRes = R.drawable.select_2,
@@ -67,7 +76,7 @@ fun Selector(
         )
 
         Box(
-            modifier = SELECTOR_DIVIDER_MODIFIER.background(Theme.R.colorBorderGray)
+            modifier = dividerModifier
         )
 
         SelectorButton(
@@ -87,11 +96,13 @@ private fun SelectorButton(
 ) {
     val bg = if (isSelected) Theme.R.colorBorderSelect else Theme.background
     val tint = if (isSelected) COLOR_WHITE else Theme.R.colorTextGray
+    val styledBase = remember(bg) {
+        BUTTON_SIZE_MODIFIER.background(bg)
+    }
+    val boxModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
 
     Box(
-        modifier = modifier
-            .then(BUTTON_SIZE_MODIFIER)
-            .background(bg)
+        modifier = boxModifier
             .clickable(onClick = onClick),
         contentAlignment = BOX_ALIGNMENT_CENTER
     ) {

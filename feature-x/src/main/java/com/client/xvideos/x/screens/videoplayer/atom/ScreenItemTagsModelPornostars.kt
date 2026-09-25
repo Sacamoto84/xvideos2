@@ -84,11 +84,10 @@ fun ScreenItemTagsModelPornostars(
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val hasCount = remember(count) { count.isNotBlank() }
+    val hasCount = count.isNotBlank()
     val textModifier = if (hasCount) TEXT_MODIFIER_WITH_COUNT else TEXT_MODIFIER_NO_COUNT
-    val baseModifier = modifier
-        .then(TAG_BASE_MODIFIER)
-        .background(color)
+    val styledBase = remember(color) { TAG_BASE_MODIFIER.background(color) }
+    val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
     val rowModifier = if (onClick != null) baseModifier.clickable(onClick = onClick) else baseModifier
 
     Row(

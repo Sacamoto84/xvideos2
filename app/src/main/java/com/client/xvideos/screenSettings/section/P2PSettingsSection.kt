@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -26,9 +27,12 @@ private const val TEXT_DISABLED = "Выключен"
 private const val MSG_PERMISSIONS_REQUIRED = "Нужны разрешения для работы P2P в фоне"
 private const val MSG_BG_RECEIVE_ENABLED = "Приём в фоне включен"
 private const val MSG_BG_RECEIVE_DISABLED = "Приём в фоне выключен"
+private const val ICON_RED = R.drawable.icon_red
 
 @Composable
-internal fun P2PSettingsSection() {
+internal fun P2PSettingsSection(
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val bgReceive by Settings.p2p_background_receive.field.collectAsStateWithLifecycle()
 
@@ -59,13 +63,11 @@ internal fun P2PSettingsSection() {
         }
     }
 
-    val bgReceiveSubtitle = remember(bgReceive) {
-        if (bgReceive) TEXT_ENABLED else TEXT_DISABLED
-    }
+    val bgReceiveSubtitle = if (bgReceive) TEXT_ENABLED else TEXT_DISABLED
 
-    SettingsGroup {
+    SettingsGroup(modifier = modifier) {
         SettingsSwitchRow(
-            icon = R.drawable.icon_red,
+            icon = ICON_RED,
             text = TEXT_BACKGROUND_RECEIVE,
             subtitle = bgReceiveSubtitle,
             value = bgReceive,
@@ -77,5 +79,5 @@ internal fun P2PSettingsSection() {
 @Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun P2PSettingsSectionPreview() = SettingsPreview {
-    P2PSettingsSection()
+    P2PSettingsSection(modifier = Modifier)
 }

@@ -30,8 +30,8 @@ internal fun XSettingsSection(
     val onRow2Change: (Boolean) -> Unit = remember { { enabled -> Settings.xvideos_row2.setValue(enabled) } }
     val onShemaleChange: (Boolean) -> Unit = remember { { enabled -> Settings.xvideos_shemale.setValue(enabled) } }
 
-    val row2Subtitle = remember(xvideosRow2) { if (xvideosRow2) TEXT_ENABLED else TEXT_DISABLED }
-    val shemaleSubtitle = remember(xvideosShemale) { if (xvideosShemale) TEXT_ENABLED else TEXT_DISABLED }
+    val row2Subtitle = if (xvideosRow2) TEXT_ENABLED else TEXT_DISABLED
+    val shemaleSubtitle = if (xvideosShemale) TEXT_ENABLED else TEXT_DISABLED
 
     SettingsGroup(modifier = modifier) {
         SettingsSwitchRow(

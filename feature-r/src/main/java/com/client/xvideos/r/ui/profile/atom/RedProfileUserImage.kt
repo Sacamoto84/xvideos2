@@ -160,7 +160,9 @@ fun RedProfileCreaterInfo(
     val aboutTitle = remember(item.username) { "$ABOUT_TITLE_PREFIX${item.username}$ABOUT_TITLE_SUFFIX" }
     val descriptionTrimmed = remember(item.description) { item.description?.trimMargin() }
 
-    Column(modifier = modifier.then(ROOT_COLUMN_BASE_MODIFIER)) {
+    val rootModifier = if (modifier == Modifier) ROOT_COLUMN_BASE_MODIFIER else modifier.then(ROOT_COLUMN_BASE_MODIFIER)
+
+    Column(modifier = rootModifier) {
         CreatorTopInfoRow(
             item = item,
             isFollow = isFollow,
@@ -206,9 +208,15 @@ private fun CreatorTopInfoRow(
     val followButtonTextColor = if (isFollow) Color.White else Color.Black
     val followButtonBgColor = if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow
     val followButtonBorderModifier = if (isFollow) FOLLOW_BUTTON_BORDER_MODIFIER else Modifier
+    val followButtonStyledModifier = remember(isFollow, followButtonBgColor) {
+        FOLLOW_BUTTON_BASE_MODIFIER
+            .background(followButtonBgColor)
+            .then(followButtonBorderModifier)
+    }
+    val topRowModifier = if (modifier == Modifier) TOP_ROW_BASE_MODIFIER else modifier.then(TOP_ROW_BASE_MODIFIER)
 
     Row(
-        modifier = modifier.then(TOP_ROW_BASE_MODIFIER),
+        modifier = topRowModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (item.profileImageUrl != null) {
@@ -259,9 +267,7 @@ private fun CreatorTopInfoRow(
             Box(
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .then(FOLLOW_BUTTON_BASE_MODIFIER)
-                    .background(followButtonBgColor)
-                    .then(followButtonBorderModifier)
+                    .then(followButtonStyledModifier)
                     .clickable(onClick = onFollowClick),
                 contentAlignment = Alignment.Center
             ) {
@@ -284,8 +290,10 @@ private fun CreatorStatsRow(
     publishedGifsPretty: String,
     modifier: Modifier = Modifier,
 ) {
+    val statsRowModifier = if (modifier == Modifier) STATS_ROW_BASE_MODIFIER else modifier.then(STATS_ROW_BASE_MODIFIER)
+
     Row(
-        modifier = modifier.then(STATS_ROW_BASE_MODIFIER),
+        modifier = statsRowModifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = STATS_ROW_HORIZONTAL_ARRANGEMENT
     ) {
@@ -332,8 +340,10 @@ private fun StatItem(
 private fun StatDivider(
     modifier: Modifier = Modifier,
 ) {
+    val dividerModifier = if (modifier == Modifier) STAT_DIVIDER_BASE_MODIFIER else modifier.then(STAT_DIVIDER_BASE_MODIFIER)
+
     Box(
-        modifier = modifier.then(STAT_DIVIDER_BASE_MODIFIER)
+        modifier = dividerModifier
     )
 }
 
