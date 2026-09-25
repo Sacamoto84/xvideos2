@@ -14,4 +14,12 @@ data class MediaResponse(
     @SerialName("users") val users: List<UserInfo> = emptyList(),
     @SerialName("niches") val niches: List<NichesInfo> = emptyList(),
     @SerialName("tags") val tags: List<String> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = gifs.isEmpty() && users.isEmpty() && niches.isEmpty()
+    val isNotEmpty: Boolean get() = !isEmpty
+    val hasMorePages: Boolean get() = page < pages
+
+    companion object {
+        val EMPTY = MediaResponse()
+    }
+}

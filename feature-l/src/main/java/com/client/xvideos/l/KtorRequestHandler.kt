@@ -88,7 +88,9 @@ class KtorRequestHandler(
     suspend fun get(url: String, params: Map<String, String> = emptyMap()): String {
         return client.get {
             url(url)
-            params.forEach { (k, v) -> parameter(k, v) }
+            if (params.isNotEmpty()) {
+                params.forEach { (k, v) -> parameter(k, v) }
+            }
         }.body()
     }
 
@@ -113,6 +115,9 @@ class KtorRequestHandler(
     // --- Login ---
     var loggedIn: Boolean = false
         private set
+
+    val isLoggedIn: Boolean get() = loggedIn
+    val hasCredentials: Boolean get() = !username.isNullOrBlank() && !password.isNullOrBlank()
 
     fun setCredentials(username: String?, password: String?) {
         val normalizedUsername = username?.trim().orEmpty()
@@ -170,6 +175,7 @@ class KtorRequestHandler(
     }
 
     private fun String.isCloudflareChallenge(): Boolean {
+        if (isEmpty()) return false
         return contains("<title>Just a moment", ignoreCase = true) ||
                 contains("challenge-platform", ignoreCase = true) ||
                 contains("cf-chl", ignoreCase = true)

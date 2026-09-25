@@ -26,7 +26,19 @@ data class HTML5PlayerConfig(
     val staticPath: String = "",
     val https: Boolean = true,
     val viewData: String = ""
-)
+) {
+    val hasVideoUrl: Boolean
+        get() = videoUrlHigh.isNotEmpty() || videoHLS.isNotEmpty() || videoUrlLow.isNotEmpty()
+
+    val bestVideoUrl: String
+        get() = videoUrlHigh.ifEmpty { videoHLS.ifEmpty { videoUrlLow } }
+
+    val isValid: Boolean get() = hasVideoUrl
+
+    companion object {
+        val EMPTY = HTML5PlayerConfig()
+    }
+}
 
 @Immutable
 data class Sponsor(

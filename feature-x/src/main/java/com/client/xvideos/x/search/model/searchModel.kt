@@ -38,10 +38,17 @@ data class Channel(
 
 @Serializable
 data class SearchResult(
-    val result: Boolean,
-    val code: Int,
-    val keywords: List<Keyword>,
+    val result: Boolean = false,
+    val code: Int = 0,
+    val keywords: List<Keyword> = emptyList(),
     val pornstar: List<Pornstar>? = null, // Может отсутствовать
     val channel: List<Channel>? = null,   // Может отсутствовать
     val BLACKLISTED: Boolean? = null      // Может отсутствовать
-)
+) {
+    val isEmpty: Boolean get() = keywords.isEmpty() && pornstar.isNullOrEmpty() && channel.isNullOrEmpty()
+    val isNotEmpty: Boolean get() = !isEmpty
+
+    companion object {
+        val EMPTY = SearchResult(result = false, code = 0, keywords = emptyList())
+    }
+}

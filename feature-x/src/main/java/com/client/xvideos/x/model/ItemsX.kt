@@ -23,4 +23,12 @@ data class ItemsX(
     val href: String = "",            // * Путь до страницы видео (Для открытия в экране плеера) Только оно и нужно для этого
     val nameProfile: String = "",     // - Отображаемое название профиля
     val linkProfile: String = "",     // * Путь до профиля путь к каналу (/old4k)
-) : Serializable
+) : Serializable {
+    val isValid: Boolean get() = id > 0L
+    val isEmpty: Boolean get() = id <= 0L
+    val isNotEmpty: Boolean get() = id > 0L
+
+    companion object {
+        val EMPTY = ItemsX()
+    }
+}

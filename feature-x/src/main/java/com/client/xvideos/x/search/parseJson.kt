@@ -9,7 +9,7 @@ private val searchJson = Json { ignoreUnknownKeys = true }
 
 fun parseJson(json: String): SearchResult? {
     val trimmed = json.trim()
-    if (trimmed.isEmpty() || !trimmed.startsWith('{')) return null
+    if (trimmed.length < 2 || trimmed.first() != '{' || trimmed.last() != '}') return null
     return try {
         searchJson.decodeFromString(SearchResult.serializer(), trimmed)
     } catch (e: Exception) {

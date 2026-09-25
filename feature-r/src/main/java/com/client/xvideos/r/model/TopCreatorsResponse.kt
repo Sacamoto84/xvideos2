@@ -8,7 +8,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TopCreatorsResponse(
     @SerialName("creators") val creators: List<TopCreator> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = creators.isEmpty()
+    val isNotEmpty: Boolean get() = creators.isNotEmpty()
+    val size: Int get() = creators.size
+
+    companion object {
+        val EMPTY = TopCreatorsResponse()
+    }
+}
 
 @Immutable
 @Serializable
@@ -23,4 +31,12 @@ data class TopCreator(
     @SerialName("verified") val verified: Boolean = false,
     @SerialName("studio") val studio: Boolean = false,
     @SerialName("views") val views: Int = 0
-)
+) {
+    val isValid: Boolean get() = username.isNotBlank()
+    val isEmpty: Boolean get() = username.isEmpty()
+    val isNotEmpty: Boolean get() = username.isNotEmpty()
+
+    companion object {
+        val EMPTY = TopCreator()
+    }
+}
