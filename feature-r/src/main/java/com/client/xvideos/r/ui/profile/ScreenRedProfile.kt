@@ -114,7 +114,7 @@ fun RedProfileScreenContent(
                 }
 
                 if ((creator != null) && (tags.isNotEmpty())) {
-                    TagsBlock(tags, tagsSelect, onTagClick)
+                    TagsBlock(tags = tags, tagsSelect = tagsSelect, onClick = onTagClick)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }

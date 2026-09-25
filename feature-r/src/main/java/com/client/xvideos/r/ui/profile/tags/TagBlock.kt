@@ -30,13 +30,49 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private val TAG_CHIP_CORNER = 16.dp
+private val TAG_CHIP_SHAPE = RoundedCornerShape(TAG_CHIP_CORNER)
+private val TAG_CHIP_HEIGHT = 32.dp
+private val TAG_CHIP_BORDER_WIDTH = 1.dp
+private val TAG_CHIP_OUTER_HORIZONTAL_PADDING = 4.dp
+private val TAG_CHIP_OUTER_VERTICAL_PADDING = 2.dp
+private val TAG_CHIP_INNER_HORIZONTAL_PADDING = 12.dp
+private val TAG_CHIP_INNER_VERTICAL_PADDING = 4.dp
+private val TAG_CHIP_FONT_SIZE = 14.sp
+
+private val EXPAND_BUTTON_SIZE = 32.dp
+private val EXPAND_ICON_SIZE = 18.dp
+private val EXPAND_BUTTON_BORDER_WIDTH = 1.dp
+
+private const val CD_EXPAND_TAGS = "Развернуть теги"
+private const val CD_COLLAPSE_TAGS = "Свернуть теги"
+
+private val TAG_CHIP_BASE_MODIFIER = Modifier
+    .padding(horizontal = TAG_CHIP_OUTER_HORIZONTAL_PADDING, vertical = TAG_CHIP_OUTER_VERTICAL_PADDING)
+    .height(TAG_CHIP_HEIGHT)
+    .clip(TAG_CHIP_SHAPE)
+
+private val TAG_CHIP_CONTENT_PADDING_MODIFIER = Modifier
+    .padding(horizontal = TAG_CHIP_INNER_HORIZONTAL_PADDING, vertical = TAG_CHIP_INNER_VERTICAL_PADDING)
+    .wrapContentWidth()
+
+private val EXPAND_BUTTON_BASE_MODIFIER = Modifier
+    .padding(horizontal = TAG_CHIP_OUTER_HORIZONTAL_PADDING, vertical = TAG_CHIP_OUTER_VERTICAL_PADDING)
+    .size(EXPAND_BUTTON_SIZE)
+    .clip(CircleShape)
+    .background(Color.Transparent)
+
+private val EXPAND_ICON_MODIFIER = Modifier.size(EXPAND_ICON_SIZE)
 
 @Composable
 fun TagsBlock(
     tags: List<String>,
     tagsSelect: List<String>,
+    modifier: Modifier = Modifier,
     onClick: (String) -> Unit = {}
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -50,7 +86,7 @@ fun TagsBlock(
     val stableOnClick = remember { { tag: String -> currentOnClick(tag) } }
     val onToggleExpanded: () -> Unit = remember { { expanded = !expanded } }
 
-    SubcomposeLayout { constraints ->
+    SubcomposeLayout(modifier = modifier) { constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val maxW = constraints.maxWidth
 
@@ -132,42 +168,55 @@ fun TagsBlock(
 }
 
 @Composable
-private fun TagChip(text: String, select: Boolean, onClick: (String) -> Unit) {
+private fun TagChip(
+    text: String,
+    select: Boolean,
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val handleTagClick = remember(text, onClick) { { onClick(text) } }
     Text(
         text = text,
         color = if (select) Color.Black else Color.White,
-        fontSize = 14.sp,
+        fontSize = TAG_CHIP_FONT_SIZE,
         fontFamily = Theme.R.fontFamilyPopinsRegular,
-        modifier = Modifier
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .height(32.dp)
-            .clip(RoundedCornerShape(16.dp)) // Используем фиксированный радиус для скорости
+        modifier = modifier
+            .then(TAG_CHIP_BASE_MODIFIER)
             .background(if (select) Theme.R.colorYellow else Color.Transparent)
-            .border(1.dp, Theme.R.colorYellow, RoundedCornerShape(16.dp))
+            .border(TAG_CHIP_BORDER_WIDTH, Theme.R.colorYellow, TAG_CHIP_SHAPE)
             .clickable(onClick = handleTagClick)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .wrapContentWidth()
+            .then(TAG_CHIP_CONTENT_PADDING_MODIFIER)
     )
 }
 
 @Composable
-private fun ExpandCollapseButton(expanded: Boolean, onClick: () -> Unit) {
+private fun ExpandCollapseButton(
+    expanded: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
-        modifier = Modifier
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(Color.Transparent)
-            .border(1.dp, Theme.R.colorYellow, CircleShape)
+        modifier = modifier
+            .then(EXPAND_BUTTON_BASE_MODIFIER)
+            .border(EXPAND_BUTTON_BORDER_WIDTH, Theme.R.colorYellow, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = if (expanded) Icons.Default.Close else Icons.Default.MoreHoriz,
-            contentDescription = null,
+            contentDescription = if (expanded) CD_COLLAPSE_TAGS else CD_EXPAND_TAGS,
             tint = Color.White,
-            modifier = Modifier.size(18.dp)
+            modifier = EXPAND_ICON_MODIFIER
         )
     }
+}
+
+@Preview
+@Composable
+private fun TagsBlockPreview() {
+    TagsBlock(
+        tags = listOf("Outdoor", "Amateur", "Verified", "Solo", "Big Assets", "POV", "4K"),
+        tagsSelect = listOf("Verified"),
+        onClick = {}
+    )
 }

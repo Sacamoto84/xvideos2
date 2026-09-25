@@ -47,6 +47,17 @@ private val PILL_RESTART_TEXT_STYLE = TextStyle(
     fontSize = PILL_FONT_SIZE
 )
 
+private val PILL_ROW_MODIFIER = Modifier.padding(
+    horizontal = PILL_ROW_HORIZONTAL_PADDING,
+    vertical = PILL_ROW_VERTICAL_PADDING
+)
+private val PILL_SPACER_MODIFIER = Modifier.width(PILL_SPACER_WIDTH)
+private val PILL_BUTTON_BASE_MODIFIER = Modifier.clip(PILL_BUTTON_SHAPE)
+private val PILL_BUTTON_PADDING_MODIFIER = Modifier.padding(
+    horizontal = PILL_BUTTON_HORIZONTAL_PADDING,
+    vertical = PILL_BUTTON_VERTICAL_PADDING
+)
+
 /**
  * Плашка с уведомлением о возобновлении воспроизведения и кнопкой «С начала».
  */
@@ -63,21 +74,20 @@ fun ResumePlaybackPill(
         tonalElevation = PILL_TONAL_ELEVATION,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = PILL_ROW_HORIZONTAL_PADDING, vertical = PILL_ROW_VERTICAL_PADDING),
+            modifier = PILL_ROW_MODIFIER,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = text,
                 style = PILL_TEXT_STYLE
             )
-            Spacer(modifier = Modifier.width(PILL_SPACER_WIDTH))
+            Spacer(modifier = PILL_SPACER_MODIFIER)
             Text(
                 text = BUTTON_RESTART_TEXT,
                 style = PILL_RESTART_TEXT_STYLE,
-                modifier = Modifier
-                    .clip(PILL_BUTTON_SHAPE)
+                modifier = PILL_BUTTON_BASE_MODIFIER
                     .clickable(onClick = onRestart)
-                    .padding(horizontal = PILL_BUTTON_HORIZONTAL_PADDING, vertical = PILL_BUTTON_VERTICAL_PADDING)
+                    .then(PILL_BUTTON_PADDING_MODIFIER)
             )
         }
     }

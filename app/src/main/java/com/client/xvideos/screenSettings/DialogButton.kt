@@ -3,6 +3,7 @@ package com.client.xvideos.screenSettings
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
@@ -15,8 +16,9 @@ fun DialogButton(
     buttonText: String,
     onDismiss: () -> Unit,
     onBlockConfirmed: () -> Unit,
+    modifier: Modifier = Modifier,
     destructive: Boolean = true,
-    composable: @Composable () -> Unit = {}
+    composable: (@Composable () -> Unit)? = null
 ) {
     if (visible) {
         val bodyAnnotated = remember(body) {
@@ -28,8 +30,10 @@ fun DialogButton(
                 onDismiss()
             }
         }
-        val dialogContent: @Composable ColumnScope.() -> Unit = remember(composable) {
-            { composable() }
+        val dialogContent: (@Composable ColumnScope.() -> Unit)? = remember(composable) {
+            composable?.let { content ->
+                { content() }
+            }
         }
 
         LavenderDialog(

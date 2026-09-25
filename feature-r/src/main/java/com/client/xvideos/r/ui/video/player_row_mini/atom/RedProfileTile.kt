@@ -31,6 +31,22 @@ private val SHADOW_OFFSET = 1.dp
 private val PADDING_DEFAULT = 8.dp
 private const val PLACEHOLDER_TEXT = "-"
 
+private val TILE_BOX_BASE_MODIFIER = Modifier
+    .fillMaxSize()
+    .clip(TILE_SHAPE)
+
+private val SHADOW_OFFSET_MODIFIER = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET)
+
+private val INDEX_TEXT_MODIFIER = Modifier
+    .padding(start = PADDING_DEFAULT)
+    .then(SHADOW_OFFSET_MODIFIER)
+
+private val BOTTOM_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
+
+private val VIEWS_ROW_MODIFIER = Modifier.padding(PADDING_DEFAULT)
+private val VIEWS_TEXT_MODIFIER = Modifier.padding(start = PADDING_DEFAULT)
+private val DURATION_TEXT_MODIFIER = Modifier.padding(PADDING_DEFAULT)
+
 @Composable
 fun RedProfileTile(
     item: GifsInfo,
@@ -43,30 +59,30 @@ fun RedProfileTile(
     val prettyViews = remember(item.views) { item.views?.toPrettyCount() ?: PLACEHOLDER_TEXT }
     val prettyDuration = remember(item.duration) { item.duration?.toMinSec() ?: PLACEHOLDER_TEXT }
 
-    Box(modifier = modifier.fillMaxSize().clip(TILE_SHAPE)) {
+    Box(modifier = modifier.then(TILE_BOX_BASE_MODIFIER)) {
         // Индекс картинки
         Text(
             indexText,
             color = Color.Gray,
-            modifier = Modifier.padding(start = PADDING_DEFAULT).offset(SHADOW_OFFSET, SHADOW_OFFSET),
+            modifier = INDEX_TEXT_MODIFIER,
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
 
         // Нижний ряд с лайками и длительностью
         Row(
-            modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+            modifier = BOTTOM_ROW_BASE_MODIFIER.align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isVisibleView) {
                 Row(
-                    modifier = Modifier.padding(PADDING_DEFAULT),
+                    modifier = VIEWS_ROW_MODIFIER,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ShadowedIcon()
                     ShadowedText(
                         text = prettyViews,
-                        modifier = Modifier.padding(start = PADDING_DEFAULT)
+                        modifier = VIEWS_TEXT_MODIFIER
                     )
                 }
             }
@@ -74,7 +90,7 @@ fun RedProfileTile(
             if (isVisibleDuration) {
                 ShadowedText(
                     text = prettyDuration,
-                    modifier = Modifier.padding(PADDING_DEFAULT)
+                    modifier = DURATION_TEXT_MODIFIER
                 )
             }
         }
@@ -85,15 +101,16 @@ fun RedProfileTile(
 private fun ShadowedIcon(
     modifier: Modifier = Modifier,
 ) {
+    val painter = painterResource(R.drawable.rg_button)
     Box(modifier = modifier) {
         Icon(
-            painter = painterResource(R.drawable.rg_button),
+            painter = painter,
             contentDescription = null,
             tint = Color.Black,
-            modifier = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET)
+            modifier = SHADOW_OFFSET_MODIFIER
         )
         Icon(
-            painter = painterResource(R.drawable.rg_button),
+            painter = painter,
             contentDescription = null,
             tint = Color.White
         )
@@ -109,7 +126,7 @@ private fun ShadowedText(
         Text(
             text = text,
             color = Color.Black,
-            modifier = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET),
+            modifier = SHADOW_OFFSET_MODIFIER,
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
         Text(

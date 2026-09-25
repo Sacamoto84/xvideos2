@@ -75,6 +75,20 @@ private const val CD_EXIT_FULLSCREEN = "Exit Fullscreen"
 private const val LABEL_FIT = "Fit"
 private const val LABEL_FILL = "Fill"
 
+private val BOTTOM_BAR_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .background(BOTTOM_BAR_BG)
+    .padding(horizontal = BAR_HORIZONTAL_PADDING, vertical = BAR_VERTICAL_PADDING)
+
+private val PLAY_PAUSE_ICON_MODIFIER = Modifier.size(PLAY_PAUSE_ICON_SIZE)
+private val FULLSCREEN_ICON_MODIFIER = Modifier.size(FULLSCREEN_ICON_SIZE)
+private val FIT_MODE_BASE_MODIFIER = Modifier.clip(FIT_MODE_SHAPE)
+private val FIT_MODE_PADDING_MODIFIER = Modifier.padding(
+    horizontal = FIT_MODE_HORIZONTAL_PADDING,
+    vertical = FIT_MODE_VERTICAL_PADDING
+)
+private val BAR_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(BAR_CONTROL_SPACING)
+
 /**
  * Нижняя панель управления X-плеером поверх видео.
  *
@@ -126,12 +140,9 @@ fun X_PlayerBottomBar(
     val formattedTotalTime = remember(host.totalTime) { formatTime(host.totalTime) }
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(BOTTOM_BAR_BG)
-            .padding(horizontal = BAR_HORIZONTAL_PADDING, vertical = BAR_VERTICAL_PADDING),
+        modifier = modifier.then(BOTTOM_BAR_BASE_MODIFIER),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(BAR_CONTROL_SPACING)
+        horizontalArrangement = BAR_HORIZONTAL_ARRANGEMENT
     ) {
 
         // Play / Pause
@@ -139,9 +150,7 @@ fun X_PlayerBottomBar(
             imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
             contentDescription = if (host.isPaused) CD_PLAY else CD_PAUSE,
             tint = CONTROL_ICON_TINT,
-            modifier = Modifier
-                .size(PLAY_PAUSE_ICON_SIZE)
-                .clickable(onClick = onTogglePlayPause)
+            modifier = PLAY_PAUSE_ICON_MODIFIER.clickable(onClick = onTogglePlayPause)
         )
 
         // Текущее время
@@ -186,14 +195,9 @@ fun X_PlayerBottomBar(
 
         // Переключатель режима масштабирования Fit / Fill
         if (isFullScreen) {
-            val fitModeText = if (host.videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT
-            Text(
-                text = fitModeText,
-                style = FIT_MODE_TEXT_STYLE,
-                modifier = Modifier
-                    .clip(FIT_MODE_SHAPE)
-                    .clickable(onClick = onToggleFitMode)
-                    .padding(horizontal = FIT_MODE_HORIZONTAL_PADDING, vertical = FIT_MODE_VERTICAL_PADDING)
+            FitModeToggle(
+                videoFitMode = host.videoFitMode,
+                onToggleFitMode = onToggleFitMode
             )
         }
 
@@ -203,12 +207,27 @@ fun X_PlayerBottomBar(
                 imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
                 contentDescription = if (isFullScreen) CD_EXIT_FULLSCREEN else CD_FULLSCREEN,
                 tint = CONTROL_ICON_TINT,
-                modifier = Modifier
-                    .size(FULLSCREEN_ICON_SIZE)
-                    .clickable(onClick = onFullScreenClick)
+                modifier = FULLSCREEN_ICON_MODIFIER.clickable(onClick = onFullScreenClick)
             )
         }
     }
+}
+
+@Composable
+private fun FitModeToggle(
+    videoFitMode: ScreenResize,
+    onToggleFitMode: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val fitModeText = if (videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT
+    Text(
+        text = fitModeText,
+        style = FIT_MODE_TEXT_STYLE,
+        modifier = modifier
+            .then(FIT_MODE_BASE_MODIFIER)
+            .clickable(onClick = onToggleFitMode)
+            .then(FIT_MODE_PADDING_MODIFIER)
+    )
 }
 
 private const val MAX_FORMATTED_SECONDS = 86400 * 7

@@ -70,6 +70,16 @@ private const val DEFAULT_KEYBOARD_VALUE = -1
 private const val CD_PREV_PAGE = "Предыдущая страница"
 private const val CD_NEXT_PAGE = "Следующая страница"
 
+private val PAGE_NAV_BUTTON_BASE_MODIFIER = Modifier
+    .fillMaxHeight()
+    .background(Theme.L.red)
+
+private val PAGE_SELECTOR_DIALOG_MODIFIER = Modifier
+    .clip(PAGE_SELECTOR_DIALOG_SHAPE)
+    .border(DIALOG_BORDER_WIDTH, PAGE_SELECTOR_DIALOG_BORDER_COLOR, PAGE_SELECTOR_DIALOG_SHAPE)
+    .background(PAGE_SELECTOR_DIALOG_BG_COLOR)
+    .padding(DIALOG_PADDING)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumListPageSelector(
@@ -101,6 +111,8 @@ fun AlbumListPageSelector(
         }
     }
 
+    val borderLineColor = Theme.L.grey3
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -109,14 +121,12 @@ fun AlbumListPageSelector(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
-                .background(Theme.L.red)
-                .clickable(onClick = onPrevPage),
-            contentAlignment = Alignment.Center
-        ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, tint = Color.White, contentDescription = CD_PREV_PAGE) }
+        AlbumPageNavButton(
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            contentDescription = CD_PREV_PAGE,
+            onClick = onPrevPage,
+            modifier = Modifier.weight(1f)
+        )
 
         Box(
             modifier = Modifier
@@ -127,14 +137,14 @@ fun AlbumListPageSelector(
 
                     // верхняя линия
                     drawLine(
-                        color = Theme.L.grey3,
+                        color = borderLineColor,
                         start = Offset(0f, 0f),
                         end = Offset(size.width, 0f),
                         strokeWidth = strokeWidth
                     )
                     // нижняя линия
                     drawLine(
-                        color = Theme.L.grey3,
+                        color = borderLineColor,
                         start = Offset(0f, size.height),
                         end = Offset(size.width, size.height),
                         strokeWidth = strokeWidth
@@ -150,20 +160,12 @@ fun AlbumListPageSelector(
             )
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
-                .background(Theme.L.red)
-                .clickable(onClick = onNextPage),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                tint = Color.White,
-                contentDescription = CD_NEXT_PAGE
-            )
-        }
+        AlbumPageNavButton(
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = CD_NEXT_PAGE,
+            onClick = onNextPage,
+            modifier = Modifier.weight(1f)
+        )
     }
 
     //-- Диалог --
@@ -178,17 +180,34 @@ fun AlbumListPageSelector(
 }
 
 @Composable
+private fun AlbumPageNavButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .then(PAGE_NAV_BUTTON_BASE_MODIFIER)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            tint = Color.White,
+            contentDescription = contentDescription
+        )
+    }
+}
+
+@Composable
 private fun PageSelectorDialogContent(
     pageMax: Int,
     onKeyboardNumberClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .clip(PAGE_SELECTOR_DIALOG_SHAPE)
-            .border(DIALOG_BORDER_WIDTH, PAGE_SELECTOR_DIALOG_BORDER_COLOR, PAGE_SELECTOR_DIALOG_SHAPE)
-            .background(PAGE_SELECTOR_DIALOG_BG_COLOR)
-            .padding(DIALOG_PADDING),
+        modifier = modifier.then(PAGE_SELECTOR_DIALOG_MODIFIER),
         contentAlignment = Alignment.Center
     ) {
         KeyboardNumber(

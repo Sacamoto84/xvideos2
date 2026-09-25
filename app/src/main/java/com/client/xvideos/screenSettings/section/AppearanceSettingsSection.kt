@@ -78,6 +78,38 @@ private val PREVIEW_LABEL_PADDING = 16.dp
 private val PREVIEW_LABEL_FONT_SIZE = 13.sp
 private const val PREVIEW_LABEL_ALPHA = 0.9f
 private val SCROLL_BUTTONS_END_PADDING = 20.dp
+private val PREVIEW_LABEL_COLOR = Color.White.copy(alpha = PREVIEW_LABEL_ALPHA)
+private val ON_SCROLL_NOOP: () -> Unit = {}
+
+private val SECTION_SPACER_MODIFIER = Modifier.height(SECTION_SPACER_HEIGHT)
+
+private val PREVIEW_CARD_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = PREVIEW_CARD_HORIZONTAL_PADDING)
+    .height(PREVIEW_CARD_HEIGHT)
+    .clip(PREVIEW_CARD_SHAPE)
+    .background(SettingsCardColor)
+
+private val CIRCLE_PINK_BASE_MODIFIER = Modifier
+    .size(CIRCLE_PINK_SIZE)
+    .padding(start = CIRCLE_PINK_PADDING_START, top = CIRCLE_PINK_PADDING_TOP)
+    .clip(CircleShape)
+    .background(CIRCLE_COLOR_PINK)
+
+private val CIRCLE_ORANGE_BASE_MODIFIER = Modifier
+    .size(CIRCLE_ORANGE_SIZE)
+    .clip(CircleShape)
+    .background(CIRCLE_COLOR_ORANGE)
+
+private val CIRCLE_CYAN_BASE_MODIFIER = Modifier
+    .size(CIRCLE_CYAN_SIZE)
+    .padding(end = CIRCLE_CYAN_PADDING_END)
+    .clip(CircleShape)
+    .background(CIRCLE_COLOR_CYAN)
+
+private val PREVIEW_LABEL_BASE_MODIFIER = Modifier.padding(PREVIEW_LABEL_PADDING)
+
+private val SCROLL_BUTTONS_BASE_MODIFIER = Modifier.padding(end = SCROLL_BUTTONS_END_PADDING)
 
 /**
  * Экран настроек «Отображение» (Appearance).
@@ -102,7 +134,7 @@ internal fun AppearanceSettingsSection(
             currentEffect = currentEffect
         )
 
-        Spacer(Modifier.height(SECTION_SPACER_HEIGHT))
+        Spacer(SECTION_SPACER_MODIFIER)
 
         SettingsSectionTitle(TITLE_SCROLL_BUTTONS)
         SettingsGroup {
@@ -164,12 +196,7 @@ private fun ScrollButtonPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = PREVIEW_CARD_HORIZONTAL_PADDING)
-            .height(PREVIEW_CARD_HEIGHT)
-            .clip(PREVIEW_CARD_SHAPE)
-            .background(SettingsCardColor)
+        modifier = modifier.then(PREVIEW_CARD_BASE_MODIFIER)
     ) {
         // Цветной имитационный фон галереи, помеченный как hazeSource
         Box(
@@ -181,26 +208,18 @@ private fun ScrollButtonPreviewCard(
             // Декоративные цветные круги для проверки преломления и размытия
             Box(
                 modifier = Modifier
-                    .size(CIRCLE_PINK_SIZE)
                     .align(Alignment.TopStart)
-                    .padding(start = CIRCLE_PINK_PADDING_START, top = CIRCLE_PINK_PADDING_TOP)
-                    .clip(CircleShape)
-                    .background(CIRCLE_COLOR_PINK)
+                    .then(CIRCLE_PINK_BASE_MODIFIER)
             )
             Box(
                 modifier = Modifier
-                    .size(CIRCLE_ORANGE_SIZE)
                     .align(Alignment.BottomCenter)
-                    .clip(CircleShape)
-                    .background(CIRCLE_COLOR_ORANGE)
+                    .then(CIRCLE_ORANGE_BASE_MODIFIER)
             )
             Box(
                 modifier = Modifier
-                    .size(CIRCLE_CYAN_SIZE)
                     .align(Alignment.CenterEnd)
-                    .padding(end = CIRCLE_CYAN_PADDING_END)
-                    .clip(CircleShape)
-                    .background(CIRCLE_COLOR_CYAN)
+                    .then(CIRCLE_CYAN_BASE_MODIFIER)
             )
         }
 
@@ -214,26 +233,24 @@ private fun ScrollButtonPreviewCard(
         // Подпись образца
         Text(
             text = "$PREVIEW_LABEL_PREFIX${currentEffect.title}",
-            color = Color.White.copy(alpha = PREVIEW_LABEL_ALPHA),
+            color = PREVIEW_LABEL_COLOR,
             style = previewLabelStyle,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(PREVIEW_LABEL_PADDING)
+                .then(PREVIEW_LABEL_BASE_MODIFIER)
         )
-
-        val onScrollPreview = remember { {} }
 
         // Плавающие кнопки скролла в правом краю карточки
         FloatingScrollButtons(
             showScrollToTop = true,
             showScrollToBottom = true,
             hazeState = hazeState,
-            onScrollToTop = onScrollPreview,
-            onScrollToBottom = onScrollPreview,
+            onScrollToTop = ON_SCROLL_NOOP,
+            onScrollToBottom = ON_SCROLL_NOOP,
             effect = currentEffect,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(end = SCROLL_BUTTONS_END_PADDING)
+                .then(SCROLL_BUTTONS_BASE_MODIFIER)
         )
     }
 }
