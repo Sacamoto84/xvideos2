@@ -43,10 +43,14 @@ fun ButtonIcon(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
 ) {
+    val boxModifier = if (modifier == Modifier) {
+        BUTTON_ICON_BASE_MODIFIER
+    } else {
+        modifier.then(BUTTON_ICON_BASE_MODIFIER)
+    }
+
     Box(
-        modifier = modifier
-            .then(BUTTON_ICON_BASE_MODIFIER)
-            .clickable(onClick = onClick),
+        modifier = boxModifier.clickable(onClick = onClick),
         contentAlignment = BUTTON_ICON_ALIGNMENT
     ) {
         Icon(

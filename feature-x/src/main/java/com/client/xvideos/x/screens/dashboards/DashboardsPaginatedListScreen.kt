@@ -62,6 +62,7 @@ import timber.log.Timber
 private val ERROR_BADGE_SHAPE = RoundedCornerShape(8.dp)
 private val ERROR_BADGE_BG = Color(0xD9212121)
 private const val GRID_COLUMNS = 2
+private val GRID_CELLS_FIXED = GridCells.Fixed(GRID_COLUMNS)
 private val SPINNER_SIZE = 40.dp
 private val RETRY_BUTTON_HEIGHT = 32.dp
 private val ERROR_SPACER_HEIGHT = 12.dp
@@ -69,6 +70,9 @@ private val ERROR_BADGE_PADDING = 8.dp
 private val ERROR_BADGE_CONTENT_HORIZONTAL = 12.dp
 private val ERROR_BADGE_CONTENT_VERTICAL = 6.dp
 private val ERROR_TEXT_FONT_SIZE = 12.sp
+private val RETRY_BUTTON_PADDING = PaddingValues(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = 0.dp)
+private val ROW_ALIGNMENT_CENTER_VERTICALLY = Alignment.CenterVertically
+private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
 
 private const val TEXT_LOAD_ERROR = "Не удалось загрузить страницу"
 private const val TEXT_UPDATE_ERROR = "Не удалось обновить страницу"
@@ -90,6 +94,11 @@ private val CELL_BOX_BASE_MODIFIER = Modifier
     .aspectRatio(DASHBOARD_CARD_ASPECT_RATIO)
     .padding(CELL_CARD_PADDING)
     .background(Color.DarkGray)
+
+private val ERROR_ROW_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .background(ERROR_BADGE_BG, ERROR_BADGE_SHAPE)
+    .padding(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = ERROR_BADGE_CONTENT_VERTICAL)
 
 private val CHANNEL_BADGE_BASE_MODIFIER = Modifier.background(CHANNEL_BADGE_BG)
 private val FAVORITE_ICON_MODIFIER = Modifier.padding(bottom = FAVORITE_ICON_PADDING, end = FAVORITE_ICON_PADDING)
@@ -203,12 +212,9 @@ fun DashboardsPaginatedListScreen(
                         .align(Alignment.TopCenter)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(ERROR_BADGE_BG, ERROR_BADGE_SHAPE)
-                            .padding(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = ERROR_BADGE_CONTENT_VERTICAL),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = ERROR_ROW_BASE_MODIFIER,
+                        verticalAlignment = ROW_ALIGNMENT_CENTER_VERTICALLY,
+                        horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
                     ) {
                         Text(
                             text = TEXT_UPDATE_ERROR,
@@ -219,7 +225,7 @@ fun DashboardsPaginatedListScreen(
                         Button(
                             onClick = onRetry,
                             modifier = Modifier.height(RETRY_BUTTON_HEIGHT),
-                            contentPadding = PaddingValues(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = 0.dp)
+                            contentPadding = RETRY_BUTTON_PADDING
                         ) {
                             Text(TEXT_RETRY, fontSize = ERROR_TEXT_FONT_SIZE)
                         }
@@ -247,7 +253,7 @@ fun DashboardsPaginatedListContent(
     val topCutout = getTopInsetDp()
     val contentPadding = remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
-        columns = GridCells.Fixed(GRID_COLUMNS),
+        columns = GRID_CELLS_FIXED,
         modifier = modifier.fillMaxSize(),
         state = gridState,
         contentPadding = contentPadding,

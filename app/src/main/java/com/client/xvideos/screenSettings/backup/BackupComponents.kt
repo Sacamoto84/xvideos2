@@ -37,7 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
@@ -145,6 +145,12 @@ private const val TEXT_RESTORE_PASSWORD_TITLE = "Ввод пароля бэка�
 private const val TEXT_RESTORE_PASSWORD_CONFIRM = "Открыть"
 private const val TEXT_RESTORE_PASSWORD_DESCRIPTION = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого."
 
+private val BACKUP_FLOW_SCREEN_COUNT = BackupFlowScreen.entries.size
+private val XLR_BACKUP_CONTENT_MODE_COUNT = XlrBackupContentMode.entries.size
+private val BACKUP_SECTION_ENTER = expandVertically(expandFrom = Alignment.Top)
+private val BACKUP_SECTION_EXIT = shrinkVertically(shrinkTowards = Alignment.Top)
+private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
+
 @Composable
 internal fun BackupModeSelector(
     selected: BackupFlowScreen,
@@ -152,6 +158,15 @@ internal fun BackupModeSelector(
     onSelected: (BackupFlowScreen) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val segmentedColors = SegmentedButtonDefaults.colors(
+        activeContainerColor = SettingsAccentColor,
+        activeContentColor = SettingsScreenBackground,
+        activeBorderColor = SettingsAccentColor,
+        inactiveContainerColor = SettingsCardColor,
+        inactiveContentColor = Theme.L.textColor,
+        inactiveBorderColor = SettingsDividerColor
+    )
+
     SingleChoiceSegmentedButtonRow(
         modifier = modifier.then(BACKUP_SELECTOR_BASE_MODIFIER)
     ) {
@@ -162,17 +177,10 @@ internal fun BackupModeSelector(
                 onClick = { onSelected(item) },
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = BackupFlowScreen.entries.size,
+                    count = BACKUP_FLOW_SCREEN_COUNT,
                     baseShape = BACKUP_COMPONENT_SHAPE
                 ),
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = SettingsAccentColor,
-                    activeContentColor = SettingsScreenBackground,
-                    activeBorderColor = SettingsAccentColor,
-                    inactiveContainerColor = SettingsCardColor,
-                    inactiveContentColor = Theme.L.textColor,
-                    inactiveBorderColor = SettingsDividerColor
-                ),
+                colors = segmentedColors,
                 label = {
                     Text(
                         text = item.title,
@@ -209,7 +217,7 @@ internal fun BackupContentModeSelector(
                 onClick = { onValueChange(mode) },
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = XlrBackupContentMode.entries.size
+                    count = XLR_BACKUP_CONTENT_MODE_COUNT
                 ),
                 label = { Text(backupContentModeTitle(mode)) }
             )
@@ -411,7 +419,7 @@ internal fun BackupSectionGroup(
             text = section.title,
             subtitle = "${section.files} файлов • ${formatBytes(section.bytes)}",
             trailing = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER) {
                     TriStateCheckbox(
                         state = state,
                         enabled = enabled,
@@ -425,7 +433,9 @@ internal fun BackupSectionGroup(
                             painter = painterResource(R.drawable.exo_ic_chevron_right),
                             contentDescription = if (expanded) TEXT_COLLAPSE else TEXT_EXPAND,
                             tint = SettingsAccentColor,
-                            modifier = Modifier.rotate(if (expanded) CHEVRON_ROTATION_EXPANDED else CHEVRON_ROTATION_COLLAPSED)
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = if (expanded) CHEVRON_ROTATION_EXPANDED else CHEVRON_ROTATION_COLLAPSED
+                            }
                         )
                     }
                 }
@@ -435,8 +445,8 @@ internal fun BackupSectionGroup(
 
         AnimatedVisibility(
             visible = expanded,
-            enter = expandVertically(expandFrom = Alignment.Top),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top)
+            enter = BACKUP_SECTION_ENTER,
+            exit = BACKUP_SECTION_EXIT
         ) {
             Column {
                 if (children.isEmpty()) {

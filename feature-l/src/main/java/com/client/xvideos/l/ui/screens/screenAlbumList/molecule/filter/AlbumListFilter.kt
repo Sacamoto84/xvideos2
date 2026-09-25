@@ -64,7 +64,24 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.Albu
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterTags
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.StyleGenresTags
 
-private val cardShape = RoundedCornerShape(8.dp)
+private val CARD_SHAPE = RoundedCornerShape(8.dp)
+private val BUTTON_SHAPE = RoundedCornerShape(6.dp)
+private val BORDER_WIDTH = 1.dp
+private val CARD_TOP_PADDING = 8.dp
+private val CARD_INNER_PADDING = 8.dp
+private val BOTTOM_SPACER_HEIGHT = 8.dp
+private val HEADER_HEIGHT = 56.dp
+private val SEARCH_HEADER_HEIGHT = 48.dp
+private val ICON_SIZE_16 = 16.dp
+private val ICON_SIZE_24 = 24.dp
+private val CLOSE_BUTTON_SIZE = 36.dp
+private val SPACER_WIDTH_4 = 4.dp
+private val SPACER_WIDTH_6 = 6.dp
+private val ROW_SPACED_BY_6 = Arrangement.spacedBy(6.dp)
+private val ROW_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val ROW_ABSOLUTE_SPACE_BETWEEN = Arrangement.Absolute.SpaceBetween
+private val ALIGNMENT_CENTER_VERTICALLY = Alignment.CenterVertically
+private val COLOR_GRAY = Color.Gray
 
 /** Общий фон-«карточка» секции фильтра: отступ сверху, скругление, фон, опц. рамка. */
 private fun Modifier.filterCard(
@@ -72,10 +89,10 @@ private fun Modifier.filterCard(
 ): Modifier {
     val palette = StyleGenresTags.Palette
     return this
-        .padding(top = 8.dp)
-        .clip(cardShape)
+        .padding(top = CARD_TOP_PADDING)
+        .clip(CARD_SHAPE)
         .background(palette.surface)
-        .then(if (border) Modifier.border(1.dp, palette.border, cardShape) else Modifier)
+        .then(if (border) Modifier.border(BORDER_WIDTH, palette.border, CARD_SHAPE) else Modifier)
 }
 
 @Composable
@@ -96,6 +113,14 @@ fun AlbumListFilter(
     var showSavedPresetsDialog by remember { mutableStateOf(false) }
     val palette = StyleGenresTags.Palette
 
+    val animatedTextStyle = remember {
+        Theme.L.Type.bodyLarge.copy(
+            color = StyleGenresTags.colorSelectTextItem,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    val checkboxColors = CheckboxDefaults.colors(uncheckedBorderColor = COLOR_GRAY)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -113,12 +138,12 @@ fun AlbumListFilter(
         if (filter.searchQuery.isNotBlank()) {
             AlbumFilterSearchHeader(filter.searchQuery)
         } else {
-            Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
+            Box(modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)) {
                 AlbumFilterDisplay(filter.display, onRequestApply = { onFilterApply(filter.copy(display = it)) })
             }
         }
 
-        Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
+        Box(modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)) {
             AlbumListFilterAlbumType(
                 when (filter.album_type) {
                     AlbumType.All -> 0
@@ -136,36 +161,40 @@ fun AlbumListFilter(
             }
         }
 
-        Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
+        Box(modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)) {
             AlbumListFilterContentType(filter.content_id) { onFilterApply(filter.copy(content_id = it)) }
         }
 
         Box(
-            modifier = Modifier.filterCard(border = true).padding(8.dp)
+            modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)
         ) { AlbumListFilterAudiences(filter) { onFilterApply(it) } }
 
         Box(
-            modifier = Modifier.filterCard(border = true).padding(8.dp)
+            modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)
         ) { AlbumListFilterSize(filter.picture_count_rank) { onFilterApply(filter.copy(picture_count_rank = it)) } }
 
         Box(
-            modifier = Modifier.filterCard(border = true).padding(8.dp)
+            modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)
         ) { AlbumListFilterGenres(filter, filterGCount) { onFilterApply(it) } }
 
         Box(
-            modifier = Modifier.filterCard(border = true).padding(8.dp)
+            modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)
         ) { AlbumListFilterTags(filter, filterTagsCount) { onFilterApply(it) } }
 
         Row(
-            modifier = Modifier.fillMaxWidth().filterCard(border = true).padding(start = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Absolute.SpaceBetween
+            modifier = Modifier.fillMaxWidth().filterCard(border = true).padding(start = CARD_INNER_PADDING),
+            verticalAlignment = ALIGNMENT_CENTER_VERTICALLY,
+            horizontalArrangement = ROW_ABSOLUTE_SPACE_BETWEEN
         ) {
-            Text("Animated", style = Theme.L.Type.bodyLarge.copy(color = StyleGenresTags.colorSelectTextItem, fontWeight = FontWeight.Bold))
-            Checkbox(checked = filter.selection == "animated", onCheckedChange = { onFilterApply(filter.copy(selection = if (it) "animated" else "all")) }, colors = CheckboxDefaults.colors(uncheckedBorderColor = Color.Gray))
+            Text("Animated", style = animatedTextStyle)
+            Checkbox(
+                checked = filter.selection == "animated",
+                onCheckedChange = { onFilterApply(filter.copy(selection = if (it) "animated" else "all")) },
+                colors = checkboxColors
+            )
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(BOTTOM_SPACER_HEIGHT))
 
     }
 
@@ -194,42 +223,45 @@ private fun AlbumListFilterHeader(
     onClose: () -> Unit
 ) {
     val palette = StyleGenresTags.Palette
+    val headerTitleStyle = remember(palette.textPrimary) {
+        Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+    }
     Row(
         modifier = Modifier
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
             .fillMaxWidth()
-            .height(56.dp)
+            .height(HEADER_HEIGHT)
             .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = ALIGNMENT_CENTER_VERTICALLY,
+        horizontalArrangement = ROW_SPACE_BETWEEN
     ) {
         Text(
             "Filters",
             color = palette.textPrimary,
-            style = Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
+            style = headerTitleStyle
         )
 
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            verticalAlignment = ALIGNMENT_CENTER_VERTICALLY,
+            horizontalArrangement = ROW_SPACED_BY_6
         ) {
             // Save button
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                    .clip(BUTTON_SHAPE)
+                    .border(BORDER_WIDTH, palette.border, BUTTON_SHAPE)
                     .background(palette.field)
                     .clickable { onSaveClick() }
                     .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = ALIGNMENT_CENTER_VERTICALLY
             ) {
                 Icon(
                     imageVector = Icons.Default.Save,
                     contentDescription = "Save filter preset",
                     tint = palette.accent,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(ICON_SIZE_16)
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(SPACER_WIDTH_4))
                 Text(
                     "Save",
                     color = palette.textPrimary,
@@ -240,20 +272,20 @@ private fun AlbumListFilterHeader(
             // Saved presets button
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                    .clip(BUTTON_SHAPE)
+                    .border(BORDER_WIDTH, palette.border, BUTTON_SHAPE)
                     .background(palette.field)
                     .clickable { onSavedPresetsClick() }
                     .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = ALIGNMENT_CENTER_VERTICALLY
             ) {
                 Icon(
                     imageVector = Icons.Outlined.BookmarkBorder,
                     contentDescription = "Saved presets",
                     tint = palette.selectedBorder,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(ICON_SIZE_16)
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(SPACER_WIDTH_4))
                 Text(
                     "Saved ($presetsCount)",
                     color = palette.textPrimary,
@@ -264,13 +296,13 @@ private fun AlbumListFilterHeader(
             // Close button (X)
             IconButton(
                 onClick = onClose,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(CLOSE_BUTTON_SIZE)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close filters",
                     tint = palette.textSecondary,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(ICON_SIZE_24)
                 )
             }
         }
@@ -282,23 +314,23 @@ private fun AlbumFilterSearchHeader(
     searchQuery: String
 ) {
     val palette = StyleGenresTags.Palette
-    Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
+    Box(modifier = Modifier.filterCard(border = true).padding(CARD_INNER_PADDING)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
+                .height(SEARCH_HEADER_HEIGHT)
+                .clip(BUTTON_SHAPE)
+                .border(BORDER_WIDTH, palette.border, BUTTON_SHAPE)
                 .background(palette.field)
                 .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = ALIGNMENT_CENTER_VERTICALLY
         ) {
             Text(
                 "Search:",
                 color = palette.textSecondary,
                 style = Theme.L.Type.rowSubtitle
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(SPACER_WIDTH_6))
             Text(
                 searchQuery,
                 color = palette.textPrimary,

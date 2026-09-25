@@ -19,10 +19,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -31,29 +32,47 @@ import com.composeunstyled.DisclosureHeading
 import com.composeunstyled.DisclosurePanel
 import com.composeunstyled.rememberDisclosureState
 
-private val style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
+private val ROW_TITLE_STYLE = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
+private val TWEEN_ROTATION = tween<Float>()
+private val DISCLOSURE_ENTER = expandVertically(
+    spring(stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntSize.VisibilityThreshold)
+)
+private val DISCLOSURE_EXIT = shrinkVertically()
+private val DISCLOSURE_ROW_MODIFIER = Modifier.fillMaxWidth().height(48.dp)
+private val DISCLOSURE_ICON_SIZE_MODIFIER = Modifier.size(32.dp)
+private val ICON_ARROW_DROP_DOWN = Icons.Default.ArrowDropDown
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
 
 @Composable
-fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @Composable () -> Unit ) {
+fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @Composable () -> Unit) {
 
     val state = rememberDisclosureState()
     val palette = StyleGenresTags.Palette
+    val headingStyle = remember(palette.textPrimary) { ROW_TITLE_STYLE.copy(color = palette.textPrimary) }
 
     Disclosure(state = state) {
         DisclosureHeading(backgroundColor = Color.Transparent) {
-            val degrees by animateFloatAsState(if (state.expanded) -0f else -90f, tween())
+            val degrees by animateFloatAsState(if (state.expanded) 0f else -90f, TWEEN_ROTATION)
 
             Row(
-                modifier = Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically
+                modifier = DISCLOSURE_ROW_MODIFIER,
+                verticalAlignment = ROW_VERTICAL_ALIGNMENT
             ) {
-                Icon( imageVector = Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.rotate(degrees).size(32.dp), tint = palette.textSecondary )
-                Text(contentDisclosureHeading, style = style.copy(color = palette.textPrimary))
+                Icon(
+                    imageVector = ICON_ARROW_DROP_DOWN,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .graphicsLayer { rotationZ = degrees }
+                        .then(DISCLOSURE_ICON_SIZE_MODIFIER),
+                    tint = palette.textSecondary
+                )
+                Text(contentDisclosureHeading, style = headingStyle)
             }
 
         }
         DisclosurePanel(
-            enter = expandVertically( spring( stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntSize.VisibilityThreshold ) ),
-            exit = shrinkVertically()
+            enter = DISCLOSURE_ENTER,
+            exit = DISCLOSURE_EXIT
         ) {
             contentDisclosurePanel.invoke()
         }

@@ -44,12 +44,15 @@ private val BUTTON_UP_DEFAULT_SIZE_MODIFIER = Modifier
     .height(BUTTON_UP_HEIGHT)
     .width(DEFAULT_BUTTON_UP_WIDTH)
 
+private val BUTTON_UP_DEFAULT_FULL_MODIFIER = BUTTON_UP_DEFAULT_SIZE_MODIFIER.then(BUTTON_UP_BASE_MODIFIER)
+
 private val BUTTON_UP_CIRCLE_BASE_MODIFIER = Modifier
     .clip(CircleShape)
     .border(BUTTON_UP_BORDER_WIDTH, BUTTON_UP_BORDER_COLOR, CircleShape)
     .background(Theme.tabLevel0)
 
 private val BUTTON_UP_CIRCLE_DEFAULT_SIZE_MODIFIER = Modifier.size(DEFAULT_BUTTON_UP_CIRCLE_SIZE)
+private val BUTTON_UP_CIRCLE_DEFAULT_FULL_MODIFIER = BUTTON_UP_CIRCLE_DEFAULT_SIZE_MODIFIER.then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
 
 @Composable
 fun ButtonUp(
@@ -57,16 +60,15 @@ fun ButtonUp(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val sizeModifier = if (width == DEFAULT_BUTTON_UP_WIDTH) {
-        BUTTON_UP_DEFAULT_SIZE_MODIFIER
+    val baseModifier = if (width == DEFAULT_BUTTON_UP_WIDTH) {
+        BUTTON_UP_DEFAULT_FULL_MODIFIER
     } else {
-        Modifier.height(BUTTON_UP_HEIGHT).width(width)
+        Modifier.height(BUTTON_UP_HEIGHT).width(width).then(BUTTON_UP_BASE_MODIFIER)
     }
 
     Box(
         modifier = modifier
-            .then(sizeModifier)
-            .then(BUTTON_UP_BASE_MODIFIER)
+            .then(baseModifier)
             .clickable(onClick = onClick),
         contentAlignment = BUTTON_UP_ALIGNMENT
     ) {
@@ -84,16 +86,15 @@ fun ButtonUpCircle(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val sizeModifier = if (size == DEFAULT_BUTTON_UP_CIRCLE_SIZE) {
-        BUTTON_UP_CIRCLE_DEFAULT_SIZE_MODIFIER
+    val baseModifier = if (size == DEFAULT_BUTTON_UP_CIRCLE_SIZE) {
+        BUTTON_UP_CIRCLE_DEFAULT_FULL_MODIFIER
     } else {
-        Modifier.size(size)
+        Modifier.size(size).then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
     }
 
     Box(
         modifier = modifier
-            .then(sizeModifier)
-            .then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
+            .then(baseModifier)
             .clickable(onClick = onClick),
         contentAlignment = BUTTON_UP_ALIGNMENT
     ) {

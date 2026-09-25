@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.x.feature.country.ComposeCountry
@@ -13,6 +14,7 @@ import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNav
 import kotlinx.coroutines.launch
 
 private val CONTROLS_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
 
 /**
  * Второй ряд дашборда: кнопка страны + выбор текущей страницы.
@@ -30,7 +32,10 @@ fun DashboardControlsRow(
         { page -> scope.launch { onChange(page) } }
     }
 
-    Row(modifier = modifier.then(CONTROLS_ROW_BASE_MODIFIER)) {
+    Row(
+        modifier = modifier.then(CONTROLS_ROW_BASE_MODIFIER),
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+    ) {
         ComposeCountry()
         Box(modifier = Modifier.weight(1f)) {
             BottomListDashBoardNavigationButtons2(
