@@ -29,7 +29,11 @@ private val SUBSCRIPTION_AVATAR_SHAPE = RoundedCornerShape(SUBSCRIPTION_AVATAR_C
 private val SUBSCRIPTION_AVATAR_PLACEHOLDER_BG = Color.DarkGray
 private val AVATAR_BOX_SIZE = 96.dp
 private val PERSON_ICON_SIZE = 32.dp
-private val PERSON_ICON_TINT = Color.White
+private val COLOR_WHITE = Color.White
+private val PERSON_ICON_TINT = COLOR_WHITE
+private val ICON_PERSON = Icons.Default.Person
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val SPAN_STYLE_BOLD = SpanStyle(fontWeight = FontWeight.Bold)
 private val AVATAR_BOX_BASE_MODIFIER = Modifier
     .clip(SUBSCRIPTION_AVATAR_SHAPE)
     .size(AVATAR_BOX_SIZE)
@@ -53,7 +57,7 @@ fun DialogSubscriptionDelete(
         val dialogBody = remember(pending.name) {
             buildAnnotatedString {
                 append(TEXT_DELETE_AUTHOR_PREFIX)
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                withStyle(SPAN_STYLE_BOLD) { append(pending.name) }
                 append(TEXT_DELETE_AUTHOR_SUFFIX)
             }
         }
@@ -61,14 +65,14 @@ fun DialogSubscriptionDelete(
             {
                 Box(
                     modifier = AVATAR_BOX_BASE_MODIFIER,
-                    contentAlignment = Alignment.Center
+                    contentAlignment = BOX_ALIGNMENT_CENTER
                 ) {
                     val url = pending.urlProfile
                     if (url != null) {
                         UrlImage(url = url)
                     } else {
                         Icon(
-                            Icons.Default.Person,
+                            ICON_PERSON,
                             contentDescription = null,
                             modifier = PERSON_ICON_MODIFIER,
                             tint = PERSON_ICON_TINT

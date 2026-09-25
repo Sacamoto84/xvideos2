@@ -25,6 +25,8 @@ private val BUTTON_TOP_PADDING = 2.dp
 private val BUTTON_BOTTOM_PADDING = 4.dp
 private val BUTTON_BORDER_WIDTH = 1.dp
 private const val TEXT_SHARE_ALBUM = "Share Album (P2P)"
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
+private val COLOR_WHITE = Color.White
 
 private val SHARE_ALBUM_BUTTON_BASE_MODIFIER = Modifier
     .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
@@ -39,7 +41,7 @@ fun AlbumInfoButtonShareAlbum(
     modifier: Modifier = Modifier
 ) {
     val buttonTextStyle = remember(Theme.L.Type.button) {
-        Theme.L.Type.button.copy(color = Color.White)
+        Theme.L.Type.button.copy(color = COLOR_WHITE)
     }
 
     Box(
@@ -48,11 +50,11 @@ fun AlbumInfoButtonShareAlbum(
             .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SHARE_ALBUM_BUTTON_SHAPE)
             .background(Theme.L.grey6)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Text(
             text = TEXT_SHARE_ALBUM,
-            color = Color.White,
+            color = COLOR_WHITE,
             style = buttonTextStyle
         )
     }

@@ -86,6 +86,15 @@ private val SETTINGS_ITEM_TRAILING_SPACER_WIDTH = 12.dp
 private val SETTINGS_SLIDER_WITH_ICON_START_PADDING = 56.dp
 private val SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING = 16.dp
 private val SETTINGS_SLIDER_END_PADDING = 16.dp
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.Center
+private val ICON_BOX_ALIGNMENT = Alignment.Center
+private val DIVIDER2_MODIFIER = Modifier
+    .fillMaxWidth()
+    .height(SETTINGS_DIVIDER2_HEIGHT)
+    .background(SettingsScreenBackground)
+private val SLIDER_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val ICON_SIZE_MODIFIER = Modifier.size(SETTINGS_ICON_SIZE)
 
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 
@@ -140,7 +149,7 @@ fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = SETTINGS_DEFAULT_
 
 @Composable
 fun SettingsDivider2() {
-    Spacer(Modifier.fillMaxWidth().height(SETTINGS_DIVIDER2_HEIGHT).background(SettingsScreenBackground))
+    Spacer(DIVIDER2_MODIFIER)
 }
 
 @Composable
@@ -240,7 +249,7 @@ fun SettingsListItem(
             .then(clickableModifier)
             .heightIn(min = SETTINGS_ITEM_MIN_HEIGHT)
             .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING, vertical = SETTINGS_ITEM_VERTICAL_PADDING),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         if (icon != 0) {
             SettingsIcon(icon)
@@ -248,7 +257,7 @@ fun SettingsListItem(
         }
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT
         ) {
             Text(
                 text = text,
@@ -284,14 +293,14 @@ private fun SettingsListItemPreview() = SettingsPreview {
 @Composable
 fun SettingsIcon(@DrawableRes icon: Int) {
     Box(
-        modifier = Modifier.size(SETTINGS_ICON_SIZE),
-        contentAlignment = Alignment.Center
+        modifier = ICON_SIZE_MODIFIER,
+        contentAlignment = ICON_BOX_ALIGNMENT
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
             tint = SettingsRowTextSecondary,
-            modifier = Modifier.size(SETTINGS_ICON_SIZE)
+            modifier = ICON_SIZE_MODIFIER
         )
     }
 }
@@ -346,18 +355,22 @@ fun SettingsSwitchRow(
         uncheckedBorderColor = SWITCH_UNCHECKED_BORDER
     )
 
-    SettingsListItem(
-        icon = icon,
-        text = text,
-        subtitle = subtitle,
-        trailing = {
+    val trailingContent: @Composable () -> Unit = remember(value, enabled, onValueChange, switchColors) {
+        {
             Switch(
                 checked = value,
                 enabled = enabled,
                 onCheckedChange = onValueChange,
                 colors = switchColors
             )
-        },
+        }
+    }
+
+    SettingsListItem(
+        icon = icon,
+        text = text,
+        subtitle = subtitle,
+        trailing = trailingContent,
         modifier = modifier
     )
 }
@@ -400,15 +413,19 @@ fun SettingsButtonRowWithDialog(
         composable = composable
     )
 
-    SettingsListItem(
-        icon = icon,
-        text = text,
-        subtitle = null,
-        trailing = {
+    val trailingContent: @Composable () -> Unit = remember(onOpen, value) {
+        {
             TextButton(onClick = onOpen) {
                 Text(value, color = SettingsAccentColor, fontWeight = FontWeight.Medium)
             }
         }
+    }
+
+    SettingsListItem(
+        icon = icon,
+        text = text,
+        subtitle = null,
+        trailing = trailingContent
     )
 }
 
@@ -448,7 +465,7 @@ fun IntSliderSetting(
         }
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = SLIDER_COLUMN_BASE_MODIFIER) {
         SettingsListItem(
             icon = icon,
             text = text,

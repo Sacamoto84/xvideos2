@@ -28,6 +28,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -241,7 +243,7 @@ private fun AppSettingsScreenContent(
 
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = settingsWindowInsets,
+        contentWindowInsets = SETTINGS_WINDOW_INSETS,
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
         AppSettingsScreenBody(
@@ -265,7 +267,7 @@ private fun AppSettingsScreenContent(
     }
 }
 
-private val settingsWindowInsets = WindowInsets(0, 0, 0, 0)
+private val SETTINGS_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
 
 private const val SECTION_TITLE_MAIN = "Основное"
 private const val SECTION_TITLE_SECTIONS = "Разделы"
@@ -509,8 +511,8 @@ internal enum class SettingsPage(
     );
 
     companion object {
-        val primaryPages: List<SettingsPage> = listOf(Appearance, Privacy, Network, WebServer, Cache, Storage, Backup, P2P)
-        val contentPages: List<SettingsPage> = listOf(X, L, Red)
+        val primaryPages: PersistentList<SettingsPage> = persistentListOf(Appearance, Privacy, Network, WebServer, Cache, Storage, Backup, P2P)
+        val contentPages: PersistentList<SettingsPage> = persistentListOf(X, L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
     }

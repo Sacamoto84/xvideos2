@@ -34,6 +34,7 @@ private val CHIP_VERTICAL_PADDING = 2.dp
 private val CHIP_CONTENT_PADDING = 4.dp
 private val HEADER_VERTICAL_PADDING = 4.dp
 private val HEADER_FONT_SIZE = 16.sp
+private val HEADER_FONT_WEIGHT = FontWeight.ExtraBold
 private val GENRE_FONT_SIZE = 14.sp
 private const val LABEL_GENRES = "Genres: "
 
@@ -52,7 +53,7 @@ fun AlbumInfoGreeting(
     modifier: Modifier = Modifier
 ) {
     val headerStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = HEADER_FONT_SIZE)
+        Theme.L.Type.rowTitle.copy(fontWeight = HEADER_FONT_WEIGHT, fontSize = HEADER_FONT_SIZE)
     }
     val genreTextStyle = remember(Theme.L.Type.rowValue, Theme.L.primaryColor) {
         Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = GENRE_FONT_SIZE)

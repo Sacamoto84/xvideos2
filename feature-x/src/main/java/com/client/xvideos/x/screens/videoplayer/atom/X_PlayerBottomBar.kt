@@ -54,6 +54,11 @@ private val TIME_FONT_SIZE = 11.sp
 private val CONTROL_ICON_TINT = Color.White
 private val TIME_TEXT_COLOR = Color.White
 private const val SAFE_MAX_PROGRESS_FALLBACK = 0.1f
+private val ICON_PLAY = Icons.Filled.PlayArrow
+private val ICON_PAUSE = Icons.Filled.Pause
+private val ICON_FULLSCREEN = Icons.Filled.Fullscreen
+private val ICON_FULLSCREEN_EXIT = Icons.Filled.FullscreenExit
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
 
 private val TIME_TEXT_STYLE = TextStyle(
     color = TIME_TEXT_COLOR,
@@ -141,13 +146,13 @@ fun X_PlayerBottomBar(
 
     Row(
         modifier = modifier.then(BOTTOM_BAR_BASE_MODIFIER),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT,
         horizontalArrangement = BAR_HORIZONTAL_ARRANGEMENT
     ) {
 
         // Play / Pause
         Icon(
-            imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+            imageVector = if (host.isPaused) ICON_PLAY else ICON_PAUSE,
             contentDescription = if (host.isPaused) CD_PLAY else CD_PAUSE,
             tint = CONTROL_ICON_TINT,
             modifier = PLAY_PAUSE_ICON_MODIFIER.clickable(onClick = onTogglePlayPause)
@@ -204,7 +209,7 @@ fun X_PlayerBottomBar(
         // Полный экран (если поддержан экраном)
         if (onFullScreenClick != null) {
             Icon(
-                imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                imageVector = if (isFullScreen) ICON_FULLSCREEN_EXIT else ICON_FULLSCREEN,
                 contentDescription = if (isFullScreen) CD_EXIT_FULLSCREEN else CD_FULLSCREEN,
                 tint = CONTROL_ICON_TINT,
                 modifier = FULLSCREEN_ICON_MODIFIER.clickable(onClick = onFullScreenClick)

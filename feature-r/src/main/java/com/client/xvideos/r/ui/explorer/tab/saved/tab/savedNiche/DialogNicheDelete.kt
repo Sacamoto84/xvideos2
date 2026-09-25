@@ -27,6 +27,7 @@ private const val DIALOG_TITLE = "Удалить группу?"
 private const val CONFIRM_TEXT = "Удалить"
 private const val TEXT_DELETE_NICHE_PREFIX = "Удалить «"
 private const val TEXT_DELETE_NICHE_SUFFIX = "» из сохранённых?"
+private val SPAN_STYLE_BOLD = SpanStyle(fontWeight = FontWeight.Bold)
 
 @Composable
 fun DialogNicheDelete(
@@ -41,7 +42,7 @@ fun DialogNicheDelete(
         val dialogBody = remember(pending.name) {
             buildAnnotatedString {
                 append(TEXT_DELETE_NICHE_PREFIX)
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                withStyle(SPAN_STYLE_BOLD) { append(pending.name) }
                 append(TEXT_DELETE_NICHE_SUFFIX)
             }
         }

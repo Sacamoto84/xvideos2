@@ -40,15 +40,16 @@ private val BADGE_PADDING_HORIZONTAL = 5.dp
 
 private val TEXT_FONT_SIZE = 13.sp
 private val COUNT_FONT_SIZE = 11.sp
+private val COLOR_WHITE = Color.White
 
 private val PORNOSTAR_TEXT_STYLE = TextStyle(
-    color = Color.White,
+    color = COLOR_WHITE,
     fontSize = TEXT_FONT_SIZE,
     fontWeight = FontWeight.Medium
 )
 
 private val COUNT_TEXT_STYLE = TextStyle(
-    color = Color.White,
+    color = COLOR_WHITE,
     fontSize = COUNT_FONT_SIZE,
     fontFamily = FontFamily.SansSerif,
     textAlign = TextAlign.Center,
