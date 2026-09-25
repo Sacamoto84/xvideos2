@@ -39,8 +39,14 @@ object GallerySaver {
     /** Копирует уже скачанный файл в галерею. Fire-and-forget, снекбары внутри. */
     fun saveLocal(context: Context, src: File, fileName: String) {
         val appContext = context.applicationContext
-        val cleanFileName = File(fileName.trim()).name.trim()
-        if (isUnsafeItemName(cleanFileName)) {
+        val trimmed = fileName.trim()
+        if (trimmed.isEmpty()) {
+            Timber.w("GallerySaver: отклонён пустой fileName")
+            SnackBar.error("Недопустимое имя файла")
+            return
+        }
+        val cleanFileName = File(trimmed).name.trim()
+        if (cleanFileName.isEmpty() || isUnsafeItemName(cleanFileName)) {
             Timber.w("GallerySaver: отклонён небезопасный fileName: $fileName")
             SnackBar.error("Недопустимое имя файла")
             return
@@ -84,8 +90,14 @@ object GallerySaver {
         progress: MutableStateFlow<Float>? = null,
     ) {
         val appContext = context.applicationContext
-        val cleanFileName = File(fileName.trim()).name.trim()
-        if (isUnsafeItemName(cleanFileName)) {
+        val trimmed = fileName.trim()
+        if (trimmed.isEmpty()) {
+            Timber.w("GallerySaver: отклонён пустой fileName")
+            SnackBar.error("Недопустимое имя файла")
+            return
+        }
+        val cleanFileName = File(trimmed).name.trim()
+        if (cleanFileName.isEmpty() || isUnsafeItemName(cleanFileName)) {
             Timber.w("GallerySaver: отклонён небезопасный fileName: $fileName")
             SnackBar.error("Недопустимое имя файла")
             return
@@ -183,13 +195,14 @@ object GallerySaver {
     /** Есть ли уже такой файл в папке галереи. */
     private fun exists(context: Context, fileName: String): Boolean =
         runCatching {
+            val relPath = GalleryTarget.relativePath(fileName)
             context.contentResolver.query(
                 collectionFor(fileName),
                 arrayOf(MediaStore.MediaColumns._ID),
                 "${MediaStore.MediaColumns.RELATIVE_PATH}=? AND ${MediaStore.MediaColumns.DISPLAY_NAME}=?",
-                arrayOf(GalleryTarget.relativePath(fileName), fileName),
+                arrayOf(relPath, fileName),
                 null
-            )?.use { it.count > 0 } ?: false
+            )?.use { it.moveToFirst() } ?: false
         }.getOrDefault(false)
 
     private fun collectionFor(fileName: String): Uri =

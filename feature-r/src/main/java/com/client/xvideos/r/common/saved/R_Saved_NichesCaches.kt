@@ -92,8 +92,7 @@ class R_Saved_NichesCaches(
                     }
                 }
                 val json = AppJson.encodeToString(niches)
-                val file = cacheFile()
-                file.writeTextAtomically(json)
+                cacheFile.writeTextAtomically(json)
                 withContext(Dispatchers.Main) {
                     list.replaceWith(niches)
                     version++
@@ -118,27 +117,28 @@ class R_Saved_NichesCaches(
         }
     }
 
-    fun refreshIfStale(maxAgeHours: Long = AUTO_REFRESH_MAX_AGE_HOURS) {
-        timeRefresh()
-        val file = cacheFile()
-        val shouldRefresh = !file.exists() || list.isEmpty() || lastModifiedHour >= maxAgeHours
+    private val cacheFile = File(AppPath.r_nichesCache, CACHE_FILE_NAME)
 
-        if (!shouldRefresh || isDownloading) {
+    fun refreshIfStale(maxAgeHours: Long = AUTO_REFRESH_MAX_AGE_HOURS) {
+        if (isDownloading) return
+        timeRefresh()
+        val shouldRefresh = !cacheFile.exists() || list.isEmpty() || lastModifiedHour >= maxAgeHours
+
+        if (!shouldRefresh) {
             return
         }
 
-        Timber.i("R niches cache auto refresh: exists=${file.exists()} size=${list.size} ageHours=$lastModifiedHour")
+        Timber.i("R niches cache auto refresh: exists=${cacheFile.exists()} size=${list.size} ageHours=$lastModifiedHour")
         refresh(showSnackBar = false)
     }
 
     fun readFromDisk() {
         scope.launch(Dispatchers.IO) {
-            val file = cacheFile()
-            if (!file.exists()) {
+            if (!cacheFile.exists() || cacheFile.length() == 0L) {
                 return@launch
             }
             runCatching {
-                val json = file.readText()
+                val json = cacheFile.readText()
                 val niches = AppJson.decodeFromString<List<Niche>>(json)
                 withContext(Dispatchers.Main) {
                     list.replaceWith(niches)
@@ -158,22 +158,16 @@ class R_Saved_NichesCaches(
     }
 
     private fun timeRefresh() {
-        val file = cacheFile()
-        if (!file.exists()) {
+        if (!cacheFile.exists()) {
             lastModifiedHour = -1
             lastModifiedMinute = -1
             return
         }
         // Получаем время последней модификации
-        val lastModified = file.lastModified() // время в миллисекундах с эпохи
+        val lastModified = cacheFile.lastModified() // время в миллисекундах с эпохи
         val now = System.currentTimeMillis()
         val diffMillis = now - lastModified
         lastModifiedMinute = diffMillis / (60 * 1000)
         lastModifiedHour = diffMillis / (60 * 60 * 1000)
     }
-
-    private fun cacheFile(): File {
-        return File(AppPath.r_nichesCache, CACHE_FILE_NAME)
-    }
-
 }

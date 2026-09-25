@@ -24,7 +24,8 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
     private var mutationJob: Job? = null
 
     fun add(item: AlbumDetails) {
-        if (item.id.toLongOrNull() == null) {
+        val albumId = item.id.toLongOrNull()
+        if (albumId == null) {
             Timber.w("Skip saving L album with invalid id:${item.id} name:${item.title}")
             SnackBar.error("Альбом не сохранён: пустой id")
             return
@@ -60,10 +61,12 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         mutationJob = scope.launch(Dispatchers.IO) {
             albumDb.insert(item.id, item)
                 .onSuccess {
-                    runCatching {
-                        db.lAlbumPictureCache.put(albumId.toString(), AppJson.encodeToString(picsDetails))
-                    }.onFailure {
-                        Timber.e(it, "SavedL_Albums: ошибка кэширования картинок альбома $albumId")
+                    if (picsDetails.isNotEmpty()) {
+                        runCatching {
+                            db.lAlbumPictureCache.put(albumId.toString(), AppJson.encodeToString(picsDetails))
+                        }.onFailure {
+                            Timber.e(it, "SavedL_Albums: ошибка кэширования картинок альбома $albumId")
+                        }
                     }
                     withContext(Dispatchers.Main) {
                         list.removeAll { it.id == item.id }
@@ -78,6 +81,7 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
     }
 
     fun remove(item: AlbumDetails) {
+        if (item.id.isBlank()) return
         Timber.i("removeAlbum() id:${item.id} name:${item.title}")
         mutationJob?.cancel()
         mutationJob = scope.launch(Dispatchers.IO) {
@@ -93,6 +97,8 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
                 }
         }
     }
+
+    fun contains(id: String): Boolean = id.isNotBlank() && list.any { it.id == id }
 
     private var refreshJob: Job? = null
 

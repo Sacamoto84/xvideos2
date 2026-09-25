@@ -71,6 +71,10 @@ class DownloadRed @Inject constructor(
     }
 
     fun downloadItem(item: GifsInfo) {
+        if (item.id.isBlank() || item.userName.isBlank()) {
+            Timber.w("Skip downloadItem with blank id or userName: id=${item.id}, user=${item.userName}")
+            return
+        }
         scope.launch(Dispatchers.IO) {
             try {
                 Timber.i("Начало загрузки: ${item.id}")
@@ -180,22 +184,33 @@ class DownloadRed @Inject constructor(
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {
             val rootDir = File(AppPath.r_cache_download)
+            if (!rootDir.exists() || !rootDir.isDirectory) {
+                _downloadList.emit(emptyList())
+                _downloadedVideoKeys.emit(emptySet())
+                return@launch
+            }
 
             // Один обход на оба результата: собираем .info и .mp4 сразу без
             // промежуточного списка всех файлов и двойной фильтрации.
             val infoFiles = ArrayList<File>()
             val mp4Files = ArrayList<File>()
-            if (rootDir.exists() && rootDir.isDirectory) {
-                for (f in rootDir.walkTopDown()) {
-                    if (!f.isFile || f.length() <= 0L) continue
-                    when (f.extension) {
-                        "info" -> infoFiles.add(f)
-                        "mp4" -> mp4Files.add(f)
-                    }
+            for (f in rootDir.walkTopDown()) {
+                if (!f.isFile || f.length() <= 0L) continue
+                when (f.extension) {
+                    "info" -> infoFiles.add(f)
+                    "mp4" -> mp4Files.add(f)
                 }
             }
 
-            infoFiles.sortByDescending { it.lastModified() }
+            if (infoFiles.isEmpty() && mp4Files.isEmpty()) {
+                _downloadList.emit(emptyList())
+                _downloadedVideoKeys.emit(emptySet())
+                return@launch
+            }
+
+            if (infoFiles.size > 1) {
+                infoFiles.sortByDescending { it.lastModified() }
+            }
             val result = ArrayList<GifsInfo>(infoFiles.size)
             for (file in infoFiles) {
                 try {
@@ -269,8 +284,11 @@ class DownloadRed @Inject constructor(
     }
 
     fun delete(item: GifsInfo) {
-        if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
-            Timber.w("DownloadRed.delete -> Отклонён небезопасный путь: userName=${item.userName}, id=${item.id}")
+        val userName = item.userName
+        val id = item.id
+        if (userName.isBlank() || id.isBlank()) return
+        if (isUnsafeItemName(userName) || isUnsafeItemName(id)) {
+            Timber.w("DownloadRed.delete -> Отклонён небезопасный путь: userName=$userName, id=$id")
             return
         }
         scope.launch(Dispatchers.IO) {

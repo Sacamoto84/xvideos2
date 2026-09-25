@@ -54,6 +54,7 @@ class R_Saved_Likes(
     }
 
     fun remove(item: GifsInfo) {
+        if (item.id.isBlank()) return
         Timber.i("R_Saved_Likes remove() id:${item.id} userName:${item.userName} url:${item.urls.hd}")
         scope.launch(Dispatchers.IO) {
             likesDb.delete(item.id)
@@ -70,6 +71,9 @@ class R_Saved_Likes(
         }
     }
 
+    /** Быстрая проверка принадлежности к лайкам. */
+    fun contains(id: String): Boolean = id.isNotBlank() && list.any { it.id == id }
+
     private var refreshJob: Job? = null
 
     fun refresh() {
@@ -77,6 +81,7 @@ class R_Saved_Likes(
         refreshJob = scope.launch(Dispatchers.IO) {
             likesDb.refresh()
             val current = withContext(Dispatchers.Main) { list.toList() }
+            if (current.isEmpty()) return@launch
             val sanitized = current.sanitizeGifsInfoList()
             // Переписываем список только если санитизация реально что-то изменила,
             // иначе получаем лишнюю перезапись и мигание списка.
@@ -87,5 +92,4 @@ class R_Saved_Likes(
             }
         }
     }
-
 }

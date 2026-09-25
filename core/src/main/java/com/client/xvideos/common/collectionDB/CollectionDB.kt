@@ -52,7 +52,7 @@ class CollectionDB<T>(
     fun create(collectionName: String): Result<Boolean> {
         return try {
             val safeName = CollectionName.normalizeOrNull(collectionName)
-                ?: return Result.failure(IOException("Недопустимое имя коллекции: $collectionName"))
+                ?: return Result.failure(IllegalArgumentException("Недопустимое имя коллекции: $collectionName"))
             Timber.i("!!! Создать коллекцию  collectionCreateToDisk() collectionName:$safeName")
             synchronized(lock) {
                 // Создаем директорию <userName>/block, если её нет
@@ -206,13 +206,16 @@ class CollectionDB<T>(
 
         val collections: List<CollectionEntity<T>> = synchronized(lock) {
             val entries = rootDir.listFiles() ?: return@synchronized emptyList()
+            if (entries.isEmpty()) return@synchronized emptyList()
             val result = ArrayList<CollectionEntity<T>>(entries.size)
             for (dir in entries) {
                 if (dir.isDirectory) {
                     result.add(loadCollectionDir(dir))
                 }
             }
-            result.sortBy { it.collection }
+            if (result.size > 1) {
+                result.sortBy { it.collection }
+            }
             result
         }
 
@@ -224,6 +227,7 @@ class CollectionDB<T>(
 
     private fun loadCollectionDir(dir: File): CollectionEntity<T> {
         val rawFiles = dir.listFiles() ?: return CollectionEntity(dir.name, emptyList())
+        if (rawFiles.isEmpty()) return CollectionEntity(dir.name, emptyList())
         val collectionFiles = ArrayList<File>(rawFiles.size)
         for (f in rawFiles) {
             if (!f.isFile) continue
@@ -234,7 +238,10 @@ class CollectionDB<T>(
                 collectionFiles.add(f)
             }
         }
-        collectionFiles.sortByDescending { it.lastModified() }
+        if (collectionFiles.isEmpty()) return CollectionEntity(dir.name, emptyList())
+        if (collectionFiles.size > 1) {
+            collectionFiles.sortByDescending { it.lastModified() }
+        }
         val itemsInDir = ArrayList<T>(collectionFiles.size)
         for (file in collectionFiles) {
             if (file.length() == 0L) continue

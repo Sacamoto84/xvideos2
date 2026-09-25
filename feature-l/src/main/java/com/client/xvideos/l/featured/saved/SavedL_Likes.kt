@@ -40,6 +40,11 @@ class SavedL_Likes(
     }
 
     fun add(item: PicsDetails) {
+        if (item.url_to_original.isNullOrBlank() && item.url_to_video.isNullOrBlank()) {
+            Timber.w("SavedL_Likes: отклонён элемент без URL")
+            SnackBar.error("Недопустимый URL для сохранения")
+            return
+        }
         Timber.i("SavedL_Likes addLikes() item:${item.url_to_original}")
 
         mutationJob?.cancel()
@@ -65,6 +70,7 @@ class SavedL_Likes(
     }
 
     fun remove(url: String) {
+        if (url.isBlank()) return
         Timber.i("SavedL_Likes removeLikes() url:$url")
 
         // Вызов приходит из onDelete в composable, то есть с main-потока, а

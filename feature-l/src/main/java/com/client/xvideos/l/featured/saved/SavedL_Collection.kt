@@ -313,7 +313,9 @@ class SavedL_Collection(
     }
 
     fun beginAddManyToCollection(items: List<PicsDetails>) {
-        collectionItemsPendingAdd.replaceWith(items.distinctBy { lPicsDetailsIdentityKey(it) })
+        if (items.isEmpty()) return
+        val unique = if (items.size == 1) items else items.distinctBy { lPicsDetailsIdentityKey(it) }
+        collectionItemsPendingAdd.replaceWith(unique)
         collectionItemGifInfo = collectionItemsPendingAdd.firstOrNull()
         visibleDialog = collectionItemsPendingAdd.isNotEmpty()
     }
@@ -332,11 +334,12 @@ class SavedL_Collection(
     }
 
     fun addAll(items: List<PicsDetails>, collectionName: String) {
+        if (items.isEmpty()) return
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
             SnackBar.error("Недопустимое название коллекции")
             return
         }
-        val uniqueItems = items.distinctBy { lPicsDetailsIdentityKey(it) }
+        val uniqueItems = if (items.size == 1) items else items.distinctBy { lPicsDetailsIdentityKey(it) }
         if (uniqueItems.isEmpty()) return
 
         Timber.i("SavedL_Collection addAll() count:${uniqueItems.size} collection:$safeName")
@@ -380,26 +383,32 @@ class SavedL_Collection(
     }
 
     fun remove(item: PicsDetails, collectionName: String) {
-        remove(
-            identifiers = listOfNotNull(
-                item.url_to_original,
-                item.url_to_video,
-                item.lDownloadUrl()
-            ) + (item.thumbnails?.mapNotNull { it.url } ?: emptyList()),
-            collectionName = collectionName
-        )
+        val identifiers = ArrayList<String>(4)
+        item.url_to_original?.let { if (it.isNotEmpty()) identifiers.add(it) }
+        item.url_to_video?.let { if (it.isNotEmpty()) identifiers.add(it) }
+        item.lDownloadUrl()?.let { if (it.isNotEmpty()) identifiers.add(it) }
+        item.thumbnails?.forEach { thumb ->
+            thumb.url?.let { if (it.isNotEmpty()) identifiers.add(it) }
+        }
+        if (identifiers.isEmpty()) {
+            SnackBar.error("Файл не найден")
+            return
+        }
+        remove(identifiers = identifiers, collectionName = collectionName)
     }
 
     fun remove(url: String, collectionName: String) {
+        if (url.isBlank()) return
         remove(listOf(url), collectionName)
     }
 
     fun removeAll(items: List<PicsDetails>, collectionName: String) {
+        if (items.isEmpty()) return
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
             SnackBar.error("Недопустимое название коллекции")
             return
         }
-        val uniqueItems = items.distinctBy { lPicsDetailsIdentityKey(it) }
+        val uniqueItems = if (items.size == 1) items else items.distinctBy { lPicsDetailsIdentityKey(it) }
         if (uniqueItems.isEmpty()) return
         // Обход папок коллекции на каждый элемент плюс рекурсивное удаление — на IO.
         mutationJob?.cancel()
@@ -496,6 +505,7 @@ class SavedL_Collection(
 
 
     private fun remove(identifiers: List<String>, collectionName: String) {
+        if (identifiers.isEmpty()) return
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
             SnackBar.error("Недопустимое название коллекции")
             return
