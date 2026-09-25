@@ -65,6 +65,9 @@ private val CELL_BOX_BASE_MODIFIER = Modifier
 private val ALIGNMENT_CENTER = Alignment.Center
 private val ALIGNMENT_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
 
+private val TAG_ROW_KEY_PROVIDER: (Int, List<ItemsX>) -> String = { index, row -> "${index}_${row.first().id}" }
+private val TAG_ROW_CONTENT_TYPE: (Int, List<ItemsX>) -> String = { _, _ -> CONTENT_TYPE_TAG_ROW }
+
 /**
  * Одна страница выдачи по тегу.
  *
@@ -154,8 +157,8 @@ fun TagsPaginatedListScreen(
         // ключ уронил бы список.
         itemsIndexed(
             items = chunkedRows,
-            key = { index, row -> "${index}_${row.first().id}" },
-            contentType = { _, _ -> CONTENT_TYPE_TAG_ROW }
+            key = TAG_ROW_KEY_PROVIDER,
+            contentType = TAG_ROW_CONTENT_TYPE
         ) { _, row ->
             Row(modifier = ROW_BASE_MODIFIER) {
                 row.forEach { cell ->

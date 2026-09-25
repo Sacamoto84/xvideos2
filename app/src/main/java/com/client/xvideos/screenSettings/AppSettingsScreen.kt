@@ -247,8 +247,7 @@ private fun AppSettingsScreenContent(
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
         AppSettingsScreenBody(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = FULL_SIZE_MODIFIER
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .verticalScroll(scrollState),
             topCutout = topCutout,
@@ -268,6 +267,7 @@ private fun AppSettingsScreenContent(
 }
 
 private val SETTINGS_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
 
 private const val SECTION_TITLE_MAIN = "Основное"
 private const val SECTION_TITLE_SECTIONS = "Разделы"
@@ -310,19 +310,23 @@ private fun AppSettingsScreenBody(
         )
     }
 
+    val titleModifier = remember(topCutout) {
+        Modifier
+            .fillMaxWidth()
+            .padding(
+                top = topCutout + SCREEN_TITLE_VERTICAL_PADDING,
+                bottom = SCREEN_TITLE_VERTICAL_PADDING,
+                start = SCREEN_TITLE_HORIZONTAL_PADDING,
+                end = SCREEN_TITLE_HORIZONTAL_PADDING
+            )
+    }
+
     Column(
         modifier = modifier.then(BODY_COLUMN_BASE_MODIFIER)
     ) {
         Text(
             text = currentPage.title,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    top = topCutout + SCREEN_TITLE_VERTICAL_PADDING,
-                    bottom = SCREEN_TITLE_VERTICAL_PADDING,
-                    start = SCREEN_TITLE_HORIZONTAL_PADDING,
-                    end = SCREEN_TITLE_HORIZONTAL_PADDING
-                ),
+            modifier = titleModifier,
             color = SettingsRowTextPrimary,
             style = titleStyle
         )

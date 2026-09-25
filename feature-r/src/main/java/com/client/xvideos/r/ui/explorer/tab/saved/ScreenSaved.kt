@@ -67,12 +67,14 @@ object R_ScreenSavedTab : Screen {
         Icons.Outlined.Person,
         Icons.Outlined.Group,
         Icons.Outlined.Save,
-        //Icons.Outlined.Dataset,
-        //Icons.Outlined.Folder,
         Icons.Outlined.Apps,
         Icons.Outlined.Subscriptions,
-
     )
+
+    private val SAVED_CONTENT_INSETS = WindowInsets(0, 0, 0, 0)
+    private val SAVED_PAGE_KEY_PROVIDER: (Int) -> Any = { page -> page }
+    private val SAVED_PAGE_COUNT_PROVIDER: () -> Int = { 6 }
+    private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
 
     @Composable
     override fun Content() {
@@ -80,7 +82,7 @@ object R_ScreenSavedTab : Screen {
         val scope = rememberCoroutineScope()
         val pagerState = rememberPagerState(
             initialPage = vm.screenType.coerceIn(0, 5),
-            pageCount = { 6 }
+            pageCount = SAVED_PAGE_COUNT_PROVIDER
         )
 
         LaunchedEffect(pagerState.currentPage) {
@@ -113,24 +115,30 @@ object R_ScreenSavedTab : Screen {
             }
         }
 
+        val overlay0Content: @Composable () -> Unit = remember(overlay0, pagerState.currentPage) {
+            { TabBarPoints(overlay0, pagerState.currentPage == 0) }
+        }
+        val overlay4Content: @Composable () -> Unit = remember(overlay4, pagerState.currentPage) {
+            { TabBarPoints(overlay4, pagerState.currentPage == 4) }
+        }
+
         Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = SAVED_CONTENT_INSETS,
             bottomBar = {
                 Column {
                     HorizontalDivider()
                     TabRow(
                         value = pagerState.currentPage,
                         containerColor = Theme.tabLevel1,
-                        //containerColor = Theme.R.colorBottomBarBackground,
                         titlesIcon = SAVED_TAB_ICONS,
                         onChangeState = onTabChange,
-                        overlay0 = { TabBarPoints( overlay0, pagerState.currentPage == 0 ) },
-                        overlay4 = { TabBarPoints( overlay4, pagerState.currentPage == 4 ) },
+                        overlay0 = overlay0Content,
+                        overlay4 = overlay4Content,
                     )
                 }
             },
 
-            modifier = Modifier.fillMaxSize(),
+            modifier = FULL_SIZE_MODIFIER,
             containerColor = Theme.background
         ) { paddingValues ->
 
@@ -138,10 +146,10 @@ object R_ScreenSavedTab : Screen {
                 ProvidePagerScrollbarAlpha(pagerState = pagerState) {
                     HorizontalPager(
                         state = pagerState,
-                        key = { page -> page },
+                        key = SAVED_PAGE_KEY_PROVIDER,
                         userScrollEnabled = !isInsideCollection,
                         beyondViewportPageCount = 0,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = FULL_SIZE_MODIFIER
                     ) { page ->
                         when (page) {
                             0 -> R_Screen_Saved_LikesTab.Content()

@@ -63,9 +63,34 @@ data class FeedPlaybackActions(
     val onSpeedChange: (PlayerSpeed) -> Unit,
 )
 
+private val DIVIDER_MODIFIER = Modifier.height(8.dp).width(2.dp).background(Color.DarkGray)
+private val BUTTON_BOX_MODIFIER = Modifier.height(46.dp).width(46.dp)
+private val ICON_BUTTON_SIZE_MODIFIER = Modifier.size(46.dp)
+private val ROW_BASE_MODIFIER = Modifier.fillMaxWidth().height(48.dp)
+private val PADDING_4_MODIFIER = Modifier.padding(horizontal = 4.dp)
+
+private val COLOR_WHITE = Color.White
+private val COLOR_GRAY = Color.Gray
+private val COLOR_GREEN = Color.Green
+private val COLOR_LIGHT_GRAY = Color.LightGray
+
+private val ICON_VOLUME_OFF = Icons.AutoMirrored.Filled.VolumeOff
+private val ICON_VOLUME_UP = Icons.AutoMirrored.Filled.VolumeUp
+
+private val ALIGN_CENTER = Alignment.Center
+private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.Center
+
+private const val ROTATION_0 = 0f
+private const val ROTATION_90 = 90f
+private val PLAY_ROTATED_MODIFIER = Modifier.rotate(ROTATION_90)
+private val PLAY_DEFAULT_MODIFIER = Modifier.rotate(ROTATION_0)
+
 @Composable
 private fun Divider() {
-    Spacer(modifier = Modifier.height(8.dp).width(2.dp).background(Color.DarkGray))
+    Spacer(modifier = DIVIDER_MODIFIER)
 }
 
 @Composable
@@ -75,27 +100,29 @@ private fun TimeMarkerButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val textStyle = remember {
+        TextStyle(
+            color = COLOR_WHITE,
+            fontSize = 10.sp,
+            fontFamily = Theme.R.fontFamilyPopinsRegular,
+            textAlign = TextAlign.Center
+        )
+    }
     Column(
         modifier = modifier
-            .height(46.dp)
-            .width(46.dp)
+            .then(BUTTON_BOX_MODIFIER)
             .clickable(onClick = onClick),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT,
+        horizontalAlignment = ALIGN_CENTER_HORIZONTALLY
     ) {
         BasicText(
             time.toTwoDecimalPlacesWithColon(),
-            style = TextStyle(
-                color = Color.White,
-                fontSize = 10.sp,
-                fontFamily = Theme.R.fontFamilyPopinsRegular,
-                textAlign = TextAlign.Center
-            ),
+            style = textStyle,
             modifier = Modifier.fillMaxWidth()
         )
         Text(
             label,
-            color = Color.White,
+            color = COLOR_WHITE,
             fontSize = 20.sp,
             fontFamily = Theme.R.fontFamilyPopinsRegular,
             textAlign = TextAlign.Center
@@ -111,17 +138,18 @@ private fun AbToggleButton(
 ) {
     IconButton(
         onClick = onClick,
-        modifier = modifier.size(46.dp)
+        modifier = modifier.then(ICON_BUTTON_SIZE_MODIFIER)
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Box(contentAlignment = ALIGN_CENTER) {
+            val color = if (enableAB) COLOR_GREEN else COLOR_LIGHT_GRAY
             Icon(
                 painter = painterResource(R.drawable.rg_button),
                 contentDescription = if (enableAB) "Выключить повтор отрезка A-B" else "Включить повтор отрезка A-B",
-                tint = if (enableAB) Color.Green else Color.LightGray
+                tint = color
             )
             Text(
                 "AB",
-                color = if (enableAB) Color.Green else Color.LightGray,
+                color = color,
                 fontSize = 8.sp,
                 fontFamily = Theme.R.fontFamilyPopinsRegular
             )
@@ -139,8 +167,8 @@ private fun PlayPauseButton(
         Icon(
             painter = painterResource(if (play) R.drawable.select_1 else R.drawable.rg_button),
             contentDescription = if (play) "Пауза" else "Воспроизведение",
-            tint = Color.White,
-            modifier = Modifier.rotate(if (play) 90f else 0f)
+            tint = COLOR_WHITE,
+            modifier = if (play) PLAY_ROTATED_MODIFIER else PLAY_DEFAULT_MODIFIER
         )
     }
 }
@@ -156,7 +184,7 @@ private fun SeekButton(
         Icon(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
-            tint = Color.White
+            tint = COLOR_WHITE
         )
     }
 }
@@ -169,16 +197,15 @@ private fun MuteButton(
 ) {
     Box(
         modifier = modifier
-            .height(46.dp)
-            .width(46.dp)
+            .then(BUTTON_BOX_MODIFIER)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = ALIGN_CENTER
     ) {
-        val icon = if (mute) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
+        val icon = if (mute) ICON_VOLUME_OFF else ICON_VOLUME_UP
         Icon(
             icon,
             contentDescription = if (mute) "Включить звук" else "Выключить звук",
-            tint = if (mute) Color.Gray else Color.White
+            tint = if (mute) COLOR_GRAY else COLOR_WHITE
         )
     }
 }
@@ -189,19 +216,36 @@ fun FeedControls_Container_Line0(
     actions: FeedPlaybackActions,
     modifier: Modifier = Modifier,
 ) {
+    val triggerContent: @Composable (() -> Unit) -> Unit = remember(state.speed.displayName) {
+        { onClick ->
+            Box(
+                modifier = BUTTON_BOX_MODIFIER
+                    .clickable(onClick = onClick),
+                contentAlignment = ALIGN_CENTER
+            ) {
+                Text(
+                    text = state.speed.displayName,
+                    color = COLOR_WHITE,
+                    fontSize = 12.sp,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp)
+            .then(ROW_BASE_MODIFIER)
             .horizontalScroll(state = rememberScrollState()),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
+        verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         TimeMarkerButton(
             label = "A",
             time = state.timeA,
             onClick = actions.onSetTimeA,
-            modifier = Modifier.padding(horizontal = 4.dp)
+            modifier = PADDING_4_MODIFIER
         )
         Divider()
         TimeMarkerButton(
@@ -240,23 +284,7 @@ fun FeedControls_Container_Line0(
         PlaybackSpeedMenu(
             currentSpeed = state.speed,
             onSpeedSelected = actions.onSpeedChange,
-            trigger = { onClick ->
-                Box(
-                    modifier = Modifier
-                        .height(46.dp)
-                        .width(46.dp)
-                        .clickable(onClick = onClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = state.speed.displayName,
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontFamily = Theme.R.fontFamilyPopinsRegular,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            trigger = triggerContent
         )
     }
 }

@@ -37,10 +37,23 @@ import com.client.xvideos.l.model.lMediaRequestHeaders
 private val ERROR_CONTAINER_SHAPE = RoundedCornerShape(8.dp)
 private val ERROR_BG_COLOR = Color(0xBF000000)
 private val POSTER_PLACEHOLDER_BG = Color(0xFF202020)
+private val COLOR_WHITE = Color.White
+private val COLOR_LIGHT_GRAY = Color.LightGray
 private val ERROR_HORIZONTAL_PADDING = 16.dp
 private val ERROR_VERTICAL_PADDING = 10.dp
 private val ERROR_FONT_SIZE = 14.sp
 private const val TEXT_PLAYBACK_ERROR = "Ошибка воспроизведения"
+private val ENTER_FADE = fadeIn()
+private val EXIT_FADE = fadeOut()
+private val ICON_PLAY_ARROW = Icons.Default.PlayArrow
+private val ALIGN_CENTER = Alignment.Center
+private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val CONTENT_SCALE_FIT = ContentScale.Fit
+private val POSTER_PLACEHOLDER_MODIFIER = Modifier.background(POSTER_PLACEHOLDER_BG)
+private val ERROR_BOX_BASE_MODIFIER = Modifier
+    .clip(ERROR_CONTAINER_SHAPE)
+    .background(ERROR_BG_COLOR)
+    .padding(horizontal = ERROR_HORIZONTAL_PADDING, vertical = ERROR_VERTICAL_PADDING)
 
 /**
  * Видео на странице полноэкранного просмотра L.
@@ -72,7 +85,7 @@ internal fun LFullScreenVideo(
             LFullScreenVideoPoster(
                 previewUrl = previewUrl,
                 albumName = albumName,
-                modifier = Modifier.fillMaxSize()
+                modifier = FULL_SIZE_MODIFIER
             )
         }
         return
@@ -111,7 +124,7 @@ internal fun LFullScreenVideo(
 
     Box(modifier = modifier) {
         VideoPlayerWithMenuContent(
-            modifier = Modifier.fillMaxSize(),
+            modifier = FULL_SIZE_MODIFIER,
             playerHost = playerHost,
             onClick = onTap,
             autoRotate = rotate,
@@ -122,35 +135,33 @@ internal fun LFullScreenVideo(
 
         AnimatedVisibility(
             visible = playerHost.poster || playbackError,
-            enter = fadeIn(),
-            exit = fadeOut()
+            enter = ENTER_FADE,
+            exit = EXIT_FADE
         ) {
             LFullScreenVideoPoster(
                 previewUrl = previewUrl,
                 albumName = albumName,
-                modifier = Modifier.fillMaxSize()
+                modifier = FULL_SIZE_MODIFIER
             )
         }
 
         if (playerHost.poster && !playbackError) {
             CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = Color.LightGray
+                modifier = Modifier.align(ALIGN_CENTER),
+                color = COLOR_LIGHT_GRAY
             )
         }
 
         if (playbackError) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .clip(ERROR_CONTAINER_SHAPE)
-                    .background(ERROR_BG_COLOR)
-                    .padding(horizontal = ERROR_HORIZONTAL_PADDING, vertical = ERROR_VERTICAL_PADDING),
-                contentAlignment = Alignment.Center
+                    .align(ALIGN_CENTER)
+                    .then(ERROR_BOX_BASE_MODIFIER),
+                contentAlignment = ALIGN_CENTER
             ) {
                 Text(
                     text = TEXT_PLAYBACK_ERROR,
-                    color = Color.White,
+                    color = COLOR_WHITE,
                     fontSize = ERROR_FONT_SIZE
                 )
             }
@@ -167,7 +178,7 @@ private fun LFullScreenVideoPoster(
     if (previewUrl.isNotBlank() && !previewUrl.isLVideoFileUrl()) {
         UrlImage(
             url = previewUrl,
-            contentScale = ContentScale.Fit,
+            contentScale = CONTENT_SCALE_FIT,
             modifier = modifier,
             albumName = albumName,
             autoPlay = false,
@@ -175,10 +186,10 @@ private fun LFullScreenVideoPoster(
         )
     } else {
         Box(
-            modifier = modifier.background(POSTER_PLACEHOLDER_BG),
-            contentAlignment = Alignment.Center
+            modifier = modifier.then(POSTER_PLACEHOLDER_MODIFIER),
+            contentAlignment = ALIGN_CENTER
         ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+            Icon(ICON_PLAY_ARROW, contentDescription = null, tint = COLOR_WHITE)
         }
     }
 }

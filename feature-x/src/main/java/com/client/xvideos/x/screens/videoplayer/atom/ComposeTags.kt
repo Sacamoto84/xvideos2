@@ -98,12 +98,18 @@ private val TAG_CHIP_BASE_MODIFIER = Modifier
     .background(TAG_BG_COLOR)
     .border(TAG_BORDER_WIDTH, TAG_BORDER_COLOR, TAG_CHIP_SHAPE)
 
+private val TAG_CHIP_FULL_MODIFIER = TAG_CHIP_BASE_MODIFIER
+    .padding(horizontal = TAG_CHIP_CONTENT_PADDING)
+
 private val TAG_TOGGLE_BASE_MODIFIER = Modifier
     .padding(horizontal = TAG_CHIP_HORIZONTAL_PADDING, vertical = TAG_CHIP_VERTICAL_PADDING)
     .height(TAG_CHIP_HEIGHT)
     .clip(TAG_CHIP_SHAPE)
     .background(TAG_ACTION_BG_COLOR)
     .border(TAG_BORDER_WIDTH, TAG_ACTION_BORDER_COLOR, TAG_CHIP_SHAPE)
+
+private val TAG_TOGGLE_FULL_MODIFIER = TAG_TOGGLE_BASE_MODIFIER
+    .padding(start = TAG_TOGGLE_START_PADDING, end = TAG_TOGGLE_END_PADDING)
 
 private val TAG_CONTAINER_EXPANDED_MODIFIER = Modifier
     .clip(TAG_CONTAINER_SHAPE)
@@ -112,9 +118,9 @@ private val TAG_CONTAINER_EXPANDED_MODIFIER = Modifier
     .padding(horizontal = TAG_CONTAINER_PADDING, vertical = TAG_CONTAINER_PADDING)
     .heightIn(max = TAG_CONTAINER_MAX_HEIGHT)
 
-private val TAG_CHIP_CONTENT_PADDING_MODIFIER = Modifier.padding(horizontal = TAG_CHIP_CONTENT_PADDING)
-private val TAG_TOGGLE_PADDING_MODIFIER = Modifier.padding(start = TAG_TOGGLE_START_PADDING, end = TAG_TOGGLE_END_PADDING)
 private val TAG_TOGGLE_ICON_MODIFIER = Modifier.size(TAG_TOGGLE_ICON_SIZE)
+private val TAG_TOGGLE_ICON_ROTATED_MODIFIER = TAG_TOGGLE_ICON_MODIFIER.rotate(ROTATION_EXPANDED)
+private val TAG_TOGGLE_ICON_DEFAULT_MODIFIER = TAG_TOGGLE_ICON_MODIFIER.rotate(ROTATION_COLLAPSED)
 private val FLOW_ROW_VERTICAL_ARRANGEMENT = Arrangement.Center
 private val FLOW_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.Start
 
@@ -230,7 +236,7 @@ fun ComposeTags(
 
     val scrollState = rememberScrollState()
     val containerModifier = if (tagsState.isExpanded) {
-        TAG_CONTAINER_EXPANDED_MODIFIER.verticalScroll(scrollState)
+        remember(scrollState) { TAG_CONTAINER_EXPANDED_MODIFIER.verticalScroll(scrollState) }
     } else {
         Modifier
     }
@@ -311,9 +317,8 @@ private fun TagChip(
 ) {
     Box(
         modifier = modifier
-            .then(TAG_CHIP_BASE_MODIFIER)
-            .clickable(onClick = onClick)
-            .then(TAG_CHIP_CONTENT_PADDING_MODIFIER),
+            .then(TAG_CHIP_FULL_MODIFIER)
+            .clickable(onClick = onClick),
         contentAlignment = ALIGNMENT_CENTER,
     ) {
         Text(
@@ -333,9 +338,8 @@ private fun TagToggleChip(
 ) {
     Row(
         modifier = modifier
-            .then(TAG_TOGGLE_BASE_MODIFIER)
-            .clickable(onClick = onClick)
-            .then(TAG_TOGGLE_PADDING_MODIFIER),
+            .then(TAG_TOGGLE_FULL_MODIFIER)
+            .clickable(onClick = onClick),
         verticalAlignment = ALIGNMENT_CENTER_VERTICALLY,
     ) {
         Text(
@@ -346,8 +350,7 @@ private fun TagToggleChip(
             imageVector = ARROW_DROP_DOWN_ICON,
             contentDescription = contentDescription,
             tint = COLOR_WHITE,
-            modifier = TAG_TOGGLE_ICON_MODIFIER
-                .rotate(if (isExpanded) ROTATION_EXPANDED else ROTATION_COLLAPSED),
+            modifier = if (isExpanded) TAG_TOGGLE_ICON_ROTATED_MODIFIER else TAG_TOGGLE_ICON_DEFAULT_MODIFIER,
         )
     }
 }

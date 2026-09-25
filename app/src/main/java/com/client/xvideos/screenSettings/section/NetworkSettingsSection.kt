@@ -40,6 +40,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private const val ICON_DNS = R.drawable.ic_dns_24
+private const val ICON_DIAGNOSTICS = R.drawable.diagnostics_24
+private const val ICON_HARD_DISK = R.drawable.hard_disk_24
+
 private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
 private const val DIAGNOSTIC_TEST_HOST = "api.redgifs.com"
 
@@ -139,7 +143,7 @@ internal fun NetworkSettingsSection(
         SettingsSectionTitle(TITLE_DOH)
         SettingsGroup {
             SettingsSwitchRow(
-                icon = R.drawable.ic_dns_24,
+                icon = ICON_DNS,
                 text = TEXT_DOH,
                 subtitle = dohSubtitle,
                 value = dohEnabled,
@@ -184,6 +188,10 @@ private fun DohProviderSelectionGroup(
     val customSubtitle = remember(customUrl) {
         if (customUrl.isNotBlank()) customUrl else HINT_ENTER_URL
     }
+    val radioColors = RadioButtonDefaults.colors(
+        selectedColor = SettingsAccentColor,
+        unselectedColor = RADIO_UNSELECTED_COLOR
+    )
 
     Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_PROVIDER)
@@ -204,6 +212,7 @@ private fun DohProviderSelectionGroup(
                         provider = provider,
                         isSelected = currentProvider == provider,
                         subtitle = subtitle,
+                        radioColors = radioColors,
                         onSelect = onSelectProvider
                     )
                 }
@@ -212,7 +221,7 @@ private fun DohProviderSelectionGroup(
             if (currentProvider == DohProvider.CUSTOM) {
                 SettingsDivider()
                 SettingsListItem(
-                    icon = R.drawable.ic_dns_24,
+                    icon = ICON_DNS,
                     text = TEXT_DOH_SERVER_URL,
                     subtitle = customSubtitle,
                     onClick = onOpenCustomUrlDialog
@@ -227,14 +236,11 @@ private fun DohProviderItem(
     provider: DohProvider,
     isSelected: Boolean,
     subtitle: String,
+    radioColors: androidx.compose.material3.RadioButtonColors,
     onSelect: (DohProvider) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val onClick = remember(provider, onSelect) { { onSelect(provider) } }
-    val radioColors = RadioButtonDefaults.colors(
-        selectedColor = SettingsAccentColor,
-        unselectedColor = RADIO_UNSELECTED_COLOR
-    )
     val trailingContent: @Composable () -> Unit = remember(isSelected, radioColors) {
         {
             RadioButton(
@@ -245,7 +251,7 @@ private fun DohProviderItem(
         }
     }
     SettingsListItem(
-        icon = R.drawable.ic_dns_24,
+        icon = ICON_DNS,
         text = provider.title,
         subtitle = subtitle,
         trailing = trailingContent,
@@ -289,7 +295,7 @@ private fun NetworkParamsGroup(
         SettingsSectionTitle(TITLE_NETWORK_PARAMS)
         SettingsGroup {
             SettingsSwitchRow(
-                icon = R.drawable.ic_dns_24,
+                icon = ICON_DNS,
                 text = TEXT_FALLBACK,
                 subtitle = fallbackSubtitle,
                 value = fallbackToSystem,
@@ -297,7 +303,7 @@ private fun NetworkParamsGroup(
             )
             SettingsDivider()
             SettingsSwitchRow(
-                icon = R.drawable.ic_dns_24,
+                icon = ICON_DNS,
                 text = TEXT_IPV4_ONLY,
                 subtitle = ipv4OnlySubtitle,
                 value = ipv4Only,
@@ -342,14 +348,14 @@ private fun DohDiagnosticsGroup(
         SettingsSectionTitle(TITLE_DIAGNOSTICS)
         SettingsGroup {
             SettingsListItem(
-                icon = R.drawable.diagnostics_24,
+                icon = ICON_DIAGNOSTICS,
                 text = TEXT_CHECK_DNS,
                 subtitle = SUBTITLE_CHECK_DNS,
                 onClick = onDiagnose
             )
             SettingsDivider()
             SettingsListItem(
-                icon = R.drawable.hard_disk_24,
+                icon = ICON_HARD_DISK,
                 text = TEXT_CLEAR_CACHE,
                 subtitle = SUBTITLE_CLEAR_CACHE,
                 onClick = onClearCache
