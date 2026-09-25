@@ -35,7 +35,8 @@ import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import java.util.Locale
 
-private val FIT_MODE_SHAPE = RoundedCornerShape(4.dp)
+private val FIT_MODE_CORNER = 4.dp
+private val FIT_MODE_SHAPE = RoundedCornerShape(FIT_MODE_CORNER)
 private val BOTTOM_BAR_BG = Color(0x73000000)
 
 private val PLAY_PAUSE_ICON_SIZE = 28.dp
@@ -48,6 +49,9 @@ private val BAR_CONTROL_SPACING = 8.dp
 private val FIT_MODE_HORIZONTAL_PADDING = 4.dp
 private val FIT_MODE_VERTICAL_PADDING = 2.dp
 private val TIME_FONT_SIZE = 11.sp
+private val CONTROL_ICON_TINT = Color.White
+private val TIME_TEXT_COLOR = Color.White
+private const val SAFE_MAX_PROGRESS_FALLBACK = 0.1f
 
 private const val CD_PLAY = "Play"
 private const val CD_PAUSE = "Pause"
@@ -119,7 +123,7 @@ fun X_PlayerBottomBar(
         Icon(
             imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
             contentDescription = if (host.isPaused) CD_PLAY else CD_PAUSE,
-            tint = Color.White,
+            tint = CONTROL_ICON_TINT,
             modifier = Modifier
                 .size(PLAY_PAUSE_ICON_SIZE)
                 .clickable(onClick = onTogglePlayPause)
@@ -132,7 +136,7 @@ fun X_PlayerBottomBar(
             ?: 0
         Text(
             text = formatTime(safeCurrentTimeSec),
-            color = Color.White,
+            color = TIME_TEXT_COLOR,
             fontFamily = FontFamily.SansSerif,
             fontSize = TIME_FONT_SIZE
         )
@@ -143,7 +147,7 @@ fun X_PlayerBottomBar(
             .takeIf { it.isFinite() }
             ?.coerceIn(0f, safeTotalTime)
             ?: 0f
-        val safeMaxProgress = if (safeTotalTime > 0f) safeTotalTime else 0.1f
+        val safeMaxProgress = if (safeTotalTime > 0f) safeTotalTime else SAFE_MAX_PROGRESS_FALLBACK
 
         CustomSeekBar(
             modifier = Modifier.weight(1f),
@@ -158,7 +162,7 @@ fun X_PlayerBottomBar(
         // Общее время
         Text(
             text = formattedTotalTime,
-            color = Color.White,
+            color = TIME_TEXT_COLOR,
             fontFamily = FontFamily.SansSerif,
             fontSize = TIME_FONT_SIZE
         )
@@ -173,7 +177,7 @@ fun X_PlayerBottomBar(
         if (isFullScreen) {
             Text(
                 text = if (host.videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT,
-                color = Color.White,
+                color = TIME_TEXT_COLOR,
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
                 fontSize = TIME_FONT_SIZE,
@@ -189,7 +193,7 @@ fun X_PlayerBottomBar(
             Icon(
                 imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
                 contentDescription = if (isFullScreen) CD_EXIT_FULLSCREEN else CD_FULLSCREEN,
-                tint = Color.White,
+                tint = CONTROL_ICON_TINT,
                 modifier = Modifier
                     .size(FULLSCREEN_ICON_SIZE)
                     .clickable(onClick = onFullScreenClick)
@@ -199,13 +203,17 @@ fun X_PlayerBottomBar(
 }
 
 private const val MAX_FORMATTED_SECONDS = 86400 * 7
+private const val SECONDS_PER_HOUR = 3600
+private const val SECONDS_PER_MINUTE = 60
+private const val TIME_FORMAT_WITH_HOURS = "%d:%02d:%02d"
+private const val TIME_FORMAT_MINUTES_ONLY = "%d:%02d"
 
 /** Секунды → `M:SS` (или `H:MM:SS` для длинных видео). */
 internal fun formatTime(totalSeconds: Int): String {
     val validSeconds = totalSeconds.coerceIn(0, MAX_FORMATTED_SECONDS)
-    val hours = validSeconds / 3600
-    val minutes = (validSeconds % 3600) / 60
-    val seconds = validSeconds % 60
-    return if (hours > 0) String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
-    else String.format(Locale.US, "%d:%02d", minutes, seconds)
+    val hours = validSeconds / SECONDS_PER_HOUR
+    val minutes = (validSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+    val seconds = validSeconds % SECONDS_PER_MINUTE
+    return if (hours > 0) String.format(Locale.US, TIME_FORMAT_WITH_HOURS, hours, minutes, seconds)
+    else String.format(Locale.US, TIME_FORMAT_MINUTES_ONLY, minutes, seconds)
 }

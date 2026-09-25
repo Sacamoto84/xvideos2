@@ -15,11 +15,12 @@ fun DialogButton(
     buttonText: String,
     onDismiss: () -> Unit,
     onBlockConfirmed: () -> Unit,
+    destructive: Boolean = true,
     composable: @Composable () -> Unit = {}
 ) {
     if (visible) {
         val bodyAnnotated = remember(body) {
-            if (body.isNotEmpty()) AnnotatedString(body) else null
+            if (body.isNotBlank()) AnnotatedString(body) else null
         }
         val handleConfirm = remember(onBlockConfirmed, onDismiss) {
             {
@@ -38,6 +39,7 @@ fun DialogButton(
             content = dialogContent,
             confirmText = buttonText,
             onConfirm = handleConfirm,
+            destructive = destructive,
         )
     }
 }

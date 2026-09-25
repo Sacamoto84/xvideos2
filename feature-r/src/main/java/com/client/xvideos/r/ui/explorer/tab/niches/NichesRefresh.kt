@@ -35,6 +35,28 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 
+private const val REFRESH_DELAY_MS = 1000L
+private val REFRESH_SPACER_HEIGHT_8 = 8.dp
+private val REFRESH_SPACER_HEIGHT_16 = 16.dp
+private val REFRESH_MINI_HORIZONTAL_PADDING = 8.dp
+private val REFRESH_MINI_VERTICAL_PADDING = 4.dp
+private val REFRESH_INDICATOR_SIZE = 36.dp
+private val REFRESH_ICON_SIZE = 34.dp
+private val REFRESH_ICON_PADDING = 4.dp
+private val REFRESH_TITLE_FONT_SIZE = 20.sp
+private val REFRESH_BUTTON_FONT_SIZE = 18.sp
+private val REFRESH_MINI_FONT_SIZE = 14.sp
+
+private const val TEXT_NO_NICHES = "Отсутствует список Niches"
+private const val TEXT_DOWNLOAD_LIST = "Скачать список "
+private const val CD_REFRESH = "Refresh"
+
+private val NICHES_MESSAGE_STYLE = TextStyle(
+    fontSize = REFRESH_TITLE_FONT_SIZE,
+    color = Color.White,
+    fontFamily = Theme.R.fontFamilyDMsanss
+)
+
 /**
  * Заглушки списка ниш: предложение скачать список и подсказка, что он устарел.
  *
@@ -47,31 +69,32 @@ fun Refresh(
     onRefreshNichesCacheClick: () -> Unit,
     nichesCacheProgress: Float,
     refreshList: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(nichesCacheProgress) {
         if (nichesCacheProgress == 1f) {
-            delay(1000)
+            delay(REFRESH_DELAY_MS)
             refreshList.invoke()
         }
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Theme.tabLevel1),
-        verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(TEXT_NO_NICHES, style = NICHES_MESSAGE_STYLE)
 
-        Text("Отсутствует список Niches", style = styleTest)
-
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_8))
         Button(
             onClick = onRefreshNichesCacheClick,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.R.colorBlue)
         ) {
-            Text("Скачать список ", style = styleTest.copy(fontSize = 18.sp))
+            Text(TEXT_DOWNLOAD_LIST, style = NICHES_MESSAGE_STYLE.copy(fontSize = REFRESH_BUTTON_FONT_SIZE))
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_16))
         LinearWavyProgressIndicator(
             progress = { nichesCacheProgress },
             Modifier.graphicsLayer(
@@ -85,56 +108,54 @@ fun Refresh(
 @Composable
 fun RefreshMini(
     onRefreshNichesCacheClick: () -> Unit,
-    nichesCacheProgress: Float= 0f,
+    nichesCacheProgress: Float = 0f,
     refreshList: () -> Unit = {},
-    cacheHour : Long = 1L
+    cacheHour: Long = 1L,
+    modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(nichesCacheProgress) {
         if (nichesCacheProgress == 1f) {
-            delay(1000)
+            delay(REFRESH_DELAY_MS)
             refreshList.invoke()
         }
     }
 
     Row(
-        modifier = Modifier.padding(horizontal = 8.dp).padding(vertical = 4.dp).fillMaxSize().background(Theme.tabLevel1), verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .padding(horizontal = REFRESH_MINI_HORIZONTAL_PADDING, vertical = REFRESH_MINI_VERTICAL_PADDING)
+            .fillMaxSize()
+            .background(Theme.tabLevel1),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
-    )
-    {
+    ) {
+        Text("Старый список Niches, возраст $cacheHour часов", style = NICHES_MESSAGE_STYLE.copy(fontSize = REFRESH_MINI_FONT_SIZE))
 
-        Text("Старый список Niches, возраст $cacheHour часов", style = styleTest.copy(fontSize = 14.sp))
+        Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_8))
 
-        Spacer(Modifier.height(8.dp))
-
-        Box() {
-
+        Box {
             if (nichesCacheProgress == 0f) {
-                IconButton(onClick = onRefreshNichesCacheClick, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onRefreshNichesCacheClick, modifier = Modifier.size(REFRESH_INDICATOR_SIZE)) {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = CD_REFRESH,
                         tint = Color.White,
-                        modifier = Modifier.size(34.dp).background(
-                            Theme.R.colorBlue,
-                            CircleShape
-                        ).padding(4.dp)
+                        modifier = Modifier
+                            .size(REFRESH_ICON_SIZE)
+                            .background(Theme.R.colorBlue, CircleShape)
+                            .padding(REFRESH_ICON_PADDING)
                     )
                 }
             }
 
-
-
             CircularWavyProgressIndicator(
                 progress = { nichesCacheProgress },
-                Modifier.size(36.dp)
-
+                Modifier
+                    .size(REFRESH_INDICATOR_SIZE)
                     .graphicsLayer(
                         alpha = if (nichesCacheProgress > 0f) 1f else 0f
                     )
             )
-
         }
-
     }
 }
 
@@ -159,9 +180,3 @@ fun RefreshPreview() {
         }
     }
 }
-
-private val styleTest = TextStyle(
-    fontSize = 20.sp,
-    color = Color.White,
-    fontFamily = Theme.R.fontFamilyDMsanss
-)

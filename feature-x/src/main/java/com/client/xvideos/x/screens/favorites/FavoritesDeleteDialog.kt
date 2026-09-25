@@ -14,7 +14,8 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val FAVORITE_POSTER_SHAPE = RoundedCornerShape(8.dp)
+private val FAVORITE_POSTER_CORNER = 8.dp
+private val FAVORITE_POSTER_SHAPE = RoundedCornerShape(FAVORITE_POSTER_CORNER)
 private const val POSTER_ASPECT_RATIO = 352f / 198f
 private val POSTER_WIDTH = 160.dp
 private const val DIALOG_TITLE = "Удалить из избранного?"
@@ -32,6 +33,9 @@ fun ConfirmDeleteFavoriteDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val handleConfirm = remember(onConfirm) { { onConfirm() } }
+    val handleDismiss = remember(onDismiss) { { onDismiss() } }
+
     val iconContent: @Composable () -> Unit = remember(posterUrl) {
         {
             UrlImage(
@@ -46,10 +50,10 @@ fun ConfirmDeleteFavoriteDialog(
 
     LavenderDialog(
         title = DIALOG_TITLE,
-        onDismiss = onDismiss,
+        onDismiss = handleDismiss,
         icon = iconContent,
         confirmText = CONFIRM_TEXT,
-        onConfirm = onConfirm,
+        onConfirm = handleConfirm,
         destructive = true,
     )
 }

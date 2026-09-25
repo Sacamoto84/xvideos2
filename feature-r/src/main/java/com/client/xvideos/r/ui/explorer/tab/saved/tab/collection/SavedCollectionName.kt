@@ -60,6 +60,13 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import timber.log.Timber
 
+private val TOP_BAR_START_PADDING = 4.dp
+private val TOP_BAR_END_PADDING = 8.dp
+private val TITLE_START_PADDING = 4.dp
+private val TITLE_FONT_SIZE = 18.sp
+private const val CD_BACK = "Назад"
+private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+
 class ScreenCollectionName(
     val collectionName: String,
     private val popOnBack: Boolean = false
@@ -98,37 +105,46 @@ class ScreenCollectionName(
             { profileName -> navigator.push(ScreenRedProfile(profileName)) }
         }
 
+        val titleText = selectedCollection ?: collectionName
+
         Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = ZERO_WINDOW_INSETS,
             topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = getTopInsetDp())
-                    .padding(start = 4.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = closeCollection) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Назад",
-                        tint = Theme.R.colorYellow
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = getTopInsetDp())
+                        .padding(start = TOP_BAR_START_PADDING, end = TOP_BAR_END_PADDING),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = closeCollection) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = CD_BACK,
+                            tint = Theme.R.colorYellow
+                        )
+                    }
+                    Text(
+                        text = titleText,
+                        modifier = Modifier.padding(start = TITLE_START_PADDING),
+                        color = Theme.R.colorYellow,
+                        fontSize = TITLE_FONT_SIZE,
+                        fontFamily = Theme.R.fontFamilyPopinsRegular
                     )
                 }
-                Text(
-                    selectedCollection ?: collectionName,
-                    modifier = Modifier.padding(start = 4.dp),
-                    color = Theme.R.colorYellow,
-                    fontSize = 18.sp,
-                    fontFamily = Theme.R.fontFamilyPopinsRegular
-                )
             }
-        }) { padding ->
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center){
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
                 LazyRow123(
                     host = vm.likedHost,
                     modifier = Modifier.fillMaxSize(),
-                    onClickOpenProfile = onClickOpenProfile)
+                    onClickOpenProfile = onClickOpenProfile
+                )
             }
         }
 

@@ -7,6 +7,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
@@ -29,6 +30,12 @@ private const val TEXT_CLEAR_IMAGE_CACHE = "Очистить кэш картин
 private const val TEXT_CLEAR = "Очистить"
 private const val TEXT_ENABLED = "Включён"
 private const val TEXT_DISABLED = "Выключен"
+private const val MSG_DISK_CACHE_ENABLED = "Дисковый кэш включен"
+private const val MSG_DISK_CACHE_DISABLED = "Дисковый кэш выключен"
+private const val MSG_DISK_CACHE_SIZE_PREFIX = "Размер кэша картинок: "
+private const val DIALOG_BODY_PREFIX = "Размер на диске: "
+private const val RAM_CACHE_STEP = 1
+private const val RAM_CACHE_SUFFIX = "%"
 private const val DISK_CACHE_STEP_MB = 50
 private const val DISK_CACHE_SUFFIX_MB = " MB"
 
@@ -39,27 +46,28 @@ internal fun CacheSettingsSection(
     diskCacheSizeMb: Int,
     imageCacheSizeBytes: Long,
     onClearImageCache: () -> Unit,
-    context: Context
+    context: Context,
+    modifier: Modifier = Modifier
 ) {
     val onRamCacheFinished: (Int) -> Unit = remember(context) {
         { value ->
             Settings.image_cache_ram_percent.setValue(value)
             CoilImageLoaderFactory.recreate(context)
-            SnackBar.success("$TEXT_RAM_CACHE: $value%")
+            SnackBar.success("$TEXT_RAM_CACHE: $value$RAM_CACHE_SUFFIX")
         }
     }
     val onDiskCacheToggled: (Boolean) -> Unit = remember(context) {
         { enabled ->
             Settings.image_cache_disk_enabled.setValue(enabled)
             CoilImageLoaderFactory.recreate(context)
-            SnackBar.success(if (enabled) "Дисковый кэш включен" else "Дисковый кэш выключен")
+            SnackBar.success(if (enabled) MSG_DISK_CACHE_ENABLED else MSG_DISK_CACHE_DISABLED)
         }
     }
     val onDiskCacheLimitFinished: (Int) -> Unit = remember(context) {
         { value ->
             Settings.image_cache_disk_size_mb.setValue(value)
             CoilImageLoaderFactory.recreate(context)
-            SnackBar.success("Размер кэша картинок: $value MB")
+            SnackBar.success("$MSG_DISK_CACHE_SIZE_PREFIX$value$DISK_CACHE_SUFFIX_MB")
         }
     }
 
@@ -76,17 +84,17 @@ internal fun CacheSettingsSection(
         if (diskCacheEnabled) TEXT_ENABLED else TEXT_DISABLED
     }
     val clearDialogBody = remember(formattedDiskSize) {
-        "Размер на диске: $formattedDiskSize"
+        "$DIALOG_BODY_PREFIX$formattedDiskSize"
     }
 
-    SettingsGroup {
+    SettingsGroup(modifier = modifier) {
         IntSliderSetting(
             text = TEXT_RAM_CACHE,
             value = normalizedRam,
             min = CoilImageLoaderFactory.MIN_RAM_CACHE_PERCENT,
             max = CoilImageLoaderFactory.MAX_RAM_CACHE_PERCENT,
-            step = 1,
-            suffix = "%",
+            step = RAM_CACHE_STEP,
+            suffix = RAM_CACHE_SUFFIX,
             icon = R.drawable.memory_24,
             onValueChangeFinished = onRamCacheFinished
         )
