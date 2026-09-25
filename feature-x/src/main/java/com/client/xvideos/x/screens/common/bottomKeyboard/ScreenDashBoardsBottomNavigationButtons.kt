@@ -59,11 +59,14 @@ private val COLOR_ACCENT = Color(0xFFFF9000)
 private val COLOR_TEXT_WHITE = Color(0xFFCCCCCC)
 private val COLOR_BLACK_BACKGROUND = Color(0xFF252525)
 private val SELECTED_BORDER_COLOR = Color(0xFFFF9900)
+private val COLOR_DISABLED_TEXT = Color.DarkGray
+private val COLOR_ENABLED_TEXT = Color.Black
 
 private val NAV_BUTTON_HEIGHT = 48.dp
 private val ITEM_PADDING_HORIZONTAL = 0.5.dp
 private val SELECTED_BORDER_WIDTH = 2.dp
 private val ARROW_FONT_SIZE = 24.sp
+private val ARROW_FONT_WEIGHT = FontWeight.Bold
 private const val PAGE_FRACTION = 0.2f
 
 private const val CONTENT_TYPE_PAGE_NUMBER = "page_number_item"
@@ -86,6 +89,9 @@ private val PAGE_BUTTON_BASE_MODIFIER = Modifier
     .padding(horizontal = ITEM_PADDING_HORIZONTAL)
     .height(NAV_BUTTON_HEIGHT)
     .background(COLOR_BLACK_BACKGROUND)
+
+private val LAZY_ROW_MODIFIER = Modifier.fillMaxWidth()
+private val BOX_ALIGNMENT_CENTER = Alignment.Center
 
 /**
  * Bottom navigation buttons
@@ -130,8 +136,8 @@ fun BottomListDashBoardNavigationButtons2(
 
         LazyRow(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
+                .then(LAZY_ROW_MODIFIER),
             state = state
         ) {
             items(
@@ -167,20 +173,20 @@ private fun ArrowNavigationButton(
     modifier: Modifier = Modifier,
 ) {
     val bg = if (!enabled) COLOR_TEXT_BLACK else COLOR_ACCENT
-    val textColor = if (!enabled) Color.DarkGray else Color.Black
+    val textColor = if (!enabled) COLOR_DISABLED_TEXT else COLOR_ENABLED_TEXT
 
     Box(
         modifier = modifier
             .then(ARROW_BUTTON_BASE_MODIFIER)
             .background(bg)
             .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Text(
             text = arrow,
             color = textColor,
             fontSize = ARROW_FONT_SIZE,
-            fontWeight = FontWeight.Bold
+            fontWeight = ARROW_FONT_WEIGHT
         )
     }
 }
@@ -200,7 +206,7 @@ private fun PageNumberButton(
             .then(PAGE_BUTTON_BASE_MODIFIER)
             .then(borderModifier)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Text(text = pageText, color = COLOR_TEXT_WHITE)
     }

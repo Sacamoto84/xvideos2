@@ -31,6 +31,9 @@ private val BUTTON_UP_HEIGHT = 46.dp
 private val DEFAULT_BUTTON_UP_WIDTH = 32.dp
 private val DEFAULT_BUTTON_UP_CIRCLE_SIZE = 46.dp
 private val BUTTON_UP_ICON_TINT = Color.LightGray
+private const val CD_SCROLL_UP = "Вверх"
+private val ARROW_UP_ICON = Icons.Filled.ArrowUpward
+private val BUTTON_UP_ALIGNMENT = Alignment.Center
 
 private val BUTTON_UP_BASE_MODIFIER = Modifier
     .clip(BUTTON_UP_ROUNDED_SHAPE)
@@ -65,11 +68,11 @@ fun ButtonUp(
             .then(sizeModifier)
             .then(BUTTON_UP_BASE_MODIFIER)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BUTTON_UP_ALIGNMENT
     ) {
         Icon(
-            Icons.Filled.ArrowUpward,
-            contentDescription = null,
+            imageVector = ARROW_UP_ICON,
+            contentDescription = CD_SCROLL_UP,
             tint = BUTTON_UP_ICON_TINT
         )
     }
@@ -92,11 +95,11 @@ fun ButtonUpCircle(
             .then(sizeModifier)
             .then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = BUTTON_UP_ALIGNMENT
     ) {
         Icon(
-            Icons.Filled.ArrowUpward,
-            contentDescription = null,
+            imageVector = ARROW_UP_ICON,
+            contentDescription = CD_SCROLL_UP,
             tint = BUTTON_UP_ICON_TINT
         )
     }

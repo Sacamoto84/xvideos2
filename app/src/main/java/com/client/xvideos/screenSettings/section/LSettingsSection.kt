@@ -32,6 +32,7 @@ private const val TAB_L_COLLECTION = "L Collection"
 private const val LOGOUT_CONFIRM_TEMPLATE_PREFIX = "При следующем открытии L нужно будет снова ввести логин и пароль: "
 private const val SNACK_L_PROFILE_CLOSED = "Профиль L закрыт"
 private const val SNACK_THUMBNAIL_PREFIX = "Размер миниатюры: "
+private const val ICON_LUSCIOUS = R.drawable.icon_luscious
 
 @Composable
 internal fun LSettingsSection(
@@ -71,7 +72,7 @@ internal fun LSettingsSection(
 
     SettingsGroup(modifier = modifier) {
         SettingsButtonRowWithDialog(
-            icon = R.drawable.icon_luscious,
+            icon = ICON_LUSCIOUS,
             text = TEXT_PROFILE_L,
             value = loginValueText,
             textDialogTitle = TEXT_LOGOUT_DIALOG_TITLE,
@@ -81,7 +82,7 @@ internal fun LSettingsSection(
         )
         SettingsDivider()
         SettingsValueRow(
-            icon = R.drawable.icon_luscious,
+            icon = ICON_LUSCIOUS,
             text = TEXT_THUMBNAIL_SIZE,
             value = currentDisplayName
         )
@@ -100,5 +101,5 @@ internal fun LSettingsSection(
 @Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun LSettingsSectionPreview() = SettingsPreview {
-    LSettingsSection(lLogin = "preview_user")
+    LSettingsSection(lLogin = "preview_user", modifier = Modifier)
 }

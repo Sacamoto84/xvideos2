@@ -18,6 +18,7 @@ private const val TEXT_TWO_COLUMNS = "2 столбика"
 private const val TEXT_SHEMALE = "Shemale"
 private const val TEXT_ENABLED = "Включено"
 private const val TEXT_DISABLED = "Выключено"
+private const val ICON_XVIDEOS = R.drawable.icon_xvideos_white
 
 @Composable
 internal fun XSettingsSection(
@@ -34,7 +35,7 @@ internal fun XSettingsSection(
 
     SettingsGroup(modifier = modifier) {
         SettingsSwitchRow(
-            icon = R.drawable.icon_xvideos_white,
+            icon = ICON_XVIDEOS,
             text = TEXT_TWO_COLUMNS,
             subtitle = row2Subtitle,
             value = xvideosRow2,
@@ -43,7 +44,7 @@ internal fun XSettingsSection(
         SettingsDivider()
 
         SettingsSwitchRow(
-            icon = R.drawable.icon_xvideos_white,
+            icon = ICON_XVIDEOS,
             text = TEXT_SHEMALE,
             subtitle = shemaleSubtitle,
             value = xvideosShemale,
@@ -55,5 +56,5 @@ internal fun XSettingsSection(
 @Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun XSettingsSectionPreview() = SettingsPreview {
-    XSettingsSection()
+    XSettingsSection(modifier = Modifier)
 }

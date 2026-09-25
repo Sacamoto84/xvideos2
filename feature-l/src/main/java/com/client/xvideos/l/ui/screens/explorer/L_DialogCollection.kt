@@ -54,8 +54,42 @@ private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекци
 private const val TEXT_NO_COLLECTIONS = "Нет коллекций"
 private const val TEXT_CREATE = "Создать"
 
+private val EMPTY_BOX_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(vertical = EMPTY_COLLECTIONS_VERTICAL_PADDING)
+
+private val LAZY_COLUMN_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .heightIn(min = COLLECTION_LIST_MIN_HEIGHT, max = COLLECTION_LIST_MAX_HEIGHT)
+
+private val ITEM_ROW_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(ITEM_OUTER_PADDING)
+    .clip(COLLECTION_ITEM_SHAPE)
+
+private val ITEM_ROW_CONTENT_PADDING_MODIFIER = Modifier.padding(
+    horizontal = ITEM_INNER_HORIZONTAL_PADDING,
+    vertical = ITEM_INNER_VERTICAL_PADDING
+)
+
+private val PREVIEW_BASE_MODIFIER = Modifier
+    .clip(COLLECTION_ITEM_SHAPE)
+    .size(COLLECTION_PREVIEW_SIZE)
+
+private val FOLDER_PLACEHOLDER_BASE_MODIFIER = Modifier
+    .clip(COLLECTION_ITEM_SHAPE)
+    .size(COLLECTION_PREVIEW_SIZE)
+    .background(FOLDER_PLACEHOLDER_BG)
+
+private val FOLDER_ICON_MODIFIER = Modifier.size(FOLDER_ICON_SIZE)
+
+private val ITEM_SPACER_MODIFIER = Modifier.width(ITEM_SPACER_WIDTH)
+
 @Composable
-fun LCollectionDialogs(savedL: SavedL) {
+fun LCollectionDialogs(
+    savedL: SavedL,
+    modifier: Modifier = Modifier,
+) {
     val isAnyDialogOpen = savedL.collection.visibleDialogCreateNew || savedL.collection.visibleDialog
     val onBack = remember(savedL) {
         {
@@ -89,7 +123,10 @@ fun LCollectionDialogs(savedL: SavedL) {
     }
 
     if (savedL.collection.visibleDialog) {
-        L_DialogCollection(savedL)
+        L_DialogCollection(
+            savedL = savedL,
+            modifier = modifier,
+        )
     }
 }
 
@@ -101,7 +138,10 @@ fun LCollectionDialogs(savedL: SavedL) {
  * наружу из корневого экрана.
  */
 @Composable
-fun L_DialogCollection(savedL: SavedL) {
+fun L_DialogCollection(
+    savedL: SavedL,
+    modifier: Modifier = Modifier,
+) {
     val haptic = LocalHapticFeedback.current
     val onDismissDialog: () -> Unit = remember(savedL) { { savedL.collection.visibleDialog = false } }
     val onConfirmCreate: () -> Unit = remember(savedL) {
@@ -125,9 +165,7 @@ fun L_DialogCollection(savedL: SavedL) {
         content = {
             if (savedL.collection.collectionList.isEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = EMPTY_COLLECTIONS_VERTICAL_PADDING),
+                    modifier = EMPTY_BOX_BASE_MODIFIER,
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -141,9 +179,7 @@ fun L_DialogCollection(savedL: SavedL) {
                 val listState = rememberLazyListState()
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = COLLECTION_LIST_MIN_HEIGHT, max = COLLECTION_LIST_MAX_HEIGHT)
+                    modifier = LAZY_COLUMN_BASE_MODIFIER
                 ) {
                     items(
                         count = savedL.collection.collectionList.size,
@@ -156,45 +192,11 @@ fun L_DialogCollection(savedL: SavedL) {
                                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                             }
                         }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(ITEM_OUTER_PADDING)
-                                .clip(COLLECTION_ITEM_SHAPE)
-                                .clickable(onClick = handleItemClick)
-                                .padding(horizontal = ITEM_INNER_HORIZONTAL_PADDING, vertical = ITEM_INNER_VERTICAL_PADDING),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (collectionItem.previewUrl != null) {
-                                UrlImage(
-                                    url = collectionItem.previewUrl,
-                                    modifier = Modifier.clip(COLLECTION_ITEM_SHAPE).size(COLLECTION_PREVIEW_SIZE)
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(COLLECTION_ITEM_SHAPE)
-                                        .size(COLLECTION_PREVIEW_SIZE)
-                                        .background(FOLDER_PLACEHOLDER_BG),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Folder,
-                                        contentDescription = null,
-                                        tint = Theme.DialogLavande.dismissTextColor,
-                                        modifier = Modifier.size(FOLDER_ICON_SIZE)
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.width(ITEM_SPACER_WIDTH))
-                            Text(
-                                text = collectionItem.collection,
-                                color = Color.White,
-                                fontSize = ITEM_TEXT_FONT_SIZE,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = Theme.L.fontFamilyDMsanss
-                            )
-                        }
+                        LCollectionRowItem(
+                            name = collectionItem.collection,
+                            previewUrl = collectionItem.previewUrl,
+                            onClick = handleItemClick
+                        )
                     }
                 }
             }
@@ -202,6 +204,49 @@ fun L_DialogCollection(savedL: SavedL) {
         confirmText = TEXT_CREATE,
         onConfirm = onConfirmCreate,
     )
+}
+
+@Composable
+private fun LCollectionRowItem(
+    name: String,
+    previewUrl: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .then(ITEM_ROW_BASE_MODIFIER)
+            .clickable(onClick = onClick)
+            .then(ITEM_ROW_CONTENT_PADDING_MODIFIER),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (previewUrl != null) {
+            UrlImage(
+                url = previewUrl,
+                modifier = PREVIEW_BASE_MODIFIER
+            )
+        } else {
+            Box(
+                modifier = FOLDER_PLACEHOLDER_BASE_MODIFIER,
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = name,
+                    tint = Theme.DialogLavande.dismissTextColor,
+                    modifier = FOLDER_ICON_MODIFIER
+                )
+            }
+        }
+        Spacer(ITEM_SPACER_MODIFIER)
+        Text(
+            text = name,
+            color = Color.White,
+            fontSize = ITEM_TEXT_FONT_SIZE,
+            fontWeight = FontWeight.Medium,
+            fontFamily = Theme.L.fontFamilyDMsanss
+        )
+    }
 }
 
 internal enum class LCollectionDialogBackAction {

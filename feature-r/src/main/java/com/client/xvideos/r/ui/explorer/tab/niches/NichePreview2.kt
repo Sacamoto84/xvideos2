@@ -59,6 +59,60 @@ private val BUTTON_END_PADDING = 6.dp
 private val BUTTON_BORDER_WIDTH = 1.dp
 private val TITLE_FONT_SIZE = 18.sp
 private val STAT_FONT_SIZE = 16.sp
+private const val CD_SUBSCRIBERS = "Подписчики"
+private const val CD_POSTS = "Публикации"
+
+private val CARD_BASE_MODIFIER = Modifier
+    .padding(horizontal = CARD_HORIZONTAL_PADDING)
+    .fillMaxWidth()
+    .height(CARD_HEIGHT)
+    .clip(NICHE_CARD_SHAPE)
+    .background(Theme.tabLevel3)
+
+private val CARD_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val CARD_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+
+private val THUMBNAIL_BASE_MODIFIER = Modifier
+    .padding(start = IMAGE_START_PADDING)
+    .size(IMAGE_SIZE)
+    .clip(NICHE_IMAGE_SHAPE)
+
+private val CONTENT_COLUMN_BASE_MODIFIER = Modifier
+    .padding(start = CONTENT_START_PADDING, top = CONTENT_VERTICAL_PADDING, bottom = CONTENT_VERTICAL_PADDING)
+    .fillMaxWidth()
+    .fillMaxHeight()
+
+private val CONTENT_COLUMN_ARRANGEMENT = Arrangement.SpaceBetween
+
+private val TITLE_TEXT_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .height(ROW_HEIGHT)
+
+private val STATS_ROW_CONTAINER_MODIFIER = Modifier
+    .fillMaxWidth()
+    .fillMaxHeight()
+
+private val STATS_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val STATS_ROW_VERTICAL_ALIGNMENT = Alignment.Top
+
+private val STAT_ITEM_ROW_MODIFIER = Modifier.height(ROW_HEIGHT)
+private val STAT_ITEM_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+
+private val STAT_ICON_MODIFIER = Modifier.size(STAT_ICON_SIZE)
+private val STAT_TEXT_PADDING_MODIFIER = Modifier.padding(start = STAT_SPACER_PADDING)
+
+private val BUTTON_BASE_MODIFIER = Modifier
+    .padding(end = BUTTON_END_PADDING)
+    .width(BUTTON_WIDTH)
+    .height(BUTTON_HEIGHT)
+    .clip(NICHE_BUTTON_SHAPE)
+
+private val BUTTON_BORDER_MODIFIER = Modifier.border(BUTTON_BORDER_WIDTH, Color.White, NICHE_BUTTON_SHAPE)
+private val BUTTON_ALIGNMENT = Alignment.Center
+
+private val COLOR_LIGHT_GRAY = Color.LightGray
+private val COLOR_WHITE = Color.White
+private val COLOR_BLACK = Color.Black
 
 @Composable
 fun NichePreview2(
@@ -111,91 +165,75 @@ private fun NichePreview2Content(
     val subscribersText = remember(niche.subscribers) { niche.subscribers.toPrettyCountInt() }
     val gifsText = remember(niche.gifs) { niche.gifs.toPrettyCountInt() }
     val buttonText = if (isFollowed) BUTTON_UNFOLLOW_TEXT else BUTTON_FOLLOW_TEXT
-    val buttonTextColor = if (isFollowed) Color.White else Color.Black
+    val buttonTextColor = if (isFollowed) COLOR_WHITE else COLOR_BLACK
     val buttonBgColor = if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow
-    val buttonBorderModifier = remember(isFollowed) {
-        if (isFollowed) Modifier.border(BUTTON_BORDER_WIDTH, Color.White, NICHE_BUTTON_SHAPE) else Modifier
-    }
+    val buttonBorderMod = if (isFollowed) BUTTON_BORDER_MODIFIER else Modifier
 
     Row(
         modifier = modifier
-            .padding(horizontal = CARD_HORIZONTAL_PADDING)
-            .fillMaxWidth()
-            .height(CARD_HEIGHT)
-            .clip(NICHE_CARD_SHAPE)
-            .background(Theme.tabLevel3)
+            .then(CARD_BASE_MODIFIER)
             .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = CARD_VERTICAL_ALIGNMENT,
+        horizontalArrangement = CARD_HORIZONTAL_ARRANGEMENT
     ) {
 
         UrlImage(
             niche.thumbnail,
-            modifier = Modifier
-                .padding(start = IMAGE_START_PADDING)
-                .size(IMAGE_SIZE)
-                .clip(NICHE_IMAGE_SHAPE)
+            modifier = THUMBNAIL_BASE_MODIFIER
         )
 
         Column(
-            modifier = Modifier
-                .padding(start = CONTENT_START_PADDING, top = CONTENT_VERTICAL_PADDING, bottom = CONTENT_VERTICAL_PADDING)
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = CONTENT_COLUMN_BASE_MODIFIER,
+            verticalArrangement = CONTENT_COLUMN_ARRANGEMENT
         ) {
 
             Text(
                 text = niche.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(ROW_HEIGHT),
-                color = Color.White,
+                modifier = TITLE_TEXT_BASE_MODIFIER,
+                color = COLOR_WHITE,
                 fontSize = TITLE_FONT_SIZE,
                 fontFamily = Theme.R.fontFamilyDMsanss
             )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                modifier = STATS_ROW_CONTAINER_MODIFIER,
+                horizontalArrangement = STATS_ROW_HORIZONTAL_ARRANGEMENT,
+                verticalAlignment = STATS_ROW_VERTICAL_ALIGNMENT
             ) {
 
                 Column {
                     Row(
-                        modifier = Modifier.height(ROW_HEIGHT),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = STAT_ITEM_ROW_MODIFIER,
+                        verticalAlignment = STAT_ITEM_VERTICAL_ALIGNMENT
                     ) {
                         Icon(
                             painterResource(R.drawable.members),
-                            contentDescription = null,
-                            modifier = Modifier.size(STAT_ICON_SIZE),
-                            tint = Color.LightGray,
+                            contentDescription = CD_SUBSCRIBERS,
+                            modifier = STAT_ICON_MODIFIER,
+                            tint = COLOR_LIGHT_GRAY,
                         )
                         Text(
                             text = subscribersText,
-                            modifier = Modifier.padding(start = STAT_SPACER_PADDING),
-                            color = Color.LightGray,
+                            modifier = STAT_TEXT_PADDING_MODIFIER,
+                            color = COLOR_LIGHT_GRAY,
                             fontSize = STAT_FONT_SIZE,
                             fontFamily = Theme.R.fontFamilyDMsanss
                         )
                     }
                     Row(
-                        modifier = Modifier.height(ROW_HEIGHT),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = STAT_ITEM_ROW_MODIFIER,
+                        verticalAlignment = STAT_ITEM_VERTICAL_ALIGNMENT
                     ) {
                         Icon(
                             painterResource(R.drawable.posts),
-                            contentDescription = null,
-                            modifier = Modifier.size(STAT_ICON_SIZE),
-                            tint = Color.LightGray,
+                            contentDescription = CD_POSTS,
+                            modifier = STAT_ICON_MODIFIER,
+                            tint = COLOR_LIGHT_GRAY,
                         )
                         Text(
                             text = gifsText,
-                            modifier = Modifier.padding(start = STAT_SPACER_PADDING),
-                            color = Color.LightGray,
+                            modifier = STAT_TEXT_PADDING_MODIFIER,
+                            color = COLOR_LIGHT_GRAY,
                             fontSize = STAT_FONT_SIZE,
                             fontFamily = Theme.R.fontFamilyDMsanss
                         )
@@ -203,15 +241,11 @@ private fun NichePreview2Content(
                 }
 
                 Box(
-                    modifier = Modifier
-                        .padding(end = BUTTON_END_PADDING)
-                        .width(BUTTON_WIDTH)
-                        .height(BUTTON_HEIGHT)
-                        .clip(NICHE_BUTTON_SHAPE)
-                        .then(buttonBorderModifier)
+                    modifier = BUTTON_BASE_MODIFIER
+                        .then(buttonBorderMod)
                         .background(buttonBgColor)
                         .clickable(onClick = onFollowClick),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = BUTTON_ALIGNMENT
                 ) {
                     Text(
                         text = buttonText,

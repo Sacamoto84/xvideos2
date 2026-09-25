@@ -53,6 +53,18 @@ private val SPACER_HEIGHT = 12.dp
 private val CELL_BG_COLOR = Color.DarkGray
 private val MESSAGE_COLOR = Color.Gray
 
+private val SPINNER_MODIFIER = Modifier.size(SPINNER_SIZE)
+private val ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val BOX_FILL_MAX_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val SPACER_MODIFIER = Modifier.height(SPACER_HEIGHT)
+private val CELL_BOX_BASE_MODIFIER = Modifier
+    .aspectRatio(TAG_CARD_ASPECT_RATIO)
+    .padding(CELL_PADDING)
+    .background(CELL_BG_COLOR)
+
+private val ALIGNMENT_CENTER = Alignment.Center
+private val ALIGNMENT_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
+
 /**
  * Одна страница выдачи по тегу.
  *
@@ -105,7 +117,7 @@ fun TagsPaginatedListScreen(
                     onRetry = onRetry
                 )
             } else {
-                CircularProgressIndicator(modifier = Modifier.size(SPINNER_SIZE))
+                CircularProgressIndicator(modifier = SPINNER_MODIFIER)
             }
         }
         return
@@ -129,8 +141,8 @@ fun TagsPaginatedListScreen(
 
     LazyColumn(
         state = listState,
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier.then(BOX_FILL_MAX_SIZE_MODIFIER),
+        horizontalAlignment = ALIGNMENT_CENTER_HORIZONTALLY
     ) {
         if (header != null) {
             item(key = CONTENT_TYPE_TAG_HEADER, contentType = CONTENT_TYPE_TAG_HEADER) {
@@ -145,7 +157,7 @@ fun TagsPaginatedListScreen(
             key = { index, row -> "${index}_${row.first().id}" },
             contentType = { _, _ -> CONTENT_TYPE_TAG_ROW }
         ) { _, row ->
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = ROW_BASE_MODIFIER) {
                 row.forEach { cell ->
                     key(cell.id) {
                         TagGridCell(
@@ -172,9 +184,9 @@ private fun TagsStatusLayout(
     header: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.then(BOX_FILL_MAX_SIZE_MODIFIER)) {
         header?.invoke()
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = BOX_FILL_MAX_SIZE_MODIFIER, contentAlignment = ALIGNMENT_CENTER) {
             content()
         }
     }
@@ -188,10 +200,7 @@ private fun TagGridCell(
 ) {
     val handleOpen = remember(cell, onOpenVideo) { { onOpenVideo(cell) } }
     Box(
-        modifier = modifier
-            .aspectRatio(TAG_CARD_ASPECT_RATIO)
-            .padding(CELL_PADDING)
-            .background(CELL_BG_COLOR)
+        modifier = modifier.then(CELL_BOX_BASE_MODIFIER)
     ) {
         // Жесты как в ленте раздела: тап — превью, долгий тап и
         // двойной — открыть плеер.
@@ -211,10 +220,10 @@ private fun TagsStateMessage(
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = ALIGNMENT_CENTER_HORIZONTALLY
     ) {
         Text(message, color = MESSAGE_COLOR)
-        Spacer(modifier = Modifier.height(SPACER_HEIGHT))
+        Spacer(modifier = SPACER_MODIFIER)
         Button(onClick = onRetry) {
             Text(BUTTON_RETRY_TEXT)
         }

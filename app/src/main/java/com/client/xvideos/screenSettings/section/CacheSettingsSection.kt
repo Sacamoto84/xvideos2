@@ -39,6 +39,10 @@ private const val RAM_CACHE_SUFFIX = "%"
 private const val DISK_CACHE_STEP_MB = 50
 private const val DISK_CACHE_SUFFIX_MB = " MB"
 
+private const val ICON_HARD_DISK = R.drawable.hard_disk_24
+private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
+private const val ICON_MEMORY = R.drawable.memory_24
+
 @Composable
 internal fun CacheSettingsSection(
     ramCachePercent: Int,
@@ -95,13 +99,13 @@ internal fun CacheSettingsSection(
             max = CoilImageLoaderFactory.MAX_RAM_CACHE_PERCENT,
             step = RAM_CACHE_STEP,
             suffix = RAM_CACHE_SUFFIX,
-            icon = R.drawable.memory_24,
+            icon = ICON_MEMORY,
             onValueChangeFinished = onRamCacheFinished
         )
         SettingsDivider()
 
         SettingsSwitchRow(
-            icon = R.drawable.hard_disk_24,
+            icon = ICON_HARD_DISK,
             text = TEXT_DISK_CACHE,
             subtitle = diskCacheSubtitle,
             value = diskCacheEnabled,
@@ -116,21 +120,21 @@ internal fun CacheSettingsSection(
             max = CoilImageLoaderFactory.MAX_DISK_CACHE_SIZE_MB,
             step = DISK_CACHE_STEP_MB,
             suffix = DISK_CACHE_SUFFIX_MB,
-            icon = R.drawable.hard_drive_2_24,
+            icon = ICON_HARD_DRIVE,
             enabled = diskCacheEnabled,
             onValueChangeFinished = onDiskCacheLimitFinished
         )
         SettingsDivider()
 
         SettingsValueRow(
-            icon = R.drawable.hard_disk_24,
+            icon = ICON_HARD_DISK,
             text = TEXT_DISK_CACHE_ON_DISK,
             value = formattedDiskSize
         )
         SettingsDivider()
 
         SettingsButtonRowWithDialog(
-            icon = R.drawable.hard_disk_24,
+            icon = ICON_HARD_DISK,
             text = TEXT_CLEAR_IMAGE_CACHE,
             value = TEXT_CLEAR,
             textDialogTitle = TEXT_CLEAR_IMAGE_CACHE,
@@ -151,6 +155,7 @@ private fun CacheSettingsSectionPreview() = SettingsPreview {
         diskCacheSizeMb = 512,
         imageCacheSizeBytes = 1024L * 1024L * 128L,
         onClearImageCache = {},
-        context = context
+        context = context,
+        modifier = Modifier
     )
 }
