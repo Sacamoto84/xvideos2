@@ -16,15 +16,23 @@ enum class ThumbnailsSize(
     LARGE_THUMBALIST("large_thumbnail", "Small");
 
     companion object {
+        val DEFAULT = SMALL
+
         /**
          * Find ThumbnailsSize by its value
          */
-        fun fromValue(value: String): ThumbnailsSize? = entries.find { it.value == value }
+        fun fromValue(value: String): ThumbnailsSize? {
+            if (value.isEmpty()) return null
+            return entries.find { it.value.equals(value, ignoreCase = true) }
+        }
 
         /**
          * Find ThumbnailsSize by its display name
          */
-        fun fromDisplayName(displayName: String): ThumbnailsSize? = entries.find { it.displayName == displayName }
+        fun fromDisplayName(displayName: String): ThumbnailsSize? {
+            if (displayName.isEmpty()) return null
+            return entries.find { it.displayName.equals(displayName, ignoreCase = true) }
+        }
 
         /**
          * Get all available display names

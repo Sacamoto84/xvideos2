@@ -9,7 +9,7 @@ class ProgressInterceptor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
-        if (originalResponse.code == 204 || originalResponse.code == 304) {
+        if (!originalResponse.isSuccessful || originalResponse.code == 204 || originalResponse.code == 304) {
             return originalResponse
         }
         @Suppress("USELESS_ELVIS")

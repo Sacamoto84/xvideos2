@@ -15,6 +15,12 @@ sealed interface UiMessage {
     data class Warning(override val text: String): UiMessage
 }
 
+val UiMessage.isError: Boolean get() = this is UiMessage.Error
+val UiMessage.isSuccess: Boolean get() = this is UiMessage.Success
+val UiMessage.isWarning: Boolean get() = this is UiMessage.Warning
+val UiMessage.isInfo: Boolean get() = this is UiMessage.Info
+val UiMessage.isNotEmpty: Boolean get() = text.isNotEmpty()
+
 @Immutable
 class UiSnackbarVisuals(
     val ui: UiMessage,
@@ -25,5 +31,6 @@ class UiSnackbarVisuals(
 ) : SnackbarVisuals
 
 suspend fun SnackbarHostState.show(ui: UiMessage) {
+    if (ui.text.isBlank()) return
     showSnackbar(UiSnackbarVisuals(ui))
 }

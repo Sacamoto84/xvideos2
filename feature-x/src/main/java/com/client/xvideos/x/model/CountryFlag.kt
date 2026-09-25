@@ -13,10 +13,12 @@ package com.client.xvideos.x.model
 fun getFlagEmoji(countryCode: String): String {
     if (countryCode.length < 2) return "❓"
     val raw = if (countryCode.startsWith("flag-", ignoreCase = true)) countryCode.substring(5) else countryCode
-    val code = raw.uppercase()
-    if (code.length != 2 || code[0] !in 'A'..'Z' || code[1] !in 'A'..'Z') return "❓"
-    val firstChar = code[0].code - 'A'.code + 0x1F1E6
-    val secondChar = code[1].code - 'A'.code + 0x1F1E6
+    if (raw.length != 2) return "❓"
+    val c0 = raw[0].uppercaseChar()
+    val c1 = raw[1].uppercaseChar()
+    if (c0 !in 'A'..'Z' || c1 !in 'A'..'Z') return "❓"
+    val firstChar = c0.code - 'A'.code + 0x1F1E6
+    val secondChar = c1.code - 'A'.code + 0x1F1E6
     val chars = CharArray(4)
     Character.toChars(firstChar, chars, 0)
     Character.toChars(secondChar, chars, 2)

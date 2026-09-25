@@ -22,6 +22,7 @@ class ProgressResponseBody(
     override fun source(): BufferedSource = bufferedSource
 
     private fun source(source: Source): Source {
+        val totalLength = responseBody.contentLength()
         return object : ForwardingSource(source) {
             var totalBytesRead = 0L
 
@@ -30,7 +31,7 @@ class ProgressResponseBody(
                 totalBytesRead += if (bytesRead != -1L) bytesRead else 0L
                 progressListener(
                     totalBytesRead,
-                    responseBody.contentLength(),
+                    totalLength,
                     bytesRead == -1L
                 )
                 return bytesRead

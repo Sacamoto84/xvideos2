@@ -72,12 +72,14 @@ fun applySubTitleTrackSelection(
 @OptIn(UnstableApi::class)
 fun isHlsUrl(url: String?): Boolean {
     if (url.isNullOrBlank()) return false
-    val cleanUrl = url.substringBefore('?').substringBefore('#').trim()
+    val trimmed = url.trim()
+    if (trimmed.endsWith(".m3u8", ignoreCase = true)) return true
+    val cleanUrl = trimmed.substringBefore('?').substringBefore('#').trim()
     if (cleanUrl.endsWith(".m3u8", ignoreCase = true)) {
         return true
     }
     return runCatching {
-        val uri = android.net.Uri.parse(url)
+        val uri = android.net.Uri.parse(trimmed)
         Util.inferContentType(uri) == C.CONTENT_TYPE_HLS
     }.getOrDefault(false)
 }

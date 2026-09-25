@@ -14,9 +14,11 @@ import com.client.xvideos.common.settings.element.SettingElementList
  */
 fun ColumnSelect_AddColumn(pref: SettingElementInt, list: SettingElementList<Boolean>) {
     val flags = list.field.value
+    if (flags.isEmpty()) return
     val enabledIndices = flags.mapIndexedNotNull { index, enabled -> if (enabled && index in 1..4) index else null }
     if (enabledIndices.isEmpty()) return
     val currentIndex = pref.field.value
+    if (enabledIndices.size == 1 && enabledIndices[0] == currentIndex) return
     val currentPos = enabledIndices.indexOf(currentIndex)
     val nextPos = if (currentPos == -1) 0 else (currentPos + 1) % enabledIndices.size
 

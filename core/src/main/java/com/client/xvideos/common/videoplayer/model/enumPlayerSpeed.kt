@@ -9,13 +9,21 @@ enum class PlayerSpeed(val speed: Float, val displayName: String) {
     X1_5(1.5f, "1.5x"),
     X2(2.0f, "2.0x");
 
+    val isNormal: Boolean get() = this == X1
+
     companion object {
         val DEFAULT = X1
+
+        fun fromSpeed(speed: Float): PlayerSpeed =
+            entries.find { it.speed == speed } ?: DEFAULT
     }
 }
 
 enum class ScreenResize {
-    FIT, FILL
+    FIT, FILL;
+
+    val isFit: Boolean get() = this == FIT
+    val isFill: Boolean get() = this == FILL
 }
 
 enum class PlayerOption {
