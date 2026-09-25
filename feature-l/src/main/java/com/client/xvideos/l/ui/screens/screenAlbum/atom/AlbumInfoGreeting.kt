@@ -25,29 +25,39 @@ import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
 import com.client.xvideos.l.model.Tag
 
-private val GENRE_CHIP_SHAPE = RoundedCornerShape(4.dp)
+private val GENRE_CHIP_CORNER = 4.dp
+private val GENRE_CHIP_SHAPE = RoundedCornerShape(GENRE_CHIP_CORNER)
+private val CHIP_BORDER_WIDTH = 1.dp
+private val CHIP_HORIZONTAL_PADDING = 2.dp
+private val CHIP_VERTICAL_PADDING = 2.dp
+private val CHIP_CONTENT_PADDING = 4.dp
+private val HEADER_VERTICAL_PADDING = 4.dp
+private val HEADER_FONT_SIZE = 16.sp
+private val GENRE_FONT_SIZE = 14.sp
 private const val LABEL_GENRES = "Genres: "
 
 @Composable
 fun AlbumInfoGreeting(
     parsed: AlbumDetails,
-    onGenreClick: (Genre) -> Unit = {}
+    onGenreClick: (Genre) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     val headerStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = HEADER_FONT_SIZE)
     }
     val genreTextStyle = remember(Theme.L.Type.rowValue, Theme.L.primaryColor) {
-        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = 14.sp)
+        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = GENRE_FONT_SIZE)
     }
 
     FlowRow(
+        modifier = modifier,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = LABEL_GENRES,
             color = Theme.L.textColor,
             style = headerStyle,
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = HEADER_VERTICAL_PADDING)
         )
 
         parsed.genres.forEach { item ->
@@ -56,11 +66,11 @@ fun AlbumInfoGreeting(
                 Text(
                     text = item.title,
                     modifier = Modifier
-                        .padding(horizontal = 2.dp, vertical = 2.dp)
-                        .border(1.dp, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
+                        .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
+                        .border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
                         .clip(GENRE_CHIP_SHAPE)
                         .clickable(onClick = handleClick)
-                        .padding(4.dp),
+                        .padding(CHIP_CONTENT_PADDING),
                     color = Theme.L.primaryColor,
                     style = genreTextStyle
                 )

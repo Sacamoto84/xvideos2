@@ -17,10 +17,13 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val NICHE_ICON_SHAPE = RoundedCornerShape(8.dp)
+private val NICHE_ICON_CORNER = 8.dp
+private val NICHE_ICON_SHAPE = RoundedCornerShape(NICHE_ICON_CORNER)
 private val NICHE_ICON_SIZE = 96.dp
 private const val DIALOG_TITLE = "Удалить группу?"
 private const val CONFIRM_TEXT = "Удалить"
+private const val TEXT_DELETE_NICHE_PREFIX = "Удалить «"
+private const val TEXT_DELETE_NICHE_SUFFIX = "» из сохранённых?"
 
 @Composable
 fun DialogNicheDelete(
@@ -34,9 +37,9 @@ fun DialogNicheDelete(
         }
         val dialogBody = remember(pending.name) {
             buildAnnotatedString {
-                append("Удалить «")
+                append(TEXT_DELETE_NICHE_PREFIX)
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                append("» из сохранённых?")
+                append(TEXT_DELETE_NICHE_SUFFIX)
             }
         }
         val iconContent: @Composable () -> Unit = remember(pending.thumbnail) {

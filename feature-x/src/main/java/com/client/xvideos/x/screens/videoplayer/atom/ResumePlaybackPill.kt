@@ -19,13 +19,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val PILL_SHAPE = RoundedCornerShape(20.dp)
-private val PILL_BUTTON_SHAPE = RoundedCornerShape(6.dp)
+private val PILL_CORNER = 20.dp
+private val PILL_SHAPE = RoundedCornerShape(PILL_CORNER)
+private val PILL_BUTTON_CORNER = 6.dp
+private val PILL_BUTTON_SHAPE = RoundedCornerShape(PILL_BUTTON_CORNER)
 private val PILL_BG_COLOR = Color(0xDD212121)
 private val PILL_RESTART_COLOR = Color(0xFFFF5252)
 private val PILL_FONT_SIZE = 13.sp
 private val PILL_SHADOW_ELEVATION = 4.dp
 private val PILL_TONAL_ELEVATION = 6.dp
+private val PILL_ROW_HORIZONTAL_PADDING = 14.dp
+private val PILL_ROW_VERTICAL_PADDING = 7.dp
+private val PILL_SPACER_WIDTH = 10.dp
+private val PILL_BUTTON_HORIZONTAL_PADDING = 4.dp
+private val PILL_BUTTON_VERTICAL_PADDING = 2.dp
 private const val BUTTON_RESTART_TEXT = "С начала"
 
 /**
@@ -44,7 +51,7 @@ fun ResumePlaybackPill(
         tonalElevation = PILL_TONAL_ELEVATION,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+            modifier = Modifier.padding(horizontal = PILL_ROW_HORIZONTAL_PADDING, vertical = PILL_ROW_VERTICAL_PADDING),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -52,7 +59,7 @@ fun ResumePlaybackPill(
                 color = Color.White,
                 fontSize = PILL_FONT_SIZE,
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(PILL_SPACER_WIDTH))
             Text(
                 text = BUTTON_RESTART_TEXT,
                 color = PILL_RESTART_COLOR,
@@ -61,7 +68,7 @@ fun ResumePlaybackPill(
                 modifier = Modifier
                     .clip(PILL_BUTTON_SHAPE)
                     .clickable(onClick = onRestart)
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                    .padding(horizontal = PILL_BUTTON_HORIZONTAL_PADDING, vertical = PILL_BUTTON_VERTICAL_PADDING)
             )
         }
     }

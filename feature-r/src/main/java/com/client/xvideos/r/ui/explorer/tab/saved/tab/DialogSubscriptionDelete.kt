@@ -24,12 +24,16 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.common.saved.SelectedCreator
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val SUBSCRIPTION_AVATAR_SHAPE = RoundedCornerShape(8.dp)
+private val SUBSCRIPTION_AVATAR_CORNER = 8.dp
+private val SUBSCRIPTION_AVATAR_SHAPE = RoundedCornerShape(SUBSCRIPTION_AVATAR_CORNER)
 private val SUBSCRIPTION_AVATAR_PLACEHOLDER_BG = Color.DarkGray
 private val AVATAR_BOX_SIZE = 96.dp
 private val PERSON_ICON_SIZE = 32.dp
+private val PERSON_ICON_TINT = Color.White
 private const val DIALOG_TITLE = "Удалить подписку?"
 private const val CONFIRM_TEXT = "Удалить"
+private const val TEXT_DELETE_AUTHOR_PREFIX = "Удалить автора «"
+private const val TEXT_DELETE_AUTHOR_SUFFIX = "» из подписок?"
 
 @Composable
 fun DialogSubscriptionDelete(
@@ -43,9 +47,9 @@ fun DialogSubscriptionDelete(
         }
         val dialogBody = remember(pending.name) {
             buildAnnotatedString {
-                append("Удалить автора «")
+                append(TEXT_DELETE_AUTHOR_PREFIX)
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                append("» из подписок?")
+                append(TEXT_DELETE_AUTHOR_SUFFIX)
             }
         }
         val iconContent: @Composable () -> Unit = remember(pending.urlProfile) {
@@ -65,7 +69,7 @@ fun DialogSubscriptionDelete(
                             Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.size(PERSON_ICON_SIZE),
-                            tint = Color.White
+                            tint = PERSON_ICON_TINT
                         )
                     }
                 }

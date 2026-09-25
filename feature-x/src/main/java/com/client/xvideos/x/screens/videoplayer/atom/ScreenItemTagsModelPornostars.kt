@@ -20,8 +20,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val PORNOSTAR_TAG_SHAPE = RoundedCornerShape(6.dp)
-private val COUNT_BADGE_SHAPE = RoundedCornerShape(4.dp)
+private val PORNOSTAR_TAG_CORNER = 6.dp
+private val PORNOSTAR_TAG_SHAPE = RoundedCornerShape(PORNOSTAR_TAG_CORNER)
+private val COUNT_BADGE_CORNER = 4.dp
+private val COUNT_BADGE_SHAPE = RoundedCornerShape(COUNT_BADGE_CORNER)
 private val COUNT_BADGE_BG = Color(0x33000000)
 
 private val TAG_HEIGHT = 28.dp
@@ -45,10 +47,11 @@ fun ScreenItemTagsModelPornostars(
     text: String,
     color: Color,
     count: String,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val hasCount = remember(count) { count.isNotBlank() }
-    val baseModifier = Modifier
+    val baseModifier = modifier
         .padding(horizontal = TAG_PADDING_HORIZONTAL, vertical = TAG_PADDING_VERTICAL)
         .height(TAG_HEIGHT)
         .clip(PORNOSTAR_TAG_SHAPE)

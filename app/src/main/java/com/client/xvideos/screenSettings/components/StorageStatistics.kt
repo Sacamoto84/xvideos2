@@ -29,7 +29,8 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.util.formatBytes
 import java.io.File
 
-private val PROGRESS_SHAPE = RoundedCornerShape(6.dp)
+private val PROGRESS_CORNER = 6.dp
+private val PROGRESS_SHAPE = RoundedCornerShape(PROGRESS_CORNER)
 private const val TEXT_TOTAL_DATA = "Всего данных"
 private const val SUBTITLE_X = "XVideos"
 private const val SUBTITLE_L = "Luscious"
@@ -39,6 +40,8 @@ private val STORAGE_ROW_VERTICAL_PADDING = 12.dp
 private val PROGRESS_BAR_HEIGHT = 6.dp
 private val ICON_SPACER_WIDTH = 16.dp
 private val SUBTITLE_SPACER_HEIGHT = 4.dp
+private const val PROGRESS_COERCE_MIN = 0f
+private const val PROGRESS_COERCE_MAX = 1f
 
 @Immutable
 internal data class StorageStat(
@@ -61,10 +64,13 @@ internal val EmptyStorageStats = listOf(
 )
 
 @Composable
-internal fun StorageStatisticsSection(stats: List<StorageStat>) {
+internal fun StorageStatisticsSection(
+    stats: List<StorageStat>,
+    modifier: Modifier = Modifier
+) {
     val totalBytes = remember(stats) { stats.sumOf { it.sizeBytes } }
     val formattedTotal = remember(totalBytes) { formatBytes(totalBytes) }
-    SettingsGroup {
+    SettingsGroup(modifier = modifier) {
         SettingsValueRow(
             icon = R.drawable.icon_red,
             text = TEXT_TOTAL_DATA,
@@ -75,7 +81,7 @@ internal fun StorageStatisticsSection(stats: List<StorageStat>) {
             key(stat.key) {
                 SettingsDivider()
                 val progress = if (totalBytes > 0L) {
-                    (stat.sizeBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+                    (stat.sizeBytes.toFloat() / totalBytes.toFloat()).coerceIn(PROGRESS_COERCE_MIN, PROGRESS_COERCE_MAX)
                 } else {
                     0f
                 }
@@ -98,23 +104,27 @@ private fun StorageStatisticsSectionPreview() = SettingsPreview {
 }
 
 @Composable
-internal fun StorageProgressRow(stat: StorageStat, progress: Float) {
+internal fun StorageProgressRow(
+    stat: StorageStat,
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
     val formattedSize = remember(stat.sizeBytes) { formatBytes(stat.sizeBytes) }
     val subtitleText = remember(stat.key, stat.fileCount) {
         "${sectionSubtitle(stat.key)} \u2022 файлов: ${stat.fileCount}"
     }
-    val rowTitleStyle = remember {
+    val rowTitleStyle = remember(Theme.L.Type.rowTitle) {
         Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
     }
-    val rowSubtitleStyle = remember {
+    val rowSubtitleStyle = remember(Theme.L.Type.rowSubtitle) {
         Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
     }
-    val captionStyle = remember {
+    val captionStyle = remember(Theme.L.Type.caption) {
         Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(SettingsCardColor)
             .padding(horizontal = STORAGE_ROW_HORIZONTAL_PADDING, vertical = STORAGE_ROW_VERTICAL_PADDING),
