@@ -11,6 +11,7 @@ class SettingElementString(private val sharedPrefs: SharedPreferences, val name:
     val field: StateFlow<String> = _field.asStateFlow()
 
     fun setValue(value: String) {
+        if (_field.value == value && sharedPrefs.contains(name)) return
         sharedPrefs.edit { putString(name, value) }
         _field.value = value
     }

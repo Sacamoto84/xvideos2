@@ -27,6 +27,9 @@ class R_Saved_Creator(
                 .onSuccess {
                     withContext(Dispatchers.Main) {
                         val existingIndex = list.indexOfFirst { it.username == item.username }
+                        if (existingIndex == list.lastIndex && list[existingIndex] == item) {
+                            return@withContext
+                        }
                         if (existingIndex >= 0) {
                             list.removeAt(existingIndex)
                         }
@@ -67,7 +70,11 @@ class R_Saved_Creator(
                 .onSuccess {
                     Timber.i("R_Saved_Creator updateIfSaved() id:${item.username}")
                     withContext(Dispatchers.Main) {
-                        val idx = list.indexOfFirst { it.username == item.username }
+                        val idx = if (index < list.size && list[index].username == item.username) {
+                            index
+                        } else {
+                            list.indexOfFirst { it.username == item.username }
+                        }
                         if (idx != -1) {
                             list[idx] = item
                         }

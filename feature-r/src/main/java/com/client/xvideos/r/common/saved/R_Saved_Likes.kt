@@ -37,6 +37,9 @@ class R_Saved_Likes(
                 .onSuccess {
                     withContext(Dispatchers.Main) {
                         val existingIndex = list.indexOfFirst { it.id == safeItem.id }
+                        if (existingIndex == list.lastIndex && list[existingIndex] == safeItem) {
+                            return@withContext
+                        }
                         if (existingIndex >= 0) {
                             list.removeAt(existingIndex)
                         }

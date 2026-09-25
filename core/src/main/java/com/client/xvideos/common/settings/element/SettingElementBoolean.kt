@@ -11,6 +11,7 @@ class SettingElementBoolean(private val sharedPrefs: SharedPreferences, val name
     val field: StateFlow<Boolean> = _field.asStateFlow()
 
     fun setValue(value: Boolean) {
+        if (_field.value == value && sharedPrefs.contains(name)) return
         sharedPrefs.edit { putBoolean(name, value) }
         _field.value = value
     }

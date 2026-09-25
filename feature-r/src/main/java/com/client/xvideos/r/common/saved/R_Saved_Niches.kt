@@ -26,6 +26,9 @@ class R_Saved_Niches(
                 .onSuccess {
                     withContext(Dispatchers.Main) {
                         val existingIndex = list.indexOfFirst { it.id == item.id }
+                        if (existingIndex == list.lastIndex && list[existingIndex] == item) {
+                            return@withContext
+                        }
                         if (existingIndex >= 0) {
                             list.removeAt(existingIndex)
                         }

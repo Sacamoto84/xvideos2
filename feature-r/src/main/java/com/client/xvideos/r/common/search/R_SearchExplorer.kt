@@ -59,7 +59,17 @@ class R_SearchExplorer @Inject constructor(
 
             redApi.getTagSuggestions(request)
                 .onFailure { Timber.w(it, "R_SearchExplorer: подсказки тегов не пришли") }
-                .map { list -> list.map { s -> SuggestionItem(text = s.text, count = s.gifs) } }
+                .map { list ->
+                    if (list.isEmpty()) {
+                        emptyList()
+                    } else {
+                        val result = ArrayList<SuggestionItem>(list.size)
+                        for (s in list) {
+                            result.add(SuggestionItem(text = s.text, count = s.gifs))
+                        }
+                        result
+                    }
+                }
                 .getOrDefault(emptyList())
         } catch (e: CancellationException) {
             // Ввод продолжился — mapLatest отменил эту ветку штатно, ошибки нет.

@@ -57,7 +57,22 @@ fun PicsDetails.lFullScreenImageUrls(): List<String> {
     val fallbackOriginal = url_to_original
         ?.takeIf { thumbnails.isEmpty() && it.isNotBlank() && !it.isLVideoFileUrl() }
 
-    return (listOfNotNull(localOriginal) + thumbnails + listOfNotNull(fallbackOriginal)).distinct()
+    val capacity = thumbnails.size + (if (localOriginal != null) 1 else 0) + (if (fallbackOriginal != null) 1 else 0)
+    if (capacity == 0) return emptyList()
+
+    val result = ArrayList<String>(capacity)
+    if (localOriginal != null) {
+        result.add(localOriginal)
+    }
+    for (thumb in thumbnails) {
+        if (thumb != localOriginal) {
+            result.add(thumb)
+        }
+    }
+    if (fallbackOriginal != null && fallbackOriginal != localOriginal) {
+        result.add(fallbackOriginal)
+    }
+    return result
 }
 
 fun PicsDetails.lImageMediaUrl(): String? {
@@ -103,24 +118,9 @@ fun PicsDetails.lSavedFileName(): String? {
     return candidate.replace("..", "_")
 }
 
-fun lMediaRequestHeaders(): Map<String, String> {
-    return mapOf(
-        "User-Agent" to L_MEDIA_USER_AGENT,
-        "Referer" to "https://www.luscious.net/",
-        "Origin" to "https://www.luscious.net",
-        "Accept" to "*/*",
-        "Accept-Encoding" to "identity",
-        "Accept-Language" to "ru,en;q=0.9"
-    )
-}
+fun lMediaRequestHeaders(): Map<String, String> = L_MEDIA_REQUEST_HEADERS
 
-fun lMediaDownloadHeaders(): HashMap<String, List<String>> {
-    return HashMap<String, List<String>>().apply {
-        lMediaRequestHeaders()
-            .filterKeys { it != "User-Agent" }
-            .forEach { (key, value) -> put(key, listOf(value)) }
-    }
-}
+fun lMediaDownloadHeaders(): HashMap<String, List<String>> = HashMap(L_MEDIA_DOWNLOAD_HEADERS)
 
 fun lMediaUserAgent(): String = L_MEDIA_USER_AGENT
 
@@ -151,6 +151,21 @@ private fun String.isLocalImagePath(): Boolean {
 private const val L_MEDIA_USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36"
 
+private val L_MEDIA_REQUEST_HEADERS: Map<String, String> = mapOf(
+    "User-Agent" to L_MEDIA_USER_AGENT,
+    "Referer" to "https://www.luscious.net/",
+    "Origin" to "https://www.luscious.net",
+    "Accept" to "*/*",
+    "Accept-Encoding" to "identity",
+    "Accept-Language" to "ru,en;q=0.9"
+)
+
+private val L_MEDIA_DOWNLOAD_HEADERS: HashMap<String, List<String>> = HashMap<String, List<String>>().apply {
+    L_MEDIA_REQUEST_HEADERS
+        .filterKeys { it != "User-Agent" }
+        .forEach { (key, value) -> put(key, listOf(value)) }
+}
+
 private val ANCHOR_ID_REGEX = Regex("""/id/(\d+)""")
 
 /**
@@ -159,12 +174,11 @@ private val ANCHOR_ID_REGEX = Regex("""/id/(\d+)""")
  */
 fun PicsDetails.extractAnchorId(): String? {
     if (!id.isNullOrBlank()) return id.trim()
-    val allUrls = listOfNotNull(url, url_to_original, url_to_video) + thumbnails.orEmpty().mapNotNull { it.url }
-    for (candidate in allUrls) {
-        val match = ANCHOR_ID_REGEX.find(candidate)
-        if (match != null) {
-            return match.groupValues[1]
-        }
+    url?.let { ANCHOR_ID_REGEX.find(it)?.groupValues?.getOrNull(1) }?.let { return it }
+    url_to_original?.let { ANCHOR_ID_REGEX.find(it)?.groupValues?.getOrNull(1) }?.let { return it }
+    url_to_video?.let { ANCHOR_ID_REGEX.find(it)?.groupValues?.getOrNull(1) }?.let { return it }
+    thumbnails?.forEach { thumb ->
+        thumb.url?.let { ANCHOR_ID_REGEX.find(it)?.groupValues?.getOrNull(1) }?.let { return it }
     }
     return null
 }

@@ -87,12 +87,12 @@ abstract class ISearchTemplate(
 
     suspend fun add(text: String) {
         val trimmed = text.trim()
-        if (trimmed.isNotBlank()) dao.insertAndTrim(trimmed)
+        if (trimmed.isNotEmpty()) dao.insertAndTrim(trimmed)
     }
 
     suspend fun delete(text: String) {
         val trimmed = text.trim()
-        if (trimmed.isNotBlank()) dao.deleteByTexts(trimmed)
+        if (trimmed.isNotEmpty()) dao.deleteByTexts(trimmed)
     }
 
     suspend fun clear() = dao.deleteAll()

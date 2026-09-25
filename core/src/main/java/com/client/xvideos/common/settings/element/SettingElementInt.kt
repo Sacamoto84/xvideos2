@@ -11,6 +11,7 @@ class SettingElementInt(private val sharedPrefs: SharedPreferences, val name: St
     val field: StateFlow<Int> = _field.asStateFlow()
 
     fun setValue(value: Int) {
+        if (_field.value == value && sharedPrefs.contains(name)) return
         sharedPrefs.edit { putInt(name, value) }
         _field.value = value
     }

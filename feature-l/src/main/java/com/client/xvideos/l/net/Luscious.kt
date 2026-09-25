@@ -74,5 +74,7 @@ private val ALBUM_ID_REGEX = Regex("(?:^|/)albums/(?:[^/]*_)?(\\d+)")
 
 // Вспомогательная функция для извлечения ID из URL
 internal fun extractIdFromUrl(url: String): String? {
-    return ALBUM_ID_REGEX.find(url.trim())?.groupValues?.get(1)
+    val trimmed = url.trim()
+    if (!trimmed.contains("albums/")) return null
+    return ALBUM_ID_REGEX.find(trimmed)?.groupValues?.getOrNull(1)
 }
