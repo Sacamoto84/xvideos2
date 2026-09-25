@@ -158,14 +158,13 @@ class AndroidConnectivityObserver(
     }
 
     private fun unregisterNetworkCallback() {
-        networkCallback?.let { callback ->
-            try {
-                connectivityManager?.unregisterNetworkCallback(callback)
-                Timber.d("unregisterNetworkCallback success")
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to unregister network callback")
-            }
-            networkCallback = null
+        val callback = networkCallback ?: return
+        networkCallback = null
+        try {
+            connectivityManager?.unregisterNetworkCallback(callback)
+            Timber.d("unregisterNetworkCallback success")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to unregister network callback")
         }
     }
 }

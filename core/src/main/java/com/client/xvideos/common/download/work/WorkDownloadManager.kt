@@ -61,9 +61,11 @@ class WorkDownloadManager @Inject constructor(
 
     /** Отменить загрузку по уникальному ID или тегу. */
     fun cancelByTag(tag: String) {
-        Timber.i("WorkDownloadManager: Отмена загрузок по тегу $tag")
-        workManager.cancelAllWorkByTag(tag)
-        workManager.cancelUniqueWork(tag)
+        val trimmed = tag.trim()
+        if (trimmed.isEmpty()) return
+        Timber.i("WorkDownloadManager: Отмена загрузок по тегу $trimmed")
+        workManager.cancelAllWorkByTag(trimmed)
+        workManager.cancelUniqueWork(trimmed)
     }
 
     /** Отменить все текущие и запланированные загрузки. */
@@ -80,13 +82,15 @@ class WorkDownloadManager @Inject constructor(
 
     /** Наблюдать за состоянием загрузок с заданным тегом. */
     fun observeDownloadsByTag(tag: String): Flow<List<DownloadWorkState>> {
-        return workManager.getWorkInfosByTagFlow(tag)
-            .map { list -> list.map { DownloadWorkState.fromWorkInfo(it) } }
+        val trimmed = tag.trim()
+        if (trimmed.isEmpty()) return kotlinx.coroutines.flow.flowOf(emptyList())
+        return workManager.getWorkInfosByTagFlow(trimmed)
+            .map { list -> if (list.isEmpty()) emptyList() else list.map { DownloadWorkState.fromWorkInfo(it) } }
     }
 
     /** Наблюдать за всеми активными и недавними загрузками. */
     fun observeAllDownloads(): Flow<List<DownloadWorkState>> {
         return workManager.getWorkInfosByTagFlow(MediaDownloadWorker.WORK_TAG_DOWNLOAD)
-            .map { list -> list.map { DownloadWorkState.fromWorkInfo(it) } }
+            .map { list -> if (list.isEmpty()) emptyList() else list.map { DownloadWorkState.fromWorkInfo(it) } }
     }
 }

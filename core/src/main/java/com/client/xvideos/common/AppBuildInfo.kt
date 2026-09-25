@@ -20,6 +20,9 @@ object AppBuildInfo {
     var versionName: String = "?"
         private set
 
+    val isInitialized: Boolean
+        get() = versionName != "?"
+
     fun init(debug: Boolean, versionName: String) {
         this.debug = debug
         this.versionName = versionName

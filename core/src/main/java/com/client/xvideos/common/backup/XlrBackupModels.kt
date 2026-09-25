@@ -12,19 +12,29 @@ import androidx.compose.runtime.Immutable
  */
 @Immutable
 data class XlrBackupReport(
-    val files: Int,
-    val bytes: Long
-)
+    val files: Int = 0,
+    val bytes: Long = 0L
+) {
+    val isEmpty: Boolean get() = files == 0 && bytes == 0L
+    val isNotEmpty: Boolean get() = !isEmpty
+
+    companion object {
+        val EMPTY = XlrBackupReport(0, 0L)
+    }
+}
 
 @Immutable
 data class XlrBackupItem(
     val path: String,
     val title: String,
     val section: String,
-    val parentPath: String?,
-    val files: Int,
-    val bytes: Long
-)
+    val parentPath: String? = null,
+    val files: Int = 0,
+    val bytes: Long = 0L
+) {
+    val isEmpty: Boolean get() = files == 0 && bytes == 0L
+    val isNotEmpty: Boolean get() = !isEmpty
+}
 
 enum class XlrBackupContentMode {
     FULL,
@@ -35,4 +45,13 @@ enum class XlrBackupContentMode {
 data class XlrBackupOptions(
     val lMode: XlrBackupContentMode = XlrBackupContentMode.MINI,
     val rMode: XlrBackupContentMode = XlrBackupContentMode.MINI
-)
+) {
+    val isFullBackup: Boolean get() = lMode == XlrBackupContentMode.FULL && rMode == XlrBackupContentMode.FULL
+    val isMiniBackup: Boolean get() = lMode == XlrBackupContentMode.MINI && rMode == XlrBackupContentMode.MINI
+
+    companion object {
+        val DEFAULT = XlrBackupOptions()
+        val FULL = XlrBackupOptions(XlrBackupContentMode.FULL, XlrBackupContentMode.FULL)
+        val MINI = XlrBackupOptions(XlrBackupContentMode.MINI, XlrBackupContentMode.MINI)
+    }
+}

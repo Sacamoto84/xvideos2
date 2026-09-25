@@ -23,10 +23,15 @@ object AppContextHolder {
     @Volatile
     private var context: Context? = null
 
+    val isInitialized: Boolean
+        get() = context != null
+
     val applicationContext: Context
         get() = requireNotNull(context) {
             "AppContextHolder не инициализирован — вызовите init() в Application.onCreate()"
         }
+
+    fun getOrNull(): Context? = context
 
     fun init(context: Context) {
         this.context = context.applicationContext

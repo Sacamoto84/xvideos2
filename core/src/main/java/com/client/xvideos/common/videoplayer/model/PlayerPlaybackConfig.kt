@@ -13,7 +13,7 @@ import com.client.xvideos.common.videoplayer.util.VideoQuality
  */
 @Immutable
 data class PlayerPlaybackConfig(
-    val url: String,
+    val url: String = "",
     val isPause: Boolean = false,
     val isSliding: Boolean = false,
     val seekToTime: Float? = null,
@@ -27,7 +27,15 @@ data class PlayerPlaybackConfig(
     val selectedQuality: VideoQuality? = null,
     val autoRotate: Boolean = false,
     val playFromTime: Float? = null,
-)
+) {
+    val isValid: Boolean get() = url.isNotBlank()
+    val isEmpty: Boolean get() = url.isEmpty()
+    val isNotEmpty: Boolean get() = url.isNotEmpty()
+
+    companion object {
+        val EMPTY = PlayerPlaybackConfig()
+    }
+}
 
 /**
  * Колбэки событий воспроизведения для [com.client.xvideos.common.videoplayer.util.CMPPlayer2].
@@ -40,7 +48,11 @@ data class PlayerPlaybackCallbacks(
     val didEndVideo: () -> Unit = {},
     val error: (MediaPlayerError) -> Unit = {},
     val poster: (Boolean) -> Unit = {}
-)
+) {
+    companion object {
+        val EMPTY = PlayerPlaybackCallbacks()
+    }
+}
 
 /**
  * Конвертирует состояние [MediaPlayerHost] в неизменяемый [PlayerPlaybackConfig].

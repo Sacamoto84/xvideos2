@@ -25,9 +25,23 @@ data class DownloadWorkState(
     val error: String? = null,
 ) {
     val isFinished: Boolean
-        get() = status == DownloadStatus.SUCCEEDED ||
-            status == DownloadStatus.FAILED ||
-            status == DownloadStatus.CANCELLED
+        get() = when (status) {
+            DownloadStatus.SUCCEEDED, DownloadStatus.FAILED, DownloadStatus.CANCELLED -> true
+            DownloadStatus.ENQUEUED, DownloadStatus.RUNNING -> false
+        }
+
+    val isRunning: Boolean get() = status == DownloadStatus.RUNNING
+    val isSuccessful: Boolean get() = status == DownloadStatus.SUCCEEDED
+    val isFailed: Boolean get() = status == DownloadStatus.FAILED
+    val isCancelled: Boolean get() = status == DownloadStatus.CANCELLED
+
+    val progressFraction: Float
+        get() = when {
+            status == DownloadStatus.SUCCEEDED -> 1f
+            totalBytes > 0L -> (bytesDownloaded.toFloat() / totalBytes).coerceIn(0f, 1f)
+            progress > 0 -> (progress / 100f).coerceIn(0f, 1f)
+            else -> 0f
+        }
 
     companion object {
         fun fromWorkInfo(workInfo: WorkInfo): DownloadWorkState {

@@ -37,6 +37,10 @@ class StorageCleanupGate @Inject constructor() {
         }
     }
 
+    val isStarted: Boolean get() = job != null
+    val isCompleted: Boolean get() = job?.isCompleted ?: true
+    val isActive: Boolean get() = job?.isActive ?: false
+
     /**
      * Ждёт завершения уборки. Возвращается сразу, если она не запускалась —
      * так выглядит процесс без `App.onCreate` (unit-тесты, Compose Preview).
@@ -45,6 +49,9 @@ class StorageCleanupGate @Inject constructor() {
      * идёт», а не «уборка удалась». Ошибка уже в журнале.
      */
     suspend fun await() {
-        job?.join()
+        val currentJob = job
+        if (currentJob != null && currentJob.isActive) {
+            currentJob.join()
+        }
     }
 }

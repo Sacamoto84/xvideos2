@@ -14,7 +14,16 @@ data class TrafficData(
     val sessionDownloaded: Long = 0L, // за сессию скачано
     val sessionUploaded: Long = 0L, // за сессию загружено
     val isSupported: Boolean = true
-)
+) {
+    val totalSessionTraffic: Long get() = sessionDownloaded + sessionUploaded
+    val totalOverallTraffic: Long get() = totalDownloaded + totalUploaded
+    val isIdle: Boolean get() = downloadSpeed == 0L && uploadSpeed == 0L
+
+    companion object {
+        val EMPTY = TrafficData()
+        val UNSUPPORTED = TrafficData(isSupported = false)
+    }
+}
 
 @Singleton
 class NetworkTrafficMonitor @Inject constructor() {
