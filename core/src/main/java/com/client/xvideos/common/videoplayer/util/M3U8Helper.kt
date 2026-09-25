@@ -21,7 +21,14 @@ data class M3U8Data(
     val videoQualities: List<VideoQuality>,
     val audioTracks: List<AudioTrack>,
     val subtitleTracks: List<SubtitleTrack>
-)
+) {
+    val isEmpty: Boolean get() = videoQualities.isEmpty() && audioTracks.isEmpty() && subtitleTracks.isEmpty()
+    val isNotEmpty: Boolean get() = !isEmpty
+
+    companion object {
+        val EMPTY = M3U8Data(emptyList(), emptyList(), emptyList())
+    }
+}
 
 private val BANDWIDTH_REGEX = Regex("BANDWIDTH=(\\d+)")
 private val RESOLUTION_REGEX = Regex("RESOLUTION=(\\d+x\\d+)")
@@ -39,8 +46,6 @@ private val REDGIFS_REQUEST_HEADERS = mapOf(
     HttpHeaders.AcceptEncoding to "identity",
     HttpHeaders.AcceptLanguage to "ru,en;q=0.9"
 )
-
-private val EMPTY_M3U8_DATA = M3U8Data(emptyList(), emptyList(), emptyList())
 
 private val sharedM3U8Client: HttpClient by lazy {
     HttpClient(OkHttp) {
@@ -83,8 +88,8 @@ class M3U8Helper {
     }
 
     internal fun parseM3U8Content(m3u8Content: String, baseUrl: String): M3U8Data {
-        if (m3u8Content.isBlank()) {
-            return EMPTY_M3U8_DATA
+        if (isInvalidM3U8Content(m3u8Content)) {
+            return M3U8Data.EMPTY
         }
         val videoQualities = mutableListOf<VideoQuality>()
         val audioTracks = mutableListOf<AudioTrack>()
@@ -92,24 +97,47 @@ class M3U8Helper {
 
         var lastQualityLine: String? = null
         for (line in m3u8Content.lineSequence()) {
-            when {
-                line.startsWith("#EXT-X-STREAM-INF") -> lastQualityLine = line
-                lastQualityLine != null && !line.startsWith("#") -> {
-                    extractQuality(lastQualityLine, line, baseUrl)?.let { videoQualities.add(it) }
-                    lastQualityLine = null
-                }
-                line.startsWith("#EXT-X-MEDIA") && line.contains("TYPE=AUDIO") ->
-                    extractAudioTrack(line, baseUrl)?.let { audioTracks.add(it) }
-                line.startsWith("#EXT-X-MEDIA") && line.contains("TYPE=SUBTITLES") ->
-                    extractSubtitleTrack(line, baseUrl)?.let { subtitleTracks.add(it) }
+            if (line.isEmpty()) continue
+            if (line.startsWith("#EXT-X-STREAM-INF")) {
+                lastQualityLine = line
+            } else if (lastQualityLine != null && !line.startsWith("#")) {
+                extractQuality(lastQualityLine, line, baseUrl)?.let { videoQualities.add(it) }
+                lastQualityLine = null
+            } else if (line.startsWith("#EXT-X-MEDIA")) {
+                processMediaLine(line, baseUrl, audioTracks, subtitleTracks)
             }
         }
         return M3U8Data(
-            videoQualities.sortedBy { it.bitrate },
-            audioTracks.distinctBy { it.name },
-            subtitleTracks.distinctBy { it.name }
+            sortQualities(videoQualities),
+            distinctAudioTracks(audioTracks),
+            distinctSubtitleTracks(subtitleTracks)
         )
     }
+
+    private fun isInvalidM3U8Content(content: String): Boolean =
+        content.isBlank() || (!content.contains("#EXTM3U") && !content.contains("#EXT-X-"))
+
+    private fun processMediaLine(
+        line: String,
+        baseUrl: String,
+        audioTracks: MutableList<AudioTrack>,
+        subtitleTracks: MutableList<SubtitleTrack>
+    ) {
+        if (line.contains("TYPE=AUDIO")) {
+            extractAudioTrack(line, baseUrl)?.let { audioTracks.add(it) }
+        } else if (line.contains("TYPE=SUBTITLES")) {
+            extractSubtitleTrack(line, baseUrl)?.let { subtitleTracks.add(it) }
+        }
+    }
+
+    private fun sortQualities(list: List<VideoQuality>): List<VideoQuality> =
+        if (list.size <= 1) list else list.sortedBy { it.bitrate }
+
+    private fun distinctAudioTracks(list: List<AudioTrack>): List<AudioTrack> =
+        if (list.size <= 1) list else list.distinctBy { it.name }
+
+    private fun distinctSubtitleTracks(list: List<SubtitleTrack>): List<SubtitleTrack> =
+        if (list.size <= 1) list else list.distinctBy { it.name }
 
     private fun resolveUrl(baseUrl: String, relativeOrAbsolute: String): String {
         val trimmed = relativeOrAbsolute.trim()

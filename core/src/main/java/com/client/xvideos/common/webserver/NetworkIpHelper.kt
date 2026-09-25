@@ -45,13 +45,15 @@ object NetworkIpHelper {
     }
 
     private fun findInterfaceIp(): String? {
-        val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
+        val interfaces = NetworkInterface.getNetworkInterfaces()?.let { Collections.list(it) }.orEmpty()
         val prioritized = interfaces.sortedByDescending { getInterfacePriority(it.name.lowercase()) }
 
         for (nif in prioritized) {
             val name = nif.name.lowercase()
-            if (isIgnoredInterface(name) || !nif.isUp || nif.isLoopback) continue
-            for (addr in Collections.list(nif.inetAddresses)) {
+            val priority = getInterfacePriority(name)
+            if (priority < 0 || !nif.isUp || nif.isLoopback) continue
+            val addresses = nif.inetAddresses?.let { Collections.list(it) }.orEmpty()
+            for (addr in addresses) {
                 if (addr is Inet4Address && !addr.isLoopbackAddress && !addr.isLinkLocalAddress) {
                     val host = addr.hostAddress
                     if (!host.isNullOrBlank()) return host
@@ -99,5 +101,8 @@ object NetworkIpHelper {
         }.getOrDefault("Wi-Fi")
     }
 
-    fun buildServerUrl(ip: String, port: Int): String = "http://$ip:$port"
+    fun buildServerUrl(ip: String, port: Int): String {
+        if (ip.isEmpty()) return ""
+        return "http://$ip:$port"
+    }
 }

@@ -8,4 +8,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TagsResponse(
     @SerialName("tags") val tags: List<TagInfo> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = tags.isEmpty()
+    val isNotEmpty: Boolean get() = tags.isNotEmpty()
+    val size: Int get() = tags.size
+
+    companion object {
+        val EMPTY = TagsResponse()
+    }
+}

@@ -14,10 +14,15 @@ import kotlin.math.round
  * 123.456f.toTwoDecimalPlacesWithColon()// "123:46"
  * ```
  */
+private val TWO_DIGIT_FRACS: Array<String> = Array(100) { frac ->
+    if (frac < 10) "0$frac" else "$frac"
+}
+
 fun Float.toTwoDecimalPlacesWithColon(): String {
     if (this.isNaN() || this.isInfinite() || this <= 0f) return "0:00"
     val totalHundredths = round(this * 100f).toLong()
     val whole = totalHundredths / 100L
     val frac = (totalHundredths % 100L).toInt()
-    return if (frac < 10) "$whole:0$frac" else "$whole:$frac"
+    val fracStr = if (frac in 0..99) TWO_DIGIT_FRACS[frac] else if (frac < 10) "0$frac" else "$frac"
+    return "$whole:$fracStr"
 }

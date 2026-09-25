@@ -19,6 +19,7 @@ import java.util.Locale
 fun String.capitalizeEachWord(): String {
     if (isEmpty()) return ""
     if (length == 1) return uppercase(Locale.getDefault())
+    if (isBlank()) return this
     val lower = lowercase(Locale.getDefault())
     val sb = StringBuilder(lower.length)
     var capitalizeNext = true

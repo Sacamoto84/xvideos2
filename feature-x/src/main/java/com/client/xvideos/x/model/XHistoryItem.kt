@@ -41,8 +41,17 @@ data class XHistoryItem(
      */
     val progressFraction: Float
         get() = when {
-            isCompleted -> 1f
-            totalDurationMs > 0L -> (lastPositionMs.toFloat() / totalDurationMs).coerceIn(0f, 1f)
-            else -> 0f
+            isCompleted || (totalDurationMs > 0L && lastPositionMs >= totalDurationMs) -> 1f
+            lastPositionMs <= 0L || totalDurationMs <= 0L -> 0f
+            else -> (lastPositionMs.toFloat() / totalDurationMs).coerceIn(0f, 1f)
         }
+
+    val remainingMs: Long get() = (totalDurationMs - lastPositionMs).coerceAtLeast(0L)
+    val isValid: Boolean get() = item.id > 0L
+    val isEmpty: Boolean get() = item.id <= 0L
+    val isNotEmpty: Boolean get() = item.id > 0L
+
+    companion object {
+        val EMPTY = XHistoryItem()
+    }
 }

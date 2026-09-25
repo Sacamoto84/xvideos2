@@ -19,15 +19,15 @@ object LocalMediaResolver {
 
     fun resolveVideo(section: String, id: String): Pair<File, String>? {
         val safeId = sanitizeId(id) ?: return null
-        return when (section.lowercase()) {
-            "x" -> {
+        return when {
+            section.equals("x", ignoreCase = true) -> {
                 val dir = File(AppPath.x_cache_download)
                 val file = File(dir, "$safeId.mp4")
                 if (isSafeInside(file, dir) && file.exists()) {
                     Pair(file, "x_$safeId.mp4")
                 } else null
             }
-            "r" -> {
+            section.equals("r", ignoreCase = true) -> {
                 val file = resolveRVideoFile(safeId) ?: return null
                 Pair(file, "r_$safeId.mp4")
             }
@@ -37,13 +37,13 @@ object LocalMediaResolver {
 
     fun resolvePoster(section: String, id: String): File? {
         val safeId = sanitizeId(id) ?: return null
-        return when (section.lowercase()) {
-            "x" -> {
+        return when {
+            section.equals("x", ignoreCase = true) -> {
                 val dir = File(AppPath.x_cache_download)
                 val file = File(dir, "$safeId.jpg")
                 if (isSafeInside(file, dir) && file.exists()) file else null
             }
-            "r" -> resolveRPosterFile(safeId)
+            section.equals("r", ignoreCase = true) -> resolveRPosterFile(safeId)
             else -> null
         }
     }
@@ -54,6 +54,7 @@ object LocalMediaResolver {
 
         val searchDirs = arrayOf(File(AppPath.l_likes), File(AppPath.l_albums))
         for (baseDir in searchDirs) {
+            if (!baseDir.exists() || !baseDir.isDirectory) continue
             resolveMediaInBaseDir(baseDir, safeFolder, safeFile)?.let { return it }
         }
         val colRoot = File(AppPath.l_collection)
@@ -81,9 +82,9 @@ object LocalMediaResolver {
 
     fun resolveCollectionCover(section: String, collectionName: String): File? {
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: return null
-        return when (section.lowercase()) {
-            "r" -> resolveRCollectionCover(safeName)
-            "l" -> resolveLCollectionCover(safeName)
+        return when {
+            section.equals("r", ignoreCase = true) -> resolveRCollectionCover(safeName)
+            section.equals("l", ignoreCase = true) -> resolveLCollectionCover(safeName)
             else -> null
         }
     }
@@ -220,6 +221,7 @@ object LocalMediaResolver {
     }
 
     internal fun encodePathSegment(raw: String): String {
+        if (raw.isEmpty()) return ""
         return runCatching {
             URLEncoder.encode(raw, Charsets.UTF_8.name()).replace("+", "%20")
         }.getOrDefault(raw)
@@ -230,11 +232,12 @@ object LocalMediaResolver {
         return runCatching {
             val fileCanonical = file.canonicalPath
             val baseCanonical = baseDir.canonicalPath
-            fileCanonical.startsWith(baseCanonical + File.separator) || fileCanonical == baseCanonical
+            fileCanonical == baseCanonical || fileCanonical.startsWith(baseCanonical + File.separator)
         }.getOrDefault(false)
     }
 
     private fun sanitizeId(raw: String): String? {
+        if (raw.isEmpty()) return null
         val cleaned = raw.trim()
         if (cleaned.isEmpty() || !SAFE_ID_REGEX.matches(cleaned)) return null
         return cleaned

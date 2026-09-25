@@ -9,14 +9,20 @@ object VideoDiskCacheCleaner {
 
     fun clearLegacyCaches(context: Context) {
         val appContext = context.applicationContext
-        val cacheDir = appContext.cacheDir
+        val cacheDir = appContext.cacheDir ?: return
+        if (!cacheDir.exists()) return
 
         for (dirName in legacyCacheDirs) {
-            File(cacheDir, dirName).deleteRecursively()
+            val target = File(cacheDir, dirName)
+            if (target.exists()) {
+                target.deleteRecursively()
+            }
         }
 
         for (databaseName in legacyCacheDatabases) {
-            appContext.deleteDatabase(databaseName)
+            runCatching {
+                appContext.deleteDatabase(databaseName)
+            }
         }
     }
 }
