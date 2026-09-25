@@ -34,12 +34,14 @@ object NetworkIpHelper {
             caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
         if (!isLocalTransport) return null
 
-        val linkProps = cm.getLinkProperties(activeNetwork)
-        return linkProps?.linkAddresses
-            ?.map { it.address }
-            ?.filterIsInstance<Inet4Address>()
-            ?.firstOrNull { !it.isLoopbackAddress && it.isSiteLocalAddress }
-            ?.hostAddress
+        val linkProps = cm.getLinkProperties(activeNetwork) ?: return null
+        for (linkAddress in linkProps.linkAddresses) {
+            val addr = linkAddress.address
+            if (addr is Inet4Address && !addr.isLoopbackAddress && addr.isSiteLocalAddress) {
+                return addr.hostAddress
+            }
+        }
+        return null
     }
 
     private fun findInterfaceIp(): String? {

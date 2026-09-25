@@ -66,16 +66,10 @@ class NetworkTrafficMonitor @Inject constructor() {
         if (monitoringJob?.isActive == true) return
 
         monitoringJob = scope.launch {
-            flow {
-                while (currentCoroutineContext().isActive) {
-                    emit(calculateTrafficData())
-                    delay(timeout) // Обновление каждую 2 секунду
-                }
+            while (isActive) {
+                _trafficFlow.value = calculateTrafficData()
+                delay(timeout)
             }
-                .flowOn(Dispatchers.IO)
-                .collect { trafficData ->
-                    _trafficFlow.value = trafficData
-                }
         }
     }
 

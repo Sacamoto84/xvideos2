@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.text.contains
 
 @Singleton
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -63,9 +62,14 @@ class R_SearchNiches @Inject constructor(
 
             // distinctBy гарантирует уникальность по тексту, даже если count
             // немного отличается.
-            (remoteResults + localResults)
-                .distinctBy { it.text.lowercase() }
-                .sortedByDescending { it.count }
+            val combinedMap = LinkedHashMap<String, SuggestionItem>(remoteResults.size + localResults.size)
+            for (item in remoteResults) {
+                combinedMap.putIfAbsent(item.text.lowercase(), item)
+            }
+            for (item in localResults) {
+                combinedMap.putIfAbsent(item.text.lowercase(), item)
+            }
+            combinedMap.values.sortedByDescending { it.count }
         } catch (e: CancellationException) {
             // Ввод продолжился — mapLatest отменил эту ветку штатно, ошибки нет.
             throw e

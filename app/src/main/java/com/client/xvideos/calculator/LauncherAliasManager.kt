@@ -22,6 +22,10 @@ object LauncherAliasManager {
         val calculatorComponent = ComponentName(context, CALCULATOR_ALIAS)
 
         try {
+            val currentCalculatorState = packageManager.getComponentEnabledSetting(calculatorComponent)
+            val isAlreadyEnabled = currentCalculatorState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            if (enabled == isAlreadyEnabled) return
+
             if (enabled) {
                 // Сначала включаем псевдоним калькулятора, затем отключаем основной сплэш
                 packageManager.setComponentEnabledSetting(

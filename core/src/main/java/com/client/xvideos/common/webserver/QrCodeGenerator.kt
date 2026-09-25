@@ -11,6 +11,14 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import timber.log.Timber
 
+private val DEFAULT_HINTS = mapOf(
+    EncodeHintType.CHARACTER_SET to "UTF-8",
+    EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+    EncodeHintType.MARGIN to 1
+)
+
+private val qrCodeWriter = QRCodeWriter()
+
 object QrCodeGenerator {
 
     /**
@@ -23,12 +31,16 @@ object QrCodeGenerator {
     ): BitMatrix? {
         if (content.isBlank()) return null
         return runCatching {
-            val hints = mapOf(
-                EncodeHintType.CHARACTER_SET to "UTF-8",
-                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
-                EncodeHintType.MARGIN to margin
-            )
-            QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, sizePx, sizePx, hints)
+            val hints = if (margin == 1) {
+                DEFAULT_HINTS
+            } else {
+                mapOf(
+                    EncodeHintType.CHARACTER_SET to "UTF-8",
+                    EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+                    EncodeHintType.MARGIN to margin
+                )
+            }
+            qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, sizePx, sizePx, hints)
         }.onFailure {
             Timber.e(it, "QrCodeGenerator: ошибка генерации QR-кода")
         }.getOrNull()
