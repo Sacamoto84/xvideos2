@@ -84,6 +84,7 @@ private fun parseColonDuration(text: String): Long {
 }
 
 fun parseDurationToMs(raw: String): Long {
+    if (raw.isBlank()) return 0L
     val text = raw.trim().lowercase()
     if (text.isBlank()) return 0L
 

@@ -11,7 +11,15 @@ data class NichesResponse(
     @SerialName("page") val page: Int = 0,
     @SerialName("pages") val pages: Int = 0,
     @SerialName("total") val total: Int = 0
-)
+) {
+    val isEmpty: Boolean get() = niches.isEmpty()
+    val isNotEmpty: Boolean get() = niches.isNotEmpty()
+    val hasMorePages: Boolean get() = page < pages
+
+    companion object {
+        val EMPTY = NichesResponse()
+    }
+}
 
 /**
  * ```kotlin
@@ -45,14 +53,28 @@ data class Niche(
     @SerialName("subscribers") val subscribers: Long = 0L,
     @SerialName("thumbnail") val thumbnail: String = "",
     @SerialName("previews") val previews: List<Preview>? = null
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank()
+    val isEmpty: Boolean get() = id.isEmpty()
+    val isNotEmpty: Boolean get() = id.isNotEmpty()
+
+    companion object {
+        val EMPTY = Niche()
+    }
+}
 
 @Immutable
 @Serializable
 data class Preview(
     @SerialName("id") val id: String = "",
     @SerialName("thumbnail") val thumbnail: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && thumbnail.isNotBlank()
+
+    companion object {
+        val EMPTY = Preview()
+    }
+}
 
 
 

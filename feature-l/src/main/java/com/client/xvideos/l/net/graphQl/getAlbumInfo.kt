@@ -52,6 +52,7 @@ private val GET_ALBUM_INFO_QUERY = """
 """.trimIndent()
 
 fun getAlbumInfo(albumId: Int): String {
+    if (albumId <= 0) return ""
     val json = buildJsonObject {
         put("query", GET_ALBUM_INFO_QUERY)
         putJsonObject("variables") {

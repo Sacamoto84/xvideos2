@@ -220,4 +220,29 @@ class RSerializationCompatibilityTest {
         assertEquals("disk_niche", niche.id)
         assertEquals(100L, niche.gifs)
     }
+
+    @Test
+    fun `NichesInfo and NichesResponse helper properties operate correctly`() {
+        val emptyNiche = NichesInfo.EMPTY
+        assertEquals(true, emptyNiche.isEmpty)
+        assertEquals(false, emptyNiche.isNotEmpty)
+        assertEquals(false, emptyNiche.isValid)
+        assertEquals(null, emptyNiche.cover)
+        assertEquals("", emptyNiche.description)
+
+        val validNiche = NichesInfo(id = "niche-1", name = "Niche 1")
+        assertEquals(false, validNiche.isEmpty)
+        assertEquals(true, validNiche.isNotEmpty)
+        assertEquals(true, validNiche.isValid)
+
+        val emptyResponse = NichesResponse.EMPTY
+        assertEquals(true, emptyResponse.isEmpty)
+        assertEquals(false, emptyResponse.isNotEmpty)
+        assertEquals(false, emptyResponse.hasMorePages)
+
+        val pagedResponse = NichesResponse(niches = listOf(Niche(id = "n1")), page = 1, pages = 3)
+        assertEquals(false, pagedResponse.isEmpty)
+        assertEquals(true, pagedResponse.isNotEmpty)
+        assertEquals(true, pagedResponse.hasMorePages)
+    }
 }

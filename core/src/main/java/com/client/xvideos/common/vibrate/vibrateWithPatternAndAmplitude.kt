@@ -7,6 +7,9 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import timber.log.Timber
 
+private val VIBRATION_PATTERN = longArrayOf(0, 25, 50, 50)
+private val VIBRATION_AMPLITUDES = intArrayOf(0, 255, 0, 127)
+
 fun vibrateWithPatternAndAmplitude(context: Context) {
     val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
@@ -17,14 +20,11 @@ fun vibrateWithPatternAndAmplitude(context: Context) {
 
     if (!vibrator.hasVibrator()) return
 
-    val pattern = longArrayOf(0, 25, 50, 50)
-    val amplitudes = intArrayOf(0, 255, 0, 127)
-
     runCatching {
         val effect = if (vibrator.hasAmplitudeControl()) {
-            VibrationEffect.createWaveform(pattern, amplitudes, -1)
+            VibrationEffect.createWaveform(VIBRATION_PATTERN, VIBRATION_AMPLITUDES, -1)
         } else {
-            VibrationEffect.createWaveform(pattern, -1)
+            VibrationEffect.createWaveform(VIBRATION_PATTERN, -1)
         }
         vibrator.vibrate(effect)
     }.onFailure { e ->

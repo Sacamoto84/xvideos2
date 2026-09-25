@@ -7,8 +7,14 @@ import kotlinx.serialization.Serializable
 @Immutable
 @Serializable
 data class NicheResponse(
-    @SerialName("niche") val niche: NichesInfo
-)
+    @SerialName("niche") val niche: NichesInfo = NichesInfo.EMPTY
+) {
+    val isValid: Boolean get() = niche.isValid
+
+    companion object {
+        val EMPTY = NicheResponse()
+    }
+}
 
 /**
  * ```json
@@ -40,13 +46,21 @@ data class NicheResponse(
 @Immutable
 @Serializable
 data class NichesInfo(
-    @SerialName("cover") val cover: String? = "cover",           //Большая широкая картинка
-    @SerialName("description") val description: String = "description",
+    @SerialName("cover") val cover: String? = null,           //Большая широкая картинка
+    @SerialName("description") val description: String = "",
     @SerialName("gifs") val gifs: Long = -1,
     @SerialName("id") val id: String = "",
     @SerialName("name") val name: String = "",
-    @SerialName("owner") val owner: String = "owner",
+    @SerialName("owner") val owner: String = "",
     @SerialName("subscribers") val subscribers: Long = -1,
-    @SerialName("thumbnail") val thumbnail: String = "thumbnail", //200x200 картинка
-    @SerialName("rules") val rules: String? = "rules",
-)
+    @SerialName("thumbnail") val thumbnail: String = "", //200x200 картинка
+    @SerialName("rules") val rules: String? = null,
+) {
+    val isValid: Boolean get() = id.isNotBlank()
+    val isEmpty: Boolean get() = id.isEmpty()
+    val isNotEmpty: Boolean get() = id.isNotEmpty()
+
+    companion object {
+        val EMPTY = NichesInfo()
+    }
+}

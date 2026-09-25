@@ -65,6 +65,7 @@ class XSiteTest {
         assertEquals(754_000L, parseDurationToMs("12:34"))
         assertEquals(3_665_000L, parseDurationToMs("01:01:05"))
         assertEquals(0L, parseDurationToMs(""))
+        assertEquals(0L, parseDurationToMs("   "))
         assertEquals(0L, parseDurationToMs("No duration"))
     }
 }

@@ -27,4 +27,10 @@ class GetAlbumInfoGraphQLTest {
         assertNotNull(variables)
         assertEquals(albumId.toString(), variables!!["id"]?.jsonPrimitive?.content)
     }
+
+    @Test
+    fun `getAlbumInfo with non-positive albumId returns empty string`() {
+        assertEquals("", getAlbumInfo(0))
+        assertEquals("", getAlbumInfo(-1))
+    }
 }

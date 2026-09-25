@@ -8,7 +8,13 @@ import java.util.UUID
 @kotlinx.serialization.Serializable
 data class SavedAlbumFilter(
     val id: String = UUID.randomUUID().toString(),
-    val name: String,
+    val name: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val filter: AlbumListFilter
-) : Serializable
+    val filter: AlbumListFilter = AlbumListFilter.DEFAULT
+) : Serializable {
+    val isValid: Boolean get() = name.isNotBlank()
+
+    companion object {
+        val EMPTY = SavedAlbumFilter(name = "")
+    }
+}

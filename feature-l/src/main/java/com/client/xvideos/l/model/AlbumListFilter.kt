@@ -28,4 +28,13 @@ data class AlbumListFilter(
     val tagMinus : List<String> = emptyList(),
     val searchQuery : String = "",
     val selection : String = "",
-) : Serializable
+) : Serializable {
+    val hasSearchQuery: Boolean get() = searchQuery.isNotBlank()
+    val hasTags: Boolean get() = tagPlus.isNotEmpty() || tagMinus.isNotEmpty()
+    val hasGenres: Boolean get() = genresPlus.isNotEmpty() || genresMinus.isNotEmpty()
+    val isFiltered: Boolean get() = hasSearchQuery || hasTags || hasGenres
+
+    companion object {
+        val DEFAULT = AlbumListFilter()
+    }
+}

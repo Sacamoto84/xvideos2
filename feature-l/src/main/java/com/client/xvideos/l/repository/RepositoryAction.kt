@@ -17,7 +17,7 @@ sealed class RepositoryAction {
     data class LoadAlbum(val id: Long) : RepositoryAction()
 
 
-    object Login : RepositoryAction()
+    data object Login : RepositoryAction()
 
 //    data class SearchAlbums(val query: String, val page: Int = 1) : RepositoryAction()
 //    data class SaveAlbum(val albumId: String) : RepositoryAction()

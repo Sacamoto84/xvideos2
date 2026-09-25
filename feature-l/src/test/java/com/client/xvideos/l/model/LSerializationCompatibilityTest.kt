@@ -387,4 +387,28 @@ class LSerializationCompatibilityTest {
         assertEquals(original.title, restored.title)
         assertEquals(original.onlyContent?.title, restored.onlyContent?.title)
     }
+
+    @Test
+    fun `AlbumListFilter helper properties and defaults operate correctly`() {
+        val defaultFilter = AlbumListFilter.DEFAULT
+        assertEquals(false, defaultFilter.hasSearchQuery)
+        assertEquals(false, defaultFilter.hasTags)
+        assertEquals(false, defaultFilter.hasGenres)
+        assertEquals(false, defaultFilter.isFiltered)
+
+        val filtered = defaultFilter.copy(searchQuery = "test", tagPlus = listOf("tag1"))
+        assertEquals(true, filtered.hasSearchQuery)
+        assertEquals(true, filtered.hasTags)
+        assertEquals(true, filtered.isFiltered)
+    }
+
+    @Test
+    fun `SavedAlbumFilter helper properties and defaults operate correctly`() {
+        val emptyFilter = SavedAlbumFilter.EMPTY
+        assertEquals("", emptyFilter.name)
+        assertEquals(false, emptyFilter.isValid)
+
+        val validFilter = SavedAlbumFilter(name = "Favorites", filter = AlbumListFilter.DEFAULT)
+        assertEquals(true, validFilter.isValid)
+    }
 }
