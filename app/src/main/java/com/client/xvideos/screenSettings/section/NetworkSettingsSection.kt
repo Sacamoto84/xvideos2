@@ -131,15 +131,13 @@ internal fun NetworkSettingsSection(
         }
     }
 
-    val dohSubtitle = remember(dohEnabled) {
-        if (dohEnabled) {
-            SUBTITLE_DOH_ENABLED
-        } else {
-            SUBTITLE_DOH_DISABLED
-        }
+    val dohSubtitle = if (dohEnabled) {
+        SUBTITLE_DOH_ENABLED
+    } else {
+        SUBTITLE_DOH_DISABLED
     }
 
-    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_DOH)
         SettingsGroup {
             SettingsSwitchRow(
@@ -193,7 +191,7 @@ private fun DohProviderSelectionGroup(
         unselectedColor = RADIO_UNSELECTED_COLOR
     )
 
-    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_PROVIDER)
         SettingsGroup {
             DohProvider.entries.forEachIndexed { index, provider ->
@@ -276,22 +274,18 @@ private fun NetworkParamsGroup(
         }
     }
 
-    val fallbackSubtitle = remember(fallbackToSystem) {
-        if (fallbackToSystem) {
-            SUBTITLE_FALLBACK_ENABLED
-        } else {
-            SUBTITLE_FALLBACK_DISABLED
-        }
+    val fallbackSubtitle = if (fallbackToSystem) {
+        SUBTITLE_FALLBACK_ENABLED
+    } else {
+        SUBTITLE_FALLBACK_DISABLED
     }
-    val ipv4OnlySubtitle = remember(ipv4Only) {
-        if (ipv4Only) {
-            SUBTITLE_IPV4_ENABLED
-        } else {
-            SUBTITLE_IPV4_DISABLED
-        }
+    val ipv4OnlySubtitle = if (ipv4Only) {
+        SUBTITLE_IPV4_ENABLED
+    } else {
+        SUBTITLE_IPV4_DISABLED
     }
 
-    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_NETWORK_PARAMS)
         SettingsGroup {
             SettingsSwitchRow(
@@ -344,7 +338,7 @@ private fun DohDiagnosticsGroup(
         }
     }
 
-    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_DIAGNOSTICS)
         SettingsGroup {
             SettingsListItem(

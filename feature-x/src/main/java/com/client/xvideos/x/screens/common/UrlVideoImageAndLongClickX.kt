@@ -97,9 +97,9 @@ fun UrlVideoImageAndLongClickX(
         }
     }
 
+    val baseModifier = if (modifier == Modifier) VIDEO_BOX_BASE_MODIFIER else modifier.then(VIDEO_BOX_BASE_MODIFIER)
     Box(
-        modifier = modifier
-            .then(VIDEO_BOX_BASE_MODIFIER)
+        modifier = baseModifier
             .combinedClickable(
                 onDoubleClick = handleDoubleClick,
                 onLongClick = handleLongClick,

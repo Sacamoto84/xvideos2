@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,11 +61,15 @@ fun AlbumListBottomBar(
     modifier: Modifier = Modifier,
     onChange: (Int) -> Unit = {}
 ) {
+    val rowModifier = remember(Theme.tabLevel1) {
+        ROW_BAR_BASE_MODIFIER.background(Theme.tabLevel1)
+    }
+
     Column(modifier = modifier) {
         HorizontalDivider()
 
         Row(
-            modifier = ROW_BAR_BASE_MODIFIER.background(Theme.tabLevel1),
+            modifier = rowModifier,
             verticalAlignment = ROW_VERTICAL_ALIGNMENT,
             horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT
         ) {
@@ -97,10 +102,9 @@ private fun FilterButton(
     modifier: Modifier = Modifier,
     baseModifier: Modifier = FILTER_BUTTON_BASE_MODIFIER,
 ) {
+    val resolvedBase = if (modifier == Modifier) baseModifier else modifier.then(baseModifier)
     Box(
-        modifier = modifier
-            .then(baseModifier)
-            .clickable(onClick = onClick),
+        modifier = resolvedBase.clickable(onClick = onClick),
         contentAlignment = BOX_ALIGNMENT_CENTER
     ) {
         Icon(ICON_FILTER_LIST, contentDescription = CD_FILTER_BUTTON, tint = COLOR_WHITE)

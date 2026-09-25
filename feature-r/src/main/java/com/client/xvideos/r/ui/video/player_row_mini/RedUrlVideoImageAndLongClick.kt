@@ -37,6 +37,19 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.video.player_row_mini.atom.Red_Video_Lite_Row2
 import java.io.File
 
+private const val ASPECT_RATIO_9_16 = 1080f / 1920f
+private val BASE_BOX_MODIFIER = Modifier.fillMaxSize().aspectRatio(ASPECT_RATIO_9_16)
+private val VIDEO_CONTAINER_BASE_MODIFIER = Modifier.fillMaxSize()
+private val VIDEO_ENTER_TRANSITION = fadeIn(animationSpec = tween(100))
+private val VIDEO_EXIT_TRANSITION = fadeOut(animationSpec = tween(200))
+private val POSTER_ENTER_TRANSITION = fadeIn(animationSpec = tween(100))
+private val POSTER_EXIT_TRANSITION = fadeOut(animationSpec = tween(100))
+private val INDEX_BOX_ALIGNMENT = Alignment.TopStart
+private val BOX_CENTER_ALIGNMENT = Alignment.Center
+private val COLOR_GRAY = Color.Gray
+private val COLOR_LIGHT_GRAY = Color.LightGray
+private val INDEX_TEXT_SIZE = 14.sp
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RedUrlVideoImageAndLongClick(
@@ -126,30 +139,36 @@ fun RedUrlVideoImageAndLongClick(
         { isShowing: Boolean -> poster = isShowing }
     }
 
+    val indexText = remember(index) { index.toString() }
+    val indexTextStyle = remember {
+        androidx.compose.ui.text.TextStyle(
+            color = COLOR_GRAY,
+            fontFamily = Theme.R.fontFamilyDMsanss,
+            fontSize = INDEX_TEXT_SIZE
+        )
+    }
+
+    val clickableModifier = BASE_BOX_MODIFIER.combinedClickable(
+        indication = null,
+        interactionSource = interactionSource,
+        onDoubleClick = handleDoubleClick,
+        onLongClick = handleLongClick,
+        onClick = handleClick
+    )
+    val rootModifier = if (modifier == Modifier) clickableModifier else clickableModifier.then(modifier)
+
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .aspectRatio(1080f / 1920)
-            .combinedClickable(
-                indication = null,
-                interactionSource = interactionSource,
-                onDoubleClick = handleDoubleClick,
-                onLongClick = handleLongClick,
-                onClick = handleClick
-            )
-            .then(modifier),
-        contentAlignment = Alignment.Center
+        modifier = rootModifier,
+        contentAlignment = BOX_CENTER_ALIGNMENT
     ) {
         AnimatedVisibility(
             visible = isVideo || preload,
-            enter = fadeIn(animationSpec = tween(100)),
-            exit = fadeOut(animationSpec = tween(200))
+            enter = VIDEO_ENTER_TRANSITION,
+            exit = VIDEO_EXIT_TRANSITION
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .alpha(if (isVideo) 1f else 0f),
-                contentAlignment = Alignment.Center
+                modifier = VIDEO_CONTAINER_BASE_MODIFIER.alpha(if (isVideo) 1f else 0f),
+                contentAlignment = BOX_CENTER_ALIGNMENT
             ) {
                 Red_Video_Lite_Row2(
                     url = videoUri,
@@ -163,32 +182,28 @@ fun RedUrlVideoImageAndLongClick(
 
         AnimatedVisibility(
             visible = poster || !isVideo,
-            enter = fadeIn(animationSpec = tween(100)),
-            exit = fadeOut(animationSpec = tween(100))
+            enter = POSTER_ENTER_TRANSITION,
+            exit = POSTER_EXIT_TRANSITION
         ) {
             Box {
                 UrlImage(
                     url = imageUrl,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .alpha(if (isVideo) 0.8f else 1.0f)
+                    modifier = VIDEO_CONTAINER_BASE_MODIFIER.alpha(if (isVideo) 0.8f else 1.0f)
                 )
                 if (isVideo) {
                     CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.LightGray
+                        modifier = Modifier.align(BOX_CENTER_ALIGNMENT),
+                        color = COLOR_LIGHT_GRAY
                     )
                 }
             }
         }
 
-        Box(modifier = Modifier.align(Alignment.TopStart)) {
+        Box(modifier = Modifier.align(INDEX_BOX_ALIGNMENT)) {
             Text(
-                text = index.toString(),
-                color = Color.Gray,
-                fontFamily = Theme.R.fontFamilyDMsanss,
-                fontSize = 14.sp
+                text = indexText,
+                style = indexTextStyle
             )
         }
     }

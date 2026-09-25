@@ -61,7 +61,10 @@ fun NichesBottomBar(
         }
     }
 
-    Column(modifier = modifier.background(Theme.tabLevel1)) {
+    val columnBase = remember(Theme.tabLevel1) { Modifier.background(Theme.tabLevel1) }
+    val columnModifier = if (modifier == Modifier) columnBase else modifier.then(columnBase)
+
+    Column(modifier = columnModifier) {
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
             modifier = ROW_BAR_BASE_MODIFIER,

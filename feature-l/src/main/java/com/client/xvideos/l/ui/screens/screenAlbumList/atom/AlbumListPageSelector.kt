@@ -148,7 +148,7 @@ fun AlbumListPageSelector(
     }
 
     Row(
-        modifier = modifier.then(SELECTOR_ROW_BASE_MODIFIER),
+        modifier = if (modifier == Modifier) SELECTOR_ROW_BASE_MODIFIER else modifier.then(SELECTOR_ROW_BASE_MODIFIER),
         horizontalArrangement = SELECTOR_ROW_HORIZONTAL_ARRANGEMENT,
         verticalAlignment = SELECTOR_ROW_VERTICAL_ALIGNMENT
     ) {
@@ -199,10 +199,9 @@ private fun AlbumPageNavButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val baseModifier = if (modifier == Modifier) PAGE_NAV_BUTTON_BASE_MODIFIER else modifier.then(PAGE_NAV_BUTTON_BASE_MODIFIER)
     Box(
-        modifier = modifier
-            .then(PAGE_NAV_BUTTON_BASE_MODIFIER)
-            .clickable(onClick = onClick),
+        modifier = baseModifier.clickable(onClick = onClick),
         contentAlignment = BOX_CENTER_ALIGNMENT
     ) {
         Icon(
@@ -220,7 +219,7 @@ private fun PageSelectorDialogContent(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.then(PAGE_SELECTOR_DIALOG_MODIFIER),
+        modifier = if (modifier == Modifier) PAGE_SELECTOR_DIALOG_MODIFIER else modifier.then(PAGE_SELECTOR_DIALOG_MODIFIER),
         contentAlignment = BOX_CENTER_ALIGNMENT
     ) {
         KeyboardNumber(

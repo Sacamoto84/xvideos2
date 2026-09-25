@@ -33,7 +33,7 @@ fun DashboardControlsRow(
     }
 
     Row(
-        modifier = modifier.then(CONTROLS_ROW_BASE_MODIFIER),
+        modifier = if (modifier == Modifier) CONTROLS_ROW_BASE_MODIFIER else modifier.then(CONTROLS_ROW_BASE_MODIFIER),
         verticalAlignment = ROW_VERTICAL_ALIGNMENT
     ) {
         ComposeCountry()

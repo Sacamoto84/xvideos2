@@ -119,6 +119,8 @@ private val ALIGN_TOP_START = Alignment.TopStart
 private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
 private val ALIGN_CENTER_END = Alignment.CenterEnd
 
+private const val ICON_BLUR = R.drawable.ic_blur_24
+
 /**
  * Экран настроек «Отображение» (Appearance).
  * Содержит интерактивное превью и переключатель режима кнопок быстрой прокрутки (Заливка, Блюр, Стекло).
@@ -135,7 +137,7 @@ internal fun AppearanceSettingsSection(
         { effect -> Settings.scroll_buttons_effect.setValue(effect.name) }
     }
 
-    Column(modifier = modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
         SettingsSectionTitle(TITLE_PREVIEW)
         ScrollButtonPreviewCard(
             hazeState = previewHazeState,
@@ -184,7 +186,7 @@ private fun ScrollEffectItem(
         }
     }
     SettingsListItem(
-        icon = R.drawable.ic_blur_24,
+        icon = ICON_BLUR,
         text = effect.title,
         subtitle = effect.subtitle,
         trailing = trailingContent,
@@ -205,7 +207,7 @@ private fun ScrollButtonPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.then(PREVIEW_CARD_BASE_MODIFIER)
+        modifier = if (modifier == Modifier) PREVIEW_CARD_BASE_MODIFIER else modifier.then(PREVIEW_CARD_BASE_MODIFIER)
     ) {
         // Цветной имитационный фон галереи, помеченный как hazeSource
         Box(
@@ -235,10 +237,13 @@ private fun ScrollButtonPreviewCard(
                 fontSize = PREVIEW_LABEL_FONT_SIZE
             )
         }
+        val previewLabelText = remember(currentEffect) {
+            "$PREVIEW_LABEL_PREFIX${currentEffect.title}"
+        }
 
         // Подпись образца
         Text(
-            text = "$PREVIEW_LABEL_PREFIX${currentEffect.title}",
+            text = previewLabelText,
             color = PREVIEW_LABEL_COLOR,
             style = previewLabelStyle,
             modifier = Modifier
