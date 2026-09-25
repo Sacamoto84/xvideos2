@@ -85,8 +85,10 @@ private val SAVED_ROW_MEDIA_BOX_BASE = Modifier
 private val SAVED_ROW_ACTIONS_ROW_MODIFIER = Modifier
     .fillMaxWidth()
     .background(Theme.L.grey6)
-private val SAVED_ROW_TITLE_MODIFIER = Modifier
-    .padding(horizontal = 8.dp)
+private val FILL_MAX_SIZE_MODIFIER = Modifier.fillMaxSize()
+private val SAVED_ROOT_BASE_MODIFIER = Modifier
+    .fillMaxSize()
+    .background(Theme.L.grey6)
 private val SHARE_ICON_MODIFIER = Modifier.size(SHARE_ICON_SIZE)
 private val DELETE_ICON_MODIFIER = Modifier.size(DELETE_ICON_SIZE)
 private val SAVED_HEADER_ROW_MODIFIER = Modifier
@@ -151,32 +153,38 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
         val onConfirmItem = remember(item, onConfirmDelete) {
             { onConfirmDelete(item) }
         }
+        val dialogImageUrl = remember(item.id, item.previewImage, saved.downloads) {
+            saved.downloads.localPosterPath(item.id) ?: item.previewImage
+        }
         ConfirmDeleteVideoDialog(
             title = TEXT_DELETE_CONFIRM_TITLE,
-            imageUrl = saved.downloads.localPosterPath(item.id) ?: item.previewImage,
+            imageUrl = dialogImageUrl,
             onConfirm = onConfirmItem,
             onDismiss = onDismissDelete,
         )
     }
 
     val topCutout = getTopInsetDp()
+    val rootModifier = if (modifier == Modifier) {
+        SAVED_ROOT_BASE_MODIFIER
+    } else {
+        modifier.then(SAVED_ROOT_BASE_MODIFIER)
+    }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Theme.L.grey6)
+        modifier = rootModifier
     ) {
         if (list.isEmpty()) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = FILL_MAX_SIZE_MODIFIER) {
                 SavedHeader(topCutout = topCutout)
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(modifier = FILL_MAX_SIZE_MODIFIER, contentAlignment = Alignment.Center) {
                     Text(TEXT_EMPTY, color = Color.Gray, fontSize = 16.sp)
                 }
             }
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize()
+                modifier = FILL_MAX_SIZE_MODIFIER
             ) {
                 item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER) {
                     SavedHeader(topCutout = topCutout)
@@ -186,7 +194,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                     key = { it.id },
                     contentType = SAVED_ROW_CONTENT_TYPE
                 ) { item ->
-                    val posterUrl = remember(item.id, saved.downloads) {
+                    val posterUrl = remember(item.id, item.previewImage, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
                     }
                     SavedRow(
@@ -207,10 +215,17 @@ private fun SavedHeader(
     modifier: Modifier = Modifier,
     topCutout: Dp = 0.dp,
 ) {
-    Column(
-        modifier = modifier
+    val headerModifier = if (modifier == Modifier) {
+        Modifier
             .fillMaxWidth()
             .padding(top = topCutout)
+    } else {
+        modifier
+            .fillMaxWidth()
+            .padding(top = topCutout)
+    }
+    Column(
+        modifier = headerModifier
     ) {
         Row(
             modifier = SAVED_HEADER_ROW_MODIFIER,
@@ -247,7 +262,7 @@ private fun SavedRow(
             modifier = SAVED_ROW_MEDIA_BOX_BASE
                 .clickable(onClick = handlePlay)
         ) {
-            UrlImage(url = posterUrl, modifier = Modifier.fillMaxSize())
+            UrlImage(url = posterUrl, modifier = FILL_MAX_SIZE_MODIFIER)
 
             // Продолжительность видео в правом верхнем углу.
             Text(
@@ -270,7 +285,9 @@ private fun SavedRow(
                 color = Color.White,
                 fontSize = 13.sp,
                 maxLines = 2,
-                modifier = Modifier.weight(1f).then(SAVED_ROW_TITLE_MODIFIER)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
             )
 
             IconButton(onClick = handleShareP2p) {

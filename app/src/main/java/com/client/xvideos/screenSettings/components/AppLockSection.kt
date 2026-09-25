@@ -81,6 +81,16 @@ private val PASSWORD_FIELD_BASE_MODIFIER = Modifier.fillMaxWidth()
 private val ICON_VISIBILITY = Icons.Filled.Visibility
 private val ICON_VISIBILITY_OFF = Icons.Filled.VisibilityOff
 private val ROW_CENTER_VERTICAL = Alignment.CenterVertically
+private val ERROR_TEXT_STYLE = Theme.L.Type.dialogBody.copy(color = appLockErrorColor)
+private val DIALOG_BODY_TEXT_STYLE = Theme.L.Type.dialogBody.copy(color = Theme.DialogLavande.bodyColor)
+private val TIMEOUT_SELECTED_TEXT_STYLE = Theme.L.Type.dialogBody.copy(
+    color = SettingsAccentColor,
+    fontWeight = FontWeight.SemiBold
+)
+private val TIMEOUT_UNSELECTED_TEXT_STYLE = Theme.L.Type.dialogBody.copy(
+    color = Theme.DialogLavande.bodyColor,
+    fontWeight = FontWeight.Normal
+)
 
 private const val CD_HIDE_CODE = "Скрыть код доступа"
 private const val CD_SHOW_CODE = "Показать код доступа"
@@ -379,7 +389,7 @@ private fun CamouflageVerificationDialog(
             Column(verticalArrangement = Arrangement.spacedBy(DIALOG_ITEM_SPACING)) {
                 Text(
                     "Для работы маскировки под калькулятор код доступа должен состоять только из цифр. Введите ваш текущий PIN-код для подтверждения:",
-                    style = Theme.L.Type.dialogBody.copy(color = Theme.DialogLavande.bodyColor)
+                    style = DIALOG_BODY_TEXT_STYLE
                 )
                 PasswordSettingField(
                     value = pinInput,
@@ -389,7 +399,7 @@ private fun CamouflageVerificationDialog(
                     onDone = onDoneNoOp
                 )
                 pinError?.let { err ->
-                    Text(err, color = appLockErrorColor, style = Theme.L.Type.dialogBody.copy(color = appLockErrorColor))
+                    Text(err, color = appLockErrorColor, style = ERROR_TEXT_STYLE)
                 }
             }
         },
@@ -561,7 +571,7 @@ internal fun AppLockPasswordDialog(
                 }
 
                 errorText?.let { err ->
-                    Text(err, color = appLockErrorColor, style = Theme.L.Type.dialogBody.copy(color = appLockErrorColor))
+                    Text(err, color = appLockErrorColor, style = ERROR_TEXT_STYLE)
                 }
             }
         },
@@ -636,18 +646,22 @@ fun PasswordSettingField(
             }
         }
     }
+    val fieldModifier = if (modifier == Modifier) PASSWORD_FIELD_BASE_MODIFIER else modifier.then(PASSWORD_FIELD_BASE_MODIFIER)
+    val fieldTextStyle = remember(dialogTheme.bodyColor) {
+        Theme.L.Type.body.copy(color = dialogTheme.bodyColor)
+    }
 
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.then(PASSWORD_FIELD_BASE_MODIFIER),
+        modifier = fieldModifier,
         label = labelComposable,
         singleLine = true,
         visualTransformation =
             if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
-        textStyle = Theme.L.Type.body.copy(color = dialogTheme.bodyColor),
+        textStyle = fieldTextStyle,
         trailingIcon = trailingIconComposable,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = dialogTheme.bodyColor,
@@ -723,11 +737,11 @@ private fun AppLockTimeoutItem(
             else -> timeout.displayName
         }
     }
+    val itemBaseModifier = if (modifier == Modifier) TIMEOUT_ITEM_FULL_MODIFIER else modifier.then(TIMEOUT_ITEM_FULL_MODIFIER)
+    val itemTextStyle = if (isSelected) TIMEOUT_SELECTED_TEXT_STYLE else TIMEOUT_UNSELECTED_TEXT_STYLE
 
     Row(
-        modifier = modifier
-            .then(TIMEOUT_ITEM_FULL_MODIFIER)
-            .clickable(onClick = onClick),
+        modifier = itemBaseModifier.clickable(onClick = onClick),
         verticalAlignment = ROW_CENTER_VERTICAL
     ) {
         RadioButton(
@@ -738,10 +752,7 @@ private fun AppLockTimeoutItem(
         Spacer(RADIO_SPACER_MODIFIER)
         Text(
             text = label,
-            style = Theme.L.Type.dialogBody.copy(
-                color = if (isSelected) SettingsAccentColor else Theme.DialogLavande.bodyColor,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-            )
+            style = itemTextStyle
         )
     }
 }

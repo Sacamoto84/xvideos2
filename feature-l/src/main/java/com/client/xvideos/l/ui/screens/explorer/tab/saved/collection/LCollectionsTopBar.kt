@@ -35,6 +35,9 @@ private val COLLECTION_TITLE_FONT_SIZE = 18.sp
 private val SORT_ORDER_FONT_SIZE = 12.sp
 private const val CD_COLLECTION_SORT = "Сортировка коллекций"
 private const val COLLECTION_TITLE_PREFIX = ">"
+private val ROW_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(start = BAR_START_PADDING)
 
 @Composable
 internal fun LCollectionsTopBar(
@@ -55,17 +58,21 @@ internal fun LCollectionsTopBar(
     // Likes) отступают от выреза сами; этот бар при миграции на Material3
     // потерял displayCutoutPadding и рендерился от y=0, под камерой.
     val topInset = getTopInsetDp()
-
-    Column(
-        modifier = modifier
+    val columnModifier = if (modifier == Modifier) {
+        Modifier
             .fillMaxWidth()
             .padding(top = topInset)
+    } else {
+        modifier
+            .fillMaxWidth()
+            .padding(top = topInset)
+    }
+
+    Column(
+        modifier = columnModifier
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                //.background(Theme.tabLevel1)
-                .padding(start = BAR_START_PADDING),
+            modifier = ROW_BASE_MODIFIER,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -104,13 +111,16 @@ internal fun LCollectionsTopBar(
                         containerColor = Theme.L.grey3
                     ) {
                         val baseMenuItemStyle = Theme.L.Type.menuItem
+                        val selectedMenuItemStyle = remember(baseMenuItemStyle) {
+                            baseMenuItemStyle.copy(color = Color.White)
+                        }
+                        val unselectedMenuItemStyle = remember(baseMenuItemStyle) {
+                            baseMenuItemStyle.copy(color = Theme.L.grey2)
+                        }
                         LCollectionSortOrder.entries.forEach { order ->
                             key(order.name) {
                                 val isSelected = order == sortOrder
-                                val textColor = if (isSelected) Color.White else Theme.L.grey2
-                                val menuItemStyle = remember(baseMenuItemStyle, textColor) {
-                                    baseMenuItemStyle.copy(color = textColor)
-                                }
+                                val menuItemStyle = if (isSelected) selectedMenuItemStyle else unselectedMenuItemStyle
                                 val handleOrderClick = remember(order, onSortOrderClick) {
                                     {
                                         onSortOrderClick(order)

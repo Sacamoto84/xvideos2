@@ -138,6 +138,17 @@ private val SLIDER_WITHOUT_ICON_MODIFIER = Modifier.padding(
     start = SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING,
     end = SETTINGS_SLIDER_END_PADDING
 )
+private val SETTINGS_SECTION_TITLE_BASE_MODIFIER = Modifier.padding(
+    start = SETTINGS_SECTION_TITLE_START_PADDING,
+    top = SETTINGS_SECTION_TITLE_TOP_PADDING,
+    bottom = SETTINGS_SECTION_TITLE_BOTTOM_PADDING,
+    end = SETTINGS_SECTION_TITLE_END_PADDING
+)
+private val SETTINGS_GROUP_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING)
+    .clip(settingsCardShape)
+    .background(SettingsCardColor)
 
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
 
@@ -154,14 +165,14 @@ fun SettingsSectionTitle(
             letterSpacing = SETTINGS_SECTION_TITLE_LETTER_SPACING
         )
     }
+    val titleModifier = if (modifier == Modifier) {
+        SETTINGS_SECTION_TITLE_BASE_MODIFIER
+    } else {
+        modifier.then(SETTINGS_SECTION_TITLE_BASE_MODIFIER)
+    }
     Text(
         text = text,
-        modifier = modifier.padding(
-            start = SETTINGS_SECTION_TITLE_START_PADDING,
-            top = SETTINGS_SECTION_TITLE_TOP_PADDING,
-            bottom = SETTINGS_SECTION_TITLE_BOTTOM_PADDING,
-            end = SETTINGS_SECTION_TITLE_END_PADDING
-        ),
+        modifier = titleModifier,
         color = SettingsAccentColor,
         style = style
     )
@@ -203,12 +214,13 @@ fun SettingsGroup(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val groupModifier = if (modifier == Modifier) {
+        SETTINGS_GROUP_BASE_MODIFIER
+    } else {
+        modifier.then(SETTINGS_GROUP_BASE_MODIFIER)
+    }
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING)
-            .clip(settingsCardShape)
-            .background(SettingsCardColor)
+        modifier = groupModifier
     ) {
         CompositionLocalProvider(LocalSettingsInGroup provides true) {
             content()
@@ -498,12 +510,19 @@ fun IntSliderSetting(
             onValueChangeFinished(snapSliderValue(sliderValue, min, max, step))
         }
     }
+    val onSliderChange: (Float) -> Unit = remember(min, max, step) {
+        { rawValue ->
+            sliderValue = snapSliderValue(rawValue, min, max, step).toFloat()
+        }
+    }
+    val valueRange = remember(min, max) { min.toFloat()..max.toFloat() }
+    val subtitleText = remember(currentValue, suffix) { "$currentValue$suffix" }
 
     Column(modifier = SLIDER_COLUMN_BASE_MODIFIER) {
         SettingsListItem(
             icon = icon,
             text = text,
-            subtitle = "$currentValue$suffix"
+            subtitle = subtitleText
         )
         val sliderModifier = if (icon != 0) SLIDER_WITH_ICON_MODIFIER else SLIDER_WITHOUT_ICON_MODIFIER
         val sliderColors = SliderDefaults.colors(
@@ -513,12 +532,10 @@ fun IntSliderSetting(
         )
         Slider(
             value = currentValue.toFloat(),
-            onValueChange = { rawValue ->
-                sliderValue = snapSliderValue(rawValue, min, max, step).toFloat()
-            },
+            onValueChange = onSliderChange,
             onValueChangeFinished = onFinished,
             modifier = sliderModifier,
-            valueRange = min.toFloat()..max.toFloat(),
+            valueRange = valueRange,
             steps = steps,
             enabled = enabled,
             colors = sliderColors

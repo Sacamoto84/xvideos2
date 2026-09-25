@@ -56,6 +56,20 @@ private const val KEY_ADD_BUTTON = "add_button"
 private const val CONTENT_TYPE_ADD_BUTTON = "add_button"
 private const val COUNT_PREFIX = "Элементов: "
 private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
+private val GRID_CELLS = GridCells.Fixed(GRID_COLUMNS)
+private val BOX_FILL_MAX_WIDTH = Modifier.fillMaxWidth()
+private val ADD_BUTTON_BASE_MODIFIER = Modifier
+    .padding(start = ADD_BUTTON_PADDING_START, top = ADD_BUTTON_PADDING_TOP)
+    .size(ADD_BUTTON_SIZE)
+    .clip(PREVIEW_CORNER_SHAPE)
+private val ADD_ICON_MODIFIER = Modifier.size(ADD_ICON_SIZE)
+private val CELL_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = CELL_HORIZONTAL_PADDING, vertical = CELL_VERTICAL_PADDING)
+private val PREVIEW_BASE_MODIFIER = Modifier
+    .clip(PREVIEW_CORNER_SHAPE)
+    .size(PREVIEW_SIZE)
+private val TEXT_SPACER_MODIFIER = Modifier.width(TEXT_SPACER_WIDTH)
 
 /**
  * Сетка коллекций: список + заголовок ([topBar]) + кнопка «+».
@@ -86,7 +100,7 @@ fun CollectionsGrid(
                 .fillMaxSize()
                 .padding(padding),
             state = gridState,
-            columns = GridCells.Fixed(GRID_COLUMNS)
+            columns = GRID_CELLS
         ) {
             itemsIndexed(
                 items = collections,
@@ -103,12 +117,9 @@ fun CollectionsGrid(
             }
 
             item(key = KEY_ADD_BUTTON, contentType = CONTENT_TYPE_ADD_BUTTON) {
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = BOX_FILL_MAX_WIDTH) {
                     Box(
-                        modifier = Modifier
-                            .padding(start = ADD_BUTTON_PADDING_START, top = ADD_BUTTON_PADDING_TOP)
-                            .size(ADD_BUTTON_SIZE)
-                            .clip(PREVIEW_CORNER_SHAPE)
+                        modifier = ADD_BUTTON_BASE_MODIFIER
                             .background(style.addButtonBackground)
                             .clickable(onClick = onCreateNewCollectionClick),
                         contentAlignment = Alignment.Center
@@ -117,7 +128,7 @@ fun CollectionsGrid(
                             Icons.Default.Add,
                             contentDescription = null,
                             tint = style.addButtonIconColor,
-                            modifier = Modifier.size(ADD_ICON_SIZE)
+                            modifier = ADD_ICON_MODIFIER
                         )
                     }
                 }
@@ -140,34 +151,39 @@ private fun CollectionGridCell(
     val countText = remember(collection.itemsCount) {
         collection.itemsCount?.let { "$COUNT_PREFIX$it" }
     }
+    val rowModifier = if (modifier == Modifier) {
+        CELL_BASE_MODIFIER
+    } else {
+        modifier.then(CELL_BASE_MODIFIER)
+    }.combinedClickable(
+        onClick = handleClick,
+        onLongClick = handleLongClick
+    )
+    val previewModifier = if (shape == PREVIEW_CORNER_SHAPE) {
+        PREVIEW_BASE_MODIFIER
+    } else {
+        Modifier
+            .clip(shape)
+            .size(PREVIEW_SIZE)
+    }
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CELL_HORIZONTAL_PADDING, vertical = CELL_VERTICAL_PADDING)
-            .combinedClickable(
-                onClick = handleClick,
-                onLongClick = handleLongClick
-            ),
+        modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         val previewUrl = collection.previewUrl
         if (previewUrl != null) {
             UrlImage(
                 url = previewUrl,
-                modifier = Modifier
-                    .clip(shape)
-                    .size(PREVIEW_SIZE)
+                modifier = previewModifier
             )
         } else {
             Box(
-                modifier = Modifier
-                    .clip(shape)
-                    .size(PREVIEW_SIZE)
+                modifier = previewModifier
                     .background(style.placeholderColor)
             )
         }
-        Spacer(Modifier.width(TEXT_SPACER_WIDTH))
+        Spacer(TEXT_SPACER_MODIFIER)
         Column {
             Text(
                 collection.name,

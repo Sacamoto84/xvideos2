@@ -66,9 +66,7 @@ private val TITLE_START_PADDING = 4.dp
 private val TITLE_FONT_SIZE = 18.sp
 private const val CD_BACK = "Назад"
 private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val TOP_BAR_HORIZONTAL_PADDING_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(start = TOP_BAR_START_PADDING, end = TOP_BAR_END_PADDING)
+private val TOP_BAR_BASE_MODIFIER = Modifier.fillMaxWidth()
 private val TITLE_MODIFIER = Modifier.padding(start = TITLE_START_PADDING)
 private val CONTENT_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
 private val LAZY_ROW_MODIFIER = Modifier.fillMaxSize()
@@ -117,9 +115,12 @@ class ScreenCollectionName(
             contentWindowInsets = ZERO_WINDOW_INSETS,
             topBar = {
                 Row(
-                    modifier = Modifier
-                        .padding(top = getTopInsetDp())
-                        .then(TOP_BAR_HORIZONTAL_PADDING_MODIFIER),
+                    modifier = TOP_BAR_BASE_MODIFIER
+                        .padding(
+                            start = TOP_BAR_START_PADDING,
+                            top = getTopInsetDp(),
+                            end = TOP_BAR_END_PADDING
+                        ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = closeCollection) {

@@ -2,6 +2,7 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +40,7 @@ private val AVATAR_BOX_BASE_MODIFIER = Modifier
     .size(AVATAR_BOX_SIZE)
     .background(SUBSCRIPTION_AVATAR_PLACEHOLDER_BG)
 private val PERSON_ICON_MODIFIER = Modifier.size(PERSON_ICON_SIZE)
+private val URL_IMAGE_MODIFIER = Modifier.fillMaxSize()
 private const val DIALOG_TITLE = "Удалить подписку?"
 private const val CONFIRM_TEXT = "Удалить"
 private const val TEXT_DELETE_AUTHOR_PREFIX = "Удалить автора «"
@@ -69,7 +71,7 @@ fun DialogSubscriptionDelete(
                 ) {
                     val url = pending.urlProfile
                     if (url != null) {
-                        UrlImage(url = url)
+                        UrlImage(url = url, modifier = URL_IMAGE_MODIFIER)
                     } else {
                         Icon(
                             ICON_PERSON,

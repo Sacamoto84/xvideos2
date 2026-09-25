@@ -74,9 +74,13 @@ private const val LABEL_COLLECTION_NAME = "Название коллекции"
 private const val BUTTON_SAVE = "Сохранить"
 private const val BUTTON_DELETE = "Удалить"
 private const val TITLE_DELETE = "Удалить коллекцию?"
+private const val TEXT_DELETE_PREFIX = "Удалить «"
+private const val TEXT_DELETE_SUFFIX = "» из коллекции"
 private val TEXT_FIELD_BORDER_ALPHA_COLOR = Color(0x66FFFFFF)
 private val COVER_CORNER_RADIUS = 8.dp
 private val COVER_ICON_SHAPE = RoundedCornerShape(COVER_CORNER_RADIUS)
+private val SPAN_STYLE_BOLD = SpanStyle(fontWeight = FontWeight.Bold)
+private val TEXT_FIELD_MODIFIER = Modifier.fillMaxWidth()
 
 object R_Screen_CollectionTab : Screen {
 
@@ -241,6 +245,8 @@ private fun R_CollectionDialogsHost(
         val onRenameClick = remember(pending, onRenameAction) { { onRenameAction(pending) } }
         val onShareClick = remember(pending, onShareAction) { { onShareAction(pending) } }
         val onDeleteClick = remember(pending, onDeleteAction) { { onDeleteAction(pending) } }
+        val menuItemStyle = remember { Theme.L.Type.menuItem.copy(color = Color.White) }
+        val iconTint = Theme.DialogLavande.buttonBackground
         LavenderDialog(
             title = TITLE_DIALOG_ACTION,
             onDismiss = onDismissAction,
@@ -253,19 +259,19 @@ private fun R_CollectionDialogsHost(
                     fontWeight = FontWeight.SemiBold
                 )
                 DropdownMenuItem(
-                    text = { androidx.compose.material3.Text(TEXT_RENAME, style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    text = { androidx.compose.material3.Text(TEXT_RENAME, style = menuItemStyle) },
                     onClick = onRenameClick,
-                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = iconTint) }
                 )
                 DropdownMenuItem(
-                    text = { androidx.compose.material3.Text(TEXT_SHARE, style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    text = { androidx.compose.material3.Text(TEXT_SHARE, style = menuItemStyle) },
                     onClick = onShareClick,
-                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, tint = iconTint) }
                 )
                 DropdownMenuItem(
-                    text = { androidx.compose.material3.Text(TEXT_DELETE, style = Theme.L.Type.menuItem.copy(color = Color.White)) },
+                    text = { androidx.compose.material3.Text(TEXT_DELETE, style = menuItemStyle) },
                     onClick = onDeleteClick,
-                    leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Theme.DialogLavande.buttonBackground) }
+                    leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = iconTint) }
                 )
             },
         )
@@ -276,6 +282,15 @@ private fun R_CollectionDialogsHost(
         val onConfirm = remember(pending, dialogData.renameValue, onConfirmRename) {
             { onConfirmRename(pending, dialogData.renameValue) }
         }
+        val textFieldColors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            cursorColor = Color.White,
+            focusedBorderColor = Theme.DialogLavande.buttonBackground,
+            unfocusedBorderColor = TEXT_FIELD_BORDER_ALPHA_COLOR,
+            focusedLabelColor = Theme.DialogLavande.dismissTextColor,
+            unfocusedLabelColor = Theme.DialogLavande.bodyColor,
+        )
         LavenderDialog(
             title = TITLE_RENAME,
             onDismiss = onDismissRename,
@@ -285,17 +300,9 @@ private fun R_CollectionDialogsHost(
                     value = dialogData.renameValue,
                     onValueChange = onRenameValueChange,
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = TEXT_FIELD_MODIFIER,
                     label = { androidx.compose.material3.Text(LABEL_COLLECTION_NAME) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedBorderColor = Theme.DialogLavande.buttonBackground,
-                        unfocusedBorderColor = TEXT_FIELD_BORDER_ALPHA_COLOR,
-                        focusedLabelColor = Theme.DialogLavande.dismissTextColor,
-                        unfocusedLabelColor = Theme.DialogLavande.bodyColor,
-                    ),
+                    colors = textFieldColors,
                 )
             },
             confirmText = BUTTON_SAVE,
@@ -310,9 +317,9 @@ private fun R_CollectionDialogsHost(
         }
         val dialogBody = remember(pending) {
             buildAnnotatedString {
-                append("Удалить «")
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
-                append("» из коллекции")
+                append(TEXT_DELETE_PREFIX)
+                withStyle(SPAN_STYLE_BOLD) { append(pending) }
+                append(TEXT_DELETE_SUFFIX)
             }
         }
         LavenderDialog(
@@ -378,10 +385,12 @@ private fun CollectionCoverIcon(
     modifier: Modifier = Modifier,
 ) {
     val size = Theme.DialogLavande.iconSize
+    val coverModifier = remember(size) { Modifier.clip(COVER_ICON_SHAPE).size(size) }
+    val imageModifier = if (modifier == Modifier) coverModifier else modifier.then(coverModifier)
     if (coverUrl != null) {
-        UrlImage(url = coverUrl, modifier = modifier.clip(COVER_ICON_SHAPE).size(size))
+        UrlImage(url = coverUrl, modifier = imageModifier)
     } else {
-        Box(modifier.clip(COVER_ICON_SHAPE).size(size).background(Color.Gray))
+        Box(imageModifier.background(Color.Gray))
     }
 }
 
