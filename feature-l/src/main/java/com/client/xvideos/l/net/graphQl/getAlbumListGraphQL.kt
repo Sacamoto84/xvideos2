@@ -12,16 +12,28 @@ import java.util.Locale.getDefault
  * пользовательский ввод (поисковый запрос, теги) содержит `"`, `\` и управляющие
  * символы.
  */
-private fun jsonEscape(value: String): String = buildString(value.length) {
-    for (c in value) {
-        when (c) {
-            '\\' -> append("\\\\")
-            '"' -> append("\\\"")
-            '\n' -> append("\\n")
-            '\r' -> append("\\r")
-            '\t' -> append("\\t")
-            '\b' -> append("\\b")
-            else -> if (c < ' ') append("\\u%04x".format(c.code)) else append(c)
+private fun jsonEscape(value: String): String {
+    var needsEscape = false
+    for (i in 0 until value.length) {
+        val c = value[i]
+        if (c == '\\' || c == '"' || c < ' ') {
+            needsEscape = true
+            break
+        }
+    }
+    if (!needsEscape) return value
+
+    return buildString(value.length + 8) {
+        for (c in value) {
+            when (c) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                '\b' -> append("\\b")
+                else -> if (c < ' ') append("\\u%04x".format(c.code)) else append(c)
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ import com.client.xvideos.l.repository.RepositoryUriConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -200,6 +201,13 @@ private fun parseAlbumListResponse(
     page: Int
 ): Result<AlbumListImplInfoAndList> = runCatching {
     val json = LJson.parseToJsonElement(response).jsonObject
+    val errors = json["errors"]?.takeIf { it !is JsonNull }?.jsonArray
+    if (!errors.isNullOrEmpty()) {
+        val errorMsg = errors.firstOrNull()?.jsonObject?.get("message")?.jsonPrimitive?.contentOrNull
+            ?: "GraphQL error loading album list"
+        error(errorMsg)
+    }
+
     val listJson = json["data"]
         ?.jsonObject
         ?.get("album")
@@ -217,11 +225,16 @@ private fun parseAlbumListResponse(
         ?: error("AlbumList response missing data.album.list.items")
 
     val info = LJson.decodeFromJsonElement<FacetCollectionInfo>(infoJson)
-    val items = ArrayList<Album>(itemsJson.size)
-    for (itemJson in itemsJson) {
-        runCatching { LJson.decodeFromJsonElement<Album>(itemJson) }
-            .getOrNull()
-            ?.let { items.add(it) }
+    val items = if (itemsJson.isEmpty()) {
+        emptyList()
+    } else {
+        val list = ArrayList<Album>(itemsJson.size)
+        for (itemJson in itemsJson) {
+            runCatching { LJson.decodeFromJsonElement<Album>(itemJson) }
+                .getOrNull()
+                ?.let { list.add(it) }
+        }
+        list
     }
 
     AlbumListImplInfoAndList(

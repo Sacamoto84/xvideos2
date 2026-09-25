@@ -30,6 +30,9 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
     }
 
     val url = source.substringBefore('?').substringBefore('#')
+    if (!url.contains("videos") && !url.contains("xvideos-cdn.com", ignoreCase = true)) {
+        return null
+    }
     val parts = url.split("/")
     val newCdnPreview = parserNewCdnPreviewUrl(url, parts)
     if (newCdnPreview != null) {

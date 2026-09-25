@@ -26,9 +26,12 @@ fun parserScreenTags(html: String): ModelScreenTag {
 
     val container = document.selectFirst("#content > div.mozaique.cust-nb-cols") ?: document.selectFirst("div.mozaique")
     val videos = container?.select("div.frame-block.thumb-block") ?: document.select("div.frame-block.thumb-block")
-    val listItems = ArrayList<ItemsX>(videos.size)
+    if (videos.isEmpty()) {
+        return ModelScreenTag(title0 = title0, title1 = title1, items = emptyList(), lastPage = lastPage)
+    }
 
-    videos.forEach { video ->
+    val listItems = ArrayList<ItemsX>(videos.size)
+    for (video in videos) {
         parseTagItemVideo(video)?.let { listItems.add(it) }
     }
 
@@ -40,7 +43,7 @@ private fun parseLastPage(document: Document): Int {
     val lastPage = pagination.selectFirst("a.last-page")?.text()?.trim()?.toIntOrNull()
     if (lastPage != null) return lastPage.coerceAtLeast(1)
 
-    return pagination.select("a").fold(1) { acc, el ->
+    return pagination.getElementsByTag("a").fold(1) { acc, el ->
         maxOf(acc, el.text().trim().toIntOrNull() ?: 1)
     }.coerceAtLeast(1)
 }

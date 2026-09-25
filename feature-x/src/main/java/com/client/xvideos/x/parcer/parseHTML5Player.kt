@@ -36,11 +36,15 @@ private val PATTERN_VIEW_DATA = Pattern.compile("html5player\\.setViewData\\('(.
 fun parseHTML5Player(script: String): HTML5PlayerConfig? {
     if (script.isBlank()) return null
 
-    val videoTitle = extractValue(script, PATTERN_VIDEO_TITLE)
-    val encodedIdVideo = extractValue(script, PATTERN_ENCODED_ID)
     val videoUrlLow = extractValue(script, PATTERN_URL_LOW)
     val videoUrlHigh = extractValue(script, PATTERN_URL_HIGH)
     val videoHLS = extractValue(script, PATTERN_URL_HLS)
+
+    val hasAnySource = !videoUrlLow.isNullOrBlank() || !videoUrlHigh.isNullOrBlank() || !videoHLS.isNullOrBlank()
+    if (!hasAnySource) return null
+
+    val videoTitle = extractValue(script, PATTERN_VIDEO_TITLE)
+    val encodedIdVideo = extractValue(script, PATTERN_ENCODED_ID)
     val thumbUrl = extractValue(script, PATTERN_THUMB_URL)
     val thumbUrl169 = extractValue(script, PATTERN_THUMB_URL_169)
     val thumbSlide = extractValue(script, PATTERN_THUMB_SLIDE)
@@ -53,9 +57,6 @@ fun parseHTML5Player(script: String): HTML5PlayerConfig? {
     val videoURL = extractValue(script, PATTERN_VIDEO_URL)
     val staticPath = extractValue(script, PATTERN_STATIC_PATH)
     val viewData = extractValue(script, PATTERN_VIEW_DATA)
-
-    val hasAnySource = !videoUrlLow.isNullOrBlank() || !videoUrlHigh.isNullOrBlank() || !videoHLS.isNullOrBlank()
-    if (!hasAnySource) return null
 
     return HTML5PlayerConfig(
         videoTitle = videoTitle ?: "",
@@ -91,6 +92,8 @@ private fun extractValue(script: String, pattern: Pattern): String? {
 // X6: "https:\/\/cdn\/x.mp4" -> "https://cdn/x.mp4"; "//cdn..." -> "https://cdn..."; null -> "".
 private fun String?.unescapeUrl(): String {
     if (this == null) return ""
-    val unescaped = if (contains("\\/")) replace("\\/", "/").trim() else trim()
-    return if (unescaped.isBlank()) "" else normalizeXUrl(unescaped)
+    val trimmed = trim()
+    if (trimmed.isEmpty()) return ""
+    val unescaped = if (trimmed.contains("\\/")) trimmed.replace("\\/", "/") else trimmed
+    return normalizeXUrl(unescaped)
 }

@@ -17,6 +17,8 @@ import timber.log.Timber
  * лучше потери данных.
  */
 fun <T> SnapshotStateList<T>.replaceWith(items: Collection<T>) {
+    if (isEmpty() && items.isEmpty()) return
+    if (this == items) return
     runCatching {
         Snapshot.withMutableSnapshot {
             clear()

@@ -31,7 +31,12 @@ fun parserItemVideoTags(document: Document): TagsModel {
         }
     }
 
-    return TagsModel(listMain, listPornstar, tagsSet.toList())
+    if (listMain.isEmpty() && listPornstar.isEmpty() && tagsSet.isEmpty()) {
+        return EMPTY_TAGS_MODEL
+    }
+
+    val finalTags = if (tagsSet.isEmpty()) emptyList() else tagsSet.toList()
+    return TagsModel(listMain, listPornstar, finalTags)
 }
 
 private fun Element.parseUploaderOrModel(): TagsMainUploaderPornstar? {

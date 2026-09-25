@@ -16,8 +16,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
 @Stable
@@ -179,6 +183,12 @@ class AlbumInfo(
 
     private fun parseAlbumDetails(response: String): Result<AlbumDetails> = runCatching {
         val json = LJson.parseToJsonElement(response).jsonObject
+        val errors = json["errors"]?.takeIf { it !is JsonNull }?.jsonArray
+        if (!errors.isNullOrEmpty()) {
+            val errorMsg = errors.firstOrNull()?.jsonObject?.get("message")?.jsonPrimitive?.contentOrNull
+                ?: "GraphQL error loading album $id"
+            error(errorMsg)
+        }
         val get = json["data"]
             ?.jsonObject
             ?.get("album")
