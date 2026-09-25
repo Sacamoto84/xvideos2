@@ -35,6 +35,7 @@ private val PILL_SPACER_WIDTH = 10.dp
 private val PILL_BUTTON_HORIZONTAL_PADDING = 4.dp
 private val PILL_BUTTON_VERTICAL_PADDING = 2.dp
 private const val BUTTON_RESTART_TEXT = "С начала"
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
 
 private val PILL_TEXT_STYLE = TextStyle(
     color = Color.White,
@@ -75,7 +76,7 @@ fun ResumePlaybackPill(
     ) {
         Row(
             modifier = PILL_ROW_MODIFIER,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = ROW_VERTICAL_ALIGNMENT
         ) {
             Text(
                 text = text,

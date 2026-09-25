@@ -79,6 +79,9 @@ private val TIMEOUT_ITEM_PADDING_MODIFIER = Modifier
     .padding(horizontal = TIMEOUT_ITEM_HORIZONTAL_PADDING, vertical = TIMEOUT_ITEM_VERTICAL_PADDING)
 private val RADIO_SPACER_MODIFIER = Modifier.width(RADIO_SPACER_WIDTH)
 private val PASSWORD_FIELD_BASE_MODIFIER = Modifier.fillMaxWidth()
+private val ICON_VISIBILITY = Icons.Filled.Visibility
+private val ICON_VISIBILITY_OFF = Icons.Filled.VisibilityOff
+private val ROW_CENTER_VERTICAL = Alignment.CenterVertically
 
 private const val CD_HIDE_CODE = "Скрыть код доступа"
 private const val CD_SHOW_CODE = "Показать код доступа"
@@ -620,28 +623,33 @@ fun PasswordSettingField(
         androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() })
     }
 
+    val labelComposable: @Composable () -> Unit = remember(label) { { Text(label) } }
+    val trailingIconComposable: @Composable () -> Unit = remember(showPassword, dialogTheme.dismissTextColor, onToggleShowPassword) {
+        {
+            IconButton(onClick = onToggleShowPassword) {
+                Icon(
+                    imageVector =
+                        if (showPassword) ICON_VISIBILITY_OFF else ICON_VISIBILITY,
+                    contentDescription =
+                        if (showPassword) CD_HIDE_CODE else CD_SHOW_CODE,
+                    tint = dialogTheme.dismissTextColor
+                )
+            }
+        }
+    }
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.then(PASSWORD_FIELD_BASE_MODIFIER),
-        label = { Text(label) },
+        label = labelComposable,
         singleLine = true,
         visualTransformation =
             if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         textStyle = Theme.L.Type.body.copy(color = dialogTheme.bodyColor),
-        trailingIcon = {
-            IconButton(onClick = onToggleShowPassword) {
-                Icon(
-                    imageVector =
-                        if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                    contentDescription =
-                        if (showPassword) CD_HIDE_CODE else CD_SHOW_CODE,
-                    tint = dialogTheme.dismissTextColor
-                )
-            }
-        },
+        trailingIcon = trailingIconComposable,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = dialogTheme.bodyColor,
             unfocusedTextColor = dialogTheme.bodyColor,
@@ -715,7 +723,7 @@ private fun AppLockTimeoutItem(
             .then(TIMEOUT_ITEM_BASE_MODIFIER)
             .clickable(onClick = onClick)
             .then(TIMEOUT_ITEM_PADDING_MODIFIER),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = ROW_CENTER_VERTICAL
     ) {
         RadioButton(
             selected = isSelected,

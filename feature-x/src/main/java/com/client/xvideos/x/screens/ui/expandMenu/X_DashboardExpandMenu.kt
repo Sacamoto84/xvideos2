@@ -36,6 +36,11 @@ private const val FAVORITE_ACTION_DELAY_MS = 50L
 private const val TEXT_FAVORITE = "Избранное"
 private const val TEXT_SAVE = "Сохранить"
 private const val TEXT_SAVE_TO_GALLERY = "В галерею"
+private val BOX_CONTENT_ALIGNMENT = Alignment.Center
+private val ICON_FAVORITE = Icons.Filled.Favorite
+private val ICON_FAVORITE_BORDER = Icons.Outlined.FavoriteBorder
+private val ICON_SAVE = Icons.Outlined.Save
+private val ICON_SAVE_ALT = Icons.Outlined.SaveAlt
 
 @Composable
 fun X_DashboardExpandMenu(
@@ -53,7 +58,7 @@ fun X_DashboardExpandMenu(
 
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = BOX_CONTENT_ALIGNMENT
     ) {
         ButtonMoveVert(BUTTON_VERT_SIZE, onOpen)
 
@@ -113,7 +118,7 @@ fun X_DashboardExpandMenuContent(
         }
     }
     val favoriteIcon = remember(isFavorite) {
-        if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+        if (isFavorite) ICON_FAVORITE else ICON_FAVORITE_BORDER
     }
 
     val favoriteLeadingIcon: @Composable () -> Unit = remember(favoriteIcon) {
@@ -127,7 +132,7 @@ fun X_DashboardExpandMenuContent(
     val saveLeadingIcon: @Composable () -> Unit = remember {
         {
             Icon(
-                Icons.Outlined.Save,
+                ICON_SAVE,
                 contentDescription = TEXT_SAVE
             )
         }
@@ -135,7 +140,7 @@ fun X_DashboardExpandMenuContent(
     val galleryLeadingIcon: @Composable () -> Unit = remember {
         {
             Icon(
-                Icons.Outlined.SaveAlt,
+                ICON_SAVE_ALT,
                 contentDescription = TEXT_SAVE_TO_GALLERY
             )
         }

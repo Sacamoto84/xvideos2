@@ -41,6 +41,7 @@ private val ROW_BAR_BASE_MODIFIER = Modifier
 
 private val SEARCH_WIDGET_BASE_MODIFIER = Modifier.padding(horizontal = SEARCH_HORIZONTAL_PADDING)
 private val ROW_BAR_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+private val ROW_BAR_VERTICAL_ALIGNMENT = Alignment.Bottom
 
 @Composable
 fun NichesBottomBar(
@@ -64,7 +65,7 @@ fun NichesBottomBar(
         Row(
             modifier = ROW_BAR_BASE_MODIFIER,
             horizontalArrangement = ROW_BAR_HORIZONTAL_ARRANGEMENT,
-            verticalAlignment = Alignment.Bottom
+            verticalAlignment = ROW_BAR_VERTICAL_ALIGNMENT
         ) {
             AnimatedVisibility(visible = !isSearchFocused) {
                 SortByOrder(
@@ -75,7 +76,7 @@ fun NichesBottomBar(
                 )
             }
 
-            searchWidget(SEARCH_WIDGET_BASE_MODIFIER.weight(1f))
+            searchWidget(Modifier.weight(1f).then(SEARCH_WIDGET_BASE_MODIFIER))
 
             AnimatedVisibility(visible = !isSearchFocused) {
                 ButtonUp(onClick = handleUpClick)

@@ -114,6 +114,9 @@ private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
 private val PREVIEW_GRADIENT_BASE_MODIFIER = Modifier
     .fillMaxSize()
     .background(PREVIEW_GRADIENT)
+private val ALIGN_TOP_START = Alignment.TopStart
+private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
+private val ALIGN_CENTER_END = Alignment.CenterEnd
 
 /**
  * Экран настроек «Отображение» (Appearance).
@@ -209,17 +212,17 @@ private fun ScrollButtonPreviewCard(
             // Декоративные цветные круги для проверки преломления и размытия
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
+                    .align(ALIGN_TOP_START)
                     .then(CIRCLE_PINK_BASE_MODIFIER)
             )
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
+                    .align(ALIGN_BOTTOM_CENTER)
                     .then(CIRCLE_ORANGE_BASE_MODIFIER)
             )
             Box(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
+                    .align(ALIGN_CENTER_END)
                     .then(CIRCLE_CYAN_BASE_MODIFIER)
             )
         }
@@ -237,7 +240,7 @@ private fun ScrollButtonPreviewCard(
             color = PREVIEW_LABEL_COLOR,
             style = previewLabelStyle,
             modifier = Modifier
-                .align(Alignment.TopStart)
+                .align(ALIGN_TOP_START)
                 .then(PREVIEW_LABEL_BASE_MODIFIER)
         )
 
@@ -250,7 +253,7 @@ private fun ScrollButtonPreviewCard(
             onScrollToBottom = ON_SCROLL_NOOP,
             effect = currentEffect,
             modifier = Modifier
-                .align(Alignment.CenterEnd)
+                .align(ALIGN_CENTER_END)
                 .then(SCROLL_BUTTONS_BASE_MODIFIER)
         )
     }

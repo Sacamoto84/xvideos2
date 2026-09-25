@@ -37,6 +37,18 @@ private val SUBTITLE_PADDING_START = 4.dp
 private const val SUFFIX_GIFS = " gifs"
 private const val SEPARATOR_SLASH = " / "
 private const val SUFFIX_PICTURES = " pictures"
+private val COVER_IMAGE_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .aspectRatio(ALBUM_CARD_ASPECT_RATIO)
+private val BOTTOM_OVERLAY_BASE_MODIFIER = Modifier
+    .fillMaxWidth()
+    .background(BOTTOM_OVERLAY_BG)
+private val TITLE_TEXT_MODIFIER = Modifier.padding(horizontal = TITLE_PADDING_HORIZONTAL)
+private val SUBTITLE_ROW_BASE_MODIFIER = Modifier
+    .padding(start = SUBTITLE_PADDING_START)
+    .fillMaxWidth()
+private val OVERLAY_ALIGNMENT = Alignment.BottomCenter
+private val COLOR_WHITE = Color.White
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -56,7 +68,7 @@ fun AlbumListItem(
     }
 
     val titleStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(color = Color.White)
+        Theme.L.Type.rowTitle.copy(color = COLOR_WHITE)
     }
 
     val countSubtitle = remember(numberOfAnimatedPictures, numberOfPictures) {
@@ -85,31 +97,26 @@ fun AlbumListItem(
     ) {
         UrlImage(
             coverUrl,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(ALBUM_CARD_ASPECT_RATIO),
+            modifier = COVER_IMAGE_BASE_MODIFIER,
             contentScale = ContentScale.Crop
         )
 
         Column(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(BOTTOM_OVERLAY_BG)
+                .align(OVERLAY_ALIGNMENT)
+                .then(BOTTOM_OVERLAY_BASE_MODIFIER)
         ) {
             Text(
                 cleanTitle,
-                modifier = Modifier.padding(horizontal = TITLE_PADDING_HORIZONTAL),
-                color = Color.White,
+                modifier = TITLE_TEXT_MODIFIER,
+                color = COLOR_WHITE,
                 style = titleStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
             Row(
-                modifier = Modifier
-                    .padding(start = SUBTITLE_PADDING_START)
-                    .fillMaxWidth()
+                modifier = SUBTITLE_ROW_BASE_MODIFIER
             ) {
                 Text(
                     countSubtitle,

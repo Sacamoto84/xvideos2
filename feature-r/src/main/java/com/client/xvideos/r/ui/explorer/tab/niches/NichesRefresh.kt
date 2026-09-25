@@ -23,6 +23,7 @@ import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,6 +47,20 @@ private val REFRESH_ICON_PADDING = 4.dp
 private val REFRESH_TITLE_FONT_SIZE = 20.sp
 private val REFRESH_BUTTON_FONT_SIZE = 18.sp
 private val REFRESH_MINI_FONT_SIZE = 14.sp
+private val COLOR_WHITE = Color.White
+private val ICON_REFRESH = Icons.Default.Refresh
+private val COLUMN_CENTER_HORIZONTAL = Alignment.CenterHorizontally
+private val COLUMN_CENTER_VERTICAL = Arrangement.Center
+private val ROW_CENTER_VERTICAL = Alignment.CenterVertically
+private val ROW_SPACE_BETWEEN = Arrangement.SpaceBetween
+private val INDICATOR_SIZE_MODIFIER = Modifier.size(REFRESH_INDICATOR_SIZE)
+private val ICON_SIZE_MODIFIER = Modifier.size(REFRESH_ICON_SIZE)
+private val ICON_PADDING_MODIFIER = Modifier.padding(REFRESH_ICON_PADDING)
+private val SPACER_HEIGHT_8_MODIFIER = Modifier.height(REFRESH_SPACER_HEIGHT_8)
+private val SPACER_HEIGHT_16_MODIFIER = Modifier.height(REFRESH_SPACER_HEIGHT_16)
+private val MINI_ROW_BASE_MODIFIER = Modifier
+    .padding(horizontal = REFRESH_MINI_HORIZONTAL_PADDING, vertical = REFRESH_MINI_VERTICAL_PADDING)
+    .fillMaxSize()
 
 private const val TEXT_NO_NICHES = "Отсутствует список Niches"
 private const val TEXT_DOWNLOAD_LIST = "Скачать список "
@@ -55,17 +70,17 @@ private const val CD_REFRESH = "Refresh"
 
 private val NICHES_MESSAGE_STYLE = TextStyle(
     fontSize = REFRESH_TITLE_FONT_SIZE,
-    color = Color.White,
+    color = COLOR_WHITE,
     fontFamily = Theme.R.fontFamilyDMsanss
 )
 private val NICHES_BUTTON_STYLE = TextStyle(
     fontSize = REFRESH_BUTTON_FONT_SIZE,
-    color = Color.White,
+    color = COLOR_WHITE,
     fontFamily = Theme.R.fontFamilyDMsanss
 )
 private val NICHES_MINI_STYLE = TextStyle(
     fontSize = REFRESH_MINI_FONT_SIZE,
-    color = Color.White,
+    color = COLOR_WHITE,
     fontFamily = Theme.R.fontFamilyDMsanss
 )
 
@@ -96,19 +111,19 @@ fun Refresh(
         modifier = modifier
             .fillMaxSize()
             .background(Theme.tabLevel1),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = COLUMN_CENTER_VERTICAL,
+        horizontalAlignment = COLUMN_CENTER_HORIZONTAL
     ) {
         Text(TEXT_NO_NICHES, style = NICHES_MESSAGE_STYLE)
 
-        Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_8))
+        Spacer(SPACER_HEIGHT_8_MODIFIER)
         Button(
             onClick = onRefreshNichesCacheClick,
             colors = buttonColors
         ) {
             Text(TEXT_DOWNLOAD_LIST, style = NICHES_BUTTON_STYLE)
         }
-        Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_16))
+        Spacer(SPACER_HEIGHT_16_MODIFIER)
         LinearWavyProgressIndicator(
             progress = { nichesCacheProgress },
             Modifier.graphicsLayer(
@@ -136,38 +151,34 @@ fun RefreshMini(
 
     Row(
         modifier = modifier
-            .padding(horizontal = REFRESH_MINI_HORIZONTAL_PADDING, vertical = REFRESH_MINI_VERTICAL_PADDING)
-            .fillMaxSize()
+            .then(MINI_ROW_BASE_MODIFIER)
             .background(Theme.tabLevel1),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = ROW_CENTER_VERTICAL,
+        horizontalArrangement = ROW_SPACE_BETWEEN
     ) {
         Text("$TEXT_OLD_NICHES_PREFIX$cacheHour$TEXT_OLD_NICHES_SUFFIX", style = NICHES_MINI_STYLE)
 
-        Spacer(Modifier.height(REFRESH_SPACER_HEIGHT_8))
+        Spacer(SPACER_HEIGHT_8_MODIFIER)
 
         Box {
             if (nichesCacheProgress == 0f) {
-                IconButton(onClick = onRefreshNichesCacheClick, modifier = Modifier.size(REFRESH_INDICATOR_SIZE)) {
+                IconButton(onClick = onRefreshNichesCacheClick, modifier = INDICATOR_SIZE_MODIFIER) {
                     Icon(
-                        Icons.Default.Refresh,
+                        ICON_REFRESH,
                         contentDescription = CD_REFRESH,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(REFRESH_ICON_SIZE)
+                        tint = COLOR_WHITE,
+                        modifier = ICON_SIZE_MODIFIER
                             .background(Theme.R.colorBlue, CircleShape)
-                            .padding(REFRESH_ICON_PADDING)
+                            .then(ICON_PADDING_MODIFIER)
                     )
                 }
             }
 
             CircularWavyProgressIndicator(
                 progress = { nichesCacheProgress },
-                Modifier
-                    .size(REFRESH_INDICATOR_SIZE)
-                    .graphicsLayer(
-                        alpha = if (nichesCacheProgress > 0f) 1f else 0f
-                    )
+                modifier = INDICATOR_SIZE_MODIFIER.graphicsLayer(
+                    alpha = if (nichesCacheProgress > 0f) 1f else 0f
+                )
             )
         }
     }

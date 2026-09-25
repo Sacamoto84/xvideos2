@@ -47,6 +47,14 @@ private val PANEL_BOTTOM_PADDING = 4.dp
 private val PANEL_INNER_PADDING = 10.dp
 private val SUBTITLE_TOP_PADDING = 6.dp
 private val BUTTON_TOP_PADDING = 8.dp
+private val WARNING_ICON = Icons.Default.Warning
+private val REFRESH_ICON = Icons.Default.Refresh
+private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
+private val HEADER_ICON_SPACER_MODIFIER = Modifier.width(HEADER_ICON_SPACER)
+private val REFRESH_ICON_SPACER_MODIFIER = Modifier.width(REFRESH_ICON_SPACER)
+private val SUBTITLE_PADDING_MODIFIER = Modifier.padding(top = SUBTITLE_TOP_PADDING)
+private val BUTTON_PADDING_MODIFIER = Modifier.padding(top = BUTTON_TOP_PADDING)
+private val COLOR_BLACK = Color.Black
 
 private const val TEXT_RETRYING = "Повторяю..."
 private const val TEXT_RETRY = "Повторить страницы"
@@ -117,13 +125,13 @@ private fun LAlbumNetworkIssuePanel(
             .background(Theme.L.grey5, PANEL_CORNER_SHAPE)
             .padding(PANEL_INNER_PADDING)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
             Icon(
-                imageVector = Icons.Default.Warning,
+                imageVector = WARNING_ICON,
                 contentDescription = null,
                 tint = warningColor
             )
-            Spacer(Modifier.width(HEADER_ICON_SPACER))
+            Spacer(HEADER_ICON_SPACER_MODIFIER)
             Text(
                 text = if (htmlChallenge) {
                     if (retryAfterSeconds > 0) {
@@ -144,7 +152,7 @@ private fun LAlbumNetworkIssuePanel(
             text = "$TEXT_CACHED_PAGES_HINT_PREFIX$failedPagesText",
             color = Theme.L.grey2,
             style = Theme.L.Type.rowSubtitle,
-            modifier = Modifier.padding(top = SUBTITLE_TOP_PADDING)
+            modifier = SUBTITLE_PADDING_MODIFIER
         )
 
         Button(
@@ -152,13 +160,13 @@ private fun LAlbumNetworkIssuePanel(
             enabled = failedPages.isNotEmpty() && !isRetryingFailedPages,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
             shape = PANEL_CORNER_SHAPE,
-            modifier = Modifier.padding(top = BUTTON_TOP_PADDING)
+            modifier = BUTTON_PADDING_MODIFIER
         ) {
-            Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Black)
-            Spacer(Modifier.width(REFRESH_ICON_SPACER))
+            Icon(REFRESH_ICON, contentDescription = null, tint = COLOR_BLACK)
+            Spacer(REFRESH_ICON_SPACER_MODIFIER)
             Text(
                 if (isRetryingFailedPages) TEXT_RETRYING else TEXT_RETRY,
-                color = Color.Black,
+                color = COLOR_BLACK,
                 style = Theme.L.Type.button
             )
         }
