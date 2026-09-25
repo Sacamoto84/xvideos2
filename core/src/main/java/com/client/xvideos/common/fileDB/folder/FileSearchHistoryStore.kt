@@ -13,7 +13,7 @@ open class FileSearchHistoryStore(
 
     suspend fun insertAndTrim(text: String, limit: Int) {
         val normalized = text.trim()
-        if (normalized.isBlank()) return
+        if (normalized.isEmpty()) return
 
         val now = System.currentTimeMillis()
         table.upsert(
@@ -39,14 +39,22 @@ open class FileSearchHistoryStore(
     }
 
     suspend fun refresh() {
-        texts.value = table.all()
+        val all = table.all()
+        if (all.isEmpty()) {
+            if (texts.value.isNotEmpty()) {
+                texts.value = emptyList()
+            }
+            return
+        }
+        texts.value = all
             .sortedByDescending { it.fields[FolderTable.FIELD_TIME_CREATE]?.toLongOrNull() ?: 0L }
             .mapNotNull { it.fields[FIELD_TEXT] ?: it.key }
     }
 
     private suspend fun trim(limit: Int) {
-        table.all()
-            .sortedByDescending { it.fields[FolderTable.FIELD_TIME_CREATE]?.toLongOrNull() ?: 0L }
+        val all = table.all()
+        if (all.size <= limit) return
+        all.sortedByDescending { it.fields[FolderTable.FIELD_TIME_CREATE]?.toLongOrNull() ?: 0L }
             .drop(limit)
             .forEach { table.delete(it.key) }
     }

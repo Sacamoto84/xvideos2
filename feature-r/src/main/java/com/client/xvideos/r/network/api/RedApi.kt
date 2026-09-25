@@ -234,7 +234,9 @@ class RedApi @Inject constructor(
     //--------------------------- Tag methods ---------------------------
 
     suspend fun getNiche(niches: String): Result<NicheResponse> {
-        val route = Route(method = "GET", path = "/v2/niches/{niches}", "niches" to niches)
+        val trimmed = niches.trim()
+        if (trimmed.isEmpty()) return Result.failure(IllegalArgumentException("Niche identifier cannot be blank"))
+        val route = Route(method = "GET", path = "/v2/niches/{niches}", "niches" to trimmed)
         return api.request<NicheResponse>(route)
     }
 
@@ -244,10 +246,12 @@ class RedApi @Inject constructor(
         count: Int = 100,
         order: Order = Order.LATEST
     ): Result<MediaResponse> {
+        val trimmed = niches.trim()
+        if (trimmed.isEmpty()) return Result.success(MediaResponse())
         val route = Route(
             method = "GET",
             path = "/v2/niches/{niches}/gifs?page={page}&count={count}&order={order}",
-            "niches" to niches,
+            "niches" to trimmed,
             "page" to page,
             "count" to count,
             "order" to order.value
@@ -256,13 +260,17 @@ class RedApi @Inject constructor(
     }
 
     suspend fun getNichesRelated(niches: String): Result<NichesResponse> {
-        val route = Route(method = "GET", path = "/v2/niches/{niches}/related", "niches" to niches)
+        val trimmed = niches.trim()
+        if (trimmed.isEmpty()) return Result.success(NichesResponse())
+        val route = Route(method = "GET", path = "/v2/niches/{niches}/related", "niches" to trimmed)
         return api.request<NichesResponse>(route)
     }
 
     suspend fun getNichesTopCreators(niches: String): Result<TopCreatorsResponse> {
+        val trimmed = niches.trim()
+        if (trimmed.isEmpty()) return Result.success(TopCreatorsResponse())
         val route =
-            Route(method = "GET", path = "/v2/niches/{niches}/top-creators", "niches" to niches)
+            Route(method = "GET", path = "/v2/niches/{niches}/top-creators", "niches" to trimmed)
         return api.request(route)
     }
 
@@ -272,7 +280,9 @@ class RedApi @Inject constructor(
     )
 
     suspend fun getNichesTopTags(niches: String): List<String> {
-        val route = Route(method = "GET", path = "/v2/niches/{niches}/top-tags", "niches" to niches)
+        val trimmed = niches.trim()
+        if (trimmed.isEmpty()) return emptyList()
+        val route = Route(method = "GET", path = "/v2/niches/{niches}/top-tags", "niches" to trimmed)
         return api.request<TagsContainer>(route).getOrNull()?.tags ?: emptyList()
     }
 

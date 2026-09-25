@@ -8,6 +8,7 @@ import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
 private val EMPTY_CREATORS_RESPONSE = SearchCreatorsResponse()
+private val EMPTY_MEDIA_RESPONSE = MediaResponse()
 private const val SEARCH_GIFS_PATH = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}"
 private const val SEARCH_GIFS_VERIFIED_PATH = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes"
 
@@ -51,12 +52,16 @@ class RedApi_Search(val api: ApiClient) {
         page: Int = 1,                  // номер страницы (1-based).
         verified: Boolean = false,
     ): Result <MediaResponse> {
+        val trimmed = searchText.trim()
+        if (trimmed.isEmpty()) {
+            return Result.success(EMPTY_MEDIA_RESPONSE)
+        }
 
         val path = if (!verified) SEARCH_GIFS_PATH else SEARCH_GIFS_VERIFIED_PATH
         val route = Route(
             method = "GET",
             path = path,
-            "search_text" to searchText,
+            "search_text" to trimmed,
             "order" to order.value,
             "count" to count,
             "page" to page,

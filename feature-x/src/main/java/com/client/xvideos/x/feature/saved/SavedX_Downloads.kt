@@ -216,6 +216,15 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             emptyArray()
         }
 
+        if (allFiles.isEmpty()) {
+            if (_list.value.isNotEmpty()) {
+                _downloadedVideoIds.value = emptySet()
+                _downloadedPosterIds.value = emptySet()
+                _list.value = emptyList()
+            }
+            return
+        }
+
         val videoIds = HashSet<Long>()
         val posterIds = HashSet<Long>()
         val infos = ArrayList<File>()
@@ -230,11 +239,15 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         }
         infos.sortByDescending { it.lastModified() }
 
-        val result = infos.mapNotNull { f ->
-            runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
+        val result = ArrayList<ItemsX>(infos.size)
+        for (f in infos) {
+            val item = runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
                 .onFailure { Timber.e(it, "X saved: битый .info ${f.absolutePath}") }
                 .getOrNull()
-        }.filter { it.id in videoIds }
+            if (item != null && item.id in videoIds) {
+                result.add(item)
+            }
+        }
         _downloadedVideoIds.value = videoIds
         _downloadedPosterIds.value = posterIds
         _list.value = result

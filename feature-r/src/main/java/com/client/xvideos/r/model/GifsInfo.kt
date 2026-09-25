@@ -60,7 +60,7 @@ fun GifsInfo.sanitizeOrNull(): GifsInfo? {
 }
 
 private fun sanitizeTagsList(safeTags: List<String>?): List<String> {
-    if (safeTags == null || safeTags.isEmpty()) return emptyList()
+    if (safeTags.isNullOrEmpty()) return emptyList()
     var hasInvalid = false
     for (tag in safeTags) {
         val s: String? = tag
@@ -77,11 +77,15 @@ private fun sanitizeTagsList(safeTags: List<String>?): List<String> {
             out.add(s)
         }
     }
-    return out
+    return if (out.isEmpty()) emptyList() else out
 }
 
 fun List<GifsInfo>?.sanitizeGifsInfoList(): List<GifsInfo> {
     if (this.isNullOrEmpty()) return emptyList()
+    if (this.size == 1) {
+        val single = this[0].sanitizeOrNull() ?: return emptyList()
+        return listOf(single)
+    }
     val seenIds = HashSet<String>(this.size)
     val result = ArrayList<GifsInfo>(this.size)
     for (item in this) {

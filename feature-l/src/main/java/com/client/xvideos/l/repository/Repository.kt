@@ -310,6 +310,7 @@ open class Repository(
     }
 
     suspend fun deleteCache(data: String, config: RepositoryUriConfig) {
+        if (config == RepositoryUriConfig.DIRECT) return
         val cacheKey = data.toMD5()
         when (config) {
             RepositoryUriConfig.CACHE_RAM -> deleteRamCache(cacheKey)

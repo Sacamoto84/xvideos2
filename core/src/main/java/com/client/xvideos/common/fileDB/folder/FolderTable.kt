@@ -50,9 +50,16 @@ class FolderTable(
 
     suspend fun all(): List<FolderRecord> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            tableDir.listFiles { file -> file.isDirectory }
-                ?.mapNotNull { readRecord(it) }
-                ?: emptyList()
+            val dirs = tableDir.listFiles { file -> file.isDirectory }
+            if (dirs.isNullOrEmpty()) return@withLock emptyList()
+            val list = ArrayList<FolderRecord>(dirs.size)
+            for (dir in dirs) {
+                val record = readRecord(dir)
+                if (record != null) {
+                    list.add(record)
+                }
+            }
+            list
         }
     }
 

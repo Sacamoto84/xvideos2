@@ -251,8 +251,13 @@ object AppDns : Dns {
             if (cache.size >= MAX_CACHE_SIZE) {
                 val excess = cache.size - (MAX_CACHE_SIZE * 3 / 4)
                 if (excess > 0) {
-                    val toRemove = cache.keys.take(excess)
-                    toRemove.forEach { cache.remove(it) }
+                    val it = cache.keys.iterator()
+                    var count = 0
+                    while (it.hasNext() && count < excess) {
+                        it.next()
+                        it.remove()
+                        count++
+                    }
                 }
             }
         }
