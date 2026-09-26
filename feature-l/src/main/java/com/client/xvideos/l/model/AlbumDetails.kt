@@ -46,6 +46,13 @@ data class AlbumDetails(
     val hasPictures: Boolean get() = number_of_pictures > 0
     val hasAnimatedPictures: Boolean get() = number_of_animated_pictures > 0
     val hasCover: Boolean get() = cover?.isValid == true
+    val hasTags: Boolean get() = tags.isNotEmpty()
+    val hasGenres: Boolean get() = genres.isNotEmpty()
+    val hasAudiences: Boolean get() = audiences.isNotEmpty()
+    val hasDescription: Boolean get() = description.isNotBlank()
+    val hasLanguage: Boolean get() = language?.isValid == true
+    val hasCreatedBy: Boolean get() = createdBy?.isValid == true
+    val effectiveTitle: String get() = title.ifBlank { id }
 
     companion object {
         val EMPTY = AlbumDetails()
@@ -60,6 +67,7 @@ data class Content(
     @SerialName("url") val url: String = ""
 ) {
     val isValid: Boolean get() = id.isNotBlank()
+    val hasTitle: Boolean get() = title.isNotBlank()
 
     companion object {
         val EMPTY = Content()

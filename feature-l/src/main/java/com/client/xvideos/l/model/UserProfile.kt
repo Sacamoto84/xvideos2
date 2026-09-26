@@ -12,6 +12,8 @@ data class UserProfile(
     val isNotEmpty: Boolean get() = !isEmpty
     val hasEmail: Boolean get() = email.isNotBlank()
     val hasPassword: Boolean get() = password.isNotBlank()
+    val isConfigured: Boolean get() = isValid
+    val hasCredentials: Boolean get() = isValid
 
     companion object {
         val EMPTY = UserProfile()

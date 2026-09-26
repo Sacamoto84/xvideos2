@@ -129,6 +129,8 @@ data class FacetCollectionInfo(
     val hasNext: Boolean get() = hasNextPage
     val hasPrevious: Boolean get() = hasPreviousPage
     val isFirstPage: Boolean get() = page <= 1
+    val isLastPage: Boolean get() = !hasNextPage && page > 0
+    val hasMultiplePages: Boolean get() = totalPages > 1
 
     companion object {
         val EMPTY = FacetCollectionInfo()
@@ -166,6 +168,10 @@ data class Album(
     val hasAnimatedPictures: Boolean get() = numberOfAnimatedPictures > 0
     val hasTags: Boolean get() = tags.isNotEmpty()
     val hasGenres: Boolean get() = genres.isNotEmpty()
+    val hasDescription: Boolean get() = description.isNotBlank()
+    val hasDownloadUrl: Boolean get() = downloadUrl.isNotBlank()
+    val hasFavorites: Boolean get() = numberOfFavorites > 0
+    val hasLanguage: Boolean get() = language?.isValid == true
 
     companion object {
         val EMPTY = Album()
@@ -180,6 +186,8 @@ data class Cover(
     @SerialName("url") val url: String = ""
 ) {
     val isValid: Boolean get() = url.isNotBlank()
+    val hasDimensions: Boolean get() = width > 0 && height > 0
+    val aspectRatio: Float get() = if (height > 0) width.toFloat() / height.toFloat() else 0f
 
     companion object {
         val EMPTY = Cover()
