@@ -31,3 +31,16 @@ fun Long.formatAsBytes(): String = formatBytes(this)
 
 /** Расширение для форматирования [Int] байтов. */
 fun Int.formatAsBytes(): String = formatBytes(this.toLong())
+
+/** Расширение для форматирования [Double] байтов с безопасной обработкой NaN/Infinity. */
+fun Double.formatAsBytes(): String =
+    if (this.isNaN() || this.isInfinite() || this <= 0.0) "0 B" else formatBytes(this.toLong())
+
+/** Расширение для форматирования [Float] байтов с безопасной обработкой NaN/Infinity. */
+fun Float.formatAsBytes(): String =
+    if (this.isNaN() || this.isInfinite() || this <= 0f) "0 B" else formatBytes(this.toLong())
+
+/** Форматирует [Long]? байтов или возвращает [default], если значение null. */
+fun formatBytesOrDefault(bytes: Long?, default: String = "0 B"): String =
+    if (bytes == null) default else formatBytes(bytes)
+

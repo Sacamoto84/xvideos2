@@ -40,3 +40,18 @@ fun String.capitalizeEachWord(): String {
 
 fun String?.capitalizeEachWordOrEmpty(): String = if (this.isNullOrBlank()) "" else this.capitalizeEachWord()
 
+/**
+ * Преобразует в верхний регистр только первую букву строки, оставляя остальную часть без изменений.
+ */
+fun String.capitalizeFirstWord(): String {
+    if (isEmpty()) return ""
+    return replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+}
+
+/**
+ * Преобразует в верхний регистр первую букву строки или возвращает пустую строку, если строка null/blank.
+ */
+fun String?.capitalizeFirstWordOrEmpty(): String =
+    if (this.isNullOrBlank()) "" else this.capitalizeFirstWord()
+
+

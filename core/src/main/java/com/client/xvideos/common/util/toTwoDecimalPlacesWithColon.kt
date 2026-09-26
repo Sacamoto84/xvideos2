@@ -30,6 +30,13 @@ fun Float.toTwoDecimalPlacesWithColon(): String {
 fun Double.toTwoDecimalPlacesWithColon(): String =
     if (this.isNaN() || this.isInfinite() || this <= 0.0) "0:00" else this.toFloat().toTwoDecimalPlacesWithColon()
 
+fun Int.toTwoDecimalPlacesWithColon(): String =
+    if (this <= 0) "0:00" else "$this:00"
+
+fun Long.toTwoDecimalPlacesWithColon(): String =
+    if (this <= 0L) "0:00" else "$this:00"
+
 fun String?.toTwoDecimalPlacesWithColonOrDefault(default: String = "0:00"): String =
     this?.toFloatOrNull()?.toTwoDecimalPlacesWithColon() ?: default
+
 

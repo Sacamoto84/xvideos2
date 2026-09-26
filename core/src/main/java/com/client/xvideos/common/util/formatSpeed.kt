@@ -22,5 +22,15 @@ fun formatSpeed(bytesPerSecond: Long): String {
 
 fun Long.formatAsSpeed(): String = formatSpeed(this)
 
-fun Float.formatAsSpeed(): String = formatSpeed(if (this.isNaN() || this <= 0f) 0L else this.toLong())
+fun Int.formatAsSpeed(): String = formatSpeed(this.toLong())
+
+fun Float.formatAsSpeed(): String =
+    formatSpeed(if (this.isNaN() || this.isInfinite() || this <= 0f) 0L else this.toLong())
+
+fun Double.formatAsSpeed(): String =
+    formatSpeed(if (this.isNaN() || this.isInfinite() || this <= 0.0) 0L else this.toLong())
+
+fun formatSpeedOrDefault(bytesPerSecond: Long?, default: String = "0 Bs"): String =
+    if (bytesPerSecond == null) default else formatSpeed(bytesPerSecond)
+
 

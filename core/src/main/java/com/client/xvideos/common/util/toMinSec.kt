@@ -48,3 +48,7 @@ fun Long.toMinSec(): String {
     return "$mStr:$sStr"
 }
 
+fun String?.toMinSecOrDefault(default: String = "00:00"): String =
+    this?.toDoubleOrNull()?.toMinSec() ?: default
+
+

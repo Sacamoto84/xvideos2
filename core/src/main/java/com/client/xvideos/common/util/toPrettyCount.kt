@@ -105,6 +105,13 @@ fun Int.toPrettyCount3(): String = this.toLong().toPrettyCount3()
 
 fun Int.toPrettyCountInt(): String = this.toLong().toPrettyCountInt()
 
+fun Double.toPrettyCount(): String =
+    if (this.isNaN() || this.isInfinite()) "0" else this.toLong().toPrettyCount()
+
+fun Float.toPrettyCount(): String =
+    if (this.isNaN() || this.isInfinite()) "0" else this.toLong().toPrettyCount()
+
 fun String?.toPrettyCountOrDefault(default: String = "0"): String =
     this?.toLongOrNull()?.toPrettyCount() ?: default
+
 

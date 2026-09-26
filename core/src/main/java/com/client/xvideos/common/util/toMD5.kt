@@ -29,3 +29,18 @@ fun String.toMD5(): String {
     if (isEmpty()) return EMPTY_MD5
     return this.toByteArray(Charsets.UTF_8).toMD5()
 }
+
+/**
+ * Преобразует nullable строку в MD5 хэш или возвращает [default], если строка null.
+ */
+fun String?.toMD5OrDefault(default: String = EMPTY_MD5): String =
+    if (this == null) default else this.toMD5()
+
+/**
+ * Проверяет, является ли строка валидным 32-символьным hex MD5 хэшем.
+ */
+fun String?.isValidMD5(): Boolean {
+    if (this == null || this.length != 32) return false
+    return all { c -> c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F' }
+}
+
