@@ -8,7 +8,15 @@ import kotlinx.serialization.Serializable
 //    "R": "82.887"
 //}
 @Serializable
-data class Keyword(val N: String, val R: String) //N группа R-рейтинг
+data class Keyword(val N: String, val R: String) { //N группа R-рейтинг
+    val name: String get() = N
+    val rating: String get() = R
+    val isValid: Boolean get() = N.isNotBlank()
+
+    companion object {
+        val EMPTY = Keyword(N = "", R = "")
+    }
+}
 
 @Serializable
 data class Pornstar(
@@ -21,7 +29,18 @@ data class Pornstar(
     val P: String, //Путь до картинки
     val RF: String, //Количество подписчиков
     val A: Map<String, String>? = null // Обрабатываем возможное отсутствие поля A
-)
+) {
+    val name: String get() = N
+    val profilePath: String get() = F
+    val avatarUrl: String get() = P
+    val videoCount: Int get() = MV
+    val subscribers: String get() = RF
+    val isValid: Boolean get() = N.isNotBlank()
+
+    companion object {
+        val EMPTY = Pornstar(N = "", F = "", T = "pornstar", MV = 0, M = 0, L = 0, P = "", RF = "")
+    }
+}
 
 @Serializable
 data class Channel(
@@ -34,7 +53,17 @@ data class Channel(
     val P: String, // Путь к картинке
     val RF: String, //Количество подписчиков
     val A: Map<String, String>? = null // Дополнительные атрибуты
-)
+) {
+    val name: String get() = N
+    val profilePath: String get() = F
+    val avatarUrl: String get() = P
+    val subscribers: String get() = RF
+    val isValid: Boolean get() = N.isNotBlank()
+
+    companion object {
+        val EMPTY = Channel(N = "", F = "", T = "channel", CPV = false, M = 0, L = 0, P = "", RF = "")
+    }
+}
 
 @Serializable
 data class SearchResult(
@@ -47,6 +76,10 @@ data class SearchResult(
 ) {
     val isEmpty: Boolean get() = keywords.isEmpty() && pornstar.isNullOrEmpty() && channel.isNullOrEmpty()
     val isNotEmpty: Boolean get() = !isEmpty
+    val hasKeywords: Boolean get() = keywords.isNotEmpty()
+    val hasPornstars: Boolean get() = !pornstar.isNullOrEmpty()
+    val hasChannels: Boolean get() = !channel.isNullOrEmpty()
+    val isBlacklisted: Boolean get() = BLACKLISTED == true
 
     companion object {
         val EMPTY = SearchResult(result = false, code = 0, keywords = emptyList())

@@ -81,7 +81,16 @@ data class PicsDetails(
     @SerialName("thumbnails") val thumbnails: List<Thumbnails>? = emptyList(),
     @SerialName("id") val id: String? = null,
     @SerialName("url") val url: String? = null
-) : Parcelable
+) : Parcelable {
+    val isValid: Boolean get() = !id.isNullOrBlank()
+    val hasVideo: Boolean get() = !url_to_video.isNullOrBlank()
+    val hasOriginal: Boolean get() = !url_to_original.isNullOrBlank()
+    val hasThumbnails: Boolean get() = !thumbnails.isNullOrEmpty()
+
+    companion object {
+        val EMPTY = PicsDetails()
+    }
+}
 
 @Immutable
 @Parcelize
@@ -91,7 +100,13 @@ data class Thumbnails(
     @SerialName("height") val height: Int = 0, //3779,
     @SerialName("size") val size: String? = null, //"small", "xMax"
     @SerialName("url") val url: String? = null //"https://..."
-) : Parcelable
+) : Parcelable {
+    val isValid: Boolean get() = !url.isNullOrBlank()
+
+    companion object {
+        val EMPTY = Thumbnails()
+    }
+}
 
 //https://cdni.luscious.net/venividivici2k13/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.640x0.jpg?md5=sn0bj1zYPF7ziGsGKnGRQA&expires=1773900756
 //[

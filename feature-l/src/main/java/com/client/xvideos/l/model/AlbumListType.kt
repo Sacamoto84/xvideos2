@@ -12,7 +12,14 @@ import kotlinx.serialization.Serializable
 data class Landing_page_albumType(
     @SerialName("title") val title: String = "",
     @SerialName("sections") val sections: List<Landing_page_albumSection> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = sections.isEmpty()
+    val isNotEmpty: Boolean get() = sections.isNotEmpty()
+
+    companion object {
+        val EMPTY = Landing_page_albumType()
+    }
+}
 
 @Serializable
 data class Landing_page_albumSection(
@@ -21,7 +28,14 @@ data class Landing_page_albumSection(
     @SerialName("item_type") val itemType: String = "", //"album"
     @SerialName("url") val url: String = "",
     @SerialName("items") val items: List<Album> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+
+    companion object {
+        val EMPTY = Landing_page_albumSection()
+    }
+}
 
 //--- AlbumListTopHits ---
 @Serializable
@@ -40,26 +54,45 @@ data class AlbumListTopHits(
 
     @SerialName("items")
     val items: List<Album> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+
+    companion object {
+        val EMPTY = AlbumListTopHits()
+    }
+}
 
 // Корневой класс для JSON
 @Serializable
 data class AlbumResponse(
     @SerialName("data")
     val data: AlbumData = AlbumData()
-)
+) {
+    companion object {
+        val EMPTY = AlbumResponse()
+    }
+}
 
 @Serializable
 data class AlbumData(
     @SerialName("album")
     val album: AlbumListWrapper = AlbumListWrapper()
-)
+) {
+    companion object {
+        val EMPTY = AlbumData()
+    }
+}
 
 @Serializable
 data class AlbumListWrapper(
     @SerialName("list")
     val list: AlbumList = AlbumList()
-)
+) {
+    companion object {
+        val EMPTY = AlbumListWrapper()
+    }
+}
 
 @Serializable
 data class AlbumList(
@@ -67,7 +100,14 @@ data class AlbumList(
     val info: FacetCollectionInfo = FacetCollectionInfo(),
     @SerialName("items")
     val items: List<Album> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+
+    companion object {
+        val EMPTY = AlbumList()
+    }
+}
 
 @Serializable
 data class FacetCollectionInfo(
@@ -85,7 +125,15 @@ data class FacetCollectionInfo(
     val itemsPerPage: Int = 0,
     @SerialName("url_complete")
     val urlComplete: String = ""
-)
+) {
+    val hasNext: Boolean get() = hasNextPage
+    val hasPrevious: Boolean get() = hasPreviousPage
+    val isFirstPage: Boolean get() = page <= 1
+
+    companion object {
+        val EMPTY = FacetCollectionInfo()
+    }
+}
 
 @Serializable
 data class Album(
@@ -111,7 +159,18 @@ data class Album(
     @SerialName("created_by") val createdBy: User = User(),
     @SerialName("tags") val tags: List<Tag> = emptyList(),
     @SerialName("genres") val genres: List<Genre> = emptyList()
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank()
+    val hasCover: Boolean get() = cover?.isValid == true
+    val hasPictures: Boolean get() = numberOfPictures > 0
+    val hasAnimatedPictures: Boolean get() = numberOfAnimatedPictures > 0
+    val hasTags: Boolean get() = tags.isNotEmpty()
+    val hasGenres: Boolean get() = genres.isNotEmpty()
+
+    companion object {
+        val EMPTY = Album()
+    }
+}
 
 @Serializable
 data class Cover(
@@ -119,7 +178,13 @@ data class Cover(
     @SerialName("height") val height: Int = 0,
     @SerialName("size") val size: String = "",
     @SerialName("url") val url: String = ""
-)
+) {
+    val isValid: Boolean get() = url.isNotBlank()
+
+    companion object {
+        val EMPTY = Cover()
+    }
+}
 
 @Serializable
 data class Language(
@@ -129,7 +194,13 @@ data class Language(
     val title: String = "",
     @SerialName("url")
     val url: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+    companion object {
+        val EMPTY = Language()
+    }
+}
 
 @Serializable
 data class User(
@@ -141,7 +212,14 @@ data class User(
     val displayName: String = "",
     @SerialName("url")
     val url: String = ""
-)
+) {
+    val effectiveName: String get() = displayName.ifBlank { name }
+    val isValid: Boolean get() = id.isNotBlank()
+
+    companion object {
+        val EMPTY = User()
+    }
+}
 
 @Serializable
 data class Tag(
@@ -150,7 +228,13 @@ data class Tag(
     @SerialName("text") val text: String = "",
     @SerialName("url") val url: String = "",
     @SerialName("count") val count: Int = 0
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && text.isNotBlank()
+
+    companion object {
+        val EMPTY = Tag()
+    }
+}
 
 @Serializable
 data class Genre(
@@ -158,11 +242,23 @@ data class Genre(
     @SerialName("title") val title: String = "",
     @SerialName("acts_as_warning") val actsAsWarning: Boolean = false,
     @SerialName("url") val url: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+    companion object {
+        val EMPTY = Genre()
+    }
+}
 
 @Serializable
 data class Audience(
     @SerialName("id") val id: String = "",
     @SerialName("title") val title: String = "",
     @SerialName("url") val url: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+    companion object {
+        val EMPTY = Audience()
+    }
+}

@@ -450,4 +450,135 @@ class LSerializationCompatibilityTest {
         val validContent = OnlyContent(id = "c1", title = "Comics")
         assertEquals(true, validContent.isValid)
     }
+
+    @Test
+    fun `AlbumDetails and PicsDetails helpers operate correctly`() {
+        val emptyDetails = AlbumDetails.EMPTY
+        assertEquals(false, emptyDetails.isValid)
+        assertEquals(false, emptyDetails.hasDownloadUrl)
+        assertEquals(false, emptyDetails.hasPictures)
+        assertEquals(false, emptyDetails.hasAnimatedPictures)
+        assertEquals(false, emptyDetails.hasCover)
+
+        val validDetails = AlbumDetails(
+            id = "12345",
+            download_url = "https://example/dl",
+            number_of_pictures = 10,
+            number_of_animated_pictures = 2,
+            cover = Cover(url = "https://example/cov.jpg")
+        )
+        assertEquals(true, validDetails.isValid)
+        assertEquals(true, validDetails.hasDownloadUrl)
+        assertEquals(true, validDetails.hasPictures)
+        assertEquals(true, validDetails.hasAnimatedPictures)
+        assertEquals(true, validDetails.hasCover)
+
+        val emptyContent = Content.EMPTY
+        assertEquals(false, emptyContent.isValid)
+        val validContent = Content(id = "cnt_1")
+        assertEquals(true, validContent.isValid)
+
+        val emptyPics = PicsDetails.EMPTY
+        assertEquals(false, emptyPics.isValid)
+        assertEquals(false, emptyPics.hasVideo)
+        assertEquals(false, emptyPics.hasOriginal)
+        assertEquals(false, emptyPics.hasThumbnails)
+
+        val validPics = PicsDetails(
+            id = "pic_1",
+            url_to_video = "https://example/v.mp4",
+            url_to_original = "https://example/orig.jpg",
+            thumbnails = listOf(Thumbnails(url = "https://example/t.jpg"))
+        )
+        assertEquals(true, validPics.isValid)
+        assertEquals(true, validPics.hasVideo)
+        assertEquals(true, validPics.hasOriginal)
+        assertEquals(true, validPics.hasThumbnails)
+
+        val emptyThumb = Thumbnails.EMPTY
+        assertEquals(false, emptyThumb.isValid)
+        assertEquals(true, Thumbnails(url = "https://example/t.jpg").isValid)
+    }
+
+    @Test
+    fun `AlbumListType models and helpers operate correctly`() {
+        val emptyLanding = Landing_page_albumType.EMPTY
+        assertEquals(true, emptyLanding.isEmpty)
+        assertEquals(false, emptyLanding.isNotEmpty)
+
+        val emptySection = Landing_page_albumSection.EMPTY
+        assertEquals(true, emptySection.isEmpty)
+        assertEquals(false, emptySection.isNotEmpty)
+
+        val emptyTopHits = AlbumListTopHits.EMPTY
+        assertEquals(true, emptyTopHits.isEmpty)
+        assertEquals(false, emptyTopHits.isNotEmpty)
+
+        assertNotNull(AlbumResponse.EMPTY)
+        assertNotNull(AlbumData.EMPTY)
+        assertNotNull(AlbumListWrapper.EMPTY)
+
+        val emptyList = AlbumList.EMPTY
+        assertEquals(true, emptyList.isEmpty)
+        assertEquals(false, emptyList.isNotEmpty)
+
+        val emptyInfo = FacetCollectionInfo.EMPTY
+        assertEquals(false, emptyInfo.hasNext)
+        assertEquals(false, emptyInfo.hasPrevious)
+        assertEquals(true, emptyInfo.isFirstPage)
+
+        val infoPage2 = FacetCollectionInfo(page = 2, hasNextPage = true, hasPreviousPage = true)
+        assertEquals(true, infoPage2.hasNext)
+        assertEquals(true, infoPage2.hasPrevious)
+        assertEquals(false, infoPage2.isFirstPage)
+
+        val emptyAlbum = Album.EMPTY
+        assertEquals(false, emptyAlbum.isValid)
+        assertEquals(false, emptyAlbum.hasCover)
+        assertEquals(false, emptyAlbum.hasPictures)
+        assertEquals(false, emptyAlbum.hasAnimatedPictures)
+        assertEquals(false, emptyAlbum.hasTags)
+        assertEquals(false, emptyAlbum.hasGenres)
+
+        val validAlbum = Album(
+            id = "555",
+            cover = Cover(url = "https://example/c.jpg"),
+            numberOfPictures = 5,
+            numberOfAnimatedPictures = 1,
+            tags = listOf(Tag(id = "t1", text = "Tag 1")),
+            genres = listOf(Genre(id = "g1", title = "Genre 1"))
+        )
+        assertEquals(true, validAlbum.isValid)
+        assertEquals(true, validAlbum.hasCover)
+        assertEquals(true, validAlbum.hasPictures)
+        assertEquals(true, validAlbum.hasAnimatedPictures)
+        assertEquals(true, validAlbum.hasTags)
+        assertEquals(true, validAlbum.hasGenres)
+
+        assertEquals(false, Cover.EMPTY.isValid)
+        assertEquals(true, Cover(url = "https://example/c.jpg").isValid)
+
+        assertEquals(false, Language.EMPTY.isValid)
+        assertEquals(true, Language(id = "en", title = "English").isValid)
+
+        val emptyUser = User.EMPTY
+        assertEquals(false, emptyUser.isValid)
+        assertEquals("", emptyUser.effectiveName)
+
+        val userWithName = User(id = "u1", name = "john")
+        assertEquals(true, userWithName.isValid)
+        assertEquals("john", userWithName.effectiveName)
+
+        val userWithDisplayName = User(id = "u2", name = "john", displayName = "John Doe")
+        assertEquals("John Doe", userWithDisplayName.effectiveName)
+
+        assertEquals(false, Tag.EMPTY.isValid)
+        assertEquals(true, Tag(id = "t1", text = "art").isValid)
+
+        assertEquals(false, Genre.EMPTY.isValid)
+        assertEquals(true, Genre(id = "g1", title = "manga").isValid)
+
+        assertEquals(false, Audience.EMPTY.isValid)
+        assertEquals(true, Audience(id = "a1", title = "everyone").isValid)
+    }
 }

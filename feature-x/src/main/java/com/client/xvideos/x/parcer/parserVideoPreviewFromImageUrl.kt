@@ -21,11 +21,11 @@ private val TRAILING_INDEX_REGEX = Regex("-\\d+$")
  * композиции — рантайм-проверкой Kotlin на входе в функцию.
  */
 fun parserVideoPreviewFromImageUrl(s: String?): String? {
-    if (s == null) return null
+    if (s.isNullOrBlank()) return null
     val source = s.trim()
     // Строку "null" продолжаем узнавать на входе: она уже записана в файлы
     // избранного прошлыми версиями и приходит оттуда через Gson.
-    if (source.isEmpty() || source.equals("null", ignoreCase = true)) {
+    if (source.equals("null", ignoreCase = true)) {
         return null
     }
 

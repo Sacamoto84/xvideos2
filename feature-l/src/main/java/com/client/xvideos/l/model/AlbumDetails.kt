@@ -40,7 +40,17 @@ data class AlbumDetails(
     @SerialName("permissions") val permissions: List<String> = emptyList(),
     @SerialName("language") val language: Language? = null,
     @SerialName("created_by") val createdBy: User? = null
-)
+) {
+    val isValid: Boolean get() = hasValidId()
+    val hasDownloadUrl: Boolean get() = download_url.isNotBlank()
+    val hasPictures: Boolean get() = number_of_pictures > 0
+    val hasAnimatedPictures: Boolean get() = number_of_animated_pictures > 0
+    val hasCover: Boolean get() = cover?.isValid == true
+
+    companion object {
+        val EMPTY = AlbumDetails()
+    }
+}
 
 @Immutable
 @Serializable
@@ -48,7 +58,13 @@ data class Content(
     @SerialName("id") val id: String = "",
     @SerialName("title") val title: String = "",
     @SerialName("url") val url: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank()
+
+    companion object {
+        val EMPTY = Content()
+    }
+}
 
 /**
  * Возвращает URL обложки альбома при наличии.
