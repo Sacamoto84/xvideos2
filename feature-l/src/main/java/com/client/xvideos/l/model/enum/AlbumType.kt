@@ -3,15 +3,17 @@ package com.client.xvideos.l.model.enum
 import kotlinx.serialization.Serializable
 
 /**
- * {
- *   "name": "album_type",
- *   "value": "pictures"
- * }
+ * Тип альбома в фильтрах Luscious.
+ *
+ * @property value Строковое значение для GraphQL-запроса (`all`, `manga`, `pictures`).
  */
 @Serializable
 enum class AlbumType(val value: String) {
+    /** Все типы альбомов. */
     All("all"),
+    /** Манга / комиксы. */
     Manga("manga"),
+    /** Изображения и фотографии. */
     Pictures("pictures");
 
     val isAll: Boolean get() = this == All

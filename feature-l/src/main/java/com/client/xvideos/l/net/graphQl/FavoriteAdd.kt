@@ -7,6 +7,14 @@ import timber.log.Timber
 
 /**
  * Выполняет сетевой GraphQL-запрос FavoriteAdd для добавления лайка на сервер Luscious.
+ *
+ * Мутация выполняется с [RepositoryUriConfig.DIRECT] в обход дискового/RAM кэша.
+ *
+ * @param repository Репозиторий сетевых запросов.
+ * @param anchorId Уникальный ID целевого объекта (картинки, альбома).
+ * @param anchorType Тип целевого объекта (`"picture"`, `"album"`).
+ * @param favoriteType Тип реакции (`"like"`, `"favorite"`).
+ * @return [Result] с сырым ответом сервера.
  */
 suspend fun FavoriteAdd(
     repository: Repository,

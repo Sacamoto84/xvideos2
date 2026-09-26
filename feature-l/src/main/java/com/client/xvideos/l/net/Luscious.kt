@@ -10,7 +10,19 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
+/**
+ * Главный фасад API раздела Luscious (L).
+ *
+ * Предоставляет методы для получения:
+ * - Подробностей конкретного альбома ([getAlbum]).
+ * - Списков альбомов с пагинацией и фильтрами ([getAlbumList]).
+ * - Агрегаций доступных фильтров ([getAlbumListAggregations]).
+ * - Топовых альбомов ([getAlbumTopHits]).
+ * - Посадочных страниц поиска и тегов ([getLandingPageAlbumTag], [getLandingPageAlbumSearch]).
+ *
+ * @property scope CoroutineScope приложения.
+ * @property repository Репозиторий сетевых запросов.
+ */
 class Luscious(
     val scope : CoroutineScope,
     val repository: Repository
@@ -26,13 +38,12 @@ class Luscious(
     }
 
     /**
+     * Возвращает объект [AlbumInfo] для работы с альбомом по ID или URL ссылки.
      *
-     *         Возвращает объект `Album` на основе параметра albumInput;
-     *
-     *         albumInput can either be an integer, being the album Id
-     *         Example (NSFW)<https://www.luscious.net/albums/animated-gifs_374481/>'s Id being 374481
-     *         Or it can be a string, the link itself
-     *
+     * @param albumInput Числовой идентификатор (Int, Long) или строка URL/ID.
+     * @param download Флаг предварительной загрузки (исторический параметр).
+     * @param requestScope Специфичный CoroutineScope для сетевых задач альбома.
+     * @return Экземпляр [AlbumInfo].
      */
     fun getAlbum(
         albumInput: Any,
@@ -53,22 +64,37 @@ class Luscious(
         return AlbumInfo(id, download, repository, requestScope)
     }
 
+    /**
+     * Запрашивает статистику фильтров (агрегации) для текущей страницы и фильтра.
+     */
     suspend fun getAlbumListAggregations(page: Int, filter: AlbumListFilter?): Result<getAlbumListAggregationsResult> {
         return getAlbumListAggregationsImpl(page, filter, repository)
     }
 
+    /**
+     * Запрашивает пагинированный список альбомов.
+     */
     suspend fun getAlbumList(page: Int, filter: AlbumListFilter?): Result<AlbumListImplInfoAndList> {
         return getAlbumListImpl(page, filter, repository)
     }
 
+    /**
+     * Создает экземпляр [AlbumTopHitsImpl] для наблюдения за топовыми альбомами.
+     */
     fun getAlbumTopHits(): AlbumTopHitsImpl {
         return AlbumTopHitsImpl(repository, scope)
     }
 
+    /**
+     * Запрашивает промо-данные альбомов для экрана посадочной страницы тега.
+     */
     suspend fun getLandingPageAlbumTag(tag : String =  "Blonde"): Result<Landing_page_albumType> {
         return LandingPageAlbumTag(tag, repository)
     }
 
+    /**
+     * Запрашивает промо-данные альбомов для посадочной страницы поиска.
+     */
     suspend fun getLandingPageAlbumSearch(search : String, limit : Int = 9): Result<Landing_page_albumType> {
         return LandingPageAlbumSearch(search, repository, limit)
     }
@@ -76,7 +102,9 @@ class Luscious(
 
 private val ALBUM_ID_REGEX = Regex("(?:^|/)albums/(?:[^/]*_)?(\\d+)")
 
-// Вспомогательная функция для извлечения ID из URL
+/**
+ * Вспомогательная функция для извлечения числового ID альбома из произвольного URL Luscious.
+ */
 internal fun extractIdFromUrl(url: String): String? {
     if (url.length < 8) return null
     val trimmed = url.trim()

@@ -2,11 +2,12 @@ package com.client.xvideos.x.search.model
 
 import kotlinx.serialization.Serializable
 
-
-//{
-//    "N": "asian",
-//    "R": "82.887"
-//}
+/**
+ * Подсказка поискового запроса (ключевое слово и его рейтинг популярности).
+ *
+ * @property N Название ключевого слова / категории.
+ * @property R Рейтинг релевантности/популярности запроса.
+ */
 @Serializable
 data class Keyword(val N: String, val R: String) { //N группа R-рейтинг
     val name: String get() = N
@@ -20,6 +21,19 @@ data class Keyword(val N: String, val R: String) { //N группа R-рейти
     }
 }
 
+/**
+ * Модель найденной порнозвезды / модели в поисковой подсказке.
+ *
+ * @property N Имя модели.
+ * @property F Путь к странице модели (slug URL).
+ * @property T Тип записи (`"pornstar"`).
+ * @property MV Количество видеороликов модели.
+ * @property M Вспомогательный счетчик.
+ * @property L Вспомогательный уровень/рейтинг.
+ * @property P URL аватара/фотографии модели.
+ * @property RF Текстовое количество подписчиков.
+ * @property A Дополнительные атрибуты ответа API.
+ */
 @Serializable
 data class Pornstar(
     val N: String,
@@ -47,6 +61,19 @@ data class Pornstar(
     }
 }
 
+/**
+ * Модель найденного канала/студии в поисковой подсказке.
+ *
+ * @property N Отображаемое название канала.
+ * @property F Относительный путь к странице профиля (`/profiles/xxx`).
+ * @property T Тип записи (`"channel"`).
+ * @property CPV Флаг премиум/верифицированного канала.
+ * @property M Вспомогательный счетчик.
+ * @property L Вспомогательный счетчик.
+ * @property P URL логотипа/аватара канала.
+ * @property RF Текстовое количество подписчиков.
+ * @property A Дополнительные атрибуты ответа API.
+ */
 @Serializable
 data class Channel(
     val N: String, //Отображаемое название канала в поисковике
@@ -73,6 +100,16 @@ data class Channel(
     }
 }
 
+/**
+ * Ответ поискового автодополнения X.
+ *
+ * @property result Флаг успешности ответа.
+ * @property code Числовой код статуса.
+ * @property keywords Список предложенных ключевых фраз ([Keyword]).
+ * @property pornstar Список предложенных моделей ([Pornstar]).
+ * @property channel Список предложенных каналов ([Channel]).
+ * @property BLACKLISTED Флаг блокировки запроса в поисковом индексе.
+ */
 @Serializable
 data class SearchResult(
     val result: Boolean = false,

@@ -37,6 +37,8 @@ import java.io.File
  * `0f..1f` — прогресс, `-2f` — простой/готово, `-3f` — ошибка.
  *
  * `KDownloader` создаётся напрямую через фабрику (DI-модуль в проекте отключён).
+ *
+ * @property scope CoroutineScope для выполнения сетевых и файловых операций загрузки.
  */
 @Stable
 class SavedX_Downloads(private val scope: CoroutineScope) {
@@ -60,15 +62,26 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         refresh()
     }
 
-    /** O(1) in-memory проверка: файл видео уже сохранён. */
+    /**
+     * O(1) in-memory проверка: файл видео уже сохранён на диске.
+     *
+     * @param id Числовой ID видео.
+     * @return `true`, если ролик скачан и доступен оффлайн.
+     */
     fun contains(id: Long): Boolean = id > 0L && _downloadedVideoIds.value.contains(id)
 
-    /** `file://`-URI скачанного видео (для ExoPlayer). */
+    /**
+     * Возвращает `file://`-URI скачанного видеофайла (для передачи в ExoPlayer).
+     *
+     * @param id Числовой ID видео.
+     */
     fun localUrl(id: Long): String = Uri.fromFile(File(dir, "$id.mp4")).toString()
 
     /**
      * Абсолютный путь к локальной картинке превью (`<id>.jpg`), если она скачана, иначе null.
      * UrlImage сам грузит локальный файл, если строка не начинается с `https://`.
+     *
+     * @param id Числовой ID видео.
      */
     fun localPosterPath(id: Long): String? {
         return if (id > 0L && _downloadedPosterIds.value.contains(id)) File(dir, "$id.jpg").absolutePath else null
@@ -81,6 +94,8 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
      * Прямой URL берётся со страницы видео ([ItemsX.href]) тем же путём, что и плеер:
      * `readHtmlFromURLDirect` → [parserItemVideo] → [parseHTML5Player]. HLS не нужен.
      * Прогресс отражается в [percent], по завершении пишется `.info` и шлётся снекбар.
+     *
+     * @param item Объект ролика для сохранения.
      */
     fun download(item: ItemsX) {
         if (item.id <= 0L) return
@@ -148,9 +163,12 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     }
 
     /**
-     * Прямой mp4 наилучшего качества со страницы видео ([ItemsX.href]) —
+     * Резолвит прямой mp4 наилучшего качества со страницы видео ([ItemsX.href]) —
      * тем же путём, что и плеер: `readHtmlFromURLDirect` → [parserItemVideo] →
-     * [parseHTML5Player]. null, если не удалось.
+     * [parseHTML5Player]. Возвращает null, если не удалось извлечь ссылку.
+     *
+     * @param item Объект ролика.
+     * @return Прямая ссылка на MP4 файл наивысшего качества.
      */
     suspend fun resolveDirectVideoUrl(item: ItemsX): String? = runCatchingCancellable {
         val pageUrl = normalizeXUrl(item.href)
@@ -161,8 +179,11 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     }.getOrNull()
 
     /**
-     * «В галерею»: видео уже в кеше — копия в общую галерею,
-     * иначе резолвим прямой mp4 и качаем туда целиком.
+     * Сохранение видео в общую галерею устройства: если видео уже скачано в кэш —
+     * копируется в общую галерею через [GallerySaver.saveLocal],
+     * иначе резолвится прямой mp4 и скачивается напрямую туда через [GallerySaver.saveFromUrl].
+     *
+     * @param item Объект сохраняемого ролика.
      */
     fun saveToGallery(item: ItemsX) {
         if (item.id <= 0L) return
@@ -186,6 +207,11 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Удаляет скачанный видеоролик, его обложку и файл метаданных `.info` из локального диска.
+     *
+     * @param item Удаляемый ролик.
+     */
     fun delete(item: ItemsX) {
         if (item.id <= 0L) return
         scope.launch(Dispatchers.IO) {
@@ -200,7 +226,9 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
 
     private var refreshJob: Job? = null
 
-    /** Перечитать список сохранённого по `.info`-файлам. */
+    /**
+     * Перечитать список сохранённого по `.info`-файлам на диске.
+     */
     fun refresh() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {
@@ -208,6 +236,9 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Сканирует директорию [dir], сопоставляет mp4, jpg и info файлы, формируя актуальный список загрузок.
+     */
     private fun loadFromDisk() {
         val root = File(dir)
         val allFiles = if (root.exists() && root.isDirectory) {

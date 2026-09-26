@@ -20,20 +20,31 @@ import java.util.Locale
  *
  * Использует [BigDecimal] для высокой точности без артефактов вещественных чисел Double.
  * Поддерживает честный расчёт процентов, смену знака (+/-), повторение операции по «=»,
- * динамическое переключение «AC» / «C» и подсветку активного оператора.
+ * динамическое переключение «AC» / «C», секретный ввод пин-кода и подсветку активного оператора.
+ *
+ * @param initialDisplay Начальное строковое значение на экране (по умолчанию "0").
+ * @param initialHistory Начальная история вычисления.
  */
 @Stable
 class CalculatorState(
     initialDisplay: String = "0",
     initialHistory: String = ""
 ) {
+    /** Текущее отображаемое на дисплее число или статус ошибки. */
     var displayValue by mutableStateOf(initialDisplay)
+    /** Строка истории текущего математического выражения (например, "200 +"). */
     var expressionHistory by mutableStateOf(initialHistory)
+    /** Предыдущее введенное число для бинарных операций. */
     var previousValue by mutableStateOf<BigDecimal?>(null)
+    /** Текущий ожидающий выполнения математический оператор ("+", "-", "×", "÷"). */
     var pendingOperation by mutableStateOf<String?>(null)
+    /** Последний операнд для повторения операции по повторному нажатию "=". */
     var lastOperand by mutableStateOf<BigDecimal?>(null)
+    /** Последний оператор для повторения операции по повторному нажатию "=". */
     var lastOperator by mutableStateOf<String?>(null)
+    /** Флаг начала ввода нового числа (следующая цифра заменяет текущий дисплей). */
     var isNewEntry by mutableStateOf(true)
+    /** Флаг выполнения асинхронной проверки пароля разблокировки. */
     var isVerifying by mutableStateOf(false)
         private set
 
@@ -51,6 +62,12 @@ class CalculatorState(
 
     private val enteredPinDigits = StringBuilder()
 
+    /**
+     * Обрабатывает ввод цифры [digit] с тактильным откликом.
+     *
+     * @param digit Введенная цифра ("0".."9").
+     * @param haptic Интерфейс тактильной отдачи.
+     */
     fun onDigit(digit: String, haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
 
@@ -75,6 +92,9 @@ class CalculatorState(
         lastOperand = null
     }
 
+    /**
+     * Обрабатывает нажатие десятичной точки.
+     */
     fun onDecimal(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         enteredPinDigits.clear()
@@ -87,6 +107,9 @@ class CalculatorState(
         }
     }
 
+    /**
+     * Инвертирует математический знак текущего отображаемого числа (+/-).
+     */
     fun onPlusMinus(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         enteredPinDigits.clear()
@@ -99,6 +122,9 @@ class CalculatorState(
         }
     }
 
+    /**
+     * Устанавливает или вычисляет промежуточный результат при нажатии бинарного оператора [op] (+, -, ×, ÷).
+     */
     fun onOperator(op: String, haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         enteredPinDigits.clear()
@@ -130,6 +156,9 @@ class CalculatorState(
         isNewEntry = true
     }
 
+    /**
+     * Вычисляет процент в зависимости от наличия незавершенной операции сложения/вычитания.
+     */
     fun onPercent(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         enteredPinDigits.clear()
@@ -217,6 +246,15 @@ class CalculatorState(
         }
     }
 
+    /**
+     * Обрабатывает нажатие клавиши «=»: сначала проверяет разблокировку приложения
+     * по введенному пин-коду, а при несовпадении производит математический расчет выражения.
+     *
+     * @param scope Корутинная область для асинхронного вызова проверки пароля.
+     * @param haptic Интерфейс тактильной отдачи.
+     * @param onUnlockFailed Обратный вызов при неудачной попытке ввода пин-кода.
+     * @param onUnlock Функция проверки пароля и разблокировки.
+     */
     fun onEquals(
         scope: CoroutineScope,
         haptic: HapticFeedback,
@@ -249,7 +287,9 @@ class CalculatorState(
         }
     }
 
-
+    /**
+     * Очищает дисплей (Clear) или сбрасывает все состояние вычислений (All Clear).
+     */
     fun onClear(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         enteredPinDigits.clear()
@@ -267,6 +307,9 @@ class CalculatorState(
         }
     }
 
+    /**
+     * Удаляет последний введенный символ на дисплее (Backspace).
+     */
     fun onBackspace(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         if (enteredPinDigits.isNotEmpty()) {
@@ -327,11 +370,13 @@ class CalculatorState(
     }
 
     companion object {
+        /** Текст, отображаемый при ошибках вычислений (деление на ноль). */
         const val ERROR_TEXT = "Ошибка"
         private const val MAX_INPUT_DIGITS = 15
         private const val CALC_SCALE = 12
         private val ONE_HUNDRED = BigDecimal("100")
 
+        /** [Saver] для сохранения состояния калькулятора при смене конфигурации Android. */
         val Saver: Saver<CalculatorState, List<String?>> = Saver(
             save = {
                 listOf(

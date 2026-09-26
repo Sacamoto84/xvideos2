@@ -17,10 +17,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 /**
- * Состояние вкладки ниш и его привязка к Hilt.
+ * [ScreenModel] вкладки каталога ниш в разделе Explorer RedGifs.
  *
- * Выделено из `R_ScreenNichesTab.kt` (было 526 строк). Тело не менялось —
- * перенос дословный.
+ * Управляет порядком сортировки ниш [sortType], связывает его с навигационным состоянием [navigationState].
+ *
+ * @param navigationState Глобальное навигационное состояние раздела RedGifs.
+ * @param savedRed Фасад локальных данных (включая кэш ниш).
+ * @param search Стейт-холдер поиска ниш.
  */
 @Stable
 class ScreenRedExplorerNichesSM @Inject constructor(
@@ -30,14 +33,17 @@ class ScreenRedExplorerNichesSM @Inject constructor(
 ) : ScreenModel {
 
     private val _sortType = MutableStateFlow(navigationState.nichesSort)
+    /** Текущий тип сортировки каталога ниш. */
     val sortType = _sortType.asStateFlow()
 
+    /** Изменяет тип сортировки и сохраняет его в навигационном состоянии. */
     fun changeSortType(order: Order) {
         navigationState.updateNichesSort(order)
         _sortType.value = order
     }
 }
 
+/** Hilt-модуль привязки [ScreenRedExplorerNichesSM]. */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleRedExplorerNiches {

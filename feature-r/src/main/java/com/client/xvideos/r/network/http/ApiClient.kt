@@ -26,11 +26,29 @@ import okhttp3.ConnectionSpec
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+/**
+ * HTTP-клиент модуля RedGifs на базе Ktor и движка OkHttp.
+ *
+ * Инкапсулирует:
+ * - Управление временным анонимным Bearer-токеном (автоматическое получение, кэширование и обновление при 401 Unauthorized);
+ * - Потокобезопасность доступа к токену через [Mutex] с double-checked паттерном;
+ * - DNS-over-HTTPS резолвинг через [AppDns];
+ * - Настройку таймаутов, ретраев и стандартных HTTP-заголовков (Referer, Origin, UserAgent).
+ */
 object ApiClient {
 
+    /** Заголовок User-Agent браузера для обхода Cloudflare и ограничений поставщика. */
     const val USER_AGENT: String =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 
+    /**
+     * Сконфигурированный экземпляр [HttpClient] на базе OkHttp:
+     * - DNS через [AppDns];
+     * - Modern TLS и Compatible TLS;
+     * - 30 секунд таймауты (connect, read, write);
+     * - Автоматический retry до 3 раз с экспоненциальной задержкой;
+     * - JSON ContentNegotiation через [RJson].
+     */
     val client = HttpClient(OkHttp) {
         engine {
             config {
@@ -74,12 +92,21 @@ object ApiClient {
     var bearerToken: String? = null
         private set
 
+    /** Атомарная ссылка на заголовок `Bearer <token>` для быстрой подстановки в запросы. */
     @PublishedApi
     internal val bearerHeaderRef = AtomicReference<String?>(null)
 
+    /** Кэшированный результат успешного Unit для предотвращения лишних аллокаций. */
     private val SUCCESS_UNIT = Result.success(Unit)
+
+    /** Мьютекс синхронизации получения и обновления токена. */
     private val tokenMutex = Mutex()
 
+    /**
+     * DTO ответа авторизационного эндпоинта RedGifs `/v2/auth/temporary`.
+     *
+     * @property token Временный токен доступа.
+     */
     @Serializable
     data class TokenResponse(@SerialName("token") val token: String)
 
@@ -100,6 +127,8 @@ object ApiClient {
      * Принудительно обновляет токен после 401, но только если другой корутин
      * не успел его уже заменить (сравнение с [previousToken] под мьютексом),
      * иначе несколько параллельных 401 устроили бы шторм логинов.
+     *
+     * @param previousToken Токен, на котором был получен HTTP 401 Unauthorized.
      */
     @PublishedApi
     internal suspend fun refreshToken(previousToken: String?): Result<Unit> {
@@ -135,12 +164,19 @@ object ApiClient {
         }
     }
 
+    /**
+     * Публичный метод принудительной авторизации (получения временного токена).
+     * Безопасен для многопоточного вызова (блокирует [tokenMutex]).
+     */
     suspend fun login(): Result<Boolean> = tokenMutex.withLock { loginLocked() }
 
     /**
      * Общая обёртка авторизованного запроса: гарантирует токен, выполняет [perform],
      * а при 401 один раз обновляет токен и повторяет. Единая точка обработки ошибок
      * вместо четырёх копий retry-логики.
+     *
+     * @param perform Лямбда выполнения запроса с актуальным токеном.
+     * @return [Result] с результатом запроса либо с ошибкой.
      */
     @PublishedApi
     internal suspend inline fun <T> withAuth(crossinline perform: suspend (token: String?) -> T): Result<T> {
@@ -175,6 +211,13 @@ object ApiClient {
         }
     }
 
+    /**
+     * Выполняет типизированный GET-запрос по произвольному [url] с автоматической авторизацией.
+     *
+     * @param T Тип десериализуемого тела ответа.
+     * @param url Полный URL-адрес запроса.
+     * @param params Map query-параметров.
+     */
     suspend inline fun <reified T> request(
         url: String,
         params: Map<String, String> = emptyMap(),
@@ -188,6 +231,13 @@ object ApiClient {
         }.body()
     }
 
+    /**
+     * Выполняет типизированный GET-запрос по объекту [route] с автоматической авторизацией.
+     *
+     * @param T Тип десериализуемого тела ответа.
+     * @param route Сконфигурированный объект [Route].
+     * @param params Дополнительные параметры запроса.
+     */
     suspend inline fun <reified T> request(
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
@@ -201,6 +251,12 @@ object ApiClient {
         }.body()
     }
 
+    /**
+     * Выполняет запрос по объекту [route] и возвращает сырой текст ответа [String].
+     *
+     * @param route Сконфигурированный объект [Route].
+     * @param params Дополнительные query-параметры.
+     */
     suspend fun requestText(
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
@@ -214,6 +270,12 @@ object ApiClient {
         }.bodyAsText()
     }
 
+    /**
+     * Выполняет запрос по произвольному [url] и возвращает сырой текст ответа [String].
+     *
+     * @param url Полный URL-адрес запроса.
+     * @param params Дополнительные query-параметры.
+     */
     suspend fun requestText(
         url: String,
         vararg params: Pair<String, Any> = emptyArray(),

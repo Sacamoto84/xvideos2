@@ -16,6 +16,18 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Стейт-холдер поиска в каталоге ниш RedGifs.
+ *
+ * Объединяет подсказки из двух источников:
+ * 1. Сетевой API поиска ниш [RedApi.searchNichesShort];
+ * 2. Локальный кэш ниш [SavedRed.nichesCache], обеспечивая работу подсказок даже при отсутствии сети.
+ *
+ * @param dao Хранилище истории поиска ниш.
+ * @param savedRed Фасад локальных данных для доступа к кэшу ниш.
+ * @param redApi Сетевой клиент RedGifs.
+ * @param scope Скоп уровня приложения.
+ */
 @Singleton
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class R_SearchNiches @Inject constructor(
@@ -45,6 +57,10 @@ class R_SearchNiches @Inject constructor(
         }
     }
 
+    /**
+     * Выполняет поиск подсказок ниш, объединяя результаты сети и локального кэша,
+     * с сортировкой по убыванию популярности (числу гифок).
+     */
     private suspend fun suggestionsFor(query: String): List<SuggestionItem> {
         if (query.isEmpty()) return emptyList()
 

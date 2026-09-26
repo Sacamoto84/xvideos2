@@ -35,6 +35,10 @@ import timber.log.Timber
  * модель держит только загрузку HLS-ссылки. Управление воспроизведением, дорожками
  * и скоростью — в `MediaPlayerHost`, создаваемом в `Content()`. Стартовая позиция
  * приходит через [position] и применяется к хосту, когда медиа готово.
+ *
+ * @property url URL страницы видеоролика.
+ * @property position Стартовая позиция воспроизведения в миллисекундах.
+ * @property db Файловая БД для RAM-кэша страниц.
  */
 @Deprecated("Используйте ScreenX_VideoPlayerSM с встроенным полноэкранным режимом")
 @Stable
@@ -44,6 +48,7 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
     val db: AppFileDatabase
 ) : ScreenModel {
 
+    /** Фабрика assisted injection для передачи параметров [url] и [position]. */
     @AssistedFactory
     interface Factory : ScreenModelFactory {
         fun create(url: String, position: Long): ScreenX_VideoPlayerFullScreenSM
@@ -56,15 +61,19 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
         Timber.d("!!! ScreenX_VideoPlayerFullScreenSM onDispose")
     }
 
+    /** Нормализованная ссылка на видеопоток (HLS или MP4). */
     var passedString: String by mutableStateOf("")
         private set
 
+    /** Флаг сетевой или парсинг ошибки. */
     var isError: Boolean by mutableStateOf(false)
         private set
 
+    /** Флаг выполнения загрузки страницы. */
     var isLoading: Boolean by mutableStateOf(true)
         private set
 
+    /** Конфигурация HTML5-плеера. */
     var playerConfig: HTML5PlayerConfig? by mutableStateOf(null)
         private set
 
@@ -74,6 +83,11 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
 
     private var loadJob: kotlinx.coroutines.Job? = null
 
+    /**
+     * Загружает страницу видео и извлекает ссылку на воспроизведение.
+     *
+     * @param forceReload Сбросить RAM-кэш и загрузить заново.
+     */
     fun loadVideo(forceReload: Boolean = false) {
         if (url.isBlank()) {
             isLoading = false
@@ -143,6 +157,9 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
         }
     }
 
+    /**
+     * Обработка ошибки воспроизведения: очищает закэшированный URL.
+     */
     fun onPlaybackError() {
         Timber.w("ScreenX_VideoPlayerFullScreenSM: ошибка воспроизведения для %s, очистка RAM-кэша", url)
         isError = true
@@ -152,6 +169,9 @@ class ScreenX_VideoPlayerFullScreenSM @AssistedInject constructor(
     }
 }
 
+/**
+ * Hilt-модуль привязки [ScreenX_VideoPlayerFullScreenSM.Factory].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleItemFullScreen {

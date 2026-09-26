@@ -2,38 +2,39 @@ package com.client.xvideos.common.kdownloader.internal.stream
 
 import java.io.IOException
 
+/**
+ * Интерфейс файлового потока вывода с поддержкой произвольного доступа (seek) и синхронизации с диском.
+ *
+ * Позволяет позиционировать указатель записи для возобновления скачивания и сбрасывать буферы
+ * на физический накопитель для защиты от повреждения файлов при сбоях питания.
+ */
 interface FileDownloadOutputStream {
     /**
-     * Writes `len` bytes from the specified byte array
-     * starting at offset `off` to this file.
+     * Записывает [len] байт из массива [b], начиная со смещения [off].
      */
     @Throws(IOException::class)
     fun write(b: ByteArray?, off: Int, len: Int)
 
     /**
-     * Flush all buffer to system and force all system buffers to synchronize with the underlying
-     * device.
+     * Сбрасывает системные буферы памяти и принудительно синхронизирует их с физическим накопителем.
      */
     @Throws(IOException::class)
     fun flushAndSync()
 
     /**
-     * Closes this output stream and releases any system resources associated with this stream. The
-     * general contract of `close` is that it closes the output stream. A closed stream
-     * cannot perform output operations and cannot be reopened.
+     * Закрывает поток вывода и освобождает связанные дескрипторы ОС.
      */
     @Throws(IOException::class)
     fun close()
 
     /**
-     * Sets the file-pointer offset, measured from the beginning of this file, at which the next
-     * read or write occurs.  The offset may be set beyond the end of the file.
+     * Перемещает указатель записи в файле на абсолютное смещение [offset].
      */
     @Throws(IOException::class, IllegalAccessException::class)
     fun seek(offset: Long)
 
     /**
-     * Sets the length of this file.
+     * Устанавливает длину целевого файла.
      */
     @Throws(IOException::class, IllegalAccessException::class)
     fun setLength(newLength: Long)

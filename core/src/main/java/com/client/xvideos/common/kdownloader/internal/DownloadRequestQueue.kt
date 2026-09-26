@@ -1,20 +1,32 @@
 package com.client.xvideos.common.kdownloader.internal
 
 import com.client.xvideos.common.kdownloader.Status
+import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Потокобезопасная очередь запросов на скачивание.
+ *
+ * Управляет активным реестром задач в памяти ([idRequestMap]), фильтрацией по тегам,
+ * дедупликацией повторных запросов, а также операциями паузы, возобновления и групповой отмены.
+ *
+ * @param downloader Диспетчер корутин для фактического выполнения задач.
+ */
 class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
 
-    private val idRequestMap = java.util.concurrent.ConcurrentHashMap<Int, DownloadRequest>()
+    /** Реестр активных запросов в памяти с потокобезопасным доступом. */
+    private val idRequestMap = ConcurrentHashMap<Int, DownloadRequest>()
 
     /**
-    * Получить все запросы с указанным тегом
-    */
+     * Возвращает все активные запросы с указанным тегом.
+     *
+     * @param tag Пользовательский тег группы загрузок.
+     */
     fun getRequestsByTag(tag: String): List<DownloadRequest> {
         return idRequestMap.values.filter { it.tag == tag }
     }
 
     /**
-     * Получить статусы всех запросов с указанным тегом
+     * Возвращает пары (ID загрузки, статус) для всех запросов с указанным тегом.
      */
     fun getStatusesByTag(tag: String): List<Pair<Int, Status>> {
         return idRequestMap.values
@@ -23,7 +35,7 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
     }
 
     /**
-     * Получить статусы всех запросов с указанным тегом в виде Map
+     * Возвращает ассоциативный массив ID -> Status для всех запросов с указанным тегом.
      */
     fun getStatusMapByTag(tag: String): Map<Int, Status> {
         return idRequestMap.values
@@ -32,21 +44,21 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
     }
 
     /**
-     * Получить все запросы (без фильтрации)
+     * Возвращает снимок всех текущих запросов очереди.
      */
     fun getAllRequests(): List<DownloadRequest> {
         return idRequestMap.values.toList()
     }
 
     /**
-     * Получить все статусы (без фильтрации)
+     * Возвращает мапу всех текущих статусов (ID -> Status).
      */
     fun getAllStatuses(): Map<Int, Status> {
         return idRequestMap.mapValues { it.value.status }
     }
 
     /**
-     * Получить количество запросов по статусам для указанного тега
+     * Возвращает агрегированное количество задач по каждому статусу для указанного тега.
      */
     fun getStatusCountsByTag(tag: String): Map<Status, Int> {
         return idRequestMap.values
@@ -55,6 +67,13 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
             .mapValues { it.value.size }
     }
 
+    /**
+     * Помещает запрос в очередь с проверкой на дедупликацию.
+     * Если задача с таким ID уже находится в очереди или выполняется, повторный запуск игнорируется.
+     *
+     * @param request Запрос на загрузку.
+     * @return Идентификатор загрузки.
+     */
     fun enqueue(request: DownloadRequest): Int {
         val existing = idRequestMap[request.downloadId]
         if (existing != null && (existing.status == Status.QUEUED || existing.status == Status.RUNNING)) {
@@ -65,11 +84,17 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
         return downloader.enqueue(request)
     }
 
+    /**
+     * Возвращает текущий статус задачи по её ID (или [Status.UNKNOWN], если задачи нет в памяти).
+     */
     fun status(id: Int): Status {
         val req = idRequestMap[id] ?: return Status.UNKNOWN
         return req.status
     }
 
+    /**
+     * Отменяет задачу и удаляет её из реестра очереди.
+     */
     fun cancel(id: Int) {
         val req = idRequestMap[id]
         if (req != null && req.status != Status.CANCELLED) {
@@ -78,12 +103,16 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
         idRequestMap.remove(id)
     }
 
+    /**
+     * Удаляет задачу из реестра очереди в памяти (без отмены файла, если она уже завершена).
+     */
     fun remove(id: Int) {
         idRequestMap.remove(id)
     }
 
-
-
+    /**
+     * Отменяет все задачи, помеченные указанным тегом.
+     */
     fun cancel(tag: String) {
         val list = idRequestMap.values.filter {
             it.tag == tag
@@ -94,6 +123,9 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
         }
     }
 
+    /**
+     * Отменяет все задачи в очереди и очищает диспетчер.
+     */
     fun cancelAll() {
         val list = idRequestMap.values.toList()
         for (req in list) {
@@ -102,6 +134,9 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
         downloader.cancelAll()
     }
 
+    /**
+     * Переводит выполняющуюся задачу в статус [Status.PAUSED].
+     */
     fun pause(id: Int) {
         val req = idRequestMap[id] ?: return
         if (req.status != Status.RUNNING && req.status != Status.QUEUED) {
@@ -110,6 +145,9 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
         req.status = Status.PAUSED
     }
 
+    /**
+     * Возобновляет приостановленную задачу [Status.PAUSED], отправляя её обратно в диспетчер.
+     */
     fun resume(id: Int) {
         val req = idRequestMap[id] ?: return
         if (req.status != Status.PAUSED) {

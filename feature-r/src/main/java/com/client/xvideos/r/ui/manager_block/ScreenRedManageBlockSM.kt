@@ -13,17 +13,25 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+/**
+ * [ScreenModel] экрана управления черным списком заблокированных роликов RedGifs.
+ *
+ * @param blockRed Синглтон управления блокировками.
+ */
 @Stable
 class ScreenRedManageBlockSM @Inject constructor(
     private val blockRed: BlockRed
 ) : ScreenModel {
+    /** Список всех заблокированных элементов. */
     val blockList: StateFlow<List<GifsInfo>> = blockRed.blockList
 
+    /** Разблокирует указанный элемент [item]. */
     fun unblock(item: GifsInfo) {
         blockRed.unblockItem(item)
     }
 }
 
+/** Hilt-модуль регистрации [ScreenRedManageBlockSM]. */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleRedManageBlock {
@@ -32,5 +40,3 @@ abstract class ScreenModuleRedManageBlock {
     @ScreenModelKey(ScreenRedManageBlockSM::class)
     abstract fun bindScreenRedManageBlockScreenModel(hiltListScreenModel: ScreenRedManageBlockSM): ScreenModel
 }
-
-

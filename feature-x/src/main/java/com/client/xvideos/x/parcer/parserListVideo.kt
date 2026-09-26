@@ -14,6 +14,7 @@ private val VIEWS_TOKEN_REGEX = Regex("""\d[\d., \s]*[KkMmGgКкМмБб]?""")
  * X4: извлечение флага текущей страны вынесено в отдельную чистую функцию.
  * Раньше [parserListVideo] как побочный эффект писал глобальную `currentCountries`.
  *
+ * @param document Разобранный HTML-документ страницы.
  * @return emoji-флаг (напр. "🇸🇪") или null, если не удалось определить.
  */
 fun parseSiteCountryFlag(document: Document): String? {
@@ -24,12 +25,30 @@ fun parseSiteCountryFlag(document: Document): String? {
     return getFlagEmoji("flag-$code")
 }
 
+/**
+ * Извлекает флаг текущей локализации сайта из строки HTML.
+ */
 fun parseSiteCountryFlag(html: String): String? =
     if (html.isBlank()) null else parseSiteCountryFlag(Jsoup.parse(html))
 
+/**
+ * Парсит список карточек видеороликов из HTML-строки главной страницы или раздела сайта X.
+ *
+ * @param html Текст HTML-страницы.
+ * @return Список моделей [ItemsX].
+ */
 fun parserListVideo(html: String): List<ItemsX> =
     if (html.isBlank()) emptyList() else parserListVideo(Jsoup.parse(html))
 
+/**
+ * Парсит список карточек видеороликов из DOM-документа страницы раздела X.
+ *
+ * Ищет блоки карточек `div.frame-block`, извлекает ID из `data-id`, название,
+ * ссылки на видео и превью, длительность и имя канала.
+ *
+ * @param document Разобранный документ Jsoup.
+ * @return Список валидных моделей [ItemsX].
+ */
 fun parserListVideo(document: Document): List<ItemsX> {
     // Находим все видео-блоки
     val videoBlocks = document.select("div.frame-block")

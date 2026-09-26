@@ -1,5 +1,16 @@
 package com.client.xvideos.l.model.enum
 
+/**
+ * Индекс быстрого выбора категории фильтрации на экране дашборда:
+ *
+ * - Unselect (-1)
+ * - Default (0)
+ * - Manga (1)
+ * - Hentai (2)
+ * - Porn (3)
+ *
+ * @property value Числовой код индекса.
+ */
 enum class SelectIndex(val value: Int) {
     Unselect(-1),
     Default(0),

@@ -9,7 +9,10 @@ package com.client.xvideos.l.repository
  * ссылались друг на друга по кругу из-за трёх строк.
  */
 object LusciousEndpoints {
+    /** Конечная точка единого GraphQL API (nobatch). */
     const val API = "https://members.luscious.net/graphql/nobatch/"
+    /** Базовый URL портала Luscious. */
     const val HOME = "https://members.luscious.net"
+    /** Страница авторизации пользователя с формой логина. */
     const val LOGIN = "https://members.luscious.net/accounts/login/"
 }

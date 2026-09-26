@@ -46,6 +46,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * Внутренний контейнер параметров фильтрации и пагинации ленты RedGifs.
+ */
 private data class SearchParams(
     val query: String,
     val sort: Order,
@@ -53,6 +56,26 @@ private data class SearchParams(
     val queryNiches: String
 )
 
+/**
+ * Центральный стейт-холдер сетки медиаконтента RedGifs.
+ *
+ * Управляет:
+ * - Потоком пагинации [pager] на базе AndroidX Paging 3;
+ * - Состоянием скролла сетки [state] ([LazyGridState]) и одиночной колонки [stateColumn] ([LazyListState]);
+ * - Размером окна предзагрузки [cacheWindow] (ahead 0.5f, behind 0.15f) для гладкой работы пула видеоплееров;
+ * - Динамическим числом колонок [columns] (от 2 до 4);
+ * - Реакцией на изменение поискового запроса, сортировки и выбранных тегов с автосбросом скролла вверх;
+ * - Регистрацией в глобальном [RFeedSessionStore] для бесшовного перехода в полноэкранный плеер.
+ *
+ * @property connectivityObserver Монитор сетевого подключения.
+ * @property scope Скоп для кэширования пагинации.
+ * @property typePager Тип ленты (топ, ниши, лайки, подписки, профиль, коллекции).
+ * @property extraString Дополнительный строковый аргумент (имя профиля, ниши или коллекции).
+ * @property startOrder Начальный порядок сортировки.
+ * @property startColumns Начальное число колонок сетки (2..4).
+ * @property visibleProfileInfo Показывать ли плашку автора над элементами.
+ * @property tags Реактивный поток выбранных тегов.
+ */
 @Stable
 @OptIn(FlowPreview::class)
 class LazyRow123Host(
@@ -75,11 +98,13 @@ class LazyRow123Host(
     companion object {
         private val nextFeedId = AtomicInteger(0)
 
+        /** Нормализует число колонок сетки, удерживая его в диапазоне 2..4 (по умолчанию 2). */
         fun normalizeColumns(value: Int): Int {
             return value.takeIf { it in 2..4 } ?: 2
         }
     }
 
+    /** Уникальный строковый ключ ленты в [RFeedSessionStore]. */
     val feedKey: String = "RFeed:${typePager.name}:${extraString}:${nextFeedId.incrementAndGet()}"
 
     /**
@@ -94,23 +119,32 @@ class LazyRow123Host(
     @OptIn(ExperimentalFoundationApi::class)
     val cacheWindow = viewportFractionCacheWindow(ahead = 0.5f, behind = 0.15f)
 
+    /** Состояние скролла для сеточного режима (2-4 колонки). */
     @OptIn(ExperimentalFoundationApi::class)
     val state: LazyGridState = LazyGridState(cacheWindow = cacheWindow)
 
+    /** Состояние скролла для одноколоночного режима. */
     val stateColumn = LazyListState()
 
+    /** Реактивный флаг наличия интернет-соединения. */
     val isConnected = connectivityObserver.isConnected.stateIn( scope, SharingStarted.WhileSubscribed(5000L), false )
 
     //////////////
     // StateFlow текущего типа сортировки
     private val _sortType = MutableStateFlow(startOrder) // или "popular", "oldest"
+    /** Текущий порядок сортировки ленты. */
     val sortType: StateFlow<Order> = _sortType.asStateFlow()
 
+    /** Сменяет сортировку ленты. */
     fun changeSortType(newSort: Order) {
         _sortType.value = newSort
         Timber.d("!!! *** Sort тип изменен в $newSort")
     }
 
+    /**
+     * Поток пагинированных данных [PagingData] элементов [GifsInfo].
+     * Пересоздает Pager при смене поискового текста, сортировки или тегов.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     val pager: Flow<PagingData<GifsInfo>> =
         combine( search.searchTextDone, sortType, tags, searchNiches.searchTextDone )
@@ -146,19 +180,25 @@ class LazyRow123Host(
 
 
     private var _columns by mutableIntStateOf(normalizeColumns(startColumns))
+    /** Количество колонок сетки (2..4). */
     var columns: Int
         get() = _columns
         set(value) {
             _columns = normalizeColumns(value)
         }
 
+    /** Текущий просматриваемый индекс ролика. */
     var currentIndex by mutableIntStateOf(0)
+    /** Целевой индекс для программного скролла. */
     var currentIndexGoto by mutableIntStateOf(0)
+    /** Индекс возврата при выходе из полноэкранного режима. */
     var returnToIndex by mutableIntStateOf(-1)
     private var lastPagerParams: SearchParams? = null
 
+    /** Прокрутить сетку в самый верх. */
     fun gotoUp() { scope.launch { state.scrollToItem(0) } }
 
+    /** Прокрутить одиночную колонку в самый верх. */
     fun gotoUpColumn() { scope.launch { stateColumn.scrollToItem(0) } }
 
     init {
@@ -167,6 +207,9 @@ class LazyRow123Host(
 
 }
 
+/**
+ * Фабричная функция создания экземпляра [PagingSource] для соответствующего типа ленты [TypePager].
+ */
 fun createPager(
     typePager: TypePager,
     sort: Order,

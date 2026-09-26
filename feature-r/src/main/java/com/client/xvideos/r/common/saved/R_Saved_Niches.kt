@@ -12,13 +12,25 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * Хранилище избранных ниш пользователя в RedGifs на базе [FileDB].
+ *
+ * Файлы метаданных [NichesInfo] сохраняются в `AppPath.r_niches` с расширением `.niches`.
+ *
+ * @param scope Корутин-скоп для асинхронных операций.
+ */
 class R_Saved_Niches(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
 
+    /** Файловая БД избранных ниш. */
     val nichesDb = FileDB(AppPath.r_niches, "niches", NichesInfo.serializer())
+    /** Реактивный список избранных ниш для Compose UI. */
     val list = nichesDb.list
 
+    /**
+     * Добавляет нишу [item] в избранное на диске и в памяти.
+     */
     fun add(item: NichesInfo) {
         Timber.i("R_Saved_Niches add() id:${item.id} name:${item.name}")
         scope.launch(Dispatchers.IO) {
@@ -42,6 +54,9 @@ class R_Saved_Niches(
         }
     }
 
+    /**
+     * Удаляет нишу [item] из избранного на диске и в памяти.
+     */
     fun remove(item: NichesInfo) {
         Timber.i("R_Saved_Niches remove() id:${item.id} name:${item.name}")
         scope.launch(Dispatchers.IO) {
@@ -61,6 +76,9 @@ class R_Saved_Niches(
 
     private var refreshJob: Job? = null
 
+    /**
+     * Перечитывает список сохраненных ниш с диска.
+     */
     fun refresh() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {

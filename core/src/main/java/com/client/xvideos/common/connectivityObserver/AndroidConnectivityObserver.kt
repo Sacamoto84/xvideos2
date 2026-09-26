@@ -23,12 +23,24 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Singleton
 
+/**
+ * Интерфейс мониторинга доступности сетевого подключения.
+ * Предоставляет реактивный [StateFlow] с текущим статусом валидированного интернет-соединения.
+ */
 interface ConnectivityObserver {
+    /** Поток статуса подключения (true - интернет доступен и валидирован, false - сеть отсутствует или captive portal). */
     val isConnected: StateFlow<Boolean>
 }
 
+/**
+ * Расширение для мгновенной синхронной проверки наличия подключения.
+ * Введено в Batch 54 для упрощения предикатов без явного чтения `.value`.
+ */
 fun ConnectivityObserver.hasConnection(): Boolean = isConnected.value
 
+/**
+ * Hilt-модуль предоставления синглтона [ConnectivityObserver].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object ConnectivityModule {
@@ -43,6 +55,15 @@ object ConnectivityModule {
 
 }
 
+/**
+ * Android-реализация [ConnectivityObserver] на основе [ConnectivityManager] и [NetworkCallback].
+ *
+ * Особенности:
+ * - Требует обоих флагов: [NetworkCapabilities.NET_CAPABILITY_INTERNET] и [NetworkCapabilities.NET_CAPABILITY_VALIDATED],
+ *   что исключает ложные срабатывания при подключении к Wi-Fi сетям без фактического выхода в интернет.
+ * - Корректно обрабатывает мобильный хэндовер (переключение Wi-Fi <-> Cellular) без ложного флаппинга в disconnected.
+ * - При отмене жизненного цикла [scope] автоматически отзывает регистрацию [NetworkCallback] для предотвращения утечек памяти.
+ */
 class AndroidConnectivityObserver(
     private val context: Context,
     private val scope: CoroutineScope
@@ -68,6 +89,9 @@ class AndroidConnectivityObserver(
         }
     }
 
+    /**
+     * Опрашивает текущее активное сетевое подключение при старте приложения до прихода первого коллбэка.
+     */
     private fun updateInitialConnectionState() {
         val cm = connectivityManager
         if (cm == null) {
@@ -100,6 +124,9 @@ class AndroidConnectivityObserver(
         }
     }
 
+    /**
+     * Регистрирует системный [NetworkCallback] для динамического отслеживания изменений статуса сети.
+     */
     private fun registerNetworkCallback() {
         val cm = connectivityManager ?: return
         val callback = object : NetworkCallback() {
@@ -159,6 +186,9 @@ class AndroidConnectivityObserver(
         }
     }
 
+    /**
+     * Безопасное снятие регистрации [NetworkCallback].
+     */
     private fun unregisterNetworkCallback() {
         val callback = networkCallback ?: return
         networkCallback = null

@@ -7,7 +7,14 @@ import com.client.xvideos.r.model.GifsInfo
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
-
+/**
+ * [PagingSource] для ленты подписок RedGifs.
+ *
+ * Агрегирует новые работы от выбранных авторов через [SavedRed.subscriptions.refreshSubscription]
+ * и сортирует их по убыванию даты создания.
+ *
+ * @property savedRed Фасад локальных данных и менеджера подписок.
+ */
 class ItemSubscriptionsPagingSource (val savedRed: SavedRed): PagingSource<Int, GifsInfo>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {

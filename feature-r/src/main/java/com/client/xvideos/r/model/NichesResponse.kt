@@ -4,6 +4,14 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Ответ сетевого запроса списка ниш (каталог раздела Explorer).
+ *
+ * @property niches Список ниш [Niche] на текущей странице.
+ * @property page Номер текущей страницы.
+ * @property pages Общее количество страниц.
+ * @property total Общее количество ниш в каталоге.
+ */
 @Immutable
 @Serializable
 data class NichesResponse(
@@ -12,37 +20,30 @@ data class NichesResponse(
     @SerialName("pages") val pages: Int = 0,
     @SerialName("total") val total: Int = 0
 ) {
+    /** Проверяет, пуст ли список ниш. */
     val isEmpty: Boolean get() = niches.isEmpty()
+
+    /** Проверяет, содержит ли список хотя бы одну нишу. */
     val isNotEmpty: Boolean get() = niches.isNotEmpty()
+
+    /** Проверяет наличие последующих страниц в каталоге. */
     val hasMorePages: Boolean get() = page < pages
 
     companion object {
+        /** Пустой экземпляр ответа со значениями по умолчанию. */
         val EMPTY = NichesResponse()
     }
 }
 
 /**
- * ```kotlin
- *   "id": "female-backs",
- *   "name": "Female Backs",
- *   "gifs": 245,
- *   "subscribers": 914,
- *   "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
- *   previews": [
- *                 {
- *                     "id": "dangerouswanmice",
- *                     "thumbnail": "https://media.redgifs.com/DangerousWanMice-mobile.jpg"
- *                 },
- *                 {
- *                     "id": "weirddaringbovine",
- *                     "thumbnail": "https://media.redgifs.com/WeirdDaringBovine-mobile.jpg"
- *                 },
- *                 {
- *                     "id": "unsteadyphonywren",
- *                     "thumbnail": "https://media.redgifs.com/UnsteadyPhonyWren-mobile.jpg"
- *                 }
- *             ]
- * ```
+ * Краткая модель ниши из каталога Explorer со встроенными превью роликов.
+ *
+ * @property id Уникальный слаг ниши (например, "female-backs").
+ * @property name Название ниши для отображения пользователю.
+ * @property gifs Общее количество гифок в нише.
+ * @property subscribers Число подписчиков ниши.
+ * @property thumbnail URL иконки ниши.
+ * @property previews Список превью лучших роликов ниши [Preview].
  */
 @Immutable
 @Serializable
@@ -54,35 +55,53 @@ data class Niche(
     @SerialName("thumbnail") val thumbnail: String = "",
     @SerialName("previews") val previews: List<Preview>? = null
 ) {
+    /** Проверяет, валиден ли идентификатор ниши. */
     val isValid: Boolean get() = id.isNotBlank()
+
+    /** Проверяет, пуст ли идентификатор ниши. */
     val isEmpty: Boolean get() = id.isEmpty()
+
+    /** Проверяет, не пуст ли идентификатор ниши. */
     val isNotEmpty: Boolean get() = id.isNotEmpty()
+
+    /** Возвращает отображаемое имя ниши (если name пусто, используется id). */
     val displayName: String get() = name.ifBlank { id }
+
+    /** Проверяет наличие непустого thumbnail URL. */
     val hasThumbnail: Boolean get() = thumbnail.isNotBlank()
+
+    /** Проверяет наличие превью роликов. */
     val hasPreviews: Boolean get() = !previews.isNullOrEmpty()
+
+    /** Проверяет, что в нише есть хотя бы одна гифка. */
     val hasGifs: Boolean get() = gifs > 0L
+
+    /** Проверяет, что у ниши есть хотя бы один подписчик. */
     val hasSubscribers: Boolean get() = subscribers > 0L
 
     companion object {
+        /** Пустой экземпляр [Niche] со значениями по умолчанию. */
         val EMPTY = Niche()
     }
 }
 
+/**
+ * Модель миниатюры предварительного просмотра для ниши.
+ *
+ * @property id Идентификатор ролика.
+ * @property thumbnail URL картинки превью.
+ */
 @Immutable
 @Serializable
 data class Preview(
     @SerialName("id") val id: String = "",
     @SerialName("thumbnail") val thumbnail: String = ""
 ) {
+    /** Проверяет валидность превью (непустые id и thumbnail). */
     val isValid: Boolean get() = id.isNotBlank() && thumbnail.isNotBlank()
 
     companion object {
+        /** Пустой экземпляр [Preview]. */
         val EMPTY = Preview()
     }
 }
-
-
-
-
-
-

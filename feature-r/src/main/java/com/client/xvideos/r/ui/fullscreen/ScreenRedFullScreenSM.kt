@@ -1,6 +1,5 @@
 package com.client.xvideos.r.ui.fullscreen
 
-
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -24,7 +23,17 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
-
+/**
+ * [ScreenModel] для экрана полноэкранного воспроизведения RedGifs (TikTok-подобный вертикальный пейджер).
+ *
+ * Управляет состоянием:
+ * - Воспроизведением/паузой [play];
+ * - Отключением звука [mute];
+ * - Автоповоротом экрана [autoRotate];
+ * - Скоростью воспроизведения [speed];
+ * - Режимом зацикливания отрезка A-B ([enableAB], [timeA], [timeB]);
+ * - Делегированием команд текущему активному видеоплееру [currentPlayerControls].
+ */
 @Stable
 class ScreenRedFullScreenSM @Inject constructor(
     val downloadRed: DownloadRed,
@@ -34,20 +43,33 @@ class ScreenRedFullScreenSM @Inject constructor(
     val search: R_SearchExplorer,
 ) : ScreenModel {
 
+    /** Флаг активного воспроизведения видео. */
     var play by mutableStateOf(true)
+    /** Флаг заглушения аудиодорожки. */
     var mute by mutableStateOf(true)
+    /** Флаг автоматического поворота экрана в горизонтальную ориентацию. */
     var autoRotate by mutableStateOf(false)
+    /** Текущая скорость воспроизведения плеера. */
     var speed by mutableStateOf(PlayerSpeed.DEFAULT)
 
+    /** Флаг активности режима циклического повтора отрезка A-B. */
     var enableAB by mutableStateOf(false)
+    /** Временная метка начала петли A (в секундах). */
     var timeA by mutableFloatStateOf(3f)
+    /** Временная метка конца петли B (в секундах). */
     var timeB by mutableFloatStateOf(6f)
 
+    /** Ссылка на контролы управления текущим видимым видеоплеером. */
     var currentPlayerControls by mutableStateOf<PlayerControls?>(null)
 
+    /** Текущая позиция воспроизведения в секундах. */
     var currentPlayerTime by mutableFloatStateOf(0f)
+    /** Общая длительность текущего ролика в секундах. */
     var currentPlayerDuration by mutableIntStateOf(0)
 
+    /**
+     * Фиксирует точку A петли повтора по текущему положению воспроизведения.
+     */
     fun setTimeA() {
         timeA = sanitizePointTime(currentPlayerTime, currentPlayerDuration)
         if (enableAB && timeB <= timeA) {
@@ -55,6 +77,9 @@ class ScreenRedFullScreenSM @Inject constructor(
         }
     }
 
+    /**
+     * Фиксирует точку B петли повтора по текущему положению воспроизведения.
+     */
     fun setTimeB() {
         timeB = sanitizePointTime(currentPlayerTime, currentPlayerDuration)
         if (enableAB && timeB <= timeA) {
@@ -62,6 +87,9 @@ class ScreenRedFullScreenSM @Inject constructor(
         }
     }
 
+    /**
+     * Переключает режим циклического повтора отрезка A-B с валидацией границ.
+     */
     fun toggleAB() {
         if (!enableAB && timeB <= timeA) {
             SnackBar.warning("Точка B должна быть больше точки A")
@@ -70,6 +98,9 @@ class ScreenRedFullScreenSM @Inject constructor(
         }
     }
 
+    /**
+     * Переключает состояние воспроизведения (Play/Pause).
+     */
     fun togglePlay() {
         play = !play
         if (play) {
@@ -79,23 +110,28 @@ class ScreenRedFullScreenSM @Inject constructor(
         }
     }
 
+    /** Перемотка назад на [seconds] секунд. */
     fun rewind(seconds: Float = 1f) {
         currentPlayerControls?.rewind(seconds)
     }
 
+    /** Перемотка вперед на [seconds] секунд. */
     fun forward(seconds: Float = 1f) {
         currentPlayerControls?.forward(seconds)
     }
 
+    /** Переключение звука (Mute/Unmute). */
     fun toggleMute() {
         mute = !mute
     }
 
+    /** Сброс скорости воспроизведения на стандартную 1.0x. */
     fun resetSpeed() {
         speed = PlayerSpeed.DEFAULT
     }
 }
 
+/** Hilt-модуль привязки [ScreenRedFullScreenSM] в карту ScreenModel Voyager. */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleRedFullScreen {
@@ -105,6 +141,10 @@ abstract class ScreenModuleRedFullScreen {
     abstract fun bindScreenRedFullScreenModel(screenModel: ScreenRedFullScreenSM): ScreenModel
 }
 
+/**
+ * Валидирует и ограничивает временную метку точки A/B:
+ * гарантирует неотрицательность, конечность и непревышение длительности видео.
+ */
 internal fun sanitizePointTime(time: Float, durationSec: Int): Float {
     if (!time.isFinite() || time < 0f) return 0f
     return if (durationSec > 0) time.coerceAtMost(durationSec.toFloat()) else time

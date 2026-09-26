@@ -5,7 +5,13 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
- * Выполняет сетевой GraphQL-запрос FavoritesByDatePictureSet и возвращает сырую строку ответа.
+ * Выполняет сетевой GraphQL-запрос FavoritesByDatePictureSet для получения избранных/лайкнутых наборов картинок (альбомов) пользователя.
+ *
+ * @param repository Репозиторий сетевых запросов.
+ * @param userId Идентификатор пользователя (если null — текущий авторизованный профиль).
+ * @param page Номер страницы выдачи (начиная с 1).
+ * @param showLikes Показывать ли лайкнутые наборы.
+ * @return [Result] с JSON ответом сервера.
  */
 suspend fun FavoritesByDatePictureSet(
     repository: Repository,

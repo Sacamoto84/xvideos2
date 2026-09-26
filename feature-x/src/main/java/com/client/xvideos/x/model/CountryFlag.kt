@@ -12,8 +12,17 @@ package com.client.xvideos.x.model
  */
 const val UNKNOWN_FLAG = "❓"
 
+/**
+ * Проверяет, поддерживается ли двухбуквенный код страны и формирует ли он валидный флаг-эмодзи.
+ */
 fun isValidCountryCode(countryCode: String): Boolean = getFlagEmoji(countryCode) != UNKNOWN_FLAG
 
+/**
+ * Преобразует двухбуквенный код страны (или CSS-класс вида `flag-xx`) в соответствующий флаг-эмодзи Юникода.
+ *
+ * @param countryCode Двухбуквенный код страны (например, `"us"`, `"ru"`, `"flag-fr"`).
+ * @return Эмодзи флага страны либо [UNKNOWN_FLAG] при некорректном коде.
+ */
 fun getFlagEmoji(countryCode: String): String {
     if (countryCode.length < 2) return UNKNOWN_FLAG
     val raw = if (countryCode.startsWith("flag-", ignoreCase = true)) countryCode.substring(5) else countryCode
@@ -29,6 +38,9 @@ fun getFlagEmoji(countryCode: String): String {
     return String(chars)
 }
 
+/**
+ * Преобразует код страны в эмодзи флага либо возвращает `null`, если код не распознан.
+ */
 fun getFlagEmojiOrNull(countryCode: String?): String? {
     if (countryCode == null) return null
     val emoji = getFlagEmoji(countryCode)

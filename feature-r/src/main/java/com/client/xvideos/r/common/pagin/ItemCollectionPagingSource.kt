@@ -8,8 +8,17 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
+/**
+ * [PagingSource] для отображения элементов сохраненной пользовательской коллекции.
+ *
+ * Считывает элементы из [SavedRed.collections] по имени [collection].
+ *
+ * @property collection Имя открытой коллекции.
+ * @property savedRed Фасад локальных данных.
+ */
 class ItemCollectionPagingSource(val collection: String?, val savedRed: SavedRed) : PagingSource<Int, GifsInfo>() {
 
+    /** Проверяет, задано ли непустое имя коллекции. */
     val hasCollection: Boolean get() = !collection.isNullOrBlank()
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, GifsInfo> {

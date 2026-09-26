@@ -15,10 +15,13 @@ import kotlinx.coroutines.launch
  *
  * Один загрузочный «акт» (одно сохранение PicsDetails) оборачивается в [begin]/[finish].
  * Внутри него каждое скачивание файла оборачивается в [startFile]/[updateFile]/[finishFile].
+ *
+ * @param scope Область корутин для отложенного скрытия индикатора после завершения.
  */
 class LDownloadProgress(private val scope: CoroutineScope) {
 
     private val flow = MutableStateFlow(HIDDEN)
+    /** Поток совокупного процента скачивания (от 0f до 1f, либо [HIDDEN]). */
     val percentDownload: StateFlow<Float> = flow
 
     private val lock = Any()
@@ -28,6 +31,11 @@ class LDownloadProgress(private val scope: CoroutineScope) {
     private var finishedFiles = 0
     private var nextFileProgressId = 0
 
+    /**
+     * Регистрирует начало пакета скачивания на указанное количество файлов [fileCount].
+     *
+     * @param fileCount Ожидаемое количество файлов для загрузки.
+     */
     fun begin(fileCount: Int) {
         synchronized(lock) {
             activeJobs += 1
@@ -36,6 +44,10 @@ class LDownloadProgress(private val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Фиксирует завершение пакета скачивания. При окончании всех активных задач
+     * переводит состояние в [DONE] и через [DONE_VISIBLE_MS] скрывает индикатор ([HIDDEN]).
+     */
     fun finish() {
         val shouldHide: Boolean
         synchronized(lock) {
@@ -64,6 +76,11 @@ class LDownloadProgress(private val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Регистрирует начало скачивания отдельного файла.
+     *
+     * @return Уникальный идентификатор отслеживаемого файла для последующих обновлений.
+     */
     fun startFile(): Int = synchronized(lock) {
         val id = nextFileProgressId++
         activeFileProgress[id] = 0f
@@ -71,6 +88,12 @@ class LDownloadProgress(private val scope: CoroutineScope) {
         id
     }
 
+    /**
+     * Обновляет долю скачивания для файла с указанным [id].
+     *
+     * @param id Идентификатор файла, полученный из [startFile].
+     * @param fraction Прогресс от 0f до 1f.
+     */
     fun updateFile(id: Int, fraction: Float) {
         synchronized(lock) {
             if (id in activeFileProgress) {
@@ -80,6 +103,11 @@ class LDownloadProgress(private val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Завершает скачивание файла с указанным [id] и увеличивает счетчик полностью скачанных файлов.
+     *
+     * @param id Идентификатор файла, полученный из [startFile].
+     */
     fun finishFile(id: Int) {
         synchronized(lock) {
             if (activeFileProgress.remove(id) != null) {
@@ -89,6 +117,9 @@ class LDownloadProgress(private val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Пересчитывает суммарный прогресс всех загрузок и обновляет [flow].
+     */
     private fun recompute() {
         if (totalFiles <= 0 || activeJobs <= 0) {
             flow.value = HIDDEN
@@ -100,8 +131,11 @@ class LDownloadProgress(private val scope: CoroutineScope) {
     }
 
     companion object {
+        /** Маркер скрытого состояния индикатора прогресса. */
         const val HIDDEN = -2f
+        /** Маркер 100% завершения загрузки. */
         const val DONE = 1f
+        /** Задержка в миллисекундах перед скрытием завершенного индикатора прогресса. */
         const val DONE_VISIBLE_MS = 400L
     }
 }

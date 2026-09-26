@@ -12,12 +12,24 @@ import java.io.InputStream
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+/**
+ * Реализация сетевого клиента [HttpClient] на основе [OkHttpClient].
+ *
+ * Особенности:
+ * - Интеграция с [AppDns] для безопасного разрешения доменных имен через DoH.
+ * - Ручное управление редиректами (`followRedirects = false`) для безопасной валидации целевых URL.
+ * - Поддержка заголовка `Range: bytes=N-` для докачки частично загруженных файлов.
+ * - Отмена текущего вызова [Call.cancel] при прерывании задачи.
+ */
 class DefaultHttpClient : HttpClient {
     private var call: Call? = null
     private var response: Response? = null
     private var bodyStream: InputStream? = null
 
     companion object {
+        /**
+         * Базовый экземпляр OkHttpClient с настроенным AppDns и авто-ретраями при разрывах соединений.
+         */
         private val baseOkHttpClient: OkHttpClient by lazy {
             OkHttpClient.Builder()
                 .dns(AppDns)
@@ -34,6 +46,7 @@ class DefaultHttpClient : HttpClient {
 
     @Throws(IOException::class)
     override fun connect(req: DownloadRequest) {
+        // Формируем заголовок Range для докачки с текущего смещения req.downloadedBytes
         val range: String = String.format(
             Locale.ENGLISH,
             "bytes=%d-", req.downloadedBytes
@@ -46,6 +59,7 @@ class DefaultHttpClient : HttpClient {
 
         addHeaders(req, builder)
 
+        // Применяем кастомные таймауты из запроса, если они заданы
         val client = if (req.connectTimeOut > 0 || req.readTimeOut > 0) {
             baseOkHttpClient.newBuilder()
                 .apply {

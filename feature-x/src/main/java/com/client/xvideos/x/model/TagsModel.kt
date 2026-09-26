@@ -2,17 +2,13 @@ package com.client.xvideos.x.model
 
 import androidx.compose.runtime.Immutable
 
-//<li class="main-uploader">
-//<a class="btn btn-default label main uploader-tag hover-name" href="/milfed">
-//<span class="name">
-//<span class="icon-f icf-device-tv-v2"/>
-//Milfed
-//</span>
-//<span class="user-subscribe" data -user-id="568100199" data -user-profile="milfed">
-//<span class="count">359k</span>
-//</span>
-//</a>
-//</li>
+/**
+ * Элемент автора, канала или порнозвезды в блоке тегов под видеороликом.
+ *
+ * @property href Относительная ссылка на профиль автора или страницу модели.
+ * @property name Отображаемое имя автора/модели.
+ * @property count Число подписчиков или количество роликов (текстовое представление, например `"359k"`).
+ */
 @Immutable
 data class TagsMainUploaderPornstar(
     val href: String = "",
@@ -29,16 +25,13 @@ data class TagsMainUploaderPornstar(
     }
 }
 
-
-//<li class="model">
-//<a class="btn btn-default label profile hover-name is-pornstar" data-id="306248827" href="/pornstars/london-river">
-//<span class="model-star-sub icon-f icf-star-o" data-user-id="306248827" data-user-profile="london-river"/>
-//<span class="name">London River</span>
-//<span class="user-subscribe" data-user-id="306248827" data-user-profile="london-river">
-//<span class="count">198k</span>
-//</span>
-//</a>
-//</li>
+/**
+ * Совокупность всех тегов и метаданных участников, извлеченных со страницы видеоролика.
+ *
+ * @property mainUploader Список основных авторов/каналов, загрузивших видео.
+ * @property pornstars Список порнозвезд и моделей, участвующих в ролике.
+ * @property tags Список текстовых категорий и тегов ролика.
+ */
 @Immutable
 data class TagsModel(
     val mainUploader: List<TagsMainUploaderPornstar> = emptyList(),

@@ -12,14 +12,26 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * Хранилище избранных создателей контента (авторов) RedGifs на базе [FileDB].
+ *
+ * Файлы метаданных [UserInfo] сохраняются в `AppPath.r_creators` с расширением `.creator`.
+ *
+ * @param scope Корутин-скоп для фонового I/O.
+ */
 class R_Saved_Creator(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
 
+    /** Файловая БД авторов. */
     val creatorDb = FileDB(AppPath.r_creators, "creator", UserInfo.serializer())
 
+    /** Реактивный список избранных авторов для Compose UI. */
     val list = creatorDb.list
 
+    /**
+     * Сохраняет автора [item] в избранные на диске и в памяти.
+     */
     fun add(item: UserInfo) {
         Timber.i("R_Saved_Creator add() id:${item.username}")
         scope.launch(Dispatchers.IO) {
@@ -43,6 +55,9 @@ class R_Saved_Creator(
         }
     }
 
+    /**
+     * Удаляет автора по [username] из избранных на диске и в памяти.
+     */
     fun remove(username: String) {
         Timber.i("R_Saved_Creator remove() id:${username}")
         scope.launch(Dispatchers.IO) {
@@ -60,6 +75,10 @@ class R_Saved_Creator(
         }
     }
 
+    /**
+     * Если автор уже сохранен в избранном, обновляет его данные актуальной версией [item].
+     * Возвращает true, если автор был в списке и обновление запущено.
+     */
     fun updateIfSaved(item: UserInfo): Boolean {
         val index = list.indexOfFirst { it.username == item.username }
         if (index == -1) return false
@@ -89,6 +108,9 @@ class R_Saved_Creator(
 
     private var refreshJob: Job? = null
 
+    /**
+     * Перечитывает список сохраненных авторов с диска.
+     */
     fun refresh() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {

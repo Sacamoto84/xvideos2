@@ -1,33 +1,59 @@
 package com.client.xvideos.common.traficStatistic
-// NetworkTrafficMonitor.kt - Сервис для мониторинга трафика
+
 import android.net.TrafficStats
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Снимок метрик сетевого трафика приложения.
+ *
+ * @property downloadSpeed Мгновенная скорость скачивания в байтах в секунду (B/s).
+ * @property uploadSpeed Мгновенная скорость отдачи в байтах в секунду (B/s).
+ * @property totalDownloaded Общий объем входящего трафика за все время работы ОС (Rx).
+ * @property totalUploaded Общий объем исходящего трафика за все время работы ОС (Tx).
+ * @property sessionDownloaded Объем входящего трафика за текущую сессию работы приложения.
+ * @property sessionUploaded Объем исходящего трафика за текущую сессию работы приложения.
+ * @property isSupported Флаг поддержки системных счетчиков [TrafficStats] текущим ядром устройства.
+ */
 data class TrafficData(
-    val downloadSpeed: Long = 0L, // байт/с
-    val uploadSpeed: Long = 0L, // байт/с
-    val totalDownloaded: Long = 0L, // всего скачано
-    val totalUploaded: Long = 0L, // всего загружено
-    val sessionDownloaded: Long = 0L, // за сессию скачано
-    val sessionUploaded: Long = 0L, // за сессию загружено
+    val downloadSpeed: Long = 0L,
+    val uploadSpeed: Long = 0L,
+    val totalDownloaded: Long = 0L,
+    val totalUploaded: Long = 0L,
+    val sessionDownloaded: Long = 0L,
+    val sessionUploaded: Long = 0L,
     val isSupported: Boolean = true
 ) {
+    /** Суммарный объем входящего и исходящего трафика за текущую сессию. */
     val totalSessionTraffic: Long get() = sessionDownloaded + sessionUploaded
+
+    /** Суммарный объем входящего и исходящего трафика за все время. */
     val totalOverallTraffic: Long get() = totalDownloaded + totalUploaded
+
+    /** Истина, если сетевой обмен отсутствует (нулевая скорость в обоих направлениях). */
     val isIdle: Boolean get() = downloadSpeed == 0L && uploadSpeed == 0L
 
     companion object {
+        /** Пустой объект с нулевыми счетчиками. */
         val EMPTY = TrafficData()
+
+        /** Объект для устройств без поддержки [TrafficStats]. */
         val UNSUPPORTED = TrafficData(isSupported = false)
     }
 }
 
+/**
+ * Синглтон-сервис периодического мониторинга скорости и объема сети процесса приложения.
+ *
+ * Использует системный [TrafficStats.getUidRxBytes] для подсчета байтов конкретного UID процесса.
+ * Предоставляет реактивный [StateFlow] для обновления UI индикаторов трафика без блокировки потоков.
+ */
 @Singleton
 class NetworkTrafficMonitor @Inject constructor() {
 
+    /** Интервал обновления метрик (2000 мс). */
     val timeout = 2000L
 
     private val appUid = android.os.Process.myUid()
@@ -40,6 +66,8 @@ class NetworkTrafficMonitor @Inject constructor() {
     private var previousTime = 0L
 
     private val _trafficFlow = MutableStateFlow(TrafficData())
+
+    /** Реактивный поток актуальных данных о трафике. */
     val trafficFlow: StateFlow<TrafficData> = _trafficFlow.asStateFlow()
 
     private var monitoringJob: Job? = null
@@ -48,6 +76,9 @@ class NetworkTrafficMonitor @Inject constructor() {
         initializeCounters()
     }
 
+    /**
+     * Инициализация базовых значений счетчиков при старте мониторинга.
+     */
     private fun initializeCounters() {
         val currentRxBytes = TrafficStats.getUidRxBytes(appUid)
         val currentTxBytes = TrafficStats.getUidTxBytes(appUid)
@@ -71,6 +102,9 @@ class NetworkTrafficMonitor @Inject constructor() {
         }
     }
 
+    /**
+     * Запускает фоновый цикл периодического замера скорости.
+     */
     fun startMonitoring() {
         if (monitoringJob?.isActive == true) return
 
@@ -82,11 +116,17 @@ class NetworkTrafficMonitor @Inject constructor() {
         }
     }
 
+    /**
+     * Приостанавливает цикл периодического замера скорости.
+     */
     fun stopMonitoring() {
         monitoringJob?.cancel()
         monitoringJob = null
     }
 
+    /**
+     * Вычисляет дельту байтов за прошедший временной интервал и определяет текущую скорость.
+     */
     private fun calculateTrafficData(): TrafficData {
         val currentRxBytes = TrafficStats.getUidRxBytes(appUid)
         val currentTxBytes = TrafficStats.getUidTxBytes(appUid)
@@ -107,7 +147,6 @@ class NetworkTrafficMonitor @Inject constructor() {
             ((currentTxBytes - previousTxBytes) / timeDiffSec).toLong().coerceAtLeast(0L)
         } else 0L
 
-        // Обновляем предыдущие значения
         previousRxBytes = currentRxBytes
         previousTxBytes = currentTxBytes
         previousTime = currentTime
@@ -123,6 +162,9 @@ class NetworkTrafficMonitor @Inject constructor() {
         )
     }
 
+    /**
+     * Сбрасывает точку отсчета трафика для текущей сессии на текущие значения.
+     */
     fun resetSession() {
         scope.launch {
             val currentRxBytes = TrafficStats.getUidRxBytes(appUid)
@@ -137,6 +179,9 @@ class NetworkTrafficMonitor @Inject constructor() {
         }
     }
 
+    /**
+     * Полное освобождение ресурсов и завершение скоупа монитора.
+     */
     fun destroy() {
         stopMonitoring()
         scope.cancel()

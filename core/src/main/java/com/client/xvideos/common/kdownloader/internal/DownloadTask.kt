@@ -22,6 +22,22 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 
+/**
+ * Исполнитель отдельной задачи скачивания файла по протоколу HTTP.
+ *
+ * Отвечает за:
+ * - Ограничение параллельных сетевых потоков через [downloadSemaphore] (не более 4 одновременно).
+ * - Управление жизненным циклом HTTP-соединения, заголовками Range и ETag.
+ * - Обработку редиректов и определение возможности докачки (HTTP 206 Partial Content).
+ * - Сброс кэша и перезапуск при смене ETag на сервере или коде 416 (Range Not Satisfiable).
+ * - Потоковое чтение данных чанками по [BUFFER_SIZE] (4 КБ).
+ * - Периодическую синхронизацию буферов на диск ([flushAndSync]) и сохранение прогресса в SQLite БД.
+ * - Защиту от поврежденных файлов: проверка на 0 байт, сверка с Content-Length, атомарное переименование `.temp` файла.
+ * - Безопасную очистку ресурсов и дескрипторов при отмене или ошибках.
+ *
+ * @param req Модель параметров запроса.
+ * @param dbHelper Интерфейс базы данных для сохранения прогресса.
+ */
 class DownloadTask(
     private val req: DownloadRequest,
     private val dbHelper: DbHelper
@@ -42,12 +58,22 @@ class DownloadTask(
     private var eTag: String = ""
 
     companion object {
+        /** Минимальный временной интервал между синхронизациями с БД (2 секунды). */
         private const val TIME_GAP_FOR_SYNC: Long = 2000
+
+        /** Минимальный объем скачанных данных между синхронизациями с БД (64 КБ). */
         private const val MIN_BYTES_FOR_SYNC: Long = 65536
+
+        /** Размер промежуточного буфера чтения из сетевого сокета (4 КБ). */
         private const val BUFFER_SIZE = 1024 * 4
+
+        /** Семафор для ограничения одновременных сетевых загрузок до 4 потоков. */
         private val downloadSemaphore = Semaphore(4)
     }
 
+    /**
+     * Запуск выполнения задачи с использованием лямбда-коллбэков.
+     */
     suspend inline fun run(
         crossinline onStart: () -> Unit = {},
         crossinline onProgress: (value: Int) -> Unit = { _ -> },
@@ -66,6 +92,9 @@ class DownloadTask(
         override fun onPause() = onPause()
     })
 
+    /**
+     * Создает новую запись о загрузке в БД на фоновом потоке IO.
+     */
     private suspend fun createAndInsertNewModel() {
         withContext(Dispatchers.IO) {
             dbHelper.insert(
@@ -83,14 +112,20 @@ class DownloadTask(
         }
     }
 
+    /**
+     * Удаляет запись из БД после завершения или при отмене задачи.
+     */
     private suspend fun removeNoMoreNeededModelFromDatabase() {
         withContext(Dispatchers.IO) {
             dbHelper.remove(req.downloadId)
         }
     }
 
-
-
+    /**
+     * Основной рабочий цикл выполнения задачи скачивания.
+     *
+     * @param listener Слушатель событий жизненного цикла загрузки.
+     */
     suspend fun run(listener: DownloadRequest.Listener) {
         downloadSemaphore.withPermit {
             withContext(Dispatchers.IO.limitedParallelism(1)) {
@@ -101,6 +136,7 @@ class DownloadTask(
 
                     var model = getDownloadModelIfAlreadyPresentInDatabase()
 
+                    // Разрешение коллизии: если на диске остался .temp файл от предыдущего сбоя без записи в БД
                     if (model == null && file.exists() && dbHelper is AppDbHelper) {
                         if (!deleteTempFile()) {
                             val parent = file.parentFile ?: File(req.dirPath)
@@ -121,6 +157,7 @@ class DownloadTask(
                         }
                     }
 
+                    // Восстановление прогресса из БД при наличии существующего файла
                     if (model != null) {
                         if (file.exists()) {
                             req.totalBytes = (model.totalBytes)
@@ -133,7 +170,7 @@ class DownloadTask(
                         }
                     }
 
-                    // use the url to download the file with HTTP Client
+                    // Инициализация HTTP-клиента и регистрация хука отмены
                     val client = DefaultHttpClient().clone()
                     httpClient = client
                     cancelHandler = req.job?.invokeOnCompletion {
@@ -151,7 +188,6 @@ class DownloadTask(
                     }
 
                     req.status = Status.RUNNING
-
                     listener.onStart()
 
                     client.connect(req)
@@ -163,6 +199,7 @@ class DownloadTask(
                     responseCode = redirectedClient.getResponseCode()
                     eTag = redirectedClient.getResponseHeader(Constants.ETAG)
 
+                    // Проверка на устаревание ETag или ошибку 416 (сброс к полной перекачке)
                     if (checkIfFreshStartRequiredAndStart(model)) {
                         model = null
                         redirectedClient = httpClient ?: redirectedClient
@@ -255,6 +292,7 @@ class DownloadTask(
                         return@withContext
                     }
 
+                    // Позиционирование указателя записи при докачке
                     if (isResumeSupported && req.downloadedBytes != 0L) {
                         outStream.seek(req.downloadedBytes)
                     }
@@ -267,6 +305,7 @@ class DownloadTask(
                     }
 
                     var lastProgress = -1
+                    // Основной цикл чтения байтов из сети и записи на диск
                     do {
                         val byteCount = stream.read(buff, 0, BUFFER_SIZE)
                         if (byteCount == -1) {
@@ -326,6 +365,7 @@ class DownloadTask(
                         return@withContext
                     }
 
+                    // Guard 1: Защита от создания 0-байтовых файлов при пустом ответе сервера
                     if (req.downloadedBytes == 0L) {
                         closeAllSafely(outStream)
                         this@DownloadTask.outputStream = null
@@ -337,6 +377,7 @@ class DownloadTask(
                         return@withContext
                     }
 
+                    // Guard 2: Защита от недокачанных файлов (сверка с Content-Length)
                     if (totalBytes > 0 && req.downloadedBytes < totalBytes) {
                         closeAllSafely(outStream)
                         this@DownloadTask.outputStream = null
@@ -350,6 +391,7 @@ class DownloadTask(
                         return@withContext
                     }
 
+                    // Финальное переименование временного .temp файла в целевой
                     val path = getPath(req.dirPath, req.fileName)
                     closeAllSafely(outStream)
                     this@DownloadTask.outputStream = null
@@ -398,10 +440,16 @@ class DownloadTask(
         }
     }
 
+    /**
+     * Сервер поддерживает докачку только при ответе кодом 206 (Partial Content).
+     */
     private fun setResumeSupportedOrNot() {
         isResumeSupported = (responseCode == HttpURLConnection.HTTP_PARTIAL)
     }
 
+    /**
+     * Удаляет временный файл загрузки с диска.
+     */
     private fun deleteTempFile(): Boolean {
         val file = File(tempPath)
         if (file.exists()) {
@@ -410,6 +458,10 @@ class DownloadTask(
         return false
     }
 
+    /**
+     * Проверяет, требуется ли полный сброс и перезапуск загрузки с нуля
+     * (изменился ETag на сервере или получен HTTP 416 Range Not Satisfiable).
+     */
     @Throws(IOException::class)
     private suspend fun checkIfFreshStartRequiredAndStart(model: DownloadModel?): Boolean {
         if (responseCode == Constants.HTTP_RANGE_NOT_SATISFIABLE || isETagChanged(model)) {
@@ -434,19 +486,27 @@ class DownloadTask(
         return false
     }
 
+    /**
+     * Сравнивает текущий ETag ответа сервера с сохраненным в БД.
+     */
     private fun isETagChanged(model: DownloadModel?): Boolean {
         return (!(eTag.isEmpty() || model == null || model.eTag.isEmpty())
                 && model.eTag != eTag)
     }
 
+    /**
+     * Извлекает существующую запись загрузки из БД.
+     */
     private suspend fun getDownloadModelIfAlreadyPresentInDatabase(): DownloadModel? {
         return withContext(Dispatchers.IO) {
             dbHelper.find(req.downloadId)
         }
     }
 
+    /**
+     * Потокобезопасное закрытие всех активных сетевых соединений и файловых потоков с подавлением ошибок.
+     */
     private suspend fun closeAllSafely(outputStream: FileDownloadOutputStream?) {
-
         try {
             httpClient?.close()
         } catch (e: Exception) {
@@ -481,6 +541,9 @@ class DownloadTask(
         }
     }
 
+    /**
+     * Периодическая проверка необходимости сброса буферов на диск (каждые 64 КБ и 2 секунды).
+     */
     private suspend fun syncIfRequired(outputStream: FileDownloadOutputStream) {
         val currentBytes: Long = req.downloadedBytes
         val currentTime = System.currentTimeMillis()
@@ -493,6 +556,9 @@ class DownloadTask(
         }
     }
 
+    /**
+     * Принудительная синхронизация буферов с физическим носителем и обновление позиции в БД.
+     */
     private suspend fun sync(outputStream: FileDownloadOutputStream) {
         var success: Boolean
         try {
@@ -512,6 +578,9 @@ class DownloadTask(
         }
     }
 
+    /**
+     * Проверяет, успешен ли HTTP-код ответа сервера (2xx).
+     */
     private fun isSuccessful(): Boolean {
         return (responseCode >= HttpURLConnection.HTTP_OK
                 && responseCode < HttpURLConnection.HTTP_MULT_CHOICE)

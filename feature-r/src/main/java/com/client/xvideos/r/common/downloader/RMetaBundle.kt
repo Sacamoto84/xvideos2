@@ -9,9 +9,13 @@ import java.io.File
  * рядом в `<tmpRoot>/<userName>/`). Видео не участвует — получатель стримит по URL
  * из метаданных. Сетевой части нет — тестируемо.
  *
- * @param tmpRoot корень временной папки экспорта; станет storeRoot бандла,
+ * @param tmpRoot Корень временной папки экспорта; станет storeRoot бандла,
  *   relativePath файлов получится `<userName>/<id>.*` — получатель положит их
  *   в `r_cache_download` с той же структурой.
+ * @param userName Имя автора.
+ * @param id Идентификатор медиафайла.
+ * @param infoJson Сериализованный в JSON объект [com.client.xvideos.r.model.GifsInfo].
+ * @return Сформированный пакет [P2pExportBundle].
  */
 fun buildRMetaBundle(tmpRoot: File, userName: String, id: String, infoJson: String): P2pExportBundle {
     val dir = File(tmpRoot, userName).apply { mkdirs() }

@@ -23,26 +23,59 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** Шаблон пути для получения топа GIF за неделю (7 дней). */
 private const val PATH_TOP7 = "/v2/gifs/search?order=top7&count={count}&page={page}&type={type}"
+/** Шаблон пути для получения топа GIF за месяц (28 дней). */
 private const val PATH_TOP28 = "/v2/gifs/search?order=top28&count={count}&page={page}&type={type}"
+/** Шаблон пути для получения топа GIF за всё время. */
 private const val PATH_TOP = "/v2/gifs/search?order=top&count={count}&page={page}&type={type}"
+/** Шаблон пути для получения трендовых GIF. */
 private const val PATH_TRENDING = "/v2/gifs/search?order=trending&count={count}&page={page}&type={type}"
+/** Шаблон пути для получения самых свежих (последних) GIF. */
 private const val PATH_LATEST = "/v2/gifs/search?order=latest&count={count}&page={page}&type={type}"
+/** Шаблон пути для поиска GIF пользователя с фильтрацией по тегам. */
 private const val PATH_USER_SEARCH_TAGS = "/v2/users/{username}/search?order={order}&page={page}&count={count}&tags={tags}"
+/** Шаблон пути для поиска GIF пользователя без фильтрации по типу медиа и тегам. */
 private const val PATH_USER_SEARCH = "/v2/users/{username}/search?page={page}&count={count}&order={order}"
+/** Шаблон пути для поиска GIF пользователя с фильтром по типу медиа и тегам. */
 private const val PATH_USER_SEARCH_TYPE_TAGS = "/v2/users/{username}/search?order={order}&page={page}&count={count}&type={type}&tags={tags}"
+/** Шаблон пути для поиска GIF пользователя с фильтром по типу медиа. */
 private const val PATH_USER_SEARCH_TYPE = "/v2/users/{username}/search?page={page}&count={count}&order={order}&type={type}"
 
+/**
+ * Главный фасад API сервиса RedGifs.
+ *
+ * Предоставляет методы для получения:
+ * - Популярных и трендовых лент медиа (неделя, месяц, всё время, тренды, новые) с кэшированием в [mediaCache];
+ * - Профилей авторов и их опубликованных работ;
+ * - Ниш (тематических разделов), связанных ниш и топовых авторов в них;
+ * - Подсказок поиска по тегам и нишам.
+ *
+ * Делегирует узкоспециализированные запросы в:
+ * - [explorer] ([RedApi_Explorer]): просмотр каталога ниш;
+ * - [search] ([RedApi_Search]): полнотекстовый поиск медиа и авторов;
+ * - [tags] ([RedApi_Tags]): справочник тегов.
+ *
+ * @property db Локальная файловая БД для кэширования HTTP-ответов.
+ */
 @Singleton
 class RedApi @Inject constructor(
    db: AppFileDatabase
 ) {
 
+    /** Сетевой HTTP-клиент с авторизацией. */
     val api = ApiClient
+
+    /** Таблица файлового дискового кэша для [MediaResponse]. */
     private val mediaCache = db.rCacheMediaResponse
 
+    /** API подраздела каталога ниш. */
     val explorer = RedApi_Explorer(api)
+
+    /** API полнотекстового поиска гифок и авторов. */
     val search = RedApi_Search(api)
+
+    /** API справочника и подсказок тегов. */
     val tags = RedApi_Tags(api)
 
     //--------------------------- GIF methods ---------------------------
@@ -56,8 +89,12 @@ class RedApi @Inject constructor(
     // docs/redgifs-api.md, если метод понадобится снова.
 
     /**
-     * ## Получить топ GIF-ов за неделю.
-     * Работает
+     * Получить топ GIF за последнюю неделю (`order=top7`).
+     * Ответ кэшируется на диске через [cacheMediaResponse].
+     *
+     * @param count Количество элементов на страницу.
+     * @param page Номер страницы (1-based).
+     * @param type Тип медиа (GIF, image и т.д.).
      */
     suspend fun getTopThisWeek(
         count: Int,                      // количество элементов на страницу.
@@ -74,7 +111,14 @@ class RedApi @Inject constructor(
         return cacheMediaResponse(route, this, mediaCache)
     }
 
-
+    /**
+     * Получить топ GIF за последний месяц (`order=top28`).
+     * Ответ кэшируется на диске через [cacheMediaResponse].
+     *
+     * @param count Количество элементов на страницу.
+     * @param page Номер страницы (1-based).
+     * @param type Тип медиа (GIF, image и т.д.).
+     */
     suspend fun getTopThisMonth(
         count: Int,                      // количество элементов на страницу.
         page: Int,                       // номер страницы (1-based).
@@ -90,15 +134,18 @@ class RedApi @Inject constructor(
         return cacheMediaResponse(route, this, mediaCache)
     }
 
-
     /**
-     * ## Топ за всё время.
+     * Получить топ GIF за всё время (`order=top`).
      *
-     * `order=top` — именно он и означает «без ограничения по времени»: рядом
+     * `order=top` — именно он означает «без ограничения по времени»: рядом
      * `top7` это неделя, `top28` месяц. Значения `alltime` у RedGifs нет,
      * `/v2/gifs/search` отвечает на него 400 BadOrder (проверено 06.08.2026,
      * docs/redgifs-api.md). До появления этого метода выбор «All time» в меню
      * уходил в `else` и молча отдавал неделю.
+     *
+     * @param count Количество элементов на страницу.
+     * @param page Номер страницы (1-based).
+     * @param type Тип медиа (GIF, image и т.д.).
      */
     suspend fun getTopAllTime(
         count: Int,                      // количество элементов на страницу.
@@ -115,7 +162,14 @@ class RedApi @Inject constructor(
         return cacheMediaResponse(route, this, mediaCache)
     }
 
-
+    /**
+     * Получить трендовые GIF (`order=trending`).
+     * Ответ кэшируется на диске через [cacheMediaResponse].
+     *
+     * @param count Количество элементов на страницу.
+     * @param page Номер страницы (1-based).
+     * @param type Тип медиа (GIF, image и т.д.).
+     */
     suspend fun getTopTrending(
         count: Int,                      // количество элементов на страницу.
         page: Int,                       // номер страницы (1-based).
@@ -131,8 +185,14 @@ class RedApi @Inject constructor(
         return cacheMediaResponse(route, this, mediaCache)
     }
 
-    //Последние, новые посты, не нужно кешировать
-
+    /**
+     * Получить самые свежие опубликованные посты (`order=latest`).
+     * Намеренно не кэшируется, так как выдача постоянно обновляется.
+     *
+     * @param count Количество элементов на страницу.
+     * @param page Номер страницы (1-based).
+     * @param type Тип медиа (GIF, image и т.д.).
+     */
     suspend fun getTopLatest(
         count: Int,                      // количество элементов на страницу.
         page: Int,                       // номер страницы (1-based).
@@ -152,6 +212,11 @@ class RedApi @Inject constructor(
 
     //--------------------------- User/Creator methods ---------------------------
 
+    /**
+     * Загрузить подробную информацию о пользователе/авторе по его никнейму.
+     *
+     * @param userName Имя пользователя (username).
+     */
     suspend fun readCreator(
         userName: String,
     ): Result<UserInfo> {
@@ -164,18 +229,20 @@ class RedApi @Inject constructor(
         return api.request<UserInfo>(route)
     }
 
-
     /**
-     * ```kotlin
-     *  Получить последние 50 элементов
-     *  https://api.redgifs.com/v2/users/panteritaaaa/search?order=latest&count=50&page=1
-     *  https://api.redgifs.com/v2/users/relative_rub/search?order=latest&count=50&page=1
-     * ```
+     * Поиск и пагинация опубликованных GIF конкретного создателя.
      *
-     * Версия с тегами
-     * ```kotlin
-     *  https://api.redgifs.com/v2/users/entakeeke1a/search?order=new&count=40&tags=Amateur%2CArmpit%2CArmpits
-     * ```
+     * Поддерживает:
+     * - Фильтрацию по типу контента ([MediaType]);
+     * - Фильтрацию по списку тегов ([tags]);
+     * - Различные порядки сортировки ([Order]).
+     *
+     * @param userName Имя создателя.
+     * @param page Номер страницы (1-based).
+     * @param count Количество элементов на страницу.
+     * @param order Порядок сортировки.
+     * @param type Тип контента (GIF, Image, All).
+     * @param tags Список тегов для сужения выдачи.
      */
     suspend fun searchCreator(
         userName: String,
@@ -233,6 +300,11 @@ class RedApi @Inject constructor(
 
     //--------------------------- Tag methods ---------------------------
 
+    /**
+     * Получить детальную информацию о конкретной нише по её идентификатору.
+     *
+     * @param niches Идентификатор или слаг ниши.
+     */
     suspend fun getNiche(niches: String): Result<NicheResponse> {
         val trimmed = niches.trim()
         if (trimmed.isEmpty()) return Result.failure(IllegalArgumentException("Niche identifier cannot be blank"))
@@ -240,6 +312,15 @@ class RedApi @Inject constructor(
         return api.request<NicheResponse>(route)
     }
 
+    /**
+     * Загрузить страницу гифок, входящих в указанную нишу.
+     * Ответ кэшируется через [cacheMediaResponse].
+     *
+     * @param niches Идентификатор ниши.
+     * @param page Номер страницы.
+     * @param count Количество элементов на страницу.
+     * @param order Порядок сортировки.
+     */
     suspend fun getNiches(
         niches: String,
         page: Int = 1,
@@ -259,6 +340,11 @@ class RedApi @Inject constructor(
         return cacheMediaResponse(route, this, mediaCache)
     }
 
+    /**
+     * Загрузить список похожих/связанных ниш для заданной ниши.
+     *
+     * @param niches Идентификатор ниши.
+     */
     suspend fun getNichesRelated(niches: String): Result<NichesResponse> {
         val trimmed = niches.trim()
         if (trimmed.isEmpty()) return Result.success(NichesResponse())
@@ -266,6 +352,11 @@ class RedApi @Inject constructor(
         return api.request<NichesResponse>(route)
     }
 
+    /**
+     * Получить топ создателей в указанной нише.
+     *
+     * @param niches Идентификатор ниши.
+     */
     suspend fun getNichesTopCreators(niches: String): Result<TopCreatorsResponse> {
         val trimmed = niches.trim()
         if (trimmed.isEmpty()) return Result.success(TopCreatorsResponse())
@@ -274,11 +365,22 @@ class RedApi @Inject constructor(
         return api.request(route)
     }
 
+    /**
+     * Контейнер ответа для списка тегов ниши.
+     *
+     * @property tags Список строк тегов.
+     */
     @Serializable
     data class TagsContainer(
         @SerialName("tags") val tags: List<String> = emptyList()
     )
 
+    /**
+     * Получить популярные теги в заданной нише.
+     *
+     * @param niches Идентификатор ниши.
+     * @return Список имен тегов.
+     */
     suspend fun getNichesTopTags(niches: String): List<String> {
         val trimmed = niches.trim()
         if (trimmed.isEmpty()) return emptyList()
@@ -286,12 +388,9 @@ class RedApi @Inject constructor(
         return api.request<TagsContainer>(route).getOrNull()?.tags ?: emptyList()
     }
 
-
     //explorer
 
-
     //////////////////////////////////// Поиск ////////////////////////////////////
-
 
     // Здесь были две перегрузки searchCreators — на /v1/creators/search и на
     // /v2/search/creators — и закомментированная searchCreatorsLong. Вызовов ни
@@ -303,14 +402,15 @@ class RedApi @Inject constructor(
     // Живой поиск авторов делает searchCreatorsShort в RedApi_Search.
 
     /**
-     * ## Поиск ниш по тексту.
-     * https://api.redgifs.com/v2/niches/search?query=Ana
+     * Поиск ниш по тексту (`/v2/niches/search?query=...`).
      *
-     * Разбор отдан ktor'у. Раньше тело забиралось через `requestText`, а
+     * Разбор отдан Ktor'у. Раньше тело забиралось через `requestText`, а
      * `String?` из `getOrNull()` уходил в `Gson().fromJson(res, listType)` — на
      * `null` Gson возвращает `null`, и присваивание в non-null
      * `SearchNichesShortResponse` роняло проверку Kotlin. То есть при отказе
      * сети отсюда прилетал NPE вместо ошибки сети.
+     *
+     * @param text Текст поискового запроса.
      */
     suspend fun searchNichesShort(text: String): Result<List<SearchItemNichesResponse>> {
         val trimmed = text.trim()
@@ -325,9 +425,10 @@ class RedApi @Inject constructor(
     // присваивание в non-null List роняет проверку Kotlin. Подсказки тегов
     // берёт getTagSuggestions — он возвращает Result и разбирается ktor'ом.
 
-
     /**
-     * ## Получить подсказки (suggest) по тегам.
+     * Получить подсказки (suggestions) по тегам для автодополнения строки поиска.
+     *
+     * @param query Начало поискового слова.
      */
     suspend fun getTagSuggestions(query: String): Result <List<TagSuggestion>> {
         val trimmed = query.trim()
@@ -340,15 +441,19 @@ class RedApi @Inject constructor(
 }
 
 /**
- * Ответ из кеша, а если там пусто — из сети, с укладкой в кеш.
+ * Ответ из файлового кеша, а если там пусто — из сети, с сохранением в кеш.
  *
  * Возвращает [Result], а не голый [MediaResponse]. Раньше при отказе сети
  * отсюда уходил `MediaResponse(0, 0, 0, …)` — пустой объект вместо ошибки.
  * Дальше по цепочке `pages = 0` превращались в `nextKey = null`, и Paging
- * получал **успешную пустую страницу**: `LoadState.Error` не наступал, кнопки
+ * получал успешную пустую страницу: `LoadState.Error` не наступал, кнопки
  * «повторить» не было, экран просто показывал пустоту. При этом соседний
  * `getTopLatest` шёл через `Result` и ошибку показывал честно — одно и то же
  * приложение вело себя по-разному в зависимости от выбранной сортировки.
+ *
+ * @param route Запрашиваемый маршрут.
+ * @param redApi Экземпляр [RedApi] для выполнения сетевого запроса.
+ * @param cache Таблица файлового кэша.
  */
 private suspend fun cacheMediaResponse(
     route: Route,
@@ -386,5 +491,3 @@ private suspend fun cacheMediaResponse(
         }
         .onFailure { Timber.w(it, "Network error during request: ${route.url}") }
 }
-
-

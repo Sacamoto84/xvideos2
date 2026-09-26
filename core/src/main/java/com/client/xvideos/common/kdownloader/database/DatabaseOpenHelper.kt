@@ -4,12 +4,21 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
+/**
+ * Вспомогательный класс создания и миграции SQLite-базы данных загрузчика [KDownloader].
+ *
+ * Создает таблицу [AppDbHelper.TABLE_NAME] для сохранения состояния докачки файлов.
+ */
 class DatabaseOpenHelper internal constructor(context: Context?) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+    /**
+     * Создание структуры таблиц базы данных при первом запуске.
+     */
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             "CREATE TABLE IF NOT EXISTS " +
-                    AppDbHelper.Companion.TABLE_NAME.toString() + "( " +
+                    AppDbHelper.TABLE_NAME + "( " +
                     DownloadModel.ID + " INTEGER PRIMARY KEY, " +
                     DownloadModel.URL + " VARCHAR, " +
                     DownloadModel.ETAG + " VARCHAR, " +
@@ -22,6 +31,9 @@ class DatabaseOpenHelper internal constructor(context: Context?) :
         )
     }
 
+    /**
+     * Миграция схемы базы данных при обновлении версии.
+     */
     override fun onUpgrade(db: SQLiteDatabase, i: Int, i1: Int) {}
 
     companion object {

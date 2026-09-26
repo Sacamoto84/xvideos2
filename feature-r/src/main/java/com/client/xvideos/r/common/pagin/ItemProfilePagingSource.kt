@@ -12,6 +12,21 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
+/**
+ * [PagingSource] для постраничной загрузки публикаций профиля конкретного создателя.
+ *
+ * Поддерживает:
+ * - Сортировку контента [sort];
+ * - Фильтрацию по списку выбранных тегов [tags];
+ * - Санитизацию данных и исключение заблокированных роликов [block];
+ * - Регистрацию автора в глобальном in-memory кэше [UsersRed].
+ *
+ * @property profileName Никнейм автора.
+ * @property sort Порядок сортировки.
+ * @property block Менеджер блокировок.
+ * @property redApi Сетевой клиент.
+ * @property tags Список тегов для фильтрации (по умолчанию пуст).
+ */
 class ItemProfilePagingSource (val profileName : String, val sort : Order, val block: BlockRed, val redApi: RedApi, val tags : List<String> = emptyList()): PagingSource<Int, GifsInfo>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {

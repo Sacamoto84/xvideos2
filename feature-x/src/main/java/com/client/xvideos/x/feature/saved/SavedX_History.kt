@@ -21,6 +21,9 @@ import java.util.concurrent.ConcurrentHashMap
  * Сохраняет прогресс для роликов длительностью >= 2 минут (120 000 мс).
  * При досмотре до >= 95% позиция сбрасывается на 0L (следующий запуск начнётся сначала).
  * Ёмкость ограничена [MAX_HISTORY_ITEMS] записями (FIFO вытеснение самых старых).
+ *
+ * @property scope CoroutineScope для выполнения операций дискового ввода-вывода.
+ * @property ioDispatcher Диспетчер для выполнения фоновых файловых операций (по умолчанию [Dispatchers.IO]).
  */
 @Stable
 class SavedX_History(
@@ -45,6 +48,9 @@ class SavedX_History(
     /**
      * Возвращает сохранённый элемент истории по ID ролика.
      * Сначала проверяется in-memory кэш, затем чтение с диска.
+     *
+     * @param id Числовой ID видео.
+     * @return Объект [XHistoryItem] или `null`, если ролик не найден в истории.
      */
     fun get(id: Long): XHistoryItem? {
         if (id <= 0L) return null
@@ -60,6 +66,10 @@ class SavedX_History(
      * - Позиция возобновления сохраняется только для роликов длительностью >= 2 минут (120 000 мс)
      *   и если просмотрено не менее 5 секунд. Для коротких (< 2 мин) или досмотренных (>= 95%)
      *   позиция сбрасывается на 0L (ролик начнётся сначала).
+     *
+     * @param item Объект видео.
+     * @param positionMs Текущая позиция воспроизведения в миллисекундах.
+     * @param totalDurationMs Общая длительность видео в миллисекундах.
      */
     fun updateProgress(item: ItemsX, positionMs: Long, totalDurationMs: Long) {
         if (item.id <= 0L) return
@@ -113,6 +123,8 @@ class SavedX_History(
 
     /**
      * Удаляет запись из истории по ID видео.
+     *
+     * @param item Объект ролика для удаления.
      */
     fun delete(item: ItemsX) {
         if (item.id <= 0L) return
@@ -136,6 +148,8 @@ class SavedX_History(
 
     /**
      * Пакетное удаление записей из истории по ID роликов.
+     *
+     * @param ids Набор идентификаторов видео для удаления.
      */
     fun deleteBatchByIds(ids: Collection<Long>) {
         if (ids.isEmpty()) return
@@ -162,6 +176,8 @@ class SavedX_History(
 
     /**
      * Пакетное удаление записей из истории по списку элементов.
+     *
+     * @param items Коллекция удаляемых элементов.
      */
     fun deleteBatch(items: Collection<ItemsX>) {
         if (items.isEmpty()) return
@@ -188,6 +204,9 @@ class SavedX_History(
         }
     }
 
+    /**
+     * Перечитывает записи из файловой БД и сортирует их по времени последнего просмотра.
+     */
     fun refresh() {
         refreshJob?.cancel()
         refreshJob = scope.launch(ioDispatcher) {
@@ -222,10 +241,15 @@ class SavedX_History(
 
     companion object {
         private const val EXTENSION = "XHistoryItem"
+        /** Максимальное количество записей в истории (200 штук). */
         const val MAX_HISTORY_ITEMS = 200
-        const val MIN_DURATION_FOR_HISTORY_MS = 120_000L // 2 минуты
-        const val MIN_PLAYBACK_FOR_SAVE_MS = 5_000L      // 5 секунд (порог возобновления)
-        const val MIN_PLAYBACK_START_MS = 1_000L         // 1 секунда (порог фиксации в истории)
-        const val COMPLETION_THRESHOLD = 0.95f           // 95% длительности
+        /** Минимальная общая длительность ролика (2 минуты), при которой сохраняется позиция возобновления. */
+        const val MIN_DURATION_FOR_HISTORY_MS = 120_000L
+        /** Минимальное время просмотра (5 секунд) для сохранения позиции возобновления. */
+        const val MIN_PLAYBACK_FOR_SAVE_MS = 5_000L
+        /** Минимальное время просмотра (1 секунда) для добавления в историю. */
+        const val MIN_PLAYBACK_START_MS = 1_000L
+        /** Порог досмотра ролика (95%), после которого просмотр считается завершенным. */
+        const val COMPLETION_THRESHOLD = 0.95f
     }
 }

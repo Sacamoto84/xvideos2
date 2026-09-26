@@ -20,25 +20,39 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * [ScreenModel] экрана подписанных (избранных на сервере) альбомов пользователя Luscious.
+ *
+ * Осуществляет пагинацию серверного списка подписок, отслеживает состояние загрузки
+ * и предоставляет возможность удаления альбома из подписок.
+ *
+ * @param repository Репозиторий доступа к серверным подпискам и избранному.
+ */
 @Stable
 class ScreenLSubscribedAlbumsSM @Inject constructor(
     private val repository: LusciousServerFavoritesRepository
 ) : ScreenModel {
 
+    /** Состояние прокрутки сетки подписанных альбомов. */
     val state = LazyGridState()
 
     private val _albums = MutableStateFlow<List<AlbumDetails>>(emptyList())
+    /** Поток списка подписанных альбомов пользователя. */
     val albums = _albums.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
+    /** Поток индикатора первичной загрузки или пагинации. */
     val isLoading = _isLoading.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
+    /** Поток индикатора обновления списка (pull-to-refresh). */
     val isRefreshing = _isRefreshing.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
+    /** Поток текста ошибки загрузки. */
     val errorMessage = _errorMessage.asStateFlow()
 
+    /** Флаг наличия последующих страниц для загрузки. */
     var hasMore: Boolean = true
         private set
 
@@ -49,6 +63,9 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
         loadInitial()
     }
 
+    /**
+     * Загружает начальную первую страницу подписанных альбомов.
+     */
     fun loadInitial() {
         if (_isLoading.value) return
         loadJob?.cancel()
@@ -70,6 +87,9 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
         }
     }
 
+    /**
+     * Загружает следующую страницу альбомов для бесконечной ленты.
+     */
     fun loadNextPage() {
         if (_isLoading.value || !hasMore || _errorMessage.value != null) return
         loadJob = screenModelScope.launch {
@@ -90,6 +110,9 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
         }
     }
 
+    /**
+     * Обновляет список подписок с первой страницы.
+     */
     fun refresh() {
         if (_isRefreshing.value) return
         loadJob?.cancel()
@@ -110,6 +133,11 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
         }
     }
 
+    /**
+     * Отменяет подписку на альбом [album] на сервере и удаляет его из локального списка.
+     *
+     * @param album Альбом, подписку на который необходимо удалить.
+     */
     fun unlikeAlbum(album: AlbumDetails) {
         screenModelScope.launch {
             val result = repository.unlikeAlbum(album.id)
@@ -124,9 +152,14 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
     }
 }
 
+/**
+ * Hilt-модуль мультибиндинга для [ScreenLSubscribedAlbumsSM].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleLSubscribedAlbums {
+
+    /** Регистрирует [ScreenLSubscribedAlbumsSM] в карте ScreenModel Voyager. */
     @Binds
     @IntoMap
     @ScreenModelKey(ScreenLSubscribedAlbumsSM::class)

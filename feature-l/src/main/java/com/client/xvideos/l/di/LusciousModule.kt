@@ -15,14 +15,28 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import javax.inject.Singleton
 
+/**
+ * Hilt-модуль внедрения зависимостей для модуля `:feature-l`.
+ *
+ * Предоставляет синглтоны:
+ * - [KDownloader]: настроенный менеджер параллельных загрузок файлов.
+ * - [Repository]: репозиторий запросов к GraphQL API Luscious и кэширования.
+ * - [Luscious]: корневой фасад API раздела L.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object LusciousModule {
 
+    /**
+     * Создает экземпляр [KDownloader] для загрузки медиа-контента альбомов L.
+     */
     @Singleton
     @Provides
     fun provideDownloader( @ApplicationContext context: Context ): KDownloader { return KDownloader.create(context, DownloaderConfig(false)) }
 
+    /**
+     * Предоставляет репозиторий сетевых запросов и кэша [Repository].
+     */
     @Singleton
     @Provides
     fun provideRepository(
@@ -31,6 +45,9 @@ object LusciousModule {
         return Repository(db)
     }
 
+    /**
+     * Предоставляет фасад доступа к API Luscious [Luscious].
+     */
     @Singleton
     @Provides
     fun provideLuscious(

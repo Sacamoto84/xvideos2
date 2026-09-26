@@ -9,6 +9,19 @@ import timber.log.Timber
 import java.io.File
 import java.io.IOException
 
+/**
+ * Отчет о результатах фонового восстановления/докачки поврежденных или неполных сохраненных элементов.
+ *
+ * @property totalMetadataFiles Общее количество просканированных файлов метаданных.
+ * @property incompleteItems Количество элементов, в которых отсутствовали медиа-файлы или превью.
+ * @property downloadedMedia Количество успешно докачанных основных медиафайлов.
+ * @property downloadedPreview Количество успешно докачанных файлов превью.
+ * @property invalidMetadataFiles Количество поврежденных файлов метаданных, которые не удалось разобрать.
+ * @property failedMedia Количество медиафайлов, скачивание которых завершилось ошибкой.
+ * @property failedPreview Количество файлов превью, скачивание которых завершилось ошибкой.
+ * @property skippedNoMediaUrl Количество медиа, пропущенных из-за отсутствия исходного URL.
+ * @property skippedNoPreviewUrl Количество превью, пропущенных из-за отсутствия исходного URL.
+ */
 @Immutable
 data class LDownloadRecoveryReport(
     val totalMetadataFiles: Int = 0,
@@ -22,16 +35,29 @@ data class LDownloadRecoveryReport(
     val skippedNoPreviewUrl: Int = 0
 )
 
+/**
+ * Файл-кандидат на восстановление с целевым путем на диске и исходным URL.
+ */
 private data class LRecoveryFile(
     val target: File,
     val sourceUrl: String?
 )
 
+/**
+ * Кандидат на восстановление: основной медиафайл и связанные файлы превью.
+ */
 private data class LRecoveryCandidate(
     val media: LRecoveryFile?,
     val previews: List<LRecoveryFile>
 )
 
+/**
+ * Сканирует локальные директории лайков и коллекций Luscious и выполняет докачку
+ * отсутствующих или недокачанных файлов медиа и превью.
+ *
+ * @param onEvent Обратный вызов для логирования текстовых статусов восстановления в реальном времени.
+ * @return Итоговый отчет [LDownloadRecoveryReport].
+ */
 internal suspend fun lRecoverIncompleteSavedMedia(
     onEvent: (String) -> Unit = {}
 ): LDownloadRecoveryReport = withContext(Dispatchers.IO) {
@@ -87,6 +113,9 @@ internal suspend fun lRecoverIncompleteSavedMedia(
     report
 }
 
+/**
+ * Сканирует каталоги и возвращает пару из предварительного отчета и списка кандидатов на докачку.
+ */
 private fun scanLIncompleteSavedMedia(): Pair<LDownloadRecoveryReport, List<LRecoveryCandidate>> {
     val metadataFiles = lRecoveryMetadataFiles()
     var invalidMetadataFiles = 0
@@ -130,6 +159,9 @@ private fun scanLIncompleteSavedMedia(): Pair<LDownloadRecoveryReport, List<LRec
     ) to candidates
 }
 
+/**
+ * Находит все файлы `metadata.json` в корневых директориях лайков и коллекций Luscious.
+ */
 private fun lRecoveryMetadataFiles(): List<File> {
     val results = mutableListOf<File>()
     val roots = arrayOf(File(AppPath.l_likes), File(AppPath.l_collection))
@@ -144,6 +176,9 @@ private fun lRecoveryMetadataFiles(): List<File> {
     return results
 }
 
+/**
+ * Собирает список файлов превью, ожидаемых к наличию на диске согласно метаданным.
+ */
 private fun LSavedLikeMetadata.previewRecoveryFiles(folder: File): List<LRecoveryFile> {
     val previews = mutableListOf<LRecoveryFile>()
     previewFiles
@@ -195,5 +230,8 @@ private suspend fun lRestoreSourceToFile(client: io.ktor.client.HttpClient, sour
     lDownloadToFile(client, source, target)
 }
 
+/**
+ * Проверяет имя файла на безопасность (отсутствие path traversal последовательностей `..`, `/`, `\`).
+ */
 private fun isSafeFileName(name: String): Boolean =
     !name.contains("..") && !name.contains('/') && !name.contains('\\')

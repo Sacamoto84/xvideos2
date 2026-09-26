@@ -37,12 +37,32 @@ import timber.log.Timber
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 
+/**
+ * Варианты фильтрации контента на экране профиля автора.
+ *
+ * @property value Текстовая подпись в UI.
+ */
 enum class TypeGifs(val value: String) {
+    /** Весь контент. */
     ALL("All"),
+    /** Только видео/GIF. */
     GIFS("GIFs"),
+    /** Только статичные изображения. */
     IMAGES("Images"),
 }
 
+/**
+ * [ScreenModel] экрана профиля автора (создателя контента) в RedGifs.
+ *
+ * Управляет:
+ * - Загрузкой информации о профиле автора [creator];
+ * - Мультивыбором тегов автора для фильтрации его ленты ([tags], [tagsSelect]);
+ * - Порядком сортировки [order];
+ * - Переключением между гифками и изображениями [typeGifs];
+ * - Состоянием хоста сетки контента [likedHost].
+ *
+ * @param profileName Никнейм автора.
+ */
 @Stable
 class ScreenRedProfileSM @AssistedInject constructor(
     @Assisted val profileName: String,
@@ -55,50 +75,66 @@ class ScreenRedProfileSM @AssistedInject constructor(
     val searchNiches: R_SearchNiches,
 ) : ScreenModel {
 
+    /** Фабрика Assisted Injection для профиля. */
     @AssistedFactory
     interface Factory : ScreenModelFactory {
         fun create(profileName: String): ScreenRedProfileSM
     }
 
+    /** Очищенный никнейм автора. */
     val cleanProfileName = profileName.trim()
 
+    /** Данные профиля автора. */
     var creator: UserInfo? by mutableStateOf(null)
 
     private val _tags = MutableStateFlow<Set<String>>(emptySet())
+    /** Доступные теги из публикаций автора. */
     val tags: StateFlow<Set<String>> = _tags
 
     private val _tagsSelect = MutableStateFlow<Set<String>>(emptySet())
+    /** Набор тегов, выбранных пользователем для фильтрации. */
     val tagsSelect: StateFlow<Set<String>> = _tagsSelect.asStateFlow()
 
+    /** Добавляет список тегов к доступным. */
     fun tagsAdd(l: List<String>) {
         _tags.update { it + l }
     }
 
+    /** Переключает состояние выбора тега [tag] (включить/исключить). */
     fun toggleSelectTag(tag: String) {
         _tagsSelect.update {
             if (tag in it) it - tag else it + tag
         }
     }
 
+    /** Сбрасывает все выбранные теги. */
     fun resetSelectedTags() {
         _tagsSelect.value = emptySet()
     }
 
+    /** Доступные варианты сортировки на экране профиля. */
     val orderList = listOf(Order.TOP, Order.LATEST, Order.OLDEST, Order.TOP28, Order.TRENDING)
+    /** Текущий порядок сортировки. */
     var order by mutableStateOf(Order.LATEST)
 
+    /** Доступные фильтры типа контента. */
     val typeGifsList = listOf(TypeGifs.GIFS, TypeGifs.IMAGES)
+    /** Выбранный фильтр контента. */
     var typeGifs by mutableStateOf(TypeGifs.GIFS)
 
     private val _isLoading = MutableStateFlow(false)
+    /** Флаг выполнения сетевой загрузки данных профиля. */
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Селектор вида сетки из настроек. */
     val selector: StateFlow<Int> = Settings.red_profile_selector.field
 
+    /** Сохраняет выбранный вид сетки. */
     fun setSelector(value: Int) {
         Settings.red_profile_selector.setValue(value)
     }
 
+    /** Хост сетки видеороликов автора. */
     val likedHost = LazyRow123Host(
         connectivityObserver = connectivityObserver,
         scope = screenModelScope,
@@ -140,12 +176,14 @@ class ScreenRedProfileSM @AssistedInject constructor(
         }
     }
 
+    /** Сбрасывает состояние экрана. */
     fun clear() {
         _isLoading.value = false
         _tags.update { emptySet() }
     }
 }
 
+/** Hilt-модуль Assisted-фабрики экрана профиля. */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleRedProfile {

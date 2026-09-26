@@ -12,6 +12,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
+/**
+ * Выполняет сетевой GraphQL-запрос `LandingPageAlbumSearch` и возвращает промо-структуру результатов поиска альбомов.
+ *
+ * @param search Поисковая фраза.
+ * @param repository Репозиторий сетевых запросов.
+ * @param limit Максимальное число элементов в подборках.
+ * @return [Result] с моделью [Landing_page_albumType].
+ */
 suspend fun LandingPageAlbumSearch(
     search: String,
     repository: Repository,

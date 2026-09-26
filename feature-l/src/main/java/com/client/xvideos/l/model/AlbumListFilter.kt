@@ -7,10 +7,26 @@ import com.client.xvideos.l.model.enum.PictureCountRank
 import java.io.Serializable
 
 /**
+ * Модель фильтрации списка альбомов Luscious.
+ *
  * `Serializable` обязателен: фильтр лежит в экране, который создаёт
  * `L_ScreenAlbumList.create`, а экраны Voyager (`Screen : Serializable`) целиком
  * уходят в saved state активити. Без этого приложение падает
  * `NotSerializableException`, когда система сохраняет состояние.
+ *
+ * @property display Сортировка/отображение альбомов (например, `"date_newest"`).
+ * @property album_type Тип альбомов ([AlbumType]).
+ * @property audienceIds Строка включенных аудиторий (например, `"+1+10+12+2+3+5+6+8+9"`).
+ * @property languageIds Строка включенных языков (например, `"+1+100+101+2+3+4+5+6+7+8+9+99"`).
+ * @property itemsPerPage Количество элементов на страницу (по умолчанию 30).
+ * @property picture_count_rank Фильтр по числу картинок ([PictureCountRank]).
+ * @property content_id Категория контента ([ContentId]).
+ * @property genresPlus Включенные жанры.
+ * @property genresMinus Исключенные жанры.
+ * @property tagPlus Включенные теги.
+ * @property tagMinus Исключенные теги.
+ * @property searchQuery Строка текстового поиска.
+ * @property selection Дополнительная выборка (например, `"animated"`).
  */
 @Immutable
 @kotlinx.serialization.Serializable

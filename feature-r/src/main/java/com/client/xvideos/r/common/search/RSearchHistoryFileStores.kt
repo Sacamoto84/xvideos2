@@ -7,6 +7,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Файловое хранилище истории поисковых запросов в разделе Explorer RedGifs.
+ *
+ * @param db База данных файловых таблиц приложения.
+ * @param scope Скоп приложения для фоновой инициализации.
+ */
 @Singleton
 class RSearchHistoryExplorerFileStore @Inject constructor(
     db: AppFileDatabase,
@@ -17,6 +23,12 @@ class RSearchHistoryExplorerFileStore @Inject constructor(
     }
 }
 
+/**
+ * Файловое хранилище истории поисковых запросов в каталоге ниш RedGifs.
+ *
+ * @param db База данных файловых таблиц приложения.
+ * @param scope Скоп приложения для фоновой инициализации.
+ */
 @Singleton
 class RSearchHistoryNichesFileStore @Inject constructor(
     db: AppFileDatabase,

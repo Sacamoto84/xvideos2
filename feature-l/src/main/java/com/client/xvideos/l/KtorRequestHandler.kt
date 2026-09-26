@@ -32,6 +32,22 @@ import com.client.xvideos.l.net.json.LJson
 import timber.log.Timber
 import java.io.IOException
 
+/**
+ * Низкоуровневый HTTP-клиент на Ktor/OkHttp для взаимодействия с Luscious.
+ *
+ * Обеспечивает:
+ * - Безопасный DNS-over-HTTPS резолвинг через [AppDns].
+ * - Сохранение сессионных cookies между запросами ([AcceptAllCookiesStorage]).
+ * - Автоматический повтор запросов при сетевых сбоях и ошибках 413, 429, 500-504 ([HttpRequestRetry]).
+ * - Аутентификацию пользователя через веб-форму логина ([login]) с детекцией Cloudflare challenge.
+ *
+ * @property timeoutMillis Таймаут соединения и чтения в миллисекундах (по умолчанию 15 000).
+ * @property maxRetries Максимальное число повторов при ошибках (по умолчанию 5).
+ * @property retryStatusCodes Набор кодов ответа HTTP, требующих повтора запроса.
+ * @property backoffFactor Множитель экспоненциальной задержки между повторами (мс).
+ * @param username Логин пользователя.
+ * @param password Пароль пользователя.
+ */
 class KtorRequestHandler(
     private val timeoutMillis: Long = 15000,
     private val maxRetries: Int = 5,
@@ -46,6 +62,7 @@ class KtorRequestHandler(
     @Volatile
     private var password: String? = password
 
+    /** Экземпляр HttpClient со сконфигурированным движком OkHttp. */
     val client = HttpClient(OkHttp) {
         engine {
             config {
@@ -85,6 +102,12 @@ class KtorRequestHandler(
         }
     }
 
+    /**
+     * Выполняет HTTP GET-запрос и возвращает ответ в виде строки.
+     *
+     * @param url Целевой URL запроса.
+     * @param params Параметры строки запроса (query parameters).
+     */
     suspend fun get(url: String, params: Map<String, String> = emptyMap()): String {
         return client.get {
             url(url)
@@ -94,6 +117,12 @@ class KtorRequestHandler(
         }.body()
     }
 
+    /**
+     * Выполняет HTTP POST-запрос с телом в формате `application/json` (используется для GraphQL).
+     *
+     * @param url Целевой URL GraphQL endpoint.
+     * @param data Сырая строка JSON запроса.
+     */
     suspend fun postJson(url: String, data: String): String {
         return client.post {
             url(url)
@@ -102,6 +131,9 @@ class KtorRequestHandler(
         }.body()
     }
 
+    /**
+     * Выполняет HTTP POST-запрос формы `application/x-www-form-urlencoded`.
+     */
     private suspend fun post(url: String, formData: Map<String, String> = emptyMap()): String {
         return client.post {
             url(url)
@@ -113,12 +145,19 @@ class KtorRequestHandler(
 
 
     // --- Login ---
+    /** Флаг успешной аутентификации в текущей сессии клиента. */
     var loggedIn: Boolean = false
         private set
 
+    /** `true`, если клиент успешно аутентифицирован. */
     val isLoggedIn: Boolean get() = loggedIn
+
+    /** `true`, если заданы логин и пароль. */
     val hasCredentials: Boolean get() = !username.isNullOrBlank() && !password.isNullOrBlank()
 
+    /**
+     * Обновляет учетные данные пользователя. При изменении логина или пароля статус входа сбрасывается.
+     */
     fun setCredentials(username: String?, password: String?) {
         val normalizedUsername = username?.trim().orEmpty()
         val normalizedPassword = password.orEmpty()
@@ -129,10 +168,18 @@ class KtorRequestHandler(
         }
     }
 
+    /**
+     * Закрывает HTTP-клиент и освобождает сетевые ресурсы.
+     */
     fun close() {
         client.close()
     }
 
+    /**
+     * Выполняет вход на сайт Luscious, отправляя учетные данные на endpoint логина.
+     *
+     * @return `true`, если вход выполнен успешно.
+     */
     suspend fun login(): Boolean {
         val currentUsername = username
         val currentPassword = password
@@ -174,6 +221,7 @@ class KtorRequestHandler(
         return loggedIn
     }
 
+    /** Проверяет, является ли ответ страницей верификации/капчи Cloudflare. */
     private fun String.isCloudflareChallenge(): Boolean {
         if (isEmpty()) return false
         return contains("<title>Just a moment", ignoreCase = true) ||

@@ -2,6 +2,13 @@ package com.client.xvideos.l.model
 
 import androidx.compose.runtime.Immutable
 
+/**
+ * Вариант сортировки и отображения списка альбомов.
+ *
+ * @property primary Основная группа (например, `"By Top Rated"`, `"By Date"`, `"First Letter"`).
+ * @property secondary Подкатегория / временной интервал (например, `"7 Days"`, `"Newest First"`).
+ * @property request Строковый ключ параметра `display` для передачи в GraphQL API.
+ */
 @Immutable
 data class DataAlbumFilterDisplay(
     val primary: String,
@@ -22,6 +29,7 @@ const val byDate = "By Date"
 const val byTopRated = "By Top Rated"
 const val byFirstLetter = "First Letter"
 
+/** Полный список доступных вариантов сортировки и фильтрации отображения альбомов Luscious. */
 val albumFilterDisplay = listOf(
 
     //-- By Top Rated
@@ -86,9 +94,11 @@ val albumFilterDisplay = listOf(
 
 /**
  * Ищет элемент отображения фильтра альбомов по ключу запроса.
+ *
+ * @param request Значение ключа `display`.
+ * @return Соответствующий [DataAlbumFilterDisplay] либо `null`.
  */
 fun findAlbumFilterDisplayByRequest(request: String): DataAlbumFilterDisplay? {
     if (request.isBlank()) return null
     return albumFilterDisplay.firstOrNull { it.request.equals(request, ignoreCase = true) }
 }
-

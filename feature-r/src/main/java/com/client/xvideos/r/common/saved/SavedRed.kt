@@ -8,6 +8,22 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Главный фасад сохраненного пользовательского контента в модуле RedGifs.
+ *
+ * Инкапсулирует доступ к локальным хранилищам:
+ * - Лайков [likes] ([R_Saved_Likes]);
+ * - Избранных авторов [creators] ([R_Saved_Creator]);
+ * - Избранных ниш [niches] ([R_Saved_Niches]);
+ * - Пользовательских коллекций [collections] ([R_Saved_Collection]);
+ * - Подписок на авторов [subscriptions] ([R_Saved_Subscriptions]);
+ * - Локального кэша полного списка ниш [nichesCache] ([R_Saved_NichesCaches]).
+ *
+ * Синглтон: инициализирует фоновую загрузку коллекций и проверку свежести кэша ниш при старте приложения.
+ *
+ * @property redApi Сетевой API RedGifs.
+ * @property scope Корутин-скоп уровня приложения.
+ */
 @Singleton
 class SavedRed @Inject constructor(
     val redApi: RedApi,
@@ -15,15 +31,25 @@ class SavedRed @Inject constructor(
 ) {
 
     /////////////////////////////////////////////////////////////////////////////////////////////
+    /** Хранилище лайков гифок. */
     val likes       = R_Saved_Likes(scope)
+    /** Хранилище сохраненных создателей. */
     val creators    = R_Saved_Creator(scope)
+    /** Хранилище сохраненных ниш. */
     val niches      = R_Saved_Niches(scope)
+    /** Хранилище именованных коллекций пользователя. */
     val collections = R_Saved_Collection(scope)
 
+    /** Менеджер подписок на авторов и агрегации их контента. */
     val subscriptions = R_Saved_Subscriptions(scope, redApi)
 
+    /** Дисковый кэш каталога ниш с периодическим обновлением. */
     val nichesCache = R_Saved_NichesCaches(scope, redApi)
 
+    /**
+     * Общее суммарное количество сохраненных элементов во всех разделах
+     * (лайки + авторы + ниши + коллекции).
+     */
     val totalSavedCount: Int
         get() = likes.list.size + creators.list.size + niches.list.size + collections.collectionList.size
 
@@ -65,6 +91,3 @@ class SavedRed @Inject constructor(
     /////////////////////////////////////////////////////////////////////////////////////////////
 
 }
-
-
-

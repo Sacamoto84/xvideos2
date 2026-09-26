@@ -13,11 +13,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.onSuccess
 
+/**
+ * Хранилище избранных видеороликов раздела X.
+ *
+ * Сохраняет объекты [ItemsX] в файловой БД на диске ([FileDB] в [AppPath.x_favorites]),
+ * поддерживает реактивный snapshot-список [list] и множество [favoriteIds]
+ * для мгновенной O(1)-проверки [contains].
+ *
+ * @property scope CoroutineScope для выполнения операций дискового ввода-вывода на [Dispatchers.IO].
+ */
 @Stable
 class SavedX_Favorites(val scope: CoroutineScope) {
 
     private val favoritesDb = FileDB(AppPath.x_favorites, "ItemsX", ItemsX.serializer())
 
+    /** Наблюдаемый список избранных элементов для Compose UI. */
     val list = favoritesDb.list
 
     /**
@@ -30,7 +40,14 @@ class SavedX_Favorites(val scope: CoroutineScope) {
         refresh()
     }
 
-    /** Файловый I/O вынесен на [Dispatchers.IO]: раньше запись шла в главном потоке (риск ANR). */
+    /**
+     * Добавляет ролик в избранное.
+     *
+     * Файловый I/O вынесен на [Dispatchers.IO], обновление списка и множества [favoriteIds]
+     * выполняется на [Dispatchers.Main].
+     *
+     * @param item Объект добавляемого ролика.
+     */
     fun add(item: ItemsX) {
         if (item.id <= 0L) {
             SnackBar.error("Недопустимый ID видео")
@@ -55,6 +72,11 @@ class SavedX_Favorites(val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Удаляет ролик из избранного.
+     *
+     * @param item Объект удаляемого ролика.
+     */
     fun remove(item: ItemsX) {
         if (item.id <= 0L) {
             SnackBar.error("Недопустимый ID видео")
@@ -78,11 +100,19 @@ class SavedX_Favorites(val scope: CoroutineScope) {
         }
     }
 
-    /** Быстрая O(1)-проверка принадлежности к избранному. */
+    /**
+     * Быстрая O(1)-проверка нахождения ролика в избранном.
+     *
+     * @param id Числовой ID видео.
+     * @return `true`, если ролик находится в избранном.
+     */
     fun contains(id: Long): Boolean = id > 0L && favoriteIds.contains(id)
 
     private var refreshJob: Job? = null
 
+    /**
+     * Перечитывает записи из локального файлового хранилища в память и обновляет кэш идентификаторов.
+     */
     fun refresh() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {

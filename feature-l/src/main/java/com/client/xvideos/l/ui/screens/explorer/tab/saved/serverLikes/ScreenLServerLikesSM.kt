@@ -20,25 +20,39 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * [ScreenModel] экрана серверных лайков картинок пользователя Luscious.
+ *
+ * Управляет постраничной подгрузкой лайкнутых картинок через GraphQL API Luscious,
+ * обновлением состояния, удалением лайков и интеграцией с [LazyRowPictureDetailsHost].
+ *
+ * @param repository Репозиторий доступа к серверным подпискам и избранному.
+ */
 @Stable
 class ScreenLServerLikesSM @Inject constructor(
     private val repository: LusciousServerFavoritesRepository
 ) : ScreenModel {
 
+    /** Хост состояния сетки и выбора картинок. */
     val host = LazyRowPictureDetailsHost("l_server_likes")
 
     private val _pictures = MutableStateFlow<List<PicsDetails>>(emptyList())
+    /** Поток списка картинок, понравившихся пользователю на сервере. */
     val pictures = _pictures.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
+    /** Поток флага фоновой загрузки (первой или следующей страницы). */
     val isLoading = _isLoading.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
+    /** Поток флага обновления списка с первой страницы (pull-to-refresh). */
     val isRefreshing = _isRefreshing.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
+    /** Поток текста ошибки загрузки либо null при успешной работе. */
     val errorMessage = _errorMessage.asStateFlow()
 
+    /** Флаг наличия доступных следующих страниц для пагинации. */
     var hasMore: Boolean = true
         private set
 
@@ -56,10 +70,18 @@ class ScreenLServerLikesSM @Inject constructor(
         loadInitial()
     }
 
+    /**
+     * Удаляет картинку из локального списка хоста после снятия лайка на сервере.
+     *
+     * @param pic Картинка, лайк с которой был снят.
+     */
     fun unlikePicture(pic: PicsDetails) {
         host.removePicture(pic)
     }
 
+    /**
+     * Загружает начальную первую страницу серверных лайков.
+     */
     fun loadInitial() {
         if (_isLoading.value) return
         loadJob?.cancel()
@@ -81,6 +103,9 @@ class ScreenLServerLikesSM @Inject constructor(
         }
     }
 
+    /**
+     * Загружает следующую страницу серверных лайков для бесконечного скролла.
+     */
     fun loadNextPage() {
         if (_isLoading.value || !hasMore || _errorMessage.value != null) return
         loadJob = screenModelScope.launch {
@@ -103,6 +128,9 @@ class ScreenLServerLikesSM @Inject constructor(
         }
     }
 
+    /**
+     * Принудительно перезагружает список лайков с первой страницы.
+     */
     fun refresh() {
         if (_isRefreshing.value) return
         loadJob?.cancel()
@@ -125,9 +153,14 @@ class ScreenLServerLikesSM @Inject constructor(
     }
 }
 
+/**
+ * Hilt-модуль мультибиндинга для [ScreenLServerLikesSM].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleLServerLikes {
+
+    /** Регистрирует [ScreenLServerLikesSM] в карте ScreenModel Voyager. */
     @Binds
     @IntoMap
     @ScreenModelKey(ScreenLServerLikesSM::class)

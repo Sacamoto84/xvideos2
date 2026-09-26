@@ -1,15 +1,25 @@
 package com.client.xvideos.r.model
 
+/**
+ * Варианты сортировки контента в API RedGifs (для лент, поиска, профилей и ниш).
+ *
+ * @property value Строковое значение параметра `order`, принимаемое бэкендом RedGifs.
+ */
 enum class Order(val value: String) {
+    /** Трендовый контент. */
     TRENDING("trending"),
+    /** Топ за всё время (order=top). */
     TOP("top"),
+    /** Сначала новые (свежие). */
     LATEST("latest"),
+    /** Сначала старые. */
     OLDEST("oldest"),
     // Были RECENT("recent") и BEST("best"). Ни один адрес RedGifs их не
     // принимает: /v2/gifs/search отвечает 400 BadOrder, профильный адрес молча
     // игнорирует и отдаёт выдачу в своём порядке. Ни в одном наборе сортировок
     // они не стояли — только подписи в SortByOrder. Проверено 06.08.2026,
     // таблица в docs/redgifs-api.md.
+    /** Топ за последний месяц (28 дней). */
     TOP28("top28"),
 
     /** Релевантность запросу. Есть только у поиска, у лент смысла не имеет. */
@@ -17,6 +27,7 @@ enum class Order(val value: String) {
 
     //NEW("new"),
 
+    /** Временное состояние сброса для принудительной перезагрузки страницы пагинации. */
     FORCE_TEMP(""),
 
     // Значения именно top7/top28: столько же зашито в путь у getTopThisWeek и
@@ -24,7 +35,9 @@ enum class Order(val value: String) {
     // уходили, потому что для лент метод выбирается по самой константе, а не
     // по её значению. Но у поиска order берётся отсюда, и с "week" сервер
     // отдавал не то.
+    /** Топ за неделю (7 дней). */
     TOP_WEEK("top7"),
+    /** Топ за месяц (28 дней). */
     TOP_MONTH("top28"),
 
     // «Топ за всё время» — это [TOP]. Здесь стоял отдельный TOP_ALLTIME("alltime"),
@@ -38,69 +51,105 @@ enum class Order(val value: String) {
 
 
     //NICHES
+    /** Сортировка ниш: по числу подписчиков (убывание). */
     NICHES_SUBSCRIBERS_D("subscribers"),
 
+    /** Сортировка ниш: по числу подписчиков (возрастание, клиентская). */
     NICHES_SUBSCRIBERS_A("subscribers"),
 
+    /** Сортировка ниш: по числу постов (убывание). */
     NICHES_POST_D("posts"),
 
+    /** Сортировка ниш: по числу постов (возрастание, клиентская). */
     NICHES_POST_A("posts"),
+
+    /** Сортировка ниш: по имени от А до Я (клиентская). */
     NICHES_NAME_A_Z("name"),
+
+    /** Сортировка ниш: по имени от Я до А (клиентская). */
     NICHES_NAME_Z_A("name");
 
+    /** Проверяет, относится ли данная сортировка к каталогу ниш. */
     val isNichesOrder: Boolean get() = this.name.startsWith("NICHES_")
+
+    /** Проверяет, выбрана ли сортировка LATEST. */
     val isLatest: Boolean get() = this == LATEST
+
+    /** Проверяет, выбрана ли сортировка OLDEST. */
     val isOldest: Boolean get() = this == OLDEST
+
+    /** Проверяет, выбрана ли сортировка TOP. */
     val isTop: Boolean get() = this == TOP
+
+    /** Проверяет, выбрана ли сортировка TRENDING. */
     val isTrending: Boolean get() = this == TRENDING
+
+    /** Проверяет, выбрана ли сортировка по релевантности RELEVANT. */
     val isRelevant: Boolean get() = this == RELEVANT
 
     companion object {
+        /** Сортировка по умолчанию. */
         val DEFAULT = LATEST
+
+        /** Поиск [Order] по строковому значению [value] (без учета регистра). */
         fun fromValue(value: String): Order? = entries.firstOrNull { it.value.equals(value, ignoreCase = true) }
+
+        /** Поиск [Order] по значению либо возврат [default]. */
         fun fromValueOrDefault(value: String?, default: Order = DEFAULT): Order =
             if (value != null) fromValue(value) ?: default else default
     }
 }
 
+/**
+ * Тип медиаконтента для фильтрации запросов в RedGifs.
+ *
+ * @property value Сетевой код типа медиаконтента.
+ */
 enum class MediaType(val value: String) {
+    /** Только статические изображения (`i`). */
     IMAGE("i"),
+    /** Только анимированные ролики/гифки (`g`). */
     GIF("g"),
+    /** Все типы медиаконтента (`all`). */
     ALL("all");
 
+    /** Проверяет, выбран ли тип ALL. */
     val isAll: Boolean get() = this == ALL
+
+    /** Проверяет, выбран ли тип IMAGE. */
     val isImage: Boolean get() = this == IMAGE
+
+    /** Проверяет, выбран ли тип GIF. */
     val isGif: Boolean get() = this == GIF
 
     companion object {
+        /** Тип по умолчанию (ALL). */
         val DEFAULT = ALL
+
+        /** Находит [MediaType] по значению или null. */
         fun fromValueOrNull(value: String?): MediaType? =
             if (value != null) entries.firstOrNull { it.value.equals(value, ignoreCase = true) } else null
 
+        /** Находит [MediaType] по значению или возвращает [default]. */
         fun fromValue(value: String?, default: MediaType = DEFAULT): MediaType =
             fromValueOrNull(value) ?: default
     }
 }
 
+/** Список запасных вариантов при отсутствии RELEVANT в доступном наборе. */
 private val RELEVANT_FALLBACKS = listOf(Order.TOP, Order.TRENDING)
+/** Список запасных вариантов при отсутствии TOP в доступном наборе. */
 private val TOP_FALLBACKS = listOf(Order.TOP_WEEK, Order.TRENDING)
 
 /**
- * Ближайшая сортировка из [list] к текущей.
+ * Выбирает ближайшую подходящую сортировку из переданного [list] к текущей.
  *
- * Нужно там, где набор сортировок меняется под экраном: у ленты гифок он один
- * без поиска и другой с поиском, и выбранное значение может в новом наборе
- * отсутствовать. Раньше в таком случае жёстко ставился [Order.LATEST] — то
- * есть выбор пользователя молча заменялся на самый далёкий от него: выбрал
- * «All time», начал искать — искалось по «Latest».
+ * Необходимо там, где набор допустимых сортировок динамически меняется на экране:
+ * у ленты гифок он один без поиска и другой с поиском. Без этой функции
+ * выбранная пользователем сортировка сбрасывалась на жесткий дефолт (Latest).
  *
- * Замены подобраны так, чтобы попадать только в значения, принимаемые сервером
- * (таблица в docs/redgifs-api.md).
- *
- * После сведения `TOP_ALLTIME` к [TOP] наборы ленты и поиска различаются одним
- * элементом — [RELEVANT], которого у лент нет и быть не может. Остальные ветки
- * оставлены на случай новых наборов: функция общая, её зовёт `SortByOrder` для
- * всех меню сортировки, включая профиль и ниши.
+ * @param list Список доступных на данном экране вариантов сортировки.
+ * @return Ближайший подходящий [Order].
  */
 fun Order.nearestIn(list: List<Order>): Order {
     if (list.isEmpty()) return this
@@ -112,14 +161,3 @@ fun Order.nearestIn(list: List<Order>): Order {
     }
     return preferred.firstOrNull { it in list } ?: list.firstOrNull() ?: this
 }
-
-
-
-
-
-
-
-
-
-
-

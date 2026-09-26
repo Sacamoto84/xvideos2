@@ -1,5 +1,14 @@
 package com.client.xvideos.l.model.enum
 
+/**
+ * Категории целевой аудитории альбомов Luscious.
+ *
+ * @property id Числовой идентификатор категории в API.
+ * @property title Отображаемое название аудитории.
+ * @property description Текстовое описание аудитории.
+ * @property posterUrl URL постера категории.
+ * @property url Относительный URL страницы аудитории на сайте.
+ */
 enum class AudiencesType(
     val id: Int,
     val title: String,

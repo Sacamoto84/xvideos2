@@ -11,11 +11,21 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
+/**
+ * ScreenModel экрана локального воспроизведения скачанных роликов X.
+ *
+ * Предоставляет доступ к локальным сохранениям, истории и загрузкам ([SavedX]).
+ *
+ * @property saved Фасад локальных данных раздела X.
+ */
 @Stable
 class ScreenX_LocalVideoPlayerSM @Inject constructor(
     val saved: SavedX
 ) : ScreenModel
 
+/**
+ * Hilt-модуль привязки [ScreenX_LocalVideoPlayerSM].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleLocalVideoPlayer {

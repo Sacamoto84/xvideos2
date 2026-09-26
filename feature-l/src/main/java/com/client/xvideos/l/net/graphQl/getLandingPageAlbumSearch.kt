@@ -88,6 +88,13 @@ fragment AlbumInSearchList on Album {
 }
 """.trimIndent()
 
+/**
+ * Генерирует тело GraphQL-запроса `LandingPageAlbumSearch` для получения промо-секции результатов поиска альбомов.
+ *
+ * @param search Строка поискового запроса.
+ * @param limit Максимальное число возвращаемых элементов в секциях (по умолчанию 9).
+ * @return JSON-строка запроса к GraphQL endpoint.
+ */
 fun getLandingPageAlbumSearch(search: String, limit: Int = 9): String {
     return buildJsonObject {
         put("operationName", "LandingPageAlbumSearch")

@@ -35,6 +35,13 @@ fragment PicUrls on Picture {
 }
 """.trimIndent().replace("\n", "\\n")
 
+/**
+ * Генерирует тело GraphQL-запроса `ListAlbumPictures` для получения списка картинок альбома с информацией о разрешении и URL.
+ *
+ * @param albumId Числовой ID альбома.
+ * @param page Номер страницы (начиная с 1).
+ * @return JSON-строка тела запроса.
+ */
 fun getPicturesJson(albumId: Int, page: Int = 1): String {
     return """{"query":"$LIST_ALBUM_PICTURES_QUERY_ESCAPED","variables":{"input":{"display":"position","filters":[{"name":"album_id","value":"$albumId"}],"page":$page}}}"""
 }

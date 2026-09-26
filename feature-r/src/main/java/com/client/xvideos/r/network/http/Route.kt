@@ -17,39 +17,52 @@ import io.ktor.http.encodeURLParameter
 private val PLACEHOLDER = Regex("""\{(\w+)\}""")
 
 /**
- * Адрес запроса: шаблон пути плюс значения подстановок.
+ * Маршрут и параметры HTTP-запроса к API RedGifs.
  *
- * ```
+ * Инкапсулирует HTTP-метод, шаблон пути с именованными плейсхолдерами вида `{param}`
+ * и вариативный список аргументов подстановки.
+ *
+ * Пример использования:
+ * ```kotlin
  * Route("GET", "/v2/gifs/search?query={q}&page={page}", "q" to "cat", "page" to 1)
  * ```
  *
- * Кодирование отдано ktor'у ([encodeURLParameter]). Раньше здесь лежал
- * самодельный `encodeURIComponent` из двадцати одного `replace`, и он не
- * закрывал три случая:
+ * Кодирование параметров делегировано Ktor ([encodeURLParameter]).
+ * Защищает от трёх типичных дефектов наивной подстановки:
+ * 1. Символ `%` теперь корректно URL-экранируется.
+ * 2. Символы вне ASCII (кириллица и др.) безопасно кодируются.
+ * 3. Фигурные скобки `{` и `}` в значениях параметров экранируются и не приводят
+ *    к каскадной подстановке в собственный шаблон (однопроходный [PLACEHOLDER]).
  *
- * - **`%`** не экранировался вовсе. Запрос «50%» уходил как есть, и сервер
- *   читал `%` как начало escape-последовательности;
- * - **не-ASCII** — кириллица и всё прочее — не трогался никак;
- * - **`{` и `}`** не экранировались, а подстановка шла последовательными
- *   `replace` по всей строке. Значение первого параметра подставлялось раньше
- *   остальных, поэтому текст поиска `{order}` попадал в результат и заменялся
- *   следующей итерацией — подстановка в собственный шаблон.
- *
- * Третий случай закрыт заодно с первыми двумя: [PLACEHOLDER] проходит строку
- * один раз, и подставленное значение повторно не осматривается.
+ * @property method HTTP-метод (например, "GET", "POST").
+ * @property path Относительный шаблон URL с плейсхолдерами в фигурных скобках.
+ * @param parameters Список пар (ключ, значение) для заполнения плейсхолдеров в [path].
  */
 class Route(val method: String, val path: String, vararg parameters: Pair<String, Any>) {
 
+    /** Флаг наличия переданных параметров подстановки. */
     private val hasVarargParams: Boolean = parameters.isNotEmpty()
 
+    /**
+     * Итоговый абсолютный URL-адрес запроса с префиксом [BASE] и подставленными параметрами.
+     * Если [path] пуст, возвращает пустую строку.
+     */
     val url: String = when {
         path.isEmpty() -> ""
         parameters.isEmpty() || !path.contains('{') -> BASE + path
         else -> BASE + path.fillPlaceholders(parameters)
     }
 
+    /** Проверяет, является ли HTTP-метод GET (без учета регистра). */
     val isGet: Boolean get() = method.equals("GET", ignoreCase = true)
+
+    /** Проверяет, является ли HTTP-метод POST (без учета регистра). */
     val isPost: Boolean get() = method.equals("POST", ignoreCase = true)
+
+    /**
+     * Показывает, содержит ли маршрут параметры (переданные в vararg либо
+     * присутствующие как query-параметры `?` в итоговом URL).
+     */
     val hasParameters: Boolean get() = hasVarargParams || url.contains('?')
 
     override fun toString(): String = url
@@ -66,6 +79,10 @@ class Route(val method: String, val path: String, vararg parameters: Pair<String
         return result
     }
 
+    /**
+     * Выполняет однопроходную замену плейсхолдеров `{param}` в строке шаблона.
+     * Ненайденные параметры остаются в шаблоне без изменений для упрощения отладки в логах.
+     */
     private fun String.fillPlaceholders(params: Array<out Pair<String, Any>>): String =
         PLACEHOLDER.replace(this) { match ->
             // Нет такого параметра — оставляем шаблон нетронутым: так вели себя
@@ -81,6 +98,7 @@ class Route(val method: String, val path: String, vararg parameters: Pair<String
         }
 
     companion object {
+        /** Базовый хост API RedGifs. */
         const val BASE = "https://api.redgifs.com"
     }
 }

@@ -16,6 +16,16 @@ import timber.log.Timber
 import java.util.LinkedHashMap
 import java.util.concurrent.atomic.AtomicLong
 
+/**
+ * Состояние антибот-защиты (Cloudflare / HTML challenge) для отображения в UI и управления повторными попытками.
+ *
+ * @property active Активен ли режим ожидания кулдауна после получения HTML вместо JSON.
+ * @property message Текстовое описание ошибки или причины блокировки.
+ * @property retryAtMs Метка времени (UTC мс), до которой сетевые запросы заблокированы кулдауном.
+ * @property retryDelayMs Длительность задержки перед повторной попыткой в миллисекундах.
+ * @property requestHash Хэш запроса, вызвавшего срабатывание защиты.
+ * @property updatedAtMs Время последнего обновления состояния защиты.
+ */
 data class LRepositoryProtectionUiState(
     val active: Boolean = false,
     val message: String = "",
@@ -24,16 +34,31 @@ data class LRepositoryProtectionUiState(
     val requestHash: String? = null,
     val updatedAtMs: Long = 0L
 ) {
+    /**
+     * Возвращает оставшееся время кулдауна в миллисекундах от текущего момента [nowMs].
+     */
     fun remainingMs(nowMs: Long = System.currentTimeMillis()): Long {
         return (retryAtMs - nowMs).coerceAtLeast(0L)
     }
 }
 
+/**
+ * Центральный сетевой репозиторий модуля Luscious.
+ *
+ * Отвечает за:
+ * - управление сессией пользователя и авторизацией в [KtorRequestHandler];
+ * - отправку GraphQL POST-запросов на [LusciousEndpoints.API];
+ * - многоуровневое кэширование ответов (RAM LRU-кэш, постоянный ROM-кэш);
+ * - обработку антибот-защиты (HTML challenge/Cloudflare) с экспоненциальным кулдауном;
+ * - троттлинг сетевых запросов с минимальным интервалом.
+ *
+ * @param fileDb Локальная файловая база данных для доступа к ROM-кэшам.
+ */
 open class Repository(
     fileDb: AppFileDatabase,
 ) {
 
-    //Точка входа для GraphQL
+    /** Точка входа для GraphQL API Luscious. */
     val apiUrl = LusciousEndpoints.API
 
     @Volatile
@@ -80,6 +105,9 @@ open class Repository(
     }
 
     /**
+     * Выполняет выход из аккаунта Luscious: очищает сохраненные учетные данные,
+     * пересоздает сетевой обработчик [KtorRequestHandler] и сбрасывает статус защиты.
+     *
      * Под обоими мьютексами: без них close() старого клиента приходился
      * на середину выполняющегося запроса.
      */
@@ -96,6 +124,9 @@ open class Repository(
         clearHtmlChallengeUiState()
     }
 
+    /**
+     * Проверяет и при необходимости выполняет авторизацию пользователя по сохраненным логину и паролю.
+     */
     private suspend fun ensureAuthenticated(): Result<Unit> {
         return try {
             authMutex.withLock {
@@ -122,6 +153,9 @@ open class Repository(
         }
     }
 
+    /**
+     * Запрашивает данные с использованием постоянного ROM-кэша (с проверкой срока жизни).
+     */
     private suspend fun getFromCacheRom(data: String): Result<String> {
         return try {
             val cacheKey = data.toMD5()
@@ -152,6 +186,9 @@ open class Repository(
         }
     }
 
+    /**
+     * Запрашивает данные с использованием оперативного RAM-кэша в памяти.
+     */
     private suspend fun getFromCacheRam(data: String): Result<String> {
         return try {
             val cacheKey = data.toMD5()
@@ -177,6 +214,13 @@ open class Repository(
         }
     }
 
+    /**
+     * Выполняет GraphQL-запрос [data] к серверу Luscious в соответствии с политикой кэширования [config].
+     *
+     * @param data Сериализованное тело GraphQL-запроса (JSON).
+     * @param config Политика кэширования (напрямую в сеть, RAM или ROM кэш).
+     * @return Успешная строка валидного JSON-ответа либо [Result.failure].
+     */
     open suspend fun openURI(
         data: String,
         config: RepositoryUriConfig = RepositoryUriConfig.DIRECT
@@ -195,6 +239,9 @@ open class Repository(
         }
     }
 
+    /**
+     * Выполняет POST-запрос с автоматическим повтором при обнаружении HTML challenge страницы.
+     */
     private suspend fun postJsonValidated(
         data: String,
         requestHash: String = data.toMD5()
@@ -234,6 +281,9 @@ open class Repository(
         return lastFailure ?: Result.failure(IllegalStateException("Server returned HTML instead of JSON"))
     }
 
+    /**
+     * Выполняет сетевой запрос с троттлингом минимального интервала между запросами.
+     */
     private suspend fun postJsonThrottled(data: String): String {
         return requestMutex.withLock {
             val now = System.currentTimeMillis()
@@ -250,6 +300,9 @@ open class Repository(
         }
     }
 
+    /**
+     * Устанавливает кулдаун ожидания после обнаружения антибот-челленджа.
+     */
     private fun scheduleHtmlChallengeCooldown(
         delayMs: Long,
         requestHash: String,
@@ -269,6 +322,9 @@ open class Repository(
         )
     }
 
+    /**
+     * Сбрасывает флаг активности защиты после успешного получения ответа.
+     */
     private fun clearHtmlChallengeUiState() {
         if (!_protectionUiState.value.active) return
         _protectionUiState.value = LRepositoryProtectionUiState(
@@ -283,6 +339,9 @@ open class Repository(
         }
     }
 
+    /**
+     * Проверяет полученный текст ответа на корректность формата JSON и отсутствие корневых ошибок GraphQL.
+     */
     private fun validateJsonResponse(response: String): Result<String> {
         val normalized = response.trim()
         if (!normalized.startsWith("{")) {
@@ -309,6 +368,9 @@ open class Repository(
         }
     }
 
+    /**
+     * Удаляет закэшированный ответ для переданного тела запроса [data] в соответствии с [config].
+     */
     suspend fun deleteCache(data: String, config: RepositoryUriConfig) {
         if (config == RepositoryUriConfig.DIRECT) return
         val cacheKey = data.toMD5()
@@ -319,6 +381,9 @@ open class Repository(
         }
     }
 
+    /**
+     * Считывает закэшированный бандл альбома из локальной БД по ID [albumId], проверяя возраст кэша.
+     */
     suspend fun getAlbumBundleCache(albumId: Int, maxAgeMs: Long): String? {
         val key = albumId.toString()
         val entry = lAlbumBundleCacheDao.get(key) ?: return null
@@ -330,10 +395,16 @@ open class Repository(
         return entry.content
     }
 
+    /**
+     * Сохраняет бандл альбома [content] в кэш БД по [albumId].
+     */
     suspend fun putAlbumBundleCache(albumId: Int, content: String) {
         lAlbumBundleCacheDao.put(albumId.toString(), content)
     }
 
+    /**
+     * Удаляет запись бандла альбома из кэша БД по [albumId].
+     */
     suspend fun deleteAlbumBundleCache(albumId: Int) {
         lAlbumBundleCacheDao.delete(albumId.toString())
     }
@@ -375,8 +446,14 @@ open class Repository(
 
 }
 
+/**
+ * Политика кэширования для выполнения запросов через [Repository.openURI].
+ */
 enum class RepositoryUriConfig {
-    DIRECT,    // Direct network request
-    CACHE_RAM, // Temporary in-memory LRU cache, cleared with the process
-    CACHE_ROM  // Persistent file cache
+    /** Прямой сетевой запрос без кэширования. */
+    DIRECT,
+    /** Временный LRU-кэш в оперативной памяти (очищается при перезапуске процесса). */
+    CACHE_RAM,
+    /** Постоянный файловый кэш в локальной базе данных ROM. */
+    CACHE_ROM
 }

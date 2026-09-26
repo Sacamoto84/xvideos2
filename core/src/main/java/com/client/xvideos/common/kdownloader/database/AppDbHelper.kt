@@ -8,11 +8,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * Реализация хранилища [DbHelper] на базе Android SQLite.
+ *
+ * Обеспечивает персистентность метаданных загрузок, потокобезопасные асинхронные
+ * операции в контексте [Dispatchers.IO] и обработку ошибок SQLite с логированием через Timber.
+ */
 class AppDbHelper(context: Context?) : DbHelper {
 
     private var db: SQLiteDatabase
 
     companion object {
+        /** Имя таблицы для хранения записей о загрузках. */
         const val TABLE_NAME = "downloads"
     }
 

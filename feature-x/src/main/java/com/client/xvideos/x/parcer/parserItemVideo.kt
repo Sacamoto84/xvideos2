@@ -7,7 +7,13 @@ import org.jsoup.nodes.Document
 private const val PLAYER_MARKER = "html5player."
 
 /**
- * Достаёт из DOM страницы скрипт с конфигом html5-плеера. `null` — не нашёлся.
+ * Извлекает тело JavaScript-скрипта инициализации HTML5-плеера из DOM-дерева страницы видео.
+ *
+ * Поиск оптимизирован: сначала проверяется блок контейнера `#video-player-bg`,
+ * затем выполняется поиск по всем скриптам документа.
+ *
+ * @param document Разобранный HTML-документ Jsoup.
+ * @return Текст скрипта инициализации плеера либо `null`, если скрипт не найден.
  */
 fun parserItemVideo(document: Document): String? {
     val container = document.selectFirst("#video-player-bg")
@@ -27,7 +33,10 @@ fun parserItemVideo(document: Document): String? {
 }
 
 /**
- * Достаёт из HTML строки скрипт с конфигом html5-плеера. `null` — не нашёлся.
+ * Извлекает тело JavaScript-скрипта инициализации HTML5-плеера из сырой HTML-строки.
+ *
+ * @param html Текст HTML-страницы ролика.
+ * @return Текст скрипта инициализации плеера либо `null`.
  */
 fun parserItemVideo(html: String): String? {
     if (html.isBlank() || !html.contains(PLAYER_MARKER)) return null

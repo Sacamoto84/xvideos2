@@ -11,6 +11,20 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
+/**
+ * [PagingSource] для постраничной загрузки гифок конкретной ниши (`/v2/niches/{niche}/gifs`).
+ *
+ * Инкапсулирует:
+ * - Фильтрацию заблокированных материалов ([BlockRed]);
+ * - Автоматическое наполнение глобального кэша авторов [UsersRed];
+ * - Вычисление ключа следующей страницы по `pages` из метаданных ответа (без лишних пустых запросов);
+ * - Сохранение позиции скролла при refresh вокруг anchorPosition.
+ *
+ * @property order Порядок сортировки в нише.
+ * @property nichesName Имя или слаг просматриваемой ниши.
+ * @property block Фильтр заблокированных материалов.
+ * @property redApi Сетевой клиент RedGifs.
+ */
 class ItemNailsPagingSource (val order : Order, val nichesName : String, val block: BlockRed, val redApi: RedApi): PagingSource<Int, GifsInfo>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {

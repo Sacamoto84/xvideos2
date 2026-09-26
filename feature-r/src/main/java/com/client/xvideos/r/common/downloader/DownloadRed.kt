@@ -27,6 +27,17 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Отчет о сканировании и восстановлении поврежденных / неполных загрузок RedGifs.
+ *
+ * @property totalInfoFiles Всего найдено `.info` файлов на диске.
+ * @property incompleteItems Количество элементов с отсутствующим видео или превью.
+ * @property queuedVideo Количество видеофайлов, поставленных в очередь докачки.
+ * @property queuedPreview Количество превью-картинок, поставленных в очередь докачки.
+ * @property invalidInfoFiles Число поврежденных `.info` файлов, которые не удалось распарсить.
+ * @property skippedNoVideoUrl Пропущено из-за отсутствия ссылки на видео.
+ * @property skippedNoPreviewUrl Пропущено из-за отсутствия ссылки на превью.
+ */
 @Immutable
 data class RedDownloadRecoveryReport(
     val totalInfoFiles: Int = 0,
@@ -38,10 +49,27 @@ data class RedDownloadRecoveryReport(
     val skippedNoPreviewUrl: Int = 0
 )
 
+/** Кандидат на восстановление загрузки (элемент с отсутствующим `.mp4` или `.jpg`). */
 private data class RedDownloadRecoveryCandidate(
     val item: GifsInfo
 )
 
+/**
+ * Фасад управления скачанным контентом RedGifs.
+ *
+ * Предоставляет:
+ * - Реактивный список всех загруженных элементов [downloadList] (построенный по метаданным `.info`);
+ * - Набор ключей физически присутствующих видеофайлов [downloadedVideoKeys] (для быстрого O(1) поиска в UI плеера без I/O на главном потоке);
+ * - Сохранение в общую галерею устройства [saveToGallery];
+ * - Шеринг медиа через системный Intent [downloadItemAndShare];
+ * - Экспорт метаданных для P2P-передачи [shareMetaByP2p];
+ * - Проверку и автоматическое восстановление незавершенных загрузок [recoverIncompleteDownloads];
+ * - Удаление одиночных файлов [delete] и полной очистки папки загрузок [deleteAll].
+ *
+ * @property downloader Низкоуровневый загрузчик файлов.
+ * @param scope Скоп приложения для долгоживущих операций.
+ * @param appContext Контекст приложения.
+ */
 @Singleton
 class DownloadRed @Inject constructor(
     val downloader: Downloader,
@@ -52,6 +80,7 @@ class DownloadRed @Inject constructor(
     //var downloadList = mutableStateSetOf<String>()
 
     private val _downloadList = MutableStateFlow<List<GifsInfo>>(emptyList())
+    /** Реактивный список всех сохраненных роликов (сортировка по убыванию даты изменения). */
     val downloadList: StateFlow<List<GifsInfo>> = _downloadList.asStateFlow()
 
     /**
@@ -70,6 +99,9 @@ class DownloadRed @Inject constructor(
         refreshDownloadList()
     }
 
+    /**
+     * Инициирует загрузку медиаэлемента [item] с последующим обновлением списка.
+     */
     fun downloadItem(item: GifsInfo) {
         if (item.id.isBlank() || item.userName.isBlank()) {
             Timber.w("Skip downloadItem with blank id or userName: id=${item.id}, user=${item.userName}")
@@ -180,6 +212,10 @@ class DownloadRed @Inject constructor(
     private var refreshJob: Job? = null
     private var recoveryJob: Job? = null
 
+    /**
+     * Сканирует каталог `r_cache_download` одним проходом, считывает все `.info` файлы
+     * и обновляет [downloadList] и [downloadedVideoKeys].
+     */
     fun refreshDownloadList() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {
@@ -228,10 +264,19 @@ class DownloadRed @Inject constructor(
         }
     }
 
+    /**
+     * Сканирует каталог на наличие неполных закачек и формирует [RedDownloadRecoveryReport].
+     */
     suspend fun scanIncompleteDownloads(): RedDownloadRecoveryReport = withContext(Dispatchers.IO) {
         scanIncompleteDownloadsInternal().report
     }
 
+    /**
+     * Находит все неполные загрузки и докачивает недостающие видео или превью.
+     *
+     * @param onComplete Вызывается на главном потоке по завершении с итоговым отчетом.
+     * @param onEvent Коллбэк прогресса и текстовых событий.
+     */
     fun recoverIncompleteDownloads(
         onComplete: (RedDownloadRecoveryReport) -> Unit = {},
         onEvent: (String) -> Unit = {}
@@ -269,6 +314,9 @@ class DownloadRed @Inject constructor(
         }
     }
 
+    /**
+     * Удаляет все скачанные файлы RedGifs и очищает каталог загрузок.
+     */
     fun deleteAll(onComplete: () -> Unit = {}) {
         downloader.kDownloader.cancelAll()
         scope.launch(Dispatchers.IO) {
@@ -283,6 +331,10 @@ class DownloadRed @Inject constructor(
         }
     }
 
+    /**
+     * Удаляет конкретный скачанный элемент [item] (mp4, info, jpg),
+     * а также папку автора, если она осталась пустой.
+     */
     fun delete(item: GifsInfo) {
         val userName = item.userName
         val id = item.id
@@ -332,6 +384,9 @@ class DownloadRed @Inject constructor(
         val candidates: List<RedDownloadRecoveryCandidate>
     )
 
+    /**
+     * Внутренний метод анализа дискового пространства загрузок и поиска неполных записей.
+     */
     private fun scanIncompleteDownloadsInternal(): RecoveryScan {
         val rootDir = File(AppPath.r_cache_download)
         val infoFiles = if (rootDir.exists() && rootDir.isDirectory) {

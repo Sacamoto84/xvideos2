@@ -13,6 +13,7 @@ import java.io.Serializable
  * @param lastPositionMs сохранённая позиция воспроизведения в миллисекундах
  * @param totalDurationMs общая продолжительность видео в миллисекундах
  * @param updatedAt время последнего просмотра в миллисекундах (`System.currentTimeMillis()`)
+ * @param isCompleted признак того, что ролик просмотрен до конца (>= 95%)
  */
 @Immutable
 @kotlinx.serialization.Serializable

@@ -2,6 +2,20 @@ package com.client.xvideos.l.model.enum
 
 import kotlinx.serialization.Serializable
 
+/**
+ * Диапазон количества картинок в альбоме для фильтрации выдачи:
+ *
+ * - All (-1)
+ * - C0_25 (0..25)
+ * - C25_50 (25..50)
+ * - C50_100 (50..100)
+ * - C100_200 (100..200)
+ * - C200_800 (200..800)
+ * - C800_3200 (800..3200)
+ * - C3200_12800 (3200..12800)
+ *
+ * @property count Числовой ранг фильтрации.
+ */
 @Serializable
 enum class PictureCountRank(val count: Int){
     All(-1),

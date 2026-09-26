@@ -35,6 +35,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
+/**
+ * Описание проблемы/сбоя при загрузке конкретной страницы картинок альбома.
+ *
+ * @property page Номер сбойной страницы.
+ * @property message Текст ошибки.
+ * @property htmlChallenge `true`, если сервер вернул Cloudflare HTML-челлендж вместо JSON.
+ * @property failedAtMs Метка времени сбоя в миллисекундах.
+ */
 @Immutable
 data class LAlbumPageLoadIssue(
     val page: Int,
@@ -43,6 +51,12 @@ data class LAlbumPageLoadIssue(
     val failedAtMs: Long = System.currentTimeMillis()
 )
 
+/**
+ * Снапшот картинок альбома для сохранения в кэш бандлов.
+ *
+ * @property pics Полный список разобранных элементов [PicsDetails].
+ * @property totalPages Общее число страниц.
+ */
 @Immutable
 data class LAlbumPicsBundleSnapshot(
     val pics: List<PicsDetails>,
@@ -50,7 +64,16 @@ data class LAlbumPicsBundleSnapshot(
 )
 
 /**
- * Информация о картинках по id альбома
+ * Менеджер пагинированной порционной загрузки картинок альбома Luscious.
+ *
+ * Управляет:
+ * - Последовательной загрузкой чанков страниц картинок ([contentUrls]).
+ * - Отслеживанием прогресса [percentLoad].
+ * - Управлением сбойными страницами [failedPages] и их повторной попыткой ([retryFailedPages]).
+ * - Восстановлением из дискового кэша бандлов ([restoreFromBundleCache]).
+ *
+ * @property id Идентификатор альбома.
+ * @property repository Репозиторий сетевых запросов.
  */
 @Stable
 class AlbumPicsDetails(
@@ -62,20 +85,27 @@ class AlbumPicsDetails(
         const val PAGE_REQUEST_DELAY_MS = 250L
     }
 
+    /** Реактивный список загруженных картинок для отображения в сетке/пейджере. */
     val pics = mutableStateListOf<PicsDetails>()
 
+    /** Общее расчетное число страниц картинок в альбоме. */
     var totalPages: Int? = null
 
+    /** Прогресс загрузки картинок альбома от 0f до 1f. */
     var percentLoad by mutableFloatStateOf(0f)
 
+    /** Флаг активного сетевого запроса страницы. */
     var isPageRequestInFlight by mutableStateOf(false)
         private set
 
+    /** Флаг выполнения повторной загрузки сбойных страниц. */
     var isRetryingFailedPages by mutableStateOf(false)
         private set
 
+    /** Список страниц, завершившихся ошибкой. */
     val failedPages = mutableStateListOf<LAlbumPageLoadIssue>()
 
+    /** Реактивный статус сетевой защиты (Cloudflare/Captcha). */
     val protectionUiState: StateFlow<LRepositoryProtectionUiState>
         get() = repository.protectionUiState
 
@@ -194,6 +224,11 @@ class AlbumPicsDetails(
         return PageLoadResult(page, pages, list)
     }
 
+    /**
+     * Запускает последовательную подгрузку всех страниц картинок альбома.
+     *
+     * @param pageCacheConfig Конфигурация кэширования ответов страниц.
+     */
     suspend fun contentUrls(
         pageCacheConfig: RepositoryUriConfig = RepositoryUriConfig.CACHE_RAM
     ) = withContext(Dispatchers.Default) {
@@ -240,6 +275,9 @@ class AlbumPicsDetails(
         Timber.d("AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
     }
 
+    /**
+     * Восстанавливает список картинок из закэшированного бандла без выполнения сетевых запросов.
+     */
     suspend fun restoreFromBundleCache(
         items: List<PicsDetails>,
         cachedTotalPages: Int?
@@ -261,6 +299,9 @@ class AlbumPicsDetails(
         }
     }
 
+    /**
+     * Формирует снимок полностью загруженного набора картинок, если все страницы получены без ошибок.
+     */
     suspend fun bundleSnapshotOrNull(): LAlbumPicsBundleSnapshot? = stateMutex.withLock {
         if (failedPages.isNotEmpty() || percentLoad < 1f || pics.isEmpty()) {
             return@withLock null
@@ -313,6 +354,9 @@ class AlbumPicsDetails(
         }
     }
 
+    /**
+     * Повторяет загрузку всех зафиксированных в [failedPages] страниц картинок.
+     */
     suspend fun retryFailedPages() = withContext(Dispatchers.Default) {
         val pagesToRetry = stateMutex.withLock {
             if (failedPages.isEmpty()) emptyList() else failedPages.mapTo(java.util.TreeSet<Int>()) { it.page }.toList()
@@ -387,6 +431,9 @@ class AlbumPicsDetails(
     }
 }
 
+/**
+ * Нормализует URL оригиналов и миниатюр для списка картинок [l].
+ */
 internal fun normalizePictureUrls(l: List<PicsDetails>): List<PicsDetails> {
     if (l.isEmpty()) return emptyList()
     var modified = false
@@ -421,6 +468,9 @@ internal fun normalizePictureUrls(l: List<PicsDetails>): List<PicsDetails> {
     return if (modified) result else l
 }
 
+/**
+ * Вычисляет корректное число страниц альбома на основе информации о количестве картинок.
+ */
 internal fun calculateAlbumPages(totalPagesFromInfo: Int?, totalItems: Int?, itemsPerPage: Int?): Int {
     val calculatedPages = if (totalItems != null && itemsPerPage != null && itemsPerPage > 0) {
         ((totalItems + itemsPerPage - 1) / itemsPerPage).coerceAtLeast(1)

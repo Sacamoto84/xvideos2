@@ -24,6 +24,15 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+/**
+ * Менеджер создания, проверки и восстановления зашифрованных и незашифрованных бэкапов приложения.
+ *
+ * Архитектурные особенности:
+ * - Поддерживает формат шифрования XLRB (AES-256-GCM с потоковыми блоками по 64 КБ) и legacy ZIP.
+ * - Охватывает разделы X, L, R с возможностью выбора детальности (FULL/MINI).
+ * - Транзакционное восстановление данных: перед заменой папок данные откладываются в скрытые
+ *   папки `.xlr_old_*`, обеспечивая автоматический откат при сбоях или обрывах питания.
+ */
 object XlrBackupManager {
     private const val SCHEMA_VERSION = 1
     private const val MANIFEST_ENTRY = "backup.json"
@@ -42,11 +51,23 @@ object XlrBackupManager {
 
     private val sections = listOf("X", "L", "R")
 
+    /**
+     * Генерирует стандартное имя файла бэкапа с временной меткой: "xvideos-xlr-backup-YYYYMMDD-HHmmss.xlr".
+     *
+     * @param now Unix timestamp текущего времени.
+     */
     fun defaultFileName(now: Long = System.currentTimeMillis()): String {
         val sdf = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
         return "xvideos-xlr-backup-${sdf.format(Date(now))}.xlr"
     }
 
+    /**
+     * Быстро определяет тип файла бэкапа по первым байтам через [ContentResolver].
+     *
+     * @param context Контекст Android.
+     * @param uri URI выбранного пользователем файла архива.
+     * @return [XlrBackupType] (зашифрованный, zip или неподдерживаемый).
+     */
     fun detectBackupType(context: Context, uri: Uri): XlrBackupType {
         return runCatching {
             val input = context.contentResolver.openInputStream(uri) ?: return XlrBackupType.UNSUPPORTED
@@ -58,6 +79,13 @@ object XlrBackupManager {
         }.getOrDefault(XlrBackupType.UNSUPPORTED)
     }
 
+    /**
+     * Сканирует локальную файловую систему и строит дерево разделов и папок с подсчетом размеров.
+     *
+     * @param options Настройки включения полных медиафайлов или только миниатюр.
+     * @param baseDir Корневой каталог данных приложения.
+     * @return Список элементов [XlrBackupItem] для отображения в дереве выбора.
+     */
     suspend fun currentBackupItems(
         options: XlrBackupOptions = XlrBackupOptions(),
         baseDir: File = File(AppPath.main)
@@ -93,6 +121,14 @@ object XlrBackupManager {
         }
     }
 
+    /**
+     * Анализирует архив бэкапа без полной распаковки на диск и строит дерево содержимого.
+     *
+     * @param context Контекст Android.
+     * @param uri URI выбранного архива.
+     * @param password Пароль для расшифровки (если архив зашифрован).
+     * @return [Result] со списком элементов бэкапа [XlrBackupItem] или ошибкой (неверный пароль/повреждение).
+     */
     suspend fun inspectBackup(
         context: Context,
         uri: Uri,
@@ -129,6 +165,12 @@ object XlrBackupManager {
         }
     }
 
+    /**
+     * Рассчитывает суммарное количество файлов и байтов для подмножества выбранных путей.
+     *
+     * @param items Полный список элементов.
+     * @param selectedPaths Набор относительных путей, отмеченных пользователем.
+     */
     fun reportForSelection(items: List<XlrBackupItem>, selectedPaths: Set<String>): XlrBackupReport {
         val normalized = normalizeSelectedPaths(selectedPaths)
         return items
@@ -141,6 +183,16 @@ object XlrBackupManager {
             }
     }
 
+    /**
+     * Создает новый архив бэкапа с опциональным потоковым шифрованием XLRB.
+     *
+     * @param context Контекст Android.
+     * @param uri URI целевого файла для сохранения.
+     * @param selectedPaths Набор путей, подлежащих архивации.
+     * @param options Опции фильтрации медиа (FULL/MINI).
+     * @param password Пароль для шифрования (null или пустой — архив сохраняется как обычный ZIP).
+     * @return [Result] с отчетом о записанных файлах и байтах.
+     */
     suspend fun createBackup(
         context: Context,
         uri: Uri,
@@ -184,6 +236,18 @@ object XlrBackupManager {
         }
     }
 
+    /**
+     * Восстанавливает данные из архива бэкапа с транзакционной гарантией безопасности.
+     *
+     * Распаковка выполняется сначала в изолированную временную папку `.xlr_restore_tmp`,
+     * после чего текущие рабочие папки отодвигаются в `.xlr_old_*`, а новые накатываются на их место.
+     * В случае сбоя выполняется автоматический откат к исходному состоянию.
+     *
+     * @param context Контекст Android.
+     * @param uri URI файла бэкапа.
+     * @param selectedPaths Список папок для восстановления.
+     * @param password Пароль для расшифровки архива.
+     */
     suspend fun restoreBackup(
         context: Context,
         uri: Uri,

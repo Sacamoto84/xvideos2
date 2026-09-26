@@ -100,24 +100,23 @@ private fun buildFavoritesByDatePictureSetQuery(hasUserId: Boolean): String {
       genres {
         id
         title
+        slug
         url
-        acts_as_warning
       }
     }
     """.trimIndent()
 }
 
-private val FAVORITES_SET_WITH_USER_QUERY = buildFavoritesByDatePictureSetQuery(hasUserId = true)
-private val FAVORITES_SET_NO_USER_QUERY = buildFavoritesByDatePictureSetQuery(hasUserId = false)
+private val FAVORITES_PICTURE_SET_WITH_USER_QUERY = buildFavoritesByDatePictureSetQuery(hasUserId = true)
+private val FAVORITES_PICTURE_SET_NO_USER_QUERY = buildFavoritesByDatePictureSetQuery(hasUserId = false)
 
 /**
- * Генерирует тело GraphQL POST-запроса для FavoritesByDatePictureSet.
+ * Генерирует тело GraphQL POST-запроса для FavoritesByDatePictureSet (лайкнутые/избранные наборы картинок и альбомы).
  *
- * @param userId ID пользователя. Если null или пустой, генерируется вариант запроса
- *               без аргумента user_id для проверки, умеет ли бэкенд брать пользователя
- *               из текущей авторизованной сессии/куки.
- * @param page Номер страницы (начиная с 1).
- * @param showLikes Показывать ли лайки (по умолчанию true).
+ * @param userId ID пользователя (или null для текущего авторизованного профиля).
+ * @param page Номер страницы выдачи (начиная с 1).
+ * @param showLikes Показывать ли лайкнутые наборы.
+ * @return JSON-строка тела запроса к GraphQL endpoint.
  */
 fun getFavoritesByDatePictureSet(
     userId: String? = null,
@@ -126,7 +125,7 @@ fun getFavoritesByDatePictureSet(
 ): String {
     val cleanUserId = userId?.trim()
     val hasUserId = !cleanUserId.isNullOrBlank()
-    val query = if (hasUserId) FAVORITES_SET_WITH_USER_QUERY else FAVORITES_SET_NO_USER_QUERY
+    val query = if (hasUserId) FAVORITES_PICTURE_SET_WITH_USER_QUERY else FAVORITES_PICTURE_SET_NO_USER_QUERY
 
     return buildJsonObject {
         put("id", "30")

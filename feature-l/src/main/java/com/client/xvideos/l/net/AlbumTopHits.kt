@@ -17,12 +17,21 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
+/**
+ * Загрузчик и реактивный держатель топовых популярных альбомов Luscious (Top Hits).
+ *
+ * Выполняет запрос `getAlbumListTopHitsQuery()` и заполняет snapshot-список [items].
+ *
+ * @property repository Репозиторий сетевых запросов.
+ * @property scope CoroutineScope выполнения фонового запроса.
+ */
 @Stable
 class AlbumTopHitsImpl(
     val repository: Repository,
     val scope: CoroutineScope,
 ) {
 
+    /** Реактивный список топовых альбомов. */
     val items = mutableStateListOf<AlbumListTopHits>()
 
     init {

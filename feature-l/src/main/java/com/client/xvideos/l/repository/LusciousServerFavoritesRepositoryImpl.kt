@@ -31,6 +31,12 @@ import javax.inject.Singleton
 
 /**
  * Реализация репозитория серверных подписок и лайков Luscious.
+ *
+ * Осуществляет взаимодействие с GraphQL API Luscious для синхронизации
+ * избранных альбомов и лайкнутых картинок пользователя, а также выполнения мутаций
+ * добавления и удаления из избранного.
+ *
+ * @param repository Базовый репозиторий [Repository] для выполнения сетевых запросов.
  */
 @Singleton
 class LusciousServerFavoritesRepositoryImpl @Inject constructor(
@@ -277,6 +283,9 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
         return parseFavoriteMutationResult(rawResult, "remove_favorite", "FavoriteRemove")
     }
 
+    /**
+     * Разбирает результат мутации добавления/удаления избранного, проверяя ошибки GraphQL и структуры мутации.
+     */
     private fun parseFavoriteMutationResult(
         rawResult: Result<String>,
         mutationField: String,
@@ -316,6 +325,9 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
     }
 }
 
+/**
+ * Проверяет соответствие объекта картинки в GraphQL-ответе [picObj] искомому фрагменту слага [targetSlug].
+ */
 private fun pictureMatchesSlug(picObj: JsonObject, targetSlug: String): Boolean {
     if (picObj["url"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
     if (picObj["url_to_original"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
@@ -334,6 +346,9 @@ private val ULID_REGEX = Regex("""[0-9A-HJKMNP-TV-Z]{26}""")
 private val DIMENSIONS_EXT_REGEX = Regex("""\.\d+x\d+\.[a-zA-Z0-9]+$""")
 private val EXT_REGEX = Regex("""\.[a-zA-Z0-9]+$""")
 
+/**
+ * Извлекает кандидат на слаг или ULID идентификатор из строки URL или локального имени файла.
+ */
 internal fun extractSlugCandidate(input: String): String {
     val clean = input.substringBefore('?').substringBefore('#').trim()
     val ulidMatch = ULID_REGEX.find(clean)
@@ -348,10 +363,14 @@ internal fun extractSlugCandidate(input: String): String {
     return if (slug.length >= 4) slug else withoutExt
 }
 
+/**
+ * Hilt-модуль привязки реализации [LusciousServerFavoritesRepositoryImpl] к интерфейсу [LusciousServerFavoritesRepository].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class LusciousServerFavoritesModule {
 
+    /** Привязывает реализацию репозитория серверных подписок и лайков Luscious. */
     @Binds
     @Singleton
     abstract fun bindLusciousServerFavoritesRepository(

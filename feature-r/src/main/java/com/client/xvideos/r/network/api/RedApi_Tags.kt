@@ -4,12 +4,20 @@ import com.client.xvideos.r.model.tag.TagsResponse
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
+/** Маршрут запроса полного справочника тегов RedGifs. */
 private val ROUTE_TAGS = Route("GET", "/v1/tags")
 
+/**
+ * Подраздел API RedGifs для работы с глобальным каталогом тегов.
+ *
+ * @property api HTTP-клиент модуля.
+ */
 class RedApi_Tags(val api: ApiClient) {
 
     /**
-     * #### Возвращает список всех существующих тегов. 7к штук (имя, количество)
+     * Возвращает полный список всех зарегистрированных тегов (около 7 000 элементов с именем и количеством).
+     *
+     * @return [Result] с коллекцией [TagsResponse].
      */
     suspend fun getTags(): Result<TagsResponse> {
         return api.request(ROUTE_TAGS)

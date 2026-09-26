@@ -24,6 +24,18 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
+/**
+ * Менеджер загрузки подробной информации об альбоме (метаданные + список изображений).
+ *
+ * Координирует:
+ * - Загрузку метаданных альбома [AlbumDetails] через GraphQL [getAlbumInfo].
+ * - Восстановление и сохранение полного бандла из локального кэша ([restoreBundleIfFresh], [cacheBundleIfComplete]).
+ * - Постраничную подгрузку картинок альбома через [AlbumPicsDetails].
+ *
+ * @property id Уникальный числовой ID альбома.
+ * @property repository Репозиторий сетевых запросов и кэша.
+ * @property scope CoroutineScope для выполнения сетевых задач.
+ */
 @Stable
 class AlbumInfo(
     val id: Int,
@@ -38,19 +50,24 @@ class AlbumInfo(
         scope: CoroutineScope,
     ) : this(id, repository, scope)
 
+    /** Менеджер пагинированной загрузки списка картинок альбома. */
     val albumPicsDetails = AlbumPicsDetails(id, repository)
 
     private val _albumInfo = MutableStateFlow<AlbumDetails?>(null)
+    /** Метаданные альбома (название, автор, описание, теги, счетчик картинок). */
     @Suppress("MemberNameEqualsClassName")
     val albumInfo: StateFlow<AlbumDetails?> = _albumInfo.asStateFlow()
 
     private val _loadError = MutableStateFlow<String?>(null)
+    /** Текст последней ошибки загрузки метаданных (если есть). */
     val loadError: StateFlow<String?> = _loadError.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
+    /** Флаг первичной загрузки информации об альбоме. */
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
+    /** Флаг принудительного обновления альбома из сети. */
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private var loadJob: Job? = null
@@ -59,15 +76,20 @@ class AlbumInfo(
         loadAlbum()
     }
 
+    /** Повторить попытку загрузки альбома при ошибке. */
     fun retry() {
         loadAlbum()
     }
 
+    /** Принудительно обновить данные альбома из сети в обход локального кэша. */
     fun refresh() {
         if (_isRefreshing.value) return
         loadAlbum(forceNetwork = true)
     }
 
+    /**
+     * Повторить загрузку страниц картинок, завершившихся сбоем.
+     */
     suspend fun retryFailedPages() {
         albumPicsDetails.retryFailedPages()
         val details = _albumInfo.value
@@ -76,6 +98,9 @@ class AlbumInfo(
         }
     }
 
+    /**
+     * Загружает данные альбома из кэша либо по сети через GraphQL.
+     */
     private fun loadAlbum(forceNetwork: Boolean = false) {
         loadJob?.cancel()
         loadJob = scope.launch(Dispatchers.IO) {
@@ -131,6 +156,9 @@ class AlbumInfo(
         }
     }
 
+    /**
+     * Восстанавливает данные альбома и картинок из кэша бандлов, если кэш актуален.
+     */
     private suspend fun restoreBundleIfFresh(repository: Repository): Boolean {
         val cachedJson = repository.getAlbumBundleCache(id, L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS) ?: return false
         val bundle = runCatching {
@@ -155,6 +183,9 @@ class AlbumInfo(
         return true
     }
 
+    /**
+     * Сохраняет снапшот полностью загруженного альбома в файловый бандл-кэш.
+     */
     private suspend fun cacheBundleIfComplete(
         repository: Repository,
         albumDetails: AlbumDetails
@@ -181,6 +212,9 @@ class AlbumInfo(
         }
     }
 
+    /**
+     * Разбирает JSON-ответ GraphQL-запроса getAlbumInfo.
+     */
     private fun parseAlbumDetails(response: String): Result<AlbumDetails> = runCatching {
         val json = LJson.parseToJsonElement(response).jsonObject
         val errors = json["errors"]?.takeIf { it !is JsonNull }?.jsonArray
@@ -205,8 +239,7 @@ class AlbumInfo(
      */
     val thumbnail: String get() = albumInfo.value?.cover?.url.orEmpty()
 
+    /** Ссылка для скачивания архива всего альбома с сайта (если доступна). */
     val downloadUrl: String
         get() = albumInfo.value?.download_url?.takeIf { it.isNotBlank() }?.let { LusciousEndpoints.HOME + it }.orEmpty()
 }
-
-

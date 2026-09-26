@@ -7,55 +7,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
-```json
-{
-    "__typename": "Picture",
-    "id": "59362744",
-    "title": "Millie Beachside Demon Latex Seductress By Frwds Dleksko Fullview",
-    "description": "",
-    "created": 1770995944.280297,
-    "like_status": "none",                     // !Не используем
-    "number_of_comments": 0,                   // !Не используем
-    "number_of_favorites": 0,                  // !Не используем
-    "moderation_status": "NOT_MODERATED",      // !Не используем
-    "width": 1920,                             //
-    "height": 2803,                            //
-    "resolution": "1920x2803",                 //
-    "aspect_ratio": "1920:2803",               //
-    "url_to_original": null,                   // !Не используем
-    "url_to_video": null,                      // Адрес видео
-    "is_animated": false,
-    "position": 42,
-    "permissions": [ "create" ],               // !Не используем
-    "url": "/pictures/album/millie_603323/id/59362744/@millie_beachside_demon_latex_seductress_by_frwds_d",
-    "tags": [],
-    "thumbnails": [
-    {
-        "width": 1680,
-        "target_width": 1600,
-        "height": 2453,
-        "size": "xMax",
-        "url": "https://cdni.luscious.net/venividivici2k13/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.1680x0.jpg?md5=fgYNqcEoz8zeAuRLpEaUGQ&expires=1773900756"
-    },
-    {
-        "width": 640,
-        "target_width": 400,
-        "height": 935,
-        "size": "small",
-        "url": "https://cdni.luscious.net/venividivici2k13/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.640x0.jpg?md5=sn0bj1zYPF7ziGsGKnGRQA&expires=1773900756"
-    },
-    {
-        "width": 315,
-        "target_width": 0,
-        "height": 460,
-        "size": "large_thumbnail",
-        "url": "https://cdni.luscious.net/venividivici2k13/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.315x0.jpg?md5=8itQfJ2Q00VR9BWCUlvXRA&expires=1773900756"
-    }
-    ]
-}
-```
-*/
-/**
+ * Детальная карточка изображения (или анимированного видео) в альбоме Luscious.
+ *
  * @Immutable — обещание Compose, что объект после создания не меняется.
  *
  * Без него отчёт компилятора помечает класс как `Uncertain(List)`: поле
@@ -66,6 +19,16 @@ import kotlinx.serialization.Serializable
  *
  * Обещание правдиво: все поля `val`, список приходит из JSON и нигде не
  * мутируется. Если кто-то соберётся его менять — сначала снять аннотацию.
+ *
+ * @property height Высота исходного изображения.
+ * @property width Ширина исходного изображения.
+ * @property is_animated Флаг анимации (GIF или MP4 видеопоток).
+ * @property url_to_original URL к оригинальному файлу полного разрешения.
+ * @property url_to_video URL к видео-версии (для анимированных картинок).
+ * @property album Имя или ID альбома.
+ * @property thumbnails Список миниатюр различных размеров [Thumbnails].
+ * @property id Уникальный ID картинки.
+ * @property url Относительный веб-URL картинки на сайте.
  */
 @Immutable
 @Parcelize
@@ -92,6 +55,14 @@ data class PicsDetails(
     }
 }
 
+/**
+ * Вариант миниатюры картинки определенного разрешения.
+ *
+ * @property width Ширина миниатюры.
+ * @property height Высота миниатюры.
+ * @property size Название размера (например, `"small"`, `"large_thumbnail"`, `"xMax"`).
+ * @property url URL файла миниатюры на CDN.
+ */
 @Immutable
 @Parcelize
 @Serializable
@@ -107,25 +78,3 @@ data class Thumbnails(
         val EMPTY = Thumbnails()
     }
 }
-
-//https://cdni.luscious.net/venividivici2k13/603323/millie_beachside_dem_01KHBSB2THB9YFJCQT22P9NGCS.640x0.jpg?md5=sn0bj1zYPF7ziGsGKnGRQA&expires=1773900756
-//[
-//{
-//    "width": 1680,
-//    "height": 2044,
-//    "size": "xMax",
-//    "url": "https://ah-img.luscious.net/Senred/554756/img_20250420_143600_01K3KQKZAWZVQB2X2RQXE7CWDC.1680x0.jpg"
-//},
-//{
-//    "width": 640,
-//    "height": 779,
-//    "size": "small",
-//    "url": "https://ah-img.luscious.net/Senred/554756/img_20250420_143600_01K3KQKZAWZVQB2X2RQXE7CWDC.640x0.jpg"
-//},
-//{
-//    "width": 315,
-//    "height": 384,
-//    "size": "large_thumbnail",
-//    "url": "https://ah-img.luscious.net/Senred/554756/img_20250420_143600_01K3KQKZAWZVQB2X2RQXE7CWDC.315x0.jpg"
-//}
-//]

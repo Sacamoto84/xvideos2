@@ -5,49 +5,42 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
+ * Модель профиля автора/создателя контента в RedGifs.
+ *
+ * Содержит счетчики подписчиков, опубликованных постов, суммарных просмотров,
+ * ссылки на аватар и сторонние социальные сети.
+ *
+ * Пример JSON из API:
  * ```json
- *   "users": [
- *     {
- *       "creationtime": 1758278234,
- *       "description": "",
- *       "followers": 21193,
- *       "following": 0,
- *       "gifs": 2324,
- *       "name": "relative_rub",
- *       "profileImageUrl": "https://userpic.redgifs.com/8/9a/89ac53e4968b17e3335e7dc57c53b238.png",
- *       "profileUrl": "https://onlyfans.com/vickicandy/trial/z8eqb14059tqhbzx3n0rudymkmsrky6n",
- *       "premium": {
- *         "subscription_outbound_link": null
- *       },
- *       "publishedCollections": 0,
- *       "publishedGifs": 2176,
- *       "socialUrl1": null,
- *       "socialUrl2": null,
- *       "socialUrl3": null,
- *       "socialUrl4": null,
- *       "socialUrl5": "https://reddit.com/user/Relative_Rub_9070/",
- *       "socialUrl6": null,
- *       "socialUrl7": null,
- *       "socialUrl8": null,
- *       "socialUrl9": null,
- *       "socialUrl10": null,
- *       "socialUrl11": null,
- *       "socialUrl12": null,
- *       "socialUrl13": null,
- *       "socialUrl14": null,
- *       "socialUrl15": null,
- *       "socialUrl16": null,
- *       "socialUrl17": null,
- *       "socialUrl18": null,
- *       "studio": false,
- *       "subscription": 0,
- *       "url": "https://www.redgifs.com/users/relative_rub",
- *       "username": "relative_rub",
- *       "verified": true,
- *       "views": 32986108
- *     }
- *   ],
+ * {
+ *   "creationtime": 1758278234,
+ *   "description": "Creator description",
+ *   "followers": 21193,
+ *   "following": 0,
+ *   "gifs": 2324,
+ *   "name": "relative_rub",
+ *   "profileImageUrl": "https://userpic.redgifs.com/.../avatar.png",
+ *   "profileUrl": "https://onlyfans.com/...",
+ *   "publishedGifs": 2176,
+ *   "url": "https://www.redgifs.com/users/relative_rub",
+ *   "username": "relative_rub",
+ *   "verified": true,
+ *   "views": 32986108
+ * }
  * ```
+ *
+ * @property description Текстовое био автора.
+ * @property creationtime Время регистрации аккаунта (unix timestamp).
+ * @property followers Количество подписчиков.
+ * @property gifs Общее число загруженных гифок.
+ * @property name Отображаемое имя (Display Name).
+ * @property profileImageUrl URL аватара профиля.
+ * @property profileUrl Внешняя ссылка на личный сайт/OnlyFans/linktree автора.
+ * @property publishedGifs Количество публично опубликованных гифок.
+ * @property url Прямая ссылка на страницу автора на redgifs.com.
+ * @property username Уникальный никнейм автора в нижнем регистре.
+ * @property verified Флаг подтвержденного (верифицированного) аккаунта.
+ * @property views Общее число просмотров всех гифок автора.
  */
 @Immutable
 @Serializable
@@ -65,18 +58,35 @@ data class UserInfo(
     @SerialName("verified")        val verified: Boolean = false,                // *
     @SerialName("views")           val views: Long  = 0L,                           // * Общее количество просмотров всех опубликованных пользователем GIF. > 123194825
 ) {
+    /** Проверяет валидность модели (username не пуст). */
     val isValid: Boolean get() = username.isNotBlank()
+
+    /** Возвращает отображаемое имя автора (если name пустое, берется username). */
     val displayName: String get() = name.ifBlank { username }
+
+    /** Проверяет наличие аватара. */
     val hasAvatar: Boolean get() = !profileImageUrl.isNullOrBlank()
+
+    /** Проверяет наличие описания. */
     val hasDescription: Boolean get() = !description.isNullOrBlank()
+
+    /** Проверяет наличие времени регистрации. */
     val hasCreationTime: Boolean get() = creationtime > 0L
+
+    /** Проверяет наличие подписчиков. */
     val hasFollowers: Boolean get() = followers > 0L
+
+    /** Проверяет наличие опубликованных гифок. */
     val hasGifs: Boolean get() = gifs > 0L || publishedGifs > 0L
+
+    /** Проверяет наличие внешней ссылки на профиль. */
     val hasProfileUrl: Boolean get() = profileUrl.isNotBlank()
+
+    /** Проверяет статус верификации. */
     val isVerified: Boolean get() = verified
 
     companion object {
+        /** Пустой экземпляр [UserInfo]. */
         val EMPTY = UserInfo()
     }
 }
-

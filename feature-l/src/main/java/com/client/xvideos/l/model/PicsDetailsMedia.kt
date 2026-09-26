@@ -2,6 +2,9 @@ package com.client.xvideos.l.model
 
 import com.client.xvideos.common.settings.ThumbnailsSize
 
+/**
+ * Проверяет, является ли данный элемент анимированным медиа (видео mp4, gif).
+ */
 fun PicsDetails.isAnimatedMedia(): Boolean {
     if (is_animated) return true
     if (!url_to_video.isNullOrBlank()) return true
@@ -21,16 +24,25 @@ fun PicsDetails.isAnimatedMedia(): Boolean {
     }
 }
 
+/**
+ * Возвращает URL воспроизводимого видеофайла для анимированного элемента.
+ */
 fun PicsDetails.lAnimationVideoUrl(): String? {
     if (!isAnimatedMedia()) return null
     return url_to_video?.takeIf { it.isNotBlank() }
         ?: url_to_original?.takeIf { it.isLVideoFileUrl() }
 }
 
+/**
+ * Безопасно вычисляет соотношение сторон картинки (width / height).
+ */
 fun PicsDetails.safeAspectRatio(): Float {
     return if (width > 0 && height > 0) width.toFloat() / height else 1f
 }
 
+/**
+ * Возвращает наилучший URL для скачивания файла (видео или картинки).
+ */
 fun PicsDetails.lDownloadUrl(): String? {
     return if (isAnimatedMedia()) {
         lAnimationVideoUrl() ?: lImageMediaUrl()
@@ -39,6 +51,9 @@ fun PicsDetails.lDownloadUrl(): String? {
     }
 }
 
+/**
+ * Возвращает URL превью заданного размера [thumbnailsSize].
+ */
 fun PicsDetails.lPreviewImageUrl(thumbnailsSize: String): String {
     return thumbnails
         ?.firstOrNull { it.size == thumbnailsSize }
@@ -50,6 +65,9 @@ fun PicsDetails.lPreviewImageUrl(thumbnailsSize: String): String {
         ?: lImageMediaUrl().orEmpty()
 }
 
+/**
+ * Возвращает список URL изображений для полноэкранного просмотра (с приоритетом локального файла).
+ */
 fun PicsDetails.lFullScreenImageUrls(): List<String> {
     val localOriginal = url_to_original
         ?.takeIf { it.isLocalImagePath() }
@@ -77,6 +95,9 @@ fun PicsDetails.lFullScreenImageUrls(): List<String> {
     return result
 }
 
+/**
+ * Возвращает лучший доступный URL статического изображения.
+ */
 fun PicsDetails.lImageMediaUrl(): String? {
     val localOriginal = url_to_original?.takeIf { it.isLocalImagePath() }
     return localOriginal
@@ -84,10 +105,16 @@ fun PicsDetails.lImageMediaUrl(): String? {
         ?: url_to_original?.takeIf { it.isNotBlank() && !it.isLVideoFileUrl() }
 }
 
+/**
+ * Возвращает URL наибольшей по площади миниатюры.
+ */
 fun PicsDetails.lBestThumbnailImageUrl(): String? {
     return lThumbnailImageUrlsBySize().firstOrNull()
 }
 
+/**
+ * Возвращает список URL всех миниатюр, отсортированных по убыванию разрешения.
+ */
 fun PicsDetails.lThumbnailImageUrlsBySize(): List<String> {
     val thumbs = thumbnails
     if (thumbs.isNullOrEmpty()) return emptyList()
@@ -107,6 +134,9 @@ fun PicsDetails.lThumbnailImageUrlsBySize(): List<String> {
         .toList()
 }
 
+/**
+ * Формирует уникальное безопасное имя файла для сохранения на локальный диск.
+ */
 fun PicsDetails.lSavedFileName(): String? {
     val sourceName = lDownloadUrl()?.lUrlFileName()?.takeIf { it.isNotBlank() } ?: return null
     val cleanSourceName = sourceName.replace('/', '_').replace('\\', '_')
@@ -121,8 +151,10 @@ fun PicsDetails.lSavedFileName(): String? {
     return candidate.replace("..", "_")
 }
 
+/** Заголовки HTTP для запросов медиафайлов Luscious. */
 fun lMediaRequestHeaders(): Map<String, String> = L_MEDIA_REQUEST_HEADERS
 
+/** Заголовки загрузки для KDownloader. */
 fun lMediaDownloadHeaders(): HashMap<String, List<String>> = HashMap(L_MEDIA_DOWNLOAD_HEADERS)
 
 fun lMediaUserAgent(): String = L_MEDIA_USER_AGENT
@@ -196,4 +228,3 @@ fun PicsDetails.extractAnchorId(): String? {
 val PicsDetails.hasAnchorId: Boolean get() = extractAnchorId() != null
 
 fun PicsDetails.extractAnchorIdOrEmpty(): String = extractAnchorId() ?: ""
-

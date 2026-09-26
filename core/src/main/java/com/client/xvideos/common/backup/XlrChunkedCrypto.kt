@@ -22,16 +22,27 @@ import javax.crypto.spec.SecretKeySpec
  * Тип архива бэкапа, определяемый по сигнатуре первых 4 байт.
  */
 enum class XlrBackupType {
+    /** Зашифрованный XLR-архив с магической сигнатурой "XLRB". */
     ENCRYPTED_XLR,
+
+    /** Устаревший незашифрованный ZIP-архив (сигнатура "PK\x03\x04"). */
     LEGACY_ZIP,
+
+    /** Неподдерживаемый или поврежденный формат файла. */
     UNSUPPORTED
 }
 
+/**
+ * Исключение, выбрасываемое при несовпадении пользовательского пароля шифрования.
+ */
 class XlrInvalidPasswordException(
     message: String = "Неверный пароль для расшифровки бэкапа",
     cause: Throwable? = null
 ) : GeneralSecurityException(message, cause)
 
+/**
+ * Исключение при обнаружении повреждения целостности архива или неожиданного обрыва потока.
+ */
 class XlrCorruptedBackupException(message: String, cause: Throwable? = null) :
     IOException(message, cause)
 
@@ -80,6 +91,9 @@ object XlrChunkedCrypto {
         return true
     }
 
+    /**
+     * Определяет тип архива бэкапа по первым байтам заголовка.
+     */
     fun detectType(firstBytes: ByteArray): XlrBackupType {
         return when {
             matchesMagic(firstBytes, MAGIC_BYTES) -> XlrBackupType.ENCRYPTED_XLR
@@ -88,6 +102,10 @@ object XlrChunkedCrypto {
         }
     }
 
+    /**
+     * Генерирует AES-256 ключ из пароля и соли по стандарту PBKDF2WithHmacSHA256 (120 000 итераций).
+     * Автоматически затирает массив символов пароля в памяти.
+     */
     fun deriveKey(password: CharArray, salt: ByteArray): SecretKey {
         val spec = PBEKeySpec(password, salt, PBKDF2_ITERATIONS, KEY_BITS)
         return try {
@@ -100,6 +118,9 @@ object XlrChunkedCrypto {
         }
     }
 
+    /**
+     * Формирует уникальный 12-байтовый Nonce для чанка (4 байта случайного префикса + 8 байт индекса чанка).
+     */
     fun buildNonce(prefix: ByteArray, chunkIndex: Long): ByteArray {
         return ByteBuffer.allocate(12)
             .put(prefix)
@@ -107,6 +128,9 @@ object XlrChunkedCrypto {
             .array()
     }
 
+    /**
+     * Формирует данные аутентификации AAD (индекс чанка + флаг последнего блока) для защиты от модификаций.
+     */
     fun buildAad(chunkIndex: Long, isLast: Boolean): ByteArray {
         return ByteBuffer.allocate(9)
             .putLong(chunkIndex)
@@ -118,6 +142,9 @@ object XlrChunkedCrypto {
 /**
  * Зашифровывающий поток вывода. Принимает данные произвольными блоками,
  * накапливает по 64 КБ, зашифровывает в режиме AES-GCM и пишет во внутренний поток.
+ *
+ * @param destination Целевой поток байт (например, файл архива).
+ * @param password Пользовательский пароль шифрования.
  */
 class XlrEncryptedOutputStream(
     private val destination: OutputStream,
@@ -232,6 +259,9 @@ class XlrEncryptedOutputStream(
 
 /**
  * Расшифровывающий поток ввода. Читает заголовок XLRB, проверяет аутентичность чанков и расшифровывает на лету.
+ *
+ * @param source Входящий поток зашифрованного архива.
+ * @param password Пароль для расшифровки.
  */
 class XlrEncryptedInputStream(
     private val source: InputStream,

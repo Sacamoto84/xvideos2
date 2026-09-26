@@ -19,6 +19,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * Хранилище пользовательских именованных коллекций роликов RedGifs.
+ *
+ * Наследует [LinkCollectionStore] и организует хранение папок коллекций в `AppPath.r_collection`.
+ * Управляет состоянием UI-диалогов создания и добавления элементов в коллекции.
+ *
+ * @param scope Корутин-скоп для асинхронных операций с диском.
+ */
 @Stable
 class R_Saved_Collection(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -34,13 +42,18 @@ class R_Saved_Collection(
     /** Отобразить диалог создания новой коллекции */
     var visibleDialogCreateNew by mutableStateOf(false)
 
+    /** Медиаэлемент, над которым сейчас открыт диалог добавления в коллекцию. */
     var collectionItemGifInfo by mutableStateOf<GifsInfo?>(null)
 
+    /** Название текущей выбранной пользователем коллекции. */
     val selectedCollection = MutableStateFlow<String?>(null)
     //-------------------------------------------
 
     private var refreshJob: Job? = null
 
+    /**
+     * Добавляет медиаэлемент [item] в именованную коллекцию [collectionName].
+     */
     override fun addCollection(item: GifsInfo, collectionName: String) {
         val safeItem = item.sanitizeOrNull() ?: run {
             SnackBar.error("Collection add error: empty id")
@@ -56,6 +69,9 @@ class R_Saved_Collection(
         }
     }
 
+    /**
+     * Удаляет медиаэлемент с [itemId] из коллекции [collectionName].
+     */
     override fun deleteItemFromCollection(itemId: String, collectionName: String) {
         if (itemId.isBlank() || collectionName.isBlank()) return
         Timber.i("R_Saved_Collection deleteItemFromCollection() item:${itemId} collectionName:$collectionName")
@@ -69,6 +85,9 @@ class R_Saved_Collection(
         }
     }
 
+    /**
+     * Полностью удаляет коллекцию [collectionName] и все её элементы.
+     */
     override fun deleteCollection(collectionName: String) {
         if (collectionName.isBlank()) return
         scope.launch(Dispatchers.IO) {
@@ -81,6 +100,9 @@ class R_Saved_Collection(
         }
     }
 
+    /**
+     * Создает новую пустую именованную коллекцию [collectionName].
+     */
     override fun createCollection(collectionName: String) {
         if (collectionName.isBlank()) return
         Timber.i("R_Saved_Collection createCollection() collectionName:$collectionName")
@@ -96,6 +118,10 @@ class R_Saved_Collection(
         }
     }
 
+    /**
+     * Асинхронно перечитывает с диска все коллекции и их элементы,
+     * выполняет санитацию списков и публикует результат на главный поток.
+     */
     override fun refreshCollectionList() {
         val seq = nextLoadSeq()
         refreshJob?.cancel()

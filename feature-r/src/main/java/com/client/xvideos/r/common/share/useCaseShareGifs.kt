@@ -10,7 +10,14 @@ import com.client.xvideos.r.model.GifsInfo
 import timber.log.Timber
 import java.io.File
 
-//--- Поделиться ---
+/**
+ * Отправляет локальный скачанный видеофайл медиаэлемента [item] в системный диалог «Поделиться».
+ *
+ * Выполняет проверки безопасности пути и существования файла в `r_cache_download/<userName>/<id>.mp4`.
+ *
+ * @param context Контекст Android для вызова системного интента.
+ * @param item Передаваемый медиаэлемент.
+ */
 fun useCaseShareGifs(context: Context, item: GifsInfo) {
     if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
         Timber.w("shareGifs -> Отклонён небезопасный путь: userName=${item.userName}, id=${item.id}")

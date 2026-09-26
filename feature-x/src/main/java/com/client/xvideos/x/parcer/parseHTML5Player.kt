@@ -23,15 +23,17 @@ private val PATTERN_STATIC_PATH = Pattern.compile("html5player\\.setStaticPath\\
 private val PATTERN_VIEW_DATA = Pattern.compile("html5player\\.setViewData\\('(.*?)'\\)")
 
 /**
- * Разбирает скрипт html5-плеера. `null` — играть нечего.
+ * Разбирает содержимое скрипта инициализации HTML5-видеоплеера страницы X в объект [HTML5PlayerConfig].
  *
- * Раньше при полном промахе отсюда уходил `HTML5PlayerConfig` со всеми полями
- * `""`: отказ выглядел как успех с пустыми данными, плеер получал пустые адреса
- * и молчал. Тот же класс дефекта, что чинили в кеше лент R.
+ * Извлекает вызовы `html5player.set*` с помощью регулярных выражений:
+ * - URL потоков: High/Low MP4, адаптивный HLS.
+ * - URL постеров и спрайтов раскадровки (с декодированием экранированных слешей `\/`).
+ * - Метаданные (название, автор, ID ролика).
  *
- * Признак «нечего играть» — ни одного источника: ни низкого качества, ни
- * высокого, ни HLS. Всё остальное (название, превью, имя автора) может
- * отсутствовать на законных основаниях и разбор не отменяет.
+ * Если ни одного источника воспроизведения не найдено, возвращает `null` (сигнал того, что воспроизведение невозможно).
+ *
+ * @param script Тело JavaScript блока `<script>` со страницы ролика.
+ * @return Распарсенная конфигурация [HTML5PlayerConfig] либо `null`.
  */
 fun parseHTML5Player(script: String): HTML5PlayerConfig? {
     val trimmed = script.trim()
@@ -85,11 +87,13 @@ fun parseHTML5Player(script: String): HTML5PlayerConfig? {
     )
 }
 
+/** Извлекает первое совпадение группы regex из текста скрипта. */
 private fun extractValue(script: String, pattern: Pattern): String? {
     val matcher = pattern.matcher(script)
     return if (matcher.find()) matcher.group(1) else null
 }
 
+/** Декодирует экранированные слэши `\/` из JS-строк и нормализует URL. */
 // X6: "https:\/\/cdn\/x.mp4" -> "https://cdn/x.mp4"; "//cdn..." -> "https://cdn..."; null -> "".
 private fun String?.unescapeUrl(): String {
     if (this == null) return ""

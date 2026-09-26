@@ -27,17 +27,26 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import timber.log.Timber
 
+/**
+ * ScreenModel экрана выдачи по конкретному тегу/категории раздела X.
+ *
+ * Выполняет асинхронную подгрузку и разбор HTML страниц тега ([loadPage]),
+ * поддерживает пагинацию и форматирование имени тега для формирования корректного URL.
+ *
+ * @property tag Исходное имя тега.
+ */
 @Stable
 class ScreenTagsViewModel @AssistedInject constructor(
     @Assisted val tag: String,
 ) : ScreenModel {
 
+    /** Фабрика assisted injection для передачи параметра [tag]. */
     @AssistedFactory
     interface Factory : ScreenModelFactory {
         fun create(tag: String): ScreenTagsViewModel
     }
 
-    // Compose-состояние: экран перерисуется, когда асинхронная загрузка завершится.
+    /** Compose-состояние экрана тега с заголовком и списком роликов. */
     var screen by mutableStateOf(ModelScreenTag("", "", emptyList()))
         private set
 
@@ -65,6 +74,9 @@ class ScreenTagsViewModel @AssistedInject constructor(
      * Нулевая страница грузится дважды: здесь, в [init], ради заголовка и числа
      * страниц, и ещё раз первой страницей пейджера. Принято сознательно —
      * убирать кэшем в сетевом слое, если понадобится.
+     *
+     * @param index Номер страницы пагинации (0, 1, 2, ...).
+     * @return Модель разобранной страницы [ModelScreenTag].
      */
     suspend fun loadPage(index: Int): ModelScreenTag {
         // Страницы адресуются /tags/<тег>/N; /tags/<тег> и /tags/<тег>/0 — одно и то же.
@@ -86,6 +98,9 @@ class ScreenTagsViewModel @AssistedInject constructor(
     }
 }
 
+/**
+ * Hilt-модуль привязки фабрики [ScreenTagsViewModel.Factory].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleTags {

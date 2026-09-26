@@ -39,6 +39,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.security.MessageDigest
 
+/** Имя файла метаданных сохраненного элемента внутри его каталога. */
 internal const val L_METADATA_FILE_NAME = "metadata.json"
 
 /**
@@ -47,11 +48,14 @@ internal const val L_METADATA_FILE_NAME = "metadata.json"
  */
 internal const val L_PART_FILE_SUFFIX = ".part"
 
+/** Проверяет, является ли файл временным недокачанным фрагментом с суффиксом `.part`. */
 internal fun File.isPartialDownload(): Boolean = name.endsWith(L_PART_FILE_SUFFIX)
+
+/** Стандартный размер буфера потокового чтения и записи (8 КБ). */
 private const val DEFAULT_BUFFER_SIZE = 8 * 1024
 
 /**
- * Создаёт настроенный [HttpClient] для скачивания media-файлов luscious.
+ * Создаёт настроенный [HttpClient] для скачивания media-файлов luscious с поддержкой DoH и таймаутов.
  */
 internal fun lCreateMediaClient(): HttpClient = HttpClient(OkHttp) {
     engine {
@@ -73,6 +77,13 @@ internal fun lCreateMediaClient(): HttpClient = HttpClient(OkHttp) {
 
 /**
  * Описание одного варианта превью, который мы уже извлекли из [PicsDetails].
+ *
+ * @property url Сетевой URL превью.
+ * @property width Ширина изображения в пикселях.
+ * @property height Высота изображения в пикселях.
+ * @property size Текстовая метка размера ("small", "medium", "large_thumbnail" и т.д.).
+ * @property sizeMarker Суффикс размера для формирования имени файла на диске.
+ * @property extension Расширение файла ("jpg", "webp", "png").
  */
 internal data class LPreviewSource(
     val url: String,
@@ -82,6 +93,7 @@ internal data class LPreviewSource(
     val sizeMarker: String,
     val extension: String
 ) {
+    /** Конвертирует источник превью в сохраняемую запись метаданных [LSavedLikePreview]. */
     fun toSavedPreview(fileName: String): LSavedLikePreview = LSavedLikePreview(
         fileName = fileName,
         sourceUrl = url,
@@ -91,6 +103,9 @@ internal data class LPreviewSource(
     )
 }
 
+/**
+ * Извлекает уникальные источники статических превью из миниатюр [PicsDetails], отсортированные по возрастанию площади.
+ */
 internal fun PicsDetails.lPreviewSources(): List<LPreviewSource> {
     return thumbnails
         ?.mapNotNull { it.toPreviewSource() }
@@ -99,6 +114,9 @@ internal fun PicsDetails.lPreviewSources(): List<LPreviewSource> {
         ?: emptyList()
 }
 
+/**
+ * Преобразует [Thumbnails] в [LPreviewSource], отфильтровывая пустые и видео-URL.
+ */
 private fun Thumbnails.toPreviewSource(): LPreviewSource? {
     val sourceUrl = url?.takeIf { it.isNotBlank() && !it.isLVideoFileUrl() } ?: return null
     return LPreviewSource(
@@ -111,6 +129,9 @@ private fun Thumbnails.toPreviewSource(): LPreviewSource? {
     )
 }
 
+/**
+ * Формирует детерминированное имя директории для сохранения элемента на основе альбома, SHA-256 URL и имени файла.
+ */
 internal fun lBuildFolderName(item: PicsDetails, mediaUrl: String): String {
     val album = item.album?.takeIf { it.isNotBlank() && it != "null" } ?: "no_album"
     val baseName = mediaUrl.lUrlFileName()
@@ -121,11 +142,13 @@ internal fun lBuildFolderName(item: PicsDetails, mediaUrl: String): String {
     return "${album.sanitizeFilePart()}_${mediaUrl.sha256().take(12)}_$baseName"
 }
 
+/** Извлекает нормализованное расширение графического файла (jpg, jpeg, png, webp, gif). */
 internal fun String.imageExtension(): String =
     lUrlExtension().lowercase()
         .takeIf { it in setOf("jpg", "jpeg", "png", "webp", "gif") }
         ?: "jpg"
 
+/** Извлекает нормализованное расширение видеофайла (mp4, webm, m4v, mov). */
 internal fun String.videoExtension(): String =
     lUrlExtension().lowercase()
         .takeIf { it in setOf("mp4", "webm", "m4v", "mov") }
@@ -134,6 +157,7 @@ internal fun String.videoExtension(): String =
 private val PREVIEW_SIZE_MARKER_REGEX = Regex("\\.(\\d+x\\d+)\\.[^.]+$")
 private val SANITIZE_FILE_PART_REGEX = Regex("[^A-Za-z0-9._-]")
 
+/** Извлекает маркер разрешения вида `300x400` из URL или генерирует его из переданных [width] и [height]. */
 private fun String.previewSizeMarker(width: Int, height: Int): String {
     return PREVIEW_SIZE_MARKER_REGEX
         .find(lUrlFileName())
@@ -142,16 +166,20 @@ private fun String.previewSizeMarker(width: Int, height: Int): String {
         ?: "${width}x${height}"
 }
 
+/** Очищает строку от спецсимволов для безопасного использования в качестве части имени файла/папки. */
 internal fun String.sanitizeFilePart(): String =
     replace(SANITIZE_FILE_PART_REGEX, "_").trim('_')
 
+/** Вычисляет SHA-256 хэш строки в hex-формате. */
 internal fun String.sha256(): String {
     val bytes = MessageDigest.getInstance("SHA-256").digest(toByteArray(Charsets.UTF_8))
     return bytes.joinToString("") { "%02x".format(it) }
 }
 
+/** Удаляет префикс схемы `file://` при наличии. */
 internal fun String.lToFilePath(): String = removePrefix("file://")
 
+/** Преобразует строку в существующий локальный [File] либо возвращает `null`, если строка является сетевым URL или файл отсутствует. */
 internal fun String.lToLocalFileOrNull(): File? {
     if (startsWith("http://", ignoreCase = true) || startsWith("https://", ignoreCase = true)) {
         return null
@@ -159,6 +187,7 @@ internal fun String.lToLocalFileOrNull(): File? {
     return File(lToFilePath()).takeIf { it.exists() && it.isFile }
 }
 
+/** Проверяет, что [file] физически находится внутри директории [root] (защита от path traversal). */
 internal fun lIsInside(root: File, file: File): Boolean = runCatching {
     val rootPath = root.canonicalFile.absolutePath
     val filePath = file.canonicalFile.absolutePath
@@ -167,6 +196,14 @@ internal fun lIsInside(root: File, file: File): Boolean = runCatching {
 
 /* ---------- Скачивание / копирование ---------- */
 
+/**
+ * Скачивает файл по [url] в [file] через временный `.part` файл с контролем размера.
+ *
+ * @param client Экземпляр [HttpClient].
+ * @param url Сетевой адрес файла.
+ * @param file Целевой локальный файл.
+ * @param onProgress Обратный вызов обновления прогресса скачивания в байтах.
+ */
 internal suspend fun lDownloadToFile(
     client: HttpClient,
     url: String,
@@ -215,6 +252,9 @@ internal suspend fun lDownloadToFile(
     }
 }
 
+/**
+ * Скачивает файл по сети с регистрацией прогресса в [progress].
+ */
 internal suspend fun lDownloadToFileTracked(
     client: HttpClient,
     url: String,
@@ -236,6 +276,9 @@ internal suspend fun lDownloadToFileTracked(
     }
 }
 
+/**
+ * Копирует локальный файл [source] в [file] с регистрацией прогресса в [progress].
+ */
 internal fun lCopyToFileTracked(
     source: File,
     file: File,
@@ -251,6 +294,9 @@ internal fun lCopyToFileTracked(
     }
 }
 
+/**
+ * Сохраняет медиаисточник (локальный файл либо сетевой URL) в файл назначения [file] с отслеживанием прогресса.
+ */
 internal suspend fun lSaveMediaSourceTracked(
     client: HttpClient,
     source: String,
@@ -267,6 +313,9 @@ internal suspend fun lSaveMediaSourceTracked(
 
 /* ---------- Album info ---------- */
 
+/**
+ * Получает детальные метаданные альбома Luscious по его [albumId], проверяя кэш бандлов перед обращением в сеть.
+ */
 internal suspend fun lFetchAlbumDetails(luscious: Luscious, albumId: Int): AlbumDetails? {
     val cachedBundle = luscious.repository.getAlbumBundleCache(
         albumId = albumId,
@@ -290,12 +339,14 @@ internal suspend fun lFetchAlbumDetails(luscious: Luscious, albumId: Int): Album
         ?.parseAlbumDetails()
 }
 
+/** Разбирает JSON бандла кэша альбома. */
 private fun String.parseAlbumBundleCache(): LAlbumBundleCache? = runCatching {
     LJson.decodeFromString<LAlbumBundleCache>(this)
 }.onFailure {
     Timber.w(it, "L album bundle cache parse failed")
 }.getOrNull()
 
+/** Разбирает GraphQL-ответ с полями `data.album.get` в [AlbumDetails]. */
 private fun String.parseAlbumDetails(): AlbumDetails? = runCatching {
     val get = LJson.parseToJsonElement(this).jsonObject["data"]
         ?.jsonObject
@@ -319,7 +370,11 @@ private fun String.parseAlbumDetails(): AlbumDetails? = runCatching {
  * Используется и в likes, и в collection — единственное отличие L_Likes/L_Collection
  * это корневая директория [root].
  *
- * @return папка сохранённого item'а.
+ * @param item Сохраняемый элемент с изображениями/видео.
+ * @param root Корневая папка (`AppPath.l_likes` или папка коллекции).
+ * @param luscious Ссылка на сервис API Luscious.
+ * @param progress Трекер совокупного прогресса скачивания.
+ * @return Результат [Result] с папкой [File] сохранённого элемента.
  */
 internal suspend fun lPersistPicsDetailsToFolder(
     item: PicsDetails,

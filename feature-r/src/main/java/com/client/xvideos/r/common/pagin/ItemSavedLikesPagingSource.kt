@@ -9,6 +9,15 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
+/**
+ * [PagingSource] для отображения сохраненных пользователем лайков гифок.
+ *
+ * Считывает элементы из [SavedRed.likes], выполняет санитизацию и клиентскую сортировку согласно [order]
+ * (по дате добавления, новизне или числу лайков).
+ *
+ * @property order Выбранный порядок сортировки.
+ * @property savedRed Фасад доступа к локальным данным лайков.
+ */
 class ItemSavedLikesPagingSource (val order : Order, val savedRed: SavedRed): PagingSource<Int, GifsInfo>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {

@@ -8,6 +8,9 @@ import kotlinx.serialization.Serializable
 
 //--- landing_page_album ---
 
+/**
+ * Промо-модель посадочной страницы альбомов (тега или поиска).
+ */
 @Serializable
 data class Landing_page_albumType(
     @SerialName("title") val title: String = "",
@@ -21,6 +24,9 @@ data class Landing_page_albumType(
     }
 }
 
+/**
+ * Секция подборки альбомов на посадочной странице.
+ */
 @Serializable
 data class Landing_page_albumSection(
     @SerialName("title") val title: String = "", //"Hentai Manga"
@@ -38,6 +44,9 @@ data class Landing_page_albumSection(
 }
 
 //--- AlbumListTopHits ---
+/**
+ * Подборка топовых альбомов по категории (Top Hits).
+ */
 @Serializable
 data class AlbumListTopHits(
     @SerialName("title")
@@ -109,6 +118,9 @@ data class AlbumList(
     }
 }
 
+/**
+ * Информация о постраничной коллекции (метаданные пагинации).
+ */
 @Serializable
 data class FacetCollectionInfo(
     @SerialName("page")
@@ -137,6 +149,9 @@ data class FacetCollectionInfo(
     }
 }
 
+/**
+ * Модель альбома в результатах поиска или ленте Luscious.
+ */
 @Serializable
 data class Album(
     @SerialName("__typename") val typeName: String = "", // "Album"
@@ -178,6 +193,9 @@ data class Album(
     }
 }
 
+/**
+ * Обложка альбома с размерами и URL.
+ */
 @Serializable
 data class Cover(
     @SerialName("width") val width: Int = 0,
@@ -194,6 +212,9 @@ data class Cover(
     }
 }
 
+/**
+ * Язык альбома.
+ */
 @Serializable
 data class Language(
     @SerialName("id")
@@ -210,6 +231,9 @@ data class Language(
     }
 }
 
+/**
+ * Автор/пользователь, создавший альбом.
+ */
 @Serializable
 data class User(
     @SerialName("id")
@@ -229,6 +253,9 @@ data class User(
     }
 }
 
+/**
+ * Тег альбома.
+ */
 @Serializable
 data class Tag(
     @SerialName("id") val id: String = "",
@@ -244,6 +271,9 @@ data class Tag(
     }
 }
 
+/**
+ * Жанр альбома.
+ */
 @Serializable
 data class Genre(
     @SerialName("id") val id: String = "",
@@ -258,6 +288,9 @@ data class Genre(
     }
 }
 
+/**
+ * Аудитория альбома.
+ */
 @Serializable
 data class Audience(
     @SerialName("id") val id: String = "",

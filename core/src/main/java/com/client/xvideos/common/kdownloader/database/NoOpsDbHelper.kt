@@ -1,5 +1,11 @@
 package com.client.xvideos.common.kdownloader.database
 
+/**
+ * Пустая реализация [DbHelper] (No-op), используемая при выключенной базе данных
+ * или в легковесных тестовых окружениях.
+ *
+ * Все операции являются холостыми и не сохраняют состояние на диск.
+ */
 class NoOpsDbHelper : DbHelper {
 
     override suspend fun find(id: Int): DownloadModel? {

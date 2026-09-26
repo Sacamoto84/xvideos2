@@ -4,44 +4,54 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Обертка ответа API RedGifs на запрос информации об одной нише (`/v2/niches/{niche}`).
+ *
+ * @property niche Детальная информация о нише [NichesInfo].
+ */
 @Immutable
 @Serializable
 data class NicheResponse(
     @SerialName("niche") val niche: NichesInfo = NichesInfo.EMPTY
 ) {
+    /** Проверяет валидность полученной ниши. */
     val isValid: Boolean get() = niche.isValid
 
     companion object {
+        /** Пустой экземпляр ответа. */
         val EMPTY = NicheResponse()
     }
 }
 
 /**
+ * Модель категории/тематического раздела (ниши) в сервисе RedGifs.
+ *
+ * Содержит счетчики гифок и подписчиков, обложку, аватарку (thumbnail) и правила модерации раздела.
+ *
+ * Пример JSON из API:
  * ```json
- * "niches": [
- *     {
- *       "cover": "https://userpic.redgifs.com/niches/covers/big-areolas.jpg",
- *       "description": "NSFW GIFs and images featuring women with large areolas.",
- *       "gifs": 29209,
- *       "id": "big-areolas",
- *       "name": "Big Areolas",
- *       "owner": "phpunit",
- *       "subscribers": 77917,
- *       "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/big-areolas.jpg",
- *       "rules": "1. Big Areolas 2. Porn featuring females with large areolas. 3. Are title and description relevant to the gif?"
- *     },
- *     {
- *       "cover": "https://userpic.redgifs.com/niches/covers/legal-teens.jpg",
- *       "description": "NSFW GIFs and images featuring 18 or 19 year old women.",
- *       "gifs": 654498,
- *       "id": "legal-teens",
- *       "name": "Legal Teens",
- *       "owner": "phpunit",
- *       "subscribers": 476841,
- *       "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/legal-teens.jpg",
- *       "rules": "1. Legal Teens 2. Porn featuring legal aged, female teens. 3. Are title and description relevant to the gif?"
- *     },
- *     ```
+ * {
+ *   "cover": "https://userpic.redgifs.com/niches/covers/big-areolas.jpg",
+ *   "description": "NSFW GIFs and images featuring women with large areolas.",
+ *   "gifs": 29209,
+ *   "id": "big-areolas",
+ *   "name": "Big Areolas",
+ *   "owner": "phpunit",
+ *   "subscribers": 77917,
+ *   "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/big-areolas.jpg",
+ *   "rules": "1. Big Areolas 2. Porn featuring females with large areolas..."
+ * }
+ * ```
+ *
+ * @property cover URL широкого фонового баннера ниши.
+ * @property description Текстовое описание тематики ниши.
+ * @property gifs Общее количество гифок в нише (-1 если неизвестно).
+ * @property id Уникальный слаг-идентификатор ниши (например, "legal-teens").
+ * @property name Человекочитаемое название ниши ("Legal Teens").
+ * @property owner Никнейм владельца/куратора ниши.
+ * @property subscribers Число подписчиков ниши.
+ * @property thumbnail URL квадратной иконки/превью (обычно 200x200).
+ * @property rules Правила публикации контента в данной нише.
  */
 @Immutable
 @Serializable
@@ -56,11 +66,17 @@ data class NichesInfo(
     @SerialName("thumbnail") val thumbnail: String = "", //200x200 картинка
     @SerialName("rules") val rules: String? = null,
 ) {
+    /** Проверяет, валиден ли идентификатор ниши (не пуст и не пробельный). */
     val isValid: Boolean get() = id.isNotBlank()
+
+    /** Проверяет, пуст ли идентификатор ниши. */
     val isEmpty: Boolean get() = id.isEmpty()
+
+    /** Проверяет, не пуст ли идентификатор ниши. */
     val isNotEmpty: Boolean get() = id.isNotEmpty()
 
     companion object {
+        /** Пустой экземпляр ниши. */
         val EMPTY = NichesInfo()
     }
 }

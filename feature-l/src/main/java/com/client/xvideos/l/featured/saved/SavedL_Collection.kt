@@ -29,26 +29,39 @@ import java.util.concurrent.ConcurrentHashMap
  * Файловая система выведена в [LCollectionFs.lReadCollections] / [lReadCollectionItems] /
  * [lFindCollectionItemFolder], сетевая часть — в [lPersistPicsDetailsToFolder].
  * Этот класс держит только public API + Compose state и оркестрирует вызовы.
+ *
+ * @param scope Область корутин для выполнения дисковых и сетевых операций.
+ * @param luscious Ссылка на сервис API Luscious.
  */
 class SavedL_Collection(
     private val scope: CoroutineScope,
     private val luscious: Luscious
 ) {
 
+    /** Список элементов картинок текущей открытой коллекции. */
     val listUrl = mutableStateListOf<PicsDetails>()
+    /** Список всех существующих локальных коллекций с метаданными. */
     val collectionList = mutableStateListOf<LCollectionEntity>()
+    /** Список групп дубликатов в текущей коллекции. */
     val duplicateGroups = mutableStateListOf<LCollectionDuplicateGroup>()
 
     private val progress = LDownloadProgress(scope)
+    /** Поток совокупного процента скачивания файлов при добавлении в коллекцию. */
     val percentDownload: StateFlow<Float> = progress.percentDownload
 
+    /** Имя текущей выбранной/открытой коллекции (null, если открыт список коллекций). */
     var currentCollectionName by mutableStateOf<String?>(null)
+    /** Текущий порядок сортировки коллекций. */
     var sortOrder by mutableStateOf(LCollectionSortOrder.RECENT)
 
     //----- Dialogs -----
+    /** Флаг видимости диалога выбора коллекции для добавления элемента(ов). */
     var visibleDialog by mutableStateOf(false)
+    /** Флаг видимости диалога создания новой коллекции. */
     var visibleDialogCreateNew by mutableStateOf(false)
+    /** Выбранный элемент медиа для добавления через диалог. */
     var collectionItemGifInfo by mutableStateOf<PicsDetails?>(null)
+    /** Список элементов, ожидающих добавления в выбранную коллекцию. */
     val collectionItemsPendingAdd = mutableStateListOf<PicsDetails>()
     //-------------------
 
@@ -60,6 +73,9 @@ class SavedL_Collection(
 
     private var refreshCollectionJob: Job? = null
 
+    /**
+     * Асинхронно сканирует директорию коллекций на IO-потоке и обновляет [collectionList].
+     */
     fun refreshCollectionList() {
         // Обход каталога коллекций (с подсчётом элементов/дублей и чтением
         // metadata.json) — на IO; обновление Compose-state — на Main, иначе ANR.
@@ -84,11 +100,21 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Применяет новый порядок сортировки коллекций и перезагружает их список.
+     *
+     * @param order Новый порядок сортировки [LCollectionSortOrder].
+     */
     fun applySortOrder(order: LCollectionSortOrder) {
         sortOrder = order
         refreshCollectionList()
     }
 
+    /**
+     * Создает новую локальную коллекцию с именем [collectionName].
+     *
+     * @param collectionName Желаемое имя коллекции.
+     */
     fun createCollection(collectionName: String) {
         Timber.i("SavedL_Collection createCollection() collectionName:$collectionName")
         val safeName = CollectionName.normalizeOrNull(collectionName)
@@ -116,6 +142,11 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Удаляет коллекцию [collectionName] и все входящие в неё файлы.
+     *
+     * @param collectionName Название удаляемой коллекции.
+     */
     fun deleteCollection(collectionName: String) {
         Timber.i("SavedL_Collection deleteCollection() collectionName:$collectionName")
         // Имя приходит из списка на экране, но список строится по содержимому
@@ -145,6 +176,12 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Переименовывает коллекцию из [oldName] в [newName].
+     *
+     * @param oldName Текущее имя коллекции.
+     * @param newName Новое имя коллекции.
+     */
     fun renameCollection(oldName: String, newName: String) {
         Timber.i("SavedL_Collection renameCollection() oldName:$oldName newName:$newName")
         val trimmedNewName = CollectionName.normalizeOrNull(newName)
@@ -220,6 +257,11 @@ class SavedL_Collection(
 
     private val collectionCache = ConcurrentHashMap<String, MutableStateFlow<List<PicsDetails>?>>()
 
+    /**
+     * Возвращает реактивный поток элементов коллекции [collectionName], кэшируемый в памяти сессии.
+     *
+     * @param collectionName Название запрашиваемой коллекции.
+     */
     fun getCollectionItems(collectionName: String): StateFlow<List<PicsDetails>?> {
         val safeName = CollectionName.normalizeOrNull(collectionName)
             ?: return MutableStateFlow(emptyList())
@@ -230,6 +272,11 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Сбрасывает кэш элементов указанной коллекции и перезагружает её с диска.
+     *
+     * @param collectionName Название обновляемой коллекции.
+     */
     fun invalidateCollection(collectionName: String) {
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: return
         collectionCache[safeName]?.let { flow ->
@@ -263,6 +310,11 @@ class SavedL_Collection(
     private var refreshDuplicatesJob: Job? = null
     private var mutationJob: Job? = null
 
+    /**
+     * Устанавливает коллекцию [collectionName] в качестве текущей открытой.
+     *
+     * @param collectionName Имя открываемой коллекции.
+     */
     fun setCollection(collectionName: String) {
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
             SnackBar.error("Недопустимое название коллекции")
@@ -276,11 +328,17 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Сбрасывает текущую выбранную коллекцию и очищает [listUrl].
+     */
     fun exitCollection() {
         currentCollectionName = null
         listUrl.clear()
     }
 
+    /**
+     * Перезагружает элементы текущей открытой коллекции [currentCollectionName].
+     */
     fun refresh() {
         val rawName = currentCollectionName ?: return
         val collectionName = CollectionName.normalizeOrNull(rawName) ?: run {
@@ -291,6 +349,11 @@ class SavedL_Collection(
         reloadCollectionItems(collectionName, flow)
     }
 
+    /**
+     * Пересчитывает группы дубликатов элементов для указанной коллекции.
+     *
+     * @param collectionName Название коллекции (по умолчанию текущая).
+     */
     fun refreshDuplicates(collectionName: String? = currentCollectionName) {
         val rawName = collectionName ?: return
         val name = CollectionName.normalizeOrNull(rawName) ?: return
@@ -305,6 +368,9 @@ class SavedL_Collection(
 
     /* ---------- Элементы ---------- */
 
+    /**
+     * Начинает процесс добавления одиночного элемента [item] в коллекцию через диалог.
+     */
     fun beginAddToCollection(item: PicsDetails) {
         collectionItemsPendingAdd.clear()
         collectionItemsPendingAdd.add(item)
@@ -312,6 +378,9 @@ class SavedL_Collection(
         visibleDialog = true
     }
 
+    /**
+     * Начинает процесс пакетного добавления элементов [items] в коллекцию через диалог.
+     */
     fun beginAddManyToCollection(items: List<PicsDetails>) {
         if (items.isEmpty()) return
         val unique = if (items.size == 1) items else items.distinctBy { lPicsDetailsIdentityKey(it) }
@@ -320,6 +389,9 @@ class SavedL_Collection(
         visibleDialog = collectionItemsPendingAdd.isNotEmpty()
     }
 
+    /**
+     * Завершает диалог добавления, сохраняя ожидающие элементы в коллекцию [collectionName].
+     */
     fun addPendingToCollection(collectionName: String) {
         val items = collectionItemsPendingAdd.toList()
             .ifEmpty { listOfNotNull(collectionItemGifInfo) }
@@ -329,10 +401,16 @@ class SavedL_Collection(
         collectionItemGifInfo = null
     }
 
+    /**
+     * Скачивает и сохраняет медиафайл [item] в указанную коллекцию [collectionName].
+     */
     fun add(item: PicsDetails, collectionName: String) {
         addAll(listOf(item), collectionName)
     }
 
+    /**
+     * Пакетно скачивает и сохраняет медиафайлы [items] в коллекцию [collectionName].
+     */
     fun addAll(items: List<PicsDetails>, collectionName: String) {
         if (items.isEmpty()) return
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
@@ -382,6 +460,9 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Удаляет медиафайл [item] из коллекции [collectionName].
+     */
     fun remove(item: PicsDetails, collectionName: String) {
         val identifiers = ArrayList<String>(4)
         item.url_to_original?.let { if (it.isNotEmpty()) identifiers.add(it) }
@@ -397,11 +478,17 @@ class SavedL_Collection(
         remove(identifiers = identifiers, collectionName = collectionName)
     }
 
+    /**
+     * Удаляет медиафайл по URL/пути [url] из коллекции [collectionName].
+     */
     fun remove(url: String, collectionName: String) {
         if (url.isBlank()) return
         remove(listOf(url), collectionName)
     }
 
+    /**
+     * Пакетно удаляет медиафайлы [items] из коллекции [collectionName].
+     */
     fun removeAll(items: List<PicsDetails>, collectionName: String) {
         if (items.isEmpty()) return
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
@@ -432,6 +519,9 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Назначает элемент [item] постоянной пользовательской обложкой для коллекции [collectionName].
+     */
     fun setManualCover(item: PicsDetails, collectionName: String? = currentCollectionName) {
         val rawName = collectionName ?: return
         val name = CollectionName.normalizeOrNull(rawName) ?: run {
@@ -464,6 +554,9 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Находит и удаляет повторяющиеся дубликаты элементов внутри коллекции [collectionName], оставляя только одну копию каждого.
+     */
     fun removeDuplicateItems(collectionName: String? = currentCollectionName) {
         val rawName = collectionName ?: return
         val name = CollectionName.normalizeOrNull(rawName) ?: run {

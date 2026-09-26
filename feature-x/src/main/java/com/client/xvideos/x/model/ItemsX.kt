@@ -4,11 +4,24 @@ import androidx.compose.runtime.Immutable
 import java.io.Serializable
 
 /**
- * Значения по умолчанию обязаны быть **у всех** полей, и это не косметика.
+ * Базовая модель карточки видеоролика в разделе X.
+ *
+ * Значения по умолчанию обязаны быть **у всех** полей для устойчивой десериализации.
  *
  * Избранное хранится файлами и читается через kotlinx.serialization.
  * `Serializable` обязателен: модель передаётся в экраны Voyager (`ScreenX_VideoPlayer`,
  * `ScreenX_LocalVideoPlayer`), которые уходят в saved state через Java-сериализацию.
+ *
+ * @property id Уникальный числовой ID видео (парсится из ссылки или атрибутов).
+ * @property title Название видеоролика (локализуется сайтом).
+ * @property duration Текстовая длительность видео (например, `"11 мин."`, `"12:34"`).
+ * @property views Текстовое количество просмотров (например, `"1.2M"`).
+ * @property channel Отображаемое название канала автора.
+ * @property previewImage Ссылка на статическую обложку/постер ролика.
+ * @property previewVideo Ссылка на короткое видео-превью (micro-MP4).
+ * @property href Относительный или абсолютный путь к странице видео.
+ * @property nameProfile Отображаемое имя профиля автора.
+ * @property linkProfile Ссылка на страницу профиля/канала.
  */
 @Immutable
 @kotlinx.serialization.Serializable

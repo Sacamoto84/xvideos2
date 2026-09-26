@@ -6,7 +6,8 @@ package com.client.xvideos.x.parcer
 private val TRAILING_INDEX_REGEX = Regex("-\\d+$")
 
 /**
- * Собирает адрес видео-превью из адреса картинки-превью. `null` — не получилось.
+ * Собирает URL видео-превью (короткого зацикленного micro-mp4) из URL статической картинки-превью.
+ * Возвращает `null`, если URL не поддается трансформации.
  *
  * Признаком неудачи раньше служила **строка** `"null"`. Проверял её один
  * вызывающий из трёх, поэтому она успевала лечь в `ItemsX.previewVideo` и
@@ -15,10 +16,13 @@ private val TRAILING_INDEX_REGEX = Regex("-\\d+$")
  * адрес из четырёх букв. Настоящий `null` такого круга не даёт — его нельзя
  * забыть проверить.
  *
- * Параметр нullable намеренно: сюда приходят поля моделей, разобранных Gson, а он
+ * Параметр nullable намеренно: сюда приходят поля моделей, разобранных Gson, а он
  * умеет положить `null` в поле с типом `String` (см. [com.client.xvideos.x.model.ItemsX]).
  * Раньше сигнатура была non-null, и такой `null` ронял приложение прямо в
  * композиции — рантайм-проверкой Kotlin на входе в функцию.
+ *
+ * @param s URL статической картинки постера.
+ * @return URL видео-превью MP4 либо `null`.
  */
 fun parserVideoPreviewFromImageUrl(s: String?): String? {
     if (s.isNullOrBlank()) return null
@@ -76,6 +80,9 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
     return sb.toString()
 }
 
+/**
+ * Обрабатывает альтернативный формат CDN для превью нового образца (`preview.mp4`).
+ */
 private fun parserNewCdnPreviewUrl(url: String, parts: List<String>): String? {
     val hostIndex = parts.indexOfFirst { it.contains("xvideos-cdn.com", ignoreCase = true) }
     if (hostIndex < 0) return null

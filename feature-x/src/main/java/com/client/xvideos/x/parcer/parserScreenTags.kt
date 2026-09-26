@@ -12,6 +12,14 @@ import org.jsoup.nodes.Element
 
 private val EMPTY_MODEL_SCREEN_TAG = ModelScreenTag(title0 = "?", title1 = "?", items = emptyList(), lastPage = 1)
 
+/**
+ * Парсит HTML-страницу категории, тега или порнозвезды в модель [ModelScreenTag].
+ *
+ * Извлекает заголовки страницы, список карточек видеороликов и номер последней доступной страницы пагинации.
+ *
+ * @param html Сырой HTML-код страницы тега.
+ * @return Модель экрана тега [ModelScreenTag].
+ */
 fun parserScreenTags(html: String): ModelScreenTag {
     if (html.isBlank()) {
         return EMPTY_MODEL_SCREEN_TAG
@@ -38,6 +46,9 @@ fun parserScreenTags(html: String): ModelScreenTag {
     return ModelScreenTag(title0 = title0, title1 = title1, items = listItems, lastPage = lastPage)
 }
 
+/**
+ * Находит и вычисляет номер последней страницы из блока пагинации `div.pagination`.
+ */
 private fun parseLastPage(document: Document): Int {
     val pagination = document.selectFirst("div.pagination") ?: return 1
     val lastPage = pagination.selectFirst("a.last-page")?.text()?.trim()?.toIntOrNull()
@@ -53,6 +64,9 @@ private fun parseLastPage(document: Document): Int {
     return maxPage
 }
 
+/**
+ * Разбирает HTML-элемент карточки видео внутри страницы тега.
+ */
 private fun parseTagItemVideo(video: Element): ItemsX? {
     return try {
         val titleElement = video.selectFirst("p.title a")

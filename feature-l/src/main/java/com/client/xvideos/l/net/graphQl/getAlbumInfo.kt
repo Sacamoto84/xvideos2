@@ -51,6 +51,12 @@ private val GET_ALBUM_INFO_QUERY = """
     }
 """.trimIndent()
 
+/**
+ * Генерирует GraphQL POST-запрос `getAlbumInfo` для получения полных метаданных альбома по его ID.
+ *
+ * @param albumId Числовой идентификатор альбома Luscious.
+ * @return JSON-строка тела запроса с полями `query` и `variables`.
+ */
 fun getAlbumInfo(albumId: Int): String {
     if (albumId <= 0) return ""
     val json = buildJsonObject {

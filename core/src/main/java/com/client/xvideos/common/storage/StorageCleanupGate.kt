@@ -14,9 +14,9 @@ import javax.inject.Singleton
  * через `App.instance` — единственная причина, по которой этот глобал вообще
  * существовал. Теперь ожидание инжектируется как обычная зависимость.
  *
- * Ждать обязательно перед первым обращением к `AppPath.p2p_inbox`,
- * `p2p_outbox` и `l_cacheDownload`: уборка их рекурсивно удаляет и создаёт
- * заново, и работа с ними параллельно с этим потеряет файлы.
+ * Ждать обязательно перед первым обращением к временным директориям кэша:
+ * уборка их рекурсивно удаляет и создаёт заново, и работа с ними параллельно
+ * с этим может привести к потере данных.
  */
 @Singleton
 class StorageCleanupGate @Inject constructor() {
@@ -27,6 +27,9 @@ class StorageCleanupGate @Inject constructor() {
     /**
      * Запускает уборку в [scope]. Повторный вызов игнорируется: уборка разовая
      * и на процесс одна.
+     *
+     * @param scope Скоуп выполнения уборки.
+     * @param block Асинхронное действие очистки.
      */
     @Synchronized
     fun start(scope: CoroutineScope, block: suspend () -> Unit) {
@@ -37,13 +40,25 @@ class StorageCleanupGate @Inject constructor() {
         }
     }
 
+    /** Истина, если процесс уборки был запущен. */
     val isStarted: Boolean get() = job != null
+
+    /** Истина, если уборка успешно или с ошибкой завершилась (или не запускалась). */
     val isCompleted: Boolean get() = job?.isCompleted ?: true
+
+    /** Истина, если уборка выполняется прямо сейчас. */
     val isActive: Boolean get() = job?.isActive ?: false
+
+    /** Истина, если уборка запущена, но ещё не успела завершиться. */
     val isPending: Boolean get() = isStarted && !isCompleted
+
+    /** Истина, если гейт находится в состоянии покоя (ещё не запускался или уже завершился). */
     val isIdle: Boolean get() = !isStarted || isCompleted
+
+    /** Проверяет активность выполнения задачи уборки (алиас для [isActive]). */
     fun isRunning(): Boolean = isActive
 
+    /** Сброс внутреннего состояния для изоляции в тестах. */
     fun resetForTesting() {
         job = null
     }

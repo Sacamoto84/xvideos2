@@ -8,6 +8,12 @@ import com.client.xvideos.r.model.GifsInfo
 import timber.log.Timber
 import java.io.File
 
+/**
+ * Читает и десериализует все заблокированные элементы [GifsInfo] для конкретного автора [userName].
+ *
+ * @param userName Имя автора.
+ * @return Список десериализованных объектов [GifsInfo].
+ */
 fun blockGetGifsInfoByUserName(userName: String): List<GifsInfo> {
     if (isUnsafeItemName(userName)) return emptyList()
 
@@ -25,6 +31,9 @@ fun blockGetGifsInfoByUserName(userName: String): List<GifsInfo> {
     return blockedGifs
 }
 
+/**
+ * Вспомогательная функция чтения и парсинга `.block` файлов из папки [blockDir] в коллекцию [out].
+ */
 internal fun readBlockedGifsFromDir(blockDir: File, out: MutableList<GifsInfo>) {
     val files = blockDir.listFiles() ?: return
     for (file in files) {

@@ -25,6 +25,21 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
+/**
+ * Локальный файловый кэш полного списка ниш RedGifs.
+ *
+ * Поскольку API RedGifs не поддерживает сортировку по названию на сервере,
+ * для полноценного поиска и клиентской фильтрации каталог ниш выгружается целиком
+ * и кэшируется в `AppPath.r_nichesCache/niches.json`.
+ *
+ * Поддерживает:
+ * - Автоматическое обновление, если кэш старше 24 часов ([refreshIfStale]);
+ * - Отслеживание прогресса загрузки страниц ([progress], 0..1f);
+ * - Реактивное уведомление UI через Compose [list] и ключ пересчета [version].
+ *
+ * @property scope Скоп корутин для выполнения фоновой загрузки.
+ * @property redApi Сетевой клиент RedGifs.
+ */
 @Stable
 class R_Saved_NichesCaches(
     val scope: CoroutineScope,
@@ -51,19 +66,30 @@ class R_Saved_NichesCaches(
     var version by mutableIntStateOf(0)
         private set
 
+    /** Флаг выполнения сетевой синхронизации кэша прямо сейчас. */
     var isDownloading by mutableStateOf(false)
 
+    /** Прогресс скачивания страниц каталога от 0.0f до 1.0f. */
     var progress by mutableFloatStateOf(0f)
 
+    /** Флаг наличия загруженных данных в кэше. */
     var isDownloaded by mutableStateOf(false)
 
+    /** Время с момента последнего обновления файла кэша (в часах). */
     var lastModifiedHour by mutableLongStateOf(-1)
+    /** Время с момента последнего обновления файла кэша (в минутах). */
     var lastModifiedMinute by mutableLongStateOf(-1)
 
     init {
         readFromDisk()
     }
 
+    /**
+     * Загружает все страницы каталога ниш из сети, атомарно сохраняет JSON в файл
+     * и обновляет список в памяти.
+     *
+     * @param showSnackBar Показывать ли снэкбар об успехе/ошибке (по умолчанию true).
+     */
     fun refresh(showSnackBar: Boolean = true) {
         if (isDownloading) return
         isDownloading = true
@@ -119,6 +145,10 @@ class R_Saved_NichesCaches(
 
     private val cacheFile = File(AppPath.r_nichesCache, CACHE_FILE_NAME)
 
+    /**
+     * Проверяет возраст файла кэша ниш на диске и запускает тихое обновление,
+     * если файл отсутствует, пуст или старше [maxAgeHours] часов.
+     */
     fun refreshIfStale(maxAgeHours: Long = AUTO_REFRESH_MAX_AGE_HOURS) {
         if (isDownloading) return
         timeRefresh()
@@ -132,6 +162,9 @@ class R_Saved_NichesCaches(
         refresh(showSnackBar = false)
     }
 
+    /**
+     * Считывает ранее сохраненный кэш ниш с диска.
+     */
     fun readFromDisk() {
         scope.launch(Dispatchers.IO) {
             if (!cacheFile.exists() || cacheFile.length() == 0L) {
@@ -157,6 +190,7 @@ class R_Saved_NichesCaches(
         }
     }
 
+    /** Пересчитывает прошедшее время с момента последнего сохранения файла кэша. */
     private fun timeRefresh() {
         if (!cacheFile.exists()) {
             lastModifiedHour = -1

@@ -20,22 +20,41 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Менеджер пользовательских пресетов фильтрации каталога альбомов Luscious.
+ *
+ * Обеспечивает сохранение, удаление, реактивное наблюдение и персистентность
+ * пресетов [SavedAlbumFilter] в [SharedPreferences] в формате JSON.
+ */
 object AlbumFilterPresetManager {
     private const val PREFS_NAME = "l_album_filter_presets"
     private const val KEY_PRESETS = "presets_json"
 
     private val _presets = MutableStateFlow<List<SavedAlbumFilter>>(emptyList())
+    /** Реактивный поток списка всех сохраненных пресетов фильтра. */
     val presets: StateFlow<List<SavedAlbumFilter>> = _presets.asStateFlow()
 
+    /** Количество сохраненных пресетов. */
     val count: Int get() = _presets.value.size
+    /** Флаг отсутствия сохраненных пресетов. */
     val isEmpty: Boolean get() = _presets.value.isEmpty()
+    /** Флаг наличия хотя бы одного сохраненного пресета. */
     val isNotEmpty: Boolean get() = _presets.value.isNotEmpty()
 
+    /**
+     * Находит пресет по его уникальному ID.
+     */
     fun getPresetById(id: String): SavedAlbumFilter? = _presets.value.find { it.id == id }
 
+    /**
+     * Находит пресет по названию (без учета регистра).
+     */
     fun getPresetByName(name: String): SavedAlbumFilter? =
         _presets.value.find { it.name.equals(name.trim(), ignoreCase = true) }
 
+    /**
+     * Проверяет наличие пресета с указанным названием.
+     */
     fun hasPreset(name: String): Boolean =
         _presets.value.any { it.name.equals(name.trim(), ignoreCase = true) }
 
@@ -43,6 +62,12 @@ object AlbumFilterPresetManager {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val persistMutex = Mutex()
 
+    /**
+     * Инициализирует менеджер, загружая сохраненные пресеты из [SharedPreferences].
+     * Безопасен к многократным вызовам (выполняется ровно один раз).
+     *
+     * @param context Контекст Android приложения.
+     */
     fun init(context: Context) {
         if (!isInitialized.compareAndSet(false, true)) return
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -62,6 +87,13 @@ object AlbumFilterPresetManager {
         }
     }
 
+    /**
+     * Сохраняет новый или обновляет существующий пресет фильтрации.
+     *
+     * @param context Контекст Android приложения.
+     * @param name Название пресета (если пустое, генерируется автоматически).
+     * @param filter Сохраняемая конфигурация [AlbumListFilter].
+     */
     fun savePreset(context: Context, name: String, filter: AlbumListFilter) {
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val cleanName = name.trim().ifBlank { generateDefaultName(filter) }
@@ -76,6 +108,12 @@ object AlbumFilterPresetManager {
         }
     }
 
+    /**
+     * Удаляет пресет фильтрации по его уникальному идентификатору [id].
+     *
+     * @param context Контекст Android приложения.
+     * @param id Идентификатор удаляемого пресета.
+     */
     fun deletePreset(context: Context, id: String) {
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val snapshot = _presets.updateAndGet { current ->
@@ -88,6 +126,9 @@ object AlbumFilterPresetManager {
         }
     }
 
+    /**
+     * Сбрасывает состояние менеджера в заданный список [initial] для изолированного тестирования.
+     */
     @androidx.annotation.VisibleForTesting
     fun resetForTesting(initial: List<SavedAlbumFilter> = emptyList()) {
         _presets.value = initial
@@ -117,6 +158,12 @@ object AlbumFilterPresetManager {
         PictureCountRank.C3200_12800 -> "3200..12800"
     }
 
+    /**
+     * Генерирует читаемое имя пресета по умолчанию на основе активных параметров фильтра.
+     *
+     * @param filter Объект фильтра [AlbumListFilter].
+     * @return Сгенерированная строка названия.
+     */
     fun generateDefaultName(filter: AlbumListFilter): String {
         val parts = ArrayList<String>(6)
         if (filter.searchQuery.isNotBlank()) {
@@ -140,6 +187,12 @@ object AlbumFilterPresetManager {
         return if (parts.isEmpty()) "Preset ${_presets.value.size + 1}" else parts.joinToString(DEFAULT_NAME_SEPARATOR)
     }
 
+    /**
+     * Форматирует краткое текстовое резюме всех условий фильтра для показа в подсказках UI.
+     *
+     * @param filter Объект фильтра [AlbumListFilter].
+     * @return Строка со списком активных условий через разделитель ` | `.
+     */
     fun formatFilterSummary(filter: AlbumListFilter): String {
         val items = ArrayList<String>(8)
         items.add("Type: ${filter.album_type.name}")

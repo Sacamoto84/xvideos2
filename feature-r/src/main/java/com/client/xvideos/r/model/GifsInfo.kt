@@ -5,11 +5,31 @@ import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 /**
- * `Serializable` обязателен: модель лежит в `ScreenRedFullScreen`, а экраны
+ * Основная доменная модель элемента медиа (GIF или изображения) в разделе RedGifs.
+ *
+ * Инкапсулирует метаданные ролика: идентификатор, ссылки на стриминг и постеры,
+ * дату создания, информацию об авторе, счетчики лайков и просмотров.
+ *
+ * `Serializable` обязателен: модель лежит в аргументах `ScreenRedFullScreen`, а экраны
  * Voyager (`Screen : Serializable`) целиком уходят в saved state активити через
  * `Parcel.writeSerializable`. Без этого приложение падает с
  * `NotSerializableException`, когда система сохраняет состояние.
- * Тот же приём уже применён к `P2pSendSource`.
+ *
+ * @property id Уникальный текстовый идентификатор медиафайла (например, "drablonelychameleon").
+ * @property createDate Время создания в формате unix timestamp (секунды/миллисекунды).
+ * @property contentType Категория контента (по умолчанию "Solo Female").
+ * @property likes Количество лайков на сервере.
+ * @property width Ширина видео/изображения в пикселях.
+ * @property height Высота видео/изображения в пикселях.
+ * @property tags Список тегов медиа.
+ * @property description Текстовое описание от автора.
+ * @property views Количество просмотров (может быть null).
+ * @property type Тип контента: 0/1 — GIF/Video, 2 — статическое изображение.
+ * @property userName Имя автора/создателя контента.
+ * @property urls Набор ссылок на медиафайлы различных разрешений и постеры.
+ * @property duration Длительность видео в секундах (с плавающей точкой).
+ * @property hls Флаг доступности HLS-потока.
+ * @property niches Список слагов ниш, к которым относится данный ролик.
  */
 @Stable
 @kotlinx.serialization.Serializable
@@ -30,23 +50,54 @@ data class GifsInfo(
     @SerialName("hls") val hls: Boolean? = null,
     @SerialName("niches") val niches: List<String>? = null,
 ) : Serializable {
+
+    /** Проверяет, валиден ли объект (id не пуст и не состоит из одних пробелов). */
     val isValid: Boolean get() = id.isNotBlank()
+
+    /** Проверяет, является ли объект статическим изображением (type == 2). */
     val isImage: Boolean get() = type == 2
+
+    /** Проверяет, является ли объект анимацией/видео (type == 0 или 1). */
     val isGif: Boolean get() = type == 1 || type == 0
+
+    /** Проверяет наличие непустого списка тегов. */
     val hasTags: Boolean get() = tags.isNotEmpty()
+
+    /** Проверяет наличие привязанных ниш. */
     val hasNiches: Boolean get() = !niches.isNullOrEmpty()
+
+    /** Проверяет наличие осмысленного описания (не дефолтного "Описание"). */
     val hasDescription: Boolean get() = description.isNotBlank() && description != "Описание"
+
+    /** Проверяет, задана ли валидная положительная длительность. */
     val hasDuration: Boolean get() = duration != null && duration > 0.0
+
+    /** Проверяет наличие положительного числа просмотров. */
     val hasViews: Boolean get() = views != null && views > 0L
+
+    /** Проверяет наличие хотя бы одного лайка. */
     val hasLikes: Boolean get() = likes > 0
+
+    /** Проверяет, валиден ли вложенный объект ссылок [urls]. */
     val hasUrls: Boolean get() = urls.isValid
+
+    /** Проверяет, указано ли непустое имя автора (отличное от дефолтного "userName"). */
     val hasUserName: Boolean get() = userName.isNotBlank() && userName != "userName"
 
     companion object {
+        /** Пустой экземпляр [GifsInfo] со значениями по умолчанию. */
         val EMPTY = GifsInfo()
     }
 }
 
+/**
+ * Очищает и нормализует объект [GifsInfo]:
+ * - Возвращает null, если [GifsInfo.id] пуст или null;
+ * - Заменяет потенциальные null-поля на безопасные значения по умолчанию;
+ * - Фильтрует пустые теги в списке;
+ * - Нормализует вложенный [URL1] через [URL1.sanitize];
+ * - Избегает лишнего копирования, если объект уже чист.
+ */
 fun GifsInfo.sanitizeOrNull(): GifsInfo? {
     val safeId: String? = id
     if (safeId.isNullOrBlank()) return null
@@ -75,6 +126,10 @@ fun GifsInfo.sanitizeOrNull(): GifsInfo? {
     )
 }
 
+/**
+ * Очищает список тегов от null и пустых строк.
+ * Если все теги валидны, возвращает исходный список без дополнительных аллокаций.
+ */
 private fun sanitizeTagsList(safeTags: List<String>?): List<String> {
     if (safeTags.isNullOrEmpty()) return emptyList()
     var hasInvalid = false
@@ -96,6 +151,12 @@ private fun sanitizeTagsList(safeTags: List<String>?): List<String> {
     return if (out.isEmpty()) emptyList() else out
 }
 
+/**
+ * Очищает и дедуплицирует список элементов [GifsInfo]:
+ * - Пропускает невалидные элементы ([sanitizeOrNull]);
+ * - Исключает дубликаты по [GifsInfo.id] с сохранением порядка первого вхождения;
+ * - Безопасен для null-коллекций (возвращает emptyList()).
+ */
 fun List<GifsInfo>?.sanitizeGifsInfoList(): List<GifsInfo> {
     if (this.isNullOrEmpty()) return emptyList()
     if (this.size == 1) {

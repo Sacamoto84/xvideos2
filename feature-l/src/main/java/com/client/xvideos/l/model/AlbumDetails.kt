@@ -5,10 +5,37 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Поддерживает разбор через kotlinx.serialization.
+ * Подробная модель альбома Luscious, получаемая по запросу `getAlbumInfo`.
  *
+ * Поддерживает разбор через kotlinx.serialization.
  * coerceInputValues в kotlinx.serialization безопасно подставляет дефолты
  * при приходе null.
+ *
+ * @property created Время создания альбома (Unix timestamp double).
+ * @property modified Время последнего изменения альбома.
+ * @property id Уникальный числовой ID альбома в виде строки.
+ * @property title Название альбома.
+ * @property tags Список тегов альбома.
+ * @property is_manga Признак того, что альбом является мангой/комиксом.
+ * @property content Категория контента альбома.
+ * @property genres Список жанров альбома.
+ * @property cover Обложка альбома [Cover].
+ * @property description Текстовое описание альбома.
+ * @property audiences Список целевых аудиторий альбома.
+ * @property number_of_pictures Общее количество картинок в альбоме.
+ * @property number_of_animated_pictures Число анимированных изображений (GIF/видео).
+ * @property url Относительный URL страницы альбома.
+ * @property download_url Относительный URL скачивания ZIP-архива альбома.
+ * @property slug Человекочитаемый URL-слаг альбома.
+ * @property likeStatus Текущий статус лайка пользователя (`like`, `none`).
+ * @property moderationStatus Статус модерации альбома.
+ * @property numberOfFavorites Число добавлений в избранное на сервере.
+ * @property numberOfDislikes Число дислайков.
+ * @property numberOfDuplicates Количество дубликатов.
+ * @property labels Метки альбома (например, `"hot"`).
+ * @property permissions Разрешения пользователя для альбома.
+ * @property language Язык контента альбома.
+ * @property createdBy Автор, создавший альбом.
  */
 @Immutable
 @Serializable
@@ -59,6 +86,9 @@ data class AlbumDetails(
     }
 }
 
+/**
+ * Категория контента альбома.
+ */
 @Immutable
 @Serializable
 data class Content(

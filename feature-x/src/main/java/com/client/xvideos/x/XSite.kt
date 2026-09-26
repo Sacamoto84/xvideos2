@@ -15,6 +15,9 @@ const val urlStart = "https://www.xv-ru.com"
  * - Нормализует протокольно-относительные ссылки (например, `"//cdn.xv-ru.com/video.mp4"` -> `"https://cdn.xv-ru.com/video.mp4"`).
  * - Сохраняет уже абсолютные протокольные ссылки (`http://`, `https://`).
  * - Возвращает пустую строку для пустых/пробельных ссылок.
+ *
+ * @param href Исходный URL или относительный путь.
+ * @return Абсолютный канонический URL.
  */
 fun normalizeXUrl(href: String): String {
     val trimmed = href.trim()
@@ -24,8 +27,17 @@ fun normalizeXUrl(href: String): String {
     return "$urlStart/${trimmed.removePrefix("/")}"
 }
 
+/**
+ * Расширение для строки: приводит относительный или абсолютный URL к нормализованному виду раздела X.
+ */
 fun String.toNormalizedXUrl(): String = normalizeXUrl(this)
 
+/**
+ * Проверяет, является ли переданная строка валидным URL для ресурсов раздела X.
+ *
+ * @param href Проверяемый URL.
+ * @return `true`, если строка не пуста и имеет корректный префикс схемы или пути.
+ */
 fun isValidXUrl(href: String): Boolean =
     href.isNotBlank() && (href.startsWith("http://") || href.startsWith("https://") || href.startsWith("/") || href.startsWith("//"))
 
@@ -42,6 +54,9 @@ private val SECONDS_REGEX = Regex("""(\d+)\s*(?:sec|сек|s)""")
  * - Числовой формат: `/video12345/title` -> `12345L`
  * - Точечный формат с числом: `/video.12345/title` -> `12345L`
  * - Современный формат с токеном: `/video.uicfdab07bd/_` -> стабильный детерминированный положительный Long ID
+ *
+ * @param href URL страницы с видео.
+ * @return Уникальный [Long] идентификатор видео либо `null`, если идентификатор не найден.
  */
 fun extractXVideoId(href: String): Long? {
     if (href.isBlank() || !href.contains("/video")) return null
@@ -59,15 +74,24 @@ fun extractXVideoId(href: String): Long? {
     return null
 }
 
+/**
+ * Проверяет, указывает ли данный URL на страницу видео раздела X.
+ */
 fun isXVideoUrl(href: String): Boolean = extractXVideoId(href) != null
 
+/**
+ * Извлекает числовой идентификатор видео из URL либо возвращает значение по умолчанию.
+ *
+ * @param href URL страницы видео.
+ * @param default Значение по умолчанию (по умолчанию 0L).
+ * @return Извлеченный идентификатор или [default].
+ */
 fun extractXVideoIdOrDefault(href: String?, default: Long = 0L): Long =
     if (!href.isNullOrBlank()) extractXVideoId(href) ?: default else default
 
-
 /**
- * Разбирает текстовую длительность видео (например, "10 мин.", "15 min", "1 hr 12 min", "12:34")
- * в миллисекунды. При невозможности разбора возвращает 0L.
+ * Разбирает строку длительности в формате с двоеточиями (`MM:SS` или `HH:MM:SS`) в миллисекунды.
+ * При невозможности разбора возвращает 0L.
  */
 private fun parseColonDuration(text: String): Long {
     val firstColon = text.indexOf(':')
@@ -94,6 +118,17 @@ private fun parseColonDuration(text: String): Long {
     return 0L
 }
 
+/**
+ * Разбирает произвольную текстовую длительность видео (например, `"10 мин."`, `"15 min"`, `"1 hr 12 min"`, `"12:34"`)
+ * в миллисекунды.
+ *
+ * Поддерживает форматирование с двоеточиями, текстовые обозначения на русском и английском,
+ * а также чистые числовые значения (трактуемые как минуты при <= 180 либо секунды).
+ * При невозможности разбора возвращает 0L.
+ *
+ * @param raw Исходный текст длительности.
+ * @return Длительность ролика в миллисекундах.
+ */
 fun parseDurationToMs(raw: String): Long {
     if (raw.isBlank()) return 0L
     val text = raw.trim().lowercase()
@@ -133,4 +168,3 @@ fun parseDurationToMs(raw: String): Long {
 
     return totalMs
 }
-

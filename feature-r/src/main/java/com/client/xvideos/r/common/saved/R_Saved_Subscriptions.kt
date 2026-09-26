@@ -17,10 +17,27 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-
+/**
+ * Элемент состояния выбранного автора в фильтре ленты подписок.
+ *
+ * @property name Никнейм автора.
+ * @property select Флаг включения контента автора в общую ленту подписок.
+ * @property urlProfile URL аватара автора для круглого бейджа в UI.
+ */
 @Stable
 data class SelectedCreator(val name: String, var select: Boolean, val urlProfile : String?)
 
+/**
+ * Менеджер подписок на авторов RedGifs.
+ *
+ * Позволяет:
+ * - Подписываться / отписываться от авторов с сохранением в `AppPath.r_subscriptions`;
+ * - Выбирать авторов для фильтрации контента в ленте подписок ([selectedListCreator]);
+ * - Агрегировать свежие работы всех выбранных авторов ([refreshSubscription]).
+ *
+ * @property scope Скоп для корутин.
+ * @property redApi Сетевой клиент RedGifs.
+ */
 class R_Saved_Subscriptions(
     val scope: CoroutineScope,
     val redApi: RedApi,
@@ -29,10 +46,13 @@ class R_Saved_Subscriptions(
     private val creatorDb = FileDB(AppPath.r_subscriptions, "subscriptions", UserInfo.serializer())
 
     /**
-     * Список авторов на которых подписаны
+     * Список авторов, на которых оформлена подписка.
      */
     val listCreators = creatorDb.list
 
+    /**
+     * Интерактивный список авторов с чекбоксами выбора для ленты подписок.
+     */
     val selectedListCreator = mutableStateListOf<SelectedCreator>()
 
 
@@ -40,6 +60,10 @@ class R_Saved_Subscriptions(
         refresh()
     }
 
+    /**
+     * Синхронизирует [selectedListCreator] со списком сохраненных авторов [listCreators]:
+     * добавляет новых и удаляет отписанных.
+     */
     private fun syncSelectedList() {
         val currentNames = HashSet<String>(selectedListCreator.size)
         for (sc in selectedListCreator) {
@@ -57,6 +81,9 @@ class R_Saved_Subscriptions(
         selectedListCreator.removeAll { it.name !in creatorsSet }
     }
 
+    /**
+     * Оформляет подписку на автора [item] и сохраняет в БД.
+     */
     fun add(item: UserInfo) {
         if (item.username.isBlank()) return
         Timber.i("R_Saved_Subscriptions add() id:$item")
@@ -79,6 +106,9 @@ class R_Saved_Subscriptions(
         }
     }
 
+    /**
+     * Отменяет подписку на автора по никнейму [username].
+     */
     fun remove(username: String) {
         if (username.isBlank()) return
         Timber.i("R_Saved_Subscriptions remove() id:$username")
@@ -98,6 +128,9 @@ class R_Saved_Subscriptions(
         }
     }
 
+    /**
+     * Перечитывает список подписок с диска и синхронизирует состояние UI.
+     */
     fun refresh() {
         scope.launch(Dispatchers.IO) {
             creatorDb.refresh()
@@ -107,12 +140,16 @@ class R_Saved_Subscriptions(
         }
     }
 
-
+    /** Загружает последние 50 гифок автора по его никнейму. */
     private suspend fun read50LastItem(name: String): List<GifsInfo> {
         return redApi.searchCreator(userName = name, count = 50, type = MediaType.ALL).getOrThrow().gifs.sanitizeGifsInfoList()
     }
 
-
+    /**
+     * Загружает и объединяет последние гифки от всех авторов, у которых стоит флаг [SelectedCreator.select].
+     *
+     * @return Дедуплицированный объединенный список гифок.
+     */
     suspend fun refreshSubscription() : List<GifsInfo> {
         val selectedNames = withContext(Dispatchers.Main) {
             syncSelectedList()
@@ -146,6 +183,5 @@ class R_Saved_Subscriptions(
         }
         return res
     }
-
 
 }

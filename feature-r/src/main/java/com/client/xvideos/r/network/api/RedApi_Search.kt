@@ -7,15 +7,28 @@ import com.client.xvideos.r.model.search.SearchCreatorsResponse
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
+/** Пустой ответ создателей для возврата при пустом поисковом запросе. */
 private val EMPTY_CREATORS_RESPONSE = SearchCreatorsResponse()
+/** Пустой медиа-ответ для возврата при пустом поисковом запросе. */
 private val EMPTY_MEDIA_RESPONSE = MediaResponse()
+/** Шаблон пути для полнотекстового поиска гифок. */
 private const val SEARCH_GIFS_PATH = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}"
+/** Шаблон пути для полнотекстового поиска только среди верифицированных авторов. */
 private const val SEARCH_GIFS_VERIFIED_PATH = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes"
 
+/**
+ * Подраздел API RedGifs для поиска авторов и медиаконтента.
+ *
+ * @property api HTTP-клиент модуля.
+ */
 class RedApi_Search(val api: ApiClient) {
 
-    //https://api.redgifs.com/v2/creators/suggest?query=Ana
-    //Возвращает 5 элементов
+    /**
+     * Быстрый поиск / автодополнение авторов по частичному вводу никнейма.
+     * Эндпоинт: `/v2/creators/suggest?query=...` (возвращает до 5 элементов).
+     *
+     * @param text Строка поиска (если пустая — сразу возвращается пустой результат без сети).
+     */
     suspend fun searchCreatorsShort(text: String): Result<SearchCreatorsResponse> {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) {
@@ -26,24 +39,20 @@ class RedApi_Search(val api: ApiClient) {
         return api.request<SearchCreatorsResponse>(route)
     }
 
-
     /**
-     * ## Поиск GIF-ов по тексту.
-     * https://api.redgifs.com/v2/gifs/search?query=anal&page=2&count=40&order=top
+     * Полнотекстовый поиск гифок по ключевой фразе или тегу.
      *
-     * top, trending, latest
+     * Эндпоинт: `/v2/gifs/search?query=...`
+     * Поддерживает сортировку (top, trending, latest), пагинацию и фильтр по верифицированным создателям.
      *
-     * Адрес `/v2/gifs/search`, строка поиска — в параметре **`query`**.
+     * Внимание: параметр поиска на стороне RedGifs называется именно `query`. Если передать неверное имя параметра,
+     * сервер вернет HTTP 200, но отдаст общую дефолтную ленту без фильтрации.
      *
-     * Раньше здесь стоял `/v2/search/gifs?query=...`, и он работал примерно до
-     * июля 2026. Потом RedGifs перенёс поиск на общий адрес лент, а старую
-     * ветку убрал — тот же запрос стал отвечать 404.
-     *
-     * Ловушка: если написать `search_text` вместо `query`, ответ будет 200, но
-     * это будет **лента без всякой фильтрации** — те же 99 элементов и 100
-     * страниц, что и без поиска. Проверять поиск надо заведомо бессмысленным
-     * словом: правильный запрос отдаёт 0 элементов, игнорируемый — полную
-     * ленту.
+     * @param searchText Поисковая фраза.
+     * @param order Порядок сортировки результатов (по умолчанию [Order.TOP]).
+     * @param count Размер страницы.
+     * @param page Номер страницы (1-based).
+     * @param verified Если true — искать только среди проверенных (verified) авторов.
      */
     suspend fun searchGifs(
         searchText: String,             // строка поиска.

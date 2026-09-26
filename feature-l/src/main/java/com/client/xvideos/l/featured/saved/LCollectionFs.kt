@@ -10,19 +10,40 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.io.File
 
+/** Имя файла конфигурации коллекции внутри её директории. */
 private const val L_COLLECTION_CONFIG_FILE_NAME = "collection.json"
 
+/**
+ * Варианты сортировки локальных пользовательских коллекций Luscious.
+ *
+ * @property title Человекочитаемое отображаемое название порядка сортировки.
+ */
 enum class LCollectionSortOrder(val title: String) {
+    /** Сортировка по времени последней модификации (сначала новые). */
     RECENT("Сначала новые"),
+    /** Алфавитная сортировка по имени коллекции. */
     NAME("По названию"),
+    /** Сортировка по количеству элементов в коллекции (по убыванию). */
     SIZE("Больше элементов"),
 }
 
+/**
+ * Группа обнаруженных дубликатов картинок/медиа внутри одной коллекции.
+ *
+ * @property key Идентификационный ключ дубликата (на основе URL или атрибутов медиа).
+ * @property items Список повторяющихся элементов [PicsDetails].
+ */
 data class LCollectionDuplicateGroup(
     val key: String,
     val items: List<PicsDetails>
 )
 
+/**
+ * Служебная конфигурация отдельной коллекции Luscious.
+ *
+ * @property schemaVersion Версия схемы конфигурации.
+ * @property coverFolderName Относительное имя подпапки элемента, выбранного в качестве обложки.
+ */
 @Serializable
 internal data class LCollectionConfig(
     val schemaVersion: Int = 1,
@@ -30,7 +51,14 @@ internal data class LCollectionConfig(
 )
 
 /**
- * Список коллекций L: имя, превью (если найдено) и количество элементов.
+ * Модель сущности коллекции Luscious: имя, превью, количество элементов и метаданные.
+ *
+ * @property collection Название коллекции (имя директории).
+ * @property previewUrl Локальный путь к изображению-обложке коллекции (или null, если отсутствует).
+ * @property itemsCount Количество валидных элементов (папок с `metadata.json`).
+ * @property lastModifiedAt Метка времени последнего изменения коллекции или её элементов.
+ * @property duplicateCount Число найденных дублирующихся элементов.
+ * @property hasManualCover Флаг того, что обложка была установлена пользователем вручную.
  */
 data class LCollectionEntity(
     val collection: String,
@@ -45,6 +73,10 @@ data class LCollectionEntity(
  * Читает список коллекций из корня [collectionsRoot]. Каждая коллекция — это
  * директория первого уровня. Превью берётся из метаданных первого подходящего
  * элемента, размер — это число элементов с валидным `metadata.json`.
+ *
+ * @param collectionsRoot Корневая папка с коллекциями (`AppPath.l_collection`).
+ * @param sortOrder Желаемый порядок сортировки [LCollectionSortOrder].
+ * @return Отсортированный список сущностей [LCollectionEntity].
  */
 internal fun lReadCollections(
     collectionsRoot: File,
@@ -79,6 +111,9 @@ internal fun lReadCollections(
 /**
  * Читает все элементы одной коллекции в виде [PicsDetails], отсортированных по
  * убыванию даты сохранения.
+ *
+ * @param collectionFolder Директория целевой коллекции.
+ * @return Список моделей [PicsDetails], восстановленных из локальных файлов метаданных.
  */
 internal fun lReadCollectionItems(collectionFolder: File): List<PicsDetails> {
     return lReadStoredCollectionItems(collectionFolder)
@@ -86,6 +121,12 @@ internal fun lReadCollectionItems(collectionFolder: File): List<PicsDetails> {
         .mapNotNull { (metadata, folder) -> metadata.toPicsDetails(folder) }
 }
 
+/**
+ * Читает пары (метаданные, директория) для всех сохраненных элементов коллекции.
+ *
+ * @param collectionFolder Папка коллекции.
+ * @return Список пар [LSavedLikeMetadata] и [File] подпапки элемента.
+ */
 internal fun lReadStoredCollectionItems(collectionFolder: File): List<Pair<LSavedLikeMetadata, File>> {
     collectionFolder.mkdirs()
     return collectionFolder.listFiles()
@@ -100,6 +141,9 @@ internal fun lReadStoredCollectionItems(collectionFolder: File): List<Pair<LSave
 /**
  * Находит локальный путь к превью первой коллекции. Возвращает локальный путь
  * (не URL), либо `null`, если ни в одном элементе нет валидного изображения.
+ *
+ * @param collectionFolder Папка коллекции.
+ * @return Абсолютный путь к файлу изображения превью или `null`.
  */
 private fun lResolveCollectionPreviewUrl(collectionFolder: File): String? {
     val config = lReadCollectionConfig(collectionFolder)
@@ -142,6 +186,13 @@ private fun lResolveCollectionPreviewUrl(collectionFolder: File): String? {
     return null
 }
 
+/**
+ * Определяет локальный файл наилучшего доступного превью для сохраненного элемента.
+ *
+ * @param folder Папка элемента.
+ * @param metadata Метаданные сохраненного элемента.
+ * @return Абсолютный путь к файлу превью или медиафайлу, если превью не найдено.
+ */
 private fun lResolveItemPreviewUrl(folder: File, metadata: LSavedLikeMetadata): String? {
     metadata.previewFiles
         ?.sortedByDescending { it.width * it.height }
@@ -167,12 +218,18 @@ private fun lResolveItemPreviewUrl(folder: File, metadata: LSavedLikeMetadata): 
     return null
 }
 
+/**
+ * Подсчитывает число валидных элементов в коллекции (папок, содержащих непустой `metadata.json`).
+ */
 private fun lResolveCollectionItemsCount(collectionFolder: File): Int {
     return collectionFolder.listFiles()
         ?.count { it.isDirectory && File(it, L_METADATA_FILE_NAME).let { meta -> meta.exists() && meta.length() > 0L } }
         ?: 0
 }
 
+/**
+ * Вычисляет время последнего изменения коллекции как максимум среди дат папок элементов.
+ */
 private fun lResolveCollectionLastModified(collectionFolder: File): Long {
     val newestItem = collectionFolder.listFiles()
         ?.filter { it.isDirectory }
@@ -180,6 +237,10 @@ private fun lResolveCollectionLastModified(collectionFolder: File): Long {
     return newestItem ?: collectionFolder.lastModified()
 }
 
+/**
+ * Считывает конфигурационный файл `collection.json` из папки коллекции [collectionFolder].
+ * При отсутствии файла или ошибке разбора возвращает конфигурацию по умолчанию [LCollectionConfig].
+ */
 internal fun lReadCollectionConfig(collectionFolder: File): LCollectionConfig {
     val file = File(collectionFolder, L_COLLECTION_CONFIG_FILE_NAME)
     if (!file.exists()) return LCollectionConfig()
@@ -188,12 +249,18 @@ internal fun lReadCollectionConfig(collectionFolder: File): LCollectionConfig {
     }.getOrDefault(LCollectionConfig())
 }
 
+/**
+ * Атомарно записывает конфигурационный файл `collection.json` в папку коллекции [collectionFolder].
+ */
 internal fun lWriteCollectionConfig(collectionFolder: File, config: LCollectionConfig) {
     collectionFolder.mkdirs()
     File(collectionFolder, L_COLLECTION_CONFIG_FILE_NAME)
         .writeTextAtomically(AppJson.encodeToString(config))
 }
 
+/**
+ * Извлекает список всех возможных сетевых идентификаторов (URL оригиналов, видео, превью) из [PicsDetails].
+ */
 internal fun lCollectionItemIdentifiers(item: PicsDetails): List<String> {
     return listOfNotNull(
         item.url_to_original,
@@ -202,6 +269,10 @@ internal fun lCollectionItemIdentifiers(item: PicsDetails): List<String> {
     ) + (item.thumbnails?.mapNotNull { it.url } ?: emptyList())
 }
 
+/**
+ * Формирует уникальный ключ идентичности элемента [PicsDetails] на основе URL без параметров
+ * либо комбинации характеристик (альбом, размеры, анимация).
+ */
 internal fun lPicsDetailsIdentityKey(item: PicsDetails): String {
     return lCollectionItemIdentifiers(item)
         .firstOrNull { it.isNotBlank() }
@@ -210,6 +281,9 @@ internal fun lPicsDetailsIdentityKey(item: PicsDetails): String {
         ?: "${item.album.orEmpty()}-${item.width}-${item.height}-${item.is_animated}"
 }
 
+/**
+ * Формирует уникальный ключ идентичности сохраненного элемента на основе метаданных [LSavedLikeMetadata].
+ */
 internal fun lMetadataIdentityKey(metadata: LSavedLikeMetadata): String {
     return listOfNotNull(
         metadata.sourceOriginalUrl,
@@ -224,6 +298,9 @@ internal fun lMetadataIdentityKey(metadata: LSavedLikeMetadata): String {
         ?: "${metadata.albumId.orEmpty()}-${metadata.picture.width}-${metadata.picture.height}-${metadata.picture.is_animated}"
 }
 
+/**
+ * Находит и группирует повторяющиеся элементы в коллекции в список [LCollectionDuplicateGroup].
+ */
 internal fun lReadCollectionDuplicateGroups(collectionFolder: File): List<LCollectionDuplicateGroup> {
     return lReadStoredCollectionItems(collectionFolder)
         .groupBy { (metadata, _) -> lMetadataIdentityKey(metadata) }
@@ -237,6 +314,9 @@ internal fun lReadCollectionDuplicateGroups(collectionFolder: File): List<LColle
         .sortedByDescending { it.items.size }
 }
 
+/**
+ * Находит группы папок дубликатов в коллекции для последующей очистки.
+ */
 internal fun lFindCollectionDuplicateFolders(collectionFolder: File): List<List<Pair<LSavedLikeMetadata, File>>> {
     return lReadStoredCollectionItems(collectionFolder)
         .groupBy { (metadata, _) -> lMetadataIdentityKey(metadata) }
@@ -250,6 +330,10 @@ internal fun lFindCollectionDuplicateFolders(collectionFolder: File): List<List<
  * может быть локальный путь или один из исходных URL'ов. Сначала проверяется
  * прямое попадание идентификатора в [root] (быстрый путь), затем —
  * содержимое `metadata.json` каждой папки (медленный путь).
+ *
+ * @param root Корневая папка коллекции.
+ * @param identifiers Список кандидатов-идентификаторов (URL, локальные пути).
+ * @return Папка [File] найденного элемента или `null`.
  */
 internal fun lFindCollectionItemFolder(root: File, identifiers: List<String>): File? {
     val normalizedIdentifiers = identifiers
@@ -297,6 +381,10 @@ internal fun lFindCollectionItemFolder(root: File, identifiers: List<String>): F
 /**
  * Ищет папку лайка по любому из его идентификаторов
  * (локальный путь к media/preview либо один из исходных URL).
+ *
+ * @param root Корневая папка лайков (`AppPath.l_likes`).
+ * @param url Локальный путь или сетевой URL элемента.
+ * @return Папка [File] найденного лайка или `null`.
  */
 internal fun lFindLikeFolder(root: File, url: String): File? {
     val trimmed = url.trim()
@@ -330,4 +418,3 @@ internal fun lFindLikeFolder(root: File, url: String): File? {
                     metadata.previewFiles?.any { it.sourceUrl == trimmed } == true
         }
 }
-

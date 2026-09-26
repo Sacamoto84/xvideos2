@@ -8,23 +8,42 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
 import java.io.File
 
+/**
+ * Координатор корутинных скоупов и диспетчеризации задач [KDownloader].
+ *
+ * Архитектурно разделяет потоки на три изолированных [CoroutineScope]:
+ * 1. [scope] — последовательное или параллельное выполнение сетевых задач [DownloadTask] на `Dispatchers.IO`.
+ * 2. [dbScope] — изолированные операции чтения/записи в локальную БД и файловые очистки, независимые от отмены сетевых задач.
+ * 3. [callbackScope] — гарантированная доставка событий слушателям на главном потоке [Dispatchers.Main].
+ *
+ * @param dbHelper Хранилище записей о загрузках.
+ */
 class DownloadDispatchers(private val dbHelper: DbHelper) {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1) +     //main
+    /** Скоуп для запуска сетевых задач загрузки. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1) +
             CoroutineExceptionHandler { _, _ ->
 
             })
 
+    /** Изолированный скоуп для фоновых операций с БД и файловой системой. */
     private val dbScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1) +
             CoroutineExceptionHandler { _, _ ->
 
             })
 
+    /** Скоуп главного потока для безопасной доставки событий в UI. */
     private val callbackScope = CoroutineScope(SupervisorJob() + Dispatchers.Main +
             CoroutineExceptionHandler { _, _ ->
 
             })
 
+    /**
+     * Помещает задачу в корутинный пул выполнения и привязывает сгенерированный [Job] к запросу.
+     *
+     * @param req Запрос на скачивание.
+     * @return Идентификатор загрузки [DownloadRequest.downloadId].
+     */
     fun enqueue(req: DownloadRequest): Int {
         val job = scope.launch(Dispatchers.IO.limitedParallelism(1)) {
             execute(req)
@@ -33,6 +52,9 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         return req.downloadId
     }
 
+    /**
+     * Запускает [DownloadTask] и маршрутизирует его коллбэки в главный поток.
+     */
     private suspend fun execute(request: DownloadRequest) {
         DownloadTask(request, dbHelper).run(
             onStart = {
@@ -59,6 +81,9 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         )
     }
 
+    /**
+     * Выполняет блок кода на главном потоке UI через [callbackScope].
+     */
     private fun executeOnMainThread(block: () -> Unit) {
         // Колбэки слушателя (onStart/onProgress/onCompleted/...) доходят до UI,
         // поэтому выполняем их именно на главном потоке.
@@ -69,6 +94,11 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         }
     }
 
+    /**
+     * Отменяет отдельную задачу, прерывает её корутину, удаляет временный файл и запись из БД.
+     *
+     * @param req Запрос, подлежащий отмене.
+     */
     fun cancel(req: DownloadRequest) {
         val wasPaused = req.status == Status.PAUSED
         val wasQueued = req.status == Status.QUEUED
@@ -105,6 +135,9 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         }
     }
 
+    /**
+     * Отменяет все активные корутины загрузок и очищает базу данных в [dbScope].
+     */
     fun cancelAll() {
         scope.coroutineContext.cancelChildren()
         dbScope.launch {
@@ -112,6 +145,9 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
         }
     }
 
+    /**
+     * Фоновая очистка временных файлов и записей в БД, не обновлявшихся более [days] дней.
+     */
     fun cleanup(days: Int) {
         dbScope.launch {
             val models: List<DownloadModel>? = dbHelper.getUnwantedModels(days)

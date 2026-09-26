@@ -31,6 +31,15 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import timber.log.Timber
 
+/**
+ * [ScreenModel] экрана отдельной ниши (категории) в RedGifs.
+ *
+ * Инкапсулирует:
+ * - Загрузку метаданных ниши [niche], похожих ниш [related] и топовых авторов [topCreator];
+ * - Управление хостом пагинации и сетки контента [lazyHost] ([LazyRow123Host]).
+ *
+ * @param nicheName Название ниши (передается через Assisted Injection).
+ */
 @Stable
 class ScreenNicheSM @AssistedInject constructor(
     @Assisted val nicheName: String,
@@ -43,17 +52,23 @@ class ScreenNicheSM @AssistedInject constructor(
     val searchNiches: R_SearchNiches,
 ) : ScreenModel {
 
+    /** Фабрика Assisted Injection для создания [ScreenNicheSM] с параметром [nicheName]. */
     @AssistedFactory
     interface Factory : ScreenModelFactory {
         fun create(nicheName: String): ScreenNicheSM
     }
 
+    /** Очищенное от пробелов имя ниши. */
     val cleanNicheName = nicheName.trim()
 
+    /** Метаданные текущей ниши. */
     var niche: NichesInfo by mutableStateOf(NichesInfo())
+    /** Список похожих ниш. */
     var related by mutableStateOf(NichesResponse(emptyList(), 0, 0, 0))
+    /** Топовые авторы данной ниши. */
     var topCreator by mutableStateOf(TopCreatorsResponse(emptyList()))
 
+    /** Хост сетки видеороликов ниши с поддержкой смены колонок и пагинации. */
     val lazyHost =
         LazyRow123Host(
             connectivityObserver = connectivityObserver, scope = screenModelScope,
@@ -86,9 +101,7 @@ class ScreenNicheSM @AssistedInject constructor(
     }
 }
 
-
-
-
+/** Hilt-модуль привязки Assisted-фабрики экрана ниши. */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleRedNiche {

@@ -11,6 +11,21 @@ import com.client.xvideos.r.model.sanitizeGifsInfoList
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
+/**
+ * [PagingSource] для главной ленты Explorer и поиска медиа RedGifs.
+ *
+ * Обрабатывает:
+ * - Полнотекстовый поиск при непустом [searchText];
+ * - Выбор соответствующего эндпоинта ленты при пустом [searchText] (неделя, месяц, всё время, тренды, свежие);
+ * - Фильтрацию заблокированных материалов через [BlockRed];
+ * - Пополнение глобального кэша авторов [UsersRed];
+ * - Сохранение скролла вокруг anchorPosition при обновлении.
+ *
+ * @property sort Выбранный порядок сортировки [Order].
+ * @property searchText Поисковая строка (если пустая — загружается стандартная лента).
+ * @property block Фильтр заблокированных роликов.
+ * @property redApi Сетевой клиент RedGifs.
+ */
 class ItemTopPagingSource(
     val sort: Order,
     val searchText: String,

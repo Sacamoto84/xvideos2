@@ -10,16 +10,40 @@ import java.net.HttpURLConnection
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
+/** Максимально допустимое количество цепочечных HTTP-редиректов для предотвращения зацикливания. */
 private const val MAX_REDIRECTION = 10
 
+/**
+ * Формирует абсолютный путь к файлу назначения на основе каталога и имени.
+ *
+ * @param dirPath Каталог назначения.
+ * @param fileName Имя файла.
+ */
 fun getPath(dirPath: String, fileName: String): String {
     return dirPath + File.separator + fileName
 }
 
+/**
+ * Формирует путь к временному файлу загрузки (`.temp`).
+ *
+ * Загрузка всегда ведется во временный файл, чтобы исключить появление неполных/битых файлов
+ * в целевой директории при внезапном обрыве соединения или аварийном завершении приложения.
+ */
 fun getTempPath(dirPath: String, fileName: String): String {
     return getPath(dirPath, fileName) + ".temp"
 }
 
+/**
+ * Атомарное или устойчивое переименование завершенного временного файла в постоянный целевой файл.
+ *
+ * Включает fallback-механизм: если стандартный [File.renameTo] терпит неудачу (например,
+ * перемещение между разными точками монтирования файловых систем или удержание дескриптора),
+ * выполняется потоковое копирование [File.copyTo] с последующим удалением исходного файла.
+ *
+ * @param oldPath Исходный путь (временный файл).
+ * @param newPath Целевой путь постоянного файла.
+ * @throws IOException если исходный файл не существует или обе попытки (rename и copy) провалились.
+ */
 @Throws(IOException::class)
 fun renameFileName(oldPath: String, newPath: String) {
     val oldFile = File(oldPath)
@@ -31,7 +55,7 @@ fun renameFileName(oldPath: String, newPath: String) {
         throw IOException("Deletion Failed: $newPath")
     }
     if (!oldFile.renameTo(newFile)) {
-        // Fallback: cross-filesystem move or temporary file handle lock
+        // Fallback: кросс-файловое перемещение или временная блокировка дескриптора
         try {
             oldFile.copyTo(newFile, overwrite = true)
             oldFile.delete()
@@ -41,6 +65,9 @@ fun renameFileName(oldPath: String, newPath: String) {
     }
 }
 
+/**
+ * Проверяет, является ли HTTP-статус перенаправлением (301, 302, 303, 300, 307, 308).
+ */
 private fun isRedirection(code: Int): Boolean {
     return code == HttpURLConnection.HTTP_MOVED_PERM
             || code == HttpURLConnection.HTTP_MOVED_TEMP
@@ -50,6 +77,16 @@ private fun isRedirection(code: Int): Boolean {
             || code == Constants.HTTP_PERMANENT_REDIRECT
 }
 
+/**
+ * Выполняет обработку цепочки HTTP-редиректов (до [MAX_REDIRECTION] шагов) с корректным
+ * разрешением относительных URI в заголовке `Location`.
+ *
+ * @param httpClient0 Исходный клиент с выполненным подключением.
+ * @param req Запрос на загрузку (его URL мутируется на итоговый разрешенный адрес).
+ * @param onNewClient Коллбэк для регистрации нового экземпляра клиента (для возможности отмены).
+ * @return Финальный [HttpClient] с ответом не являющимся редиректом.
+ * @throws IOException при отсутствии заголовка Location или превышении лимита редиректов.
+ */
 @Throws(IOException::class)
 fun getRedirectedConnectionIfAny(
     httpClient0: HttpClient,
@@ -85,6 +122,11 @@ fun getRedirectedConnectionIfAny(
 
 private val HEX_DIGITS = "0123456789abcdef".toCharArray()
 
+/**
+ * Вычисляет детерминированный целочисленный идентификатор загрузки на основе MD5-хэша от (url + dirPath + fileName).
+ *
+ * Гарантирует уникальность ID для каждой уникальной пары файл-источник.
+ */
 fun getUniqueId(url: String, dirPath: String, fileName: String): Int {
     val string = url + File.separator + dirPath + File.separator + fileName
     val hash: ByteArray = try {
@@ -101,6 +143,9 @@ fun getUniqueId(url: String, dirPath: String, fileName: String): Int {
     return String(hex).hashCode()
 }
 
+/**
+ * Удаляет временный файл загрузки (`.temp`), если он существует на диске.
+ */
 fun deleteFile(req: DownloadRequest) {
     val path = getTempPath(req.dirPath, req.fileName)
     val file = File(path)

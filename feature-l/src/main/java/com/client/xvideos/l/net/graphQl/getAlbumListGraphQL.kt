@@ -88,6 +88,13 @@ fragment AlbumInSearchList on Album {
     .replace("\n", "\\n")
     .replace("\"", "\\\"")
 
+/**
+ * Генерирует тело GraphQL-запроса `AlbumList` с полным набором параметров фильтрации [AlbumListFilter].
+ *
+ * @param page Номер запрашиваемой страницы.
+ * @param filter Объект настроек фильтрации (тип альбома, язык, аудитория, жанры, теги, поиск).
+ * @return JSON-строка запроса к GraphQL endpoint.
+ */
 fun getAlbumListGraphQL1(
     page: Int = 3,
     filter: AlbumListFilter,
@@ -163,6 +170,9 @@ fun getAlbumListGraphQL1(
     return str.toString().trimIndent()
 }
 
+/**
+ * Базовый генератор GraphQL-запроса `AlbumList` с упрощенными параметрами.
+ */
 fun getAlbumListGraphQL(
     page: Int = 3,
     itemsPerPage: Int = 30,

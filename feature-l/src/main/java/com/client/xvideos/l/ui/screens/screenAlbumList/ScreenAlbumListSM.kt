@@ -37,17 +37,38 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * Статус загрузки конкретной страницы в списке альбомов.
+ */
 enum class StatusAlbumList {
+    /** Загрузка завершилась с ошибкой или простаивает. */
     BUSY,
+    /** В процессе сетевой загрузки. */
     DOWNLOADING,
+    /** Страница успешно загружена и закэширована. */
     DOWNLOADED
 }
 
+/**
+ * Контейнер данных одной страницы каталога альбомов со статусом загрузки.
+ *
+ * @property albumListImplInfoAndList Загруженные данные альбомов и информация пагинации.
+ * @property status Текущий статус загрузки [StatusAlbumList].
+ */
 data class AlbumListImplInfoAndListAndStatus(
     val albumListImplInfoAndList: AlbumListImplInfoAndList? = null,
     val status: StatusAlbumList = StatusAlbumList.BUSY
 )
 
+/**
+ * [ScreenModel] экрана списка альбомов Luscious с поддержкой фильтрации и пагинации.
+ *
+ * Управляет постраничной загрузкой списка альбомов, агрегациями фильтров (жанры, теги, количество фото),
+ * состоянием боковой шторки (drawer) фильтров и пейджером страниц.
+ *
+ * @property inFilter Начальный фильтр списка альбомов (или null для настроек по умолчанию).
+ * @property luscious Экземпляр сетевого клиента Luscious.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Stable
 class ScreenLAlbumListSM @AssistedInject constructor(
@@ -55,8 +76,10 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     val luscious: Luscious,
 ) : ScreenModel {
 
+    /** Фабрика создания [ScreenLAlbumListSM] с передачей начального [AlbumListFilter]. */
     @AssistedFactory
     interface Factory : ScreenModelFactory {
+        /** Создает [ScreenLAlbumListSM] для заданного фильтра. */
         fun create(filter: AlbumListFilter?): ScreenLAlbumListSM
     }
 
@@ -64,37 +87,53 @@ class ScreenLAlbumListSM @AssistedInject constructor(
 
     //Глобальный фильтр
     private val _filter = MutableStateFlow(inFilter ?: AlbumListFilter())
+    /** Поток текущего активного фильтра каталога альбомов. */
     val filter: StateFlow<AlbumListFilter> = _filter.asStateFlow()
 
+    /**
+     * Обновляет активный фильтр каталога.
+     *
+     * @param filter Новый объект фильтрации [AlbumListFilter].
+     */
     fun filterUpdate(filter: AlbumListFilter) {
         _filter.value = filter
     }
 
+    /** Поток информации о фасетной коллекции и пагинации (общее число элементов, страниц). */
     val info = MutableStateFlow<FacetCollectionInfo?>(null)
 
+    /** Поток счетчиков доступных жанров для боковой панели фильтров. */
     var filterGenreStateCount = MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
+    /** Поток счетчиков тегов для боковой панели фильтров. */
     var filterTaggedStateCount = MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
+    /** Поток счетчиков диапазонов количества картинок. */
     var filterPictureCountStateCount =
         MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
 
+    /** Карта загруженных страниц каталога: номер страницы -> данные и статус. */
     val bigList = mutableStateMapOf<Int, AlbumListImplInfoAndListAndStatus>()
 
+    /** Состояние шторки (Drawer) боковой панели фильтрации. */
     val drawerState = DrawerState(DrawerValue.Closed)
 
+    /** Сохраненный индекс страницы пейджера. */
     var savedPagerPage by mutableIntStateOf(0)
 
     // Одна страница до первого ответа сети, а не десять: реальное число ставит
     // экран через pageCountState, когда придёт totalPages. Заглушка «10»
     // означала, что пейджер до загрузки считает, будто страниц ровно десять, и
     // разрешает листать в пустоту.
+    /** Состояние горизонтального пейджера страниц каталога. */
     val statePager = DefaultPagerState1(0, 0f) { 1 }
 
     //var albumList = MutableStateFlow<AlbumListImpl?>(null)
 
 
     private val _isRequest = MutableStateFlow(false)
+    /** Поток флага выполнения сетевого запроса. */
     val isRequest = _isRequest.asStateFlow()
 
+    /** Карта состояний скролла для каждой страницы альбомов: номер страницы -> [LazyGridState]. */
     val stateGrid = mutableStateMapOf<Int, LazyGridState>()
 
     init {
@@ -121,6 +160,9 @@ class ScreenLAlbumListSM @AssistedInject constructor(
         }
     }
 
+    /**
+     * Выполняет первичную загрузку первой страницы альбомов и агрегаций фильтров.
+     */
     fun loadInitialData() {
         loadJob?.cancel()
         loadJob = screenModelScope.launch {
@@ -174,6 +216,11 @@ class ScreenLAlbumListSM @AssistedInject constructor(
         Timber.d("ScreenLAlbumListSM onDispose")
     }
 
+    /**
+     * Загружает данные для конкретной страницы пейджера [page] (0-indexed).
+     *
+     * @param page Индекс запрашиваемой страницы.
+     */
     fun loadAlbumList(page: Int) {
         if (page < 0) return
         screenModelScope.launch {
@@ -220,10 +267,14 @@ class ScreenLAlbumListSM @AssistedInject constructor(
 
 }
 
+/**
+ * Hilt-модуль мультибиндинга фабрики [ScreenLAlbumListSM.Factory].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleLAlbumList {
 
+    /** Привязывает фабрику [ScreenLAlbumListSM.Factory] в карте ScreenModelFactory Voyager. */
     @Binds
     @IntoMap
     @ScreenModelFactoryKey(ScreenLAlbumListSM.Factory::class)

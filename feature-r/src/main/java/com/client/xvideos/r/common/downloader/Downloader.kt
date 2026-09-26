@@ -22,7 +22,13 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
-//Текущее содержимое готового кеша
+/**
+ * Описание элемента готового загруженного кэша RedGifs.
+ *
+ * @property name Имя автора (соответствует имени подпапки).
+ * @property id Уникальный идентификатор ролика (соответствует имени файла).
+ * @property url URL источника скачивания.
+ */
 @Immutable
 data class ItemsRedDownload(
     val name: String = "",     //Название креатора соответствует папке
@@ -30,6 +36,14 @@ data class ItemsRedDownload(
     val url: String = "",      //Создается на этапе закачки, и после успешной закачки не используется url mp4  //https://media.redgifs.com/VictoriousGlamorousStud.m4s
 )
 
+/**
+ * Отчет о постановке недостающих файлов (видео и превью) в очередь загрузчика.
+ *
+ * @property queuedVideo Количество видеофайлов (.mp4), поставленных в очередь.
+ * @property queuedPreview Количество изображений превью (.jpg), поставленных в очередь.
+ * @property skippedNoVideoUrl Пропущено из-за отсутствия валидной ссылки на видео.
+ * @property skippedNoPreviewUrl Пропущено из-за отсутствия валидной ссылки на превью.
+ */
 @Immutable
 data class RedDownloadEnqueueReport(
     val queuedVideo: Int = 0,
@@ -39,7 +53,12 @@ data class RedDownloadEnqueueReport(
 )
 
 /**
- * Проверка что данное имя креатор уже есть в кеше
+ * Низкоуровневый сервис скачивания медиафайлов RedGifs на базе [KDownloader].
+ *
+ * Сохраняет видео (`.mp4`), превью (`.jpg`) и метаданные (`.info`) в каталог `AppPath.r_cache_download/<userName>/`.
+ *
+ * @property kDownloader Движок многопоточного скачивания файлов.
+ * @param scope Корутин-скоп для выполнения дисковых операций и колбэков.
  */
 @Singleton
 class Downloader @Inject constructor(
@@ -47,9 +66,21 @@ class Downloader @Inject constructor(
     @ApplicationScope private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
 
-    //Процент скачивания 0..1 - начало скачивания, -2 busy, -3 error
+    /**
+     * Прогресс текущей загрузки:
+     * - `0.0..1.0` — активный прогресс скачивания;
+     * - `-2f` — состояние простоя (idle/готов);
+     * - `-3f` — ошибка скачивания.
+     */
     val percent = MutableStateFlow(-2f)
 
+    /**
+     * Скачивает медиафайл [item] (видео и превью), если он еще не присутствует на диске.
+     * По завершении атомарно создает файл метаданных `<id>.info` и вызывает [onComplete].
+     *
+     * @param item Загружаемый медиаэлемент.
+     * @param onComplete Коллбэк завершения загрузки.
+     */
     fun downloadRedName(item: GifsInfo, onComplete: () -> Unit = {}) {
 
         val videoUrl = item.downloadVideoUrl()
@@ -144,6 +175,15 @@ class Downloader @Inject constructor(
 
     }
 
+    /**
+     * Проверяет наличие видео и превью для [item], и докачивает только недостающие файлы.
+     *
+     * @param item Медиаэлемент.
+     * @param onComplete Коллбэк после завершения скачивания всех недостающих файлов.
+     * @param onEvent Лог-коллбэк событий.
+     * @param showSnackBarErrors Показывать ли сообщения об ошибках в снэкбаре.
+     * @return [RedDownloadEnqueueReport] со статистикой постановки в очередь.
+     */
     fun downloadMissingFiles(
         item: GifsInfo,
         onComplete: () -> Unit = {},
@@ -208,6 +248,9 @@ class Downloader @Inject constructor(
         )
     }
 
+    /**
+     * Вариант [downloadMissingFiles] для фонового восстановления поврежденных или незавершенных загрузок (без всплывающих снэкбаров).
+     */
     fun downloadMissingFilesForRecovery(
         item: GifsInfo,
         onComplete: () -> Unit = {},
@@ -221,6 +264,13 @@ class Downloader @Inject constructor(
         )
     }
 
+    /**
+     * Быстрая проверка наличия непустого `.mp4` файла в локальной папке загрузок `<r_cache_download>/<name>/<id>.mp4`.
+     *
+     * @param id Идентификатор медиафайла.
+     * @param name Имя автора.
+     * @return true, если файл существует и имеет размер более 0 байт.
+     */
     fun findVideoInDownload(id: String, name: String): Boolean {
         if (id.isBlank() || name.isBlank()) return false
         if (isUnsafeItemName(name) || isUnsafeItemName(id)) return false
@@ -237,6 +287,9 @@ class Downloader @Inject constructor(
         }
     }
 
+    /**
+     * Ставит в очередь загрузчика скачивание картинки превью (`.jpg`).
+     */
     private fun enqueuePreview(
         item: GifsInfo,
         dirPath: String,
@@ -258,6 +311,9 @@ class Downloader @Inject constructor(
         )
     }
 
+    /**
+     * Ставит в очередь загрузчика скачивание основного видеофайла (`.mp4`).
+     */
     private fun enqueueVideo(
         item: GifsInfo,
         dirPath: String,
@@ -311,12 +367,18 @@ class Downloader @Inject constructor(
     }
 }
 
+/**
+ * Выбирает наиболее качественный доступный URL для скачивания видео (HD -> SD -> Silent).
+ */
 internal fun GifsInfo.downloadVideoUrl(): String? {
     return urls.hd?.takeIf { it.isNotBlank() }
         ?: urls.sd.takeIf { it.isNotBlank() }
         ?: urls.silent?.takeIf { it.isNotBlank() }
 }
 
+/**
+ * Выбирает лучший URL для превью (Poster -> Thumbnail).
+ */
 internal fun GifsInfo.previewUrl(): String? {
     return urls.poster?.takeIf { it.isNotBlank() }
         ?: urls.thumbnail.takeIf { it.isNotBlank() }

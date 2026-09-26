@@ -20,11 +20,19 @@ import java.util.concurrent.ConcurrentHashMap
 object RFeedSessionStore {
     private val sessions = ConcurrentHashMap<String, WeakReference<LazyRow123Host>>()
 
+    /**
+     * Регистрирует активный хост ленты [host] по его уникальному ключу [LazyRow123Host.feedKey].
+     * Перед регистрацией автоматически вычищает записи с собранными GC ссылками.
+     */
     fun register(host: LazyRow123Host) {
         pruneCollected()
         sessions[host.feedKey] = WeakReference(host)
     }
 
+    /**
+     * Возвращает живой хост ленты по его ключу [feedKey].
+     * Если референт уже собран GC, запись удаляется из карты.
+     */
     fun get(feedKey: String): LazyRow123Host? {
         val host = sessions[feedKey]?.get()
         if (host == null) {
@@ -36,6 +44,7 @@ object RFeedSessionStore {
     /** Число записей в реестре. Для тестов. */
     internal fun size(): Int = sessions.size
 
+    /** Удаляет из карты записи, чьи ссылки [WeakReference] были очищены сборщиком мусора. */
     private fun pruneCollected() {
         val iterator = sessions.entries.iterator()
         while (iterator.hasNext()) {

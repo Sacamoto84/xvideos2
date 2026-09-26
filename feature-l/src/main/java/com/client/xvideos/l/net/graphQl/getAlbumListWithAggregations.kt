@@ -46,6 +46,13 @@ query AlbumListWithAggregations(${'$'}input: AlbumListInput!, ${'$'}aggregations
     .replace("\n", "\\n")
     .replace("\"", "\\\"")
 
+/**
+ * Генерирует тело GraphQL POST-запроса `AlbumListWithAggregations` для получения агрегаций и счетчиков доступных фильтров.
+ *
+ * @param page Номер текущей страницы пагинации.
+ * @param filter Объект настроек фильтрации [AlbumListFilter].
+ * @return JSON-строка тела запроса.
+ */
 fun getAlbumListWithAggregations(
     page: Int = 1,
     filter: AlbumListFilter,

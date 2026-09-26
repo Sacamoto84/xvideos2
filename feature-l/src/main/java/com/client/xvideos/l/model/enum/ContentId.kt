@@ -3,14 +3,14 @@ package com.client.xvideos.l.model.enum
 import kotlinx.serialization.Serializable
 
 /**
- * Группа filters
+ * Идентификатор категории контента в фильтрах Luscious:
  *
- * { name  : "content_id", value :  "2" }
+ * - 0: All (все)
+ * - 2: Hentai (хентай / аниме)
+ * - 5: Non-Erotic (не эротика)
+ * - 6: Real People (реальные люди / косплей)
  *
- * All 0
- * Hentai "2"
- * Non-Erotic 5
- * Real People 6
+ * @property value Числовой ID для GraphQL-запроса.
  */
 @Serializable
 enum class ContentId(val value: Int) {

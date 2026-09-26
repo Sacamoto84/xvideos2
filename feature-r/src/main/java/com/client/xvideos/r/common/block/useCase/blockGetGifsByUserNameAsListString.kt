@@ -6,6 +6,12 @@ import com.client.xvideos.common.io.requireInside
 import timber.log.Timber
 import java.io.File
 
+/**
+ * Возвращает список идентификаторов заблокированных гифок конкретного пользователя [userName].
+ *
+ * @param userName Имя автора.
+ * @return Список id гифок (имен файлов без расширения `.block`).
+ */
 fun blockGetGifsByUserNameAsListString(userName: String): List<String> {
     if (isUnsafeItemName(userName)) return emptyList()
 

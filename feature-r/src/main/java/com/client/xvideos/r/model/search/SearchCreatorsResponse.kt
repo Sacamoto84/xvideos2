@@ -4,16 +4,27 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Ответ сетевого эндпоинта поиска/подсказок авторов (`/v2/creators/suggest?query=...`).
+ *
+ * @property items Список найденных авторов [SearchItemCreatorsResponse].
+ */
 @Immutable
 @Serializable
 data class SearchCreatorsResponse(
     @SerialName("items") val items: List<SearchItemCreatorsResponse> = emptyList()
 ) {
+    /** Проверяет пустоту списка авторов. */
     val isEmpty: Boolean get() = items.isEmpty()
+
+    /** Проверяет непустоту списка авторов. */
     val isNotEmpty: Boolean get() = items.isNotEmpty()
+
+    /** Количество авторов в выдаче. */
     val size: Int get() = items.size
 
     companion object {
+        /** Пустой экземпляр ответа. */
         val EMPTY = SearchCreatorsResponse()
     }
 }
@@ -36,6 +47,17 @@ data class SearchCreatorsResponse(
 //    "studio": false,
 //    "followers": 77
 //},
+/**
+ * Элемент подсказки/поиска автора в поисковой строке.
+ *
+ * @property type Тип элемента (обычно "creator").
+ * @property text Текст с префиксом "@", например "@elfsandi".
+ * @property name Отображаемое имя автора.
+ * @property image URL аватара.
+ * @property verified Статус верификации автора.
+ * @property studio Флаг профессиональной студии.
+ * @property followers Число подписчиков.
+ */
 @Immutable
 @Serializable
 data class SearchItemCreatorsResponse(
@@ -47,13 +69,23 @@ data class SearchItemCreatorsResponse(
     @SerialName("studio") val studio: Boolean = false,
     @SerialName("followers") val followers: Long = 0L
 ) {
+    /** Никнейм автора без префикса "@". */
     val username: String get() = text.removePrefix("@")
+
+    /** Отображаемое имя либо очищенный никнейм. */
     val displayName: String get() = name.ifBlank { username }
+
+    /** Проверяет валидность элемента (поле text не пусто). */
     val isValid: Boolean get() = text.isNotBlank()
+
+    /** Проверяет наличие аватара. */
     val hasImage: Boolean get() = !image.isNullOrBlank()
+
+    /** Проверяет наличие подписчиков. */
     val hasFollowers: Boolean get() = followers > 0L
 
     companion object {
+        /** Пустой экземпляр подсказки создателя. */
         val EMPTY = SearchItemCreatorsResponse()
     }
 }

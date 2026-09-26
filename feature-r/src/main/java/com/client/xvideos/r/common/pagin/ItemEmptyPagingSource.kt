@@ -4,6 +4,10 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.client.xvideos.r.model.GifsInfo
 
+/**
+ * Заглушка [PagingSource], возвращающая пустую страницу без возможности дальнейшей пагинации.
+ * Используется для инициализации пустых или деактивированных экранов.
+ */
 class ItemEmptyPagingSource : PagingSource<Int, GifsInfo>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {

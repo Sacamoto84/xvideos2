@@ -6,10 +6,10 @@ import timber.log.Timber
 import java.io.File
 
 /**
- * Сканирует все директории пользователей в `AppPath.block_red` и собирает
- * все объекты GifsInfo, восстановленные из .block файлов.
+ * Сканирует все пользовательские директории в `AppPath.r_block` и собирает
+ * все объекты [GifsInfo], восстановленные из `.block` файлов.
  *
- * @return Список всех GifsInfo, считанных из .block файлов во всех пользовательских директориях.
+ * @return Список всех [GifsInfo], считанных из `.block` файлов во всех пользовательских директориях.
  */
 fun blockGetAllBlockedGifsInfo(): List<GifsInfo> {
     val rootDir = File(AppPath.r_block)

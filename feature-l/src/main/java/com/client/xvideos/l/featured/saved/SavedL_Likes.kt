@@ -23,6 +23,9 @@ import java.io.File
  * Все операции с файловой системой и сетью вынесены в общие helper-функции
  * (`LMediaPersist`, `LCollectionFs`); этот класс держит публичный API и
  * Compose-state ([listUrl], [percentDownload]).
+ *
+ * @param luscious Ссылка на сервис API Luscious.
+ * @param scope Область корутин для выполнения фоновых дисковых операций.
  */
 @Stable
 class SavedL_Likes(
@@ -30,8 +33,10 @@ class SavedL_Likes(
     private val scope: CoroutineScope
 ) {
 
+    /** Реактивный список локально сохраненных понравившихся элементов. */
     val listUrl = mutableStateListOf<PicsDetails>()
     private val progress = LDownloadProgress(scope)
+    /** Поток совокупного процента скачивания новых лайков. */
     val percentDownload: StateFlow<Float> = progress.percentDownload
     private var mutationJob: Job? = null
 
@@ -39,6 +44,11 @@ class SavedL_Likes(
         refresh()
     }
 
+    /**
+     * Скачивает и сохраняет элемент медиа [item] в локальное хранилище лайков (`AppPath.l_likes`).
+     *
+     * @param item Элемент с медиафайлом и метаданными.
+     */
     fun add(item: PicsDetails) {
         if (item.url_to_original.isNullOrBlank() && item.url_to_video.isNullOrBlank()) {
             Timber.w("SavedL_Likes: отклонён элемент без URL")
@@ -69,6 +79,11 @@ class SavedL_Likes(
         }
     }
 
+    /**
+     * Удаляет сохраненный лайк по его локальному пути или сетевому URL [url].
+     *
+     * @param url Идентификатор пути к файлу или исходного URL.
+     */
     fun remove(url: String) {
         if (url.isBlank()) return
         Timber.i("SavedL_Likes removeLikes() url:$url")
@@ -99,6 +114,9 @@ class SavedL_Likes(
 
     private var refreshJob: Job? = null
 
+    /**
+     * Перечитывает список всех сохраненных лайков из каталога `AppPath.l_likes` на диске.
+     */
     fun refresh() {
         // Чтение каталога с разбором каждого metadata.json делаем на IO,
         // обновление Compose-state — на Main, чтобы не блокировать UI (ANR).

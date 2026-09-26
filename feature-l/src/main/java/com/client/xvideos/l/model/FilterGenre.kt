@@ -15,6 +15,20 @@ import java.io.Serializable
  *
  * Живёт в `model`, а не рядом с запросом: на него ссылается `AlbumListFilter`,
  * то есть слой ниже сети.
+ *
+ * @property id Идентификатор жанра.
+ * @property title Название жанра.
+ * @property slug URL-слаг жанра.
+ * @property description Описание жанра.
+ * @property uploadingRules Правила загрузки контента по жанру.
+ * @property posterUrl URL постера/обложки жанра.
+ * @property actsAsWarning Помечает ли жанр альбом как содержащий предупреждение.
+ * @property actsAsDefault Выбран ли по умолчанию.
+ * @property representsUncategorized Представляет ли категорию «без категории».
+ * @property url Относительный путь к странице жанра.
+ * @property parent Идентификатор родительской категории.
+ * @property onlyAllowsModel Ограничение по моделям.
+ * @property onlyContent Ограничение по типу контента.
  */
 @Immutable
 @kotlinx.serialization.Serializable
@@ -93,11 +107,14 @@ val FilterGenre.isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
  */
 val FilterGenre.displayTitle: String get() = title.ifBlank { slug }
 
+/** Наличие ссылки на обложку жанра. */
 val FilterGenre.hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
 
+/** Наличие непустого описания жанра. */
 val FilterGenre.hasDescription: Boolean get() = description.isNotBlank()
 
+/** Наличие идентификатора родительской категории. */
 val FilterGenre.hasParent: Boolean get() = !parent.isNullOrBlank()
 
+/** Наличие непустого URL контента. */
 val OnlyContent.hasUrl: Boolean get() = url.isNotBlank()
-

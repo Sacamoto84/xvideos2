@@ -110,6 +110,15 @@ private val DEFAULT_ALBUM_LIST_TOP_HITS_QUERY = buildAlbumListTopHitsPayload(
     hitsFrom = "genre_ids"
 )
 
+/**
+ * Генерирует тело GraphQL POST-запроса `AlbumListTopHits` для получения подборки самых популярных альбомов.
+ *
+ * @param display Тип сортировки/отображения (по умолчанию `"date_newest"`).
+ * @param albumType Тип альбомов ([AlbumType]).
+ * @param contentId Категория контента ([ContentId]).
+ * @param hitsFrom Поле агрегации (по умолчанию `"genre_ids"`).
+ * @return JSON-строка тела GraphQL-запроса.
+ */
 fun getAlbumListTopHitsQuery(
     display: String = "date_newest",
     albumType: AlbumType = AlbumType.Pictures,
@@ -122,4 +131,3 @@ fun getAlbumListTopHitsQuery(
     }
     return buildAlbumListTopHitsPayload(display, albumType, contentId, hitsFrom)
 }
-

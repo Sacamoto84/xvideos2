@@ -11,7 +11,15 @@ import timber.log.Timber
 import java.io.File
 import java.io.IOException
 
-//✅ Работает 04.06.2025
+/**
+ * Блокирует переданный элемент [item]:
+ * - Проверяет безопасность путей ([isUnsafeItemName], [requireInside]);
+ * - Создает папку пользователя `<AppPath.r_block>/<userName>`;
+ * - Атомарно сохраняет JSON сериализованного [GifsInfo] в файл `<id>.block`.
+ *
+ * @param item Блокируемый медиаэлемент.
+ * @return [Result] с флагом успеха операции.
+ */
 fun blockItem(item: GifsInfo): Result<Boolean> {
     return try {
         if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
@@ -43,6 +51,15 @@ fun blockItem(item: GifsInfo): Result<Boolean> {
     }
 }
 
+/**
+ * Разблокирует переданный элемент [item]:
+ * - Проверяет безопасность путей;
+ * - Удаляет файл `<id>.block`;
+ * - Если папка автора осталась пустой, удаляет саму папку автора.
+ *
+ * @param item Разблокируемый медиаэлемент.
+ * @return [Result] с флагом успеха операции.
+ */
 fun unblockItem(item: GifsInfo): Result<Boolean> {
     return try {
         if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
@@ -75,4 +92,3 @@ fun unblockItem(item: GifsInfo): Result<Boolean> {
         Result.failure(e)
     }
 }
-

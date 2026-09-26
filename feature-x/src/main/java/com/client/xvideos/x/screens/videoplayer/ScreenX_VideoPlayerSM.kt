@@ -40,13 +40,17 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * ScreenModel экрана видеоплеера X.
+ * ScreenModel экрана онлайн-видеоплеера X.
  *
  * После миграции на общий Compose-плеер ([com.client.xvideos.common.videoplayer.host.MediaPlayerHost])
  * модель больше НЕ держит `ExoPlayer` и не управляет дорожками/скоростью напрямую —
  * этим занимается `MediaPlayerHost`, создаваемый в `Content()`. Здесь остаётся
  * только X-специфика: загрузка HTML страницы видео, извлечение HLS-ссылки и тегов,
  * навигация на теги/полный экран, а также сохранение прогресса и возобновление («Продолжить просмотр»).
+ *
+ * @property initialItem Исходная карточка ролика (если доступна из ленты).
+ * @property db Файловая БД для RAM-кэша страниц.
+ * @property saved Локальные сохранения X (избранное, загрузки, история).
  */
 @Stable
 class ScreenX_VideoPlayerSM @AssistedInject constructor(
@@ -63,8 +67,10 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         saved = SavedX(CoroutineScope(Dispatchers.Unconfined))
     )
 
+    /** Нормализованный URL страницы видео. */
     val url: String = normalizeXUrl(url)
 
+    /** Assisted-фабрика для создания экземпляра ScreenModel с параметрами [url] и [initialItem]. */
     @AssistedFactory
     interface Factory : ScreenModelFactory {
         fun create(
@@ -84,9 +90,11 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     var passedHLS: String by mutableStateOf("")
         private set
 
+    /** Флаг сетевой или парсинг ошибки загрузки страницы видео. */
     var isError: Boolean by mutableStateOf(false)
         private set
 
+    /** Флаг выполнения загрузки страницы. */
     var isLoading: Boolean by mutableStateOf(true)
         private set
 
@@ -102,18 +110,22 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     var isFullScreen: Boolean by mutableStateOf(false)
         private set
 
+    /** Переключает полноэкранный режим. */
     fun toggleFullScreen() {
         isFullScreen = !isFullScreen
     }
 
+    /** Входит в полноэкранный режим. */
     fun enterFullScreen() {
         isFullScreen = true
     }
 
+    /** Выходит из полноэкранного режима. */
     fun exitFullScreen() {
         isFullScreen = false
     }
 
+    /** Текущие метаданные воспроизводимого видеоролика. */
     var currentItem: ItemsX by mutableStateOf(
         initialItem ?: ItemsX(id = extractXVideoId(url) ?: 0L, href = url)
     )
@@ -131,6 +143,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     var resumeNoticeText: String? by mutableStateOf(null)
         private set
 
+    /** Проверяет историю просмотров и инициализирует позицию возобновления, если ролик не досмотрен. */
     private fun checkAndInitResume(videoId: Long) {
         if (videoId <= 0L || resumePositionSeconds != null) return
         val item = saved.history.get(videoId) ?: return
@@ -143,15 +156,23 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         }
     }
 
+    /** Скрывает плашку «Возобновлено с ...». */
     fun dismissResumeNotice() {
         resumeNoticeText = null
     }
 
+    /** Сбрасывает воспроизведение в начало. */
     fun restartFromBeginning() {
         resumeNoticeText = null
         resumePositionSeconds = 0f
     }
 
+    /**
+     * Сохраняет текущий прогресс воспроизведения в историю.
+     *
+     * @param positionSeconds Текущая позиция воспроизведения в секундах.
+     * @param durationSeconds Общая длительность ролика в секундах.
+     */
     fun saveProgress(positionSeconds: Float, durationSeconds: Int) {
         val playerDurationMs = durationSeconds.coerceAtLeast(0) * 1000L
         val parsedDurationMs = parseDurationToMs(currentItem.duration)
@@ -176,6 +197,11 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
     private var loadJob: kotlinx.coroutines.Job? = null
 
+    /**
+     * Загружает HTML страницы видео, извлекает конфигурацию плеера, теги и HLS ссылку.
+     *
+     * @param forceReload Если `true`, сбрасывает кэш страницы в RAM и запрашивает сеть заново.
+     */
     fun loadVideo(forceReload: Boolean = false) {
         if (url.isBlank()) {
             isLoading = false
@@ -263,6 +289,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         }
     }
 
+    /**
+     * Обрабатывает ошибку воспроизведения потока, сбрасывая состояние и очищая RAM-кэш URL.
+     */
     fun onPlaybackError() {
         Timber.w("ScreenX_VideoPlayerSM: ошибка воспроизведения для %s, очистка RAM-кэша", url)
         isError = true
@@ -273,7 +302,10 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     }
 
     /**
-     * ## Открыть экран с нужным тегом
+     * Открывает экран выдачи по выбранному тегу.
+     *
+     * @param tag Текст тега.
+     * @param navigator Навигатор Voyager.
      */
     fun openTag(tag: String, navigator: Navigator) {
         if (tag.isNotBlank()) {
@@ -282,7 +314,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     }
 
     /**
-     * ## Открыть плеер в полном окне
+     * Открыть плеер в полном окне.
      * @deprecated Используйте [toggleFullScreen] или [enterFullScreen]: плеер переключается в ландшафт на месте.
      */
     @Suppress("UnusedParameter")
@@ -292,6 +324,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     }
 }
 
+/**
+ * Hilt-модуль привязки фабрики [ScreenX_VideoPlayerSM.Factory].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleItem {
@@ -304,6 +339,9 @@ abstract class ScreenModuleItem {
     ): ScreenModelFactory
 }
 
+/**
+ * Контейнер распарсенных данных со страницы видеоролика.
+ */
 private data class ParsedVideoData(
     val config: HTML5PlayerConfig?,
     val tags: TagsModel,
@@ -312,6 +350,9 @@ private data class ParsedVideoData(
     val pageDuration: String,
 )
 
+/**
+ * Извлекает конфигурацию плеера, теги, ID и длительность из HTML-разметки страницы.
+ */
 private fun parseVideoPageData(htmlContent: String): ParsedVideoData {
     val document = org.jsoup.Jsoup.parse(htmlContent)
     val script = parserItemVideo(document)
@@ -326,4 +367,3 @@ private fun parseVideoPageData(htmlContent: String): ParsedVideoData {
     val pageDuration = document.selectFirst("span.duration")?.text().orEmpty()
     return ParsedVideoData(config, parsedTags, streamCandidate, pageId, pageDuration)
 }
-

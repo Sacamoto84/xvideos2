@@ -10,7 +10,12 @@ private const val KB_DOUBLE = 1024.0
 private const val MB_DOUBLE = 1024.0 * 1024.0
 private const val GB_DOUBLE = 1024.0 * 1024.0 * 1024.0
 
-// Функция для форматирования объема данных
+/**
+ * Форматирует объем данных в человекочитаемую строку с автоматическим выбором единиц (B, KB, MB, GB).
+ *
+ * @param bytes Размер данных в байтах.
+ * @return Форматированная строка (например, "12.4 MB" или "1.25 GB").
+ */
 fun formatBytes(bytes: Long): String {
     if (bytes <= 0L) return "0 B"
     if (bytes < ONE_KB) return "$bytes B"
@@ -21,7 +26,8 @@ fun formatBytes(bytes: Long): String {
     }
 }
 
+/** Расширение для форматирования [Long] байтов. */
 fun Long.formatAsBytes(): String = formatBytes(this)
 
+/** Расширение для форматирования [Int] байтов. */
 fun Int.formatAsBytes(): String = formatBytes(this.toLong())
-

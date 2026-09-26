@@ -7,6 +7,12 @@ import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
 import com.client.xvideos.l.model.FilterGenre
 
+/**
+ * Создает фильтр [AlbumListFilter] для выборки альбомов по заданному жанру [genre].
+ *
+ * @param genre Выбранный жанр Luscious.
+ * @return Сконфигурированный объект [AlbumListFilter] с добавленным жанром в `genresPlus`.
+ */
 internal fun albumListFilterForGenre(genre: Genre): AlbumListFilter {
     return AlbumListFilter(
         genresPlus = listOf(
@@ -29,12 +35,20 @@ internal fun albumListFilterForGenre(genre: Genre): AlbumListFilter {
     )
 }
 
+/**
+ * Создает фильтр [AlbumListFilter] для выборки альбомов по целевой аудитории [audience].
+ *
+ * @param audience Выбранная аудитория Luscious.
+ * @return Сконфигурированный объект [AlbumListFilter] с заданным `audienceIds`.
+ */
 internal fun albumListFilterForAudience(audience: Audience): AlbumListFilter {
     return AlbumListFilter(audienceIds = "+${audience.id}")
 }
 
+/**
+ * Извлекает текстовый слаг жанра из строки URL Luscious.
+ */
 private fun String.extractLPathSlug(): String? {
     val name = trim('/').substringAfterLast('/').substringBefore('?')
     return name.substringBeforeLast("_").takeIf { it.isNotBlank() }
 }
-

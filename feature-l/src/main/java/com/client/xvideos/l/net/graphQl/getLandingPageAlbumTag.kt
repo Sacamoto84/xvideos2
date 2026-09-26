@@ -86,6 +86,12 @@ fragment AlbumInSearchList on Album {
 }
 """.trimIndent()
 
+/**
+ * Генерирует тело GraphQL-запроса `LandingPageAlbumTag` для получения промо-секции альбомов по выбранному тегу.
+ *
+ * @param tag Имя тега/категории.
+ * @return JSON-строка тела GraphQL-запроса.
+ */
 fun getLandingPageAlbumTag(tag: String): String {
     return buildJsonObject {
         put("operationName", "LandingPageAlbumTag")

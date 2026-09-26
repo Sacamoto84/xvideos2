@@ -16,13 +16,28 @@ import androidx.compose.runtime.Stable
 import kotlinx.serialization.encodeToString
 import timber.log.Timber
 
+/**
+ * Менеджер сохраненных альбомов Luscious в локальной файловой базе данных [FileDB].
+ *
+ * Предоставляет реактивный список [list], методы добавления, удаления и проверки наличия альбома.
+ *
+ * @property db Экземпляр файловой базы данных для доступа к сопутствующим кэшам.
+ * @property scope Область корутин для выполнения асинхронных дисковых мутаций.
+ */
 @Stable
 class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
 
+    /** Хранилище [FileDB] для альбомов Luscious по пути `AppPath.l_albums`. */
     val albumDb = FileDB(AppPath.l_albums, "album", AlbumDetails.serializer())
+    /** Реактивный список сохраненных альбомов. */
     val list = albumDb.list
     private var mutationJob: Job? = null
 
+    /**
+     * Сохраняет метаданные альбома [item] в локальную базу данных.
+     *
+     * @param item Метаданные сохраняемого альбома.
+     */
     fun add(item: AlbumDetails) {
         val albumId = item.id.toLongOrNull()
         if (albumId == null) {
@@ -48,6 +63,12 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Сохраняет альбом [item] вместе со списком его картинок [picsDetails] в дисковый кэш картинок.
+     *
+     * @param item Метаданные сохраняемого альбома.
+     * @param picsDetails Список элементов изображений альбома.
+     */
     fun addAndPicsDetails(item: AlbumDetails, picsDetails: List<PicsDetails>) {
         val albumId = item.id.toLongOrNull()
         if (albumId == null) {
@@ -80,6 +101,11 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Удаляет альбом [item] из локального хранилища.
+     *
+     * @param item Удаляемый альбом.
+     */
     fun remove(item: AlbumDetails) {
         if (item.id.isBlank()) return
         Timber.i("removeAlbum() id:${item.id} name:${item.title}")
@@ -98,10 +124,19 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Проверяет, сохранен ли альбом с идентификатором [id].
+     *
+     * @param id Строковый ID альбома.
+     * @return `true`, если альбом присутствует в локальном списке.
+     */
     fun contains(id: String): Boolean = id.isNotBlank() && list.any { it.id == id }
 
     private var refreshJob: Job? = null
 
+    /**
+     * Обновляет список сохраненных альбомов с диска.
+     */
     fun refresh() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {

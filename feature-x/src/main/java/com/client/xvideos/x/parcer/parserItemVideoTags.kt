@@ -7,6 +7,12 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
+/**
+ * Извлекает блок тегов, авторов и участвующих моделей из DOM страницы видеоролика.
+ *
+ * @param document Разобранный HTML-документ Jsoup.
+ * @return Объект [TagsModel] с упорядоченными тегами и списками авторов/моделей.
+ */
 fun parserItemVideoTags(document: Document): TagsModel {
     val mainElements = document.select("li.main-uploader")
     val modelElements = document.select("li.model")
@@ -42,6 +48,9 @@ fun parserItemVideoTags(document: Document): TagsModel {
     return TagsModel(listMain, listPornstar, finalTags)
 }
 
+/**
+ * Разбирает HTML-элемент `<li>` автора или модели, извлекая имя, ссылку и счетчик.
+ */
 private fun Element.parseUploaderOrModel(): TagsMainUploaderPornstar? {
     val href = selectFirst("a[href]")?.attr("href")?.trim().orEmpty()
     val nameSpan = selectFirst("span.name")
@@ -55,6 +64,12 @@ private fun Element.parseUploaderOrModel(): TagsMainUploaderPornstar? {
     }
 }
 
+/**
+ * Извлекает блок тегов, авторов и участвующих моделей из сырой HTML строки страницы видеоролика.
+ *
+ * @param html Текст HTML страницы.
+ * @return [TagsModel] с найденными элементами.
+ */
 fun parserItemVideoTags(html: String): TagsModel {
     if (html.isBlank()) return TagsModel.EMPTY
     return parserItemVideoTags(Jsoup.parse(html))

@@ -6,6 +6,12 @@ package com.client.xvideos.common.net.doh
  * Все публичные провайдеры используют прямые IP-адреса для zero-bootstrap:
  * резолвер не совершает открытых DNS-запросов к провайдеру связи для определения
  * адреса самого DoH-сервера.
+ *
+ * @property title Отображаемое название провайдера.
+ * @property description Подробное описание и IP-адреса.
+ * @property primaryEndpoint Первичный URL-эндпоинт DoH JSON API.
+ * @property secondaryEndpoint Резервный URL-эндпоинт при отказе первичного.
+ * @property bootstrapIps Прямые IP-адреса для подключения без DNS-запроса.
  */
 enum class DohProvider(
     val title: String,
@@ -14,6 +20,7 @@ enum class DohProvider(
     val secondaryEndpoint: String,
     val bootstrapIps: List<String>
 ) {
+    /** Провайдер Cloudflare (1.1.1.1). */
     CLOUDFLARE(
         title = "Cloudflare",
         description = "1.1.1.1 — Быстрый глобальный DNS с защитой приватности",
@@ -21,6 +28,8 @@ enum class DohProvider(
         secondaryEndpoint = "https://1.0.0.1/dns-query",
         bootstrapIps = listOf("1.1.1.1", "1.0.0.1")
     ),
+
+    /** Провайдер Google Public DNS (8.8.8.8). */
     GOOGLE(
         title = "Google",
         description = "8.8.8.8 — Высокая доступность и надёжность Google",
@@ -28,6 +37,8 @@ enum class DohProvider(
         secondaryEndpoint = "https://8.8.4.4/resolve",
         bootstrapIps = listOf("8.8.8.8", "8.8.4.4")
     ),
+
+    /** Провайдер AdGuard DNS (94.140.14.14) с фильтрацией трекеров. */
     ADGUARD(
         title = "AdGuard",
         description = "94.140.14.14 — Блокировка рекламы, фишинга и трекеров",
@@ -35,6 +46,8 @@ enum class DohProvider(
         secondaryEndpoint = "https://94.140.15.15/resolve",
         bootstrapIps = listOf("94.140.14.14", "94.140.15.15")
     ),
+
+    /** Пользовательский кастомный эндпоинт (настраивается в Settings). */
     CUSTOM(
         title = "Пользовательский",
         description = "Собственный DoH-резолвер (NextDNS, Pi-hole и др.)",
@@ -43,14 +56,25 @@ enum class DohProvider(
         bootstrapIps = emptyList()
     );
 
+    /** Истина, если выбран пользовательский сервер. */
     val isCustom: Boolean get() = this == CUSTOM
+
+    /** Истина, если выбран провайдер Cloudflare. */
     val isCloudflare: Boolean get() = this == CLOUDFLARE
+
+    /** Истина, если выбран провайдер Google. */
     val isGoogle: Boolean get() = this == GOOGLE
+
+    /** Истина, если выбран провайдер AdGuard. */
     val isAdGuard: Boolean get() = this == ADGUARD
 
     companion object {
+        /** Провайдер по умолчанию. */
         val DEFAULT = CLOUDFLARE
 
+        /**
+         * Находит провайдера по строковому имени (без учета регистра) или возвращает [DEFAULT].
+         */
         fun fromNameOrDefault(name: String?): DohProvider =
             entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: DEFAULT
     }

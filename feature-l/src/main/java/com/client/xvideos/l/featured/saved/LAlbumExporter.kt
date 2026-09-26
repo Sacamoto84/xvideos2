@@ -19,6 +19,14 @@ import java.io.File
  */
 object LAlbumExporter {
 
+    /**
+     * Экспортирует метаданные альбома [album] для отправки по P2P.
+     *
+     * @param album Детали экспортируемого альбома.
+     * @param savedRoot Корневая директория уже сохраненных альбомов (`AppPath.l_albums`).
+     * @param outboxAlbumRoot Директория временных файлов отправки.
+     * @return [P2pExportBundle] с типом [P2pType.L_ALBUM] и файлом метаданных, либо `null` при ошибке.
+     */
     fun export(album: AlbumDetails, savedRoot: File, outboxAlbumRoot: File): P2pExportBundle? {
         if (album.id.toLongOrNull() == null) return null
         val fileName = "${album.id}.album"

@@ -12,6 +12,13 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
+/**
+ * Выполняет сетевой GraphQL-запрос `LandingPageAlbumTag` и возвращает структурированные промо-данные для экрана тега.
+ *
+ * @param tag Имя тега.
+ * @param repository Репозиторий сетевых запросов.
+ * @return [Result] с моделью [Landing_page_albumType].
+ */
 suspend fun LandingPageAlbumTag(
     tag: String,
     repository: Repository,

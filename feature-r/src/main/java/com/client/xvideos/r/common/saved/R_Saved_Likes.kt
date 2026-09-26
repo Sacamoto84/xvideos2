@@ -15,14 +15,27 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * Хранилище понравившихся роликов (лайков) RedGifs на базе [FileDB].
+ *
+ * Сохраняет JSON-файлы с метаданными [GifsInfo] в директорию `AppPath.r_likes` с расширением `.likes`.
+ * Предоставляет реактивный Compose-список [list] для непосредственного отображения в UI.
+ *
+ * @param scope Корутин-скоп для асинхронных операций чтения и записи.
+ */
 class R_Saved_Likes(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
 
+    /** Файловая БД лайков. */
     val likesDb = FileDB(AppPath.r_likes, "likes", GifsInfo.serializer())
 
+    /** Реактивный список лайков для Compose UI. */
     val list = likesDb.list
 
+    /**
+     * Добавляет [item] в лайки: сохраняет файл на диск и обновляет список в памяти.
+     */
     fun add(item: GifsInfo) {
         val safeItem = item.sanitizeOrNull() ?: run {
             SnackBar.error("Like add error: empty id")
@@ -53,6 +66,9 @@ class R_Saved_Likes(
         }
     }
 
+    /**
+     * Удаляет [item] из лайков на диске и в памяти.
+     */
     fun remove(item: GifsInfo) {
         if (item.id.isBlank()) return
         Timber.i("R_Saved_Likes remove() id:${item.id} userName:${item.userName} url:${item.urls.hd}")
@@ -71,11 +87,14 @@ class R_Saved_Likes(
         }
     }
 
-    /** Быстрая проверка принадлежности к лайкам. */
+    /** Быстрая проверка принадлежности к лайкам по строковому [id]. */
     fun contains(id: String): Boolean = id.isNotBlank() && list.any { it.id == id }
 
     private var refreshJob: Job? = null
 
+    /**
+     * Перечитывает все сохраненные лайки с диска с автоматической очисткой поврежденных записей.
+     */
     fun refresh() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {

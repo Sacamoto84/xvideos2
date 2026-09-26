@@ -42,6 +42,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * [ScreenModel] экрана отдельного альбома Luscious.
+ *
+ * Управляет загрузкой страниц картинок альбома, добавлением/удалением в избранное на сервере,
+ * локальным сохранением альбома и его картинок, системным шерингом и P2P-экспортом альбома.
+ *
+ * @property idAlbum Числовой идентификатор альбома Luscious.
+ * @property luscious Ссылка на сервис сетевого API Luscious.
+ * @property saved Локальные хранилища сохраненного контента Luscious.
+ * @property serverFavorites Репозиторий серверного избранного.
+ * @property scope Долгоживущая корутинная область уровня приложения.
+ * @property context Контекст приложения для системных интентов шаринга.
+ */
 @Stable
 class ScreenLAlbumSM @AssistedInject constructor(
     @Assisted val idAlbum: Long,
@@ -52,34 +65,47 @@ class ScreenLAlbumSM @AssistedInject constructor(
     @ApplicationContext val context: Context
 ) : ScreenModel {
 
+    /**
+     * Фабрика создания [ScreenLAlbumSM] с передачей динамического параметра [idAlbum].
+     */
     @AssistedFactory
     interface Factory : ScreenModelFactory {
+        /** Создает экземпляр [ScreenLAlbumSM] для заданного [idAlbum]. */
         fun create(idAlbum: Long): ScreenLAlbumSM
     }
 
+    /** Хост состояния сетки и выбора картинок внутри альбома. */
     val host = LazyRowPictureDetailsHost(idAlbum.toString(), idAlbum.toString())
 
+    /** Поток объекта [AlbumInfo], инкапсулирующего прогресс и загрузку страниц альбома. */
     val albumInfo = MutableStateFlow<AlbumInfo?>(
         luscious.getAlbum(idAlbum, requestScope = screenModelScope)
     )
 
     /**
-     * Показ только анимированных картинок
+     * Флаг фильтрации: показывать только анимированные картинки (GIF/видео).
      */
     var showOnlyAnimated by mutableStateOf(false)
 
     /**
-     * Статус избранного на сервере Luscious
+     * Статус нахождения альбома в избранном на сервере Luscious.
      */
     var isServerFavorite by mutableStateOf<Boolean?>(null)
+    /** Флаг выполнения запроса добавления/удаления избранного на сервере. */
     var isServerFavoriteLoading by mutableStateOf(false)
 
+    /**
+     * Синхронизирует начальный статус серверного избранного по значению [likeStatus] из ответа API.
+     */
     fun syncServerFavoriteStatus(likeStatus: String?) {
         if (isServerFavorite == null && likeStatus != null) {
             isServerFavorite = likeStatus.isNotBlank() && likeStatus != "none" && likeStatus != "dislike"
         }
     }
 
+    /**
+     * Переключает состояние лайка/избранного альбома [album] на сервере Luscious.
+     */
     fun toggleServerFavorite(album: AlbumDetails) {
         if (isServerFavoriteLoading) return
         val albumId = album.id.ifBlank { idAlbum.toString() }
@@ -125,7 +151,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
     }
 
     /**
-     * Сохранить альбом
+     * Сохраняет альбом в локальную файловую базу данных FileDB.
      */
     fun saveAlbum() {
         scope.launch {
@@ -147,11 +173,14 @@ class ScreenLAlbumSM @AssistedInject constructor(
     var p2pAlbumSource by mutableStateOf<P2pSendSource?>(null)
         private set
 
+    /** Сбрасывает активный источник P2P-отправки альбома. */
     fun dismissP2pAlbum() { p2pAlbumSource = null }
 
     /**
      * Поделиться альбомом по P2P: бандл — только файл метаданных `<id>.album`
      * (из l_albums, если альбом сохранён, иначе пишется в outbox-зеркало).
+     *
+     * @param album Альбом для экспорта.
      */
     fun shareAlbumP2p(album: AlbumDetails) {
         scope.launch(Dispatchers.IO) {
@@ -171,6 +200,9 @@ class ScreenLAlbumSM @AssistedInject constructor(
         }
     }
 
+    /**
+     * Сохраняет картинку [item] в локальные лайки с привязкой к ID альбома.
+     */
     fun downloadLike(item: PicsDetails) {
         saved.likes.add(item.copy(album = idAlbum.toString()))
     }
@@ -184,7 +216,9 @@ class ScreenLAlbumSM @AssistedInject constructor(
         Timber.d("ScreenLAlbumSM onDispose")
     }
 
-
+    /**
+     * Скачивает медиафайл [item] в кэш и открывает системный диалог шаринга Android.
+     */
     fun share(item: PicsDetails) {
         // Скачивание/запись файла — на IO (потоково), системный share — на Main.
         scope.launch(Dispatchers.IO) {
@@ -207,6 +241,9 @@ class ScreenLAlbumSM @AssistedInject constructor(
         }
     }
 
+    /**
+     * Перезагружает информацию об альбоме и его картинках.
+     */
     fun refresh() {
         val current = albumInfo.value
         if (current != null) {
@@ -216,6 +253,9 @@ class ScreenLAlbumSM @AssistedInject constructor(
         }
     }
 
+    /**
+     * Повторяет загрузку незагруженных или завершившихся с ошибкой страниц альбома.
+     */
     fun retryFailedAlbumPages() {
         screenModelScope.launch {
             albumInfo.value?.retryFailedPages()
@@ -224,10 +264,14 @@ class ScreenLAlbumSM @AssistedInject constructor(
 
 }
 
+/**
+ * Hilt-модуль привязки AssistedFactory [ScreenLAlbumSM.Factory].
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenModuleLAlbum {
 
+    /** Регистрирует фабрику создания [ScreenLAlbumSM] в Dagger мультибиндинге. */
     @Binds
     @IntoMap
     @ScreenModelFactoryKey(ScreenLAlbumSM.Factory::class)

@@ -14,8 +14,17 @@ import timber.log.Timber
 private const val mediaCategoriesBootstrap =
     """{"operationName":"MediaCategoriesBootstrap","query":"\n    query MediaCategoriesBootstrap {\n  media_categories {\n    genres {\n      id\n      title\n      slug\n      description\n      uploading_rules\n      poster_url\n      acts_as_warning\n      acts_as_default\n      represents_uncategorized\n      url\n      parent {\n        id\n      }\n      only_allows_model\n      only_content {\n        id\n        title\n        url\n      }\n    }\n    filter_settings {\n      user_id\n      has_custom_filters\n      uses_default_warnings\n      audience_ids\n      genres_blocked_ids\n      genres_subscribed_ids\n      preferred_language_ids\n      default_dashboard_content_id\n    }\n    languages {\n      id\n      title\n      url\n    }\n    content_types {\n      id\n      title\n      url\n    }\n    audiences {\n      id\n      title\n      description\n      poster_url\n      url\n    }\n  }\n}\n    ","variables":{}}"""
 
+/**
+ * Глобальный реактивный поток справочника категорий, жанров, аудиторий и языков Luscious.
+ */
 val mediaCategoriesFlow = MutableStateFlow<MediaCategories?>(null)
 
+/**
+ * Загружает и обновляет справочник медиа-категорий Luscious через запрос `MediaCategoriesBootstrap`.
+ *
+ * @param repository Репозиторий сетевых запросов.
+ * @param forceRefresh Если `true`, игнорирует ROM-кэш и запрашивает свежие данные по сети.
+ */
 suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean = false) {
     Timber.d("refreshMediaCategories (forceRefresh=$forceRefresh)")
 
@@ -42,21 +51,24 @@ suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean
     }
 }
 
-// Основной класс для всего ответа
+/**
+ * Корневой ответ запроса MediaCategoriesBootstrap.
+ */
 @Serializable
 data class MediaCategoriesBootstrapResponse(
     @SerialName("data")
     val data: ApiData = ApiData()
 )
 
-// Класс для данных
 @Serializable
 data class ApiData(
     @SerialName("media_categories")
     val mediaCategories: MediaCategories = MediaCategories()
 )
 
-// Класс для медиа категорий
+/**
+ * Справочник категорий: жанры, пользовательские настройки фильтрации, языки, типы контента и аудитории.
+ */
 @Serializable
 data class MediaCategories(
     @SerialName("genres")
@@ -84,7 +96,9 @@ data class MediaCategories(
 // Жанр и его ограничение по контенту переехали в model.FilterGenre: на них
 // ссылается AlbumListFilter, то есть слой ниже сети.
 
-// Класс для настроек фильтров
+/**
+ * Настройки фильтрации пользователя из профиля Luscious.
+ */
 @Serializable
 data class FilterSettings(
     @SerialName("user_id")
@@ -117,7 +131,9 @@ data class FilterSettings(
     val hasPreferredLanguages: Boolean get() = preferredLanguageIds.isNotEmpty()
 }
 
-// Класс для языков
+/**
+ * Язык контента альбома.
+ */
 @Serializable
 data class Language(
     @SerialName("id")
@@ -136,7 +152,9 @@ data class Language(
     }
 }
 
-// Класс для типов контента
+/**
+ * Тип медиаконтента (манга, картинки и т.д.).
+ */
 @Serializable
 data class ContentType(
     @SerialName("id")
@@ -155,7 +173,9 @@ data class ContentType(
     }
 }
 
-// Класс для аудиторий
+/**
+ * Целевая аудитория альбома.
+ */
 @Serializable
 data class Audience(
     @SerialName("id")

@@ -7,6 +7,14 @@ import timber.log.Timber
 // Лояльный парсер: новые/неизвестные поля в ответе API не должны ронять поиск.
 private val searchJson = Json { ignoreUnknownKeys = true }
 
+/**
+ * Десериализует JSON-ответ автодополнения поиска в типизированную модель [SearchResult].
+ *
+ * Безопасно валидирует формат JSON и подавляет ошибки несовместимости схемы, возвращая `null` при сбое.
+ *
+ * @param json Сырая строка JSON.
+ * @return Распарсенный объект [SearchResult] или `null`.
+ */
 fun parseJson(json: String?): SearchResult? {
     if (json.isNullOrBlank()) return null
     val trimmed = json.trim()
