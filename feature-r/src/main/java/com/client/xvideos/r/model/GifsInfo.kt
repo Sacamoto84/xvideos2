@@ -33,6 +33,14 @@ data class GifsInfo(
     val isValid: Boolean get() = id.isNotBlank()
     val isImage: Boolean get() = type == 2
     val isGif: Boolean get() = type == 1 || type == 0
+    val hasTags: Boolean get() = tags.isNotEmpty()
+    val hasNiches: Boolean get() = !niches.isNullOrEmpty()
+    val hasDescription: Boolean get() = description.isNotBlank() && description != "Описание"
+    val hasDuration: Boolean get() = duration != null && duration > 0.0
+    val hasViews: Boolean get() = views != null && views > 0L
+    val hasLikes: Boolean get() = likes > 0
+    val hasUrls: Boolean get() = urls.isValid
+    val hasUserName: Boolean get() = userName.isNotBlank() && userName != "userName"
 
     companion object {
         val EMPTY = GifsInfo()

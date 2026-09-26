@@ -174,6 +174,31 @@ class FileDB<T>(
         }
     }
 
+    fun readOrNull(nameFile: String): T? = read(nameFile).getOrNull()
+
+    fun contains(nameFile: String): Boolean {
+        if (isUnsafeItemName(nameFile)) return false
+        return synchronized(lock) {
+            File(dir, "$nameFile$dotExtension").exists()
+        }
+    }
+
+    fun insertOrUpdate(nameFile: String, value: T): Result<Boolean> = insert(nameFile, value)
+
+    val count: Int
+        get() = synchronized(lock) {
+            if (!dir.exists() || !dir.isDirectory) 0
+            else dir.listFiles()?.count { it.extension == extension } ?: 0
+        }
+
+    fun getAllKeys(): List<String> = synchronized(lock) {
+        if (!dir.exists() || !dir.isDirectory) return@synchronized emptyList()
+        val raw = dir.listFiles() ?: return@synchronized emptyList()
+        raw.filter { it.extension == extension }
+            .sortedByDescending { it.lastModified() }
+            .map { it.nameWithoutExtension }
+    }
+
     fun refresh(): Result<Boolean> {
         return try {
             // Номер берётся под тем же локом, что и чтение каталога, поэтому

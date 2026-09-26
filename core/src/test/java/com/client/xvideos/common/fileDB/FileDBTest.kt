@@ -115,4 +115,30 @@ class FileDBTest {
         assertEquals(false, File(root, "temp.tmp").exists())
         assertEquals(true, File(root, "keep.other").exists())
     }
+
+    @Test
+    fun `contains count getAllKeys readOrNull и insertOrUpdate работают корректно`() {
+        val root = tmp.newFolder("db_helpers")
+        val db = db(root)
+
+        assertEquals(0, db.count)
+        assertEquals(emptyList<String>(), db.getAllKeys())
+        org.junit.Assert.assertNull(db.readOrNull("item1"))
+        org.junit.Assert.assertFalse(db.contains("item1"))
+        org.junit.Assert.assertFalse(db.contains("../unsafe"))
+
+        assertTrue(db.insertOrUpdate("item1", Row("1", "first")).isSuccess)
+        assertTrue(db.contains("item1"))
+        assertEquals(1, db.count)
+        assertEquals(Row("1", "first"), db.readOrNull("item1"))
+        assertEquals(listOf("item1"), db.getAllKeys())
+
+        assertTrue(db.insertOrUpdate("item2", Row("2", "second")).isSuccess)
+        assertEquals(2, db.count)
+        assertTrue(db.contains("item2"))
+        val keys = db.getAllKeys()
+        assertEquals(2, keys.size)
+        assertTrue(keys.contains("item1"))
+        assertTrue(keys.contains("item2"))
+    }
 }

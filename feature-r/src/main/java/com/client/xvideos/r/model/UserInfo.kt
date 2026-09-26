@@ -68,6 +68,12 @@ data class UserInfo(
     val isValid: Boolean get() = username.isNotBlank()
     val displayName: String get() = name.ifBlank { username }
     val hasAvatar: Boolean get() = !profileImageUrl.isNullOrBlank()
+    val hasDescription: Boolean get() = !description.isNullOrBlank()
+    val hasCreationTime: Boolean get() = creationtime > 0L
+    val hasFollowers: Boolean get() = followers > 0L
+    val hasGifs: Boolean get() = gifs > 0L || publishedGifs > 0L
+    val hasProfileUrl: Boolean get() = profileUrl.isNotBlank()
+    val isVerified: Boolean get() = verified
 
     companion object {
         val EMPTY = UserInfo()

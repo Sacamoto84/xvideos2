@@ -49,9 +49,17 @@ enum class Order(val value: String) {
     NICHES_NAME_Z_A("name");
 
     val isNichesOrder: Boolean get() = this.name.startsWith("NICHES_")
+    val isLatest: Boolean get() = this == LATEST
+    val isOldest: Boolean get() = this == OLDEST
+    val isTop: Boolean get() = this == TOP
+    val isTrending: Boolean get() = this == TRENDING
+    val isRelevant: Boolean get() = this == RELEVANT
 
     companion object {
+        val DEFAULT = LATEST
         fun fromValue(value: String): Order? = entries.firstOrNull { it.value.equals(value, ignoreCase = true) }
+        fun fromValueOrDefault(value: String?, default: Order = DEFAULT): Order =
+            if (value != null) fromValue(value) ?: default else default
     }
 }
 
@@ -66,7 +74,11 @@ enum class MediaType(val value: String) {
 
     companion object {
         val DEFAULT = ALL
-        fun fromValue(value: String): MediaType = entries.firstOrNull { it.value.equals(value, ignoreCase = true) } ?: DEFAULT
+        fun fromValueOrNull(value: String?): MediaType? =
+            if (value != null) entries.firstOrNull { it.value.equals(value, ignoreCase = true) } else null
+
+        fun fromValue(value: String?, default: MediaType = DEFAULT): MediaType =
+            fromValueOrNull(value) ?: default
     }
 }
 

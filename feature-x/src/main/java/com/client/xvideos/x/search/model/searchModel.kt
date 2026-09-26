@@ -12,6 +12,8 @@ data class Keyword(val N: String, val R: String) { //N группа R-рейти
     val name: String get() = N
     val rating: String get() = R
     val isValid: Boolean get() = N.isNotBlank()
+    val hasRating: Boolean get() = R.isNotBlank()
+    val ratingDoubleOrNull: Double? get() = R.toDoubleOrNull()
 
     companion object {
         val EMPTY = Keyword(N = "", R = "")
@@ -36,6 +38,9 @@ data class Pornstar(
     val videoCount: Int get() = MV
     val subscribers: String get() = RF
     val isValid: Boolean get() = N.isNotBlank()
+    val hasAvatar: Boolean get() = P.isNotBlank()
+    val hasSubscribers: Boolean get() = RF.isNotBlank() && RF != "0"
+    val hasVideos: Boolean get() = MV > 0
 
     companion object {
         val EMPTY = Pornstar(N = "", F = "", T = "pornstar", MV = 0, M = 0, L = 0, P = "", RF = "")
@@ -59,6 +64,9 @@ data class Channel(
     val avatarUrl: String get() = P
     val subscribers: String get() = RF
     val isValid: Boolean get() = N.isNotBlank()
+    val hasAvatar: Boolean get() = P.isNotBlank()
+    val hasSubscribers: Boolean get() = RF.isNotBlank() && RF != "0"
+    val isCpv: Boolean get() = CPV
 
     companion object {
         val EMPTY = Channel(N = "", F = "", T = "channel", CPV = false, M = 0, L = 0, P = "", RF = "")

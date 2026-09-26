@@ -139,6 +139,17 @@ class FormattingUtilsTest {
         assertEquals(0L, getFolderSize(nonExistent))
         assertEquals(0L, nonExistent.folderSize())
     }
+
+    @Test
+    fun `getFolderFileCount and folderFileCount handle null or nonexistent directory safely`() {
+        val nullFile: java.io.File? = null
+        assertEquals(0, getFolderFileCount(nullFile))
+        assertEquals(0, nullFile.folderFileCount())
+
+        val nonExistent = java.io.File("non_existent_folder_path_12345")
+        assertEquals(0, getFolderFileCount(nonExistent))
+        assertEquals(0, nonExistent.folderFileCount())
+    }
 }
 
 

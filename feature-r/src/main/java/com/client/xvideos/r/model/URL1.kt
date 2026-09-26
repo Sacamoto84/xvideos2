@@ -15,8 +15,12 @@ data class URL1(
     @SerialName("sd") val sd: String = "",            // * SD-ссылка на медиафайл.                                 3.5 MB
     @SerialName("hd") val hd: String? = null,         // * HD-ссылка на медиафайл (может отсутствовать). Со звуком 21MB
 ) : Serializable {
+    val hasThumbnail: Boolean get() = thumbnail.isNotBlank()
+    val hasSd: Boolean get() = sd.isNotBlank()
     val hasHd: Boolean get() = !hd.isNullOrBlank()
     val hasSilent: Boolean get() = !silent.isNullOrBlank()
+    val hasPoster: Boolean get() = !poster.isNullOrBlank()
+    val hasHtml: Boolean get() = !html.isNullOrBlank()
     val bestVideoUrl: String get() = hd?.takeIf { it.isNotBlank() } ?: sd
     val bestImageUrl: String get() = poster?.takeIf { it.isNotBlank() } ?: thumbnail
     val isValid: Boolean get() = thumbnail.isNotBlank() || sd.isNotBlank()
