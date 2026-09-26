@@ -197,6 +197,16 @@ data class Album(
     val hasDownloadUrl: Boolean get() = downloadUrl.isNotBlank()
     val hasFavorites: Boolean get() = numberOfFavorites > 0
     val hasLanguage: Boolean get() = language?.isValid == true
+    val normalizedTitle: String get() = title.trim()
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return title.contains(q, ignoreCase = true) ||
+            description.contains(q, ignoreCase = true) ||
+            tags.any { it.text.contains(q, ignoreCase = true) } ||
+            genres.any { it.title.contains(q, ignoreCase = true) }
+    }
 
     companion object {
         val EMPTY = Album()
@@ -257,6 +267,14 @@ data class User(
 ) {
     val effectiveName: String get() = displayName.ifBlank { name }
     val isValid: Boolean get() = id.isNotBlank()
+    val hasUrl: Boolean get() = url.isNotBlank()
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return name.contains(q, ignoreCase = true) ||
+            displayName.contains(q, ignoreCase = true)
+    }
 
     companion object {
         val EMPTY = User()
@@ -276,6 +294,13 @@ data class Tag(
 ) {
     val isValid: Boolean get() = id.isNotBlank() && text.isNotBlank()
 
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return text.contains(q, ignoreCase = true) ||
+            category?.contains(q, ignoreCase = true) == true
+    }
+
     companion object {
         val EMPTY = Tag()
     }
@@ -293,6 +318,11 @@ data class Genre(
 ) {
     val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
 
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        return title.contains(query.trim(), ignoreCase = true)
+    }
+
     companion object {
         val EMPTY = Genre()
     }
@@ -308,6 +338,11 @@ data class Audience(
     @SerialName("url") val url: String = ""
 ) {
     val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        return title.contains(query.trim(), ignoreCase = true)
+    }
 
     companion object {
         val EMPTY = Audience()

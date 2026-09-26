@@ -85,6 +85,18 @@ data class AlbumDetails(
     val tagsCount: Int get() = tags.size
     val genresCount: Int get() = genres.size
     val audiencesCount: Int get() = audiences.size
+    val isNotManga: Boolean get() = !is_manga
+
+    fun hasAnyPictures(): Boolean = number_of_pictures > 0
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return title.contains(q, ignoreCase = true) ||
+            description.contains(q, ignoreCase = true) ||
+            tags.any { it.text.contains(q, ignoreCase = true) } ||
+            genres.any { it.title.contains(q, ignoreCase = true) }
+    }
 
     fun containsTag(tagName: String?): Boolean =
         if (tagName.isNullOrBlank()) false else tags.any { it.text.equals(tagName, ignoreCase = true) }
@@ -120,6 +132,11 @@ data class Content(
  * Возвращает URL обложки альбома при наличии.
  */
 fun AlbumDetails.coverUrl(): String? = cover?.url?.takeIf { it.isNotBlank() }
+
+/**
+ * Проверяет наличие непустого URL обложки.
+ */
+fun AlbumDetails.hasCoverUrl(): Boolean = coverUrl() != null
 
 /**
  * Проверяет, что у альбома валидный числовой ID.

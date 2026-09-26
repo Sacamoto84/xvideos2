@@ -46,7 +46,9 @@ data class PicsDetails(
     @SerialName("url") val url: String? = null
 ) : Parcelable {
     val isValid: Boolean get() = !id.isNullOrBlank()
+    val hasValidId: Boolean get() = !id.isNullOrBlank() && id != "0"
     val hasVideo: Boolean get() = !url_to_video.isNullOrBlank()
+    val isGifOrVideo: Boolean get() = is_animated || hasVideo
     val hasOriginal: Boolean get() = !url_to_original.isNullOrBlank()
     val hasThumbnails: Boolean get() = !thumbnails.isNullOrEmpty()
     val numericId: Long get() = id?.toLongOrNull() ?: 0L
@@ -83,6 +85,8 @@ data class Thumbnails(
     val isValid: Boolean get() = !url.isNullOrBlank()
     val hasUrl: Boolean get() = !url.isNullOrBlank()
     val hasSize: Boolean get() = !size.isNullOrBlank()
+    val hasDimensions: Boolean get() = width > 0 && height > 0
+    val aspectRatio: Float get() = if (height > 0) width.toFloat() / height.toFloat() else 0f
 
 
     companion object {

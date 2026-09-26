@@ -183,7 +183,7 @@ fun String.isLImageFileUrl(): Boolean {
     return ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "webp" || ext == "gif"
 }
 
-private fun String.isLocalImagePath(): Boolean {
+internal fun String.isLocalImagePath(): Boolean {
     return isNotBlank() &&
             !startsWith("http://", ignoreCase = true) &&
             !startsWith("https://", ignoreCase = true) &&
@@ -235,4 +235,13 @@ fun PicsDetails.hasValidPreviewImage(thumbnailsSize: String): Boolean =
     lPreviewImageUrl(thumbnailsSize).isNotBlank()
 
 fun PicsDetails.isStaticImage(): Boolean = !isAnimatedMedia()
+
+/** Проверяет, указывает ли url_to_original на локальный файл. */
+fun PicsDetails.isLocalFile(): Boolean = url_to_original?.isLocalImagePath() == true
+
+/** Суммарное разрешение картинки в пикселях. */
+fun PicsDetails.totalPixels(): Long = width.coerceAtLeast(0).toLong() * height.coerceAtLeast(0).toLong()
+
+/** Проверяет, доступно ли медиа для загрузки или просмотра. */
+fun PicsDetails.hasValidMedia(): Boolean = lDownloadUrl() != null
 

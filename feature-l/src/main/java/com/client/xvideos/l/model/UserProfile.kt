@@ -40,6 +40,12 @@ data class UserProfile(
     /** Маскированный пароль для безопасного отображения в логах. */
     val maskedPassword: String get() = if (password.isEmpty()) "" else "*".repeat(password.length.coerceAtMost(8))
 
+    /** Нормализованный адрес электронной почты (удалены пробелы, нижний регистр). */
+    val normalizedEmail: String get() = email.trim().lowercase()
+
+    /** Базовая проверка формата email. */
+    val isEmailValid: Boolean get() = email.contains('@') && email.substringAfter('@').contains('.')
+
     /** Проверяет совпадение пользователя по email без учета регистра. */
     fun isSameUser(other: UserProfile?): Boolean =
         other != null && email.isNotBlank() && email.equals(other.email, ignoreCase = true)

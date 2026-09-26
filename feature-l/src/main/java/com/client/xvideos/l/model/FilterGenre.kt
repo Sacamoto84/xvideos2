@@ -129,3 +129,15 @@ fun FilterGenre.isSameGenre(other: FilterGenre?): Boolean =
 /** Наличие непустого URL контента. */
 val OnlyContent.hasUrl: Boolean get() = url.isNotBlank()
 
+/** Проверяет, соответствует ли жанр поисковой строке (по названию, слагу или описанию). */
+fun FilterGenre.matches(query: String?): Boolean {
+    if (query.isNullOrBlank()) return true
+    val q = query.trim()
+    return title.contains(q, ignoreCase = true) ||
+        slug.contains(q, ignoreCase = true) ||
+        description.contains(q, ignoreCase = true)
+}
+
+/** Нормализованный слаг жанра в нижнем регистре. */
+val FilterGenre.normalizedSlug: String get() = slug.trim().lowercase()
+

@@ -27,8 +27,22 @@ enum class AlbumType(val value: String) {
             Pictures -> "Pictures"
         }
 
+    /** Переход к следующему типу циклически. */
+    fun next(): AlbumType {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущему типу циклически. */
+    fun prev(): AlbumType {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         val DEFAULT = Pictures
+
+        val allTitles: List<String> = entries.map { it.title }
 
         fun fromValueOrNull(value: String?): AlbumType? =
             if (value != null) entries.firstOrNull { it.value.equals(value, ignoreCase = true) } else null
@@ -44,5 +58,8 @@ enum class AlbumType(val value: String) {
 
         fun fromIdOrDefault(id: String?, default: AlbumType = DEFAULT): AlbumType =
             fromValueOrNull(id) ?: fromNameOrNull(id) ?: default
+
+        fun fromOrdinalOrDefault(ordinal: Int, default: AlbumType = DEFAULT): AlbumType =
+            entries.getOrNull(ordinal) ?: default
     }
 }

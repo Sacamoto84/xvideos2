@@ -88,8 +88,22 @@ enum class AudiencesType(
     fun matchesTitle(titleQuery: String?): Boolean =
         !titleQuery.isNullOrBlank() && title.contains(titleQuery, ignoreCase = true)
 
+    /** Переход к следующей категории аудитории циклически. */
+    fun next(): AudiencesType {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущей категории аудитории циклически. */
+    fun prev(): AudiencesType {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         val DEFAULT = STRAIGHT
+
+        val allTitles: List<String> = entries.map { it.title }
 
         fun fromId(id: Int): AudiencesType? = entries.find { it.id == id }
         fun fromIdOrNull(id: Int?): AudiencesType? = if (id != null) fromId(id) else null
@@ -109,5 +123,8 @@ enum class AudiencesType(
 
         fun fromStringOrNull(value: String?): AudiencesType? =
             value?.toIntOrNull()?.let { fromId(it) } ?: fromTitleOrNull(value) ?: fromUrlOrNull(value)
+
+        fun fromOrdinalOrDefault(ordinal: Int, default: AudiencesType = DEFAULT): AudiencesType =
+            entries.getOrNull(ordinal) ?: default
     }
 }
