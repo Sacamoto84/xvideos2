@@ -29,6 +29,7 @@ enum class ScrollButtonEffect(
     val isBlur: Boolean get() = this == BLUR
     val isGlass: Boolean get() = this == GLASS
     val requiresBlurShader: Boolean get() = this != FLAT
+    val hasSubtitle: Boolean get() = subtitle.isNotBlank()
 
     /** Переход к следующему эффекту циклически. */
     fun next(): ScrollButtonEffect {
@@ -46,10 +47,16 @@ enum class ScrollButtonEffect(
         val DEFAULT = BLUR
 
         val allTitles: List<String> = entries.map { it.title }
+        val allNames: List<String> = entries.map { it.name }
+
+        fun fromNameOrNull(name: String?): ScrollButtonEffect? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
 
         fun fromNameOrDefault(name: String?): ScrollButtonEffect {
-            return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: DEFAULT
+            return fromNameOrNull(name) ?: DEFAULT
         }
+
+        fun isValidName(name: String?): Boolean = fromNameOrNull(name) != null
 
         fun fromOrdinalOrDefault(ordinal: Int, default: ScrollButtonEffect = DEFAULT): ScrollButtonEffect =
             entries.getOrNull(ordinal) ?: default

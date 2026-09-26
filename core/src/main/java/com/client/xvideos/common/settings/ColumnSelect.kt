@@ -14,6 +14,25 @@ fun getEnabledColumns(flags: List<Boolean>, minCol: Int = 1, maxCol: Int = 4): L
 }
 
 /**
+ * Проверяет, включена ли хотя бы одна колонка в заданном диапазоне.
+ */
+fun hasEnabledColumns(flags: List<Boolean>, minCol: Int = 1, maxCol: Int = 4): Boolean =
+    getEnabledColumns(flags, minCol, maxCol).isNotEmpty()
+
+/**
+ * Проверяет, включена ли конкретная колонка по индексу.
+ */
+fun isColumnEnabled(flags: List<Boolean>, column: Int): Boolean =
+    flags.getOrNull(column) == true
+
+/**
+ * Ограничивает количество колонок допустимым диапазоном.
+ */
+fun validateColumnCount(columnCount: Int, minCol: Int = 1, maxCol: Int = 4): Int =
+    columnCount.coerceIn(minCol, maxCol)
+
+
+/**
  * Вычисляет следующее разрешённое количество колонок циклически.
  * Если список доступных пуст, возвращает [currentIndex].
  */

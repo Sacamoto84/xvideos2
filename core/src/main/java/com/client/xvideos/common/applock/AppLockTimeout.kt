@@ -49,5 +49,13 @@ enum class AppLockTimeout(
 
         fun fromOrdinalOrDefault(ordinal: Int, default: AppLockTimeout = DEFAULT): AppLockTimeout =
             entries.getOrNull(ordinal) ?: default
+
+        fun fromNameOrNull(name: String?): AppLockTimeout? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
+        fun fromNameOrDefault(name: String?, default: AppLockTimeout = DEFAULT): AppLockTimeout =
+            fromNameOrNull(name) ?: default
+
+        val allNames: List<String> = entries.map { it.name }
     }
 }

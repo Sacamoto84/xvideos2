@@ -226,4 +226,12 @@ object AppPath {
         dir.mkdirs()
     }
 
+    /** Проверяет физическое существование файла или папки по указанному пути. */
+    fun exists(path: String?): Boolean = !path.isNullOrBlank() && File(path).exists()
+
+    /** Проверяет, является ли путь существующей директорией. */
+    fun isDirectory(path: String?): Boolean = !path.isNullOrBlank() && File(path).isDirectory
+
+    /** Создает объект [File] для дочернего элемента внутри директории. */
+    fun resolveChildFile(parentPath: String, childName: String): File = File(parentPath, childName)
 }

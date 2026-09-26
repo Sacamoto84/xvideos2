@@ -19,6 +19,13 @@ data class XlrBackupReport(
     /** Истина, если отчет содержит хотя бы один файл. */
     val isNotEmpty: Boolean get() = !isEmpty
 
+    val hasFiles: Boolean get() = files > 0
+    val hasBytes: Boolean get() = bytes > 0L
+
+    /** Складывает два отчета о бэкапе. */
+    fun add(other: XlrBackupReport): XlrBackupReport =
+        XlrBackupReport(files = files + other.files, bytes = bytes + other.bytes)
+
     companion object {
         /** Пустой отчет по умолчанию. */
         val EMPTY = XlrBackupReport(0, 0L)
@@ -55,6 +62,12 @@ data class XlrBackupItem(
 
     /** Истина, если элемент имеет родительский раздел в иерархии. */
     val hasParent: Boolean get() = !parentPath.isNullOrBlank()
+
+    /** Истина, если элемент является корневым разделом (нет родителя). */
+    val isRootSection: Boolean get() = parentPath == null
+
+    /** Истина, если внутри элемента есть файлы. */
+    val hasFiles: Boolean get() = files > 0
 }
 
 /**
@@ -101,6 +114,9 @@ data class XlrBackupOptions(
 
     /** Истина, если хотя бы один раздел экспортируется в режиме MINI. */
     val hasMiniContent: Boolean get() = lMode.isMini || rMode.isMini
+
+    fun withLMode(mode: XlrBackupContentMode): XlrBackupOptions = copy(lMode = mode)
+    fun withRMode(mode: XlrBackupContentMode): XlrBackupOptions = copy(rMode = mode)
 
     companion object {
         /** Настройки по умолчанию (все в MINI). */

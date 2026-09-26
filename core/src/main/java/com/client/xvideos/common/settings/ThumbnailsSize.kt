@@ -82,5 +82,14 @@ enum class ThumbnailsSize(
          * Get all available display names
          */
         val displayNames: List<String> = entries.map { it.displayName }
+
+        val allValues: List<String> = entries.map { it.value }
+        val allNames: List<String> = entries.map { it.name }
+
+        fun fromNameOrNull(name: String?): ThumbnailsSize? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
+        fun fromNameOrDefault(name: String?, default: ThumbnailsSize = DEFAULT): ThumbnailsSize =
+            fromNameOrNull(name) ?: default
     }
 }
