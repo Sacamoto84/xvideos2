@@ -92,3 +92,12 @@ val FilterGenre.isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
  * Название жанра для отображения (title или slug).
  */
 val FilterGenre.displayTitle: String get() = title.ifBlank { slug }
+
+val FilterGenre.hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
+
+val FilterGenre.hasDescription: Boolean get() = description.isNotBlank()
+
+val FilterGenre.hasParent: Boolean get() = !parent.isNullOrBlank()
+
+val OnlyContent.hasUrl: Boolean get() = url.isNotBlank()
+

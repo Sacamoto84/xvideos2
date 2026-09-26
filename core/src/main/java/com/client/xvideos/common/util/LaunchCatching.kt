@@ -38,6 +38,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 fun CoroutineScope.launchCatching(
     context: CoroutineContext = EmptyCoroutineContext,
     message: String,
+    onError: (suspend (Exception) -> Unit)? = null,
     block: suspend CoroutineScope.() -> Unit,
 ): Job = launch(context) {
     try {
@@ -46,5 +47,6 @@ fun CoroutineScope.launchCatching(
         throw e
     } catch (e: Exception) {
         Timber.w(e, "!!! %s", message)
+        onError?.invoke(e)
     }
 }

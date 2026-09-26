@@ -145,6 +145,12 @@ fun String.lUrlExtension(): String {
     return lUrlFileName().substringAfterLast('.', missingDelimiterValue = "")
 }
 
+fun String.isLImageFileUrl(): Boolean {
+    if (isLVideoFileUrl()) return false
+    val ext = lUrlExtension().lowercase()
+    return ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "webp" || ext == "gif"
+}
+
 private fun String.isLocalImagePath(): Boolean {
     return isNotBlank() &&
             !startsWith("http://", ignoreCase = true) &&
@@ -186,3 +192,8 @@ fun PicsDetails.extractAnchorId(): String? {
     }
     return null
 }
+
+val PicsDetails.hasAnchorId: Boolean get() = extractAnchorId() != null
+
+fun PicsDetails.extractAnchorIdOrEmpty(): String = extractAnchorId() ?: ""
+

@@ -32,7 +32,14 @@ data class AlbumListFilter(
     val hasSearchQuery: Boolean get() = searchQuery.isNotBlank()
     val hasTags: Boolean get() = tagPlus.isNotEmpty() || tagMinus.isNotEmpty()
     val hasGenres: Boolean get() = genresPlus.isNotEmpty() || genresMinus.isNotEmpty()
-    val isFiltered: Boolean get() = hasSearchQuery || hasTags || hasGenres
+    val hasSelection: Boolean get() = selection.isNotBlank()
+    val isAnimatedOnly: Boolean get() = selection.equals("animated", ignoreCase = true)
+    val isFiltered: Boolean get() = hasSearchQuery || hasTags || hasGenres || hasSelection
+    val totalFilterCount: Int
+        get() = (if (hasSearchQuery) 1 else 0) +
+            (if (hasSelection) 1 else 0) +
+            tagPlus.size + tagMinus.size +
+            genresPlus.size + genresMinus.size
 
     companion object {
         val DEFAULT = AlbumListFilter()

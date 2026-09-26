@@ -96,4 +96,56 @@ class AlbumFilterDisplayStructureTest {
         assertEquals("Network error", error.errorMessageOrNull())
         assertNull(error.throwableOrNull())
     }
+
+    @Test
+    fun `PicsDetailsMedia and image url helpers work accurately`() {
+        assertEquals(true, "https://cdn/test.jpg".isLImageFileUrl())
+        assertEquals(true, "https://cdn/test.png".isLImageFileUrl())
+        assertEquals(false, "https://cdn/test.mp4".isLImageFileUrl())
+
+        val picWithoutId = PicsDetails(id = null, url = "https://example.com/id/98765/pic")
+        assertEquals(true, picWithoutId.hasAnchorId)
+        assertEquals("98765", picWithoutId.extractAnchorIdOrEmpty())
+
+        val emptyPic = PicsDetails.EMPTY
+        assertEquals(false, emptyPic.hasAnchorId)
+        assertEquals("", emptyPic.extractAnchorIdOrEmpty())
+    }
+
+    @Test
+    fun `FilterGenre and OnlyContent properties work accurately`() {
+        val genre = FilterGenre(id = "1", title = "Yaoi", posterUrl = "https://cdn/poster.jpg", description = "Desc")
+        assertTrue(genre.isValid)
+        assertTrue(genre.hasPoster)
+        assertTrue(genre.hasDescription)
+        assertFalse(genre.hasParent)
+
+        val onlyContent = OnlyContent(id = "c1", title = "Hentai", url = "/hentai")
+        assertTrue(onlyContent.isValid)
+        assertTrue(onlyContent.hasUrl)
+    }
+
+    @Test
+    fun `SavedAlbumFilter and AlbumListFilter properties reflect filter parameters`() {
+        val emptySaved = SavedAlbumFilter.EMPTY
+        assertTrue(emptySaved.isEmpty)
+        assertFalse(emptySaved.isNotEmpty)
+        assertFalse(emptySaved.hasFilter)
+
+        val activeFilter = AlbumListFilter(
+            searchQuery = "gothic",
+            selection = "animated",
+            tagPlus = listOf("t1", "t2")
+        )
+        assertTrue(activeFilter.hasSearchQuery)
+        assertTrue(activeFilter.hasSelection)
+        assertTrue(activeFilter.isAnimatedOnly)
+        assertTrue(activeFilter.isFiltered)
+        assertEquals(4, activeFilter.totalFilterCount) // 1 query + 1 selection + 2 tags
+
+        val savedWithFilter = SavedAlbumFilter(name = "Saved Gothic", filter = activeFilter)
+        assertFalse(savedWithFilter.isEmpty)
+        assertTrue(savedWithFilter.isNotEmpty)
+        assertTrue(savedWithFilter.hasFilter)
+    }
 }

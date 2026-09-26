@@ -32,6 +32,9 @@ object EventBus {
     )
     val events = _events.asSharedFlow()
 
+    val subscriberCount: Int get() = _events.subscriptionCount.value
+    val hasSubscribers: Boolean get() = _events.subscriptionCount.value > 0
+
     /**
      * Однопоточный диспетчер: корутины на нём выполняются строго по очереди,
      * поэтому подписчики видят события в том же порядке, в каком их отправили.

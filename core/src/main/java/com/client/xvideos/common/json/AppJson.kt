@@ -30,3 +30,12 @@ val AppJsonCompact: Json = Json {
     encodeDefaults = true
     prettyPrint = false
 }
+
+inline fun <reified T> Json.decodeFromStringOrNull(string: String?): T? {
+    if (string.isNullOrBlank()) return null
+    return runCatching { decodeFromString<T>(string) }.getOrNull()
+}
+
+inline fun <reified T> Json.encodeToStringOrNull(value: T): String? =
+    runCatching { encodeToString(value) }.getOrNull()
+

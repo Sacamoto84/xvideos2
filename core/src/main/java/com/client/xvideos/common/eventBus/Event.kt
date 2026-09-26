@@ -16,10 +16,19 @@ sealed class Event {
     object ArchiveCountIncrement : Event()
 
 
+    val isSnackBar: Boolean get() = this is ShowSnackBar
+    val isLog: Boolean get() = this is Log
+    val isExitPosition: Boolean get() = this is X_FullScreenExitPosition
+
     /**
      * Показ снекбара с текстом из UiMessage
      */
-    data class ShowSnackBar(val message: UiMessage) : Event()
+    data class ShowSnackBar(val message: UiMessage) : Event() {
+        val isError: Boolean get() = message is UiMessage.Error
+        val isSuccess: Boolean get() = message is UiMessage.Success
+        val isInfo: Boolean get() = message is UiMessage.Info
+        val isWarning: Boolean get() = message is UiMessage.Warning
+    }
 
     data class X_FullScreenExitPosition(val position: Long) : Event()
 
