@@ -23,6 +23,27 @@ data class SearchCreatorsResponse(
     /** Количество авторов в выдаче. */
     val size: Int get() = items.size
 
+    /** Количество авторов в выдаче. */
+    val count: Int get() = items.size
+
+    /** Проверяет наличие хотя бы одного автора в выдаче. */
+    val hasItems: Boolean get() = items.isNotEmpty()
+
+    /** Первый автор в выдаче или null. */
+    val firstOrNull: SearchItemCreatorsResponse? get() = items.firstOrNull()
+
+    /**
+     * Поиск автора по никнейму (с префиксом '@' или без него) без учета регистра.
+     *
+     * @param username Никнейм автора.
+     * @return Найденный элемент [SearchItemCreatorsResponse] или null.
+     */
+    fun findByUsernameOrNull(username: String?): SearchItemCreatorsResponse? {
+        if (username.isNullOrBlank()) return null
+        val clean = username.removePrefix("@").trim()
+        return items.firstOrNull { it.username.equals(clean, ignoreCase = true) }
+    }
+
     companion object {
         /** Пустой экземпляр ответа. */
         val EMPTY = SearchCreatorsResponse()
@@ -77,6 +98,12 @@ data class SearchItemCreatorsResponse(
 
     /** Проверяет валидность элемента (поле text не пусто). */
     val isValid: Boolean get() = text.isNotBlank()
+
+    /** Проверяет наличие непустого текстового поля. */
+    val hasText: Boolean get() = text.isNotBlank()
+
+    /** Проверяет наличие отображаемого имени. */
+    val hasName: Boolean get() = name.isNotBlank()
 
     /** Проверяет наличие аватара. */
     val hasImage: Boolean get() = !image.isNullOrBlank()

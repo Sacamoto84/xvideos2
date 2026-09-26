@@ -32,8 +32,20 @@ data class SearchNichesShortResponse(
     /** Количество ниш на текущей странице. */
     val size: Int get() = niches.size
 
+    /** Количество ниш на текущей странице. */
+    val count: Int get() = niches.size
+
+    /** Проверяет наличие ниш в выдаче. */
+    val hasNiches: Boolean get() = niches.isNotEmpty()
+
     /** Проверяет, является ли страница первой. */
     val isFirstPage: Boolean get() = page <= 1L
+
+    /** Проверяет, является ли страница последней. */
+    val isLastPage: Boolean get() = pages > 0L && page >= pages
+
+    /** Первая найденная ниша или null. */
+    val firstOrNull: SearchItemNichesResponse? get() = niches.firstOrNull()
 
     companion object {
         /** Пустой экземпляр ответа. */
@@ -82,6 +94,9 @@ data class SearchItemNichesResponse(
     /** Проверяет валидность id ниши. */
     val isValid: Boolean get() = id.isNotBlank()
 
+    /** Проверяет наличие отображаемого названия. */
+    val hasName: Boolean get() = name.isNotBlank()
+
     /** Проверяет наличие непустого thumbnail URL. */
     val hasThumbnail: Boolean get() = thumbnail.isNotBlank()
 
@@ -93,6 +108,9 @@ data class SearchItemNichesResponse(
 
     /** Проверяет наличие тегов. */
     val hasTags: Boolean get() = tags.isNotEmpty()
+
+    /** Проверяет наличие предпочтений контента. */
+    val hasPreferences: Boolean get() = preferences.isNotEmpty()
 
     companion object {
         /** Пустой экземпляр элемента ниши. */

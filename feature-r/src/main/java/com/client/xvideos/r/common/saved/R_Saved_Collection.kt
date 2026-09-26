@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.collectionDB.model.CollectionEntity
 import com.client.xvideos.common.collectionDB.model.LinkCollectionStore
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
@@ -145,4 +146,25 @@ class R_Saved_Collection(
             }
         }
     }
+
+    /** Проверяет, пуст ли список коллекций. */
+    val isEmpty: Boolean get() = collectionList.isEmpty()
+
+    /** Проверяет наличие хотя бы одной коллекции. */
+    val isNotEmpty: Boolean get() = collectionList.isNotEmpty()
+
+    /** Количество созданных коллекций. */
+    val collectionsCount: Int get() = collectionList.size
+
+    /** Проверяет наличие коллекции с именем [name]. */
+    fun containsCollection(name: String): Boolean =
+        name.isNotBlank() && collectionList.any { it.collection == name }
+
+    /** Поиск коллекции по ее имени [name]. */
+    fun findCollectionByNameOrNull(name: String?): CollectionEntity<GifsInfo>? =
+        if (name.isNullOrBlank()) null else collectionList.firstOrNull { it.collection == name }
+
+    /** Проверяет, содержится ли медиаэлемент с [itemId] хотя бы в одной коллекции. */
+    fun containsItem(itemId: String): Boolean =
+        itemId.isNotBlank() && collectionList.any { c -> c.items.any { it.id == itemId } }
 }

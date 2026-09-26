@@ -74,6 +74,25 @@ class R_Saved_Niches(
         }
     }
 
+    /** Проверяет, пуст ли список избранных ниш. */
+    val isEmpty: Boolean get() = list.isEmpty()
+
+    /** Проверяет, есть ли хотя бы одна сохраненная ниша. */
+    val isNotEmpty: Boolean get() = list.isNotEmpty()
+
+    /** Количество сохраненных ниш. */
+    val count: Int get() = list.size
+
+    /** Быстрая проверка принадлежности ниши по ее [id]. */
+    fun contains(id: String): Boolean = id.isNotBlank() && list.any { it.id == id }
+
+    /** Проверка наличия объекта ниши [item] в избранном. */
+    fun contains(item: NichesInfo?): Boolean = item != null && contains(item.id)
+
+    /** Поиск ниши в избранном по ее [id]. */
+    fun findByIdOrNull(id: String?): NichesInfo? =
+        if (id.isNullOrBlank()) null else list.firstOrNull { it.id == id }
+
     private var refreshJob: Job? = null
 
     /**

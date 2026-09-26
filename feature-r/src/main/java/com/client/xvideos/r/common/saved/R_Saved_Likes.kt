@@ -87,8 +87,24 @@ class R_Saved_Likes(
         }
     }
 
+    /** Проверяет, пуст ли список лайков. */
+    val isEmpty: Boolean get() = list.isEmpty()
+
+    /** Проверяет, есть ли сохраненные лайки. */
+    val isNotEmpty: Boolean get() = list.isNotEmpty()
+
+    /** Количество сохраненных лайков. */
+    val count: Int get() = list.size
+
     /** Быстрая проверка принадлежности к лайкам по строковому [id]. */
     fun contains(id: String): Boolean = id.isNotBlank() && list.any { it.id == id }
+
+    /** Проверка наличия объекта [item] в лайках. */
+    fun contains(item: GifsInfo?): Boolean = item != null && contains(item.id)
+
+    /** Поиск ролика в лайках по его [id]. */
+    fun findByIdOrNull(id: String?): GifsInfo? =
+        if (id.isNullOrBlank()) null else list.firstOrNull { it.id == id }
 
     private var refreshJob: Job? = null
 

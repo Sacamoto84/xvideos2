@@ -21,6 +21,15 @@ data class SearchItemTagsResponse(
     /** Проверяет валидность названия тега. */
     val isValid: Boolean get() = text.isNotBlank()
 
+    /** Проверяет, пуст ли текст тега. */
+    val isEmpty: Boolean get() = text.isEmpty()
+
+    /** Проверяет, не пуст ли текст тега. */
+    val isNotEmpty: Boolean get() = text.isNotEmpty()
+
+    /** Проверяет наличие непустого текста тега. */
+    val hasText: Boolean get() = text.isNotBlank()
+
     /** Проверяет наличие гифок с этим тегом. */
     val hasGifs: Boolean get() = gifs > 0L
 

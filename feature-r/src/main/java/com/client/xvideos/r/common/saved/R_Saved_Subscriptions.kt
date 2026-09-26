@@ -140,6 +140,26 @@ class R_Saved_Subscriptions(
         }
     }
 
+    /** Проверяет, пуст ли список подписок на авторов. */
+    val isEmpty: Boolean get() = listCreators.isEmpty()
+
+    /** Проверяет наличие оформленных подписок на авторов. */
+    val isNotEmpty: Boolean get() = listCreators.isNotEmpty()
+
+    /** Количество подписок на авторов. */
+    val count: Int get() = listCreators.size
+
+    /** Проверяет наличие подписки на автора по [username]. */
+    fun contains(username: String): Boolean =
+        username.isNotBlank() && listCreators.any { it.username == username }
+
+    /** Проверяет наличие подписки на автора [item]. */
+    fun contains(item: UserInfo?): Boolean = item != null && contains(item.username)
+
+    /** Поиск автора в подписках по [username]. */
+    fun findByUsernameOrNull(username: String?): UserInfo? =
+        if (username.isNullOrBlank()) null else listCreators.firstOrNull { it.username == username }
+
     /** Загружает последние 50 гифок автора по его никнейму. */
     private suspend fun read50LastItem(name: String): List<GifsInfo> {
         return redApi.searchCreator(userName = name, count = 50, type = MediaType.ALL).getOrThrow().gifs.sanitizeGifsInfoList()

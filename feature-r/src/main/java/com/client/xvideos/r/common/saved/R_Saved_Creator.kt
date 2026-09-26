@@ -106,6 +106,25 @@ class R_Saved_Creator(
         return true
     }
 
+    /** Проверяет, пуст ли список избранных авторов. */
+    val isEmpty: Boolean get() = list.isEmpty()
+
+    /** Проверяет, есть ли хотя бы один избранный автор. */
+    val isNotEmpty: Boolean get() = list.isNotEmpty()
+
+    /** Количество избранных авторов. */
+    val count: Int get() = list.size
+
+    /** Проверяет наличие автора по никнейму [username]. */
+    fun contains(username: String): Boolean = username.isNotBlank() && list.any { it.username == username }
+
+    /** Проверяет наличие автора [item] в избранном. */
+    fun contains(item: UserInfo?): Boolean = item != null && contains(item.username)
+
+    /** Поиск автора в избранном по [username]. */
+    fun findByUsernameOrNull(username: String?): UserInfo? =
+        if (username.isNullOrBlank()) null else list.firstOrNull { it.username == username }
+
     private var refreshJob: Job? = null
 
     /**
