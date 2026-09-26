@@ -1,6 +1,7 @@
 package com.client.xvideos.r.network.http
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -127,5 +128,23 @@ class RouteTest {
         assertEquals(r1, r2)
         assertEquals(r1.hashCode(), r2.hashCode())
         assertTrue(r1 != r3)
+    }
+
+    @Test
+    fun `Route method and parameter helpers`() {
+        val getRoute = Route("GET", "/v1/tags")
+        val postRoute = Route("POST", "/v1/tags", "a" to 1)
+        val queryRoute = Route("GET", "/v1/tags?page=1")
+
+        assertTrue(getRoute.isGet)
+        assertFalse(getRoute.isPost)
+        assertFalse(getRoute.hasParameters)
+
+        assertFalse(postRoute.isGet)
+        assertTrue(postRoute.isPost)
+        assertTrue(postRoute.hasParameters)
+
+        assertTrue(queryRoute.isGet)
+        assertTrue(queryRoute.hasParameters)
     }
 }

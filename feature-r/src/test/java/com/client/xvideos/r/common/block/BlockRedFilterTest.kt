@@ -45,12 +45,20 @@ class BlockRedFilterTest {
         blockRed.refreshListAndBlock(list)
         assertEquals(3, list.value.size)
         assertFalse(blockRed.isBlocked(item2.id))
+        assertTrue(blockRed.isEmpty)
+        assertFalse(blockRed.isBlocked(item2))
+        assertFalse(blockRed.isBlocked(null as GifsInfo?))
+        assertFalse(blockRed.isBlockedUser("user_b"))
 
         // Block item2
         assertTrue(blockItem(item2).isSuccess)
         blockRed.refresh().join()
 
+        assertFalse(blockRed.isEmpty)
         assertTrue(blockRed.isBlocked(item2.id))
+        assertTrue(blockRed.isBlocked(item2))
+        assertTrue(blockRed.isBlockedUser("user_b"))
+        assertFalse(blockRed.isBlockedUser("user_a"))
         assertTrue(blockRed.blockedIds.value.contains(item2.id))
         assertEquals(1, blockRed.blockList.value.size)
 
@@ -64,6 +72,9 @@ class BlockRedFilterTest {
         blockRed.refresh().join()
 
         assertFalse(blockRed.isBlocked(item2.id))
+        assertFalse(blockRed.isBlocked(item2))
+        assertFalse(blockRed.isBlockedUser("user_b"))
         assertFalse(blockRed.blockedIds.value.contains(item2.id))
+        assertTrue(blockRed.isEmpty)
     }
 }

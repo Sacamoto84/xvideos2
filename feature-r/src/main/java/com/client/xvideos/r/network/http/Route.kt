@@ -40,11 +40,17 @@ private val PLACEHOLDER = Regex("""\{(\w+)\}""")
  */
 class Route(val method: String, val path: String, vararg parameters: Pair<String, Any>) {
 
+    private val hasVarargParams: Boolean = parameters.isNotEmpty()
+
     val url: String = when {
         path.isEmpty() -> ""
         parameters.isEmpty() || !path.contains('{') -> BASE + path
         else -> BASE + path.fillPlaceholders(parameters)
     }
+
+    val isGet: Boolean get() = method.equals("GET", ignoreCase = true)
+    val isPost: Boolean get() = method.equals("POST", ignoreCase = true)
+    val hasParameters: Boolean get() = hasVarargParams || url.contains('?')
 
     override fun toString(): String = url
 

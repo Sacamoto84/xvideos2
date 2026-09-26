@@ -27,6 +27,8 @@ interface ConnectivityObserver {
     val isConnected: StateFlow<Boolean>
 }
 
+fun ConnectivityObserver.hasConnection(): Boolean = isConnected.value
+
 @Module
 @InstallIn(SingletonComponent::class)
 object ConnectivityModule {

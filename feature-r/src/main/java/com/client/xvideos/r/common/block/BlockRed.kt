@@ -47,10 +47,14 @@ class BlockRed @Inject constructor(
 
     val blockedCount: Int get() = blockedIds.value.size
     val hasBlocked: Boolean get() = blockedIds.value.isNotEmpty()
+    val isEmpty: Boolean get() = blockedIds.value.isEmpty()
 
     fun isBlocked(id: String): Boolean = id.isNotEmpty() && id in blockedIds.value
 
-    fun isBlocked(item: GifsInfo): Boolean = isBlocked(item.id)
+    fun isBlocked(item: GifsInfo?): Boolean = item != null && isBlocked(item.id)
+
+    fun isBlockedUser(userName: String): Boolean =
+        userName.isNotEmpty() && blockList.value.any { it.userName.equals(userName, ignoreCase = true) }
 
     fun refreshListAndBlock(list: MutableStateFlow<List<GifsInfo>>) {
         val blocked = blockedIds.value
