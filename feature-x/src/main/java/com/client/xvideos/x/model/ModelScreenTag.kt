@@ -20,10 +20,15 @@ data class ModelScreenTag(
     val isEmpty: Boolean get() = items.isEmpty()
     val isNotEmpty: Boolean get() = items.isNotEmpty()
     val size: Int get() = items.size
+    val count: Int get() = items.size
+    val firstOrNull: ItemsX? get() = items.firstOrNull()
     val hasMultiplePages: Boolean get() = lastPage > 1
     val hasTitle0: Boolean get() = title0.isNotBlank()
     val hasTitle1: Boolean get() = title1.isNotBlank()
     val displayTitle: String get() = title0.ifBlank { title1 }
+
+    fun findByIdOrNull(id: Long): ItemsX? = if (id <= 0L) null else items.firstOrNull { it.id == id }
+
 
     companion object {
         val EMPTY = ModelScreenTag()

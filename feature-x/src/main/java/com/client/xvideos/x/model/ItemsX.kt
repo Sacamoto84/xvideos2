@@ -48,6 +48,12 @@ data class ItemsX(
     val hasDuration: Boolean get() = duration.isNotBlank()
     val hasViews: Boolean get() = views.isNotBlank()
     val hasHref: Boolean get() = href.isNotBlank()
+    val hasValidHref: Boolean get() = href.isNotBlank()
+    val hasValidTitle: Boolean get() = title.isNotBlank()
+    val displayNameProfile: String get() = nameProfile.ifBlank { channel }
+
+    fun isSameVideo(other: ItemsX?): Boolean = other != null && id > 0L && id == other.id
+
 
     companion object {
         val EMPTY = ItemsX()

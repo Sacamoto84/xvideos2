@@ -20,6 +20,9 @@ data class TagsMainUploaderPornstar(
     val hasName: Boolean get() = name.isNotBlank()
     val hasCount: Boolean get() = count.isNotBlank()
 
+    fun isSame(other: TagsMainUploaderPornstar?): Boolean =
+        other != null && href.isNotBlank() && href == other.href
+
     companion object {
         val EMPTY = TagsMainUploaderPornstar()
     }
@@ -45,6 +48,13 @@ data class TagsModel(
     val hasTags: Boolean get() = tags.isNotEmpty()
     val hasMultipleTags: Boolean get() = tags.size > 1
     val totalCount: Int get() = mainUploader.size + pornstars.size + tags.size
+    val tagsCount: Int get() = tags.size
+    val mainUploaderCount: Int get() = mainUploader.size
+    val pornstarsCount: Int get() = pornstars.size
+
+    fun containsTag(tag: String?): Boolean =
+        if (tag.isNullOrBlank()) false else tags.any { it.equals(tag, ignoreCase = true) }
+
 
     companion object {
         val EMPTY = TagsModel()

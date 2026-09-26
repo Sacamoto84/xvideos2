@@ -46,3 +46,16 @@ fun getFlagEmojiOrNull(countryCode: String?): String? {
     val emoji = getFlagEmoji(countryCode)
     return if (emoji != UNKNOWN_FLAG) emoji else null
 }
+
+/**
+ * Преобразует код страны в эмодзи флага либо возвращает [default], если код не распознан.
+ */
+fun getFlagEmojiOrDefault(countryCode: String?, default: String = UNKNOWN_FLAG): String =
+    getFlagEmojiOrNull(countryCode) ?: default
+
+/**
+ * Extension-свойство/функция для преобразования nullable строки в флаг-эмодзи.
+ */
+fun String?.toCountryFlagEmoji(): String =
+    if (this == null) UNKNOWN_FLAG else getFlagEmoji(this)
+

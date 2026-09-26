@@ -74,3 +74,16 @@ fun parserItemVideoTags(html: String): TagsModel {
     if (html.isBlank()) return TagsModel.EMPTY
     return parserItemVideoTags(Jsoup.parse(html))
 }
+
+/**
+ * Безопасно разбирает HTML-строку страницы видеоролика или возвращает [TagsModel.EMPTY].
+ */
+fun parserItemVideoTagsOrEmpty(html: String?): TagsModel =
+    if (html.isNullOrBlank()) TagsModel.EMPTY else parserItemVideoTags(html)
+
+/**
+ * Быстрая проверка наличия блоков тегов в HTML без полного парсинга DOM.
+ */
+fun hasVideoTags(html: String?): Boolean =
+    if (html.isNullOrBlank()) false else html.contains("main-uploader") || html.contains("is-keyword") || html.contains("class=\"model\"")
+

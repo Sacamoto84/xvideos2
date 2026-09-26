@@ -56,6 +56,12 @@ data class XHistoryItem(
     val id: Long get() = item.id
     val title: String get() = item.title
     val previewImage: String get() = item.previewImage
+    val hasTitle: Boolean get() = item.hasTitle
+    val hasPreview: Boolean get() = item.hasImagePreview
+    val hasUpdatedAt: Boolean get() = updatedAt > 0L
+
+    fun isSameItem(other: XHistoryItem?): Boolean = other != null && id > 0L && id == other.id
+
 
     companion object {
         val EMPTY = XHistoryItem()

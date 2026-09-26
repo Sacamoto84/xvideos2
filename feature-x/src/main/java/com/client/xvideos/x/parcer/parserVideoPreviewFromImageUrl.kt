@@ -81,6 +81,19 @@ fun parserVideoPreviewFromImageUrl(s: String?): String? {
 }
 
 /**
+ * Преобразует URL статической картинки в видео-превью либо возвращает [default].
+ */
+fun parserVideoPreviewOrDefault(s: String?, default: String = ""): String =
+    parserVideoPreviewFromImageUrl(s) ?: default
+
+/**
+ * Проверяет, можно ли сгенерировать URL видео-превью из URL статической картинки.
+ */
+fun hasVideoPreview(imageUrl: String?): Boolean =
+    parserVideoPreviewFromImageUrl(imageUrl) != null
+
+
+/**
  * Обрабатывает альтернативный формат CDN для превью нового образца (`preview.mp4`).
  */
 private fun parserNewCdnPreviewUrl(url: String, parts: List<String>): String? {
