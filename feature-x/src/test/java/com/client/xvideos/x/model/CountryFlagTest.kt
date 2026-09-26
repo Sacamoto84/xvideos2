@@ -46,4 +46,14 @@ class CountryFlagTest {
         assertEquals(gbFlag, getFlagEmoji("GB"))
         assertEquals(gbFlag, getFlagEmoji("gb"))
     }
+
+    @Test
+    fun `isValidCountryCode accurately validates code`() {
+        assertEquals("❓", UNKNOWN_FLAG)
+        assertEquals(true, isValidCountryCode("flag-us"))
+        assertEquals(true, isValidCountryCode("de"))
+        assertEquals(false, isValidCountryCode("flag-12"))
+        assertEquals(false, isValidCountryCode(""))
+        assertEquals(false, isValidCountryCode("unknown"))
+    }
 }

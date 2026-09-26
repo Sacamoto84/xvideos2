@@ -107,4 +107,19 @@ class XHistoryItemTest {
         val decoded = AppJson.decodeFromString(XHistoryItem.serializer(), oldJson)
         assertFalse(decoded.isCompleted)
     }
+
+    @Test
+    fun `hasProgress and hasTotalDuration accurately reflect millisecond fields`() {
+        val emptyItem = XHistoryItem.EMPTY
+        assertFalse(emptyItem.hasProgress)
+        assertFalse(emptyItem.hasTotalDuration)
+
+        val itemWithDuration = XHistoryItem(totalDurationMs = 120_000L)
+        assertFalse(itemWithDuration.hasProgress)
+        assertTrue(itemWithDuration.hasTotalDuration)
+
+        val itemWithBoth = XHistoryItem(lastPositionMs = 50_000L, totalDurationMs = 120_000L)
+        assertTrue(itemWithBoth.hasProgress)
+        assertTrue(itemWithBoth.hasTotalDuration)
+    }
 }

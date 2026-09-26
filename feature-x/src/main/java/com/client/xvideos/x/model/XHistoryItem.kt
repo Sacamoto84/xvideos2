@@ -47,6 +47,8 @@ data class XHistoryItem(
         }
 
     val remainingMs: Long get() = (totalDurationMs - lastPositionMs).coerceAtLeast(0L)
+    val hasProgress: Boolean get() = lastPositionMs > 0L
+    val hasTotalDuration: Boolean get() = totalDurationMs > 0L
     val isValid: Boolean get() = item.id > 0L
     val isEmpty: Boolean get() = item.id <= 0L
     val isNotEmpty: Boolean get() = item.id > 0L

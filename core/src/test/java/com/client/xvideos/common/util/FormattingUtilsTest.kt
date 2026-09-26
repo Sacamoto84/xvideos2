@@ -68,6 +68,35 @@ class FormattingUtilsTest {
         assertEquals("900150983cd24fb0d6963f7d28e17f72", "abc".toMD5())
         assertEquals("5d41402abc4b2a76b9719d911017c592", "hello".toMD5())
         assertEquals("ebb5e89e8a94e9dd22abf5d915d112b2", "тест".toMD5())
+        assertEquals("d41d8cd98f00b204e9800998ecf8427e", byteArrayOf().toMD5())
+        assertEquals("900150983cd24fb0d6963f7d28e17f72", "abc".toByteArray(Charsets.UTF_8).toMD5())
+    }
+
+    @Test
+    fun `toMinSec overloads for Int and Long format correctly`() {
+        assertEquals("00:00", 0.toMinSec())
+        assertEquals("00:00", (-10).toMinSec())
+        assertEquals("01:05", 65.toMinSec())
+        assertEquals("10:00", 600.toMinSec())
+
+        assertEquals("00:00", 0L.toMinSec())
+        assertEquals("00:00", (-50L).toMinSec())
+        assertEquals("02:14", 134L.toMinSec())
+        assertEquals("12:00", 720L.toMinSec())
+    }
+
+    @Test
+    fun `formatAsBytes and formatAsSpeed extensions delegate properly`() {
+        assertEquals("0 B", 0L.formatAsBytes())
+        assertEquals("1 KB", 1024L.formatAsBytes())
+        assertEquals("1 KB", 1024.formatAsBytes())
+
+        assertEquals("0 Bs", 0L.formatAsSpeed())
+        assertEquals("1 KBs", 1024L.formatAsSpeed())
+        assertEquals("0 Bs", (-1f).formatAsSpeed())
+        assertEquals("0 Bs", Float.NaN.formatAsSpeed())
+        assertEquals("1 KBs", 1024f.formatAsSpeed())
     }
 }
+
 

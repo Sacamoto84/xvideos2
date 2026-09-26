@@ -16,6 +16,9 @@ data class ModelScreenTag(
     val lastPage: Int = 1,
 ) {
     val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+    val size: Int get() = items.size
+    val hasMultiplePages: Boolean get() = lastPage > 1
 
     companion object {
         val EMPTY = ModelScreenTag()

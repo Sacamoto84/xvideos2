@@ -20,3 +20,8 @@ fun formatBytes(bytes: Long): String {
         else -> "${(bytes / GB_DOUBLE * 100).roundToInt() / 100.0} GB"
     }
 }
+
+fun Long.formatAsBytes(): String = formatBytes(this)
+
+fun Int.formatAsBytes(): String = formatBytes(this.toLong())
+

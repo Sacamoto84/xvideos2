@@ -27,6 +27,10 @@ data class ItemsX(
     val isValid: Boolean get() = id > 0L
     val isEmpty: Boolean get() = id <= 0L
     val isNotEmpty: Boolean get() = id > 0L
+    val hasVideoPreview: Boolean get() = previewVideo.isNotBlank()
+    val hasImagePreview: Boolean get() = previewImage.isNotBlank()
+    val hasProfile: Boolean get() = nameProfile.isNotBlank() || linkProfile.isNotBlank()
+    val hasChannel: Boolean get() = channel.isNotBlank()
 
     companion object {
         val EMPTY = ItemsX()

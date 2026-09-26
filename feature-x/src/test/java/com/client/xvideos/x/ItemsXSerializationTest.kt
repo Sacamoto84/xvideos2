@@ -61,4 +61,52 @@ class ItemsXSerializationTest {
             parserVideoPreviewFromImageUrl(image)
         )
     }
+
+    @Test
+    fun `ItemsX convenience properties inspect state correctly`() {
+        val emptyItem = ItemsX.EMPTY
+        assertEquals(false, emptyItem.isValid)
+        assertEquals(true, emptyItem.isEmpty)
+        assertEquals(false, emptyItem.isNotEmpty)
+        assertEquals(false, emptyItem.hasVideoPreview)
+        assertEquals(false, emptyItem.hasImagePreview)
+        assertEquals(false, emptyItem.hasProfile)
+        assertEquals(false, emptyItem.hasChannel)
+
+        val populatedItem = ItemsX(
+            id = 42L,
+            title = "Test Video",
+            previewImage = "https://cdn/img.jpg",
+            previewVideo = "https://cdn/vid.mp4",
+            channel = "Channel1",
+            nameProfile = "Profile1"
+        )
+        assertEquals(true, populatedItem.isValid)
+        assertEquals(false, populatedItem.isEmpty)
+        assertEquals(true, populatedItem.isNotEmpty)
+        assertEquals(true, populatedItem.hasVideoPreview)
+        assertEquals(true, populatedItem.hasImagePreview)
+        assertEquals(true, populatedItem.hasProfile)
+        assertEquals(true, populatedItem.hasChannel)
+    }
+
+    @Test
+    fun `ModelScreenTag convenience properties inspect state correctly`() {
+        val emptyTag = com.client.xvideos.x.model.ModelScreenTag.EMPTY
+        assertEquals(true, emptyTag.isEmpty)
+        assertEquals(false, emptyTag.isNotEmpty)
+        assertEquals(0, emptyTag.size)
+        assertEquals(false, emptyTag.hasMultiplePages)
+
+        val populatedTag = com.client.xvideos.x.model.ModelScreenTag(
+            title0 = "T0",
+            title1 = "T1",
+            items = listOf(ItemsX(id = 1L)),
+            lastPage = 5
+        )
+        assertEquals(false, populatedTag.isEmpty)
+        assertEquals(true, populatedTag.isNotEmpty)
+        assertEquals(1, populatedTag.size)
+        assertEquals(true, populatedTag.hasMultiplePages)
+    }
 }

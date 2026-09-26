@@ -19,3 +19,8 @@ fun formatSpeed(bytesPerSecond: Long): String {
         else -> "${(bytesPerSecond / GB_DOUBLE * 100).roundToInt() / 100.0} GBs"
     }
 }
+
+fun Long.formatAsSpeed(): String = formatSpeed(this)
+
+fun Float.formatAsSpeed(): String = formatSpeed(if (this.isNaN() || this <= 0f) 0L else this.toLong())
+
