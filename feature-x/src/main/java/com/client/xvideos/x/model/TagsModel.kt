@@ -75,6 +75,19 @@ data class TagsModel(
         return pornstars.firstOrNull { it.name.equals(name, ignoreCase = true) }
     }
 
+    fun findUploaderByName(name: String?): TagsMainUploaderPornstar? {
+        if (name.isNullOrBlank()) return null
+        return mainUploader.firstOrNull { it.name.equals(name, ignoreCase = true) }
+    }
+
+    /** Проверяет соответствие тегов, авторов или моделей поисковому запросу. */
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return tags.any { it.contains(q, ignoreCase = true) } ||
+            mainUploader.any { it.matches(q) } ||
+            pornstars.any { it.matches(q) }
+    }
 
     companion object {
         val EMPTY = TagsModel()

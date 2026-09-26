@@ -207,3 +207,14 @@ fun formatDurationMs(ms: Long): String {
         String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
     }
 }
+
+/**
+ * Форматирует секунды в формат времени `"MM:SS"` или `"H:MM:SS"`.
+ */
+fun formatDurationSeconds(seconds: Long): String = formatDurationMs(seconds * 1000L)
+
+/**
+ * Extension-проверка: начинается ли ссылка с канонического домена X.
+ */
+fun String.isCanonicalXLink(): Boolean = isCanonicalXUrl(this)
+

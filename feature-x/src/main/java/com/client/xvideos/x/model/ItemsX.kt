@@ -63,9 +63,13 @@ data class ItemsX(
             nameProfile.contains(q, ignoreCase = true)
     }
 
+    val bestPreviewUrl: String get() = previewVideo.ifBlank { previewImage }
+    val hasAnyPreview: Boolean get() = hasImagePreview || hasVideoPreview
+
     fun withDuration(newDuration: String): ItemsX = copy(duration = newDuration)
     fun withViews(newViews: String): ItemsX = copy(views = newViews)
     fun withHref(newHref: String): ItemsX = copy(href = newHref)
+    fun withPreviewImage(newPreview: String): ItemsX = copy(previewImage = newPreview)
 
     fun isSameVideo(other: ItemsX?): Boolean = other != null && id > 0L && id == other.id
 

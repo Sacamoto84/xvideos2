@@ -36,6 +36,16 @@ data class ModelScreenTag(
         return items.filter { it.matches(query) }
     }
 
+    val normalizedTitle: String get() = displayTitle.trim()
+
+    /** Проверяет соответствие заголовков или вложенных видео поисковому запросу. */
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return title0.contains(q, ignoreCase = true) ||
+            title1.contains(q, ignoreCase = true) ||
+            items.any { it.matches(q) }
+    }
 
     companion object {
         val EMPTY = ModelScreenTag()

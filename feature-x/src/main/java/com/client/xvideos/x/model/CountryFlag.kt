@@ -81,3 +81,16 @@ fun getCountryCodeFromFlagClass(cssClass: String?): String? =
 fun String?.toCountryFlagEmoji(): String =
     if (this == null) UNKNOWN_FLAG else getFlagEmoji(this)
 
+/**
+ * Extension-свойство для преобразования nullable строки в флаг-эмодзи или null при отсутствии.
+ */
+fun String?.toCountryFlagEmojiOrNull(): String? =
+    getFlagEmojiOrNull(this)
+
+/**
+ * Проверяет, является ли CSS-класс валидным классом флага страны (например "flag-us").
+ */
+fun isValidFlagClass(className: String?): Boolean =
+    !getCountryCodeFromFlagClass(className).isNullOrBlank()
+
+

@@ -80,6 +80,19 @@ data class HTML5PlayerConfig(
     val hasAnyMedia: Boolean get() = hasVideoUrl || hasThumbnails
 
     val isValid: Boolean get() = hasVideoUrl
+    val normalizedTitle: String get() = videoTitle.trim()
+
+    /** Список всех доступных непустых URL видеопотоков. */
+    val allVideoUrls: List<String>
+        get() = listOf(videoUrlHigh, videoHLS, videoUrlLow).filter { it.isNotBlank() }
+
+    /** Проверяет соответствие заголовка или автора поисковой строке. */
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return videoTitle.contains(q, ignoreCase = true) ||
+            uploaderName.contains(q, ignoreCase = true)
+    }
 
     fun withVideoUrls(high: String, low: String, hls: String = ""): HTML5PlayerConfig =
         copy(videoUrlHigh = high, videoUrlLow = low, videoHLS = hls)
