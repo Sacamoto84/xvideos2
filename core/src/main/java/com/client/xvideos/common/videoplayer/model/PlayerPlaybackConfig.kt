@@ -31,6 +31,10 @@ data class PlayerPlaybackConfig(
     val isValid: Boolean get() = url.isNotBlank()
     val isEmpty: Boolean get() = url.isEmpty()
     val isNotEmpty: Boolean get() = url.isNotEmpty()
+    val isMuted: Boolean get() = volume <= 0f
+    val hasHeaders: Boolean get() = !headers.isNullOrEmpty()
+    val hasDrm: Boolean get() = drmConfig != null
+    val isSeeking: Boolean get() = isSliding || seekToTime != null
 
     companion object {
         val EMPTY = PlayerPlaybackConfig()

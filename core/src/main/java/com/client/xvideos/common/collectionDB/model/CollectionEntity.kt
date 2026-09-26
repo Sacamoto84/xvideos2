@@ -9,4 +9,9 @@ import kotlinx.serialization.Serializable
 data class CollectionEntity<T>(
     @SerialName("collection") val collection: String,
     @SerialName("list")       val items: List<T>
-)
+) {
+    val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+    val size: Int get() = items.size
+    val isValid: Boolean get() = collection.isNotBlank()
+}

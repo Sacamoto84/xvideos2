@@ -15,8 +15,20 @@ enum class ThumbnailsSize(
     SMALL("small", "Medium"),
     LARGE_THUMBALIST("large_thumbnail", "Small");
 
+    val isXMax: Boolean get() = this == XMAX
+    val isSmall: Boolean get() = this == SMALL
+    val isLargeThumbnail: Boolean get() = this == LARGE_THUMBALIST
+
     companion object {
         val DEFAULT = SMALL
+
+        /**
+         * Find ThumbnailsSize by its value or return DEFAULT
+         */
+        fun fromValueOrDefault(value: String?): ThumbnailsSize {
+            if (value.isNullOrBlank()) return DEFAULT
+            return fromValue(value) ?: DEFAULT
+        }
 
         /**
          * Find ThumbnailsSize by its value

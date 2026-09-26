@@ -12,5 +12,9 @@ object UserAgentProvider {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
     )
 
+    val defaultUserAgent: String get() = desktopBrowsers[0]
+    val count: Int get() = desktopBrowsers.size
+    val allUserAgents: List<String> get() = desktopBrowsers.toList()
+
     fun randomDesktopBrowser(): String = desktopBrowsers.random(Random.Default)
 }

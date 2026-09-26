@@ -10,6 +10,8 @@ enum class PlayerSpeed(val speed: Float, val displayName: String) {
     X2(2.0f, "2.0x");
 
     val isNormal: Boolean get() = this == X1
+    val isSlow: Boolean get() = speed < 1.0f
+    val isFast: Boolean get() = speed > 1.0f
 
     companion object {
         val DEFAULT = X1
@@ -24,8 +26,22 @@ enum class ScreenResize {
 
     val isFit: Boolean get() = this == FIT
     val isFill: Boolean get() = this == FILL
+
+    companion object {
+        val DEFAULT = FIT
+    }
 }
 
 enum class PlayerOption {
-    NONE, SPEED, QUALITY, AUDIO_TRACK, SUBTITLES
+    NONE, SPEED, QUALITY, AUDIO_TRACK, SUBTITLES;
+
+    val isNone: Boolean get() = this == NONE
+    val isSpeed: Boolean get() = this == SPEED
+    val isQuality: Boolean get() = this == QUALITY
+    val isAudioTrack: Boolean get() = this == AUDIO_TRACK
+    val isSubtitles: Boolean get() = this == SUBTITLES
+
+    companion object {
+        val DEFAULT = NONE
+    }
 }

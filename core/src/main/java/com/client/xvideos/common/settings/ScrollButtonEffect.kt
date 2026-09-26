@@ -25,9 +25,15 @@ enum class ScrollButtonEffect(
         subtitle = "Реалистичное стекло с преломлением и бликами"
     );
 
+    val isFlat: Boolean get() = this == FLAT
+    val isBlur: Boolean get() = this == BLUR
+    val isGlass: Boolean get() = this == GLASS
+
     companion object {
+        val DEFAULT = BLUR
+
         fun fromNameOrDefault(name: String?): ScrollButtonEffect {
-            return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: BLUR
+            return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: DEFAULT
         }
     }
 }

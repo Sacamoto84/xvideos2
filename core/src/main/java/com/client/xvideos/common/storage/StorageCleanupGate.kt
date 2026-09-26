@@ -40,6 +40,11 @@ class StorageCleanupGate @Inject constructor() {
     val isStarted: Boolean get() = job != null
     val isCompleted: Boolean get() = job?.isCompleted ?: true
     val isActive: Boolean get() = job?.isActive ?: false
+    val isPending: Boolean get() = isStarted && !isCompleted
+
+    fun resetForTesting() {
+        job = null
+    }
 
     /**
      * Ждёт завершения уборки. Возвращается сразу, если она не запускалась —
