@@ -58,6 +58,31 @@ data class URL1(
      */
     val bestImageUrl: String get() = poster?.takeIf { it.isNotBlank() } ?: thumbnail
 
+    /** Проверяет наличие хотя бы одного доступного видеофайла. */
+    val hasAnyVideoUrl: Boolean get() = hasHd || hasSd || hasSilent
+
+    /** Проверяет наличие хотя бы одного доступного изображения. */
+    val hasAnyImageUrl: Boolean get() = hasPoster || hasThumbnail
+
+    /**
+     * Выбирает наилучший доступный URL для фонового скачивания файла:
+     * отдает [hd], затем [silent], иначе [sd].
+     */
+    val bestDownloadUrl: String get() = hd?.takeIf { it.isNotBlank() } ?: silent?.takeIf { it.isNotBlank() } ?: sd
+
+    /**
+     * Проверяет, содержится ли искомая подстрока URL в каком-либо из адресов объекта.
+     */
+    fun containsUrl(urlQuery: String?): Boolean {
+        if (urlQuery.isNullOrBlank()) return false
+        return thumbnail.contains(urlQuery, ignoreCase = true) ||
+            (silent?.contains(urlQuery, ignoreCase = true) == true) ||
+            (poster?.contains(urlQuery, ignoreCase = true) == true) ||
+            (html?.contains(urlQuery, ignoreCase = true) == true) ||
+            sd.contains(urlQuery, ignoreCase = true) ||
+            (hd?.contains(urlQuery, ignoreCase = true) == true)
+    }
+
     /** Проверяет валидность ссылок (наличие хотя бы thumbnail или sd). */
     val isValid: Boolean get() = thumbnail.isNotBlank() || sd.isNotBlank()
 

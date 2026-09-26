@@ -31,7 +31,14 @@ internal const val SUGGESTIONS_DEBOUNCE_MS = 300L
 data class SuggestionItem(
     @SerialName("text") val text: String = "",
     @SerialName("count") val count: Long = 0,
-)
+) {
+    val isValid: Boolean get() = text.isNotBlank()
+    val hasCount: Boolean get() = count > 0
+    val normalizedText: String get() = text.trim().lowercase()
+
+    fun matches(query: String?): Boolean =
+        if (query.isNullOrBlank()) false else text.contains(query.trim(), ignoreCase = true)
+}
 
 /**
  * Базовый абстрактный стейт-холдер строки поиска в разделах RedGifs.
@@ -67,6 +74,25 @@ abstract class ISearchTemplate(
 
     /** Стек истории поиска для возврата к предыдущим запросам по Back. */
     val stack = ArrayDeque<String>()
+
+    /** Проверяет, пуста ли строка ввода. */
+    val isSearchTextEmpty: Boolean get() = searchText.value.text.isBlank()
+
+    /** Проверяет, запущен ли активный подтвержденный поиск. */
+    val isSearchActive: Boolean get() = searchTextDone.value.isNotBlank()
+
+    /** Количество текущих подсказок автодополнения. */
+    val suggestionsCount: Int get() = searchTextSuggestions.value.size
+
+    /** Количество элементов в стеке навигации истории поиска. */
+    val stackSize: Int get() = synchronized(stack) { stack.size }
+
+    /** Очищает стек навигации поиска. */
+    fun clearStack() {
+        synchronized(stack) {
+            stack.clear()
+        }
+    }
 
     companion object {
         /** Максимальная глубина стека поисковых переходов. */

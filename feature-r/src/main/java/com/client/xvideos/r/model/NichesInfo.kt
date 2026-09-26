@@ -96,6 +96,20 @@ data class NichesInfo(
     /** Проверяет наличие подписчиков. */
     val hasSubscribers: Boolean get() = subscribers > 0L
 
+    /** Проверяет наличие правил. */
+    val hasRules: Boolean get() = !rules.isNullOrBlank()
+
+    /** Выбирает наилучшую картинку: обложку или иконку. */
+    val bestImageUrl: String get() = cover?.takeIf { it.isNotBlank() } ?: thumbnail
+
+    /** Проверяет соответствие ниши поисковому запросу по имени или идентификатору. */
+    fun matches(query: String?): Boolean =
+        if (query.isNullOrBlank()) false else name.contains(query.trim(), ignoreCase = true) || id.contains(query.trim(), ignoreCase = true)
+
+    /** Проверяет совпадение ниш по идентификатору. */
+    fun isSameNiche(other: NichesInfo?): Boolean =
+        other != null && isValid && id.equals(other.id, ignoreCase = true)
+
     companion object {
         /** Пустой экземпляр ниши. */
         val EMPTY = NichesInfo()

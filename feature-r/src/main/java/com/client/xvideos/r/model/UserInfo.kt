@@ -85,6 +85,20 @@ data class UserInfo(
     /** Проверяет статус верификации. */
     val isVerified: Boolean get() = verified
 
+    /** Проверяет наличие просмотров. */
+    val hasViews: Boolean get() = views > 0L
+
+    /** Нормализованное имя пользователя (в нижнем регистре без лишних пробелов). */
+    val normalizedUsername: String get() = username.trim().lowercase()
+
+    /** Проверяет совпадение пользователей по юзернейму. */
+    fun isSameUser(other: UserInfo?): Boolean =
+        other != null && isValid && normalizedUsername == other.normalizedUsername
+
+    /** Проверяет соответствие автора поисковому запросу по отображаемому имени или никнейму. */
+    fun matches(query: String?): Boolean =
+        if (query.isNullOrBlank()) false else displayName.contains(query.trim(), ignoreCase = true) || username.contains(query.trim(), ignoreCase = true)
+
     companion object {
         /** Пустой экземпляр [UserInfo]. */
         val EMPTY = UserInfo()

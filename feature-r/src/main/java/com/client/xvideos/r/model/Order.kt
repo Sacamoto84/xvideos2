@@ -87,6 +87,15 @@ enum class Order(val value: String) {
     /** Проверяет, выбрана ли сортировка по релевантности RELEVANT. */
     val isRelevant: Boolean get() = this == RELEVANT
 
+    /** Проверяет, выбрана ли сортировка TOP_WEEK. */
+    val isTopWeek: Boolean get() = this == TOP_WEEK
+
+    /** Проверяет, выбрана ли сортировка за месяц (TOP_MONTH или TOP28). */
+    val isTopMonth: Boolean get() = this == TOP_MONTH || this == TOP28
+
+    /** Проверяет, является ли сортировка служебным флагом сброса FORCE_TEMP. */
+    val isForceTemp: Boolean get() = this == FORCE_TEMP
+
     companion object {
         /** Сортировка по умолчанию. */
         val DEFAULT = LATEST
@@ -97,6 +106,18 @@ enum class Order(val value: String) {
         /** Поиск [Order] по значению либо возврат [default]. */
         fun fromValueOrDefault(value: String?, default: Order = DEFAULT): Order =
             if (value != null) fromValue(value) ?: default else default
+
+        /** Поиск [Order] по имени константы (без учета регистра). */
+        fun fromNameOrNull(name: String?): Order? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
+        /** Поиск [Order] по имени константы либо возврат [default]. */
+        fun fromNameOrDefault(name: String?, default: Order = DEFAULT): Order =
+            fromNameOrNull(name) ?: default
+
+        /** Поиск [Order] по строковому значению [value] или имени константы. */
+        fun fromStringOrNull(value: String?): Order? =
+            if (value != null) fromValue(value) ?: fromNameOrNull(value) else null
     }
 }
 
@@ -133,6 +154,14 @@ enum class MediaType(val value: String) {
         /** Находит [MediaType] по значению или возвращает [default]. */
         fun fromValue(value: String?, default: MediaType = DEFAULT): MediaType =
             fromValueOrNull(value) ?: default
+
+        /** Находит [MediaType] по имени константы или null. */
+        fun fromNameOrNull(name: String?): MediaType? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
+        /** Находит [MediaType] по имени константы или возвращает [default]. */
+        fun fromName(name: String?, default: MediaType = DEFAULT): MediaType =
+            fromNameOrNull(name) ?: default
     }
 }
 

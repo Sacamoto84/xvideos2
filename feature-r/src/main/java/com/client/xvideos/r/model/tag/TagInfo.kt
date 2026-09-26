@@ -25,6 +25,17 @@ data class TagInfo(
     /** Проверяет наличие связанных материалов. */
     val hasCount: Boolean get() = count > 0L
 
+    /** Нормализованное имя тега в нижнем регистре без лишних пробелов. */
+    val normalizedName: String get() = name.trim().lowercase()
+
+    /** Проверяет соответствие тега поисковому запросу без учета регистра. */
+    fun matches(query: String?): Boolean =
+        if (query.isNullOrBlank()) false else name.contains(query.trim(), ignoreCase = true)
+
+    /** Проверяет совпадение тегов по имени. */
+    fun isSameTag(other: TagInfo?): Boolean =
+        other != null && isValid && normalizedName == other.normalizedName
+
     companion object {
         /** Пустой экземпляр [TagInfo]. */
         val EMPTY = TagInfo()
