@@ -73,7 +73,13 @@ data class MediaCategories(
 
     @SerialName("audiences")
     val audiences: List<Audience> = emptyList()
-)
+) {
+    val isEmpty: Boolean
+        get() = genres.isEmpty() && languages.isEmpty() && contentTypes.isEmpty() && audiences.isEmpty()
+
+    val isNotEmpty: Boolean
+        get() = !isEmpty
+}
 
 // Жанр и его ограничение по контенту переехали в model.FilterGenre: на них
 // ссылается AlbumListFilter, то есть слой ниже сети.
@@ -104,7 +110,12 @@ data class FilterSettings(
 
     @SerialName("default_dashboard_content_id")
     val defaultDashboardContentId: String = ""
-)
+) {
+    val hasAudienceFilter: Boolean get() = audienceIds.isNotEmpty()
+    val hasBlockedGenres: Boolean get() = genresBlockedIds.isNotEmpty()
+    val hasSubscribedGenres: Boolean get() = genresSubscribedIds.isNotEmpty()
+    val hasPreferredLanguages: Boolean get() = preferredLanguageIds.isNotEmpty()
+}
 
 // Класс для языков
 @Serializable
@@ -117,7 +128,13 @@ data class Language(
 
     @SerialName("url")
     val url: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+    companion object {
+        val EMPTY = Language()
+    }
+}
 
 // Класс для типов контента
 @Serializable
@@ -130,7 +147,13 @@ data class ContentType(
 
     @SerialName("url")
     val url: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+    companion object {
+        val EMPTY = ContentType()
+    }
+}
 
 // Класс для аудиторий
 @Serializable
@@ -149,4 +172,12 @@ data class Audience(
 
     @SerialName("url")
     val url: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+    val hasDescription: Boolean get() = description.isNotBlank()
+    val hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
+
+    companion object {
+        val EMPTY = Audience()
+    }
+}

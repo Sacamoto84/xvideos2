@@ -71,8 +71,13 @@ enum class AudiencesType(
         url = "/audiences/trans-x-trans_8/"
     );
 
+    val hasDescription: Boolean get() = description.isNotBlank()
+    val hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
+
     companion object {
         fun fromId(id: Int): AudiencesType? = entries.find { it.id == id }
-        fun fromUrl(url: String): AudiencesType? = entries.find { it.url == url }
+        fun fromIdOrNull(id: Int?): AudiencesType? = if (id != null) fromId(id) else null
+        fun fromUrl(url: String): AudiencesType? = entries.find { it.url.equals(url, ignoreCase = true) }
+        fun fromUrlOrNull(url: String?): AudiencesType? = if (!url.isNullOrBlank()) fromUrl(url) else null
     }
 }

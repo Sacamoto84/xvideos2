@@ -15,3 +15,39 @@ import android.content.SharedPreferences
  */
 fun Context.defaultSharedPreferences(): SharedPreferences =
     getSharedPreferences("${packageName}_preferences", Context.MODE_PRIVATE)
+
+/**
+ * Безопасное чтение строки из [SharedPreferences] с гарантированным дефолтом при null или ошибке типа.
+ */
+fun SharedPreferences.getStringOrDefault(key: String, default: String): String =
+    runCatching { getString(key, default) }.getOrNull() ?: default
+
+/**
+ * Безопасное чтение строки из [SharedPreferences] с null при отсутствии или ошибке типа.
+ */
+fun SharedPreferences.getStringOrNull(key: String): String? =
+    runCatching { getString(key, null) }.getOrNull()
+
+/**
+ * Безопасное чтение булевого флага из [SharedPreferences] с fallback при сбое или несовпадении типа.
+ */
+fun SharedPreferences.getBooleanOrDefault(key: String, default: Boolean): Boolean =
+    runCatching { getBoolean(key, default) }.getOrDefault(default)
+
+/**
+ * Безопасное чтение Int из [SharedPreferences] с fallback при сбое или несовпадении типа.
+ */
+fun SharedPreferences.getIntOrDefault(key: String, default: Int): Int =
+    runCatching { getInt(key, default) }.getOrDefault(default)
+
+/**
+ * Безопасное чтение Long из [SharedPreferences] с fallback при сбое или несовпадении типа.
+ */
+fun SharedPreferences.getLongOrDefault(key: String, default: Long): Long =
+    runCatching { getLong(key, default) }.getOrDefault(default)
+
+/**
+ * Безопасное чтение Float из [SharedPreferences] с fallback при сбое или несовпадении типа.
+ */
+fun SharedPreferences.getFloatOrDefault(key: String, default: Float): Float =
+    runCatching { getFloat(key, default) }.getOrDefault(default)

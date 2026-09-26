@@ -43,6 +43,32 @@ class LFullScreenPayloadTest {
     fun `неизвестный ключ даёт пустой список`() {
         assertEquals(emptyList<PicsDetails>(), LFullScreenPayload.get("нет такого ключа"))
         assertEquals(emptyList<PicsDetails>(), LFullScreenPayload.get(""))
+        assertEquals(emptyList<PicsDetails>(), LFullScreenPayload.get(null))
+    }
+
+    @Test
+    fun `манипуляции и проверки размера и наличия ключа`() {
+        LFullScreenPayload.clear()
+        assertTrue(LFullScreenPayload.isEmpty)
+        assertEquals(0, LFullScreenPayload.size)
+
+        val items = listOf(picture("https://cdn/sample.jpg"))
+        val key = LFullScreenPayload.put(items)
+
+        assertTrue(LFullScreenPayload.isNotEmpty)
+        assertEquals(1, LFullScreenPayload.size)
+        assertTrue(LFullScreenPayload.containsKey(key))
+        org.junit.Assert.assertFalse(LFullScreenPayload.containsKey(null))
+        org.junit.Assert.assertFalse(LFullScreenPayload.containsKey(""))
+
+        val removed = LFullScreenPayload.remove(key)
+        assertEquals(items, removed)
+        org.junit.Assert.assertFalse(LFullScreenPayload.containsKey(key))
+        assertEquals(null, LFullScreenPayload.remove(null))
+
+        LFullScreenPayload.put(items)
+        LFullScreenPayload.clear()
+        assertTrue(LFullScreenPayload.isEmpty)
     }
 
     @Test

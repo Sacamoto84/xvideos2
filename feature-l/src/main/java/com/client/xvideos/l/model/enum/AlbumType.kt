@@ -20,6 +20,10 @@ enum class AlbumType(val value: String) {
 
     companion object {
         val DEFAULT = Pictures
-        fun fromValue(value: String): AlbumType = entries.firstOrNull { it.value.equals(value, ignoreCase = true) } ?: DEFAULT
+        fun fromValueOrNull(value: String?): AlbumType? =
+            if (value != null) entries.firstOrNull { it.value.equals(value, ignoreCase = true) } else null
+
+        fun fromValue(value: String?, default: AlbumType = DEFAULT): AlbumType =
+            fromValueOrNull(value) ?: default
     }
 }

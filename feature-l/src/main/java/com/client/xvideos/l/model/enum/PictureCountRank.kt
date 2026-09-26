@@ -14,9 +14,17 @@ enum class PictureCountRank(val count: Int){
     C3200_12800(6); //3200 to 12800
 
     val isAll: Boolean get() = this == All
+    val isSpecific: Boolean get() = this != All
 
     companion object {
         val DEFAULT = All
-        fun fromCount(count: Int): PictureCountRank = entries.firstOrNull { it.count == count } ?: DEFAULT
+        fun fromCountOrNull(count: Int?): PictureCountRank? =
+            if (count != null) entries.firstOrNull { it.count == count } else null
+
+        fun fromCount(count: Int?, default: PictureCountRank = DEFAULT): PictureCountRank =
+            fromCountOrNull(count) ?: default
+
+        fun fromStringOrNull(value: String?): PictureCountRank? =
+            value?.toIntOrNull()?.let { fromCountOrNull(it) }
     }
 }

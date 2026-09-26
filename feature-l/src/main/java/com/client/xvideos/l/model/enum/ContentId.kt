@@ -20,9 +20,19 @@ enum class ContentId(val value: Int) {
     RealPeople(6);
 
     val isAll: Boolean get() = this == All
+    val isHentai: Boolean get() = this == Hentai
+    val isNonErotic: Boolean get() = this == NonErotic
+    val isRealPeople: Boolean get() = this == RealPeople
 
     companion object {
         val DEFAULT = All
-        fun fromValue(value: Int): ContentId = entries.firstOrNull { it.value == value } ?: DEFAULT
+        fun fromValueOrNull(value: Int?): ContentId? =
+            if (value != null) entries.firstOrNull { it.value == value } else null
+
+        fun fromValue(value: Int?, default: ContentId = DEFAULT): ContentId =
+            fromValueOrNull(value) ?: default
+
+        fun fromStringOrNull(value: String?): ContentId? =
+            value?.toIntOrNull()?.let { fromValueOrNull(it) }
     }
 }

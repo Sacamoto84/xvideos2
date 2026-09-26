@@ -29,6 +29,26 @@ internal object LFullScreenPayload {
         ): Boolean = size > MAX_ENTRIES
     }
 
+    val size: Int
+        @Synchronized get() = store.size
+
+    val isEmpty: Boolean
+        @Synchronized get() = store.isEmpty()
+
+    val isNotEmpty: Boolean
+        @Synchronized get() = store.isNotEmpty()
+
+    @Synchronized
+    fun containsKey(key: String?): Boolean = !key.isNullOrBlank() && store.containsKey(key)
+
+    @Synchronized
+    fun remove(key: String?): List<PicsDetails>? = if (!key.isNullOrBlank()) store.remove(key) else null
+
+    @Synchronized
+    fun clear() {
+        store.clear()
+    }
+
     @Synchronized
     fun put(items: List<PicsDetails>): String {
         val key = UUID.randomUUID().toString()
@@ -37,5 +57,5 @@ internal object LFullScreenPayload {
     }
 
     @Synchronized
-    fun get(key: String): List<PicsDetails> = store[key].orEmpty()
+    fun get(key: String?): List<PicsDetails> = if (!key.isNullOrBlank()) store[key].orEmpty() else emptyList()
 }
