@@ -23,6 +23,7 @@ enum class ContentId(val value: Int) {
     val isHentai: Boolean get() = this == Hentai
     val isNonErotic: Boolean get() = this == NonErotic
     val isRealPeople: Boolean get() = this == RealPeople
+    val isSpecific: Boolean get() = this != All
 
     val title: String
         get() = when (this) {
@@ -32,8 +33,24 @@ enum class ContentId(val value: Int) {
             RealPeople -> "Real People"
         }
 
+    /** Переход к следующей категории контента циклически. */
+    fun next(): ContentId {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущей категории контента циклически. */
+    fun prev(): ContentId {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         val DEFAULT = All
+
+        val allValues: List<Int> = entries.map { it.value }
+        val allTitles: List<String> = entries.map { it.title }
+        val allNames: List<String> = entries.map { it.name }
 
         fun fromValueOrNull(value: Int?): ContentId? =
             if (value != null) entries.firstOrNull { it.value == value } else null
@@ -52,5 +69,8 @@ enum class ContentId(val value: Int) {
 
         fun fromIdOrDefault(id: String?, default: ContentId = DEFAULT): ContentId =
             fromString(id, default)
+
+        fun fromOrdinalOrDefault(ordinal: Int, default: ContentId = DEFAULT): ContentId =
+            entries.getOrNull(ordinal) ?: default
     }
 }

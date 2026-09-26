@@ -84,6 +84,9 @@ enum class AudiencesType(
     val hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
     val isSolo: Boolean get() = this == SOLO_GIRL || this == SOLO_GUY
     val isTrans: Boolean get() = this == TRANS || this == TRANS_X_GIRL || this == TRANS_X_GUY || this == TRANS_X_TRANS
+    val isTransAudience: Boolean get() = isTrans
+    val isStraight: Boolean get() = this == STRAIGHT
+    val isGayOrLesbian: Boolean get() = this == GAY || this == LESBIAN
 
     fun matchesTitle(titleQuery: String?): Boolean =
         !titleQuery.isNullOrBlank() && title.contains(titleQuery, ignoreCase = true)
@@ -104,6 +107,8 @@ enum class AudiencesType(
         val DEFAULT = STRAIGHT
 
         val allTitles: List<String> = entries.map { it.title }
+        val allIds: List<Int> = entries.map { it.id }
+        val allNames: List<String> = entries.map { it.name }
 
         fun fromId(id: Int): AudiencesType? = entries.find { it.id == id }
         fun fromIdOrNull(id: Int?): AudiencesType? = if (id != null) fromId(id) else null
@@ -121,8 +126,14 @@ enum class AudiencesType(
         fun fromTitleOrDefault(title: String?, default: AudiencesType = DEFAULT): AudiencesType =
             fromTitleOrNull(title) ?: default
 
+        fun fromNameOrNull(name: String?): AudiencesType? =
+            if (!name.isNullOrBlank()) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
+        fun fromNameOrDefault(name: String?, default: AudiencesType = DEFAULT): AudiencesType =
+            fromNameOrNull(name) ?: default
+
         fun fromStringOrNull(value: String?): AudiencesType? =
-            value?.toIntOrNull()?.let { fromId(it) } ?: fromTitleOrNull(value) ?: fromUrlOrNull(value)
+            value?.toIntOrNull()?.let { fromId(it) } ?: fromNameOrNull(value) ?: fromTitleOrNull(value) ?: fromUrlOrNull(value)
 
         fun fromOrdinalOrDefault(ordinal: Int, default: AudiencesType = DEFAULT): AudiencesType =
             entries.getOrNull(ordinal) ?: default

@@ -34,8 +34,24 @@ enum class SelectIndex(val value: Int) {
             Porn -> "Porn"
         }
 
+    /** Переход к следующему индексу циклически. */
+    fun next(): SelectIndex {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущему индексу циклически. */
+    fun prev(): SelectIndex {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         val DEFAULT = Default
+
+        val allValues: List<Int> = entries.map { it.value }
+        val allTitles: List<String> = entries.map { it.title }
+        val allNames: List<String> = entries.map { it.name }
 
         fun fromValueOrNull(value: Int?): SelectIndex? =
             if (value != null) entries.firstOrNull { it.value == value } else null
@@ -45,6 +61,9 @@ enum class SelectIndex(val value: Int) {
 
         fun fromIndexOrDefault(index: Int, default: SelectIndex = DEFAULT): SelectIndex =
             fromValue(index, default)
+
+        fun fromOrdinalOrDefault(ordinal: Int, default: SelectIndex = DEFAULT): SelectIndex =
+            entries.getOrNull(ordinal) ?: default
 
         fun fromNameOrNull(name: String?): SelectIndex? =
             if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null

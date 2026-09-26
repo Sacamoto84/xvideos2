@@ -19,6 +19,7 @@ enum class AlbumType(val value: String) {
     val isAll: Boolean get() = this == All
     val isManga: Boolean get() = this == Manga
     val isPictures: Boolean get() = this == Pictures
+    val isSpecificType: Boolean get() = this != All
 
     val title: String
         get() = when (this) {
@@ -43,6 +44,8 @@ enum class AlbumType(val value: String) {
         val DEFAULT = Pictures
 
         val allTitles: List<String> = entries.map { it.title }
+        val allNames: List<String> = entries.map { it.name }
+        val allValues: List<String> = entries.map { it.value }
 
         fun fromValueOrNull(value: String?): AlbumType? =
             if (value != null) entries.firstOrNull { it.value.equals(value, ignoreCase = true) } else null

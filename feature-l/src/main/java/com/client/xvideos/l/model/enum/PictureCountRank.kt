@@ -53,8 +53,24 @@ enum class PictureCountRank(val count: Int){
         C3200_12800 -> picturesCount in 3200..12800
     }
 
+    /** Переход к следующему диапазону циклически. */
+    fun next(): PictureCountRank {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущему диапазону циклически. */
+    fun prev(): PictureCountRank {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         val DEFAULT = All
+
+        val allCounts: List<Int> = entries.map { it.count }
+        val allRanges: List<String> = entries.map { it.rangeDescription }
+        val allNames: List<String> = entries.map { it.name }
 
         fun fromCountOrNull(count: Int?): PictureCountRank? =
             if (count != null) entries.firstOrNull { it.count == count } else null
@@ -64,6 +80,9 @@ enum class PictureCountRank(val count: Int){
 
         fun fromRankOrDefault(rank: Int, default: PictureCountRank = DEFAULT): PictureCountRank =
             fromCount(rank, default)
+
+        fun fromOrdinalOrDefault(ordinal: Int, default: PictureCountRank = DEFAULT): PictureCountRank =
+            entries.getOrNull(ordinal) ?: default
 
         fun fromNameOrNull(name: String?): PictureCountRank? =
             if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null

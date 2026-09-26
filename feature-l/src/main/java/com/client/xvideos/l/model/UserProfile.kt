@@ -46,6 +46,21 @@ data class UserProfile(
     /** Базовая проверка формата email. */
     val isEmailValid: Boolean get() = email.contains('@') && email.substringAfter('@').contains('.')
 
+    /** Имя пользователя (до символа @) или email целиком. */
+    val usernamePart: String get() = if (email.contains('@')) email.substringBefore('@') else email
+
+    /** Доменная часть email (после @) или пустая строка. */
+    val domainPart: String get() = if (email.contains('@')) email.substringAfter('@') else ""
+
+    /** Создает копию профиля с новым паролем. */
+    fun withPassword(newPassword: String): UserProfile = copy(password = newPassword)
+
+    /** Создает копию профиля с новым email. */
+    fun withEmail(newEmail: String): UserProfile = copy(email = newEmail)
+
+    /** Возвращает пустой профиль. */
+    fun clear(): UserProfile = EMPTY
+
     /** Проверяет совпадение пользователя по email без учета регистра. */
     fun isSameUser(other: UserProfile?): Boolean =
         other != null && email.isNotBlank() && email.equals(other.email, ignoreCase = true)

@@ -242,6 +242,21 @@ fun PicsDetails.isLocalFile(): Boolean = url_to_original?.isLocalImagePath() == 
 /** Суммарное разрешение картинки в пикселях. */
 fun PicsDetails.totalPixels(): Long = width.coerceAtLeast(0).toLong() * height.coerceAtLeast(0).toLong()
 
+/** Проверяет, заданы ли положительные размеры изображения. */
+fun PicsDetails.hasDimensions(): Boolean = width > 0 && height > 0
+
+/** Проверяет, является ли изображение вертикальным (портретная ориентация). */
+fun PicsDetails.isPortrait(): Boolean = width > 0 && height > 0 && height > width
+
+/** Проверяет, является ли изображение горизонтальным (альбомная ориентация). */
+fun PicsDetails.isLandscape(): Boolean = width > 0 && height > 0 && width > height
+
+/** Проверяет, является ли изображение квадратным. */
+fun PicsDetails.isSquare(): Boolean = width > 0 && height > 0 && width == height
+
+/** Возвращает строку разрешения вида "WIDTHxHEIGHT" или пустую строку, если размеры не заданы. */
+fun PicsDetails.resolutionString(): String = if (hasDimensions()) "${width}x${height}" else ""
+
 /** Проверяет, доступно ли медиа для загрузки или просмотра. */
 fun PicsDetails.hasValidMedia(): Boolean = lDownloadUrl() != null
 
