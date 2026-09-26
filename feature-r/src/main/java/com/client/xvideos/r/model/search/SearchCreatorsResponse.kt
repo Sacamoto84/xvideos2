@@ -32,6 +32,12 @@ data class SearchCreatorsResponse(
     /** Первый автор в выдаче или null. */
     val firstOrNull: SearchItemCreatorsResponse? get() = items.firstOrNull()
 
+    /** Список никнеймов всех авторов в выдаче. */
+    val allUsernames: List<String> get() = items.map { it.username }
+
+    /** Список только верифицированных авторов. */
+    val verifiedOnly: List<SearchItemCreatorsResponse> get() = items.filter { it.verified }
+
     /**
      * Поиск автора по никнейму (с префиксом '@' или без него) без учета регистра.
      *
@@ -44,30 +50,18 @@ data class SearchCreatorsResponse(
         return items.firstOrNull { it.username.equals(clean, ignoreCase = true) }
     }
 
+    /**
+     * Фильтрует авторов по поисковому запросу.
+     */
+    fun filterByQuery(query: String?): List<SearchItemCreatorsResponse> =
+        if (query.isNullOrBlank()) items else items.filter { it.matches(query) }
+
     companion object {
         /** Пустой экземпляр ответа. */
         val EMPTY = SearchCreatorsResponse()
     }
 }
 
-//{
-//    "type": "creator",
-//    "text": "@elfsandi",
-//    "name": "Ana \ud83d\udc8b",
-//    "image": "https:\/\/userpic.redgifs.com\/5\/3f\/53f9367f4b1d523a032f5fa2475de70d.png",
-//    "verified": true,
-//    "studio": false,
-//    "followers": 274
-//},
-//{
-//    "type": "creator",
-//    "text": "@ana-fernandez",
-//    "name": "ana-fernandez",
-//    "image": null,
-//    "verified": false,
-//    "studio": false,
-//    "followers": 77
-//},
 /**
  * Элемент подсказки/поиска автора в поисковой строке.
  *
@@ -96,6 +90,9 @@ data class SearchItemCreatorsResponse(
     /** Отображаемое имя либо очищенный никнейм. */
     val displayName: String get() = name.ifBlank { username }
 
+    /** Нормализованный никнейм автора в нижнем регистре без лишних пробелов. */
+    val normalizedUsername: String get() = username.trim().lowercase()
+
     /** Проверяет валидность элемента (поле text не пусто). */
     val isValid: Boolean get() = text.isNotBlank()
 
@@ -110,6 +107,29 @@ data class SearchItemCreatorsResponse(
 
     /** Проверяет наличие подписчиков. */
     val hasFollowers: Boolean get() = followers > 0L
+
+    /** Проверяет соответствие автора поисковому запросу. */
+    fun matches(query: String?): Boolean =
+        if (query.isNullOrBlank()) false else displayName.contains(query.trim(), ignoreCase = true) || username.contains(query.trim(), ignoreCase = true)
+
+    /** Форматирует число подписчиков в компактный вид (k, M). */
+    fun formatFollowers(): String {
+        return when {
+            followers >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", followers / 1_000_000.0)
+            followers >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", followers / 1_000.0)
+            else -> followers.toString()
+        }
+    }
+
+    /** Преобразует элемент выдачи в модель профиля [com.client.xvideos.r.model.UserInfo]. */
+    fun toUserInfo(): com.client.xvideos.r.model.UserInfo =
+        com.client.xvideos.r.model.UserInfo(
+            username = username,
+            name = name,
+            profileImageUrl = image,
+            verified = verified,
+            followers = followers
+        )
 
     companion object {
         /** Пустой экземпляр подсказки создателя. */

@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+import com.client.xvideos.r.model.tag.TagInfo
+import com.client.xvideos.r.model.tag.TagSuggestion
+
 /**
  * Пауза ввода, после которой запрашиваются подсказки.
  *
@@ -38,6 +41,35 @@ data class SuggestionItem(
 
     fun matches(query: String?): Boolean =
         if (query.isNullOrBlank()) false else text.contains(query.trim(), ignoreCase = true)
+
+    fun matchesQuery(query: String?): Boolean =
+        if (query.isNullOrBlank()) true else matches(query)
+
+    /** Форматирует количество материалов в компактный вид (k, M). */
+    fun formatCount(): String {
+        return when {
+            count >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", count / 1_000_000.0)
+            count >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", count / 1_000.0)
+            else -> count.toString()
+        }
+    }
+
+    /** Преобразует подсказку в [TagInfo]. */
+    fun toTagInfo(): TagInfo = TagInfo(name = text.trim(), count = count)
+
+    /** Преобразует подсказку в [TagSuggestion]. */
+    fun toTagSuggestion(type: String = "tag"): TagSuggestion =
+        TagSuggestion(text = text.trim(), gifs = count, type = type)
+
+    companion object {
+        val EMPTY = SuggestionItem()
+
+        fun fromTagInfo(tagInfo: TagInfo): SuggestionItem =
+            SuggestionItem(text = tagInfo.name, count = tagInfo.count)
+
+        fun fromTagSuggestion(suggestion: TagSuggestion): SuggestionItem =
+            SuggestionItem(text = suggestion.text, count = suggestion.gifs)
+    }
 }
 
 /**
@@ -83,6 +115,22 @@ abstract class ISearchTemplate(
 
     /** Количество текущих подсказок автодополнения. */
     val suggestionsCount: Int get() = searchTextSuggestions.value.size
+
+    /** Проверяет наличие хотя бы одной поисковой подсказки. */
+    val hasSuggestions: Boolean get() = suggestionsCount > 0
+
+    /** Текущий введенный текст поисковой строки. */
+    val currentSearchText: String get() = searchText.value.text
+
+    /** Обновляет отображаемый текст в поле ввода. */
+    fun updateSearchText(text: String) {
+        searchText.value = TextFieldValue(text)
+    }
+
+    /** Очищает строку ввода. */
+    fun clearSearchText() {
+        searchText.value = TextFieldValue("")
+    }
 
     /** Количество элементов в стеке навигации истории поиска. */
     val stackSize: Int get() = synchronized(stack) { stack.size }

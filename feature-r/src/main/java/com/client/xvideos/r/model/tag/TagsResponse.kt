@@ -29,6 +29,9 @@ data class TagsResponse(
     /** Первый тег или null. */
     val firstOrNull: TagInfo? get() = tags.firstOrNull()
 
+    /** Список всех имен тегов в каталоге. */
+    val allNames: List<String> get() = tags.map { it.name }
+
     /**
      * Поиск тега по имени без учета регистра.
      *
@@ -37,6 +40,18 @@ data class TagsResponse(
      */
     fun findByNameOrNull(name: String?): TagInfo? =
         if (name.isNullOrBlank()) null else tags.firstOrNull { it.name.equals(name, ignoreCase = true) }
+
+    /**
+     * Фильтрует теги по поисковому запросу.
+     */
+    fun filterByQuery(query: String?): List<TagInfo> =
+        if (query.isNullOrBlank()) tags else tags.filter { it.matches(query) }
+
+    /**
+     * Возвращает копию каталога, отсортированную по количеству материалов (убывание).
+     */
+    fun sortedByCountDescending(): TagsResponse =
+        TagsResponse(tags.sortedByDescending { it.count })
 
     companion object {
         /** Пустой экземпляр ответа. */

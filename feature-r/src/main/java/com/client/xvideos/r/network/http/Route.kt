@@ -65,6 +65,19 @@ class Route(val method: String, val path: String, vararg parameters: Pair<String
      */
     val hasParameters: Boolean get() = hasVarargParams || url.contains('?')
 
+    /** Проверяет, относится ли маршрут к API v1. */
+    val isApiV1: Boolean get() = path.startsWith("/v1/")
+
+    /** Проверяет, относится ли маршрут к API v2. */
+    val isApiV2: Boolean get() = path.startsWith("/v2/")
+
+    /** Относительный путь без query-параметров. */
+    val pathWithoutQuery: String get() = path.substringBefore('?')
+
+    /** Проверяет соответствие пути заданному пути (с учетом или без query-параметров). */
+    fun matchesPath(expectedPath: String): Boolean =
+        pathWithoutQuery == expectedPath || path == expectedPath
+
     override fun toString(): String = url
 
     override fun equals(other: Any?): Boolean {
@@ -100,5 +113,13 @@ class Route(val method: String, val path: String, vararg parameters: Pair<String
     companion object {
         /** Базовый хост API RedGifs. */
         const val BASE = "https://api.redgifs.com"
+
+        /** Создает GET-маршрут с параметрами подстановки. */
+        fun get(path: String, vararg parameters: Pair<String, Any>): Route =
+            Route("GET", path, *parameters)
+
+        /** Создает POST-маршрут с параметрами подстановки. */
+        fun post(path: String, vararg parameters: Pair<String, Any>): Route =
+            Route("POST", path, *parameters)
     }
 }

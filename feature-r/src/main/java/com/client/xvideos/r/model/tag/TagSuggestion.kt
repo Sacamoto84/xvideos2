@@ -52,12 +52,28 @@ data class TagSuggestion(
 
     /** Является ли подсказка автором/создателем. */
     val isCreatorType: Boolean get() = type.equals("creator", ignoreCase = true) || type.equals("user", ignoreCase = true)
-
     /** Преобразует подсказку в [TagInfo]. */
     fun toTagInfo(): TagInfo = TagInfo(name = text.trim(), count = gifs)
+
+    /** Форматирует количество гифок в компактный вид (k, M). */
+    fun formatCount(): String {
+        return when {
+            gifs >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", gifs / 1_000_000.0)
+            gifs >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", gifs / 1_000.0)
+            else -> gifs.toString()
+        }
+    }
+
+    /** Проверяет совпадение двух подсказок по тексту и типу. */
+    fun isSameSuggestion(other: TagSuggestion?): Boolean =
+        other != null && isValid && normalizedText == other.normalizedText && type.equals(other.type, ignoreCase = true)
 
     companion object {
         /** Пустой экземпляр подсказки. */
         val EMPTY = TagSuggestion()
+
+        /** Создает [TagSuggestion] на основе [TagInfo]. */
+        fun fromTagInfo(tagInfo: TagInfo, type: String = "tag"): TagSuggestion =
+            TagSuggestion(gifs = tagInfo.count, text = tagInfo.name, type = type)
     }
 }

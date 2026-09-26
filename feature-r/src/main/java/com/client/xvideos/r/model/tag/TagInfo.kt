@@ -36,6 +36,15 @@ data class TagInfo(
     fun matchesQuery(query: String?): Boolean =
         if (query.isNullOrBlank()) true else matches(query)
 
+    /** Форматирует количество материалов в компактный вид (k, M). */
+    fun formatCount(): String {
+        return when {
+            count >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", count / 1_000_000.0)
+            count >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", count / 1_000.0)
+            else -> count.toString()
+        }
+    }
+
     /** Проверяет совпадение тегов по имени. */
     fun isSameTag(other: TagInfo?): Boolean =
         other != null && isValid && normalizedName == other.normalizedName
@@ -43,5 +52,8 @@ data class TagInfo(
     companion object {
         /** Пустой экземпляр [TagInfo]. */
         val EMPTY = TagInfo()
+
+        /** Создает [TagInfo] с очищенным именем и количеством. */
+        fun fromName(name: String, count: Long = 0L): TagInfo = TagInfo(name = name.trim(), count = count)
     }
 }

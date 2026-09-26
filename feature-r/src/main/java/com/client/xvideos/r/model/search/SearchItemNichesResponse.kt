@@ -47,6 +47,21 @@ data class SearchNichesShortResponse(
     /** Первая найденная ниша или null. */
     val firstOrNull: SearchItemNichesResponse? get() = niches.firstOrNull()
 
+    /**
+     * Поиск ниши по идентификатору (id/slug) без учета регистра.
+     */
+    fun findByIdOrNull(id: String?): SearchItemNichesResponse? {
+        if (id.isNullOrBlank()) return null
+        val clean = id.trim()
+        return niches.firstOrNull { it.id.equals(clean, ignoreCase = true) }
+    }
+
+    /**
+     * Фильтрует ниши по поисковому запросу.
+     */
+    fun filterByQuery(query: String?): List<SearchItemNichesResponse> =
+        if (query.isNullOrBlank()) niches else niches.filter { it.matches(query) }
+
     companion object {
         /** Пустой экземпляр ответа. */
         val EMPTY = SearchNichesShortResponse()
@@ -91,6 +106,9 @@ data class SearchItemNichesResponse(
     /** Отображаемое имя ниши или id как fallback. */
     val displayName: String get() = name.ifBlank { id }
 
+    /** Нормализованный ID ниши в нижнем регистре без пробелов. */
+    val normalizedId: String get() = id.trim().lowercase()
+
     /** Проверяет валидность id ниши. */
     val isValid: Boolean get() = id.isNotBlank()
 
@@ -111,6 +129,33 @@ data class SearchItemNichesResponse(
 
     /** Проверяет наличие предпочтений контента. */
     val hasPreferences: Boolean get() = preferences.isNotEmpty()
+
+    /** Проверяет соответствие ниши поисковому запросу по ID, названию или тегам. */
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return false
+        val q = query.trim()
+        return id.contains(q, ignoreCase = true) ||
+            name.contains(q, ignoreCase = true) ||
+            tags.any { it.contains(q, ignoreCase = true) }
+    }
+
+    /** Форматирует число гифок в компактный вид (k, M). */
+    fun formatGifs(): String {
+        return when {
+            gifs >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", gifs / 1_000_000.0)
+            gifs >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", gifs / 1_000.0)
+            else -> gifs.toString()
+        }
+    }
+
+    /** Форматирует число подписчиков в компактный вид (k, M). */
+    fun formatSubscribers(): String {
+        return when {
+            subscribers >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", subscribers / 1_000_000.0)
+            subscribers >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", subscribers / 1_000.0)
+            else -> subscribers.toString()
+        }
+    }
 
     companion object {
         /** Пустой экземпляр элемента ниши. */
