@@ -228,4 +228,31 @@ class DownloadWorkRequestTest {
         val resolvedUa = parsed.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }?.value
         assertEquals("MyCustomAgent/2.0", resolvedUa)
     }
+
+    @Test
+    fun `DownloadStatus and DownloadWorkState helpers operate correctly`() {
+        assertTrue(DownloadStatus.SUCCEEDED.isFinished)
+        assertTrue(DownloadStatus.FAILED.isFinished)
+        assertTrue(DownloadStatus.CANCELLED.isFinished)
+        assertFalse(DownloadStatus.RUNNING.isFinished)
+        assertFalse(DownloadStatus.ENQUEUED.isFinished)
+
+        assertTrue(DownloadStatus.RUNNING.isRunning)
+        assertTrue(DownloadStatus.SUCCEEDED.isSuccessful)
+        assertTrue(DownloadStatus.FAILED.isFailed)
+        assertTrue(DownloadStatus.CANCELLED.isCancelled)
+        assertTrue(DownloadStatus.ENQUEUED.isEnqueued)
+
+        val state = DownloadWorkState(
+            workId = UUID.randomUUID(),
+            tag = "test-tag",
+            status = DownloadStatus.ENQUEUED,
+            filePath = "/path/file.mp4",
+            error = "some error"
+        )
+        assertTrue(state.isEnqueued)
+        assertFalse(state.isFinished)
+        assertTrue(state.hasFilePath)
+        assertTrue(state.hasError)
+    }
 }

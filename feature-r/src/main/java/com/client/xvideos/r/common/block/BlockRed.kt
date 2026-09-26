@@ -45,7 +45,12 @@ class BlockRed @Inject constructor(
         blockedIds.value = blocked.mapTo(HashSet(blocked.size)) { it.id }
     }
 
-    fun isBlocked(id: String): Boolean = id in blockedIds.value
+    val blockedCount: Int get() = blockedIds.value.size
+    val hasBlocked: Boolean get() = blockedIds.value.isNotEmpty()
+
+    fun isBlocked(id: String): Boolean = id.isNotEmpty() && id in blockedIds.value
+
+    fun isBlocked(item: GifsInfo): Boolean = isBlocked(item.id)
 
     fun refreshListAndBlock(list: MutableStateFlow<List<GifsInfo>>) {
         val blocked = blockedIds.value

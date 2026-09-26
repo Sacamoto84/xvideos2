@@ -13,6 +13,7 @@ class ParseJsonTest {
 
     @Test
     fun `parseJson возвращает null для пустой или пробельной строки`() {
+        assertNull(parseJson(null))
         assertNull(parseJson(""))
         assertNull(parseJson("   "))
         assertNull(parseJson("\t\n"))

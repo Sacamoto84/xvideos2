@@ -581,4 +581,26 @@ class LSerializationCompatibilityTest {
         assertEquals(false, Audience.EMPTY.isValid)
         assertEquals(true, Audience(id = "a1", title = "everyone").isValid)
     }
+
+    @Test
+    fun `UserProfile helper properties operate correctly`() {
+        val emptyProfile = UserProfile.EMPTY
+        assertEquals(true, emptyProfile.isEmpty)
+        assertEquals(false, emptyProfile.isNotEmpty)
+        assertEquals(false, emptyProfile.isValid)
+        assertEquals(false, emptyProfile.hasEmail)
+        assertEquals(false, emptyProfile.hasPassword)
+
+        val partialProfile = UserProfile(email = "test@example.com")
+        assertEquals(false, partialProfile.isValid)
+        assertEquals(true, partialProfile.hasEmail)
+        assertEquals(false, partialProfile.hasPassword)
+
+        val fullProfile = UserProfile(email = "test@example.com", password = "secretPassword123")
+        assertEquals(true, fullProfile.isValid)
+        assertEquals(true, fullProfile.hasEmail)
+        assertEquals(true, fullProfile.hasPassword)
+        assertEquals(false, fullProfile.isEmpty)
+        assertEquals(true, fullProfile.isNotEmpty)
+    }
 }

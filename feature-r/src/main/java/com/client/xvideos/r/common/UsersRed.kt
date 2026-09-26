@@ -11,19 +11,34 @@ object UsersRed {
     val listAllUsers: List<UserInfo>
         get() = if (usersMap.isEmpty()) emptyList() else ArrayList(usersMap.values)
 
+    val count: Int get() = usersMap.size
+    val isEmpty: Boolean get() = usersMap.isEmpty()
+    val isNotEmpty: Boolean get() = !usersMap.isEmpty()
+
     /** Добавить пользователя, исключая дубликаты по username. */
     fun addUser(user: UserInfo) {
-        usersMap[user.username] = user
+        if (user.username.isNotBlank()) {
+            usersMap[user.username] = user
+        }
+    }
+
+    /** Проверить наличие пользователя по username. */
+    fun containsUser(username: String): Boolean {
+        if (username.isBlank()) return false
+        return usersMap.containsKey(username)
     }
 
     /** Найти пользователя по username. */
     fun findUser(username: String): UserInfo? {
+        if (username.isBlank()) return null
         return usersMap[username]
     }
 
     /** Удалить пользователя. */
     fun removeUser(username: String) {
-        usersMap.remove(username)
+        if (username.isNotBlank()) {
+            usersMap.remove(username)
+        }
     }
 
     /** Очистить всех пользователей. */

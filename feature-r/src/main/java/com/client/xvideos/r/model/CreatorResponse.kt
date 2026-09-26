@@ -17,7 +17,12 @@ data class CreatorResponse(
 ) {
     val isEmpty: Boolean get() = gifs.isEmpty() && users.isEmpty() && niches.isEmpty()
     val isNotEmpty: Boolean get() = !isEmpty
+    val isFirstPage: Boolean get() = page <= 1
     val hasMorePages: Boolean get() = page < pages
+    val primaryUser: UserInfo? get() = users.firstOrNull()
+    val hasGifs: Boolean get() = gifs.isNotEmpty()
+    val hasUsers: Boolean get() = users.isNotEmpty()
+    val hasTags: Boolean get() = tags.isNotEmpty()
 
     companion object {
         val EMPTY = CreatorResponse()

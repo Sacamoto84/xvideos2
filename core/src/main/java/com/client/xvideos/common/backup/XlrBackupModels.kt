@@ -32,13 +32,21 @@ data class XlrBackupItem(
     val files: Int = 0,
     val bytes: Long = 0L
 ) {
+    val isValid: Boolean get() = path.isNotBlank() && title.isNotBlank()
     val isEmpty: Boolean get() = files == 0 && bytes == 0L
     val isNotEmpty: Boolean get() = !isEmpty
 }
 
 enum class XlrBackupContentMode {
     FULL,
-    MINI
+    MINI;
+
+    val isFull: Boolean get() = this == FULL
+    val isMini: Boolean get() = this == MINI
+
+    companion object {
+        val DEFAULT = MINI
+    }
 }
 
 @Immutable

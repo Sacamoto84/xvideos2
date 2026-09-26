@@ -35,6 +35,10 @@ data class TopCreator(
     val isValid: Boolean get() = username.isNotBlank()
     val isEmpty: Boolean get() = username.isEmpty()
     val isNotEmpty: Boolean get() = username.isNotEmpty()
+    val displayName: String get() = name.ifBlank { username }
+    val hasAvatar: Boolean get() = profileImageUrl.isNotBlank()
+    val hasGifs: Boolean get() = gifs > 0
+    val hasFollowers: Boolean get() = followers > 0
 
     companion object {
         val EMPTY = TopCreator()

@@ -10,7 +10,14 @@ enum class DownloadStatus {
     RUNNING,
     SUCCEEDED,
     FAILED,
-    CANCELLED,
+    CANCELLED;
+
+    val isFinished: Boolean get() = this == SUCCEEDED || this == FAILED || this == CANCELLED
+    val isRunning: Boolean get() = this == RUNNING
+    val isSuccessful: Boolean get() = this == SUCCEEDED
+    val isFailed: Boolean get() = this == FAILED
+    val isCancelled: Boolean get() = this == CANCELLED
+    val isEnqueued: Boolean get() = this == ENQUEUED
 }
 
 @Immutable
@@ -24,16 +31,14 @@ data class DownloadWorkState(
     val filePath: String? = null,
     val error: String? = null,
 ) {
-    val isFinished: Boolean
-        get() = when (status) {
-            DownloadStatus.SUCCEEDED, DownloadStatus.FAILED, DownloadStatus.CANCELLED -> true
-            DownloadStatus.ENQUEUED, DownloadStatus.RUNNING -> false
-        }
-
-    val isRunning: Boolean get() = status == DownloadStatus.RUNNING
-    val isSuccessful: Boolean get() = status == DownloadStatus.SUCCEEDED
-    val isFailed: Boolean get() = status == DownloadStatus.FAILED
-    val isCancelled: Boolean get() = status == DownloadStatus.CANCELLED
+    val isFinished: Boolean get() = status.isFinished
+    val isRunning: Boolean get() = status.isRunning
+    val isSuccessful: Boolean get() = status.isSuccessful
+    val isFailed: Boolean get() = status.isFailed
+    val isCancelled: Boolean get() = status.isCancelled
+    val isEnqueued: Boolean get() = status.isEnqueued
+    val hasError: Boolean get() = !error.isNullOrBlank()
+    val hasFilePath: Boolean get() = !filePath.isNullOrBlank()
 
     val progressFraction: Float
         get() = when {

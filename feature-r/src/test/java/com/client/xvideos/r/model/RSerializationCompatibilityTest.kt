@@ -323,4 +323,59 @@ class RSerializationCompatibilityTest {
         assertEquals(true, imageGif.isImage)
         assertEquals(false, imageGif.isGif)
     }
+
+    @Test
+    fun `TopCreatorsResponse and CreatorResponse helper properties operate correctly`() {
+        val emptyTop = TopCreatorsResponse.EMPTY
+        assertEquals(true, emptyTop.isEmpty)
+        assertEquals(0, emptyTop.size)
+
+        val creator = TopCreator(
+            username = "alice",
+            name = "Alice Wonder",
+            profileImageUrl = "https://cdn/alice.jpg",
+            gifs = 10,
+            followers = 500
+        )
+        assertEquals(true, creator.isValid)
+        assertEquals(false, creator.isEmpty)
+        assertEquals(true, creator.isNotEmpty)
+        assertEquals("Alice Wonder", creator.displayName)
+        assertEquals(true, creator.hasAvatar)
+        assertEquals(true, creator.hasGifs)
+        assertEquals(true, creator.hasFollowers)
+
+        val creatorNoName = TopCreator(username = "bob")
+        assertEquals("bob", creatorNoName.displayName)
+        assertEquals(false, creatorNoName.hasAvatar)
+        assertEquals(false, creatorNoName.hasGifs)
+        assertEquals(false, creatorNoName.hasFollowers)
+
+        val emptyCreatorResponse = CreatorResponse.EMPTY
+        assertEquals(true, emptyCreatorResponse.isEmpty)
+        assertEquals(false, emptyCreatorResponse.isNotEmpty)
+        assertEquals(true, emptyCreatorResponse.isFirstPage)
+        assertEquals(false, emptyCreatorResponse.hasMorePages)
+        assertEquals(null, emptyCreatorResponse.primaryUser)
+        assertEquals(false, emptyCreatorResponse.hasGifs)
+        assertEquals(false, emptyCreatorResponse.hasUsers)
+        assertEquals(false, emptyCreatorResponse.hasTags)
+
+        val user = UserInfo(username = "star", name = "Star")
+        val populatedResponse = CreatorResponse(
+            gifs = listOf(GifsInfo(id = "g1")),
+            users = listOf(user),
+            tags = listOf("tag1"),
+            page = 2,
+            pages = 5
+        )
+        assertEquals(false, populatedResponse.isEmpty)
+        assertEquals(true, populatedResponse.isNotEmpty)
+        assertEquals(false, populatedResponse.isFirstPage)
+        assertEquals(true, populatedResponse.hasMorePages)
+        assertEquals(user, populatedResponse.primaryUser)
+        assertEquals(true, populatedResponse.hasGifs)
+        assertEquals(true, populatedResponse.hasUsers)
+        assertEquals(true, populatedResponse.hasTags)
+    }
 }
