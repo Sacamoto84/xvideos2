@@ -68,7 +68,15 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
      * @param id Числовой ID видео.
      * @return `true`, если ролик скачан и доступен оффлайн.
      */
+    val isDownloading: Boolean get() = _percent.value in 0f..1f
+    val isIdle: Boolean get() = _percent.value == -2f
+    val isError: Boolean get() = _percent.value == -3f
+    val isEmpty: Boolean get() = _list.value.isEmpty()
+    val isNotEmpty: Boolean get() = _list.value.isNotEmpty()
+    val count: Int get() = _list.value.size
+
     fun contains(id: Long): Boolean = id > 0L && _downloadedVideoIds.value.contains(id)
+    fun contains(item: ItemsX?): Boolean = item != null && contains(item.id)
 
     /**
      * Возвращает `file://`-URI скачанного видеофайла (для передачи в ExoPlayer).

@@ -41,6 +41,12 @@ fun parserListVideo(html: String): List<ItemsX> =
     if (html.isBlank()) emptyList() else parserListVideo(Jsoup.parse(html))
 
 /**
+ * Безопасная перегрузка парсинга карточек видео для nullable HTML-строки.
+ */
+fun parserListVideoOrEmpty(html: String?): List<ItemsX> =
+    if (html.isNullOrBlank()) emptyList() else parserListVideo(html)
+
+/**
  * Парсит список карточек видеороликов из DOM-документа страницы раздела X.
  *
  * Ищет блоки карточек `div.frame-block`, извлекает ID из `data-id`, название,

@@ -30,6 +30,10 @@ class SavedX_Favorites(val scope: CoroutineScope) {
     /** Наблюдаемый список избранных элементов для Compose UI. */
     val list = favoritesDb.list
 
+    val isEmpty: Boolean get() = list.isEmpty()
+    val isNotEmpty: Boolean get() = list.isNotEmpty()
+    val count: Int get() = list.size
+
     /**
      * Множество id избранного для O(1)-проверки [contains].
      * Snapshot-set — изменения наблюдаются Compose, поэтому индикаторы корректно перерисовываются.
@@ -107,6 +111,7 @@ class SavedX_Favorites(val scope: CoroutineScope) {
      * @return `true`, если ролик находится в избранном.
      */
     fun contains(id: Long): Boolean = id > 0L && favoriteIds.contains(id)
+    fun contains(item: ItemsX?): Boolean = item != null && contains(item.id)
 
     private var refreshJob: Job? = null
 

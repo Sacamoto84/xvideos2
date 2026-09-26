@@ -36,6 +36,10 @@ class SavedX_History(
     /** Реактивный список записей для UI экрана истории. */
     val list = historyDb.list
 
+    val isEmpty: Boolean get() = list.isEmpty()
+    val isNotEmpty: Boolean get() = list.isNotEmpty()
+    val count: Int get() = list.size
+
     /** Быстрый in-memory доступ по id для плеера без лишнего дискового I/O. */
     private val historyMap = ConcurrentHashMap<Long, XHistoryItem>()
 

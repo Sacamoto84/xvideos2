@@ -125,6 +125,8 @@ data class SearchResult(
     val hasPornstars: Boolean get() = !pornstar.isNullOrEmpty()
     val hasChannels: Boolean get() = !channel.isNullOrEmpty()
     val isBlacklisted: Boolean get() = BLACKLISTED == true
+    val totalSuggestionsCount: Int
+        get() = keywords.size + (pornstar?.size ?: 0) + (channel?.size ?: 0)
 
     companion object {
         val EMPTY = SearchResult(result = false, code = 0, keywords = emptyList())

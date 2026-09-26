@@ -87,6 +87,12 @@ fun parseHTML5Player(script: String): HTML5PlayerConfig? {
     )
 }
 
+/**
+ * Безопасная перегрузка для nullable-строки скрипта.
+ */
+fun parseHTML5PlayerOrNull(script: String?): HTML5PlayerConfig? =
+    if (script != null) parseHTML5Player(script) else null
+
 /** Извлекает первое совпадение группы regex из текста скрипта. */
 private fun extractValue(script: String, pattern: Pattern): String? {
     val matcher = pattern.matcher(script)

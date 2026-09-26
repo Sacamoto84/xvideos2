@@ -42,3 +42,10 @@ fun parserItemVideo(html: String): String? {
     if (html.isBlank() || !html.contains(PLAYER_MARKER)) return null
     return parserItemVideo(Jsoup.parse(html))
 }
+
+/**
+ * Быстрая проверка наличия маркера скрипта плеера в HTML-разметке без полного парсинга DOM.
+ */
+fun hasPlayerScript(html: String?): Boolean =
+    !html.isNullOrBlank() && html.contains(PLAYER_MARKER)
+

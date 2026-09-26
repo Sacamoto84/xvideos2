@@ -26,3 +26,9 @@ fun parseJson(json: String?): SearchResult? {
         null
     }
 }
+
+/**
+ * Десериализует JSON-ответ поиска с возможностью возврата значения по умолчанию [default].
+ */
+fun parseJsonOrDefault(json: String?, default: SearchResult = SearchResult.EMPTY): SearchResult =
+    parseJson(json) ?: default
