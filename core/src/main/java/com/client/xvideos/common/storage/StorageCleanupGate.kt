@@ -58,6 +58,24 @@ class StorageCleanupGate @Inject constructor() {
     /** Проверяет активность выполнения задачи уборки (алиас для [isActive]). */
     fun isRunning(): Boolean = isActive
 
+    /** Истина, если объект Job был создан. */
+    val hasJob: Boolean get() = job != null
+
+    /** Возвращает текстовое описание текущего состояния гейта. */
+    fun getStatusDescription(): String = when {
+        isActive -> "Active"
+        isPending -> "Pending"
+        isStarted && isCompleted -> "Completed"
+        else -> "Idle"
+    }
+
+    /** Отменяет текущую задачу уборки, если она запущена. */
+    @Synchronized
+    fun cancel() {
+        job?.cancel()
+        job = null
+    }
+
     /** Сброс внутреннего состояния для изоляции в тестах. */
     fun resetForTesting() {
         job = null

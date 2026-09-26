@@ -32,9 +32,38 @@ data class PlayerPlaybackConfig(
     val isEmpty: Boolean get() = url.isEmpty()
     val isNotEmpty: Boolean get() = url.isNotEmpty()
     val isMuted: Boolean get() = volume <= 0f
+    val isAudioEnabled: Boolean get() = !isMuted
+    val isPlaying: Boolean get() = isNotEmpty && !isPause
     val hasHeaders: Boolean get() = !headers.isNullOrEmpty()
     val hasDrm: Boolean get() = drmConfig != null
     val isSeeking: Boolean get() = isSliding || seekToTime != null
+
+    fun withVolume(newVolume: Float): PlayerPlaybackConfig =
+        copy(volume = newVolume.coerceIn(0f, 1f))
+
+    fun withSpeed(newSpeed: PlayerSpeed): PlayerPlaybackConfig =
+        copy(speed = newSpeed)
+
+    fun withSeek(time: Float?): PlayerPlaybackConfig =
+        copy(seekToTime = time?.coerceAtLeast(0f))
+
+    fun withPlayFromTime(time: Float?): PlayerPlaybackConfig =
+        copy(playFromTime = time?.coerceAtLeast(0f))
+
+    fun toggledPlayPause(): PlayerPlaybackConfig =
+        copy(isPause = !isPause)
+
+    fun toggledLoop(): PlayerPlaybackConfig =
+        copy(loop = !loop)
+
+    fun toggledScreenResize(): PlayerPlaybackConfig =
+        copy(size = size.toggle())
+
+    fun sanitized(): PlayerPlaybackConfig = copy(
+        volume = volume.coerceIn(0f, 1f),
+        seekToTime = seekToTime?.coerceAtLeast(0f),
+        playFromTime = playFromTime?.coerceAtLeast(0f)
+    )
 
     companion object {
         val EMPTY = PlayerPlaybackConfig()

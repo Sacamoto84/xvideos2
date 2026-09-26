@@ -28,12 +28,35 @@ enum class ScrollButtonEffect(
     val isFlat: Boolean get() = this == FLAT
     val isBlur: Boolean get() = this == BLUR
     val isGlass: Boolean get() = this == GLASS
+    val requiresBlurShader: Boolean get() = this != FLAT
+
+    /** Переход к следующему эффекту циклически. */
+    fun next(): ScrollButtonEffect {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущему эффекту циклически. */
+    fun prev(): ScrollButtonEffect {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
 
     companion object {
         val DEFAULT = BLUR
 
+        val allTitles: List<String> = entries.map { it.title }
+
         fun fromNameOrDefault(name: String?): ScrollButtonEffect {
             return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: DEFAULT
+        }
+
+        fun fromOrdinalOrDefault(ordinal: Int, default: ScrollButtonEffect = DEFAULT): ScrollButtonEffect =
+            entries.getOrNull(ordinal) ?: default
+
+        fun fromTitleOrDefault(title: String?, default: ScrollButtonEffect = DEFAULT): ScrollButtonEffect {
+            if (title.isNullOrBlank()) return default
+            return entries.firstOrNull { it.title.equals(title, ignoreCase = true) } ?: default
         }
     }
 }
