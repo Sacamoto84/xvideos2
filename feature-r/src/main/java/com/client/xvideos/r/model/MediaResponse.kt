@@ -64,6 +64,17 @@ data class MediaResponse(
     /** Проверяет наличие тегов в ответе. */
     val hasTags: Boolean get() = tags.isNotEmpty()
 
+    /** Общее количество гифок во всей выборке. */
+    val totalGifsCount: Int get() = total
+
+    /** Находит гифку по ее ID или null. */
+    fun findGifByIdOrNull(id: String?): GifsInfo? =
+        if (id.isNullOrBlank()) null else gifs.firstOrNull { it.id == id }
+
+    /** Фильтрует список гифок на странице по поисковому запросу. */
+    fun filterGifsByQuery(query: String?): List<GifsInfo> =
+        if (query.isNullOrBlank()) gifs else gifs.filter { it.matches(query) }
+
     companion object {
         /** Пустой экземпляр ответа со значениями по умолчанию. */
         val EMPTY = MediaResponse()

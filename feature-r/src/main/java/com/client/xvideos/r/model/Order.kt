@@ -96,9 +96,25 @@ enum class Order(val value: String) {
     /** Проверяет, является ли сортировка служебным флагом сброса FORCE_TEMP. */
     val isForceTemp: Boolean get() = this == FORCE_TEMP
 
+    /** Переход к следующему варианту сортировки циклически. */
+    fun next(): Order {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущему варианту сортировки циклически. */
+    fun prev(): Order {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         /** Сортировка по умолчанию. */
         val DEFAULT = LATEST
+
+        /** Поиск [Order] по порядковому номеру или дефолт. */
+        fun fromOrdinalOrDefault(ordinal: Int, default: Order = DEFAULT): Order =
+            entries.getOrNull(ordinal) ?: default
 
         /** Поиск [Order] по строковому значению [value] (без учета регистра). */
         fun fromValue(value: String): Order? = entries.firstOrNull { it.value.equals(value, ignoreCase = true) }
@@ -143,9 +159,25 @@ enum class MediaType(val value: String) {
     /** Проверяет, выбран ли тип GIF. */
     val isGif: Boolean get() = this == GIF
 
+    /** Переход к следующему типу медиа циклически. */
+    fun next(): MediaType {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущему типу медиа циклически. */
+    fun prev(): MediaType {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         /** Тип по умолчанию (ALL). */
         val DEFAULT = ALL
+
+        /** Поиск [MediaType] по порядковому номеру или дефолт. */
+        fun fromOrdinalOrDefault(ordinal: Int, default: MediaType = DEFAULT): MediaType =
+            entries.getOrNull(ordinal) ?: default
 
         /** Находит [MediaType] по значению или null. */
         fun fromValueOrNull(value: String?): MediaType? =

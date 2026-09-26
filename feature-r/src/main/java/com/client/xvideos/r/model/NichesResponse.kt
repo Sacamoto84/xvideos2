@@ -91,6 +91,13 @@ data class Niche(
     /** Проверяет, что у ниши есть хотя бы один подписчик. */
     val hasSubscribers: Boolean get() = subscribers > 0L
 
+    /** Количество превью роликов в нише. */
+    val previewsCount: Int get() = previews?.size ?: 0
+
+    /** Проверяет соответствие ниши поисковому запросу по имени или слагу. */
+    fun matches(query: String?): Boolean =
+        if (query.isNullOrBlank()) false else name.contains(query.trim(), ignoreCase = true) || id.contains(query.trim(), ignoreCase = true)
+
     companion object {
         /** Пустой экземпляр [Niche] со значениями по умолчанию. */
         val EMPTY = Niche()

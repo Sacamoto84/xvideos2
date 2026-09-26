@@ -99,6 +99,15 @@ data class UserInfo(
     fun matches(query: String?): Boolean =
         if (query.isNullOrBlank()) false else displayName.contains(query.trim(), ignoreCase = true) || username.contains(query.trim(), ignoreCase = true)
 
+    /** Форматирует число подписчиков в компактный вид (k, M). */
+    fun formatFollowers(): String {
+        return when {
+            followers >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", followers / 1_000_000.0)
+            followers >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", followers / 1_000.0)
+            else -> followers.toString()
+        }
+    }
+
     companion object {
         /** Пустой экземпляр [UserInfo]. */
         val EMPTY = UserInfo()

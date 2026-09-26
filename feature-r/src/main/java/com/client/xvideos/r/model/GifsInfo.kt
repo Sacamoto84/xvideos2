@@ -84,6 +84,32 @@ data class GifsInfo(
     /** Проверяет, указано ли непустое имя автора (отличное от дефолтного "userName"). */
     val hasUserName: Boolean get() = userName.isNotBlank() && userName != "userName"
 
+    /** Проверяет наличие корректных положительных габаритов. */
+    val hasDimensions: Boolean get() = width > 0 && height > 0
+
+    /** Вычисляет соотношение сторон медиа (width / height). */
+    val aspectRatio: Float get() = if (height > 0) width.toFloat() / height.toFloat() else 1f
+
+    /** Проверяет совпадение по ID, автору, описанию, тегам или нишам. */
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return false
+        val q = query.trim()
+        return id.contains(q, ignoreCase = true) ||
+            userName.contains(q, ignoreCase = true) ||
+            description.contains(q, ignoreCase = true) ||
+            tags.any { it.contains(q, ignoreCase = true) } ||
+            niches?.any { it.contains(q, ignoreCase = true) } == true
+    }
+
+    /** Форматирует длительность в формат m:ss или Xs. */
+    fun formatDuration(): String {
+        val dur = duration ?: return ""
+        val totalSecs = dur.toLong()
+        val mins = totalSecs / 60
+        val secs = totalSecs % 60
+        return if (mins > 0) String.format(java.util.Locale.US, "%d:%02d", mins, secs) else "${secs}s"
+    }
+
     companion object {
         /** Пустой экземпляр [GifsInfo] со значениями по умолчанию. */
         val EMPTY = GifsInfo()

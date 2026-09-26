@@ -27,6 +27,9 @@ data class TagSuggestion(
     /** Проверяет наличие гифок по этой подсказке. */
     val hasGifs: Boolean get() = gifs > 0L
 
+    /** Проверяет наличие положительного числа гифок. */
+    val hasCount: Boolean get() = gifs > 0L
+
     /** Проверяет наличие указанного типа сущности. */
     val hasType: Boolean get() = type.isNotBlank()
 
@@ -36,6 +39,10 @@ data class TagSuggestion(
     /** Проверяет соответствие подсказки поисковому запросу. */
     fun matches(query: String?): Boolean =
         if (query.isNullOrBlank()) false else text.contains(query.trim(), ignoreCase = true)
+
+    /** Проверяет соответствие поисковому запросу с возвратом true для пустых запросов. */
+    fun matchesQuery(query: String?): Boolean =
+        if (query.isNullOrBlank()) true else matches(query)
 
     /** Является ли подсказка тегом. */
     val isTagType: Boolean get() = type.equals("tag", ignoreCase = true)

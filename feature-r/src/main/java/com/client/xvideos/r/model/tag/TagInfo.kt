@@ -32,6 +32,10 @@ data class TagInfo(
     fun matches(query: String?): Boolean =
         if (query.isNullOrBlank()) false else name.contains(query.trim(), ignoreCase = true)
 
+    /** Проверяет соответствие поисковому запросу с возвратом true для пустых запросов. */
+    fun matchesQuery(query: String?): Boolean =
+        if (query.isNullOrBlank()) true else matches(query)
+
     /** Проверяет совпадение тегов по имени. */
     fun isSameTag(other: TagInfo?): Boolean =
         other != null && isValid && normalizedName == other.normalizedName

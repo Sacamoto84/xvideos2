@@ -87,6 +87,15 @@ data class TopCreator(
     /** Проверяет наличие просмотров. */
     val hasViews: Boolean get() = views > 0
 
+    /** Проверяет соответствие поисковому запросу по нику, имени или описанию. */
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return false
+        val q = query.trim()
+        return username.contains(q, ignoreCase = true) ||
+            name.contains(q, ignoreCase = true) ||
+            description.contains(q, ignoreCase = true)
+    }
+
     companion object {
         /** Пустой экземпляр [TopCreator]. */
         val EMPTY = TopCreator()

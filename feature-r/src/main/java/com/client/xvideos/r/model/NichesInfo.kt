@@ -106,6 +106,9 @@ data class NichesInfo(
     fun matches(query: String?): Boolean =
         if (query.isNullOrBlank()) false else name.contains(query.trim(), ignoreCase = true) || id.contains(query.trim(), ignoreCase = true)
 
+    /** Нормализованный идентификатор ниши в нижнем регистре. */
+    val normalizedId: String get() = id.trim().lowercase()
+
     /** Проверяет совпадение ниш по идентификатору. */
     fun isSameNiche(other: NichesInfo?): Boolean =
         other != null && isValid && id.equals(other.id, ignoreCase = true)

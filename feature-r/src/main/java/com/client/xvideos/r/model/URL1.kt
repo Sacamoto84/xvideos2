@@ -86,6 +86,12 @@ data class URL1(
     /** Проверяет валидность ссылок (наличие хотя бы thumbnail или sd). */
     val isValid: Boolean get() = thumbnail.isNotBlank() || sd.isNotBlank()
 
+    /** Проверяет наличие валидного URL для воспроизведения видео. */
+    val hasValidVideo: Boolean get() = bestVideoUrl.isNotBlank()
+
+    /** Проверяет наличие валидного URL для картинки превью. */
+    val hasValidImage: Boolean get() = bestImageUrl.isNotBlank()
+
     companion object {
         /** Пустой экземпляр [URL1] со значениями по умолчанию. */
         val EMPTY = URL1()

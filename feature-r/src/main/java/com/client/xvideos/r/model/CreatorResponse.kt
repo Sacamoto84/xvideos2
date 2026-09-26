@@ -61,6 +61,14 @@ data class CreatorResponse(
     /** Проверяет наличие тегов. */
     val hasTags: Boolean get() = tags.isNotEmpty()
 
+    /** Находит гифку по ее ID или null. */
+    fun findGifByIdOrNull(id: String?): GifsInfo? =
+        if (id.isNullOrBlank()) null else gifs.firstOrNull { it.id == id }
+
+    /** Находит нишу по ее имени или null. */
+    fun findNicheByNameOrNull(name: String?): NichesInfo? =
+        if (name.isNullOrBlank()) null else niches.firstOrNull { it.name.equals(name, ignoreCase = true) }
+
     companion object {
         /** Пустой экземпляр [CreatorResponse]. */
         val EMPTY = CreatorResponse()
