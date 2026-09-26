@@ -28,7 +28,11 @@ data class LSavedLikePreview(
     val width: Int,
     val height: Int,
     val size: String?
-)
+) {
+    val hasSize: Boolean get() = !size.isNullOrBlank()
+    val area: Int get() = width * height
+    val hasValidDimensions: Boolean get() = width > 0 && height > 0
+}
 
 /**
  * Полный набор сериализуемых метаданных сохраненного элемента Luscious (`metadata.json`).
@@ -78,7 +82,13 @@ data class LSavedLikeMetadata(
     val pictureId: String? = null,
     val pictureUrl: String? = null,
     val picture: PicsDetails = PicsDetails()
-)
+) {
+    val hasAlbum: Boolean get() = !albumId.isNullOrBlank()
+    val hasPictureId: Boolean get() = !pictureId.isNullOrBlank()
+    val hasMediaFile: Boolean get() = mediaFileName.isNotBlank()
+    val isAnimated: Boolean get() = !sourceVideoUrl.isNullOrBlank() || picture.is_animated
+    val previewsCount: Int get() = previewFiles?.size ?: 0
+}
 
 /**
  * Считывает и десериализует [LSavedLikeMetadata] из указанного файла [file].

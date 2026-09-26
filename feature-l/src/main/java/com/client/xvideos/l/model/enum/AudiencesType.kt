@@ -82,6 +82,11 @@ enum class AudiencesType(
 
     val hasDescription: Boolean get() = description.isNotBlank()
     val hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
+    val isSolo: Boolean get() = this == SOLO_GIRL || this == SOLO_GUY
+    val isTrans: Boolean get() = this == TRANS || this == TRANS_X_GIRL || this == TRANS_X_GUY || this == TRANS_X_TRANS
+
+    fun matchesTitle(titleQuery: String?): Boolean =
+        !titleQuery.isNullOrBlank() && title.contains(titleQuery, ignoreCase = true)
 
     companion object {
         val DEFAULT = STRAIGHT
@@ -95,5 +100,14 @@ enum class AudiencesType(
         fun fromUrlOrNull(url: String?): AudiencesType? = if (!url.isNullOrBlank()) fromUrl(url) else null
         fun fromUrlOrDefault(url: String?, default: AudiencesType = DEFAULT): AudiencesType =
             fromUrlOrNull(url) ?: default
+
+        fun fromTitleOrNull(title: String?): AudiencesType? =
+            if (!title.isNullOrBlank()) entries.firstOrNull { it.title.equals(title, ignoreCase = true) } else null
+
+        fun fromTitleOrDefault(title: String?, default: AudiencesType = DEFAULT): AudiencesType =
+            fromTitleOrNull(title) ?: default
+
+        fun fromStringOrNull(value: String?): AudiencesType? =
+            value?.toIntOrNull()?.let { fromId(it) } ?: fromTitleOrNull(value) ?: fromUrlOrNull(value)
     }
 }

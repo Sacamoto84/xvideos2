@@ -107,6 +107,9 @@ val FilterGenre.isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
  */
 val FilterGenre.displayTitle: String get() = title.ifBlank { slug }
 
+/** Псевдоним имени жанра. */
+val FilterGenre.name: String get() = title
+
 /** Наличие ссылки на обложку жанра. */
 val FilterGenre.hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
 

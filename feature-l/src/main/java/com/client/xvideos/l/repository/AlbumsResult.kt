@@ -20,3 +20,7 @@ sealed class AlbumResult : RepositoryResult() {
  */
 val AlbumResult.albumInfoOrNull: com.client.xvideos.l.net.AlbumInfo?
     get() = (this as? AlbumResult.Albums)?.albumInfo
+
+val AlbumResult.isEmpty: Boolean get() = this is AlbumResult.Empty
+val AlbumResult.isNotEmpty: Boolean get() = this is AlbumResult.Albums
+val AlbumResult.hasAlbumInfo: Boolean get() = albumInfoOrNull != null

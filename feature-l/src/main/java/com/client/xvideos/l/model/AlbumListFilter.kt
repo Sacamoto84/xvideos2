@@ -51,11 +51,30 @@ data class AlbumListFilter(
     val hasSelection: Boolean get() = selection.isNotBlank()
     val isAnimatedOnly: Boolean get() = selection.equals("animated", ignoreCase = true)
     val isFiltered: Boolean get() = hasSearchQuery || hasTags || hasGenres || hasSelection
+    val isDefault: Boolean get() = this == DEFAULT
+    val hasPictureRankFilter: Boolean get() = picture_count_rank != PictureCountRank.All
+    val hasContentIdFilter: Boolean get() = content_id != ContentId.All
+    val hasAlbumTypeFilter: Boolean get() = album_type != AlbumType.Pictures
     val totalFilterCount: Int
         get() = (if (hasSearchQuery) 1 else 0) +
             (if (hasSelection) 1 else 0) +
             tagPlus.size + tagMinus.size +
             genresPlus.size + genresMinus.size
+
+    fun containsTagPlus(tag: String?): Boolean =
+        if (tag.isNullOrBlank()) false else tagPlus.any { it.equals(tag, ignoreCase = true) }
+
+    fun containsTagMinus(tag: String?): Boolean =
+        if (tag.isNullOrBlank()) false else tagMinus.any { it.equals(tag, ignoreCase = true) }
+
+    fun containsGenrePlus(name: String?): Boolean =
+        if (name.isNullOrBlank()) false else genresPlus.any { it.title.equals(name, ignoreCase = true) || it.slug.equals(name, ignoreCase = true) }
+
+    fun containsGenreMinus(name: String?): Boolean =
+        if (name.isNullOrBlank()) false else genresMinus.any { it.title.equals(name, ignoreCase = true) || it.slug.equals(name, ignoreCase = true) }
+
+    fun withSearchQuery(query: String?): AlbumListFilter = copy(searchQuery = query.orEmpty())
+    fun withDisplay(newDisplay: String): AlbumListFilter = copy(display = newDisplay)
 
     companion object {
         val DEFAULT = AlbumListFilter()

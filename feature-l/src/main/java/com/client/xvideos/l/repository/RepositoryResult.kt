@@ -60,6 +60,27 @@ inline fun RepositoryResult.onError(action: (message: String, throwable: Throwab
 }
 
 /**
+ * Выполняет блок [action], если результат находится в состоянии загрузки.
+ */
+inline fun RepositoryResult.onLoading(action: () -> Unit): RepositoryResult {
+    if (this is RepositoryResult.Loading) {
+        action()
+    }
+    return this
+}
+
+/**
+ * Трансформирует данные успешного результата с помощью [transform].
+ */
+@Suppress("UNCHECKED_CAST")
+inline fun <T, R> RepositoryResult.map(transform: (T) -> R): RepositoryResult {
+    return when (this) {
+        is RepositoryResult.Success<*> -> RepositoryResult.Success(transform(this.data as T))
+        else -> this
+    }
+}
+
+/**
  * Возвращает текст ошибки, если результат является [RepositoryResult.Error], либо `null`.
  */
 fun RepositoryResult.errorMessageOrNull(): String? = (this as? RepositoryResult.Error)?.message

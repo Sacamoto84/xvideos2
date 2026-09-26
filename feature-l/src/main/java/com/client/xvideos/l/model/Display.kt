@@ -19,6 +19,15 @@ data class DataAlbumFilterDisplay(
     val isByTopRated: Boolean get() = primary == byTopRated
     val isByFirstLetter: Boolean get() = primary == byFirstLetter
     val isByDate: Boolean get() = primary == byDate
+    val displayTitle: String
+        get() = when {
+            primary.isNotBlank() && secondary.isNotBlank() -> "$primary: $secondary"
+            primary.isNotBlank() -> primary
+            else -> secondary
+        }
+
+    fun matchesRequest(query: String?): Boolean =
+        !query.isNullOrBlank() && request.equals(query, ignoreCase = true)
 
     companion object {
         val EMPTY = DataAlbumFilterDisplay(primary = "", secondary = "", request = "")
@@ -98,7 +107,28 @@ val albumFilterDisplay = listOf(
  * @param request Значение ключа `display`.
  * @return Соответствующий [DataAlbumFilterDisplay] либо `null`.
  */
-fun findAlbumFilterDisplayByRequest(request: String): DataAlbumFilterDisplay? {
-    if (request.isBlank()) return null
+fun findAlbumFilterDisplayByRequest(request: String?): DataAlbumFilterDisplay? {
+    if (request.isNullOrBlank()) return null
     return albumFilterDisplay.firstOrNull { it.request.equals(request, ignoreCase = true) }
+}
+
+/**
+ * Ищет элемент отображения фильтра альбомов по основной и вторичной категории.
+ */
+fun findAlbumFilterDisplayByPrimaryAndSecondary(
+    primary: String?,
+    secondary: String?
+): DataAlbumFilterDisplay? {
+    if (primary.isNullOrBlank() || secondary.isNullOrBlank()) return null
+    return albumFilterDisplay.firstOrNull {
+        it.primary.equals(primary, ignoreCase = true) && it.secondary.equals(secondary, ignoreCase = true)
+    }
+}
+
+/**
+ * Возвращает все варианты отображения для заданной основной категории [primary].
+ */
+fun getAlbumFilterDisplaysByPrimary(primary: String?): List<DataAlbumFilterDisplay> {
+    if (primary.isNullOrBlank()) return emptyList()
+    return albumFilterDisplay.filter { it.primary.equals(primary, ignoreCase = true) }
 }
