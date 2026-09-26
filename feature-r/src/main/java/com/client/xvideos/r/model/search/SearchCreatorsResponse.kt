@@ -11,6 +11,7 @@ data class SearchCreatorsResponse(
 ) {
     val isEmpty: Boolean get() = items.isEmpty()
     val isNotEmpty: Boolean get() = items.isNotEmpty()
+    val size: Int get() = items.size
 
     companion object {
         val EMPTY = SearchCreatorsResponse()
@@ -47,7 +48,10 @@ data class SearchItemCreatorsResponse(
     @SerialName("followers") val followers: Long = 0L
 ) {
     val username: String get() = text.removePrefix("@")
+    val displayName: String get() = name.ifBlank { username }
     val isValid: Boolean get() = text.isNotBlank()
+    val hasImage: Boolean get() = !image.isNullOrBlank()
+    val hasFollowers: Boolean get() = followers > 0L
 
     companion object {
         val EMPTY = SearchItemCreatorsResponse()

@@ -15,6 +15,8 @@ data class SearchNichesShortResponse(
     val isEmpty: Boolean get() = niches.isEmpty()
     val isNotEmpty: Boolean get() = niches.isNotEmpty()
     val hasMorePages: Boolean get() = page < pages
+    val size: Int get() = niches.size
+    val isFirstPage: Boolean get() = page <= 1L
 
     companion object {
         val EMPTY = SearchNichesShortResponse()
@@ -52,7 +54,12 @@ data class SearchItemNichesResponse(
     @SerialName("preferences") val preferences: List<String> = emptyList(),
     @SerialName("thumbnail") val thumbnail: String = ""
 ) {
+    val displayName: String get() = name.ifBlank { id }
     val isValid: Boolean get() = id.isNotBlank()
+    val hasThumbnail: Boolean get() = thumbnail.isNotBlank()
+    val hasGifs: Boolean get() = gifs > 0L
+    val hasSubscribers: Boolean get() = subscribers > 0L
+    val hasTags: Boolean get() = tags.isNotEmpty()
 
     companion object {
         val EMPTY = SearchItemNichesResponse()

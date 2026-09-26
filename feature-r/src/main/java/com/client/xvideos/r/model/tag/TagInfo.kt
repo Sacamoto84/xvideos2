@@ -11,6 +11,7 @@ data class TagInfo(
     @SerialName("count") val count: Long = 0L
 ) {
     val isValid: Boolean get() = name.isNotBlank()
+    val hasCount: Boolean get() = count > 0L
 
     companion object {
         val EMPTY = TagInfo()

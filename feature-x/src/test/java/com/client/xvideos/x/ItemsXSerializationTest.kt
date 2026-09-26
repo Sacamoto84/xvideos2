@@ -109,4 +109,47 @@ class ItemsXSerializationTest {
         assertEquals(1, populatedTag.size)
         assertEquals(true, populatedTag.hasMultiplePages)
     }
+
+    @Test
+    fun `HTML5PlayerConfig and Sponsor properties inspect fields accurately`() {
+        val emptyConfig = com.client.xvideos.x.model.HTML5PlayerConfig.EMPTY
+        assertEquals(false, emptyConfig.hasSponsors)
+        assertEquals(false, emptyConfig.hasUploader)
+        assertEquals(false, emptyConfig.hasTitle)
+        assertEquals(false, emptyConfig.hasSlides)
+
+        val populatedConfig = com.client.xvideos.x.model.HTML5PlayerConfig(
+            videoTitle = "Title",
+            uploaderName = "Uploader",
+            thumbSlide = "https://cdn/slide.jpg",
+            sponsors = listOf(com.client.xvideos.x.model.Sponsor(name = "Sponsor1"))
+        )
+        assertEquals(true, populatedConfig.hasSponsors)
+        assertEquals(true, populatedConfig.hasUploader)
+        assertEquals(true, populatedConfig.hasTitle)
+        assertEquals(true, populatedConfig.hasSlides)
+    }
+
+    @Test
+    fun `TagsModel and TagsMainUploaderPornstar inspect counts and emptiness accurately`() {
+        val emptyTags = com.client.xvideos.x.model.TagsModel.EMPTY
+        assertEquals(true, emptyTags.isEmpty)
+        assertEquals(false, emptyTags.hasMainUploader)
+        assertEquals(false, emptyTags.hasPornstars)
+        assertEquals(false, emptyTags.hasTags)
+        assertEquals(0, emptyTags.totalCount)
+
+        val populatedTags = com.client.xvideos.x.model.TagsModel(
+            mainUploader = listOf(com.client.xvideos.x.model.TagsMainUploaderPornstar(name = "U1", count = "10k")),
+            pornstars = listOf(com.client.xvideos.x.model.TagsMainUploaderPornstar(name = "P1")),
+            tags = listOf("tag1", "tag2")
+        )
+        assertEquals(false, populatedTags.isEmpty)
+        assertEquals(true, populatedTags.hasMainUploader)
+        assertEquals(true, populatedTags.hasPornstars)
+        assertEquals(true, populatedTags.hasTags)
+        assertEquals(4, populatedTags.totalCount)
+        assertEquals(true, populatedTags.mainUploader.first().hasCount)
+        assertEquals(false, populatedTags.pornstars.first().hasCount)
+    }
 }

@@ -12,6 +12,8 @@ data class TagsResponse(
     val isEmpty: Boolean get() = tags.isEmpty()
     val isNotEmpty: Boolean get() = tags.isNotEmpty()
     val size: Int get() = tags.size
+    val count: Int get() = tags.size
+    val firstOrNull: TagInfo? get() = tags.firstOrNull()
 
     companion object {
         val EMPTY = TagsResponse()

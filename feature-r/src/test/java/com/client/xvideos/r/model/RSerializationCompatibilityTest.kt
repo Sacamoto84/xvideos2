@@ -389,4 +389,60 @@ class RSerializationCompatibilityTest {
         assertEquals(true, populatedResponse.hasUsers)
         assertEquals(true, populatedResponse.hasTags)
     }
+
+    @Test
+    fun `Tag models and search response extensions inspect state accurately`() {
+        val tagInfo = com.client.xvideos.r.model.tag.TagInfo(name = "anal", count = 50L)
+        assertEquals(true, tagInfo.isValid)
+        assertEquals(true, tagInfo.hasCount)
+        assertEquals(false, com.client.xvideos.r.model.tag.TagInfo.EMPTY.hasCount)
+
+        val suggestion = com.client.xvideos.r.model.tag.TagSuggestion(text = "blowjob", gifs = 100L, type = "tag")
+        assertEquals(true, suggestion.isValid)
+        assertEquals(true, suggestion.hasGifs)
+        assertEquals(true, suggestion.hasType)
+
+        val tagsResponse = com.client.xvideos.r.model.tag.TagsResponse(listOf(tagInfo))
+        assertEquals(1, tagsResponse.count)
+        assertEquals(tagInfo, tagsResponse.firstOrNull)
+
+        val creatorItem = com.client.xvideos.r.model.search.SearchItemCreatorsResponse(
+            text = "@alice",
+            name = "",
+            image = "https://cdn/alice.png",
+            followers = 500L
+        )
+        assertEquals("alice", creatorItem.displayName)
+        assertEquals(true, creatorItem.hasImage)
+        assertEquals(true, creatorItem.hasFollowers)
+
+        val searchCreators = com.client.xvideos.r.model.search.SearchCreatorsResponse(listOf(creatorItem))
+        assertEquals(1, searchCreators.size)
+
+        val nicheItem = com.client.xvideos.r.model.search.SearchItemNichesResponse(
+            id = "hentai",
+            name = "Hentai Art",
+            thumbnail = "https://cdn/thumb.jpg",
+            gifs = 2000L,
+            subscribers = 5000L,
+            tags = listOf("tag1")
+        )
+        assertEquals("Hentai Art", nicheItem.displayName)
+        assertEquals(true, nicheItem.hasThumbnail)
+        assertEquals(true, nicheItem.hasGifs)
+        assertEquals(true, nicheItem.hasSubscribers)
+        assertEquals(true, nicheItem.hasTags)
+
+        val searchNiches = com.client.xvideos.r.model.search.SearchNichesShortResponse(
+            page = 1,
+            pages = 5,
+            niches = listOf(nicheItem)
+        )
+        assertEquals(1, searchNiches.size)
+        assertEquals(true, searchNiches.isFirstPage)
+
+        val tagSearchItem = com.client.xvideos.r.model.search.SearchItemTagsResponse(text = "tag1", gifs = 50L)
+        assertEquals(true, tagSearchItem.isValid)
+        assertEquals(true, tagSearchItem.hasGifs)
+    }
 }

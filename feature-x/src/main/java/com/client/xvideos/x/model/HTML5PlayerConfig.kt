@@ -37,6 +37,10 @@ data class HTML5PlayerConfig(
     val hasHighQuality: Boolean get() = videoUrlHigh.isNotEmpty()
     val hasLowQuality: Boolean get() = videoUrlLow.isNotEmpty()
     val hasThumbnails: Boolean get() = thumbUrl.isNotEmpty() || thumbUrl169.isNotEmpty()
+    val hasSponsors: Boolean get() = sponsors.isNotEmpty()
+    val hasUploader: Boolean get() = uploaderName.isNotBlank()
+    val hasTitle: Boolean get() = videoTitle.isNotBlank()
+    val hasSlides: Boolean get() = thumbSlide.isNotBlank() || thumbSlideBig.isNotBlank() || thumbSlideMinute.isNotBlank()
 
     val isValid: Boolean get() = hasVideoUrl
 

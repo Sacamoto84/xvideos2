@@ -12,6 +12,8 @@ data class TagSuggestion(
     @SerialName("type") val type: String = ""
 ) {
     val isValid: Boolean get() = text.isNotBlank()
+    val hasGifs: Boolean get() = gifs > 0L
+    val hasType: Boolean get() = type.isNotBlank()
 
     companion object {
         val EMPTY = TagSuggestion()

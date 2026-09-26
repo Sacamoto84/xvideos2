@@ -15,6 +15,7 @@ data class SearchItemTagsResponse(
     @SerialName("gifs") val gifs: Long = 0L
 ) {
     val isValid: Boolean get() = text.isNotBlank()
+    val hasGifs: Boolean get() = gifs > 0L
 
     companion object {
         val EMPTY = SearchItemTagsResponse()
