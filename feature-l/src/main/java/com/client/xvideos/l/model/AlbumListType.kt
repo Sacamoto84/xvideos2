@@ -18,6 +18,12 @@ data class Landing_page_albumType(
 ) {
     val isEmpty: Boolean get() = sections.isEmpty()
     val isNotEmpty: Boolean get() = sections.isNotEmpty()
+    val sectionsCount: Int get() = sections.size
+    val totalItemsCount: Int get() = sections.sumOf { it.items.size }
+    val firstOrNull: Landing_page_albumSection? get() = sections.firstOrNull()
+
+    fun findSectionByTitleOrNull(title: String?): Landing_page_albumSection? =
+        if (title.isNullOrBlank()) null else sections.firstOrNull { it.title.equals(title, ignoreCase = true) }
 
     companion object {
         val EMPTY = Landing_page_albumType()
@@ -37,6 +43,10 @@ data class Landing_page_albumSection(
 ) {
     val isEmpty: Boolean get() = items.isEmpty()
     val isNotEmpty: Boolean get() = items.isNotEmpty()
+    val itemsCount: Int get() = items.size
+    val hasTitle: Boolean get() = title.isNotBlank()
+    val hasUrl: Boolean get() = url.isNotBlank()
+    val firstOrNull: Album? get() = items.firstOrNull()
 
     companion object {
         val EMPTY = Landing_page_albumSection()

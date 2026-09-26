@@ -116,5 +116,13 @@ val FilterGenre.hasDescription: Boolean get() = description.isNotBlank()
 /** Наличие идентификатора родительской категории. */
 val FilterGenre.hasParent: Boolean get() = !parent.isNullOrBlank()
 
+/** Наличие правил загрузки контента. */
+val FilterGenre.hasUploadingRules: Boolean get() = uploadingRules.isNotBlank()
+
+/** Проверяет равенство жанров по идентификатору. */
+fun FilterGenre.isSameGenre(other: FilterGenre?): Boolean =
+    other != null && id.isNotBlank() && id == other.id
+
 /** Наличие непустого URL контента. */
 val OnlyContent.hasUrl: Boolean get() = url.isNotBlank()
+

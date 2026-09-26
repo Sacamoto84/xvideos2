@@ -80,6 +80,18 @@ data class AlbumDetails(
     val hasLanguage: Boolean get() = language?.isValid == true
     val hasCreatedBy: Boolean get() = createdBy?.isValid == true
     val effectiveTitle: String get() = title.ifBlank { id }
+    val numericId: Long get() = id.toLongOrNull() ?: 0L
+    val isLiked: Boolean get() = likeStatus.equals("like", ignoreCase = true)
+    val tagsCount: Int get() = tags.size
+    val genresCount: Int get() = genres.size
+    val audiencesCount: Int get() = audiences.size
+
+    fun containsTag(tagName: String?): Boolean =
+        if (tagName.isNullOrBlank()) false else tags.any { it.text.equals(tagName, ignoreCase = true) }
+
+    fun containsGenre(genreTitle: String?): Boolean =
+        if (genreTitle.isNullOrBlank()) false else genres.any { it.title.equals(genreTitle, ignoreCase = true) }
+
 
     companion object {
         val EMPTY = AlbumDetails()

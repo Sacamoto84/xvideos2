@@ -37,6 +37,14 @@ data class UserProfile(
     /** Флаг наличия полной пары учетных данных (синоним [isValid]). */
     val hasCredentials: Boolean get() = isValid
 
+    /** Маскированный пароль для безопасного отображения в логах. */
+    val maskedPassword: String get() = if (password.isEmpty()) "" else "*".repeat(password.length.coerceAtMost(8))
+
+    /** Проверяет совпадение пользователя по email без учета регистра. */
+    fun isSameUser(other: UserProfile?): Boolean =
+        other != null && email.isNotBlank() && email.equals(other.email, ignoreCase = true)
+
+
     companion object {
         /** Пустой профиль пользователя по умолчанию. */
         val EMPTY = UserProfile()

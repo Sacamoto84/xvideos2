@@ -228,3 +228,11 @@ fun PicsDetails.extractAnchorId(): String? {
 val PicsDetails.hasAnchorId: Boolean get() = extractAnchorId() != null
 
 fun PicsDetails.extractAnchorIdOrEmpty(): String = extractAnchorId() ?: ""
+
+fun PicsDetails.hasValidDownloadUrl(): Boolean = !lDownloadUrl().isNullOrBlank()
+
+fun PicsDetails.hasValidPreviewImage(thumbnailsSize: String): Boolean =
+    lPreviewImageUrl(thumbnailsSize).isNotBlank()
+
+fun PicsDetails.isStaticImage(): Boolean = !isAnimatedMedia()
+

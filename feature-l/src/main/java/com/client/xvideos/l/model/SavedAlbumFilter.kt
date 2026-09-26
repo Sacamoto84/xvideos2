@@ -36,6 +36,17 @@ data class SavedAlbumFilter(
     /** Флаг наличия активных условий фильтрации (отличается ли от настроек по умолчанию). */
     val hasFilter: Boolean get() = filter != AlbumListFilter.DEFAULT
 
+    /** Флаг наличия непустого идентификатора пресета. */
+    val hasValidId: Boolean get() = id.isNotBlank()
+
+    /** Флаг наличия непустого имени пресета. */
+    val hasName: Boolean get() = name.isNotBlank()
+
+    /** Проверяет равенство пресетов по уникальному идентификатору. */
+    fun isSamePreset(other: SavedAlbumFilter?): Boolean =
+        other != null && id.isNotBlank() && id == other.id
+
+
     companion object {
         /** Пустой шаблон пресета фильтра без имени и со стандартными настройками. */
         val EMPTY = SavedAlbumFilter(name = "")

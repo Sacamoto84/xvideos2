@@ -49,6 +49,14 @@ data class PicsDetails(
     val hasVideo: Boolean get() = !url_to_video.isNullOrBlank()
     val hasOriginal: Boolean get() = !url_to_original.isNullOrBlank()
     val hasThumbnails: Boolean get() = !thumbnails.isNullOrEmpty()
+    val numericId: Long get() = id?.toLongOrNull() ?: 0L
+    val thumbnailsCount: Int get() = thumbnails?.size ?: 0
+    val hasDimensions: Boolean get() = width > 0 && height > 0
+    val aspectRatio: Float get() = if (height > 0) width.toFloat() / height.toFloat() else 0f
+
+    fun findThumbnailBySizeOrNull(sizeName: String?): Thumbnails? =
+        if (sizeName.isNullOrBlank() || thumbnails.isNullOrEmpty()) null
+        else thumbnails.firstOrNull { it.size.equals(sizeName, ignoreCase = true) }
 
     companion object {
         val EMPTY = PicsDetails()
@@ -73,6 +81,9 @@ data class Thumbnails(
     @SerialName("url") val url: String? = null //"https://..."
 ) : Parcelable {
     val isValid: Boolean get() = !url.isNullOrBlank()
+    val hasUrl: Boolean get() = !url.isNullOrBlank()
+    val hasSize: Boolean get() = !size.isNullOrBlank()
+
 
     companion object {
         val EMPTY = Thumbnails()
