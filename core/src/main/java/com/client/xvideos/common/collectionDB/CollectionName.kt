@@ -35,4 +35,7 @@ object CollectionName {
     }
 
     fun isValid(raw: String): Boolean = normalizeOrNull(raw) != null
+
+    fun normalizeOrDefault(raw: String, default: String): String =
+        normalizeOrNull(raw) ?: default
 }

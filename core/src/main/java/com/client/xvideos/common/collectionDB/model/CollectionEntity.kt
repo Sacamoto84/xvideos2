@@ -14,4 +14,6 @@ data class CollectionEntity<T>(
     val isNotEmpty: Boolean get() = items.isNotEmpty()
     val size: Int get() = items.size
     val isValid: Boolean get() = collection.isNotBlank()
+    fun firstOrNull(): T? = items.firstOrNull()
+    fun getOrNull(index: Int): T? = items.getOrNull(index)
 }

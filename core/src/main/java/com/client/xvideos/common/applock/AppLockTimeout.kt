@@ -19,10 +19,17 @@ enum class AppLockTimeout(
     val durationMillis: Long
         get() = if (seconds <= 0) 0L else seconds * 1000L
 
+    val isImmediately: Boolean get() = this == IMMEDIATELY
+    val isNever: Boolean get() = this == NEVER
+    val isAutoLocking: Boolean get() = this != NEVER
+
     companion object {
         val DEFAULT = MINUTES_1
 
-        fun fromSeconds(seconds: Int): AppLockTimeout =
-            entries.firstOrNull { it.seconds == seconds } ?: DEFAULT
+        fun fromSecondsOrNull(seconds: Int?): AppLockTimeout? =
+            if (seconds != null) entries.firstOrNull { it.seconds == seconds } else null
+
+        fun fromSeconds(seconds: Int?, default: AppLockTimeout = DEFAULT): AppLockTimeout =
+            fromSecondsOrNull(seconds) ?: default
     }
 }

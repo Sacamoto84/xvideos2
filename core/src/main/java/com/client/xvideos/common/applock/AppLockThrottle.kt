@@ -38,6 +38,8 @@ object AppLockThrottle {
         val lockoutUntilElapsed: Long,
     ) {
         val isLocked: Boolean get() = lockoutUntilWall > 0L || lockoutUntilElapsed > 0L
+        val hasAttempts: Boolean get() = attempts > 0
+        val remainingFreeAttempts: Int get() = (FREE_ATTEMPTS - attempts).coerceAtLeast(0)
 
         companion object {
             val INITIAL = State(attempts = 0, lockoutUntilWall = 0L, lockoutUntilElapsed = 0L)
@@ -79,4 +81,10 @@ object AppLockThrottle {
         val byElapsed = if (byElapsedRaw > MAX_LOCKOUT_MS) 0L else byElapsedRaw
         return maxOf(byWall, byElapsed)
     }
+
+    /**
+     * Проверяет, активна ли блокировка ввода в данный момент.
+     */
+    fun isLockedOut(state: State, wallNow: Long, elapsedNow: Long): Boolean =
+        remainingMillis(state, wallNow, elapsedNow) > 0L
 }

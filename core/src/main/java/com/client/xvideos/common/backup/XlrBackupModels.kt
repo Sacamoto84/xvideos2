@@ -35,6 +35,7 @@ data class XlrBackupItem(
     val isValid: Boolean get() = path.isNotBlank() && title.isNotBlank()
     val isEmpty: Boolean get() = files == 0 && bytes == 0L
     val isNotEmpty: Boolean get() = !isEmpty
+    val hasParent: Boolean get() = !parentPath.isNullOrBlank()
 }
 
 enum class XlrBackupContentMode {
@@ -56,6 +57,8 @@ data class XlrBackupOptions(
 ) {
     val isFullBackup: Boolean get() = lMode == XlrBackupContentMode.FULL && rMode == XlrBackupContentMode.FULL
     val isMiniBackup: Boolean get() = lMode == XlrBackupContentMode.MINI && rMode == XlrBackupContentMode.MINI
+    val hasFullContent: Boolean get() = lMode.isFull || rMode.isFull
+    val hasMiniContent: Boolean get() = lMode.isMini || rMode.isMini
 
     companion object {
         val DEFAULT = XlrBackupOptions()

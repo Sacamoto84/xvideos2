@@ -18,6 +18,7 @@ data class CollectionGridItem(
     val isValid: Boolean get() = name.isNotBlank()
     val hasPreview: Boolean get() = !previewUrl.isNullOrBlank()
     val hasCount: Boolean get() = itemsCount != null
+    val hasPositiveCount: Boolean get() = itemsCount != null && itemsCount > 0
 
     companion object {
         val EMPTY = CollectionGridItem(name = "", previewUrl = null, itemsCount = null)
