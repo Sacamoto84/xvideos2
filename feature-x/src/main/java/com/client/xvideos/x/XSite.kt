@@ -168,3 +168,42 @@ fun parseDurationToMs(raw: String): Long {
 
     return totalMs
 }
+
+/**
+ * Извлекает текстовый слаг/токен ролика из URL (например `"uicfdab07bd"` из `"/video.uicfdab07bd/_"`).
+ */
+fun extractXVideoSlug(href: String): String? {
+    if (href.isBlank() || !href.contains("/video")) return null
+    return SLUG_VIDEO_ID_REGEX.find(href)?.groupValues?.get(1)
+}
+
+/**
+ * Проверяет, начинается ли ссылка с канонического домена раздела X [urlStart].
+ */
+fun isCanonicalXUrl(url: String): Boolean = url.startsWith(urlStart)
+
+/**
+ * Extension-проверка для строки: указывает ли она на URL видео X.
+ */
+fun String.isXVideoLink(): Boolean = isXVideoUrl(this)
+
+/**
+ * Разбирает произвольную текстовую длительность видео в секунды.
+ */
+fun parseDurationToSeconds(raw: String): Long = parseDurationToMs(raw) / 1000L
+
+/**
+ * Форматирует миллисекунды в формат времени `"MM:SS"` или `"H:MM:SS"`.
+ */
+fun formatDurationMs(ms: Long): String {
+    if (ms <= 0L) return "00:00"
+    val totalSeconds = ms / 1000L
+    val hours = totalSeconds / 3600L
+    val minutes = (totalSeconds % 3600L) / 60L
+    val seconds = totalSeconds % 60L
+    return if (hours > 0L) {
+        String.format(java.util.Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+    } else {
+        String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
+    }
+}

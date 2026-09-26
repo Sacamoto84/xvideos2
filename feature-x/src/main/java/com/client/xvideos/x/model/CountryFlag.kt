@@ -54,6 +54,28 @@ fun getFlagEmojiOrDefault(countryCode: String?, default: String = UNKNOWN_FLAG):
     getFlagEmojiOrNull(countryCode) ?: default
 
 /**
+ * Нормализует код страны: убирает префикс `"flag-"`, пробелы и приводит к нижнему регистру.
+ */
+fun normalizeCountryCode(countryCode: String?): String {
+    if (countryCode.isNullOrBlank()) return ""
+    val trimmed = countryCode.trim()
+    val raw = if (trimmed.startsWith("flag-", ignoreCase = true)) trimmed.substring(5) else trimmed
+    return if (raw.length == 2 && raw.all { it.isLetter() }) raw.lowercase() else ""
+}
+
+/**
+ * Проверяет, является ли код допустимым двухбуквенным кодом страны ISO 3166-1 alpha-2.
+ */
+fun isIsoCountryCode(code: String?): Boolean =
+    normalizeCountryCode(code).isNotEmpty()
+
+/**
+ * Извлекает двухбуквенный код из CSS-класса флага (например `"flag-us"` -> `"us"`).
+ */
+fun getCountryCodeFromFlagClass(cssClass: String?): String? =
+    normalizeCountryCode(cssClass).takeIf { it.isNotEmpty() }
+
+/**
  * Extension-свойство/функция для преобразования nullable строки в флаг-эмодзи.
  */
 fun String?.toCountryFlagEmoji(): String =

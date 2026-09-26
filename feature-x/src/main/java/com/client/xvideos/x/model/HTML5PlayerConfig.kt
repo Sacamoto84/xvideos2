@@ -75,9 +75,14 @@ data class HTML5PlayerConfig(
     val hasSponsors: Boolean get() = sponsors.isNotEmpty()
     val hasUploader: Boolean get() = uploaderName.isNotBlank()
     val hasTitle: Boolean get() = videoTitle.isNotBlank()
+    val hasValidTitle: Boolean get() = videoTitle.isNotBlank()
     val hasSlides: Boolean get() = thumbSlide.isNotBlank() || thumbSlideBig.isNotBlank() || thumbSlideMinute.isNotBlank()
+    val hasAnyMedia: Boolean get() = hasVideoUrl || hasThumbnails
 
     val isValid: Boolean get() = hasVideoUrl
+
+    fun withVideoUrls(high: String, low: String, hls: String = ""): HTML5PlayerConfig =
+        copy(videoUrlHigh = high, videoUrlLow = low, videoHLS = hls)
 
     companion object {
         val EMPTY = HTML5PlayerConfig()
@@ -97,6 +102,13 @@ data class Sponsor(
     val isValid: Boolean get() = link.isNotBlank() || name.isNotBlank()
     val hasLink: Boolean get() = link.isNotBlank()
     val hasName: Boolean get() = name.isNotBlank()
+    val displayName: String get() = name.ifBlank { desc }
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return name.contains(q, ignoreCase = true) || desc.contains(q, ignoreCase = true)
+    }
 
     companion object {
         val EMPTY = Sponsor()

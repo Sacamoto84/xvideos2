@@ -23,11 +23,18 @@ data class ModelScreenTag(
     val count: Int get() = items.size
     val firstOrNull: ItemsX? get() = items.firstOrNull()
     val hasMultiplePages: Boolean get() = lastPage > 1
+    val hasPagination: Boolean get() = hasMultiplePages
     val hasTitle0: Boolean get() = title0.isNotBlank()
     val hasTitle1: Boolean get() = title1.isNotBlank()
     val displayTitle: String get() = title0.ifBlank { title1 }
 
     fun findByIdOrNull(id: Long): ItemsX? = if (id <= 0L) null else items.firstOrNull { it.id == id }
+    fun hasItemWithId(id: Long): Boolean = findByIdOrNull(id) != null
+
+    fun filterByQuery(query: String?): List<ItemsX> {
+        if (query.isNullOrBlank()) return items
+        return items.filter { it.matches(query) }
+    }
 
 
     companion object {

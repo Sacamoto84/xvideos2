@@ -15,6 +15,12 @@ data class Keyword(val N: String, val R: String) { //N группа R-рейти
     val isValid: Boolean get() = N.isNotBlank()
     val hasRating: Boolean get() = R.isNotBlank()
     val ratingDoubleOrNull: Double? get() = R.toDoubleOrNull()
+    val normalizedName: String get() = N.trim().lowercase()
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        return N.contains(query.trim(), ignoreCase = true)
+    }
 
     companion object {
         val EMPTY = Keyword(N = "", R = "")
@@ -55,6 +61,13 @@ data class Pornstar(
     val hasAvatar: Boolean get() = P.isNotBlank()
     val hasSubscribers: Boolean get() = RF.isNotBlank() && RF != "0"
     val hasVideos: Boolean get() = MV > 0
+    val normalizedName: String get() = N.trim().lowercase()
+    val cleanProfilePath: String get() = F.removePrefix("/")
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        return N.contains(query.trim(), ignoreCase = true)
+    }
 
     companion object {
         val EMPTY = Pornstar(N = "", F = "", T = "pornstar", MV = 0, M = 0, L = 0, P = "", RF = "")
@@ -94,6 +107,13 @@ data class Channel(
     val hasAvatar: Boolean get() = P.isNotBlank()
     val hasSubscribers: Boolean get() = RF.isNotBlank() && RF != "0"
     val isCpv: Boolean get() = CPV
+    val normalizedName: String get() = N.trim().lowercase()
+    val cleanProfilePath: String get() = F.removePrefix("/")
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        return N.contains(query.trim(), ignoreCase = true)
+    }
 
     companion object {
         val EMPTY = Channel(N = "", F = "", T = "channel", CPV = false, M = 0, L = 0, P = "", RF = "")
@@ -127,6 +147,21 @@ data class SearchResult(
     val isBlacklisted: Boolean get() = BLACKLISTED == true
     val totalSuggestionsCount: Int
         get() = keywords.size + (pornstar?.size ?: 0) + (channel?.size ?: 0)
+
+    fun allSuggestionNames(): List<String> =
+        keywords.map { it.name } +
+            (pornstar?.map { it.name } ?: emptyList()) +
+            (channel?.map { it.name } ?: emptyList())
+
+    fun findPornstarByName(name: String?): Pornstar? {
+        if (name.isNullOrBlank()) return null
+        return pornstar?.firstOrNull { it.name.equals(name, ignoreCase = true) }
+    }
+
+    fun findChannelByName(name: String?): Channel? {
+        if (name.isNullOrBlank()) return null
+        return channel?.firstOrNull { it.name.equals(name, ignoreCase = true) }
+    }
 
     companion object {
         val EMPTY = SearchResult(result = false, code = 0, keywords = emptyList())

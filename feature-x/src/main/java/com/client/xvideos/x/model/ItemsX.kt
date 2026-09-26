@@ -51,6 +51,21 @@ data class ItemsX(
     val hasValidHref: Boolean get() = href.isNotBlank()
     val hasValidTitle: Boolean get() = title.isNotBlank()
     val displayNameProfile: String get() = nameProfile.ifBlank { channel }
+    val normalizedTitle: String get() = title.trim()
+    val normalizedChannel: String get() = channel.trim()
+    val cleanProfileLink: String get() = linkProfile.removePrefix("/profiles/").removePrefix("/")
+
+    fun matches(query: String?): Boolean {
+        if (query.isNullOrBlank()) return true
+        val q = query.trim()
+        return title.contains(q, ignoreCase = true) ||
+            channel.contains(q, ignoreCase = true) ||
+            nameProfile.contains(q, ignoreCase = true)
+    }
+
+    fun withDuration(newDuration: String): ItemsX = copy(duration = newDuration)
+    fun withViews(newViews: String): ItemsX = copy(views = newViews)
+    fun withHref(newHref: String): ItemsX = copy(href = newHref)
 
     fun isSameVideo(other: ItemsX?): Boolean = other != null && id > 0L && id == other.id
 

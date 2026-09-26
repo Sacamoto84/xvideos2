@@ -48,6 +48,7 @@ data class XHistoryItem(
         }
 
     val remainingMs: Long get() = (totalDurationMs - lastPositionMs).coerceAtLeast(0L)
+    val progressPercent: Int get() = (progressFraction * 100).toInt()
     val hasProgress: Boolean get() = lastPositionMs > 0L
     val hasTotalDuration: Boolean get() = totalDurationMs > 0L
     val isValid: Boolean get() = item.id > 0L
@@ -59,6 +60,14 @@ data class XHistoryItem(
     val hasTitle: Boolean get() = item.hasTitle
     val hasPreview: Boolean get() = item.hasImagePreview
     val hasUpdatedAt: Boolean get() = updatedAt > 0L
+
+    fun withPosition(positionMs: Long, updated: Long = System.currentTimeMillis()): XHistoryItem =
+        copy(lastPositionMs = positionMs.coerceAtLeast(0L), updatedAt = updated)
+
+    fun asCompleted(updated: Long = System.currentTimeMillis()): XHistoryItem =
+        copy(isCompleted = true, lastPositionMs = totalDurationMs, updatedAt = updated)
+
+    fun matches(query: String?): Boolean = item.matches(query)
 
     fun isSameItem(other: XHistoryItem?): Boolean = other != null && id > 0L && id == other.id
 
