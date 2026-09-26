@@ -14,4 +14,12 @@ internal data class LAlbumBundleCache(
     val album: AlbumDetails = AlbumDetails(),
     val totalPages: Int? = null,
     val pics: List<PicsDetails> = emptyList()
-)
+) {
+    val isFresh: Boolean get() = (System.currentTimeMillis() - cachedAtMs) < L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS
+    val isCurrentSchema: Boolean get() = schemaVersion == L_ALBUM_BUNDLE_CACHE_SCHEMA_VERSION
+    val isValid: Boolean get() = isCurrentSchema && album.id.isNotBlank()
+
+    companion object {
+        val EMPTY = LAlbumBundleCache()
+    }
+}

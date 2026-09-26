@@ -17,5 +17,12 @@ enum class ContentId(val value: Int) {
     All(0),
     Hentai(2),
     NonErotic(5),
-    RealPeople(6)
+    RealPeople(6);
+
+    val isAll: Boolean get() = this == All
+
+    companion object {
+        val DEFAULT = All
+        fun fromValue(value: Int): ContentId = entries.firstOrNull { it.value == value } ?: DEFAULT
+    }
 }

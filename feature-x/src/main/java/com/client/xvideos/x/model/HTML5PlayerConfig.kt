@@ -33,6 +33,11 @@ data class HTML5PlayerConfig(
     val bestVideoUrl: String
         get() = videoUrlHigh.ifEmpty { videoHLS.ifEmpty { videoUrlLow } }
 
+    val hasHls: Boolean get() = videoHLS.isNotEmpty()
+    val hasHighQuality: Boolean get() = videoUrlHigh.isNotEmpty()
+    val hasLowQuality: Boolean get() = videoUrlLow.isNotEmpty()
+    val hasThumbnails: Boolean get() = thumbUrl.isNotEmpty() || thumbUrl169.isNotEmpty()
+
     val isValid: Boolean get() = hasVideoUrl
 
     companion object {
@@ -42,8 +47,14 @@ data class HTML5PlayerConfig(
 
 @Immutable
 data class Sponsor(
-    val link: String,
-    val desc: String,
-    val records2257: String,
-    val name: String
-)
+    val link: String = "",
+    val desc: String = "",
+    val records2257: String = "",
+    val name: String = ""
+) {
+    val isValid: Boolean get() = link.isNotBlank() || name.isNotBlank()
+
+    companion object {
+        val EMPTY = Sponsor()
+    }
+}

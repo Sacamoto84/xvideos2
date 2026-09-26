@@ -19,6 +19,7 @@ fun parserItemVideo(document: Document): String? {
     }
 
     for (script in document.getElementsByTag("script")) {
+        if (container != null && script.parent() === container) continue
         val data = script.data()
         if (data.contains(PLAYER_MARKER)) return data
     }

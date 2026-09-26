@@ -1,6 +1,9 @@
 package com.client.xvideos.l.model
 
 import com.client.xvideos.common.json.AppJson
+import com.client.xvideos.l.model.enum.AlbumType
+import com.client.xvideos.l.model.enum.ContentId
+import com.client.xvideos.l.model.enum.PictureCountRank
 import com.client.xvideos.l.net.LAlbumBundleCache
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.net.graphQl.MediaCategoriesBootstrapResponse
@@ -410,5 +413,41 @@ class LSerializationCompatibilityTest {
 
         val validFilter = SavedAlbumFilter(name = "Favorites", filter = AlbumListFilter.DEFAULT)
         assertEquals(true, validFilter.isValid)
+    }
+
+    @Test
+    fun `AlbumType, ContentId, and PictureCountRank operate correctly`() {
+        assertEquals(AlbumType.Pictures, AlbumType.DEFAULT)
+        assertEquals(AlbumType.Manga, AlbumType.fromValue("manga"))
+        assertEquals(AlbumType.Pictures, AlbumType.fromValue("unknown"))
+        assertEquals(true, AlbumType.All.isAll)
+        assertEquals(true, AlbumType.Manga.isManga)
+        assertEquals(true, AlbumType.Pictures.isPictures)
+
+        assertEquals(ContentId.All, ContentId.DEFAULT)
+        assertEquals(ContentId.Hentai, ContentId.fromValue(2))
+        assertEquals(ContentId.All, ContentId.fromValue(999))
+        assertEquals(true, ContentId.All.isAll)
+
+        assertEquals(PictureCountRank.All, PictureCountRank.DEFAULT)
+        assertEquals(PictureCountRank.C0_25, PictureCountRank.fromCount(0))
+        assertEquals(PictureCountRank.All, PictureCountRank.fromCount(999))
+        assertEquals(true, PictureCountRank.All.isAll)
+    }
+
+    @Test
+    fun `LAlbumBundleCache and FilterGenre helpers operate correctly`() {
+        val emptyCache = LAlbumBundleCache.EMPTY
+        assertEquals(true, emptyCache.isCurrentSchema)
+        assertEquals(false, emptyCache.isValid)
+
+        val emptyGenre = FilterGenre.EMPTY
+        assertEquals(false, emptyGenre.isValid)
+
+        val emptyOnlyContent = OnlyContent.EMPTY
+        assertEquals(false, emptyOnlyContent.isValid)
+
+        val validContent = OnlyContent(id = "c1", title = "Comics")
+        assertEquals(true, validContent.isValid)
     }
 }

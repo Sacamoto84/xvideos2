@@ -25,11 +25,19 @@ data class GifsInfo(
     @SerialName("views") val views: Long? = null,
     @SerialName("type") val type: Int = 0,  //1-Gif 2-Image
     @SerialName("userName") val userName: String = "userName",           // "lilijunex"
-    @SerialName("urls") val urls: URL1 = URL1(),
+    @SerialName("urls") val urls: URL1 = URL1.EMPTY,
     @SerialName("duration") val duration: Double? = null, //15.033,
     @SerialName("hls") val hls: Boolean? = null,
     @SerialName("niches") val niches: List<String>? = null,
-) : Serializable
+) : Serializable {
+    val isValid: Boolean get() = id.isNotBlank()
+    val isImage: Boolean get() = type == 2
+    val isGif: Boolean get() = type == 1 || type == 0
+
+    companion object {
+        val EMPTY = GifsInfo()
+    }
+}
 
 fun GifsInfo.sanitizeOrNull(): GifsInfo? {
     val safeId: String? = id
@@ -42,7 +50,7 @@ fun GifsInfo.sanitizeOrNull(): GifsInfo? {
     val safeUrls: URL1? = urls
 
     val sanitizedTags = sanitizeTagsList(safeTags)
-    val sanitizedUrls = safeUrls?.sanitize() ?: URL1()
+    val sanitizedUrls = safeUrls?.sanitize() ?: URL1.EMPTY
 
     val stringsValid = safeContentType != null && safeDescription != null && safeUserName != null
     if (stringsValid && sanitizedTags === safeTags && sanitizedUrls === safeUrls) {
@@ -53,8 +61,8 @@ fun GifsInfo.sanitizeOrNull(): GifsInfo? {
         id = safeId,
         contentType = safeContentType ?: "Solo Female",
         tags = sanitizedTags,
-        description = safeDescription.orEmpty(),
-        userName = safeUserName.orEmpty(),
+        description = safeDescription ?: "Описание",
+        userName = safeUserName ?: "userName",
         urls = sanitizedUrls
     )
 }

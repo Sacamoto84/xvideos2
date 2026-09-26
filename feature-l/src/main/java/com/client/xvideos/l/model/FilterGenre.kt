@@ -57,7 +57,11 @@ data class FilterGenre(
 
     @SerialName("only_content")
     val onlyContent: OnlyContent? = null
-) : Serializable
+) : Serializable {
+    companion object {
+        val EMPTY = FilterGenre()
+    }
+}
 
 /** Ограничение жанра по типу контента. `Serializable` вслед за [FilterGenre]. */
 @Immutable
@@ -71,7 +75,13 @@ data class OnlyContent(
 
     @SerialName("url")
     val url: String = ""
-) : Serializable
+) : Serializable {
+    val isValid: Boolean get() = id.isNotBlank() && title.isNotBlank()
+
+    companion object {
+        val EMPTY = OnlyContent()
+    }
+}
 
 /**
  * Валиден ли жанр (непустой id и title).

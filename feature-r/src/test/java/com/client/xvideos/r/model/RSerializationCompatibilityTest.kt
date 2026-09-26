@@ -308,4 +308,19 @@ class RSerializationCompatibilityTest {
         val tagItem = SearchItemTagsResponse.EMPTY
         assertEquals(false, tagItem.isValid)
     }
+
+    @Test
+    fun `GifsInfo helper properties and defaults operate correctly`() {
+        val emptyGif = GifsInfo.EMPTY
+        assertEquals(false, emptyGif.isValid)
+        assertEquals("Описание", emptyGif.description)
+        assertEquals("userName", emptyGif.userName)
+        assertEquals(true, emptyGif.isGif)
+        assertEquals(false, emptyGif.isImage)
+
+        val imageGif = GifsInfo(id = "img1", type = 2)
+        assertEquals(true, imageGif.isValid)
+        assertEquals(true, imageGif.isImage)
+        assertEquals(false, imageGif.isGif)
+    }
 }

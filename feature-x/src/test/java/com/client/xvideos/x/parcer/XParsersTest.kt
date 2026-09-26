@@ -511,4 +511,30 @@ class XParsersTest {
         assertEquals(1, result.items.size)
         assertEquals(101L, result.items[0].id)
     }
+
+    @Test
+    fun `HTML5PlayerConfig and Sponsor helper properties operate correctly`() {
+        val emptyConfig = com.client.xvideos.x.model.HTML5PlayerConfig.EMPTY
+        assertEquals(false, emptyConfig.hasHls)
+        assertEquals(false, emptyConfig.hasHighQuality)
+        assertEquals(false, emptyConfig.hasLowQuality)
+        assertEquals(false, emptyConfig.hasThumbnails)
+        assertEquals(false, emptyConfig.isValid)
+
+        val fullConfig = com.client.xvideos.x.model.HTML5PlayerConfig(
+            videoHLS = "https://cdn/hls.m3u8",
+            videoUrlHigh = "https://cdn/high.mp4",
+            thumbUrl = "https://cdn/t.jpg"
+        )
+        assertEquals(true, fullConfig.hasHls)
+        assertEquals(true, fullConfig.hasHighQuality)
+        assertEquals(true, fullConfig.hasThumbnails)
+        assertEquals(true, fullConfig.isValid)
+
+        val emptySponsor = com.client.xvideos.x.model.Sponsor.EMPTY
+        assertEquals(false, emptySponsor.isValid)
+
+        val validSponsor = com.client.xvideos.x.model.Sponsor(link = "https://sponsor.com", name = "Sponsor")
+        assertEquals(true, validSponsor.isValid)
+    }
 }

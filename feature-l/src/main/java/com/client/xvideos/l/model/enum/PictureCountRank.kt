@@ -11,5 +11,12 @@ enum class PictureCountRank(val count: Int){
     C100_200(3),    //100 to 200
     C200_800(4),    //200 to 800
     C800_3200(5),   //800 to 3200
-    C3200_12800(6), //3200 to 12800
+    C3200_12800(6); //3200 to 12800
+
+    val isAll: Boolean get() = this == All
+
+    companion object {
+        val DEFAULT = All
+        fun fromCount(count: Int): PictureCountRank = entries.firstOrNull { it.count == count } ?: DEFAULT
+    }
 }
