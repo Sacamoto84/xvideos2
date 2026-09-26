@@ -3,7 +3,20 @@ package com.client.xvideos.l.model
 import androidx.compose.runtime.Immutable
 
 @Immutable
-data class DataAlbumFilterDisplay( val primary: String, val secondary : String, val request : String )
+data class DataAlbumFilterDisplay(
+    val primary: String,
+    val secondary: String,
+    val request: String
+) {
+    val isValid: Boolean get() = request.isNotBlank()
+    val isByTopRated: Boolean get() = primary == byTopRated
+    val isByFirstLetter: Boolean get() = primary == byFirstLetter
+    val isByDate: Boolean get() = primary == byDate
+
+    companion object {
+        val EMPTY = DataAlbumFilterDisplay(primary = "", secondary = "", request = "")
+    }
+}
 
 const val byDate = "By Date"
 const val byTopRated = "By Top Rated"
@@ -69,6 +82,13 @@ val albumFilterDisplay = listOf(
     DataAlbumFilterDisplay( primary = byDate, secondary = "Trending", request = "date_trending" ),
     DataAlbumFilterDisplay( primary = byDate, secondary = "Featured", request = "date_featured" ),
     DataAlbumFilterDisplay( primary = byDate, secondary = "Last Viewed", request = "date_last_interaction" ),
+)
 
-    )
+/**
+ * Ищет элемент отображения фильтра альбомов по ключу запроса.
+ */
+fun findAlbumFilterDisplayByRequest(request: String): DataAlbumFilterDisplay? {
+    if (request.isBlank()) return null
+    return albumFilterDisplay.firstOrNull { it.request.equals(request, ignoreCase = true) }
+}
 

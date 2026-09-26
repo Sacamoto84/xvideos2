@@ -13,3 +13,7 @@ val RepositoryResult.isError: Boolean get() = this is RepositoryResult.Error
 
 @Suppress("UNCHECKED_CAST")
 fun <T> RepositoryResult.getOrNull(): T? = (this as? RepositoryResult.Success<*>)?.data as? T
+
+fun RepositoryResult.errorMessageOrNull(): String? = (this as? RepositoryResult.Error)?.message
+
+fun RepositoryResult.throwableOrNull(): Throwable? = (this as? RepositoryResult.Error)?.throwable

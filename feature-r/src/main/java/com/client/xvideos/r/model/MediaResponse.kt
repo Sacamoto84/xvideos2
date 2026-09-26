@@ -17,7 +17,12 @@ data class MediaResponse(
 ) {
     val isEmpty: Boolean get() = gifs.isEmpty() && users.isEmpty() && niches.isEmpty()
     val isNotEmpty: Boolean get() = !isEmpty
+    val isFirstPage: Boolean get() = page <= 1
     val hasMorePages: Boolean get() = page < pages
+    val hasGifs: Boolean get() = gifs.isNotEmpty()
+    val hasUsers: Boolean get() = users.isNotEmpty()
+    val hasNiches: Boolean get() = niches.isNotEmpty()
+    val hasTags: Boolean get() = tags.isNotEmpty()
 
     companion object {
         val EMPTY = MediaResponse()

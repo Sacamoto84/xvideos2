@@ -43,8 +43,15 @@ enum class DohProvider(
         bootstrapIps = emptyList()
     );
 
+    val isCustom: Boolean get() = this == CUSTOM
+    val isCloudflare: Boolean get() = this == CLOUDFLARE
+    val isGoogle: Boolean get() = this == GOOGLE
+    val isAdGuard: Boolean get() = this == ADGUARD
+
     companion object {
+        val DEFAULT = CLOUDFLARE
+
         fun fromNameOrDefault(name: String?): DohProvider =
-            entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: CLOUDFLARE
+            entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: DEFAULT
     }
 }

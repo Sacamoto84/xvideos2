@@ -1,6 +1,16 @@
 package com.client.xvideos.l.model
 
+import com.client.xvideos.l.repository.RepositoryResult
+import com.client.xvideos.l.repository.errorMessageOrNull
+import com.client.xvideos.l.repository.getOrNull
+import com.client.xvideos.l.repository.isError
+import com.client.xvideos.l.repository.isLoading
+import com.client.xvideos.l.repository.isSuccess
+import com.client.xvideos.l.repository.throwableOrNull
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -52,5 +62,38 @@ class AlbumFilterDisplayStructureTest {
         assertTrue(secondaries.contains("90 Days"))
         assertTrue(secondaries.contains("1 Year"))
         assertTrue(secondaries.contains("All Time"))
+    }
+
+    @Test
+    fun `DataAlbumFilterDisplay and lookup operate correctly`() {
+        val empty = DataAlbumFilterDisplay.EMPTY
+        assertFalse(empty.isValid)
+        assertFalse(empty.isByTopRated)
+
+        val item = findAlbumFilterDisplayByRequest("rating_7_days")
+        assertNotNull(item)
+        assertTrue(item!!.isValid)
+        assertTrue(item.isByTopRated)
+        assertFalse(item.isByDate)
+        assertFalse(item.isByFirstLetter)
+
+        assertNull(findAlbumFilterDisplayByRequest("non_existent"))
+        assertNull(findAlbumFilterDisplayByRequest(""))
+    }
+
+    @Test
+    fun `RepositoryResult extensions operate correctly`() {
+        val loading: RepositoryResult = RepositoryResult.Loading
+        assertTrue(loading.isLoading)
+        assertFalse(loading.isSuccess)
+
+        val success: RepositoryResult = RepositoryResult.Success("test_data")
+        assertTrue(success.isSuccess)
+        assertEquals("test_data", success.getOrNull<String>())
+
+        val error: RepositoryResult = RepositoryResult.Error("Network error")
+        assertTrue(error.isError)
+        assertEquals("Network error", error.errorMessageOrNull())
+        assertNull(error.throwableOrNull())
     }
 }

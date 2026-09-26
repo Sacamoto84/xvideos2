@@ -57,6 +57,11 @@ data class Niche(
     val isValid: Boolean get() = id.isNotBlank()
     val isEmpty: Boolean get() = id.isEmpty()
     val isNotEmpty: Boolean get() = id.isNotEmpty()
+    val displayName: String get() = name.ifBlank { id }
+    val hasThumbnail: Boolean get() = thumbnail.isNotBlank()
+    val hasPreviews: Boolean get() = !previews.isNullOrEmpty()
+    val hasGifs: Boolean get() = gifs > 0L
+    val hasSubscribers: Boolean get() = subscribers > 0L
 
     companion object {
         val EMPTY = Niche()

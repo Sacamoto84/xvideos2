@@ -69,6 +69,11 @@ class RSerializationCompatibilityTest {
         assertEquals("creator1", response.users[0].username)
         assertEquals(1, response.niches.size)
         assertEquals("niche1", response.niches[0].id)
+        assertEquals(false, response.isFirstPage)
+        assertEquals(true, response.hasGifs)
+        assertEquals(true, response.hasUsers)
+        assertEquals(true, response.hasNiches)
+        assertEquals(true, response.hasTags)
     }
 
     @Test
@@ -112,9 +117,15 @@ class RSerializationCompatibilityTest {
 
         val response = RJson.decodeFromString<NichesResponse>(json)
 
+        val niche = response.niches[0]
         assertEquals(1, response.niches.size)
-        assertEquals("n1", response.niches[0].id)
-        assertEquals("p1", response.niches[0].previews?.firstOrNull()?.id)
+        assertEquals("n1", niche.id)
+        assertEquals("p1", niche.previews?.firstOrNull()?.id)
+        assertEquals("Niche 1", niche.displayName)
+        assertEquals(true, niche.hasThumbnail)
+        assertEquals(true, niche.hasPreviews)
+        assertEquals(true, niche.hasGifs)
+        assertEquals(true, niche.hasSubscribers)
     }
 
     @Test
