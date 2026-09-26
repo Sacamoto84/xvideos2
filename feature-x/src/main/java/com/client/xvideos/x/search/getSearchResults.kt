@@ -45,6 +45,24 @@ private val searchHttpClient: HttpClient by lazy {
 }
 
 /**
+ * Кодирует пользовательский поисковый запрос для передачи в URL подсказок.
+ */
+fun encodeSuggestQuery(query: String): String {
+    val trimmed = query.trim()
+    if (trimmed.isEmpty()) return ""
+    val rawEncoded = URLEncoder.encode(trimmed, Charsets.UTF_8.name())
+    return if (rawEncoded.contains('+')) rawEncoded.replace("+", "%20") else rawEncoded
+}
+
+/**
+ * Формирует полный URL эндпоинта подсказок поиска X.
+ */
+fun buildSuggestUrl(query: String): String {
+    val encoded = encodeSuggestQuery(query)
+    return "$urlStart/search-suggest/$encoded"
+}
+
+/**
  * Запрашивает поисковые подсказки (автокомплит) по введенному префиксу запроса.
  *
  * @param query Пользовательский поисковый запрос.
@@ -54,10 +72,7 @@ private val searchHttpClient: HttpClient by lazy {
 suspend fun getSearchResults(query: String): String? {
     val trimmed = query.trim()
     if (trimmed.isEmpty()) return null
-    // Кодируем пользовательский ввод: пробелы/спецсимволы не должны ломать URL.
-    val rawEncoded = URLEncoder.encode(trimmed, Charsets.UTF_8.name())
-    val encodedQuery = if (rawEncoded.contains('+')) rawEncoded.replace("+", "%20") else rawEncoded
-    val url = "$urlStart/search-suggest/$encodedQuery"
+    val url = buildSuggestUrl(trimmed)
 
     return try {
         val response = searchHttpClient.get(url)

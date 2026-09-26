@@ -49,3 +49,25 @@ fun parserItemVideo(html: String): String? {
 fun hasPlayerScript(html: String?): Boolean =
     !html.isNullOrBlank() && html.contains(PLAYER_MARKER)
 
+/**
+ * Проверяет наличие маркера плеера в произвольном тексте.
+ */
+fun hasPlayerMarker(text: String?): Boolean =
+    !text.isNullOrBlank() && text.contains(PLAYER_MARKER)
+
+/**
+ * Разбивает тело скрипта плеера на строки вызовов `html5player.set*`.
+ */
+fun extractPlayerScriptLines(script: String?): List<String> {
+    if (script.isNullOrBlank()) return emptyList()
+    return script.lines()
+        .map { it.trim() }
+        .filter { it.startsWith("html5player.") }
+}
+
+/**
+ * Подсчитывает количество параметров инициализации `html5player.set*` в скрипте.
+ */
+fun countPlayerProperties(script: String?): Int =
+    extractPlayerScriptLines(script).size
+

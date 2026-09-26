@@ -92,6 +92,39 @@ fun parserVideoPreviewOrDefault(s: String?, default: String = ""): String =
 fun hasVideoPreview(imageUrl: String?): Boolean =
     parserVideoPreviewFromImageUrl(imageUrl) != null
 
+/**
+ * Проверяет, является ли переданный URL ссылкой на сгенерированное видео-превью (MP4).
+ */
+fun isVideoPreviewUrl(url: String?): Boolean {
+    if (url.isNullOrBlank()) return false
+    return url.contains("/videopreview/") || url.endsWith("/preview.mp4") || url.endsWith("_169.mp4")
+}
+
+/**
+ * Проверяет, является ли ссылка статическим постером/миниатюрой.
+ */
+fun isStaticThumbUrl(url: String?): Boolean {
+    if (url.isNullOrBlank()) return false
+    val clean = url.substringBefore('?').substringBefore('#')
+    return (clean.endsWith(".jpg", ignoreCase = true) || clean.endsWith(".webp", ignoreCase = true)) &&
+        !isVideoPreviewUrl(clean)
+}
+
+/**
+ * Извлекает хеш видеоролика из пути к файлу превью.
+ */
+fun extractVideoHashFromPreviewUrl(url: String?): String? {
+    if (url.isNullOrBlank()) return null
+    val fileName = url.substringBefore('?').substringBefore('#').split('/').lastOrNull() ?: return null
+    val rawHash = fileName.substringBefore('.').substringBefore('_')
+    return if (rawHash.contains('-')) rawHash.replace(TRAILING_INDEX_REGEX, "") else rawHash
+}
+
+/**
+ * Extension-функция для преобразования nullable строки URL постера в видео-превью.
+ */
+fun String?.toVideoPreviewUrl(): String? = parserVideoPreviewFromImageUrl(this)
+
 
 /**
  * Обрабатывает альтернативный формат CDN для превью нового образца (`preview.mp4`).

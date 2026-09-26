@@ -32,3 +32,16 @@ fun parseJson(json: String?): SearchResult? {
  */
 fun parseJsonOrDefault(json: String?, default: SearchResult = SearchResult.EMPTY): SearchResult =
     parseJson(json) ?: default
+
+/**
+ * Проверяет, является ли строка синтаксически корректным JSON-ответом поиска.
+ */
+fun isValidSearchJson(json: String?): Boolean =
+    parseJson(json) != null
+
+/**
+ * Быстро извлекает только список подсказок-ключевых слов из JSON-ответа.
+ */
+fun parseJsonKeywords(json: String?): List<String> =
+    parseJson(json)?.keywords?.map { it.name } ?: emptyList()
+

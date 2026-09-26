@@ -47,6 +47,36 @@ fun parserScreenTags(html: String): ModelScreenTag {
 }
 
 /**
+ * Быстро извлекает основной и вспомогательный заголовки страницы тега (title0, title1).
+ */
+fun parseScreenTagTitle(html: String): Pair<String, String> {
+    if (html.isBlank()) return Pair("?", "?")
+    val document = Jsoup.parse(html)
+    val pageTitle = document.selectFirst("h2.page-title")
+    val title0 = pageTitle?.ownText() ?: "?"
+    val title1 = pageTitle?.selectFirst("span.sub")?.text() ?: "?"
+    return Pair(title0, title1)
+}
+
+/**
+ * Извлекает количество страниц из HTML-разметки экрана тега.
+ */
+fun parseScreenTagPageCount(html: String): Int {
+    if (html.isBlank()) return 1
+    return parseLastPage(Jsoup.parse(html))
+}
+
+/**
+ * Возвращает количество карточек видео, найденных на странице тега.
+ */
+fun parseTagItemCount(html: String): Int {
+    if (html.isBlank()) return 0
+    val document = Jsoup.parse(html)
+    val container = document.selectFirst("#content > div.mozaique.cust-nb-cols") ?: document.selectFirst("div.mozaique")
+    return (container?.select("div.frame-block.thumb-block") ?: document.select("div.frame-block.thumb-block")).size
+}
+
+/**
  * Находит и вычисляет номер последней страницы из блока пагинации `div.pagination`.
  */
 private fun parseLastPage(document: Document): Int {

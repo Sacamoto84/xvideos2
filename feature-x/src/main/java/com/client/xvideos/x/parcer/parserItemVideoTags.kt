@@ -87,3 +87,22 @@ fun parserItemVideoTagsOrEmpty(html: String?): TagsModel =
 fun hasVideoTags(html: String?): Boolean =
     if (html.isNullOrBlank()) false else html.contains("main-uploader") || html.contains("is-keyword") || html.contains("class=\"model\"")
 
+/**
+ * Быстро извлекает только список текстовых тегов-ключевых слов из разметки страницы видео.
+ */
+fun parseKeywordsOnly(html: String): List<String> =
+    parserItemVideoTags(html).tags
+
+/**
+ * Извлекает только список участвующих порнозвезд/моделей.
+ */
+fun parsePornstarsOnly(html: String): List<TagsMainUploaderPornstar> =
+    parserItemVideoTags(html).pornstars
+
+/**
+ * Извлекает только список основных загрузчиков/каналов видео.
+ */
+fun parseUploadersOnly(html: String): List<TagsMainUploaderPornstar> =
+    parserItemVideoTags(html).mainUploader
+
+
