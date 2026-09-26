@@ -39,3 +39,16 @@ inline fun <reified T> Json.decodeFromStringOrNull(string: String?): T? {
 inline fun <reified T> Json.encodeToStringOrNull(value: T): String? =
     runCatching { encodeToString(value) }.getOrNull()
 
+/**
+ * Быстро проверяет, начинается и заканчивается ли строка корректными скобками JSON ({...} или [...]).
+ */
+fun isValidJsonStructure(string: String?): Boolean {
+    if (string.isNullOrBlank()) return false
+    val trimmed = string.trim()
+    if (trimmed.length < 2) return false
+    val first = trimmed.first()
+    val last = trimmed.last()
+    return (first == '{' && last == '}') || (first == '[' && last == ']')
+}
+
+

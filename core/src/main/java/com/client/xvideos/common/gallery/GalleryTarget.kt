@@ -25,6 +25,9 @@ internal object GalleryTarget {
     private val VIDEO_EXTENSIONS = setOf("mp4", "webm", "avi", "mkv", "mov", "m4v", "3gp")
 
     fun isVideo(fileName: String): Boolean = extensionOf(fileName) in VIDEO_EXTENSIONS
+    fun isImage(fileName: String): Boolean = !isVideo(fileName)
+
+    val supportedVideoExtensions: Set<String> get() = VIDEO_EXTENSIONS
 
     /**
      * `RELATIVE_PATH` для MediaStore.
@@ -38,4 +41,15 @@ internal object GalleryTarget {
     }
 
     fun extensionOf(fileName: String): String = fileName.trim().substringAfterLast('.', "").lowercase()
+
+    fun mimeTypeFor(fileName: String): String = when (extensionOf(fileName)) {
+        "mp4" -> "video/mp4"
+        "webm" -> "video/webm"
+        "mkv" -> "video/x-matroska"
+        "jpg", "jpeg" -> "image/jpeg"
+        "png" -> "image/png"
+        "webp" -> "image/webp"
+        "gif" -> "image/gif"
+        else -> if (isVideo(fileName)) "video/*" else "image/*"
+    }
 }

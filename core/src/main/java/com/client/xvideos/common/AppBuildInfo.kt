@@ -23,8 +23,16 @@ object AppBuildInfo {
     val isRelease: Boolean
         get() = !debug
 
+    val isDebug: Boolean
+        get() = debug
+
     val isInitialized: Boolean
         get() = versionName != "?" && versionName.isNotBlank()
+
+    fun formatVersion(): String = if (isInitialized) "v$versionName" else "v?"
+
+    fun formatBuildSummary(): String =
+        if (isInitialized) "v$versionName (${if (debug) "debug" else "release"})" else "Uninitialized"
 
     fun init(debug: Boolean, versionName: String) {
         this.debug = debug

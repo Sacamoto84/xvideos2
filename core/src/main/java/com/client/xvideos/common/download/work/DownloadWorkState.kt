@@ -19,7 +19,15 @@ enum class DownloadStatus {
     val isFailed: Boolean get() = this == FAILED
     val isCancelled: Boolean get() = this == CANCELLED
     val isEnqueued: Boolean get() = this == ENQUEUED
+    val isPending: Boolean get() = this == ENQUEUED
     val isActive: Boolean get() = this == ENQUEUED || this == RUNNING
+
+    companion object {
+        fun fromNameOrDefault(name: String?, default: DownloadStatus = ENQUEUED): DownloadStatus {
+            if (name.isNullOrBlank()) return default
+            return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: default
+        }
+    }
 }
 
 @Immutable
@@ -45,6 +53,11 @@ data class DownloadWorkState(
     val hasFilePath: Boolean get() = !filePath.isNullOrBlank()
     val hasTotalBytes: Boolean get() = totalBytes > 0L
     val remainingBytes: Long get() = if (totalBytes > bytesDownloaded) totalBytes - bytesDownloaded else 0L
+    val progressPercent: Int get() = (progressFraction * 100).toInt()
+    val hasProgress: Boolean get() = progress > 0 || bytesDownloaded > 0L
+
+    fun withProgress(newProgress: Int, downloaded: Long, total: Long): DownloadWorkState =
+        copy(progress = newProgress, bytesDownloaded = downloaded, totalBytes = total)
 
     val progressFraction: Float
         get() = when {

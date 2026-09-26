@@ -68,14 +68,38 @@ enum class DohProvider(
     /** Истина, если выбран провайдер AdGuard. */
     val isAdGuard: Boolean get() = this == ADGUARD
 
+    /** Истина, если провайдер содержит bootstrap IP-адреса. */
+    val hasBootstrapIps: Boolean get() = bootstrapIps.isNotEmpty()
+
+    /** Переход к следующему провайдеру циклически. */
+    fun next(): DohProvider {
+        val nextOrdinal = (ordinal + 1) % entries.size
+        return entries[nextOrdinal]
+    }
+
+    /** Переход к предыдущему провайдеру циклически. */
+    fun prev(): DohProvider {
+        val prevOrdinal = if (ordinal == 0) entries.size - 1 else ordinal - 1
+        return entries[prevOrdinal]
+    }
+
     companion object {
         /** Провайдер по умолчанию. */
         val DEFAULT = CLOUDFLARE
+
+        /** Список отображаемых названий всех провайдеров. */
+        val allTitles: List<String> = entries.map { it.title }
 
         /**
          * Находит провайдера по строковому имени (без учета регистра) или возвращает [DEFAULT].
          */
         fun fromNameOrDefault(name: String?): DohProvider =
             entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: DEFAULT
+
+        /**
+         * Находит провайдера по порядковому номеру или возвращает [default].
+         */
+        fun fromOrdinalOrDefault(ordinal: Int, default: DohProvider = DEFAULT): DohProvider =
+            entries.getOrNull(ordinal) ?: default
     }
 }

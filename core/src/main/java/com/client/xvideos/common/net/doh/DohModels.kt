@@ -38,6 +38,15 @@ data class DohResponse(
     /** Истина, если ответ содержит данные. */
     val isNotEmpty: Boolean get() = !isEmpty
 
+    /** Возвращает первый найденный IPv4-адрес или null. */
+    fun getFirstIpv4OrNull(): String? = answer.firstOrNull { it.isA }?.data
+
+    /** Возвращает первый найденный IPv6-адрес или null. */
+    fun getFirstIpv6OrNull(): String? = answer.firstOrNull { it.isAaaa }?.data
+
+    /** Возвращает список всех извлеченных IP-адресов (IPv4 и IPv6). */
+    fun allIpAddresses(): List<String> = answer.filter { it.isA || it.isAaaa }.map { it.data }
+
     companion object {
         /** Пустой объект ответа для fallback-сценариев. */
         val EMPTY = DohResponse()
@@ -57,6 +66,8 @@ data class DohQuestion(
 ) {
     /** Проверяет непустоту доменного имени. */
     val isValid: Boolean get() = name.isNotBlank()
+    val isA: Boolean get() = type == 1
+    val isAaaa: Boolean get() = type == 28
 
     companion object {
         val EMPTY = DohQuestion()
@@ -113,4 +124,6 @@ data class DohDiagnosticResult(
 
     /** Количество полученных IP-адресов. */
     val count: Int get() = addresses.size
+
+    val summaryText: String get() = "$providerTitle: ${addresses.size} IPs in ${elapsedMs}ms"
 }

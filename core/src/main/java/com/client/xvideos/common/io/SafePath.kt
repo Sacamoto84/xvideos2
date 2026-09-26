@@ -91,3 +91,21 @@ fun isUnsafeItemName(name: String): Boolean =
     name.isBlank() || name == "." || name == ".." ||
         name.contains('/') || name.contains('\\') || name.contains('\u0000') ||
         name.any { it < ' ' }
+
+/**
+ * Проверяет, является ли относительный путь безопасным для использования.
+ */
+fun isSafeRelativePath(raw: String): Boolean =
+    runCatching { normalizeRelativePath(raw) }.isSuccess
+
+/**
+ * Нормализует относительный путь либо возвращает null, если путь небезопасен.
+ */
+fun normalizeRelativePathOrNull(raw: String): String? =
+    runCatching { normalizeRelativePath(raw) }.getOrNull()
+
+/**
+ * Проверяет, является ли имя элемента безопасным для файлового хранилища.
+ */
+fun isSafeItemName(name: String): Boolean = !isUnsafeItemName(name)
+
