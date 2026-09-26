@@ -66,7 +66,11 @@ data class AlbumListImplInfoAndList(
     val items: List<Album> = emptyList(),
     val filter: AlbumListFilter = AlbumListFilter(),
     val page: Int = 0
-)
+) {
+    val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+    val totalCount: Int get() = items.size
+}
 
 /**
  * Результат запроса агрегаций фильтров альбомов (распределение по жанрам, тегам и числу картинок).
@@ -77,7 +81,11 @@ data class GetAlbumListAggregationsResult(
     val filterPictureCountStateCount: List<AlbumListFilterGenreCountResponse>,
     val id: Int,
     val filter: AlbumListFilter?
-)
+) {
+    val hasGenres: Boolean get() = filterGenreStateCount.isNotEmpty()
+    val hasTags: Boolean get() = filterTaggedStateCount.isNotEmpty()
+    val hasPictureCounts: Boolean get() = filterPictureCountStateCount.isNotEmpty()
+}
 
 typealias getAlbumListAggregationsResult = GetAlbumListAggregationsResult
 

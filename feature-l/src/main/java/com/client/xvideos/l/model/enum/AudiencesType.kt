@@ -84,9 +84,16 @@ enum class AudiencesType(
     val hasPoster: Boolean get() = !posterUrl.isNullOrBlank()
 
     companion object {
+        val DEFAULT = STRAIGHT
+
         fun fromId(id: Int): AudiencesType? = entries.find { it.id == id }
         fun fromIdOrNull(id: Int?): AudiencesType? = if (id != null) fromId(id) else null
+        fun fromIdOrDefault(id: Int?, default: AudiencesType = DEFAULT): AudiencesType =
+            fromIdOrNull(id) ?: default
+
         fun fromUrl(url: String): AudiencesType? = entries.find { it.url.equals(url, ignoreCase = true) }
         fun fromUrlOrNull(url: String?): AudiencesType? = if (!url.isNullOrBlank()) fromUrl(url) else null
+        fun fromUrlOrDefault(url: String?, default: AudiencesType = DEFAULT): AudiencesType =
+            fromUrlOrNull(url) ?: default
     }
 }

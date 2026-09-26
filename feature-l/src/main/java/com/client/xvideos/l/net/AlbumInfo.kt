@@ -242,4 +242,7 @@ class AlbumInfo(
     /** Ссылка для скачивания архива всего альбома с сайта (если доступна). */
     val downloadUrl: String
         get() = albumInfo.value?.download_url?.takeIf { it.isNotBlank() }?.let { LusciousEndpoints.HOME + it }.orEmpty()
+
+    val hasError: Boolean get() = loadError.value != null
+    val isSuccess: Boolean get() = albumInfo.value != null
 }

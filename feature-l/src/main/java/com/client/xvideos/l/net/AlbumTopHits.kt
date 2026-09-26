@@ -63,4 +63,7 @@ class AlbumTopHitsImpl(
 
     }
 
+    val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+    val count: Int get() = items.size
 }

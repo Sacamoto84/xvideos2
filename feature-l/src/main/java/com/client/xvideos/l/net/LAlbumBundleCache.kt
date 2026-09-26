@@ -28,9 +28,14 @@ internal data class LAlbumBundleCache(
     val pics: List<PicsDetails> = emptyList()
 ) {
     /** `true`, если кэш сохранен менее 7 дней назад. */
-    val isFresh: Boolean get() = (System.currentTimeMillis() - cachedAtMs) < L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS
+    val isFresh: Boolean get() = isFreshAt(System.currentTimeMillis())
     val isCurrentSchema: Boolean get() = schemaVersion == L_ALBUM_BUNDLE_CACHE_SCHEMA_VERSION
     val isValid: Boolean get() = isCurrentSchema && album.id.isNotBlank()
+    val hasPics: Boolean get() = pics.isNotEmpty()
+    val picsCount: Int get() = pics.size
+
+    /** Проверяет свежесть кэша относительно указанной временной метки [nowMs]. */
+    fun isFreshAt(nowMs: Long): Boolean = (nowMs - cachedAtMs) < L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS
 
     companion object {
         val EMPTY = LAlbumBundleCache()

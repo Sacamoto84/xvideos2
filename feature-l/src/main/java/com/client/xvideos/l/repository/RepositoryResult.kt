@@ -37,6 +37,29 @@ val RepositoryResult.isError: Boolean get() = this is RepositoryResult.Error
 fun <T> RepositoryResult.getOrNull(): T? = (this as? RepositoryResult.Success<*>)?.data as? T
 
 /**
+ * Извлекает данные типа [T] при успехе либо возвращает указанное значение по умолчанию [default].
+ */
+fun <T> RepositoryResult.getOrDefault(default: T): T = getOrNull<T>() ?: default
+
+/**
+ * Выполняет блок [action], если результат является успешным с данными [T].
+ */
+inline fun <T> RepositoryResult.onSuccess(action: (T) -> Unit): RepositoryResult {
+    getOrNull<T>()?.let(action)
+    return this
+}
+
+/**
+ * Выполняет блок [action], если результат содержит ошибку.
+ */
+inline fun RepositoryResult.onError(action: (message: String, throwable: Throwable?) -> Unit): RepositoryResult {
+    if (this is RepositoryResult.Error) {
+        action(message, throwable)
+    }
+    return this
+}
+
+/**
  * Возвращает текст ошибки, если результат является [RepositoryResult.Error], либо `null`.
  */
 fun RepositoryResult.errorMessageOrNull(): String? = (this as? RepositoryResult.Error)?.message

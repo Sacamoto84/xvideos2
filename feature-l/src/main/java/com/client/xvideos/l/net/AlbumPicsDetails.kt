@@ -49,7 +49,9 @@ data class LAlbumPageLoadIssue(
     val message: String,
     val htmlChallenge: Boolean,
     val failedAtMs: Long = System.currentTimeMillis()
-)
+) {
+    val hasMessage: Boolean get() = message.isNotBlank()
+}
 
 /**
  * Снапшот картинок альбома для сохранения в кэш бандлов.
@@ -61,7 +63,11 @@ data class LAlbumPageLoadIssue(
 data class LAlbumPicsBundleSnapshot(
     val pics: List<PicsDetails>,
     val totalPages: Int?
-)
+) {
+    val isEmpty: Boolean get() = pics.isEmpty()
+    val isNotEmpty: Boolean get() = pics.isNotEmpty()
+    val count: Int get() = pics.size
+}
 
 /**
  * Менеджер пагинированной порционной загрузки картинок альбома Luscious.
