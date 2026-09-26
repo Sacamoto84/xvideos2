@@ -32,38 +32,29 @@ import com.composeunstyled.DisclosureHeading
 import com.composeunstyled.DisclosurePanel
 import com.composeunstyled.rememberDisclosureState
 
-private val ROW_TITLE_STYLE = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
-private val TWEEN_ROTATION = tween<Float>()
-private val DISCLOSURE_ENTER = expandVertically(
-    spring(stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntSize.VisibilityThreshold)
-)
-private val DISCLOSURE_EXIT = shrinkVertically()
-private val DISCLOSURE_ROW_MODIFIER = Modifier.fillMaxWidth().height(48.dp)
-private val DISCLOSURE_ICON_SIZE_MODIFIER = Modifier.size(32.dp)
-private val ICON_ARROW_DROP_DOWN = Icons.Default.ArrowDropDown
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-
 @Composable
 fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @Composable () -> Unit) {
 
     val state = rememberDisclosureState()
     val palette = StyleGenresTags.Palette
-    val headingStyle = remember(palette.textPrimary) { ROW_TITLE_STYLE.copy(color = palette.textPrimary) }
+    val headingStyle = remember(palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold, color = palette.textPrimary)
+    }
 
     Disclosure(state = state) {
         DisclosureHeading(backgroundColor = Color.Transparent) {
-            val degrees by animateFloatAsState(if (state.expanded) 0f else -90f, TWEEN_ROTATION)
+            val degrees by animateFloatAsState(if (state.expanded) 0f else -90f, tween())
 
             Row(
-                modifier = DISCLOSURE_ROW_MODIFIER,
-                verticalAlignment = ROW_VERTICAL_ALIGNMENT
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = ICON_ARROW_DROP_DOWN,
+                    imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
                     modifier = Modifier
                         .graphicsLayer { rotationZ = degrees }
-                        .then(DISCLOSURE_ICON_SIZE_MODIFIER),
+                        .size(32.dp),
                     tint = palette.textSecondary
                 )
                 Text(contentDisclosureHeading, style = headingStyle)
@@ -71,8 +62,10 @@ fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @
 
         }
         DisclosurePanel(
-            enter = DISCLOSURE_ENTER,
-            exit = DISCLOSURE_EXIT
+            enter = expandVertically(
+                spring(stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntSize.VisibilityThreshold)
+            ),
+            exit = shrinkVertically()
         ) {
             contentDisclosurePanel.invoke()
         }

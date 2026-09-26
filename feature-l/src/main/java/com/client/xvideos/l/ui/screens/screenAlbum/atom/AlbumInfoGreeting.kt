@@ -26,25 +26,7 @@ import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
 import com.client.xvideos.l.model.Tag
 
-private val GENRE_CHIP_CORNER = 4.dp
-private val GENRE_CHIP_SHAPE = RoundedCornerShape(GENRE_CHIP_CORNER)
-private val CHIP_BORDER_WIDTH = 1.dp
-private val CHIP_HORIZONTAL_PADDING = 2.dp
-private val CHIP_VERTICAL_PADDING = 2.dp
-private val CHIP_CONTENT_PADDING = 4.dp
-private val HEADER_VERTICAL_PADDING = 4.dp
-private val HEADER_FONT_SIZE = 16.sp
-private val HEADER_FONT_WEIGHT = FontWeight.ExtraBold
-private val GENRE_FONT_SIZE = 14.sp
-private const val LABEL_GENRES = "Genres: "
-
-private val GENRE_CHIP_BASE_MODIFIER = Modifier
-    .padding(horizontal = CHIP_HORIZONTAL_PADDING, vertical = CHIP_VERTICAL_PADDING)
-    .clip(GENRE_CHIP_SHAPE)
-
-private val GENRE_CHIP_CONTENT_PADDING_MODIFIER = Modifier.padding(CHIP_CONTENT_PADDING)
-private val HEADER_TEXT_MODIFIER = Modifier.padding(vertical = HEADER_VERTICAL_PADDING)
-private val FLOW_ROW_VERTICAL_ARRANGEMENT = Arrangement.Center
+private val CHIP_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
 fun AlbumInfoGreeting(
@@ -53,25 +35,25 @@ fun AlbumInfoGreeting(
     modifier: Modifier = Modifier
 ) {
     val headerStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(fontWeight = HEADER_FONT_WEIGHT, fontSize = HEADER_FONT_SIZE)
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
     }
     val genreTextStyle = remember(Theme.L.Type.rowValue, Theme.L.primaryColor) {
-        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = GENRE_FONT_SIZE)
+        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = 14.sp)
     }
 
     val chipBorderModifier = remember(Theme.L.secondaryColor) {
-        Modifier.border(CHIP_BORDER_WIDTH, Theme.L.secondaryColor, GENRE_CHIP_SHAPE)
+        Modifier.border(1.dp, Theme.L.secondaryColor, CHIP_SHAPE)
     }
 
     FlowRow(
         modifier = modifier,
-        verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = LABEL_GENRES,
+            text = "Genres: ",
             color = Theme.L.textColor,
             style = headerStyle,
-            modifier = HEADER_TEXT_MODIFIER
+            modifier = Modifier.padding(vertical = 4.dp)
         )
 
         parsed.genres.forEach { item ->
@@ -96,13 +78,21 @@ private fun GenreChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val baseModifier = if (modifier == Modifier) GENRE_CHIP_BASE_MODIFIER else modifier.then(GENRE_CHIP_BASE_MODIFIER)
+    val baseModifier = if (modifier == Modifier) {
+        Modifier
+            .padding(horizontal = 2.dp, vertical = 2.dp)
+            .clip(CHIP_SHAPE)
+    } else {
+        modifier
+            .padding(horizontal = 2.dp, vertical = 2.dp)
+            .clip(CHIP_SHAPE)
+    }
     Text(
         text = item.title,
         modifier = baseModifier
             .then(borderModifier)
             .clickable(onClick = onClick)
-            .then(GENRE_CHIP_CONTENT_PADDING_MODIFIER),
+            .padding(4.dp),
         color = Theme.L.primaryColor,
         style = style
     )

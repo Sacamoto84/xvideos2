@@ -31,15 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.enum.PictureCountRank
 import kotlinx.collections.immutable.persistentListOf
 
-private val style = Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold)
 private val SIZE_OPTIONS = persistentListOf("Any", "0..25", "25..50", "50..100", "100..200", "200..800", "800..3200", "3200..12800")
-private val DROPDOWN_SHAPE = RoundedCornerShape(6.dp)
-private val DROPDOWN_WIDTH = 160.dp
-private val DROPDOWN_HEIGHT = 43.dp
-private val DROPDOWN_BORDER_WIDTH = 1.dp
-private val DROPDOWN_HORIZONTAL_PADDING = 8.dp
-private val ROW_START_PADDING = 4.dp
-private const val TITLE_ALBUM_SIZE = "Album Size"
 
 @Composable
 fun AlbumListFilterSize(
@@ -61,26 +53,28 @@ fun AlbumListFilterSize(
         PictureCountRank.C3200_12800 -> "3200..12800"
     }
 
-    val titleStyle = remember(palette.textPrimary) { style.copy(color = palette.textPrimary) }
+    val titleStyle = remember(palette.textPrimary) {
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.Bold, color = palette.textPrimary)
+    }
 
     Row(
         modifier = modifier
-            .padding(start = ROW_START_PADDING)
+            .padding(start = 4.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(TITLE_ALBUM_SIZE, style = titleStyle)
+        Text("Album Size", style = titleStyle)
 
         Row(
             modifier = Modifier
-                .width(DROPDOWN_WIDTH)
-                .height(DROPDOWN_HEIGHT)
-                .clip(DROPDOWN_SHAPE)
-                .border(DROPDOWN_BORDER_WIDTH, palette.border, DROPDOWN_SHAPE)
+                .width(160.dp)
+                .height(43.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
                 .background(palette.field)
                 .clickable { showDialog = true }
-                .padding(horizontal = DROPDOWN_HORIZONTAL_PADDING),
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -101,7 +95,7 @@ fun AlbumListFilterSize(
 
     if (showDialog) {
         AlbumFilterSelectDialog(
-            title = TITLE_ALBUM_SIZE,
+            title = "Album Size",
             items = SIZE_OPTIONS,
             selectedItem = currentLabel,
             itemTitle = { it },

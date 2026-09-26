@@ -40,20 +40,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.nearestIn
 
-private val SHAPE_8 = RoundedCornerShape(8.dp)
-private val SHAPE_16 = RoundedCornerShape(16.dp)
-private val SHAPE_CIRCLE = RoundedCornerShape(50)
-private val BORDER_STROKE_1DP = 1.dp
-private val BORDER_COLOR_DEFAULT = Color(0xFF3A3A3A)
-private val MENU_CONTAINER_COLOR = Color(0xFF090909)
-private val SELECTED_ITEM_BG = Color(0xFF222222)
-private val COLOR_WHITE = Color.White
-private val COLOR_TRANSPARENT = Color.Transparent
-private val ROW_WIDTH = 100.dp
-private val ROW_HEIGHT = 46.dp
-private val ITEM_HEIGHT = 32.dp
-private val PADDING_HORIZONTAL_8 = 8.dp
-
 private val SORT_ORDER_TEXT_AUTO_SIZE = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 18.sp)
 
 private fun Order.toDisplayName(): String = when (this) {
@@ -104,15 +90,15 @@ fun SortByOrder(
         { expanded = true }
     }
 
-    val boxShape = if (!circle) SHAPE_8 else SHAPE_CIRCLE
+    val boxShape = if (!circle) RoundedCornerShape(8.dp) else RoundedCornerShape(50)
     val textStyle = remember {
         TextStyle(
-            color = COLOR_WHITE,
+            color = Color.White,
             fontFamily = Theme.R.fontFamilyDMsanss,
             fontSize = 18.sp
         )
     }
-    val menuBorder = remember { BorderStroke(BORDER_STROKE_1DP, Theme.R.colorBorderGray) }
+    val menuBorder = remember { BorderStroke(1.dp, Theme.R.colorBorderGray) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -123,17 +109,17 @@ fun SortByOrder(
     ) {
         Row(
             modifier = Modifier
-                .width(ROW_WIDTH)
-                .height(ROW_HEIGHT)
+                .width(100.dp)
+                .height(46.dp)
                 .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable)
-                .border(BORDER_STROKE_1DP, BORDER_COLOR_DEFAULT, boxShape)
+                .border(1.dp, Color(0xFF3A3A3A), boxShape)
                 .clickable(onClick = onTriggerClick),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             BasicText(
                 selected.toDisplayName(),
                 modifier = Modifier
-                    .padding(horizontal = PADDING_HORIZONTAL_8)
+                    .padding(horizontal = 8.dp)
                     .weight(1f)
                     .align(Alignment.CenterVertically),
                 style = textStyle,
@@ -146,8 +132,8 @@ fun SortByOrder(
             expanded = expanded,
             onDismissRequest = onDismissRequest,
             modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = MENU_CONTAINER_COLOR,
-            shape = SHAPE_16,
+            containerColor = Color(0xFF090909),
+            shape = RoundedCornerShape(16.dp),
             border = menuBorder
         ) {
             list.forEach { option ->
@@ -157,14 +143,14 @@ fun SortByOrder(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(ITEM_HEIGHT)
-                                .clip(SHAPE_8)
-                                .background(if (isSelected) SELECTED_ITEM_BG else COLOR_TRANSPARENT),
+                                .height(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) Color(0xFF222222) else Color.Transparent),
                             contentAlignment = Alignment.CenterStart
                         ) {
                             BasicText(
                                 option.toDisplayName(),
-                                modifier = Modifier.padding(horizontal = PADDING_HORIZONTAL_8),
+                                modifier = Modifier.padding(horizontal = 8.dp),
                                 style = textStyle,
                                 autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
                                 maxLines = 1

@@ -28,14 +28,6 @@ import com.client.xvideos.common.videoplayer.ui.StaticPlayer
 import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
 
 
-private val CLICK_OVERLAY_BOTTOM_PADDING = 48.dp
-private val TIMELINE_HORIZONTAL_PADDING = 2.dp
-private val TIMELINE_OFFSET_Y = 5.dp
-private const val FADE_DURATION_MS = 300
-
-private val ENTER_FADE = fadeIn(animationSpec = tween(FADE_DURATION_MS))
-private val EXIT_FADE = fadeOut(animationSpec = tween(FADE_DURATION_MS))
-
 /**
  * Превьюшка для режима в два столбика
  */
@@ -85,15 +77,15 @@ fun Red_Video_Lite_Row2(
 
         Box(
             modifier = Modifier
-                .padding(bottom = CLICK_OVERLAY_BOTTOM_PADDING)
+                .padding(bottom = 48.dp)
                 .fillMaxSize()
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
         )
 
         AnimatedVisibility(
             visible = !playerHost.poster,
-            enter = ENTER_FADE,
-            exit = EXIT_FADE,
+            enter = fadeIn(animationSpec = tween(300)),
+            exit = fadeOut(animationSpec = tween(300)),
             modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(),
         ) {
             Box(
@@ -111,9 +103,9 @@ fun Red_Video_Lite_Row2(
                     onSeek = onSeek,
                     onSeekFinished = onSeekFinished,
                     modifier = Modifier
-                        .padding(horizontal = TIMELINE_HORIZONTAL_PADDING)
+                        .padding(horizontal = 2.dp)
                         .fillMaxWidth()
-                        .offset(y = TIMELINE_OFFSET_Y),
+                        .offset(y = 5.dp),
                     isVisibleTime = true,
                     isVisibleStep = false,
                     isBuffering = isBuffering

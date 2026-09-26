@@ -57,32 +57,12 @@ import kotlinx.coroutines.launch
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
 private val appLockErrorColor = Color(0xFFB3261E)
-private val appLockDisableColor = Color(0xFFFF7A7A)
 private val TIMEOUT_ITEM_SHAPE = RoundedCornerShape(12.dp)
-private val UNFOCUSED_BORDER_COLOR = Color(0xFF9A9A9A)
-private val UNFOCUSED_LABEL_COLOR = Color(0xFF6E6E6E)
-private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
-
-private val RADIO_SPACER_WIDTH = 12.dp
-private val DIALOG_ITEM_SPACING = 10.dp
-private val DIALOG_COLUMN_VERTICAL_ARRANGEMENT = Arrangement.spacedBy(DIALOG_ITEM_SPACING)
-private val TIMEOUT_ITEM_SPACING = 4.dp
-private val TIMEOUT_ITEM_HORIZONTAL_PADDING = 8.dp
-private val TIMEOUT_ITEM_VERTICAL_PADDING = 10.dp
-
-private val TIMEOUT_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val TIMEOUT_COLUMN_VERTICAL_ARRANGEMENT = Arrangement.spacedBy(TIMEOUT_ITEM_SPACING)
 private val TIMEOUT_ITEM_FULL_MODIFIER = Modifier
     .fillMaxWidth()
     .clip(TIMEOUT_ITEM_SHAPE)
-    .padding(horizontal = TIMEOUT_ITEM_HORIZONTAL_PADDING, vertical = TIMEOUT_ITEM_VERTICAL_PADDING)
-private val RADIO_SPACER_MODIFIER = Modifier.width(RADIO_SPACER_WIDTH)
-private val PASSWORD_FIELD_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val ICON_VISIBILITY = Icons.Filled.Visibility
-private val ICON_VISIBILITY_OFF = Icons.Filled.VisibilityOff
-private val ROW_CENTER_VERTICAL = Alignment.CenterVertically
+    .padding(horizontal = 8.dp, vertical = 10.dp)
 private val ERROR_TEXT_STYLE = Theme.L.Type.dialogBody.copy(color = appLockErrorColor)
-private val DIALOG_BODY_TEXT_STYLE = Theme.L.Type.dialogBody.copy(color = Theme.DialogLavande.bodyColor)
 private val TIMEOUT_SELECTED_TEXT_STYLE = Theme.L.Type.dialogBody.copy(
     color = SettingsAccentColor,
     fontWeight = FontWeight.SemiBold
@@ -92,8 +72,6 @@ private val TIMEOUT_UNSELECTED_TEXT_STYLE = Theme.L.Type.dialogBody.copy(
     fontWeight = FontWeight.Normal
 )
 
-private const val CD_HIDE_CODE = "Скрыть код доступа"
-private const val CD_SHOW_CODE = "Показать код доступа"
 private const val TEXT_APP_LOCK_TITLE = "Блокировка при запуске"
 private const val TEXT_AUTO_LOCK = "Автоблокировка"
 private const val TEXT_ACCESS_CODE = "Код доступа"
@@ -209,7 +187,7 @@ fun AppLockSettingsSection(
     val disableTrailing: @Composable () -> Unit = remember(onDisableLock) {
         {
             TextButton(onClick = onDisableLock) {
-                Text(BUTTON_DISABLE, color = appLockDisableColor)
+                Text(BUTTON_DISABLE, color = Color(0xFFFF7A7A))
             }
         }
     }
@@ -386,10 +364,10 @@ private fun CamouflageVerificationDialog(
         onDismiss = handleDismiss,
         content = {
             DisableAppLockAutofill()
-            Column(verticalArrangement = Arrangement.spacedBy(DIALOG_ITEM_SPACING)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     "Для работы маскировки под калькулятор код доступа должен состоять только из цифр. Введите ваш текущий PIN-код для подтверждения:",
-                    style = DIALOG_BODY_TEXT_STYLE
+                    style = Theme.L.Type.dialogBody.copy(color = Theme.DialogLavande.bodyColor)
                 )
                 PasswordSettingField(
                     value = pinInput,
@@ -542,7 +520,7 @@ internal fun AppLockPasswordDialog(
         onDismiss = onDismiss,
         content = {
             DisableAppLockAutofill()
-            Column(verticalArrangement = DIALOG_COLUMN_VERTICAL_ARRANGEMENT) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (needsCurrentPassword) {
                     PasswordSettingField(
                         value = currentPassword,
@@ -638,15 +616,15 @@ fun PasswordSettingField(
             IconButton(onClick = onToggleShowPassword) {
                 Icon(
                     imageVector =
-                        if (showPassword) ICON_VISIBILITY_OFF else ICON_VISIBILITY,
+                        if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                     contentDescription =
-                        if (showPassword) CD_HIDE_CODE else CD_SHOW_CODE,
+                        if (showPassword) "Скрыть код доступа" else "Показать код доступа",
                     tint = dialogTheme.dismissTextColor
                 )
             }
         }
     }
-    val fieldModifier = if (modifier == Modifier) PASSWORD_FIELD_BASE_MODIFIER else modifier.then(PASSWORD_FIELD_BASE_MODIFIER)
+    val fieldModifier = if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth()
     val fieldTextStyle = remember(dialogTheme.bodyColor) {
         Theme.L.Type.body.copy(color = dialogTheme.bodyColor)
     }
@@ -668,9 +646,9 @@ fun PasswordSettingField(
             unfocusedTextColor = dialogTheme.bodyColor,
             cursorColor = dialogTheme.dismissTextColor,
             focusedBorderColor = dialogTheme.dismissTextColor,
-            unfocusedBorderColor = UNFOCUSED_BORDER_COLOR,
+            unfocusedBorderColor = Color(0xFF9A9A9A),
             focusedLabelColor = dialogTheme.dismissTextColor,
-            unfocusedLabelColor = UNFOCUSED_LABEL_COLOR
+            unfocusedLabelColor = Color(0xFF6E6E6E)
         )
     )
 }
@@ -694,7 +672,7 @@ internal fun AppLockTimeoutDialog(
 ) {
     val radioColors = RadioButtonDefaults.colors(
         selectedColor = SettingsAccentColor,
-        unselectedColor = RADIO_UNSELECTED_COLOR
+        unselectedColor = Color(0xFF938F99)
     )
 
     LavenderDialog(
@@ -703,8 +681,8 @@ internal fun AppLockTimeoutDialog(
         dismissText = "Отмена",
         content = {
             Column(
-                modifier = TIMEOUT_COLUMN_BASE_MODIFIER,
-                verticalArrangement = TIMEOUT_COLUMN_VERTICAL_ARRANGEMENT
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 AppLockTimeout.entries.forEach { timeout ->
                     key(timeout) {
@@ -742,14 +720,14 @@ private fun AppLockTimeoutItem(
 
     Row(
         modifier = itemBaseModifier.clickable(onClick = onClick),
-        verticalAlignment = ROW_CENTER_VERTICAL
+        verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
             selected = isSelected,
             onClick = null,
             colors = radioColors
         )
-        Spacer(RADIO_SPACER_MODIFIER)
+        Spacer(Modifier.width(12.dp))
         Text(
             text = label,
             style = itemTextStyle

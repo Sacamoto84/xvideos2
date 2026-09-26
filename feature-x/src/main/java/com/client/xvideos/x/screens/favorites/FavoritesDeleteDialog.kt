@@ -14,17 +14,6 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val FAVORITE_POSTER_CORNER = 8.dp
-private val FAVORITE_POSTER_SHAPE = RoundedCornerShape(FAVORITE_POSTER_CORNER)
-private const val POSTER_ASPECT_RATIO = 352f / 198f
-private val POSTER_WIDTH = 160.dp
-private const val DIALOG_TITLE = "Удалить из избранного?"
-private const val CONFIRM_TEXT = "Удалить"
-private val POSTER_MODIFIER = Modifier
-    .width(POSTER_WIDTH)
-    .aspectRatio(POSTER_ASPECT_RATIO)
-    .clip(FAVORITE_POSTER_SHAPE)
-
 /**
  * Диалог подтверждения удаления видео из «Избранного».
  *
@@ -41,16 +30,19 @@ fun ConfirmDeleteFavoriteDialog(
         {
             UrlImage(
                 url = posterUrl,
-                modifier = POSTER_MODIFIER
+                modifier = Modifier
+                    .width(160.dp)
+                    .aspectRatio(352f / 198f)
+                    .clip(RoundedCornerShape(8.dp))
             )
         }
     }
 
     LavenderDialog(
-        title = DIALOG_TITLE,
+        title = "Удалить из избранного?",
         onDismiss = onDismiss,
         icon = iconContent,
-        confirmText = CONFIRM_TEXT,
+        confirmText = "Удалить",
         onConfirm = onConfirm,
         destructive = true,
     )

@@ -27,28 +27,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 
-private val ALBUM_CARD_CORNER = 8.dp
-private val ALBUM_CARD_SHAPE = RoundedCornerShape(ALBUM_CARD_CORNER)
-private val ALBUM_BORDER_WIDTH = 1.dp
 private const val ALBUM_CARD_ASPECT_RATIO = 137f / 200f
-private val BOTTOM_OVERLAY_BG = Color(0x80000000)
-private val TITLE_PADDING_HORIZONTAL = 4.dp
-private val SUBTITLE_PADDING_START = 4.dp
-private const val SUFFIX_GIFS = " gifs"
-private const val SEPARATOR_SLASH = " / "
-private const val SUFFIX_PICTURES = " pictures"
-private val COVER_IMAGE_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .aspectRatio(ALBUM_CARD_ASPECT_RATIO)
-private val BOTTOM_OVERLAY_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .background(BOTTOM_OVERLAY_BG)
-private val TITLE_TEXT_MODIFIER = Modifier.padding(horizontal = TITLE_PADDING_HORIZONTAL)
-private val SUBTITLE_ROW_BASE_MODIFIER = Modifier
-    .padding(start = SUBTITLE_PADDING_START)
-    .fillMaxWidth()
-private val OVERLAY_ALIGNMENT = Alignment.BottomCenter
-private val COLOR_WHITE = Color.White
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -68,19 +47,19 @@ fun AlbumListItem(
     }
 
     val titleStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(color = COLOR_WHITE)
+        Theme.L.Type.rowTitle.copy(color = Color.White)
     }
 
     val countSubtitle = remember(numberOfAnimatedPictures, numberOfPictures) {
         buildString {
             if (numberOfAnimatedPictures > 0) {
                 append(numberOfAnimatedPictures)
-                append(SUFFIX_GIFS)
-                if (numberOfPictures > 0) append(SEPARATOR_SLASH)
+                append(" gifs")
+                if (numberOfPictures > 0) append(" / ")
             }
             if (numberOfPictures > 0) {
                 append(numberOfPictures)
-                if (numberOfAnimatedPictures == 0) append(SUFFIX_PICTURES)
+                if (numberOfAnimatedPictures == 0) append(" pictures")
             }
         }
     }
@@ -90,33 +69,38 @@ fun AlbumListItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .border(ALBUM_BORDER_WIDTH, Theme.tabLevel3, ALBUM_CARD_SHAPE)
-            .clip(ALBUM_CARD_SHAPE)
+            .border(1.dp, Theme.tabLevel3, RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(Theme.tabLevel1)
             .then(clickModifier)
     ) {
         UrlImage(
             coverUrl,
-            modifier = COVER_IMAGE_BASE_MODIFIER,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(ALBUM_CARD_ASPECT_RATIO),
             contentScale = ContentScale.Crop
         )
 
         Column(
             modifier = Modifier
-                .align(OVERLAY_ALIGNMENT)
-                .then(BOTTOM_OVERLAY_BASE_MODIFIER)
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Color(0x80000000))
         ) {
             Text(
                 cleanTitle,
-                modifier = TITLE_TEXT_MODIFIER,
-                color = COLOR_WHITE,
+                modifier = Modifier.padding(horizontal = 4.dp),
+                color = Color.White,
                 style = titleStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
             Row(
-                modifier = SUBTITLE_ROW_BASE_MODIFIER
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp)
             ) {
                 Text(
                     countSubtitle,

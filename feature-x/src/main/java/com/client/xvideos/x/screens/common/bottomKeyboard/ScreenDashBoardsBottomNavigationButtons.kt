@@ -54,49 +54,8 @@ fun ScreenDashBoardsBottomNavigationButtonsPreview() {
     }
 }
 
-private val COLOR_TEXT_BLACK = Color(0xFF2C2C2C)
-private val COLOR_ACCENT = Color(0xFFFF9000)
-private val COLOR_TEXT_WHITE = Color(0xFFCCCCCC)
-private val COLOR_BLACK_BACKGROUND = Color(0xFF252525)
-private val SELECTED_BORDER_COLOR = Color(0xFFFF9900)
-private val COLOR_DISABLED_TEXT = Color.DarkGray
-private val COLOR_ENABLED_TEXT = Color.Black
-
-private val NAV_BUTTON_HEIGHT = 48.dp
-private val ITEM_PADDING_HORIZONTAL = 0.5.dp
-private val SELECTED_BORDER_WIDTH = 2.dp
-private val ARROW_FONT_SIZE = 24.sp
-private val ARROW_FONT_WEIGHT = FontWeight.Bold
 private const val PAGE_FRACTION = 0.2f
-
 private const val CONTENT_TYPE_PAGE_NUMBER = "page_number_item"
-private const val ARROW_LEFT = "<"
-private const val ARROW_RIGHT = ">"
-
-private val SELECTED_BORDER_MODIFIER = Modifier.border(SELECTED_BORDER_WIDTH, SELECTED_BORDER_COLOR)
-
-private val NAV_ROW_BASE_MODIFIER = Modifier
-    .height(NAV_BUTTON_HEIGHT)
-    .fillMaxWidth()
-
-private val NAV_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-
-private val ARROW_BUTTON_BASE_MODIFIER = Modifier
-    .padding(horizontal = ITEM_PADDING_HORIZONTAL)
-    .size(NAV_BUTTON_HEIGHT)
-
-private val ARROW_BUTTON_DISABLED_MODIFIER = ARROW_BUTTON_BASE_MODIFIER.background(COLOR_TEXT_BLACK)
-private val ARROW_BUTTON_ENABLED_MODIFIER = ARROW_BUTTON_BASE_MODIFIER.background(COLOR_ACCENT)
-
-private val PAGE_BUTTON_BASE_MODIFIER = Modifier
-    .padding(horizontal = ITEM_PADDING_HORIZONTAL)
-    .height(NAV_BUTTON_HEIGHT)
-    .background(COLOR_BLACK_BACKGROUND)
-
-private val PAGE_BUTTON_SELECTED_MODIFIER = PAGE_BUTTON_BASE_MODIFIER.then(SELECTED_BORDER_MODIFIER)
-
-private val LAZY_ROW_MODIFIER = Modifier.fillMaxWidth()
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
 
 /**
  * Bottom navigation buttons
@@ -129,14 +88,14 @@ fun BottomListDashBoardNavigationButtons2(
         { onChange((value + 1).coerceIn(0, maxPageIndex)) }
     }
 
-    val rowModifier = if (modifier == Modifier) NAV_ROW_BASE_MODIFIER else modifier.then(NAV_ROW_BASE_MODIFIER)
-
     Row(
-        modifier = rowModifier,
-        horizontalArrangement = NAV_ROW_HORIZONTAL_ARRANGEMENT
+        modifier = modifier
+            .height(48.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         ArrowNavigationButton(
-            arrow = ARROW_LEFT,
+            arrow = "<",
             enabled = value > 0,
             onClick = onBackClick
         )
@@ -144,7 +103,7 @@ fun BottomListDashBoardNavigationButtons2(
         LazyRow(
             modifier = Modifier
                 .weight(1f)
-                .then(LAZY_ROW_MODIFIER),
+                .fillMaxWidth(),
             state = state
         ) {
             items(
@@ -165,7 +124,7 @@ fun BottomListDashBoardNavigationButtons2(
         }
 
         ArrowNavigationButton(
-            arrow = ARROW_RIGHT,
+            arrow = ">",
             enabled = value < maxPageIndex,
             onClick = onForwardClick
         )
@@ -179,20 +138,19 @@ private fun ArrowNavigationButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val base = if (!enabled) ARROW_BUTTON_DISABLED_MODIFIER else ARROW_BUTTON_ENABLED_MODIFIER
-    val textColor = if (!enabled) COLOR_DISABLED_TEXT else COLOR_ENABLED_TEXT
-    val boxModifier = if (modifier == Modifier) base else modifier.then(base)
-
     Box(
-        modifier = boxModifier
+        modifier = modifier
+            .padding(horizontal = 0.5.dp)
+            .size(48.dp)
+            .background(if (!enabled) Color(0xFF2C2C2C) else Color(0xFFFF9000))
             .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = arrow,
-            color = textColor,
-            fontSize = ARROW_FONT_SIZE,
-            fontWeight = ARROW_FONT_WEIGHT
+            color = if (!enabled) Color.DarkGray else Color.Black,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -204,16 +162,18 @@ private fun PageNumberButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val base = if (isSelected) PAGE_BUTTON_SELECTED_MODIFIER else PAGE_BUTTON_BASE_MODIFIER
-    val boxModifier = if (modifier == Modifier) base else modifier.then(base)
     val pageText = remember(pageNumber) { pageNumber.toString() }
+    val baseModifier = modifier
+        .padding(horizontal = 0.5.dp)
+        .height(48.dp)
+        .background(Color(0xFF252525))
+    val selectedModifier = if (isSelected) baseModifier.border(2.dp, Color(0xFFFF9900)) else baseModifier
 
     Box(
-        modifier = boxModifier
-            .clickable(onClick = onClick),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        modifier = selectedModifier.clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text = pageText, color = COLOR_TEXT_WHITE)
+        Text(text = pageText, color = Color(0xFFCCCCCC))
     }
 }
 

@@ -31,18 +31,8 @@ import com.client.xvideos.l.model.lImageMediaUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
 
 private const val TAG_URL = "url"
-private val LINK_TEXT_COLOR = Color(0xFF8AB4F8)
-private val COLOR_WHITE = Color.White
-private val MAX_DIALOG_HEIGHT = 520.dp
-private const val TITLE_INFO = "Информация"
-private const val LABEL_ALBUM = "Альбом: "
-private const val CONFIRM_OK = "OK"
-private const val ERR_OPEN_LINK = "Не удалось открыть ссылку"
-
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val COLUMN_BASE_MODIFIER = Modifier.heightIn(max = MAX_DIALOG_HEIGHT)
 private val LINK_SPAN_STYLE = SpanStyle(
-    color = LINK_TEXT_COLOR,
+    color = Color(0xFF8AB4F8),
     textDecoration = TextDecoration.Underline
 )
 
@@ -81,27 +71,28 @@ internal fun LPictureInfoDialog(
                 uriHandler.openUri(url)
             } catch (e: Exception) {
                 Timber.w(e, "LPictureInfoDialog: не удалось открыть ссылку: $url")
-                SnackBar.error(ERR_OPEN_LINK)
+                SnackBar.error("Не удалось открыть ссылку")
             }
         }
     }
 
     LavenderDialog(
-        title = TITLE_INFO,
+        title = "Информация",
         onDismiss = onDismiss,
         content = {
             Column(
-                modifier = COLUMN_BASE_MODIFIER
+                modifier = Modifier
+                    .heightIn(max = 520.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
-                    Text(LABEL_ALBUM, color = Theme.DialogLavande.dismissTextColor, fontFamily = Theme.L.fontFamilyKarla)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Альбом: ", color = Theme.DialogLavande.dismissTextColor, fontFamily = Theme.L.fontFamilyKarla)
                     if (albumId != null && onAlbumClickAction != null) {
                         TextButton(onClick = onAlbumClickAction) {
                             Text(albumId.toString())
                         }
                     } else {
-                        Text(item.album ?: "-", color = COLOR_WHITE, fontFamily = Theme.L.fontFamilyKarla)
+                        Text(item.album ?: "-", color = Color.White, fontFamily = Theme.L.fontFamilyKarla)
                     }
                 }
 
@@ -111,7 +102,7 @@ internal fun LPictureInfoDialog(
                 )
             }
         },
-        confirmText = CONFIRM_OK,
+        confirmText = "OK",
         onConfirm = onDismiss,
     )
 }

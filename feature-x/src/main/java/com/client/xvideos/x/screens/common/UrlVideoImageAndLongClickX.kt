@@ -25,10 +25,7 @@ import kotlinx.collections.immutable.persistentListOf
 import timber.log.Timber
 
 private const val NULL_STRING = "null"
-private val VIDEO_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
-private val POSTER_IMAGE_MODIFIER = Modifier.fillMaxWidth()
 private val EMPTY_FALLBACK_URLS = persistentListOf<String>()
-private val HAPTIC_FEEDBACK_CONFIRM = HapticFeedbackType.Confirm
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -86,20 +83,20 @@ fun UrlVideoImageAndLongClickX(
                     """.trimIndent()
                 )
             }
-            haptic.performHapticFeedback(HAPTIC_FEEDBACK_CONFIRM)
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         }
     }
 
     val handleVideoClick: () -> Unit = remember(item.id, haptic) {
         {
             isVideo = !isVideo
-            haptic.performHapticFeedback(HAPTIC_FEEDBACK_CONFIRM)
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         }
     }
 
-    val baseModifier = if (modifier == Modifier) VIDEO_BOX_BASE_MODIFIER else modifier.then(VIDEO_BOX_BASE_MODIFIER)
     Box(
-        modifier = baseModifier
+        modifier = modifier
+            .fillMaxSize()
             .combinedClickable(
                 onDoubleClick = handleDoubleClick,
                 onLongClick = handleLongClick,
@@ -110,12 +107,12 @@ fun UrlVideoImageAndLongClickX(
             UrlVideoLite(
                 url = previewVideoUrl.orEmpty(),
                 posterUrl = item.previewImage,
-                modifier = VIDEO_BOX_BASE_MODIFIER,
+                modifier = Modifier.fillMaxSize(),
                 fallbackUrls = fallbackUrls,
                 onClick = handleVideoClick
             )
         } else {
-            UrlImage(item.previewImage, modifier = POSTER_IMAGE_MODIFIER)
+            UrlImage(item.previewImage, modifier = Modifier.fillMaxWidth())
             overlay()
         }
     }

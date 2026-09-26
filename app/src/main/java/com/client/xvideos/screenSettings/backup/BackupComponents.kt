@@ -68,51 +68,18 @@ import com.client.xvideos.screenSettings.components.SettingsTopBarColor
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.util.formatBytes
 
-private val BACKUP_COMPONENT_CORNER = 8.dp
-private val BACKUP_COMPONENT_SHAPE = RoundedCornerShape(BACKUP_COMPONENT_CORNER)
-private val BACKUP_SELECTOR_HEIGHT = 56.dp
-private val BACKUP_SELECTOR_HORIZONTAL_PADDING = 16.dp
-private val BACKUP_SELECTOR_VERTICAL_PADDING = 6.dp
-private val BACKUP_CONSOLE_HEIGHT = 260.dp
-private val BACKUP_CONSOLE_HORIZONTAL_PADDING = 16.dp
-private val BACKUP_CONSOLE_VERTICAL_PADDING = 8.dp
-private val BACKUP_CONSOLE_INNER_PADDING = 10.dp
-private val BACKUP_CONSOLE_SUMMARY_PADDING = 2.dp
-private val BACKUP_CONSOLE_REGULAR_PADDING = 1.dp
-private val BACKUP_SELECTION_START_PADDING = 72.dp
-private val BACKUP_SELECTION_END_PADDING = 16.dp
-private val BACKUP_SELECTION_TOP_PADDING = 4.dp
-private val BACKUP_SELECTION_BOTTOM_PADDING = 8.dp
-private val BACKUP_SELECTION_SPACER_WIDTH = 8.dp
-private val BACKUP_DIALOG_SPACER_LARGE = 12.dp
-private val BACKUP_DIALOG_SPACER_MEDIUM = 8.dp
-private val BACKUP_DIALOG_SPACER_SMALL = 6.dp
-
+private val BACKUP_COMPONENT_SHAPE = RoundedCornerShape(8.dp)
 private val BACKUP_SELECTOR_BASE_MODIFIER = Modifier
     .fillMaxWidth()
-    .height(BACKUP_SELECTOR_HEIGHT)
-    .padding(horizontal = BACKUP_SELECTOR_HORIZONTAL_PADDING, vertical = BACKUP_SELECTOR_VERTICAL_PADDING)
+    .height(56.dp)
+    .padding(horizontal = 16.dp, vertical = 6.dp)
 private val BACKUP_CONSOLE_BASE_MODIFIER = Modifier
     .fillMaxWidth()
-    .height(BACKUP_CONSOLE_HEIGHT)
-    .padding(horizontal = BACKUP_CONSOLE_HORIZONTAL_PADDING, vertical = BACKUP_CONSOLE_VERTICAL_PADDING)
+    .height(260.dp)
+    .padding(horizontal = 16.dp, vertical = 8.dp)
     .background(SettingsTopBarColor, BACKUP_COMPONENT_SHAPE)
-    .padding(BACKUP_CONSOLE_INNER_PADDING)
-private val BACKUP_SELECTION_ACTIONS_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(
-        start = BACKUP_SELECTION_START_PADDING,
-        end = BACKUP_SELECTION_END_PADDING,
-        top = BACKUP_SELECTION_TOP_PADDING,
-        bottom = BACKUP_SELECTION_BOTTOM_PADDING
-    )
-private val BACKUP_SELECTION_SPACER_MODIFIER = Modifier.width(BACKUP_SELECTION_SPACER_WIDTH)
-private val BACKUP_DIALOG_SPACER_LARGE_MODIFIER = Modifier.height(BACKUP_DIALOG_SPACER_LARGE)
-private val BACKUP_DIALOG_SPACER_MEDIUM_MODIFIER = Modifier.height(BACKUP_DIALOG_SPACER_MEDIUM)
-private val BACKUP_DIALOG_SPACER_SMALL_MODIFIER = Modifier.height(BACKUP_DIALOG_SPACER_SMALL)
-private val DIALOG_FIELD_MODIFIER = Modifier.fillMaxWidth()
+    .padding(10.dp)
 
-private const val TEXT_BACKUP_CONSOLE = "Консоль backup"
 private const val TEXT_CONSOLE_EMPTY = "Пока пусто"
 private const val TEXT_CONSOLE_DEFAULT_SUBTITLE = "Здесь будет процесс восстановления файлов из сети"
 private const val TEXT_CONSOLE_CLEAR = "Очистить"
@@ -125,8 +92,6 @@ private const val TEXT_NO_DATA_FOR_BACKUP = "Нет данных для backup"
 private const val CONSOLE_SUMMARY_PREFIX = "---------"
 private const val CONSOLE_KEYWORD_TOTAL = "итог"
 
-private const val CHEVRON_ROTATION_EXPANDED = 90f
-private const val CHEVRON_ROTATION_COLLAPSED = 0f
 private const val TEXT_COLLAPSE = "Свернуть"
 private const val TEXT_EXPAND = "Развернуть"
 private const val TEXT_NO_CHILD_FOLDERS = "Нет вложенных папок"
@@ -145,11 +110,6 @@ private const val TEXT_RESTORE_PASSWORD_TITLE = "Ввод пароля бэка�
 private const val TEXT_RESTORE_PASSWORD_CONFIRM = "Открыть"
 private const val TEXT_RESTORE_PASSWORD_DESCRIPTION = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого."
 
-private val BACKUP_FLOW_SCREEN_COUNT = BackupFlowScreen.entries.size
-private val XLR_BACKUP_CONTENT_MODE_COUNT = XlrBackupContentMode.entries.size
-private val BACKUP_SECTION_ENTER = expandVertically(expandFrom = Alignment.Top)
-private val BACKUP_SECTION_EXIT = shrinkVertically(shrinkTowards = Alignment.Top)
-private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
 
 @Composable
 internal fun BackupModeSelector(
@@ -177,7 +137,7 @@ internal fun BackupModeSelector(
                 onClick = { onSelected(item) },
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = BACKUP_FLOW_SCREEN_COUNT,
+                    count = BackupFlowScreen.entries.size,
                     baseShape = BACKUP_COMPONENT_SHAPE
                 ),
                 colors = segmentedColors,
@@ -217,7 +177,7 @@ internal fun BackupContentModeSelector(
                 onClick = { onValueChange(mode) },
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = XLR_BACKUP_CONTENT_MODE_COUNT
+                    count = XlrBackupContentMode.entries.size
                 ),
                 label = { Text(backupContentModeTitle(mode)) }
             )
@@ -259,7 +219,7 @@ internal fun BackupConsole(
 
     SettingsListItem(
         icon = R.drawable.hard_drive_2_24,
-        text = TEXT_BACKUP_CONSOLE,
+        text = "Консоль backup",
         subtitle = if (lines.isEmpty()) TEXT_CONSOLE_DEFAULT_SUBTITLE else "${visibleLines.size} строк",
         trailing = {
             TextButton(
@@ -318,7 +278,7 @@ internal fun BackupConsoleLine(
         text = line,
         color = color,
         style = style,
-        modifier = modifier.padding(vertical = if (isSummary) BACKUP_CONSOLE_SUMMARY_PADDING else BACKUP_CONSOLE_REGULAR_PADDING)
+        modifier = modifier.padding(vertical = if (isSummary) 2.dp else 1.dp)
     )
 }
 
@@ -330,7 +290,16 @@ internal fun BackupSelectionActions(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.then(BACKUP_SELECTION_ACTIONS_BASE_MODIFIER),
+        modifier = modifier.then(
+            Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 72.dp,
+                    end = 16.dp,
+                    top = 4.dp,
+                    bottom = 8.dp
+                )
+        ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
@@ -339,7 +308,7 @@ internal fun BackupSelectionActions(
         ) {
             Text(TEXT_SELECT_ALL)
         }
-        Spacer(BACKUP_SELECTION_SPACER_MODIFIER)
+        Spacer(Modifier.width(8.dp))
         TextButton(
             enabled = enabled,
             onClick = onSelectNone
@@ -419,7 +388,7 @@ internal fun BackupSectionGroup(
             text = section.title,
             subtitle = "${section.files} файлов • ${formatBytes(section.bytes)}",
             trailing = {
-                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     TriStateCheckbox(
                         state = state,
                         enabled = enabled,
@@ -434,7 +403,7 @@ internal fun BackupSectionGroup(
                             contentDescription = if (expanded) TEXT_COLLAPSE else TEXT_EXPAND,
                             tint = SettingsAccentColor,
                             modifier = Modifier.graphicsLayer {
-                                rotationZ = if (expanded) CHEVRON_ROTATION_EXPANDED else CHEVRON_ROTATION_COLLAPSED
+                                rotationZ = if (expanded) 90f else 0f
                             }
                         )
                     }
@@ -445,8 +414,8 @@ internal fun BackupSectionGroup(
 
         AnimatedVisibility(
             visible = expanded,
-            enter = BACKUP_SECTION_ENTER,
-            exit = BACKUP_SECTION_EXIT
+            enter = expandVertically(expandFrom = Alignment.Top),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top)
         ) {
             Column {
                 if (children.isEmpty()) {
@@ -517,14 +486,14 @@ internal fun BackupCreatePasswordDialog(
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = BACKUP_DIALOG_SPACER_LARGE_MODIFIER)
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text(TEXT_PASSWORD_LABEL) },
                 singleLine = true,
-                modifier = DIALOG_FIELD_MODIFIER,
+                modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -542,14 +511,14 @@ internal fun BackupCreatePasswordDialog(
                 )
             )
 
-            Spacer(modifier = BACKUP_DIALOG_SPACER_MEDIUM_MODIFIER)
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = passwordConfirm,
                 onValueChange = { passwordConfirm = it },
                 label = { Text(TEXT_PASSWORD_CONFIRM_LABEL) },
                 singleLine = true,
-                modifier = DIALOG_FIELD_MODIFIER,
+                modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passwordConfirmVisible = !passwordConfirmVisible }) {
@@ -568,18 +537,18 @@ internal fun BackupCreatePasswordDialog(
             )
 
             if (password.isNotEmpty() && !isLengthValid) {
-                Spacer(modifier = BACKUP_DIALOG_SPACER_SMALL_MODIFIER)
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = TEXT_PASSWORD_TOO_SHORT,
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
-                    modifier = DIALOG_FIELD_MODIFIER
+                    modifier = Modifier.fillMaxWidth()
                 )
             } else if (passwordConfirm.isNotEmpty() && !isMatching) {
-                Spacer(modifier = BACKUP_DIALOG_SPACER_SMALL_MODIFIER)
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = TEXT_PASSWORDS_DO_NOT_MATCH,
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
-                    modifier = DIALOG_FIELD_MODIFIER
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -618,16 +587,16 @@ internal fun BackupRestorePasswordDialog(
             Text(
                 text = TEXT_RESTORE_PASSWORD_DESCRIPTION,
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
-                modifier = DIALOG_FIELD_MODIFIER
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = BACKUP_DIALOG_SPACER_LARGE_MODIFIER)
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text(TEXT_PASSWORD_LABEL) },
                 singleLine = true,
-                modifier = DIALOG_FIELD_MODIFIER,
+                modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -653,11 +622,11 @@ internal fun BackupRestorePasswordDialog(
             )
 
             if (!errorMessage.isNullOrBlank()) {
-                Spacer(modifier = BACKUP_DIALOG_SPACER_SMALL_MODIFIER)
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = errorMessage,
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
-                    modifier = DIALOG_FIELD_MODIFIER
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

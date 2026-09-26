@@ -28,25 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.l.model.enum.SelectIndex
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val NAV_BAR_HEIGHT = 48.dp
-private val NAV_ITEM_HEIGHT = 46.dp
-private val NAV_ITEM_FONT_SIZE = 16.sp
 
-private const val CD_MENU = "Menu"
-private const val TITLE_MANGA = "Manga"
-private const val TITLE_HENTAI = "Hentai"
-private const val TITLE_PORN = "Porn"
-
-private val ICON_MENU = Icons.Filled.Menu
-private val COLOR_TRANSPARENT = Color.Transparent
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-private val NAV_BAR_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .height(NAV_BAR_HEIGHT)
-private val ROW_BASE_MODIFIER = Modifier.fillMaxSize()
-private val NO_OP_CLICK: () -> Unit = {}
 
 @Composable
 fun ScreenLRootBottomNavigator(
@@ -83,14 +65,17 @@ fun ScreenLRootBottomNavigator(
     }
 
     val navBarBase = remember(Theme.L.grey4) {
-        NAV_BAR_BASE_MODIFIER.background(Theme.L.grey4)
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(Theme.L.grey4)
     }
     val boxModifier = if (modifier == Modifier) navBarBase else modifier.then(navBarBase)
 
     val itemTextStyle = remember(Theme.L.textColor, Theme.L.fontFamilyKarla) {
         androidx.compose.ui.text.TextStyle(
             color = Theme.L.textColor,
-            fontSize = NAV_ITEM_FONT_SIZE,
+            fontSize = 16.sp,
             fontFamily = Theme.L.fontFamilyKarla
         )
     }
@@ -99,67 +84,67 @@ fun ScreenLRootBottomNavigator(
         modifier = boxModifier,
     ) {
         Row(
-            modifier = ROW_BASE_MODIFIER,
-            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
-            horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             val itemBoxBase = Modifier
-                .height(NAV_ITEM_HEIGHT)
+                .height(46.dp)
                 .weight(1f)
 
             Box(
                 modifier = itemBoxBase
-                    .background(if (selectIndex == SelectIndex.Default) colorSelect else COLOR_TRANSPARENT)
+                    .background(if (selectIndex == SelectIndex.Default) colorSelect else Color.Transparent)
                     .combinedClickable(
                         onClick = onDefaultClick,
-                        onLongClick = NO_OP_CLICK
+                        onLongClick = {}
                     ),
-                contentAlignment = BOX_ALIGNMENT_CENTER
+                contentAlignment = Alignment.Center
             ) {
-                Icon(ICON_MENU, contentDescription = CD_MENU, tint = Theme.L.textColor)
+                Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Theme.L.textColor)
             }
             VerticalDivider()
             Box(
                 modifier = itemBoxBase
-                    .background(if (selectIndex == SelectIndex.Manga) colorSelect else COLOR_TRANSPARENT)
+                    .background(if (selectIndex == SelectIndex.Manga) colorSelect else Color.Transparent)
                     .combinedClickable(
-                        onClick = NO_OP_CLICK,
+                        onClick = {},
                         onLongClick = onMangaLongClick
                     ),
-                contentAlignment = BOX_ALIGNMENT_CENTER
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    TITLE_MANGA,
+                    "Manga",
                     style = itemTextStyle
                 )
             }
             VerticalDivider()
             Box(
                 modifier = itemBoxBase
-                    .background(if (selectIndex == SelectIndex.Hentai) colorSelect else COLOR_TRANSPARENT)
+                    .background(if (selectIndex == SelectIndex.Hentai) colorSelect else Color.Transparent)
                     .combinedClickable(
-                        onClick = NO_OP_CLICK,
+                        onClick = {},
                         onLongClick = onHentaiLongClick
                     ),
-                contentAlignment = BOX_ALIGNMENT_CENTER
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    TITLE_HENTAI,
+                    "Hentai",
                     style = itemTextStyle
                 )
             }
             VerticalDivider()
             Box(
                 modifier = itemBoxBase
-                    .background(if (selectIndex == SelectIndex.Porn) colorSelect else COLOR_TRANSPARENT)
+                    .background(if (selectIndex == SelectIndex.Porn) colorSelect else Color.Transparent)
                     .combinedClickable(
-                        onClick = NO_OP_CLICK,
+                        onClick = {},
                         onLongClick = onPornLongClick
                     ),
-                contentAlignment = BOX_ALIGNMENT_CENTER
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    TITLE_PORN,
+                    "Porn",
                     style = itemTextStyle
                 )
             }

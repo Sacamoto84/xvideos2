@@ -58,68 +58,10 @@ internal val SettingsDividerColor = Color(0x2E79747E)
 internal val WhatsAppGreen = SettingsAccentColor
 internal val settingsCardShape = RoundedCornerShape(24.dp)
 
-private val SWITCH_UNCHECKED_THUMB = Color(0xFF938F99)
-private val SWITCH_UNCHECKED_TRACK = Color(0xFF48464F)
-private val SWITCH_UNCHECKED_BORDER = Color(0xFF79747E)
-
-private val SETTINGS_ICON_SIZE = 24.dp
-private val SETTINGS_ITEM_MIN_HEIGHT = 60.dp
-private val SETTINGS_DIVIDER_THICKNESS = 0.5.dp
-private val SETTINGS_DIVIDER2_HEIGHT = 2.dp
-private val SETTINGS_GROUP_HORIZONTAL_PADDING = 16.dp
-private val SETTINGS_SECTION_TITLE_START_PADDING = 24.dp
-private val SETTINGS_SECTION_TITLE_TOP_PADDING = 20.dp
-private val SETTINGS_SECTION_TITLE_BOTTOM_PADDING = 8.dp
-private val SETTINGS_SECTION_TITLE_END_PADDING = 24.dp
-private val SETTINGS_SECTION_TITLE_FONT_SIZE = 14.sp
-private val SETTINGS_SECTION_TITLE_LETTER_SPACING = 0.1.sp
-private val SETTINGS_DEFAULT_START_INDENT = 56.dp
-private val SETTINGS_ROW_TITLE_FONT_SIZE = 16.sp
-private val SETTINGS_ROW_TITLE_LINE_HEIGHT = 22.sp
-private val SETTINGS_ROW_SUBTITLE_FONT_SIZE = 14.sp
-private val SETTINGS_ROW_SUBTITLE_LINE_HEIGHT = 18.sp
-private val SETTINGS_ITEM_HORIZONTAL_PADDING = 16.dp
-private val SETTINGS_ITEM_VERTICAL_PADDING = 13.dp
-private val SETTINGS_ITEM_ICON_SPACER_WIDTH = 16.dp
-private val SETTINGS_ITEM_SUBTITLE_SPACER_HEIGHT = 3.dp
-private val SETTINGS_ITEM_TRAILING_SPACER_WIDTH = 12.dp
-private val SETTINGS_SLIDER_WITH_ICON_START_PADDING = 56.dp
-private val SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING = 16.dp
-private val SETTINGS_SLIDER_END_PADDING = 16.dp
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.Center
-private val ICON_BOX_ALIGNMENT = Alignment.Center
-private val DIVIDER2_MODIFIER = Modifier
-    .fillMaxWidth()
-    .height(SETTINGS_DIVIDER2_HEIGHT)
-    .background(SettingsScreenBackground)
-private val SLIDER_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val ICON_SIZE_MODIFIER = Modifier.size(SETTINGS_ICON_SIZE)
-
-private val FONT_WEIGHT_NORMAL = FontWeight.Normal
-private val FONT_WEIGHT_MEDIUM = FontWeight.Medium
-private val COLOR_TRANSPARENT = Color.Transparent
-private val ITEM_ICON_SPACER_MODIFIER = Modifier.width(SETTINGS_ITEM_ICON_SPACER_WIDTH)
-private val ITEM_SUBTITLE_SPACER_MODIFIER = Modifier.height(SETTINGS_ITEM_SUBTITLE_SPACER_HEIGHT)
-private val ITEM_TRAILING_SPACER_MODIFIER = Modifier.width(SETTINGS_ITEM_TRAILING_SPACER_WIDTH)
-
-private val SETTINGS_DIVIDER_CONTAINER_IN_GROUP = Modifier
-    .fillMaxWidth()
-    .background(SettingsCardColor)
-private val SETTINGS_DIVIDER_CONTAINER_STANDALONE = Modifier
-    .fillMaxWidth()
-    .padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING)
-    .background(SettingsCardColor)
-private val SETTINGS_DEFAULT_DIVIDER_MODIFIER = Modifier.padding(start = SETTINGS_DEFAULT_START_INDENT, end = SETTINGS_GROUP_HORIZONTAL_PADDING)
-
 private val SETTINGS_ITEM_CORE_MODIFIER = Modifier
     .background(SettingsCardColor)
-    .heightIn(min = SETTINGS_ITEM_MIN_HEIGHT)
-    .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING, vertical = SETTINGS_ITEM_VERTICAL_PADDING)
-
-private val SETTINGS_ITEM_STANDALONE_SHAPE_MODIFIER = Modifier
-    .padding(horizontal = SETTINGS_ITEM_HORIZONTAL_PADDING)
-    .clip(settingsCardShape)
+    .heightIn(min = 60.dp)
+    .padding(horizontal = 16.dp, vertical = 13.dp)
 
 private val SETTINGS_ITEM_IN_GROUP_BASE_MODIFIER = Modifier
     .fillMaxWidth()
@@ -127,26 +69,20 @@ private val SETTINGS_ITEM_IN_GROUP_BASE_MODIFIER = Modifier
 
 private val SETTINGS_ITEM_STANDALONE_BASE_MODIFIER = Modifier
     .fillMaxWidth()
-    .then(SETTINGS_ITEM_STANDALONE_SHAPE_MODIFIER)
+    .padding(horizontal = 16.dp)
+    .clip(settingsCardShape)
     .then(SETTINGS_ITEM_CORE_MODIFIER)
 
-private val SLIDER_WITH_ICON_MODIFIER = Modifier.padding(
-    start = SETTINGS_SLIDER_WITH_ICON_START_PADDING,
-    end = SETTINGS_SLIDER_END_PADDING
-)
-private val SLIDER_WITHOUT_ICON_MODIFIER = Modifier.padding(
-    start = SETTINGS_SLIDER_WITHOUT_ICON_START_PADDING,
-    end = SETTINGS_SLIDER_END_PADDING
-)
 private val SETTINGS_SECTION_TITLE_BASE_MODIFIER = Modifier.padding(
-    start = SETTINGS_SECTION_TITLE_START_PADDING,
-    top = SETTINGS_SECTION_TITLE_TOP_PADDING,
-    bottom = SETTINGS_SECTION_TITLE_BOTTOM_PADDING,
-    end = SETTINGS_SECTION_TITLE_END_PADDING
+    start = 24.dp,
+    top = 20.dp,
+    bottom = 8.dp,
+    end = 24.dp
 )
+
 private val SETTINGS_GROUP_BASE_MODIFIER = Modifier
     .fillMaxWidth()
-    .padding(horizontal = SETTINGS_GROUP_HORIZONTAL_PADDING)
+    .padding(horizontal = 16.dp)
     .clip(settingsCardShape)
     .background(SettingsCardColor)
 
@@ -160,9 +96,9 @@ fun SettingsSectionTitle(
     val style = remember(Theme.L.Type.caption) {
         Theme.L.Type.caption.copy(
             color = SettingsAccentColor,
-            fontSize = SETTINGS_SECTION_TITLE_FONT_SIZE,
-            fontWeight = FONT_WEIGHT_MEDIUM,
-            letterSpacing = SETTINGS_SECTION_TITLE_LETTER_SPACING
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 0.1.sp
         )
     }
     val titleModifier = if (modifier == Modifier) {
@@ -185,20 +121,25 @@ private fun SettingsSectionTitlePreview() = SettingsPreview {
 }
 
 @Composable
-fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = SETTINGS_DEFAULT_START_INDENT) {
+fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
     val inGroup = LocalSettingsInGroup.current
-    val containerModifier = if (inGroup) SETTINGS_DIVIDER_CONTAINER_IN_GROUP else SETTINGS_DIVIDER_CONTAINER_STANDALONE
-    val dividerModifier = if (startIndent == SETTINGS_DEFAULT_START_INDENT) {
-        SETTINGS_DEFAULT_DIVIDER_MODIFIER
+    val containerModifier = if (inGroup) {
+        Modifier
+            .fillMaxWidth()
+            .background(SettingsCardColor)
     } else {
-        Modifier.padding(start = startIndent, end = SETTINGS_GROUP_HORIZONTAL_PADDING)
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(SettingsCardColor)
     }
+    val dividerModifier = Modifier.padding(start = startIndent, end = 16.dp)
     Box(
         modifier = containerModifier
     ) {
         HorizontalDivider(
             modifier = dividerModifier,
-            thickness = SETTINGS_DIVIDER_THICKNESS,
+            thickness = 0.5.dp,
             color = SettingsDividerColor
         )
     }
@@ -206,7 +147,12 @@ fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = SETTINGS_DEFAULT_
 
 @Composable
 fun SettingsDivider2() {
-    Spacer(DIVIDER2_MODIFIER)
+    Spacer(
+        Modifier
+            .fillMaxWidth()
+            .height(2.dp)
+            .background(SettingsScreenBackground)
+    )
 }
 
 @Composable
@@ -279,31 +225,31 @@ fun SettingsListItem(
     val titleStyle = remember(Theme.L.Type.rowTitle) {
         Theme.L.Type.rowTitle.copy(
             color = SettingsRowTextPrimary,
-            fontSize = SETTINGS_ROW_TITLE_FONT_SIZE,
-            fontWeight = FONT_WEIGHT_NORMAL,
-            lineHeight = SETTINGS_ROW_TITLE_LINE_HEIGHT
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 22.sp
         )
     }
     val subtitleStyle = remember(Theme.L.Type.rowSubtitle) {
         Theme.L.Type.rowSubtitle.copy(
             color = SettingsRowTextSecondary,
-            fontSize = SETTINGS_ROW_SUBTITLE_FONT_SIZE,
-            fontWeight = FONT_WEIGHT_NORMAL,
-            lineHeight = SETTINGS_ROW_SUBTITLE_LINE_HEIGHT
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 18.sp
         )
     }
 
     Row(
         modifier = rowModifier,
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+        verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != 0) {
             SettingsIcon(icon)
-            Spacer(ITEM_ICON_SPACER_MODIFIER)
+            Spacer(Modifier.width(16.dp))
         }
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = text,
@@ -311,7 +257,7 @@ fun SettingsListItem(
                 style = titleStyle
             )
             if (subtitle != null) {
-                Spacer(ITEM_SUBTITLE_SPACER_MODIFIER)
+                Spacer(Modifier.height(3.dp))
                 Text(
                     text = subtitle,
                     color = SettingsRowTextSecondary,
@@ -320,7 +266,7 @@ fun SettingsListItem(
             }
         }
         if (trailing != null) {
-            Spacer(ITEM_TRAILING_SPACER_MODIFIER)
+            Spacer(Modifier.width(12.dp))
             trailing()
         }
     }
@@ -339,14 +285,14 @@ private fun SettingsListItemPreview() = SettingsPreview {
 @Composable
 fun SettingsIcon(@DrawableRes icon: Int) {
     Box(
-        modifier = ICON_SIZE_MODIFIER,
-        contentAlignment = ICON_BOX_ALIGNMENT
+        modifier = Modifier.size(24.dp),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
             tint = SettingsRowTextSecondary,
-            modifier = ICON_SIZE_MODIFIER
+            modifier = Modifier.size(24.dp)
         )
     }
 }
@@ -395,10 +341,10 @@ fun SettingsSwitchRow(
     val switchColors = SwitchDefaults.colors(
         checkedThumbColor = SettingsOnAccentColor,
         checkedTrackColor = SettingsAccentColor,
-        checkedBorderColor = COLOR_TRANSPARENT,
-        uncheckedThumbColor = SWITCH_UNCHECKED_THUMB,
-        uncheckedTrackColor = SWITCH_UNCHECKED_TRACK,
-        uncheckedBorderColor = SWITCH_UNCHECKED_BORDER
+        checkedBorderColor = Color.Transparent,
+        uncheckedThumbColor = Color(0xFF938F99),
+        uncheckedTrackColor = Color(0xFF48464F),
+        uncheckedBorderColor = Color(0xFF79747E)
     )
 
     val trailingContent: @Composable () -> Unit = remember(value, enabled, onValueChange, switchColors) {
@@ -462,7 +408,7 @@ fun SettingsButtonRowWithDialog(
     val trailingContent: @Composable () -> Unit = remember(onOpen, value) {
         {
             TextButton(onClick = onOpen) {
-                Text(value, color = SettingsAccentColor, fontWeight = FONT_WEIGHT_MEDIUM)
+                Text(value, color = SettingsAccentColor, fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -518,13 +464,17 @@ fun IntSliderSetting(
     val valueRange = remember(min, max) { min.toFloat()..max.toFloat() }
     val subtitleText = remember(currentValue, suffix) { "$currentValue$suffix" }
 
-    Column(modifier = SLIDER_COLUMN_BASE_MODIFIER) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         SettingsListItem(
             icon = icon,
             text = text,
             subtitle = subtitleText
         )
-        val sliderModifier = if (icon != 0) SLIDER_WITH_ICON_MODIFIER else SLIDER_WITHOUT_ICON_MODIFIER
+        val sliderModifier = if (icon != 0) {
+            Modifier.padding(start = 56.dp, end = 16.dp)
+        } else {
+            Modifier.padding(start = 16.dp, end = 16.dp)
+        }
         val sliderColors = SliderDefaults.colors(
             thumbColor = SettingsAccentColor,
             activeTrackColor = SettingsAccentColor,

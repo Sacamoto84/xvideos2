@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,57 +20,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val PORNOSTAR_TAG_CORNER = 6.dp
-private val PORNOSTAR_TAG_SHAPE = RoundedCornerShape(PORNOSTAR_TAG_CORNER)
-private val COUNT_BADGE_CORNER = 4.dp
-private val COUNT_BADGE_SHAPE = RoundedCornerShape(COUNT_BADGE_CORNER)
-private val COUNT_BADGE_BG = Color(0x33000000)
-
-private val TAG_HEIGHT = 28.dp
-private val TAG_PADDING_HORIZONTAL = 3.dp
-private val TAG_PADDING_VERTICAL = 2.dp
-private val TEXT_PADDING_START = 8.dp
-private val TEXT_PADDING_END_WITH_COUNT = 4.dp
-private val TEXT_PADDING_END_NO_COUNT = 8.dp
-private val BADGE_HEIGHT = 20.dp
-private val BADGE_PADDING_END = 4.dp
-private val BADGE_PADDING_HORIZONTAL = 5.dp
-
-private val TEXT_FONT_SIZE = 13.sp
-private val COUNT_FONT_SIZE = 11.sp
-private val COLOR_WHITE = Color.White
-
-private val PORNOSTAR_TEXT_STYLE = TextStyle(
-    color = COLOR_WHITE,
-    fontSize = TEXT_FONT_SIZE,
-    fontWeight = FontWeight.Medium
-)
-
-private val COUNT_TEXT_STYLE = TextStyle(
-    color = COLOR_WHITE,
-    fontSize = COUNT_FONT_SIZE,
-    fontFamily = FontFamily.SansSerif,
-    textAlign = TextAlign.Center,
-    fontWeight = FontWeight.SemiBold
-)
-
-private val TAG_BASE_MODIFIER = Modifier
-    .padding(horizontal = TAG_PADDING_HORIZONTAL, vertical = TAG_PADDING_VERTICAL)
-    .height(TAG_HEIGHT)
-    .clip(PORNOSTAR_TAG_SHAPE)
-
-private val COUNT_BADGE_MODIFIER = Modifier
-    .padding(end = BADGE_PADDING_END)
-    .height(BADGE_HEIGHT)
-    .clip(COUNT_BADGE_SHAPE)
-    .background(COUNT_BADGE_BG)
-    .padding(horizontal = BADGE_PADDING_HORIZONTAL)
-
-private val TEXT_MODIFIER_WITH_COUNT = Modifier.padding(start = TEXT_PADDING_START, end = TEXT_PADDING_END_WITH_COUNT)
-private val TEXT_MODIFIER_NO_COUNT = Modifier.padding(start = TEXT_PADDING_START, end = TEXT_PADDING_END_NO_COUNT)
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val BADGE_BOX_ALIGNMENT = Alignment.Center
 
 /**
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
@@ -85,29 +33,46 @@ fun ScreenItemTagsModelPornostars(
     modifier: Modifier = Modifier
 ) {
     val hasCount = count.isNotBlank()
-    val textModifier = if (hasCount) TEXT_MODIFIER_WITH_COUNT else TEXT_MODIFIER_NO_COUNT
-    val styledBase = remember(color) { TAG_BASE_MODIFIER.background(color) }
-    val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
+    val baseModifier = modifier
+        .padding(horizontal = 3.dp, vertical = 2.dp)
+        .height(28.dp)
+        .clip(RoundedCornerShape(6.dp))
+        .background(color)
     val rowModifier = if (onClick != null) baseModifier.clickable(onClick = onClick) else baseModifier
 
     Row(
         modifier = rowModifier,
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = text,
-            modifier = textModifier,
-            style = PORNOSTAR_TEXT_STYLE
+            modifier = Modifier.padding(start = 8.dp, end = if (hasCount) 4.dp else 8.dp),
+            style = TextStyle(
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
         )
 
         if (hasCount) {
             Box(
-                modifier = COUNT_BADGE_MODIFIER,
-                contentAlignment = BADGE_BOX_ALIGNMENT
+                modifier = Modifier
+                    .padding(end = 4.dp)
+                    .height(20.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(0x33000000))
+                    .padding(horizontal = 5.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = count,
-                    style = COUNT_TEXT_STYLE
+                    style = TextStyle(
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.SansSerif,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 )
             }
         }
@@ -135,4 +100,3 @@ private fun ScreenItemTagsModelPornostarsWithoutCountPreview() {
         onClick = {}
     )
 }
-

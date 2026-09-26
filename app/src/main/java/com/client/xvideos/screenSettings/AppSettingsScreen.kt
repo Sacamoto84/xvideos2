@@ -243,11 +243,12 @@ private fun AppSettingsScreenContent(
 
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = SETTINGS_WINDOW_INSETS,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = SettingsScreenBackground
     ) { paddingValues ->
         AppSettingsScreenBody(
-            modifier = FULL_SIZE_MODIFIER
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .verticalScroll(scrollState),
             topCutout = topCutout,
@@ -266,24 +267,10 @@ private fun AppSettingsScreenContent(
     }
 }
 
-private val SETTINGS_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
-
-private const val SECTION_TITLE_MAIN = "Основное"
-private const val SECTION_TITLE_SECTIONS = "Разделы"
-private val SCREEN_TITLE_FONT_SIZE = 24.sp
-private val SCREEN_TITLE_VERTICAL_PADDING = 12.dp
-private val SCREEN_TITLE_HORIZONTAL_PADDING = 16.dp
-private val SCREEN_BOTTOM_PADDING = 24.dp
-private val SECTION_SPACER_HEIGHT = 16.dp
-private val DETAIL_PAGE_TOP_SPACER_HEIGHT = 4.dp
-
-private val SECTION_SPACER_MODIFIER = Modifier.height(SECTION_SPACER_HEIGHT)
-private val DETAIL_PAGE_TOP_SPACER_MODIFIER = Modifier.height(DETAIL_PAGE_TOP_SPACER_HEIGHT)
 private val BODY_COLUMN_BASE_MODIFIER = Modifier
     .background(SettingsScreenBackground)
     .fillMaxWidth()
-    .padding(bottom = SCREEN_BOTTOM_PADDING)
+    .padding(bottom = 24.dp)
 
 @Composable
 private fun AppSettingsScreenBody(
@@ -303,7 +290,7 @@ private fun AppSettingsScreenBody(
 ) {
     val titleStyle = remember(Theme.L.Type.screenTitle) {
         Theme.L.Type.screenTitle.copy(
-            fontSize = SCREEN_TITLE_FONT_SIZE,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = SettingsRowTextPrimary,
             textAlign = TextAlign.Start
@@ -314,10 +301,10 @@ private fun AppSettingsScreenBody(
         Modifier
             .fillMaxWidth()
             .padding(
-                top = topCutout + SCREEN_TITLE_VERTICAL_PADDING,
-                bottom = SCREEN_TITLE_VERTICAL_PADDING,
-                start = SCREEN_TITLE_HORIZONTAL_PADDING,
-                end = SCREEN_TITLE_HORIZONTAL_PADDING
+                top = topCutout + 12.dp,
+                bottom = 12.dp,
+                start = 16.dp,
+                end = 16.dp
             )
     }
 
@@ -333,7 +320,7 @@ private fun AppSettingsScreenBody(
         )
 
         if (currentPage == SettingsPage.Main) {
-            SettingsSectionTitle(SECTION_TITLE_MAIN)
+            SettingsSectionTitle("Основное")
 
             SettingsGroup {
                 SettingsPage.primaryPages.forEachIndexed { index, page ->
@@ -347,8 +334,8 @@ private fun AppSettingsScreenBody(
                 }
             }
 
-            Spacer(SECTION_SPACER_MODIFIER)
-            SettingsSectionTitle(SECTION_TITLE_SECTIONS)
+            Spacer(Modifier.height(16.dp))
+            SettingsSectionTitle("Разделы")
             SettingsGroup {
                 SettingsPage.contentPages.forEachIndexed { index, page ->
                     key(page) {
@@ -408,7 +395,7 @@ private fun SettingsDetailPage(
     val nichesCacheSize = params.data.savedRed?.nichesCache?.list?.size ?: 0
     val nichesCacheLastModifiedHour = params.data.savedRed?.nichesCache?.lastModifiedHour ?: 0L
 
-    Spacer(DETAIL_PAGE_TOP_SPACER_MODIFIER)
+    Spacer(Modifier.height(4.dp))
     when (params.currentPage) {
         SettingsPage.Main -> Unit
         SettingsPage.Privacy -> AppLockSettingsSection(modifier = modifier)

@@ -60,114 +60,17 @@ import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private val CONNECTION_CARD_SHAPE = RoundedCornerShape(24.dp)
-private val NETWORK_INDICATOR_SHAPE = RoundedCornerShape(5.dp)
-private val URL_BOX_SHAPE = RoundedCornerShape(12.dp)
-private val QR_BOX_SHAPE = RoundedCornerShape(18.dp)
 private val ACTION_BUTTON_SHAPE = RoundedCornerShape(12.dp)
-private val NETWORK_ACTIVE_COLOR = Color(0xFF00E676)
-private val URL_BOX_BG_COLOR = Color(0xFF25232A)
-private val ERROR_TEXT_COLOR = Color(0xFFFF5252)
-private val COPY_BUTTON_TEXT_COLOR = Color(0xFF2E2961)
-private val COLOR_WHITE = Color.White
-private val QR_BOX_SIZE = 210.dp
-
-private val ICON_COPY = Icons.Default.ContentCopy
-private val ICON_SHARE = Icons.Default.Share
-private val FONT_WEIGHT_MEDIUM = FontWeight.Medium
-private val FONT_WEIGHT_BOLD = FontWeight.Bold
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val TEXT_ALIGN_CENTER = TextAlign.Center
-
-private val ERROR_SPACER_HEIGHT = 8.dp
-private val SECTION_SPACER_HEIGHT = 16.dp
-private val ERROR_HORIZONTAL_PADDING = 24.dp
-private val ERROR_FONT_SIZE = 13.sp
-private val CONNECTION_CARD_HORIZONTAL_PADDING = 16.dp
-private val CONNECTION_CARD_INNER_PADDING = 20.dp
-private val NETWORK_INDICATOR_SIZE = 10.dp
-private val NETWORK_TEXT_FONT_SIZE = 13.sp
-private val NETWORK_SPACER_WIDTH = 8.dp
-private val NETWORK_BOTTOM_SPACER_HEIGHT = 14.dp
-private val URL_BOX_HORIZONTAL_PADDING = 16.dp
-private val URL_BOX_VERTICAL_PADDING = 10.dp
-private val URL_TEXT_FONT_SIZE = 17.sp
-private val QR_PADDING = 12.dp
-private val QR_BOTTOM_SPACER_HEIGHT = 12.dp
-private val QR_HINT_FONT_SIZE = 12.sp
-private val ACTION_BUTTONS_SPACING = 10.dp
-private val ACTION_ICON_SIZE = 16.dp
-private val ACTION_ICON_SPACER_WIDTH = 6.dp
-private val ACTION_BUTTON_FONT_SIZE = 13.sp
-private val FOOTER_HINT_FONT_SIZE = 12.sp
-private val FOOTER_HINT_LINE_HEIGHT = 16.sp
-
-private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val ERROR_SPACER_MODIFIER = Modifier.height(ERROR_SPACER_HEIGHT)
-private val ERROR_TEXT_MODIFIER = Modifier.padding(horizontal = ERROR_HORIZONTAL_PADDING)
-private val SECTION_SPACER_MODIFIER = Modifier.height(SECTION_SPACER_HEIGHT)
-
-private val CONNECTION_CARD_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(horizontal = CONNECTION_CARD_HORIZONTAL_PADDING)
-    .clip(CONNECTION_CARD_SHAPE)
-    .background(SettingsCardColor)
-    .padding(CONNECTION_CARD_INNER_PADDING)
-
-private val NETWORK_STATUS_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val NETWORK_STATUS_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.Center
-private val NETWORK_INDICATOR_BASE_MODIFIER = Modifier
-    .size(NETWORK_INDICATOR_SIZE)
-    .clip(NETWORK_INDICATOR_SHAPE)
-    .background(NETWORK_ACTIVE_COLOR)
-private val NETWORK_SPACER_MODIFIER = Modifier.width(NETWORK_SPACER_WIDTH)
-private val NETWORK_BOTTOM_SPACER_MODIFIER = Modifier.height(NETWORK_BOTTOM_SPACER_HEIGHT)
-
-private val URL_BOX_BASE_MODIFIER = Modifier
-    .clip(URL_BOX_SHAPE)
-    .background(URL_BOX_BG_COLOR)
-private val URL_BOX_PADDING_MODIFIER = Modifier
-    .padding(horizontal = URL_BOX_HORIZONTAL_PADDING, vertical = URL_BOX_VERTICAL_PADDING)
-
-private val QR_BOX_BASE_MODIFIER = Modifier
-    .size(QR_BOX_SIZE)
-    .clip(QR_BOX_SHAPE)
-    .background(COLOR_WHITE)
-    .padding(QR_PADDING)
-private val QR_IMAGE_MODIFIER = Modifier.fillMaxSize()
-private val QR_BOTTOM_SPACER_MODIFIER = Modifier.height(QR_BOTTOM_SPACER_HEIGHT)
-
-private val ACTION_BUTTONS_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val ACTION_BUTTONS_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(ACTION_BUTTONS_SPACING)
-private val ACTION_ICON_MODIFIER = Modifier.size(ACTION_ICON_SIZE)
-private val ACTION_ICON_SPACER_MODIFIER = Modifier.width(ACTION_ICON_SPACER_WIDTH)
-
-private const val TITLE_WEBSERVER = "Веб-сервер Wi-Fi"
-private const val TITLE_CONNECTION = "Подключение"
-private const val TEXT_STREAM_TO_PC = "Трансляция на ПК"
-private const val TEXT_KEEP_AWAKE = "Не усыплять Wi-Fi и процессор"
-private const val TEXT_KEEP_AWAKE_SUBTITLE = "Стабильный стриминг при заблокированном экране"
-private const val TEXT_SERVER_STOPPED = "Сервер выключен"
+private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
+private const val ICON_MEMORY = R.drawable.memory_24
 private const val TEXT_COPY = "Скопировать"
 private const val TEXT_SHARE = "Поделиться"
-private const val TEXT_SHARE_CHOOSER = "Поделиться ссылкой"
-private const val SERVER_RUNNING_PREFIX = "Работает: "
-private const val ERROR_TEXT_PREFIX = "Ошибка: "
-private const val NETWORK_NAME_PREFIX = "Сеть: "
-private const val QR_CD = "QR-код для подключения"
-private const val QR_HINT = "Отсканируйте камерой на планшете/ПК"
-private const val FOOTER_HINT_TEXT = "Компьютер или планшет должен быть подключен к этой же сети Wi-Fi. В браузере будет доступен просмотр видео и скачивание файлов."
 private const val MSG_CONNECT_WIFI = "Подключитесь к Wi-Fi или включите точку доступа"
 private const val MSG_SERVER_STARTING = "Запуск веб-сервера..."
 private const val MSG_SERVER_STOPPED = "Веб-сервер остановлен"
 private const val MSG_COPIED_TO_CLIPBOARD = "Ссылка скопирована в буфер"
+private const val TEXT_SHARE_CHOOSER = "Поделиться ссылкой"
 
-private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
-private const val ICON_MEMORY = R.drawable.memory_24
-
-private val URL_BOX_FULL_MODIFIER = URL_BOX_BASE_MODIFIER.then(URL_BOX_PADDING_MODIFIER)
 
 @Suppress("DEPRECATION")
 @Composable
@@ -221,16 +124,16 @@ internal fun WebServerSettingsSection(
     }
 
     val serverSubtitle = remember(isRunning, serverUrl) {
-        if (isRunning) "$SERVER_RUNNING_PREFIX$serverUrl" else TEXT_SERVER_STOPPED
+        if (isRunning) "Работает: $serverUrl" else "Сервер выключен"
     }
 
-    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
-        SettingsSectionTitle(TITLE_WEBSERVER)
+    Column(modifier = if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth()) {
+        SettingsSectionTitle("Веб-сервер Wi-Fi")
 
         SettingsGroup {
             SettingsSwitchRow(
                 icon = ICON_HARD_DRIVE,
-                text = TEXT_STREAM_TO_PC,
+                text = "Трансляция на ПК",
                 subtitle = serverSubtitle,
                 value = isRunning,
                 onValueChange = onToggleServer
@@ -240,27 +143,27 @@ internal fun WebServerSettingsSection(
 
             SettingsSwitchRow(
                 icon = ICON_MEMORY,
-                text = TEXT_KEEP_AWAKE,
-                subtitle = TEXT_KEEP_AWAKE_SUBTITLE,
+                text = "Не усыплять Wi-Fi и процессор",
+                subtitle = "Стабильный стриминг при заблокированном экране",
                 value = keepAwake,
                 onValueChange = onKeepAwakeChange
             )
         }
 
         if (lastError != null) {
-            Spacer(ERROR_SPACER_MODIFIER)
+            Spacer(Modifier.height(8.dp))
             Text(
-                text = "$ERROR_TEXT_PREFIX$lastError",
-                color = ERROR_TEXT_COLOR,
-                fontSize = ERROR_FONT_SIZE,
-                modifier = ERROR_TEXT_MODIFIER
+                text = "Ошибка: $lastError",
+                color = Color(0xFFFF5252),
+                fontSize = 13.sp,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
         }
 
         val currentServerUrl = serverUrl
         if (isRunning && currentServerUrl != null) {
-            Spacer(SECTION_SPACER_MODIFIER)
-            SettingsSectionTitle(TITLE_CONNECTION)
+            Spacer(Modifier.height(16.dp))
+            SettingsSectionTitle("Подключение")
             WebServerConnectionCard(
                 serverUrl = currentServerUrl,
                 networkName = networkName,
@@ -287,68 +190,85 @@ private fun WebServerConnectionCard(
         }
     }
 
-    val networkLabel = remember(networkName) { "$NETWORK_NAME_PREFIX$networkName" }
+    val networkLabel = remember(networkName) { "Сеть: $networkName" }
+
+    val cardBaseModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp)
+        .clip(RoundedCornerShape(24.dp))
+        .background(SettingsCardColor)
+        .padding(20.dp)
 
     Column(
-        modifier = if (modifier == Modifier) CONNECTION_CARD_BASE_MODIFIER else modifier.then(CONNECTION_CARD_BASE_MODIFIER),
-        horizontalAlignment = ALIGN_CENTER_HORIZONTALLY
+        modifier = if (modifier == Modifier) cardBaseModifier else modifier.then(cardBaseModifier),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Статус сети
         Row(
-            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
-            horizontalArrangement = NETWORK_STATUS_ROW_HORIZONTAL_ARRANGEMENT,
-            modifier = NETWORK_STATUS_ROW_BASE_MODIFIER
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Box(
-                modifier = NETWORK_INDICATOR_BASE_MODIFIER
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(Color(0xFF00E676))
             )
-            Spacer(NETWORK_SPACER_MODIFIER)
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = networkLabel,
                 color = SettingsRowTextSecondary,
-                fontSize = NETWORK_TEXT_FONT_SIZE
+                fontSize = 13.sp
             )
         }
 
-        Spacer(NETWORK_BOTTOM_SPACER_MODIFIER)
+        Spacer(Modifier.height(14.dp))
 
         // Кликабельный URL
         Box(
-            modifier = URL_BOX_FULL_MODIFIER
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFF25232A))
+                .padding(horizontal = 16.dp, vertical = 10.dp)
                 .clickable(onClick = onCopyUrl)
         ) {
             Text(
                 text = serverUrl,
                 color = SettingsAccentColor,
-                fontSize = URL_TEXT_FONT_SIZE,
-                fontWeight = FONT_WEIGHT_BOLD,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace
             )
         }
 
-        Spacer(SECTION_SPACER_MODIFIER)
+        Spacer(Modifier.height(16.dp))
 
         // QR-код
         if (qrBitmap != null) {
             Box(
-                modifier = QR_BOX_BASE_MODIFIER,
-                contentAlignment = BOX_ALIGNMENT_CENTER
+                modifier = Modifier
+                    .size(210.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color.White)
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Image(
                     bitmap = qrBitmap,
-                    contentDescription = QR_CD,
-                    modifier = QR_IMAGE_MODIFIER
+                    contentDescription = "QR-код для подключения",
+                    modifier = Modifier.fillMaxSize()
                 )
             }
-            Spacer(QR_BOTTOM_SPACER_MODIFIER)
+            Spacer(Modifier.height(12.dp))
             Text(
-                text = QR_HINT,
+                text = "Отсканируйте камерой на планшете/ПК",
                 color = SettingsRowTextSecondary,
-                fontSize = QR_HINT_FONT_SIZE
+                fontSize = 12.sp
             )
         }
 
-        Spacer(SECTION_SPACER_MODIFIER)
+        Spacer(Modifier.height(16.dp))
 
         // Кнопки действий: Копировать и Поделиться
         WebServerActionButtons(
@@ -356,15 +276,15 @@ private fun WebServerConnectionCard(
             onCopy = onCopyUrl
         )
 
-        Spacer(SECTION_SPACER_MODIFIER)
+        Spacer(Modifier.height(16.dp))
 
         // Пояснение
         Text(
-            text = FOOTER_HINT_TEXT,
+            text = "Компьютер или планшет должен быть подключен к этой же сети Wi-Fi. В браузере будет доступен просмотр видео и скачивание файлов.",
             color = SettingsRowTextSecondary,
-            fontSize = FOOTER_HINT_FONT_SIZE,
-            textAlign = TEXT_ALIGN_CENTER,
-            lineHeight = FOOTER_HINT_LINE_HEIGHT
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 16.sp
         )
     }
 }
@@ -391,14 +311,15 @@ private fun WebServerActionButtons(
 
     val copyButtonColors = ButtonDefaults.buttonColors(
         containerColor = SettingsAccentColor,
-        contentColor = COPY_BUTTON_TEXT_COLOR
+        contentColor = Color(0xFF2E2961)
     )
 
-    val rowModifier = if (modifier == Modifier) ACTION_BUTTONS_BASE_MODIFIER else modifier.then(ACTION_BUTTONS_BASE_MODIFIER)
+    val rowBaseModifier = Modifier.fillMaxWidth()
+    val rowModifier = if (modifier == Modifier) rowBaseModifier else modifier.then(rowBaseModifier)
 
     Row(
         modifier = rowModifier,
-        horizontalArrangement = ACTION_BUTTONS_HORIZONTAL_ARRANGEMENT
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Button(
             onClick = onCopy,
@@ -406,9 +327,9 @@ private fun WebServerActionButtons(
             colors = copyButtonColors,
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(ICON_COPY, contentDescription = TEXT_COPY, modifier = ACTION_ICON_MODIFIER)
-            Spacer(ACTION_ICON_SPACER_MODIFIER)
-            Text(TEXT_COPY, fontSize = ACTION_BUTTON_FONT_SIZE, fontWeight = FONT_WEIGHT_MEDIUM)
+            Icon(Icons.Default.ContentCopy, contentDescription = TEXT_COPY, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(TEXT_COPY, fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
 
         OutlinedButton(
@@ -416,9 +337,9 @@ private fun WebServerActionButtons(
             modifier = Modifier.weight(1f),
             shape = ACTION_BUTTON_SHAPE
         ) {
-            Icon(ICON_SHARE, contentDescription = TEXT_SHARE, modifier = ACTION_ICON_MODIFIER, tint = SettingsRowTextPrimary)
-            Spacer(ACTION_ICON_SPACER_MODIFIER)
-            Text(TEXT_SHARE, fontSize = ACTION_BUTTON_FONT_SIZE, color = SettingsRowTextPrimary)
+            Icon(Icons.Default.Share, contentDescription = TEXT_SHARE, modifier = Modifier.size(16.dp), tint = SettingsRowTextPrimary)
+            Spacer(Modifier.width(6.dp))
+            Text(TEXT_SHARE, fontSize = 13.sp, color = SettingsRowTextPrimary)
         }
     }
 }

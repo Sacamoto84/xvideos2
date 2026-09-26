@@ -85,30 +85,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
-private const val TOP_BAR_TITLE = "Авторы"
-private const val DIALOG_DELETE_TITLE = "Удалить автора?"
-private const val BUTTON_DELETE = "Удалить"
-private const val CD_DELETE_CREATOR = "Удалить автора"
-private const val LABEL_FOLLOWERS = "Подписчики"
-private const val LABEL_VIEWS = "Просмотры"
-private const val LABEL_POSTS = "Посты"
-private const val CONTENT_TYPE_CREATOR_ITEM = "creator_item"
-private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val TOP_BAR_START_PADDING = 8.dp
-private val TOP_BAR_VERTICAL_PADDING = 8.dp
-private val TOP_BAR_TITLE_SIZE = 18.sp
-private val CREATOR_CARD_SHAPE = RoundedCornerShape(8.dp)
-private val CREATOR_IMAGE_SIZE = 96.dp
-private val CREATOR_METRIC_SHAPE = RoundedCornerShape(6.dp)
-private val CREATOR_METRIC_BG_COLOR = Color(0xFF242424)
-private val CREATOR_USERNAME_COLOR = Color(0xFF9E9DA9)
-private val CREATOR_DELETE_ICON_COLOR = Color(0xFFAAAAAA)
-private val SCROLLBAR_WIDTH = 2.dp
-private val CREATOR_CARD_BASE_MODIFIER = Modifier
-    .padding(vertical = 2.dp, horizontal = 6.dp)
-    .clip(CREATOR_CARD_SHAPE)
-    .fillMaxWidth()
-
 object R_Screen_CreatorsTab : Screen {
 
     private fun readResolve(): Any = R_Screen_CreatorsTab
@@ -170,20 +146,20 @@ fun CreatorsTabContent(
     Scaffold(
         modifier = modifier,
         containerColor = Theme.background,
-        contentWindowInsets = ZERO_WINDOW_INSETS,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = topInset)
-                    .padding(start = TOP_BAR_START_PADDING, top = TOP_BAR_VERTICAL_PADDING, bottom = TOP_BAR_VERTICAL_PADDING),
+                    .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    TOP_BAR_TITLE,
+                    text = "Авторы",
                     modifier = Modifier,
                     color = Theme.R.colorYellow,
-                    fontSize = TOP_BAR_TITLE_SIZE,
+                    fontSize = 18.sp,
                     fontFamily = Theme.R.fontFamilyPopinsRegular,
                     textAlign = TextAlign.Center
                 )
@@ -202,7 +178,7 @@ fun CreatorsTabContent(
                 items(
                     items = creators,
                     key = { it.username },
-                    contentType = { CONTENT_TYPE_CREATOR_ITEM }
+                    contentType = { "creator_item" }
                 ) { item ->
                     CreatorListItem(
                         item = item,
@@ -230,7 +206,7 @@ private fun BoxScope.CreatorsScrollbar(
         modifier = modifier
             .fillMaxHeight()
             .align(Alignment.CenterEnd)
-            .width(SCROLLBAR_WIDTH)
+            .width(2.dp)
     ) {
         VerticalScrollbar(scrollPercentProvider)
     }
@@ -247,13 +223,12 @@ private fun CreatorListItem(
     val handleItemClick = remember(item.username, onClick) { { onClick(item.username) } }
     val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
 
-    val styledCardModifier = remember(Theme.tabLevel3) {
-        CREATOR_CARD_BASE_MODIFIER.background(Theme.tabLevel3)
-    }
-    val cardModifier = if (modifier == Modifier) styledCardModifier else modifier.then(styledCardModifier)
-
     Row(
-        modifier = cardModifier
+        modifier = modifier
+            .padding(vertical = 2.dp, horizontal = 6.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .fillMaxWidth()
+            .background(Theme.tabLevel3)
             .clickable(onClick = handleItemClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -261,13 +236,13 @@ private fun CreatorListItem(
         if (item.profileImageUrl != null) {
             UrlImage(
                 item.profileImageUrl,
-                modifier = Modifier.size(CREATOR_IMAGE_SIZE),
+                modifier = Modifier.size(96.dp),
                 contentScale = ContentScale.Crop
             )
         } else {
             Box(
                 modifier = Modifier
-                    .size(CREATOR_IMAGE_SIZE)
+                    .size(96.dp)
                     .background(Color.DarkGray),
                 contentAlignment = Alignment.Center
             ) {
@@ -298,7 +273,7 @@ private fun CreatorListItem(
             if (displayName != item.username) {
                 Text(
                     "@${item.username}",
-                    color = CREATOR_USERNAME_COLOR,
+                    color = Color(0xFF9E9DA9),
                     fontSize = 12.sp,
                     fontFamily = Theme.R.fontFamilyDMsanss,
                     maxLines = 1,
@@ -311,17 +286,17 @@ private fun CreatorListItem(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 CreatorMetric(
-                    label = LABEL_FOLLOWERS,
+                    label = "Подписчики",
                     value = item.followers,
                     modifier = Modifier.weight(1f)
                 )
                 CreatorMetric(
-                    label = LABEL_VIEWS,
+                    label = "Просмотры",
                     value = item.views,
                     modifier = Modifier.weight(1f)
                 )
                 CreatorMetric(
-                    label = LABEL_POSTS,
+                    label = "Посты",
                     value = item.publishedGifs,
                     modifier = Modifier.weight(1f)
                 )
@@ -336,8 +311,8 @@ private fun CreatorListItem(
         ) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = CD_DELETE_CREATOR,
-                tint = CREATOR_DELETE_ICON_COLOR,
+                contentDescription = "Удалить автора",
+                tint = Color(0xFFAAAAAA),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -353,8 +328,8 @@ private fun CreatorMetric(
     val prettyValue = remember(value) { value.toPrettyCount() }
     Column(
         modifier = modifier
-            .clip(CREATOR_METRIC_SHAPE)
-            .background(CREATOR_METRIC_BG_COLOR)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color(0xFF242424))
             .padding(horizontal = 6.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -367,7 +342,7 @@ private fun CreatorMetric(
         )
         Text(
             label,
-            color = CREATOR_USERNAME_COLOR,
+            color = Color(0xFF9E9DA9),
             fontSize = 9.sp,
             fontFamily = Theme.R.fontFamilyDMsanss,
             maxLines = 1,
@@ -387,11 +362,11 @@ private fun DeleteCreatorDialog(
             { onConfirm(pending) }
         }
         LavenderDialog(
-            title = DIALOG_DELETE_TITLE,
+            title = "Удалить автора?",
             onDismiss = onDismiss,
             icon = {
                 pending.profileImageUrl?.let {
-                    UrlImage(it, modifier = Modifier.clip(CREATOR_CARD_SHAPE).size(CREATOR_IMAGE_SIZE))
+                    UrlImage(it, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(96.dp))
                 }
             },
             body = buildAnnotatedString {
@@ -399,7 +374,7 @@ private fun DeleteCreatorDialog(
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
                 append("» из сохранённых?")
             },
-            confirmText = BUTTON_DELETE,
+            confirmText = "Удалить",
             onConfirm = handleConfirm,
             destructive = true,
         )

@@ -26,35 +26,7 @@ import com.client.xvideos.common.util.toMinSec
 import com.client.xvideos.common.util.toPrettyCount
 import com.composables.core.Icon
 
-private val TILE_SHAPE = RoundedCornerShape(8.dp)
-private val SHADOW_OFFSET = 1.dp
-private val PADDING_DEFAULT = 8.dp
 private const val PLACEHOLDER_TEXT = "-"
-private const val CD_VIEWS = "Просмотры"
-private const val ICON_RESOURCE = R.drawable.rg_button
-
-private val BOTTOM_ROW_ALIGNMENT = Alignment.BottomCenter
-private val BOTTOM_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val COLOR_BLACK = Color.Black
-private val COLOR_WHITE = Color.White
-private val COLOR_GRAY = Color.Gray
-
-private val TILE_BOX_BASE_MODIFIER = Modifier
-    .fillMaxSize()
-    .clip(TILE_SHAPE)
-
-private val SHADOW_OFFSET_MODIFIER = Modifier.offset(SHADOW_OFFSET, SHADOW_OFFSET)
-
-private val INDEX_TEXT_MODIFIER = Modifier
-    .padding(start = PADDING_DEFAULT)
-    .then(SHADOW_OFFSET_MODIFIER)
-
-private val BOTTOM_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
-
-private val VIEWS_ROW_MODIFIER = Modifier.padding(PADDING_DEFAULT)
-private val VIEWS_TEXT_MODIFIER = Modifier.padding(start = PADDING_DEFAULT)
-private val DURATION_TEXT_MODIFIER = Modifier.padding(PADDING_DEFAULT)
 
 @Composable
 fun RedProfileTile(
@@ -68,30 +40,38 @@ fun RedProfileTile(
     val prettyViews = remember(item.views) { item.views?.toPrettyCount() ?: PLACEHOLDER_TEXT }
     val prettyDuration = remember(item.duration) { item.duration?.toMinSec() ?: PLACEHOLDER_TEXT }
 
-    Box(modifier = modifier.then(TILE_BOX_BASE_MODIFIER)) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(8.dp))
+    ) {
         // Индекс картинки
         Text(
-            indexText,
-            color = COLOR_GRAY,
-            modifier = INDEX_TEXT_MODIFIER,
+            text = indexText,
+            color = Color.Gray,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .offset(1.dp, 1.dp),
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
 
         // Нижний ряд с лайками и длительностью
         Row(
-            modifier = BOTTOM_ROW_BASE_MODIFIER.align(BOTTOM_ROW_ALIGNMENT),
-            horizontalArrangement = BOTTOM_ROW_HORIZONTAL_ARRANGEMENT,
-            verticalAlignment = ROW_VERTICAL_ALIGNMENT
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (isVisibleView) {
                 Row(
-                    modifier = VIEWS_ROW_MODIFIER,
-                    verticalAlignment = ROW_VERTICAL_ALIGNMENT
+                    modifier = Modifier.padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     ShadowedIcon()
                     ShadowedText(
                         text = prettyViews,
-                        modifier = VIEWS_TEXT_MODIFIER
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 }
             }
@@ -99,7 +79,7 @@ fun RedProfileTile(
             if (isVisibleDuration) {
                 ShadowedText(
                     text = prettyDuration,
-                    modifier = DURATION_TEXT_MODIFIER
+                    modifier = Modifier.padding(8.dp)
                 )
             }
         }
@@ -110,18 +90,18 @@ fun RedProfileTile(
 private fun ShadowedIcon(
     modifier: Modifier = Modifier,
 ) {
-    val painter = painterResource(ICON_RESOURCE)
+    val painter = painterResource(R.drawable.rg_button)
     Box(modifier = modifier) {
         Icon(
             painter = painter,
             contentDescription = null,
-            tint = COLOR_BLACK,
-            modifier = SHADOW_OFFSET_MODIFIER
+            tint = Color.Black,
+            modifier = Modifier.offset(1.dp, 1.dp)
         )
         Icon(
             painter = painter,
-            contentDescription = CD_VIEWS,
-            tint = COLOR_WHITE
+            contentDescription = "Просмотры",
+            tint = Color.White
         )
     }
 }
@@ -134,13 +114,13 @@ private fun ShadowedText(
     Box(modifier = modifier) {
         Text(
             text = text,
-            color = COLOR_BLACK,
-            modifier = SHADOW_OFFSET_MODIFIER,
+            color = Color.Black,
+            modifier = Modifier.offset(1.dp, 1.dp),
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
         Text(
             text = text,
-            color = COLOR_WHITE,
+            color = Color.White,
             fontFamily = Theme.R.fontFamilyPopinsMedium
         )
     }

@@ -63,34 +63,10 @@ data class FeedPlaybackActions(
     val onSpeedChange: (PlayerSpeed) -> Unit,
 )
 
-private val DIVIDER_MODIFIER = Modifier.height(8.dp).width(2.dp).background(Color.DarkGray)
-private val BUTTON_BOX_MODIFIER = Modifier.height(46.dp).width(46.dp)
-private val ICON_BUTTON_SIZE_MODIFIER = Modifier.size(46.dp)
-private val ROW_BASE_MODIFIER = Modifier.fillMaxWidth().height(48.dp)
-private val PADDING_4_MODIFIER = Modifier.padding(horizontal = 4.dp)
-
-private val COLOR_WHITE = Color.White
-private val COLOR_GRAY = Color.Gray
-private val COLOR_GREEN = Color.Green
-private val COLOR_LIGHT_GRAY = Color.LightGray
-
-private val ICON_VOLUME_OFF = Icons.AutoMirrored.Filled.VolumeOff
-private val ICON_VOLUME_UP = Icons.AutoMirrored.Filled.VolumeUp
-
-private val ALIGN_CENTER = Alignment.Center
-private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.Center
-
-private const val ROTATION_0 = 0f
-private const val ROTATION_90 = 90f
-private val PLAY_ROTATED_MODIFIER = Modifier.rotate(ROTATION_90)
-private val PLAY_DEFAULT_MODIFIER = Modifier.rotate(ROTATION_0)
 
 @Composable
 private fun Divider() {
-    Spacer(modifier = DIVIDER_MODIFIER)
+    Spacer(modifier = Modifier.height(8.dp).width(2.dp).background(Color.DarkGray))
 }
 
 @Composable
@@ -102,7 +78,7 @@ private fun TimeMarkerButton(
 ) {
     val textStyle = remember {
         TextStyle(
-            color = COLOR_WHITE,
+            color = Color.White,
             fontSize = 10.sp,
             fontFamily = Theme.R.fontFamilyPopinsRegular,
             textAlign = TextAlign.Center
@@ -110,10 +86,10 @@ private fun TimeMarkerButton(
     }
     Column(
         modifier = modifier
-            .then(BUTTON_BOX_MODIFIER)
+            .size(46.dp)
             .clickable(onClick = onClick),
-        verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT,
-        horizontalAlignment = ALIGN_CENTER_HORIZONTALLY
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         BasicText(
             time.toTwoDecimalPlacesWithColon(),
@@ -122,7 +98,7 @@ private fun TimeMarkerButton(
         )
         Text(
             label,
-            color = COLOR_WHITE,
+            color = Color.White,
             fontSize = 20.sp,
             fontFamily = Theme.R.fontFamilyPopinsRegular,
             textAlign = TextAlign.Center
@@ -138,10 +114,10 @@ private fun AbToggleButton(
 ) {
     IconButton(
         onClick = onClick,
-        modifier = modifier.then(ICON_BUTTON_SIZE_MODIFIER)
+        modifier = modifier.size(46.dp)
     ) {
-        Box(contentAlignment = ALIGN_CENTER) {
-            val color = if (enableAB) COLOR_GREEN else COLOR_LIGHT_GRAY
+        Box(contentAlignment = Alignment.Center) {
+            val color = if (enableAB) Color.Green else Color.LightGray
             Icon(
                 painter = painterResource(R.drawable.rg_button),
                 contentDescription = if (enableAB) "Выключить повтор отрезка A-B" else "Включить повтор отрезка A-B",
@@ -167,8 +143,8 @@ private fun PlayPauseButton(
         Icon(
             painter = painterResource(if (play) R.drawable.select_1 else R.drawable.rg_button),
             contentDescription = if (play) "Пауза" else "Воспроизведение",
-            tint = COLOR_WHITE,
-            modifier = if (play) PLAY_ROTATED_MODIFIER else PLAY_DEFAULT_MODIFIER
+            tint = Color.White,
+            modifier = if (play) Modifier.rotate(90f) else Modifier
         )
     }
 }
@@ -184,7 +160,7 @@ private fun SeekButton(
         Icon(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
-            tint = COLOR_WHITE
+            tint = Color.White
         )
     }
 }
@@ -197,15 +173,15 @@ private fun MuteButton(
 ) {
     Box(
         modifier = modifier
-            .then(BUTTON_BOX_MODIFIER)
+            .size(46.dp)
             .clickable(onClick = onClick),
-        contentAlignment = ALIGN_CENTER
+        contentAlignment = Alignment.Center
     ) {
-        val icon = if (mute) ICON_VOLUME_OFF else ICON_VOLUME_UP
+        val icon = if (mute) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
         Icon(
             icon,
             contentDescription = if (mute) "Включить звук" else "Выключить звук",
-            tint = if (mute) COLOR_GRAY else COLOR_WHITE
+            tint = if (mute) Color.Gray else Color.White
         )
     }
 }
@@ -219,13 +195,14 @@ fun FeedControls_Container_Line0(
     val triggerContent: @Composable (() -> Unit) -> Unit = remember(state.speed.displayName) {
         { onClick ->
             Box(
-                modifier = BUTTON_BOX_MODIFIER
+                modifier = Modifier
+                    .size(46.dp)
                     .clickable(onClick = onClick),
-                contentAlignment = ALIGN_CENTER
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = state.speed.displayName,
-                    color = COLOR_WHITE,
+                    color = Color.White,
                     fontSize = 12.sp,
                     fontFamily = Theme.R.fontFamilyPopinsRegular,
                     textAlign = TextAlign.Center
@@ -236,16 +213,17 @@ fun FeedControls_Container_Line0(
 
     Row(
         modifier = modifier
-            .then(ROW_BASE_MODIFIER)
+            .fillMaxWidth()
+            .height(48.dp)
             .horizontalScroll(state = rememberScrollState()),
-        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         TimeMarkerButton(
             label = "A",
             time = state.timeA,
             onClick = actions.onSetTimeA,
-            modifier = PADDING_4_MODIFIER
+            modifier = Modifier.padding(horizontal = 4.dp)
         )
         Divider()
         TimeMarkerButton(

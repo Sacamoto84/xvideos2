@@ -23,9 +23,6 @@ import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.persistentListOf
 
-private val BAR_VERTICAL_PADDING = 2.dp
-private val SEARCH_HORIZONTAL_PADDING = 4.dp
-
 private val NICHE_SORT_ORDERS = persistentListOf(
     Order.NICHES_SUBSCRIBERS_D,
     Order.NICHES_SUBSCRIBERS_A,
@@ -34,14 +31,6 @@ private val NICHE_SORT_ORDERS = persistentListOf(
     Order.NICHES_NAME_A_Z,
     Order.NICHES_NAME_Z_A
 )
-
-private val ROW_BAR_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(vertical = BAR_VERTICAL_PADDING)
-
-private val ROW_BAR_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val ROW_BAR_VERTICAL_ALIGNMENT = Alignment.Bottom
-private val HAPTIC_CONFIRM = HapticFeedbackType.Confirm
 
 @Composable
 fun NichesBottomBar(
@@ -55,20 +44,19 @@ fun NichesBottomBar(
     val haptic = LocalHapticFeedback.current
     val handleUpClick = remember(haptic, onUpClick) {
         {
-            haptic.performHapticFeedback(HAPTIC_CONFIRM)
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             onUpClick()
         }
     }
 
-    val columnBase = remember(Theme.tabLevel1) { Modifier.background(Theme.tabLevel1) }
-    val columnModifier = if (modifier == Modifier) columnBase else modifier.then(columnBase)
-
-    Column(modifier = columnModifier) {
+    Column(modifier = modifier.background(Theme.tabLevel1)) {
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
-            modifier = ROW_BAR_BASE_MODIFIER,
-            horizontalArrangement = ROW_BAR_HORIZONTAL_ARRANGEMENT,
-            verticalAlignment = ROW_BAR_VERTICAL_ALIGNMENT
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
         ) {
             AnimatedVisibility(visible = !isSearchFocused) {
                 SortByOrder(
@@ -79,7 +67,7 @@ fun NichesBottomBar(
                 )
             }
 
-            searchWidget(Modifier.weight(1f).padding(horizontal = SEARCH_HORIZONTAL_PADDING))
+            searchWidget(Modifier.weight(1f).padding(horizontal = 4.dp))
 
             AnimatedVisibility(visible = !isSearchFocused) {
                 ButtonUp(onClick = handleUpClick)

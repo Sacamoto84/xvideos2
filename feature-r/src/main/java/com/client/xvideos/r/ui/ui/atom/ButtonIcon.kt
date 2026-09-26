@@ -21,21 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val BUTTON_ICON_BORDER_COLOR = Color(0x80757575)
-private val BUTTON_ICON_CORNER = 8.dp
-private val BUTTON_ICON_SHAPE = RoundedCornerShape(BUTTON_ICON_CORNER)
-private val BUTTON_ICON_SIZE = 46.dp
-private val BUTTON_ICON_BORDER_WIDTH = 1.dp
-private val BUTTON_ICON_TINT = Color.LightGray
-private val BUTTON_ICON_ALIGNMENT = Alignment.Center
-private val PREVIEW_ICON = Icons.Filled.Favorite
-
-private val BUTTON_ICON_BASE_MODIFIER = Modifier
-    .size(BUTTON_ICON_SIZE)
-    .clip(BUTTON_ICON_SHAPE)
-    .border(BUTTON_ICON_BORDER_WIDTH, BUTTON_ICON_BORDER_COLOR, BUTTON_ICON_SHAPE)
-    .background(Theme.R.colorCommonBackground)
-
 @Composable
 fun ButtonIcon(
     imageVector: ImageVector,
@@ -43,20 +28,19 @@ fun ButtonIcon(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
 ) {
-    val boxModifier = if (modifier == Modifier) {
-        BUTTON_ICON_BASE_MODIFIER
-    } else {
-        modifier.then(BUTTON_ICON_BASE_MODIFIER)
-    }
-
     Box(
-        modifier = boxModifier.clickable(onClick = onClick),
-        contentAlignment = BUTTON_ICON_ALIGNMENT
+        modifier = modifier
+            .size(46.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, Color(0x80757575), RoundedCornerShape(8.dp))
+            .background(Theme.R.colorCommonBackground)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = imageVector,
             contentDescription = contentDescription,
-            tint = BUTTON_ICON_TINT
+            tint = Color.LightGray
         )
     }
 }
@@ -66,7 +50,7 @@ fun ButtonIcon(
 private fun ButtonIconPreview() {
     XvideosTheme {
         ButtonIcon(
-            imageVector = PREVIEW_ICON,
+            imageVector = Icons.Filled.Favorite,
             onClick = {}
         )
     }

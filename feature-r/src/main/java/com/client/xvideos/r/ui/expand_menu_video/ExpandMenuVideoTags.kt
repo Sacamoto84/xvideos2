@@ -36,8 +36,6 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
 
-private val tintColor = Color(0xFF48454E)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpandMenuVideoTags(

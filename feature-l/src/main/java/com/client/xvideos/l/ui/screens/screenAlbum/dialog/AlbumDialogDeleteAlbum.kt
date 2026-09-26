@@ -19,42 +19,33 @@ import com.client.xvideos.l.model.Content
 import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
 
-private val ALBUM_DIALOG_COVER_CORNER = 8.dp
-private val ALBUM_DIALOG_COVER_SHAPE = RoundedCornerShape(ALBUM_DIALOG_COVER_CORNER)
-private val ALBUM_COVER_SIZE = 96.dp
-private val COVER_IMAGE_MODIFIER = Modifier
-    .size(ALBUM_COVER_SIZE)
-    .clip(ALBUM_DIALOG_COVER_SHAPE)
-private const val DIALOG_TITLE = "Удалить Альбом?"
-private const val CONFIRM_TEXT = "Удалить"
-private const val TEXT_DELETE_ALBUM_PREFIX = "Удалить «"
-private const val TEXT_DELETE_ALBUM_SUFFIX = "» из сохранённых?"
-
 @Composable
 fun AlbumDialogDeleteAlbum(pending: AlbumDetails, onDismiss: () -> Unit, onClick: () -> Unit) {
     val coverUrl = pending.cover?.url.orEmpty()
     val dialogBody = remember(pending.title) {
         buildAnnotatedString {
-            append(TEXT_DELETE_ALBUM_PREFIX)
+            append("Удалить «")
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.title) }
-            append(TEXT_DELETE_ALBUM_SUFFIX)
+            append("» из сохранённых?")
         }
     }
     val iconContent: @Composable () -> Unit = remember(coverUrl) {
         {
             UrlImage(
                 url = coverUrl,
-                modifier = COVER_IMAGE_MODIFIER
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
         }
     }
 
     LavenderDialog(
-        title = DIALOG_TITLE,
+        title = "Удалить Альбом?",
         onDismiss = onDismiss,
         icon = iconContent,
         body = dialogBody,
-        confirmText = CONFIRM_TEXT,
+        confirmText = "Удалить",
         onConfirm = onClick,
         destructive = true,
     )

@@ -40,44 +40,6 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val COLLECTION_ITEM_SHAPE = RoundedCornerShape(12.dp)
-private val COLLECTION_THUMBNAIL_SIZE = 56.dp
-private val FOLDER_ICON_SIZE = 28.dp
-private val FOLDER_PLACEHOLDER_BG = Color(0xFF3D3949)
-private val ITEM_OUTER_PADDING = 4.dp
-private val ITEM_INNER_HORIZONTAL_PADDING = 8.dp
-private val ITEM_INNER_VERTICAL_PADDING = 6.dp
-private val ITEM_SPACER_WIDTH = 12.dp
-private val EMPTY_BOX_VERTICAL_PADDING = 32.dp
-private val LAZY_COLUMN_MIN_HEIGHT = 120.dp
-private val LAZY_COLUMN_MAX_HEIGHT = 420.dp
-
-private val EMPTY_BOX_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(vertical = EMPTY_BOX_VERTICAL_PADDING)
-private val LAZY_COLUMN_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .heightIn(min = LAZY_COLUMN_MIN_HEIGHT, max = LAZY_COLUMN_MAX_HEIGHT)
-private val ITEM_ROW_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(ITEM_OUTER_PADDING)
-    .clip(COLLECTION_ITEM_SHAPE)
-private val ITEM_ROW_CONTENT_PADDING_MODIFIER = Modifier
-    .padding(horizontal = ITEM_INNER_HORIZONTAL_PADDING, vertical = ITEM_INNER_VERTICAL_PADDING)
-private val THUMBNAIL_BASE_MODIFIER = Modifier
-    .clip(COLLECTION_ITEM_SHAPE)
-    .size(COLLECTION_THUMBNAIL_SIZE)
-private val FOLDER_PLACEHOLDER_BASE_MODIFIER = Modifier
-    .clip(COLLECTION_ITEM_SHAPE)
-    .size(COLLECTION_THUMBNAIL_SIZE)
-    .background(FOLDER_PLACEHOLDER_BG)
-private val FOLDER_ICON_MODIFIER = Modifier.size(FOLDER_ICON_SIZE)
-private val ITEM_SPACER_MODIFIER = Modifier.width(ITEM_SPACER_WIDTH)
-
-private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекцию"
-private const val TEXT_NO_COLLECTIONS = "Нет коллекций"
-private const val TEXT_CREATE = "Создать"
-private const val CONTENT_TYPE_COLLECTION_ITEM = "collection_item"
 
 @Composable
 fun DialogCollection(
@@ -97,7 +59,7 @@ fun DialogCollection(
     }
 
     LavenderDialog(
-        title = TEXT_ADD_TO_COLLECTION,
+        title = "Добавить в коллекцию",
         onDismiss = onDismiss,
         content = {
             CollectionListContent(
@@ -105,7 +67,7 @@ fun DialogCollection(
                 onSelectCollection = onSelectCollection
             )
         },
-        confirmText = TEXT_CREATE,
+        confirmText = "Создать",
         onConfirm = onConfirmCreate,
     )
 }
@@ -117,11 +79,13 @@ private fun ColumnScope.CollectionListContent(
 ) {
     if (collectionList.isEmpty()) {
         Box(
-            modifier = EMPTY_BOX_BASE_MODIFIER,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 32.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = TEXT_NO_COLLECTIONS,
+                text = "Нет коллекций",
                 color = Theme.DialogLavande.bodyColor,
                 fontFamily = Theme.R.fontFamilyDMsanss,
                 fontSize = 16.sp
@@ -130,12 +94,14 @@ private fun ColumnScope.CollectionListContent(
     } else {
         LazyColumn(
             state = rememberLazyListState(),
-            modifier = LAZY_COLUMN_BASE_MODIFIER
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 120.dp, max = 420.dp)
         ) {
             items(
                 items = collectionList,
                 key = { it.collection },
-                contentType = { CONTENT_TYPE_COLLECTION_ITEM }
+                contentType = { "collection_item" }
             ) { item ->
                 CollectionRowItem(
                     item = item,
@@ -145,9 +111,6 @@ private fun ColumnScope.CollectionListContent(
         }
     }
 }
-
-private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
 
 @Composable
 private fun CollectionRowItem(
@@ -166,33 +129,41 @@ private fun CollectionRowItem(
             fontFamily = Theme.R.fontFamilyDMsanss
         )
     }
+    val itemShape = RoundedCornerShape(12.dp)
 
-    val baseModifier = if (modifier == Modifier) ITEM_ROW_BASE_MODIFIER else modifier.then(ITEM_ROW_BASE_MODIFIER)
     Row(
-        modifier = baseModifier
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+            .clip(itemShape)
             .clickable(onClick = onClick)
-            .then(ITEM_ROW_CONTENT_PADDING_MODIFIER),
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         if (item.items.isNotEmpty()) {
             UrlImage(
                 url = item.items.last().urls.thumbnail,
-                modifier = THUMBNAIL_BASE_MODIFIER
+                modifier = Modifier
+                    .clip(itemShape)
+                    .size(56.dp)
             )
         } else {
             Box(
-                modifier = FOLDER_PLACEHOLDER_BASE_MODIFIER,
-                contentAlignment = BOX_ALIGNMENT_CENTER
+                modifier = Modifier
+                    .clip(itemShape)
+                    .size(56.dp)
+                    .background(Color(0xFF3D3949)),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Folder,
                     contentDescription = item.collection,
                     tint = Theme.DialogLavande.dismissTextColor,
-                    modifier = FOLDER_ICON_MODIFIER
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
-        Spacer(ITEM_SPACER_MODIFIER)
+        Spacer(Modifier.width(12.dp))
         Text(
             text = item.collection,
             style = itemTextStyle

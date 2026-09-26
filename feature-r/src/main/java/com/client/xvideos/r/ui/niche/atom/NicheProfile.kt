@@ -37,59 +37,6 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val NICHE_THUMBNAIL_SHAPE = RoundedCornerShape(8.dp)
-private val NICHE_FOLLOW_BUTTON_SHAPE = RoundedCornerShape(8.dp)
-
-private val NICHE_THUMBNAIL_SIZE = 128.dp
-private val COLUMN_HEIGHT = 128.dp
-private val STAT_ICON_SIZE = 16.dp
-private val STAT_FONT_SIZE = 16.sp
-private val FOLLOW_BUTTON_WIDTH = 128.dp
-private val FOLLOW_BUTTON_HEIGHT = 44.dp
-private val FOLLOW_BORDER_WIDTH = 1.dp
-private val PADDING_XSMALL = 4.dp
-private val PADDING_SMALL = 8.dp
-
-private val COLOR_WHITE = Color.White
-private val COLOR_BLACK = Color.Black
-private val COLOR_TRANSPARENT = Color.Transparent
-
-private val ALIGN_CENTER = Alignment.Center
-private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.Center
-private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.SpaceBetween
-
-private val STAT_ICON_SIZE_MODIFIER = Modifier.size(STAT_ICON_SIZE)
-private val STAT_TEXT_MODIFIER = Modifier
-    .padding(start = PADDING_XSMALL, end = PADDING_XSMALL)
-    .wrapContentWidth(ALIGN_CENTER_HORIZONTALLY)
-private val NICHE_THUMBNAIL_BASE_MODIFIER = Modifier
-    .size(NICHE_THUMBNAIL_SIZE)
-    .clip(NICHE_THUMBNAIL_SHAPE)
-private val COLUMN_BASE_MODIFIER = Modifier
-    .padding(start = PADDING_SMALL)
-    .height(COLUMN_HEIGHT)
-private val FOLLOW_BUTTON_BASE_MODIFIER = Modifier
-    .padding(end = PADDING_XSMALL)
-    .clip(NICHE_FOLLOW_BUTTON_SHAPE)
-    .width(FOLLOW_BUTTON_WIDTH)
-    .height(FOLLOW_BUTTON_HEIGHT)
-
-private val ROW_BASE_MODIFIER = Modifier
-    .padding(start = PADDING_XSMALL)
-    .fillMaxWidth()
-private val FOLLOWED_BORDER_MODIFIER = Modifier.border(FOLLOW_BORDER_WIDTH, COLOR_WHITE, NICHE_FOLLOW_BUTTON_SHAPE)
-private val UNFOLLOWED_BORDER_MODIFIER = Modifier.border(FOLLOW_BORDER_WIDTH, COLOR_TRANSPARENT, NICHE_FOLLOW_BUTTON_SHAPE)
-
-private val STAT_TEXT_STYLE = TextStyle(
-    color = COLOR_WHITE,
-    textAlign = TextAlign.Center,
-    fontSize = STAT_FONT_SIZE,
-)
-
-private const val TEXT_UNSUBSCRIBE = "Выйти"
-private const val TEXT_SUBSCRIBE = "Подписаться"
 private const val DEFAULT_PLACEHOLDER_ID = "id"
 
 @Composable
@@ -138,47 +85,66 @@ fun NicheProfileContent(
     val gifsText = remember(currentNiche.gifs) { currentNiche.gifs.toPrettyCount() }
 
     Row(
-        modifier = if (modifier == Modifier) ROW_BASE_MODIFIER else modifier.then(ROW_BASE_MODIFIER),
-        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+        modifier = modifier
+            .padding(start = 4.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         UrlImage(
             currentNiche.thumbnail,
-            modifier = NICHE_THUMBNAIL_BASE_MODIFIER
+            modifier = Modifier
+                .size(128.dp)
+                .clip(RoundedCornerShape(8.dp))
         )
 
         Column(
-            modifier = COLUMN_BASE_MODIFIER.weight(1f),
-            verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .height(128.dp)
+                .weight(1f),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             if (currentNiche.id != DEFAULT_PLACEHOLDER_ID) {
-                Text(currentNiche.name, color = COLOR_WHITE, fontFamily = Theme.R.fontFamilyDMsanss)
+                Text(currentNiche.name, color = Color.White, fontFamily = Theme.R.fontFamilyDMsanss)
             }
 
-            Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(R.drawable.members),
                     contentDescription = null,
-                    tint = COLOR_WHITE,
-                    modifier = STAT_ICON_SIZE_MODIFIER
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = subscribersText,
-                    modifier = STAT_TEXT_MODIFIER,
-                    style = STAT_TEXT_STYLE
+                    modifier = Modifier
+                        .padding(start = 4.dp, end = 4.dp)
+                        .wrapContentWidth(Alignment.CenterHorizontally),
+                    style = TextStyle(
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp,
+                    )
                 )
             }
-            Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(R.drawable.posts),
                     contentDescription = null,
-                    tint = COLOR_WHITE,
-                    modifier = STAT_ICON_SIZE_MODIFIER
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = gifsText,
-                    modifier = STAT_TEXT_MODIFIER,
-                    style = STAT_TEXT_STYLE
+                    modifier = Modifier
+                        .padding(start = 4.dp, end = 4.dp)
+                        .wrapContentWidth(Alignment.CenterHorizontally),
+                    style = TextStyle(
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp,
+                    )
                 )
             }
 
@@ -195,18 +161,27 @@ private fun ButtonFollowContent(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val buttonText = if (isFollowed) TEXT_UNSUBSCRIBE else TEXT_SUBSCRIBE
-    val buttonTextColor = if (isFollowed) COLOR_WHITE else COLOR_BLACK
+    val buttonText = if (isFollowed) "Выйти" else "Подписаться"
+    val buttonTextColor = if (isFollowed) Color.White else Color.Black
     val buttonBgColor = if (isFollowed) Theme.tabLevel1 else Theme.R.colorYellow
-    val borderModifier = if (isFollowed) FOLLOWED_BORDER_MODIFIER else UNFOLLOWED_BORDER_MODIFIER
-    val baseModifier = if (modifier == Modifier) FOLLOW_BUTTON_BASE_MODIFIER else modifier.then(FOLLOW_BUTTON_BASE_MODIFIER)
+    val buttonShape = RoundedCornerShape(8.dp)
 
     Box(
-        modifier = baseModifier
-            .then(borderModifier)
+        modifier = modifier
+            .padding(end = 4.dp)
+            .clip(buttonShape)
+            .width(128.dp)
+            .height(44.dp)
+            .then(
+                if (isFollowed) {
+                    Modifier.border(1.dp, Color.White, buttonShape)
+                } else {
+                    Modifier.border(1.dp, Color.Transparent, buttonShape)
+                }
+            )
             .background(buttonBgColor)
             .clickable(onClick = onClick),
-        contentAlignment = ALIGN_CENTER
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = buttonText,

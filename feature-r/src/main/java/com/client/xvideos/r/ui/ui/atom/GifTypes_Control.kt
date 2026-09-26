@@ -22,27 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.r.ui.profile.ScreenRedProfileSM
 import com.client.xvideos.r.ui.profile.TypeGifs
 
-private val DIVIDER_WIDTH = 1.dp
-private val CONTROL_HEIGHT = 48.dp
-private val LABEL_FONT_SIZE = 18.sp
-private val INDICATOR_WIDTH = 48.dp
-private val INDICATOR_HEIGHT = 4.dp
-private val INDICATOR_OFFSET_Y = 16.dp
-private val INDICATOR_OFFSET_X = 0.dp
-private val INDICATOR_BASE_MODIFIER = Modifier
-    .offset(INDICATOR_OFFSET_X, INDICATOR_OFFSET_Y)
-    .width(INDICATOR_WIDTH)
-    .height(INDICATOR_HEIGHT)
-private val DIVIDER_MODIFIER = Modifier
-    .width(DIVIDER_WIDTH)
-    .height(CONTROL_HEIGHT)
-
-private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-private val COLOR_WHITE = Color.White
-private val COLOR_TRANSPARENT = Color.Transparent
-
 @Composable
 fun GifTypes_Control(
     vm: ScreenRedProfileSM,
@@ -80,8 +59,8 @@ fun GifTypes_Control(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         if (item0 != null) {
             TextAndLine(
@@ -92,7 +71,12 @@ fun GifTypes_Control(
             )
         }
 
-        Box(DIVIDER_MODIFIER.background(Theme.R.colorBorderGray))
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .height(48.dp)
+                .background(Theme.R.colorBorderGray)
+        )
 
         if (item1 != null) {
             TextAndLine(
@@ -112,23 +96,27 @@ private fun TextAndLine(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val textColor = if (select) COLOR_WHITE else Theme.R.colorTextGray
-    val indicatorColor = if (select) Theme.R.colorRed else COLOR_TRANSPARENT
+    val textColor = if (select) Color.White else Theme.R.colorTextGray
+    val indicatorColor = if (select) Theme.R.colorRed else Color.Transparent
 
     Box(
         modifier = modifier
             .clickable(onClick = onClick),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = str,
-            fontSize = LABEL_FONT_SIZE,
+            fontSize = 18.sp,
             color = textColor,
             fontFamily = Theme.R.fontFamilyPopinsRegular
         )
 
         Box(
-            INDICATOR_BASE_MODIFIER.background(indicatorColor)
+            modifier = Modifier
+                .offset(0.dp, 16.dp)
+                .width(48.dp)
+                .height(4.dp)
+                .background(indicatorColor)
         )
     }
 }

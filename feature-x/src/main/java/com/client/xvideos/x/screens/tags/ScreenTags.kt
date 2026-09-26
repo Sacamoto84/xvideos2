@@ -41,20 +41,6 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
 import kotlinx.coroutines.launch
 
-private val ZERO_INSETS = WindowInsets(0, 0, 0, 0)
-private val SUBTITLE_PRIMARY_COLOR = Color(0xFFB0B0B0)
-private val SUBTITLE_SECONDARY_COLOR = Color(0xFF787878)
-private val COLOR_WHITE = Color.White
-private val FONT_WEIGHT_BOLD = FontWeight.Bold
-private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
-private val PAGE_INDEX_KEY: (Int) -> Any = { pageIndex -> pageIndex }
-
-private val HEADER_TOP_PADDING_EXTRA = 8.dp
-private val HEADER_HORIZONTAL_PADDING = 16.dp
-private val HEADER_BOTTOM_PADDING = 8.dp
-private val TAG_TITLE_FONT_SIZE = 20.sp
-private val TAG_SUBTITLE_FONT_SIZE = 12.sp
-private const val BEYOND_VIEWPORT_PAGE_COUNT = 1
 
 class ScreenTags(val tag: String) : Screen {
 
@@ -140,20 +126,21 @@ fun TagsContent(
     }
 
     Scaffold(
-        modifier = modifier.then(FULL_SIZE_MODIFIER),
-        contentWindowInsets = ZERO_INSETS,
+        modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.L.grey6,
         bottomBar = bottomBarContent,
     ) { padding ->
         Box(
-            modifier = FULL_SIZE_MODIFIER
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(bottom = padding.calculateBottomPadding())
         ) {
             HorizontalPager(
                 state = pagerState,
-                modifier = FULL_SIZE_MODIFIER,
-                beyondViewportPageCount = BEYOND_VIEWPORT_PAGE_COUNT,
-                key = PAGE_INDEX_KEY
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 1,
+                key = { pageIndex -> pageIndex }
             ) { pageIndex ->
                 TagsPaginatedListScreen(
                     pageIndex = pageIndex,
@@ -182,17 +169,17 @@ private fun TagsHeader(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                top = topCutout + HEADER_TOP_PADDING_EXTRA,
-                start = HEADER_HORIZONTAL_PADDING,
-                end = HEADER_HORIZONTAL_PADDING,
-                bottom = HEADER_BOTTOM_PADDING
+                top = topCutout + 8.dp,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 8.dp
             )
     ) {
         Text(
             text = tag,
-            color = COLOR_WHITE,
-            fontSize = TAG_TITLE_FONT_SIZE,
-            fontWeight = FONT_WEIGHT_BOLD,
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -201,15 +188,15 @@ private fun TagsHeader(
                 if (hasTitle0) {
                     Text(
                         text = "$title0 ",
-                        color = SUBTITLE_PRIMARY_COLOR,
-                        fontSize = TAG_SUBTITLE_FONT_SIZE,
+                        color = Color(0xFFB0B0B0),
+                        fontSize = 12.sp,
                     )
                 }
                 if (hasTitle1) {
                     Text(
                         text = title1,
-                        color = SUBTITLE_SECONDARY_COLOR,
-                        fontSize = TAG_SUBTITLE_FONT_SIZE,
+                        color = Color(0xFF787878),
+                        fontSize = 12.sp,
                     )
                 }
             }

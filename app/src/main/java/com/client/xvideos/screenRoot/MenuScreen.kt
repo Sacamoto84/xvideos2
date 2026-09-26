@@ -48,25 +48,7 @@ import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
 import com.client.xvideos.r.ui.root.R_Screen_Root
 import com.client.xvideos.x.screens.dashboards.ScreenXDashBoards
 
-private val MENU_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val MENU_BACKGROUND_COLOR = Color(0xFF353535)
 private val MENU_BUTTON_SHAPE = RoundedCornerShape(16.dp)
-private val MENU_BUTTON_BORDER_COLOR = Color(0xFF565656)
-private val MENU_BUTTON_BG_COLOR = Color(0xFF212121)
-
-private val TOP_BAR_BUTTON_SIZE = 48.dp
-private val SETTINGS_ICON_SIZE = 32.dp
-private val HAPTIC_ICON_SIZE = 30.dp
-private val P2P_ICON_SIZE = 28.dp
-
-private val BUTTON_BORDER_WIDTH = 2.dp
-private val BUTTON_PADDING = 16.dp
-private val BUTTON_IMAGE_HEIGHT = 80.dp
-
-private const val CD_SETTINGS = "Настройки"
-private const val CD_HAPTIC = "Haptic demo"
-private const val CD_P2P = "Приём P2P"
-private const val TAG_BUTTON_L = "buttonL"
 
 /**
  * Стартовый экран выбора раздела приложения.
@@ -91,7 +73,7 @@ object MenuScreen : Screen {
         val onOpenR = remember(navigator) { { navigator.push(R_Screen_Root()) } }
 
         Scaffold(
-            contentWindowInsets = MENU_WINDOW_INSETS,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 Box(
                     modifier = Modifier
@@ -99,25 +81,27 @@ object MenuScreen : Screen {
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top)),
                     contentAlignment = Alignment.TopStart
                 ) {
-                    IconButton(onClick = onOpenSettings, modifier = Modifier.size(TOP_BAR_BUTTON_SIZE)) {
+                    IconButton(onClick = onOpenSettings, modifier = Modifier.size(48.dp)) {
                         Icon(
                             Icons.Default.MoreVert,
-                            contentDescription = CD_SETTINGS,
+                            contentDescription = "Настройки",
                             tint = Color.White,
-                            modifier = Modifier.size(SETTINGS_ICON_SIZE))
+                            modifier = Modifier.size(32.dp)
+                        )
                     }
                     // Демо-экран виброоткликов (HapticFeedbackType) для тестов
                     IconButton(
                         onClick = onOpenHapticDemo,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .size(TOP_BAR_BUTTON_SIZE)
+                            .size(48.dp)
                     ) {
                         Icon(
                             Icons.Default.Vibration,
-                            contentDescription = CD_HAPTIC,
+                            contentDescription = "Haptic demo",
                             tint = Color.White,
-                            modifier = Modifier.size(HAPTIC_ICON_SIZE))
+                            modifier = Modifier.size(30.dp)
+                        )
                     }
 
                     // Приём item по P2P (Nearby)
@@ -125,13 +109,14 @@ object MenuScreen : Screen {
                         onClick = onOpenP2pReceive,
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .size(TOP_BAR_BUTTON_SIZE)
+                            .size(48.dp)
                     ) {
                         Icon(
                             Icons.Default.Wifi,
-                            contentDescription = CD_P2P,
+                            contentDescription = "Приём P2P",
                             tint = Color.White,
-                            modifier = Modifier.size(P2P_ICON_SIZE))
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
             }
@@ -139,7 +124,7 @@ object MenuScreen : Screen {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MENU_BACKGROUND_COLOR)
+                    .background(Color(0xFF353535))
                     .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom
@@ -147,7 +132,7 @@ object MenuScreen : Screen {
 
                 ButtonSelect(R.drawable.icon_xvideos_white, onClick = onOpenX)
 
-                ButtonSelect(R.drawable.icon_luscious, TAG_BUTTON_L, onClick = onOpenL)
+                ButtonSelect(R.drawable.icon_luscious, tag = "buttonL", onClick = onOpenL)
                 ButtonSelect(R.drawable.icon_red, onClick = onOpenR)
 
             }
@@ -165,13 +150,13 @@ object MenuScreen : Screen {
 @Composable
 private fun ButtonSelect(iconId: Int, tag: String = "", onClick: () -> Unit) {
     val baseModifier = Modifier
-        .padding(BUTTON_PADDING)
+        .padding(16.dp)
         .fillMaxWidth()
         .clip(MENU_BUTTON_SHAPE)
-        .border(BUTTON_BORDER_WIDTH, MENU_BUTTON_BORDER_COLOR, MENU_BUTTON_SHAPE)
-        .background(MENU_BUTTON_BG_COLOR)
+        .border(2.dp, Color(0xFF565656), MENU_BUTTON_SHAPE)
+        .background(Color(0xFF212121))
         .clickable(onClick = onClick)
-        .padding(vertical = BUTTON_PADDING)
+        .padding(vertical = 16.dp)
 
     val finalModifier = if (tag.isNotEmpty()) baseModifier.testTag(tag) else baseModifier
 
@@ -182,7 +167,7 @@ private fun ButtonSelect(iconId: Int, tag: String = "", onClick: () -> Unit) {
         Image(
             painterResource(iconId),
             contentDescription = null,
-            modifier = Modifier.height(BUTTON_IMAGE_HEIGHT),
+            modifier = Modifier.height(80.dp),
             contentScale = ContentScale.FillHeight
         )
     }

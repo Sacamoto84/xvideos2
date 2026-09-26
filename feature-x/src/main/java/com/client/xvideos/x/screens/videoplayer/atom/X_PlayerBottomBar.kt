@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -21,9 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -37,63 +37,7 @@ import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import java.util.Locale
 
-private val FIT_MODE_CORNER = 4.dp
-private val FIT_MODE_SHAPE = RoundedCornerShape(FIT_MODE_CORNER)
-private val BOTTOM_BAR_BG = Color(0x73000000)
-
-private val PLAY_PAUSE_ICON_SIZE = 28.dp
-private val FULLSCREEN_ICON_SIZE = 28.dp
-private val SEEK_BAR_THUMB_RADIUS = 6.dp
-private val SEEK_BAR_TRACK_HEIGHT = 3.dp
-private val BAR_HORIZONTAL_PADDING = 8.dp
-private val BAR_VERTICAL_PADDING = 6.dp
-private val BAR_CONTROL_SPACING = 8.dp
-private val FIT_MODE_HORIZONTAL_PADDING = 4.dp
-private val FIT_MODE_VERTICAL_PADDING = 2.dp
-private val TIME_FONT_SIZE = 11.sp
-private val CONTROL_ICON_TINT = Color.White
-private val TIME_TEXT_COLOR = Color.White
 private const val SAFE_MAX_PROGRESS_FALLBACK = 0.1f
-private val ICON_PLAY = Icons.Filled.PlayArrow
-private val ICON_PAUSE = Icons.Filled.Pause
-private val ICON_FULLSCREEN = Icons.Filled.Fullscreen
-private val ICON_FULLSCREEN_EXIT = Icons.Filled.FullscreenExit
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-
-private val TIME_TEXT_STYLE = TextStyle(
-    color = TIME_TEXT_COLOR,
-    fontFamily = FontFamily.SansSerif,
-    fontSize = TIME_FONT_SIZE
-)
-
-private val FIT_MODE_TEXT_STYLE = TextStyle(
-    color = TIME_TEXT_COLOR,
-    fontFamily = FontFamily.SansSerif,
-    fontWeight = FontWeight.Bold,
-    fontSize = TIME_FONT_SIZE
-)
-
-private const val CD_PLAY = "Play"
-private const val CD_PAUSE = "Pause"
-private const val CD_FULLSCREEN = "Fullscreen"
-private const val CD_EXIT_FULLSCREEN = "Exit Fullscreen"
-private const val LABEL_FIT = "Fit"
-private const val LABEL_FILL = "Fill"
-
-private val BOTTOM_BAR_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .background(BOTTOM_BAR_BG)
-    .padding(horizontal = BAR_HORIZONTAL_PADDING, vertical = BAR_VERTICAL_PADDING)
-
-private val PLAY_PAUSE_ICON_MODIFIER = Modifier.size(PLAY_PAUSE_ICON_SIZE)
-private val FULLSCREEN_ICON_MODIFIER = Modifier.size(FULLSCREEN_ICON_SIZE)
-private val FIT_MODE_FULL_MODIFIER = Modifier
-    .clip(FIT_MODE_SHAPE)
-    .padding(
-        horizontal = FIT_MODE_HORIZONTAL_PADDING,
-        vertical = FIT_MODE_VERTICAL_PADDING
-    )
-private val BAR_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(BAR_CONTROL_SPACING)
 
 /**
  * Нижняя панель управления X-плеером поверх видео.
@@ -146,17 +90,22 @@ fun X_PlayerBottomBar(
     val formattedTotalTime = remember(host.totalTime) { formatTime(host.totalTime) }
 
     Row(
-        modifier = if (modifier == Modifier) BOTTOM_BAR_BASE_MODIFIER else modifier.then(BOTTOM_BAR_BASE_MODIFIER),
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT,
-        horizontalArrangement = BAR_HORIZONTAL_ARRANGEMENT
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color(0x73000000))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
         // Play / Pause
         Icon(
-            imageVector = if (host.isPaused) ICON_PLAY else ICON_PAUSE,
-            contentDescription = if (host.isPaused) CD_PLAY else CD_PAUSE,
-            tint = CONTROL_ICON_TINT,
-            modifier = PLAY_PAUSE_ICON_MODIFIER.clickable(onClick = onTogglePlayPause)
+            imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+            contentDescription = if (host.isPaused) "Play" else "Pause",
+            tint = Color.White,
+            modifier = Modifier
+                .size(28.dp)
+                .clickable(onClick = onTogglePlayPause)
         )
 
         // Текущее время
@@ -166,7 +115,11 @@ fun X_PlayerBottomBar(
             ?: 0
         Text(
             text = formatTime(safeCurrentTimeSec),
-            style = TIME_TEXT_STYLE
+            style = TextStyle(
+                color = Color.White,
+                fontFamily = FontFamily.SansSerif,
+                fontSize = 11.sp
+            )
         )
 
         // Прогресс-бар
@@ -183,14 +136,18 @@ fun X_PlayerBottomBar(
             maxProgress = safeMaxProgress,
             onValueChange = onSeekBarValueChange,
             onValueChangeFinished = onSeekBarValueChangeFinished,
-            thumbRadius = SEEK_BAR_THUMB_RADIUS,
-            trackHeight = SEEK_BAR_TRACK_HEIGHT,
+            thumbRadius = 6.dp,
+            trackHeight = 3.dp,
         )
 
         // Общее время
         Text(
             text = formattedTotalTime,
-            style = TIME_TEXT_STYLE
+            style = TextStyle(
+                color = Color.White,
+                fontFamily = FontFamily.SansSerif,
+                fontSize = 11.sp
+            )
         )
 
         // Меню выбора скорости воспроизведения
@@ -210,10 +167,12 @@ fun X_PlayerBottomBar(
         // Полный экран (если поддержан экраном)
         if (onFullScreenClick != null) {
             Icon(
-                imageVector = if (isFullScreen) ICON_FULLSCREEN_EXIT else ICON_FULLSCREEN,
-                contentDescription = if (isFullScreen) CD_EXIT_FULLSCREEN else CD_FULLSCREEN,
-                tint = CONTROL_ICON_TINT,
-                modifier = FULLSCREEN_ICON_MODIFIER.clickable(onClick = onFullScreenClick)
+                imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                contentDescription = if (isFullScreen) "Exit Fullscreen" else "Fullscreen",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable(onClick = onFullScreenClick)
             )
         }
     }
@@ -225,12 +184,18 @@ private fun FitModeToggle(
     onToggleFitMode: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val fitModeText = if (videoFitMode == ScreenResize.FILL) LABEL_FILL else LABEL_FIT
-    val baseModifier = if (modifier == Modifier) FIT_MODE_FULL_MODIFIER else modifier.then(FIT_MODE_FULL_MODIFIER)
     Text(
-        text = fitModeText,
-        style = FIT_MODE_TEXT_STYLE,
-        modifier = baseModifier.clickable(onClick = onToggleFitMode)
+        text = if (videoFitMode == ScreenResize.FILL) "Fill" else "Fit",
+        style = TextStyle(
+            color = Color.White,
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp
+        ),
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .clickable(onClick = onToggleFitMode)
     )
 }
 

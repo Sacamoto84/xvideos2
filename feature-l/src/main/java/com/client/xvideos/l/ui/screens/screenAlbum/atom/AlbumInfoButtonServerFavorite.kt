@@ -27,31 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
-private val SERVER_FAVORITE_BUTTON_SHAPE = RoundedCornerShape(4.dp)
-private val BUTTON_HEIGHT = 46.dp
-private val BUTTON_TOP_PADDING = 2.dp
-private val BUTTON_BOTTOM_PADDING = 4.dp
-private val BUTTON_BORDER_WIDTH = 1.dp
-private val CONTENT_SPACING = 8.dp
-private val ICON_SIZE = 20.dp
-private val PROGRESS_INDICATOR_SIZE = 20.dp
-private val PROGRESS_STROKE_WIDTH = 2.dp
-private const val TEXT_REMOVE_FROM_SERVER = "Удалить альбом с сервера"
-private const val TEXT_ADD_TO_SERVER = "Добавить альбом на сервер"
-private val ICON_FAVORITE_FILLED = Icons.Filled.Favorite
-private val ICON_FAVORITE_BORDER = Icons.Outlined.FavoriteBorder
-private val CONTENT_ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-private val COLOR_WHITE = Color.White
-
-private val SERVER_FAVORITE_BUTTON_BASE_MODIFIER = Modifier
-    .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
-    .height(BUTTON_HEIGHT)
-    .fillMaxWidth()
-    .clip(SERVER_FAVORITE_BUTTON_SHAPE)
-private val CONTENT_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(CONTENT_SPACING)
-private val ICON_MODIFIER = Modifier.size(ICON_SIZE)
-private val PROGRESS_INDICATOR_MODIFIER = Modifier.size(PROGRESS_INDICATOR_SIZE)
+private val BUTTON_SHAPE = RoundedCornerShape(4.dp)
 
 /**
  * Кнопка «добавить/удалить альбом из избранного на сервере Luscious» в шапке ScreenLAlbum.
@@ -63,44 +39,48 @@ fun AlbumInfoButtonServerFavorite(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val buttonText = if (isFavorite) TEXT_REMOVE_FROM_SERVER else TEXT_ADD_TO_SERVER
-    val iconVector = if (isFavorite) ICON_FAVORITE_FILLED else ICON_FAVORITE_BORDER
-    val iconTint = if (isFavorite) Theme.L.red else COLOR_WHITE
+    val buttonText = if (isFavorite) "Удалить альбом с сервера" else "Добавить альбом на сервер"
+    val iconVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+    val iconTint = if (isFavorite) Theme.L.red else Color.White
     val backgroundColor = if (isFavorite) Theme.L.grey6 else Theme.L.red
     val buttonTextStyle = remember(Theme.L.Type.button) {
-        Theme.L.Type.button.copy(color = COLOR_WHITE)
+        Theme.L.Type.button.copy(color = Color.White)
     }
     val styledBase = remember(Theme.L.grey3, backgroundColor) {
-        SERVER_FAVORITE_BUTTON_BASE_MODIFIER
-            .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SERVER_FAVORITE_BUTTON_SHAPE)
+        Modifier
+            .padding(top = 2.dp, bottom = 4.dp)
+            .height(46.dp)
+            .fillMaxWidth()
+            .clip(BUTTON_SHAPE)
+            .border(1.dp, Theme.L.grey3, BUTTON_SHAPE)
             .background(backgroundColor)
     }
     val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
 
     Box(
         modifier = baseModifier.clickable(enabled = !isLoading, onClick = onClick),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        contentAlignment = Alignment.Center
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = PROGRESS_INDICATOR_MODIFIER,
-                color = COLOR_WHITE,
-                strokeWidth = PROGRESS_STROKE_WIDTH
+                modifier = Modifier.size(20.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
             )
         } else {
             Row(
-                horizontalArrangement = CONTENT_ROW_HORIZONTAL_ARRANGEMENT,
-                verticalAlignment = CONTENT_ROW_VERTICAL_ALIGNMENT
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = iconVector,
                     contentDescription = buttonText,
                     tint = iconTint,
-                    modifier = ICON_MODIFIER
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = buttonText,
-                    color = COLOR_WHITE,
+                    color = Color.White,
                     style = buttonTextStyle
                 )
             }

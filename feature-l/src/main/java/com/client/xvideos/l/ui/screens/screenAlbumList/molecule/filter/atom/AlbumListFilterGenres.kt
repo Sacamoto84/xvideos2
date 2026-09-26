@@ -42,22 +42,6 @@ import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 import androidx.compose.runtime.key
 import androidx.compose.ui.tooling.preview.Preview
 
-private val DROPDOWN_CORNER = 6.dp
-private val DROPDOWN_SHAPE = RoundedCornerShape(DROPDOWN_CORNER)
-private val DROPDOWN_MIN_WIDTH = 160.dp
-private val DROPDOWN_MAX_WIDTH = 220.dp
-private val DROPDOWN_HEIGHT = 43.dp
-private val DROPDOWN_BORDER_WIDTH = 1.dp
-private val DROPDOWN_HORIZONTAL_PADDING = 8.dp
-private val ROW_HORIZONTAL_PADDING = 4.dp
-private val CHIPS_TOP_SPACING = 6.dp
-private val REMOVE_ICON_SIZE = 16.dp
-private const val TITLE_GENRES = "Genres"
-private const val TEXT_ANY = "Any"
-private const val TEXT_SELECTED_SUFFIX = " selected"
-private const val CD_REMOVE = "Remove"
-private const val PREFIX_NOT = "NOT"
-
 @Composable
 fun AlbumListFilterGenres(
     filter: AlbumListFilter,
@@ -85,7 +69,7 @@ fun AlbumListFilterGenres(
     var showDialog by remember { mutableStateOf(false) }
 
     val totalSelected = genresPlus.size + genresMinus.size
-    val selectorText = if (totalSelected == 0) TEXT_ANY else "$totalSelected$TEXT_SELECTED_SUFFIX"
+    val selectorText = if (totalSelected == 0) "Any" else "$totalSelected selected"
 
     Column(
         modifier = modifier
@@ -165,29 +149,29 @@ private fun GenresTriggerRow(
     }
     val dropdownBoxModifier = remember(palette.border, palette.field) {
         Modifier
-            .widthIn(min = DROPDOWN_MIN_WIDTH, max = DROPDOWN_MAX_WIDTH)
-            .height(DROPDOWN_HEIGHT)
-            .clip(DROPDOWN_SHAPE)
-            .border(DROPDOWN_BORDER_WIDTH, palette.border, DROPDOWN_SHAPE)
+            .widthIn(min = 160.dp, max = 220.dp)
+            .height(43.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .border(1.dp, palette.border, RoundedCornerShape(6.dp))
             .background(palette.field)
     }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = ROW_HORIZONTAL_PADDING),
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = TITLE_GENRES,
+            text = "Genres",
             style = titleStyle
         )
 
         Row(
             modifier = dropdownBoxModifier
                 .clickable { onClick() }
-                .padding(horizontal = DROPDOWN_HORIZONTAL_PADDING),
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -229,7 +213,7 @@ private fun ActiveGenresChips(
         )
     }
 
-    Spacer(modifier = Modifier.height(CHIPS_TOP_SPACING))
+    Spacer(modifier = Modifier.height(6.dp))
     Column(modifier = modifier.fillMaxWidth()) {
         genresPlus.forEach { item ->
             key(item.title) {
@@ -250,9 +234,9 @@ private fun ActiveGenresChips(
                     )
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = CD_REMOVE,
+                        contentDescription = "Remove",
                         tint = palette.selectedBorder,
-                        modifier = Modifier.size(REMOVE_ICON_SIZE)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
@@ -263,7 +247,7 @@ private fun ActiveGenresChips(
                 val annotatedText = remember(item.title, palette.excludedBorder) {
                     buildAnnotatedString {
                         withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) {
-                            append(PREFIX_NOT)
+                            append("NOT")
                         }
                         append(" ${item.title}")
                     }
@@ -285,9 +269,9 @@ private fun ActiveGenresChips(
                     )
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = CD_REMOVE,
+                        contentDescription = "Remove",
                         tint = palette.excludedBorder,
-                        modifier = Modifier.size(REMOVE_ICON_SIZE)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }

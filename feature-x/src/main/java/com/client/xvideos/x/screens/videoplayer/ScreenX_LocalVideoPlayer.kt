@@ -38,19 +38,6 @@ import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
-private val PLAYER_BG_COLOR = Color(0xFF040404)
-private val RESUME_PILL_BOTTOM_PADDING = 76.dp
-private const val RESUME_NOTICE_AUTO_HIDE_MS = 4000L
-private const val PROGRESS_SAVE_INTERVAL_MS = 3000L
-private const val RESUME_NOTICE_PREFIX = "Возобновлено с "
-
-private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
-private val ENTER_FADE_TRANSITION = fadeIn()
-private val EXIT_FADE_TRANSITION = fadeOut()
-
-private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
-private val CONTAINER_MODIFIER = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)
-private val RESUME_PILL_PADDING_MODIFIER = Modifier.padding(bottom = RESUME_PILL_BOTTOM_PADDING)
 
 /**
  * Плеер локального (скачанного) файла X.
@@ -96,7 +83,7 @@ class ScreenX_LocalVideoPlayer(
         var resumeNoticeText by remember(fileUrl) {
             mutableStateOf(
                 resumePosition?.let { sec ->
-                    "$RESUME_NOTICE_PREFIX${formatTime(sec.toInt())}"
+                    "Возобновлено с ${formatTime(sec.toInt())}"
                 }
             )
         }
@@ -113,7 +100,7 @@ class ScreenX_LocalVideoPlayer(
         // Авто-скрытие плашки о возобновлении через 4 секунды
         LaunchedEffect(resumeNoticeText) {
             if (resumeNoticeText != null) {
-                delay(RESUME_NOTICE_AUTO_HIDE_MS)
+                delay(4000L)
                 resumeNoticeText = null
             }
         }
@@ -123,7 +110,7 @@ class ScreenX_LocalVideoPlayer(
             if (!host.isPaused) {
                 saveProgress(sm, resolvedItem, host.currentTime, host.totalTime)
                 while (isActive) {
-                    delay(PROGRESS_SAVE_INTERVAL_MS)
+                    delay(3000L)
                     saveProgress(sm, resolvedItem, host.currentTime, host.totalTime)
                 }
             }
@@ -155,10 +142,10 @@ class ScreenX_LocalVideoPlayer(
             }
         }
 
-        Box(modifier = CONTAINER_MODIFIER) {
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
             ComposeVideoPlayer(
                 playerHost = host,
-                modifier = FULL_SIZE_MODIFIER,
+                modifier = Modifier.fillMaxSize(),
                 resetZoomTrigger = resetZoomTrigger,
                 onZoomChanged = onZoomChanged,
                 onTap = onTap,
@@ -166,11 +153,11 @@ class ScreenX_LocalVideoPlayer(
                     // Плашка возобновления
                     AnimatedVisibility(
                         visible = resumeNoticeText != null,
-                        enter = ENTER_FADE_TRANSITION,
-                        exit = EXIT_FADE_TRANSITION,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
                         modifier = Modifier
-                            .align(ALIGN_BOTTOM_CENTER)
-                            .then(RESUME_PILL_PADDING_MODIFIER)
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 76.dp)
                     ) {
                         resumeNoticeText?.let { notice ->
                             ResumePlaybackPill(
@@ -180,7 +167,7 @@ class ScreenX_LocalVideoPlayer(
                         }
                     }
 
-                    Box(modifier = Modifier.align(ALIGN_BOTTOM_CENTER)) {
+                    Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                         // Локальный файл — отдельный полноэкранный режим не требуется
                         X_PlayerBottomBar(host = host)
                     }

@@ -79,10 +79,7 @@ private const val TITLE_CUSTOM_URL_DIALOG = "Пользовательский Do
 private const val BUTTON_SAVE = "Сохранить"
 private const val TEXT_CUSTOM_URL_DESCRIPTION = "Введите HTTPS URL эндпоинта DoH резолвера (поддерживаются серверы с JSON API, RFC 8427):"
 private const val PLACEHOLDER_URL = "https://dns.example.com/dns-query"
-private val DIALOG_SPACER_HEIGHT = 8.dp
 private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val DIALOG_SPACER_MODIFIER = Modifier.height(DIALOG_SPACER_HEIGHT)
-private val DIALOG_FIELD_MODIFIER = Modifier.fillMaxWidth()
 
 @Composable
 internal fun NetworkSettingsSection(
@@ -380,13 +377,13 @@ private fun CustomDohUrlDialog(
                     style = Theme.L.Type.caption,
                     color = Theme.L.grey1
                 )
-                Spacer(DIALOG_SPACER_MODIFIER)
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = tempUrl,
                     onValueChange = onUrlChange,
                     placeholder = placeholderContent,
                     singleLine = true,
-                    modifier = DIALOG_FIELD_MODIFIER
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

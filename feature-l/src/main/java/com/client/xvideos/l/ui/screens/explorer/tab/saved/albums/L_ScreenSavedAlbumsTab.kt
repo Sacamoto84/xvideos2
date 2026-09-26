@@ -50,17 +50,8 @@ import dagger.multibindings.IntoMap
 import timber.log.Timber
 import javax.inject.Inject
 
-private const val GRID_COLUMNS = 2
-private const val EMPTY_ALBUMS_ALPHA = 0.6f
-private const val TEXT_NO_SAVED_ALBUMS = "Нет сохранённых альбомов"
-private const val ERROR_EMPTY_ID = "Не удалось открыть альбом: пустой id"
-private const val ITEM_KEY_TOP_SPACER = "top_spacer"
-private const val CONTENT_TYPE_TOP_SPACER = "top_spacer"
-private const val CONTENT_TYPE_ALBUM_ITEM = "album_item"
-private val ALBUM_PADDING_HORIZONTAL = 2.dp
-private val ALBUM_PADDING_VERTICAL = 2.dp
-private val SCROLLBAR_WIDTH = 2.dp
-private val ITEM_PADDING_MODIFIER = Modifier.padding(horizontal = ALBUM_PADDING_HORIZONTAL, vertical = ALBUM_PADDING_VERTICAL)
+private val ITEM_PADDING_MODIFIER = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
+
 
 object L_ScreenSavedAlbumsTab : Screen {
 
@@ -84,7 +75,7 @@ object L_ScreenSavedAlbumsTab : Screen {
                 if (albumId != null) {
                     navigator.push(ScreenLAlbum(albumId))
                 } else {
-                    SnackBar.error(ERROR_EMPTY_ID)
+                    SnackBar.error("Не удалось открыть альбом: пустой id")
                 }
             }
         }
@@ -121,8 +112,8 @@ fun SavedAlbumsTabContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = TEXT_NO_SAVED_ALBUMS,
-                    color = Theme.L.textColor.copy(alpha = EMPTY_ALBUMS_ALPHA)
+                    text = "Нет сохранённых альбомов",
+                    color = Theme.L.textColor.copy(alpha = 0.6f)
                 )
             }
         } else {
@@ -133,14 +124,14 @@ fun SavedAlbumsTabContent(
 
             LazyVerticalGrid(
                 state = state,
-                columns = GridCells.Fixed(GRID_COLUMNS),
+                columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 item(
-                    key = ITEM_KEY_TOP_SPACER,
+                    key = "top_spacer",
                     span = { GridItemSpan(maxLineSpan) },
-                    contentType = CONTENT_TYPE_TOP_SPACER
+                    contentType = "top_spacer"
                 ) {
                     Box(modifier = Modifier.height(topInset))
                 }
@@ -152,7 +143,7 @@ fun SavedAlbumsTabContent(
                 itemsIndexed(
                     items = albums,
                     key = { index, item -> "${item.id}#$index" },
-                    contentType = { _, _ -> CONTENT_TYPE_ALBUM_ITEM }
+                    contentType = { _, _ -> "album_item" }
                 ) { _, item ->
                     SavedAlbumGridItem(
                         item = item,
@@ -163,7 +154,7 @@ fun SavedAlbumsTabContent(
             }
 
             /** Вертикальный индикатор прокрутки */
-            Box(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(SCROLLBAR_WIDTH)) {
+            Box(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp)) {
                 VerticalScrollbar(scrollPercentProvider)
             }
         }

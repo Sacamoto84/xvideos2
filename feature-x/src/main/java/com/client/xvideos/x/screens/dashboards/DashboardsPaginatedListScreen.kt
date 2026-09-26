@@ -59,56 +59,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-private val ERROR_BADGE_SHAPE = RoundedCornerShape(8.dp)
-private val ERROR_BADGE_BG = Color(0xD9212121)
 private const val GRID_COLUMNS = 2
-private val GRID_CELLS_FIXED = GridCells.Fixed(GRID_COLUMNS)
-private val SPINNER_SIZE = 40.dp
-private val RETRY_BUTTON_HEIGHT = 32.dp
-private val ERROR_SPACER_HEIGHT = 12.dp
-private val ERROR_BADGE_PADDING = 8.dp
-private val ERROR_BADGE_CONTENT_HORIZONTAL = 12.dp
-private val ERROR_BADGE_CONTENT_VERTICAL = 6.dp
-private val ERROR_TEXT_FONT_SIZE = 12.sp
-private val RETRY_BUTTON_PADDING = PaddingValues(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = 0.dp)
-private val ROW_ALIGNMENT_CENTER_VERTICALLY = Alignment.CenterVertically
-private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
-
-private const val TEXT_LOAD_ERROR = "Не удалось загрузить страницу"
-private const val TEXT_UPDATE_ERROR = "Не удалось обновить страницу"
-private const val TEXT_RETRY = "Повторить"
 private const val CONTENT_TYPE_DASHBOARD_CELL = "dashboard_cell"
 
-private const val DASHBOARD_CARD_ASPECT_RATIO = 352f / 198f
-private val CHANNEL_BADGE_BG = Color(0x60000000)
-private val DURATION_FONT_SIZE = 14.sp
-private val DURATION_OFFSET_Y = (-3).dp
-private val DURATION_SHADOW_OFFSET_X = 0.5.dp
-private val DURATION_SHADOW_OFFSET_Y = (-2.5).dp
-private val CHANNEL_BADGE_FONT_SIZE = 14.sp
-private val FAVORITE_ICON_PADDING = 6.dp
-private val CELL_CARD_PADDING = 1.dp
-
-private val CELL_BOX_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .aspectRatio(DASHBOARD_CARD_ASPECT_RATIO)
-    .padding(CELL_CARD_PADDING)
-    .background(Color.DarkGray)
-
-private val ERROR_ROW_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .background(ERROR_BADGE_BG, ERROR_BADGE_SHAPE)
-    .padding(horizontal = ERROR_BADGE_CONTENT_HORIZONTAL, vertical = ERROR_BADGE_CONTENT_VERTICAL)
-
-private val CHANNEL_BADGE_BASE_MODIFIER = Modifier.background(CHANNEL_BADGE_BG)
-private val FAVORITE_ICON_MODIFIER = Modifier.padding(bottom = FAVORITE_ICON_PADDING, end = FAVORITE_ICON_PADDING)
-private val SHADOWED_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
-private val DURATION_SHADOW_TEXT_MODIFIER = Modifier
-    .fillMaxWidth()
-    .offset(DURATION_SHADOW_OFFSET_X, DURATION_SHADOW_OFFSET_Y)
-private val DURATION_TEXT_MODIFIER = Modifier
-    .fillMaxWidth()
-    .offset(0.dp, DURATION_OFFSET_Y)
 
 internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
@@ -181,14 +134,14 @@ fun DashboardsPaginatedListScreen(
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hasError) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(TEXT_LOAD_ERROR, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(ERROR_SPACER_HEIGHT))
+                    Text("Не удалось загрузить страницу", color = Color.Gray)
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(onClick = onRetry) {
-                        Text(TEXT_RETRY)
+                        Text("Повторить")
                     }
                 }
             } else {
-                CircularProgressIndicator(modifier = Modifier.size(SPINNER_SIZE))
+                CircularProgressIndicator(modifier = Modifier.size(40.dp))
             }
         }
     } else {
@@ -208,26 +161,29 @@ fun DashboardsPaginatedListScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = topCutout + ERROR_BADGE_PADDING, start = ERROR_BADGE_PADDING, end = ERROR_BADGE_PADDING, bottom = ERROR_BADGE_PADDING)
+                        .padding(top = topCutout + 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
                         .align(Alignment.TopCenter)
                 ) {
                     Row(
-                        modifier = ERROR_ROW_BASE_MODIFIER,
-                        verticalAlignment = ROW_ALIGNMENT_CENTER_VERTICALLY,
-                        horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xD9212121), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = TEXT_UPDATE_ERROR,
+                            text = "Не удалось обновить страницу",
                             color = Color.White,
-                            fontSize = ERROR_TEXT_FONT_SIZE,
+                            fontSize = 12.sp,
                             modifier = Modifier.weight(1f)
                         )
                         Button(
                             onClick = onRetry,
-                            modifier = Modifier.height(RETRY_BUTTON_HEIGHT),
-                            contentPadding = RETRY_BUTTON_PADDING
+                            modifier = Modifier.height(32.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
-                            Text(TEXT_RETRY, fontSize = ERROR_TEXT_FONT_SIZE)
+                            Text("Повторить", fontSize = 12.sp)
                         }
                     }
                 }
@@ -253,7 +209,7 @@ fun DashboardsPaginatedListContent(
     val topCutout = getTopInsetDp()
     val contentPadding = remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
-        columns = GRID_CELLS_FIXED,
+        columns = GridCells.Fixed(GRID_COLUMNS),
         modifier = modifier.fillMaxSize(),
         state = gridState,
         contentPadding = contentPadding,
@@ -293,10 +249,13 @@ private fun DashboardGridCell(
     val handleDownload = remember(cell, onDownload) { { onDownload(cell) } }
     val handleSaveToGallery = remember(cell, onSaveToGallery) { { onSaveToGallery(cell) } }
     val durationText = remember(cell.duration) { cell.duration.trim().removeSuffix(".") }
-    val boxModifier = if (modifier == Modifier) CELL_BOX_BASE_MODIFIER else modifier.then(CELL_BOX_BASE_MODIFIER)
 
     Box(
-        modifier = boxModifier
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(352f / 198f)
+            .padding(1.dp)
+            .background(Color.DarkGray)
     ) {
         UrlVideoImageAndLongClickX(
             cell,
@@ -310,20 +269,20 @@ private fun DashboardGridCell(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .then(CHANNEL_BADGE_BASE_MODIFIER),
+                    .background(Color(0x60000000)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = cell.channel,
                     modifier = Modifier.align(Alignment.Center),
-                    fontSize = CHANNEL_BADGE_FONT_SIZE,
+                    fontSize = 14.sp,
                     color = Color.White
                 )
             }
 
             Row(modifier = Modifier.align(Alignment.BottomEnd), horizontalArrangement = Arrangement.End) {
                 if (isFavorite) {
-                    IconFavorite18(FAVORITE_ICON_MODIFIER)
+                    IconFavorite18(Modifier.padding(bottom = 6.dp, end = 6.dp))
                 }
             }
 
@@ -345,21 +304,24 @@ private fun ShadowedDurationText(
     durationText: String,
     modifier: Modifier = Modifier,
 ) {
-    val boxModifier = if (modifier == Modifier) SHADOWED_BOX_BASE_MODIFIER else modifier.then(SHADOWED_BOX_BASE_MODIFIER)
-    Box(modifier = boxModifier) {
+    Box(modifier = modifier.fillMaxSize()) {
         Text(
             text = durationText,
-            modifier = DURATION_SHADOW_TEXT_MODIFIER,
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(0.5.dp, (-2.5).dp),
             textAlign = TextAlign.Right,
-            fontSize = DURATION_FONT_SIZE,
+            fontSize = 14.sp,
             color = Color.Black
         )
 
         Text(
             text = durationText,
-            modifier = DURATION_TEXT_MODIFIER,
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(0.dp, (-3).dp),
             textAlign = TextAlign.Right,
-            fontSize = DURATION_FONT_SIZE,
+            fontSize = 14.sp,
             color = Color.White
         )
     }

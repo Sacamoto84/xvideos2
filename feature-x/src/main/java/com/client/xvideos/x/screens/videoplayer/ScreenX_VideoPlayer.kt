@@ -21,12 +21,8 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -40,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -51,57 +48,22 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.videoplayer.atom.ComposeTags
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
 import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
-private val ERROR_SPACER_HEIGHT = 12.dp
-private val BUTTON_SPACER_WIDTH = 16.dp
-private val BACK_BUTTON_PADDING = 8.dp
-private val TAGS_START_PADDING = 56.dp
-private val TAGS_END_PADDING = 12.dp
-private val TAGS_TOP_PADDING = 8.dp
-private val RESUME_PILL_BOTTOM_PADDING_FULLSCREEN = 68.dp
-private val RESUME_PILL_BOTTOM_PADDING_PORTRAIT = 84.dp
-private const val PROGRESS_SAVE_INTERVAL_MS = 3000L
-
-private const val TEXT_LOAD_ERROR = "Не удалось загрузить видео"
-private const val TEXT_RETRY = "Повторить"
-private const val TEXT_BACK = "Назад"
-
-private val PLAYER_BG_COLOR = Color(0xFF040404)
-private val COLOR_BLACK = Color.Black
-private val COLOR_WHITE = Color.White
-private val ICON_BACK = Icons.AutoMirrored.Filled.ArrowBack
-
-private val ALIGN_CENTER = Alignment.Center
-private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
-private val ALIGN_TOP_START = Alignment.TopStart
-private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
-
 private val CutoutTopStartInsets: WindowInsets
     @Composable get() = WindowInsets.displayCutout.only(
         WindowInsetsSides.Top + WindowInsetsSides.Start
     )
-
-private val ENTER_FADE_TRANSITION = fadeIn()
-private val EXIT_FADE_TRANSITION = fadeOut()
-
-private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
-private val BLACK_BG_FULL_SIZE_MODIFIER = Modifier.fillMaxSize().background(COLOR_BLACK)
-private val PLAYER_BG_FULL_SIZE_MODIFIER = Modifier.fillMaxSize().background(PLAYER_BG_COLOR)
-
-private val ERROR_SPACER_MODIFIER = Modifier.height(ERROR_SPACER_HEIGHT)
-private val BUTTON_SPACER_MODIFIER = Modifier.width(BUTTON_SPACER_WIDTH)
-private val BACK_BUTTON_PADDING_MODIFIER = Modifier.padding(BACK_BUTTON_PADDING)
-private val TAGS_BOX_PADDING_MODIFIER = Modifier.padding(start = TAGS_START_PADDING, end = TAGS_END_PADDING, top = TAGS_TOP_PADDING)
-private val RESUME_PILL_FULLSCREEN_PADDING = Modifier.padding(bottom = RESUME_PILL_BOTTOM_PADDING_FULLSCREEN)
-private val RESUME_PILL_PORTRAIT_PADDING = Modifier.padding(bottom = RESUME_PILL_BOTTOM_PADDING_PORTRAIT)
 
 class ScreenX_VideoPlayer(
     val url: String,
@@ -200,19 +162,19 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
 @Composable
 private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
     Box(
-        modifier = BLACK_BG_FULL_SIZE_MODIFIER,
-        contentAlignment = ALIGN_CENTER
+        modifier = Modifier.fillMaxSize().background(Color.Black),
+        contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = ALIGN_CENTER_HORIZONTALLY) {
-            Text(TEXT_LOAD_ERROR, color = COLOR_WHITE)
-            Spacer(modifier = ERROR_SPACER_MODIFIER)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Не удалось загрузить видео", color = Color.White)
+            Spacer(modifier = Modifier.height(12.dp))
             Row {
                 Button(onClick = onRetry) {
-                    Text(TEXT_RETRY)
+                    Text("Повторить")
                 }
-                Spacer(modifier = BUTTON_SPACER_MODIFIER)
+                Spacer(modifier = Modifier.width(16.dp))
                 Button(onClick = onBack) {
-                    Text(TEXT_BACK)
+                    Text("Назад")
                 }
             }
         }
@@ -222,48 +184,106 @@ private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
 @Composable
 private fun VideoPlayerLoadingView(onBack: () -> Unit) {
     Box(
-        modifier = BLACK_BG_FULL_SIZE_MODIFIER,
+        modifier = Modifier.fillMaxSize().background(Color.Black),
+        contentAlignment = Alignment.Center
     ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .align(ALIGN_TOP_START)
-                .windowInsetsPadding(CutoutTopStartInsets)
-                .then(BACK_BUTTON_PADDING_MODIFIER),
-        ) {
-            Icon(
-                imageVector = ICON_BACK,
-                contentDescription = TEXT_BACK,
-                tint = COLOR_WHITE,
-            )
-        }
-        Box(
-            modifier = FULL_SIZE_MODIFIER,
-            contentAlignment = ALIGN_CENTER
-        ) {
-            CircularProgressIndicator(color = COLOR_WHITE)
-        }
+        CircularProgressIndicator(color = Color.White)
     }
 }
 
 @OptIn(UnstableApi::class)
-@Suppress("LongMethod")
 @Composable
 private fun VideoPlayerContentView(
     vm: ScreenX_VideoPlayerSM,
     navigator: Navigator,
 ) {
+    VideoPlayerContentView(
+        passedHLS = vm.passedHLS,
+        resumePositionSeconds = vm.resumePositionSeconds,
+        isFullScreen = vm.isFullScreen,
+        resumeNoticeText = vm.resumeNoticeText,
+        tags = vm.tags,
+        onPlaybackError = { vm.onPlaybackError() },
+        onExitFullScreen = { vm.exitFullScreen() },
+        onPopBack = { navigator.pop() },
+        onDismissResumeNotice = { vm.dismissResumeNotice() },
+        onTagClick = { tag -> vm.openTag(tag, navigator) },
+        onRestartFromBeginning = { vm.restartFromBeginning() },
+        onToggleFullScreen = { vm.toggleFullScreen() },
+        onSaveProgress = { positionSeconds, durationSeconds ->
+            vm.saveProgress(positionSeconds, durationSeconds)
+        },
+    )
+}
+
+@OptIn(UnstableApi::class)
+@Suppress("LongMethod", "LongParameterList")
+@Composable
+private fun VideoPlayerContentView(
+    passedHLS: String,
+    resumePositionSeconds: Float?,
+    isFullScreen: Boolean,
+    resumeNoticeText: String?,
+    tags: TagsModel,
+    onPlaybackError: () -> Unit,
+    onExitFullScreen: () -> Unit,
+    onPopBack: () -> Unit,
+    onDismissResumeNotice: () -> Unit,
+    onTagClick: (String) -> Unit,
+    onRestartFromBeginning: () -> Unit,
+    onToggleFullScreen: () -> Unit,
+    onSaveProgress: (positionSeconds: Float, durationSeconds: Int) -> Unit,
+) {
+    if (LocalInspectionMode.current) {
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "Video Preview", color = Color.White)
+            }
+
+            if (!isFullScreen) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .windowInsetsPadding(CutoutTopStartInsets)
+                        .padding(start = 4.dp, end = 4.dp, top = 4.dp)
+                ) {
+                    ComposeTags(
+                        tags,
+                        onClick = onTagClick
+                    )
+                }
+            }
+
+            if (resumeNoticeText != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (isFullScreen) 68.dp else 84.dp)
+                ) {
+                    ResumePlaybackPill(
+                        text = resumeNoticeText,
+                        onRestart = onRestartFromBeginning
+                    )
+                }
+            }
+        }
+        return
+    }
+
     // Единый Compose-плеер (общий с R/L). Хост сам освобождает ExoPlayer
     // при выходе из композиции (RememberObserver).
-    val host = remember(vm.passedHLS) {
+    val host = remember(passedHLS) {
         MediaPlayerHost(
-            mediaUrl = vm.passedHLS,
+            mediaUrl = passedHLS,
             isMuted = true, // видео X всегда без звука
             isLooping = false,
-            startTimeInSeconds = vm.resumePositionSeconds,
+            startTimeInSeconds = resumePositionSeconds,
         ).apply {
             onError = {
-                vm.onPlaybackError()
+                onPlaybackError()
             }
         }
     }
@@ -273,42 +293,40 @@ private fun VideoPlayerContentView(
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
     val onResetZoom: () -> Unit = remember { { resetZoomTrigger++ } }
-    val onExitFullScreen: () -> Unit = remember(vm) { { vm.exitFullScreen() } }
-    val onPopScreen: () -> Unit = remember(navigator) { { navigator.pop() } }
 
     // Иерархия «Назад»:
     // 1. При активном зуме сбрасывает масштаб до 1.0x (как в обычном, так и в ландшафтном режиме)
     // 2. В ландшафтном полноэкранном режиме возвращает в портретный режим
     // 3. Выходит из экрана плеера
     BackHandler(enabled = isZoomed, onBack = onResetZoom)
-    BackHandler(enabled = !isZoomed && vm.isFullScreen, onBack = onExitFullScreen)
-    BackHandler(enabled = !isZoomed && !vm.isFullScreen, onBack = onPopScreen)
+    BackHandler(enabled = !isZoomed && isFullScreen, onBack = onExitFullScreen)
+    BackHandler(enabled = !isZoomed && !isFullScreen, onBack = onPopBack)
 
-    LaunchedEffect(vm.isFullScreen) {
+    LaunchedEffect(isFullScreen) {
         areControlsVisible = true
     }
 
-    LaunchedEffect(vm.isFullScreen, areControlsVisible, host.isPaused) {
-        if (vm.isFullScreen && areControlsVisible && !host.isPaused) {
+    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused) {
+        if (isFullScreen && areControlsVisible && !host.isPaused) {
             delay(3500)
             areControlsVisible = false
         }
     }
 
     // Авто-скрытие плашки о возобновлении через 4 секунды
-    LaunchedEffect(vm.resumeNoticeText) {
-        if (vm.resumeNoticeText != null) {
+    LaunchedEffect(resumeNoticeText) {
+        if (resumeNoticeText != null) {
             delay(4000)
-            vm.dismissResumeNotice()
+            onDismissResumeNotice()
         }
     }
 
-    RememberHistoryProgressSync(vm = vm, host = host)
+    RememberHistoryProgressSync(onSaveProgress = onSaveProgress, host = host)
 
     val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
-    val onTap: () -> Unit = remember(vm, host) {
+    val onTap: () -> Unit = remember(isFullScreen, host) {
         {
-            if (vm.isFullScreen) {
+            if (isFullScreen) {
                 areControlsVisible = !areControlsVisible
             } else {
                 host.togglePlayPause()
@@ -316,88 +334,53 @@ private fun VideoPlayerContentView(
         }
     }
 
-    val onOverlayBack: () -> Unit = remember(isZoomed, navigator) {
-        {
-            if (isZoomed) {
-                resetZoomTrigger++
-            } else {
-                navigator.pop()
-            }
-        }
-    }
-    val onTagClick: (String) -> Unit = remember(host, vm, navigator) {
+    val handleTagClick: (String) -> Unit = remember(host) {
         { tag ->
             host.pause()
-            vm.openTag(tag, navigator)
+            onTagClick(tag)
         }
     }
-    val onRestartPlayback: () -> Unit = remember(host, vm) {
+    val onRestartPlayback: () -> Unit = remember(host) {
         {
             host.seekTo(0f)
-            vm.restartFromBeginning()
-        }
-    }
-    val onToggleFullScreen: () -> Unit = remember(vm) {
-        {
-            vm.toggleFullScreen()
+            onRestartFromBeginning()
         }
     }
 
-    Box(modifier = PLAYER_BG_FULL_SIZE_MODIFIER) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
         ComposeVideoPlayer(
             playerHost = host,
-            modifier = FULL_SIZE_MODIFIER,
+            modifier = Modifier.fillMaxSize(),
             resetZoomTrigger = resetZoomTrigger,
             onZoomChanged = onZoomChanged,
             onTap = onTap,
             overlay = {
-                // Кнопка возврата (только в обычном режиме; в полном экране используются системные жесты/кнопки Android)
-                AnimatedVisibility(
-                    visible = !vm.isFullScreen,
-                    enter = ENTER_FADE_TRANSITION,
-                    exit = EXIT_FADE_TRANSITION,
-                    modifier = Modifier.align(ALIGN_TOP_START)
-                ) {
-                    IconButton(
-                        onClick = onOverlayBack,
-                        modifier = Modifier
-                            .windowInsetsPadding(CutoutTopStartInsets)
-                            .then(BACK_BUTTON_PADDING_MODIFIER),
-                    ) {
-                        Icon(
-                            imageVector = ICON_BACK,
-                            contentDescription = TEXT_BACK,
-                            tint = COLOR_WHITE,
-                        )
-                    }
-                }
 
                 // Теги/каналы поверх видео (только в портретном режиме)
-                if (!vm.isFullScreen) {
+                if (!isFullScreen) {
                     Box(
                         modifier = Modifier
-                            .align(ALIGN_TOP_START)
+                            .align(Alignment.TopStart)
                             .windowInsetsPadding(CutoutTopStartInsets)
-                            .then(TAGS_BOX_PADDING_MODIFIER)
+                            .padding(start = 4.dp, end = 4.dp, top = 4.dp)
                     ) {
                         ComposeTags(
-                            vm.tags,
-                            onClick = onTagClick
+                            tags,
+                            onClick = handleTagClick
                         )
                     }
                 }
 
                 // Всплывающее уведомление о возобновлении с кнопкой «С начала»
-                val resumePillPadding = if (vm.isFullScreen) RESUME_PILL_FULLSCREEN_PADDING else RESUME_PILL_PORTRAIT_PADDING
                 AnimatedVisibility(
-                    visible = vm.resumeNoticeText != null && (!vm.isFullScreen || areControlsVisible),
-                    enter = ENTER_FADE_TRANSITION,
-                    exit = EXIT_FADE_TRANSITION,
+                    visible = resumeNoticeText != null && (!isFullScreen || areControlsVisible),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                     modifier = Modifier
-                        .align(ALIGN_BOTTOM_CENTER)
-                        .then(resumePillPadding)
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (isFullScreen) 68.dp else 84.dp)
                 ) {
-                    vm.resumeNoticeText?.let { notice ->
+                    resumeNoticeText?.let { notice ->
                         ResumePlaybackPill(
                             text = notice,
                             onRestart = onRestartPlayback
@@ -407,14 +390,14 @@ private fun VideoPlayerContentView(
 
                 // Панель управления снизу с автоскрытием в полноэкранном режиме
                 AnimatedVisibility(
-                    visible = !vm.isFullScreen || areControlsVisible,
-                    enter = ENTER_FADE_TRANSITION,
-                    exit = EXIT_FADE_TRANSITION,
-                    modifier = Modifier.align(ALIGN_BOTTOM_CENTER)
+                    visible = !isFullScreen || areControlsVisible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     X_PlayerBottomBar(
                         host = host,
-                        isFullScreen = vm.isFullScreen,
+                        isFullScreen = isFullScreen,
                         onFullScreen = onToggleFullScreen
                     )
                 }
@@ -425,16 +408,16 @@ private fun VideoPlayerContentView(
 
 @Composable
 private fun RememberHistoryProgressSync(
-    vm: ScreenX_VideoPlayerSM,
+    onSaveProgress: (positionSeconds: Float, durationSeconds: Int) -> Unit,
     host: MediaPlayerHost,
 ) {
     // Периодическое сохранение прогресса во время активного воспроизведения
     LaunchedEffect(host.isPaused) {
         if (!host.isPaused) {
-            vm.saveProgress(host.currentTime, host.totalTime)
+            onSaveProgress(host.currentTime, host.totalTime)
             while (isActive) {
-                delay(PROGRESS_SAVE_INTERVAL_MS)
-                vm.saveProgress(host.currentTime, host.totalTime)
+                delay(3000L)
+                onSaveProgress(host.currentTime, host.totalTime)
             }
         }
     }
@@ -442,7 +425,31 @@ private fun RememberHistoryProgressSync(
     // Финальное сохранение текущей позиции при закрытии экрана
     DisposableEffect(Unit) {
         onDispose {
-            vm.saveProgress(host.currentTime, host.totalTime)
+            onSaveProgress(host.currentTime, host.totalTime)
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF040404)
+@Composable
+private fun VideoPlayerContentViewPreview() {
+    XvideosTheme {
+        VideoPlayerContentView(
+            passedHLS = "https://example.com/video.m3u8",
+            resumePositionSeconds = 120f,
+            isFullScreen = false,
+            resumeNoticeText = "Возобновлено с 02:00",
+            tags = TagsModel(
+                tags = listOf("sample_tag_1", "sample_tag_2")
+            ),
+            onPlaybackError = {},
+            onExitFullScreen = {},
+            onPopBack = {},
+            onDismissResumeNotice = {},
+            onTagClick = {},
+            onRestartFromBeginning = {},
+            onToggleFullScreen = {},
+            onSaveProgress = { _, _ -> },
+        )
     }
 }

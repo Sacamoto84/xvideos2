@@ -33,16 +33,6 @@ import com.client.xvideos.l.model.enum.AudiencesType
 import com.client.xvideos.l.net.graphQl.Audience
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 
-private val DROPDOWN_SHAPE = RoundedCornerShape(6.dp)
-private val DROPDOWN_MIN_WIDTH = 160.dp
-private val DROPDOWN_MAX_WIDTH = 220.dp
-private val DROPDOWN_HEIGHT = 43.dp
-private val DROPDOWN_BORDER_WIDTH = 1.dp
-private val DROPDOWN_HORIZONTAL_PADDING = 8.dp
-private val ROW_HORIZONTAL_PADDING = 4.dp
-private const val TITLE_AUDIENCES = "Audiences"
-private const val TEXT_ALL_AUDIENCES = "All audiences"
-
 @Composable
 fun AlbumListFilterAudiences(
     filter: AlbumListFilter,
@@ -62,7 +52,7 @@ fun AlbumListFilterAudiences(
 
     val summaryText = remember(isAllSelected, audiences, selectedIds) {
         if (isAllSelected) {
-            TEXT_ALL_AUDIENCES
+            "All audiences"
         } else {
             audiences.filter { it.id in selectedIds }.joinToString { it.title }
         }
@@ -90,24 +80,24 @@ fun AlbumListFilterAudiences(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = ROW_HORIZONTAL_PADDING),
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = TITLE_AUDIENCES,
+            text = "Audiences",
             style = titleStyle
         )
 
         Row(
             modifier = Modifier
-                .widthIn(min = DROPDOWN_MIN_WIDTH, max = DROPDOWN_MAX_WIDTH)
-                .height(DROPDOWN_HEIGHT)
-                .clip(DROPDOWN_SHAPE)
-                .border(DROPDOWN_BORDER_WIDTH, palette.border, DROPDOWN_SHAPE)
+                .widthIn(min = 160.dp, max = 220.dp)
+                .height(43.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .border(1.dp, palette.border, RoundedCornerShape(6.dp))
                 .background(palette.field)
                 .clickable { showDialog = true }
-                .padding(horizontal = DROPDOWN_HORIZONTAL_PADDING),
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

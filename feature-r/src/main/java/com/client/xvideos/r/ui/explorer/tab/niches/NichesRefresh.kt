@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,55 +34,6 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 
-private const val REFRESH_DELAY_MS = 1000L
-private val REFRESH_SPACER_HEIGHT_8 = 8.dp
-private val REFRESH_SPACER_HEIGHT_16 = 16.dp
-private val REFRESH_MINI_HORIZONTAL_PADDING = 8.dp
-private val REFRESH_MINI_VERTICAL_PADDING = 4.dp
-private val REFRESH_INDICATOR_SIZE = 36.dp
-private val REFRESH_ICON_SIZE = 34.dp
-private val REFRESH_ICON_PADDING = 4.dp
-private val REFRESH_TITLE_FONT_SIZE = 20.sp
-private val REFRESH_BUTTON_FONT_SIZE = 18.sp
-private val REFRESH_MINI_FONT_SIZE = 14.sp
-private val COLOR_WHITE = Color.White
-private val ICON_REFRESH = Icons.Default.Refresh
-private val COLUMN_CENTER_HORIZONTAL = Alignment.CenterHorizontally
-private val COLUMN_CENTER_VERTICAL = Arrangement.Center
-private val ROW_CENTER_VERTICAL = Alignment.CenterVertically
-private val ROW_SPACE_BETWEEN = Arrangement.SpaceBetween
-private val INDICATOR_SIZE_MODIFIER = Modifier.size(REFRESH_INDICATOR_SIZE)
-private val ICON_SIZE_MODIFIER = Modifier.size(REFRESH_ICON_SIZE)
-private val ICON_PADDING_MODIFIER = Modifier.padding(REFRESH_ICON_PADDING)
-private val SPACER_HEIGHT_8_MODIFIER = Modifier.height(REFRESH_SPACER_HEIGHT_8)
-private val SPACER_HEIGHT_16_MODIFIER = Modifier.height(REFRESH_SPACER_HEIGHT_16)
-private val MINI_ROW_BASE_MODIFIER = Modifier
-    .padding(horizontal = REFRESH_MINI_HORIZONTAL_PADDING, vertical = REFRESH_MINI_VERTICAL_PADDING)
-    .fillMaxSize()
-
-private const val TEXT_NO_NICHES = "Отсутствует список Niches"
-private const val TEXT_DOWNLOAD_LIST = "Скачать список "
-private const val TEXT_OLD_NICHES_PREFIX = "Старый список Niches, возраст "
-private const val TEXT_OLD_NICHES_SUFFIX = " часов"
-private const val CD_REFRESH = "Refresh"
-
-private val NICHES_MESSAGE_STYLE = TextStyle(
-    fontSize = REFRESH_TITLE_FONT_SIZE,
-    color = COLOR_WHITE,
-    fontFamily = Theme.R.fontFamilyDMsanss
-)
-private val NICHES_BUTTON_STYLE = TextStyle(
-    fontSize = REFRESH_BUTTON_FONT_SIZE,
-    color = COLOR_WHITE,
-    fontFamily = Theme.R.fontFamilyDMsanss
-)
-private val NICHES_MINI_STYLE = TextStyle(
-    fontSize = REFRESH_MINI_FONT_SIZE,
-    color = COLOR_WHITE,
-    fontFamily = Theme.R.fontFamilyDMsanss
-)
-
-private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
 
 /**
  * Заглушки списка ниш: предложение скачать список и подсказка, что он устарел.
@@ -101,7 +51,7 @@ fun Refresh(
 ) {
     LaunchedEffect(nichesCacheProgress) {
         if (nichesCacheProgress == 1f) {
-            delay(REFRESH_DELAY_MS)
+            delay(1000L)
             refreshList.invoke()
         }
     }
@@ -110,21 +60,31 @@ fun Refresh(
 
     Column(
         modifier = modifier
-            .then(FULL_SIZE_MODIFIER)
+            .fillMaxSize()
             .background(Theme.tabLevel1),
-        verticalArrangement = COLUMN_CENTER_VERTICAL,
-        horizontalAlignment = COLUMN_CENTER_HORIZONTAL
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(TEXT_NO_NICHES, style = NICHES_MESSAGE_STYLE)
+        Text(
+            text = "Отсутствует список Niches",
+            fontSize = 20.sp,
+            color = Color.White,
+            fontFamily = Theme.R.fontFamilyDMsanss
+        )
 
-        Spacer(SPACER_HEIGHT_8_MODIFIER)
+        Spacer(Modifier.height(8.dp))
         Button(
             onClick = onRefreshNichesCacheClick,
             colors = buttonColors
         ) {
-            Text(TEXT_DOWNLOAD_LIST, style = NICHES_BUTTON_STYLE)
+            Text(
+                text = "Скачать список ",
+                fontSize = 18.sp,
+                color = Color.White,
+                fontFamily = Theme.R.fontFamilyDMsanss
+            )
         }
-        Spacer(SPACER_HEIGHT_16_MODIFIER)
+        Spacer(Modifier.height(16.dp))
         LinearWavyProgressIndicator(
             progress = { nichesCacheProgress },
             modifier = Modifier.graphicsLayer {
@@ -145,39 +105,46 @@ fun RefreshMini(
 ) {
     LaunchedEffect(nichesCacheProgress) {
         if (nichesCacheProgress == 1f) {
-            delay(REFRESH_DELAY_MS)
+            delay(1000L)
             refreshList.invoke()
         }
     }
 
     Row(
         modifier = modifier
-            .then(MINI_ROW_BASE_MODIFIER)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .fillMaxSize()
             .background(Theme.tabLevel1),
-        verticalAlignment = ROW_CENTER_VERTICAL,
-        horizontalArrangement = ROW_SPACE_BETWEEN
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text("$TEXT_OLD_NICHES_PREFIX$cacheHour$TEXT_OLD_NICHES_SUFFIX", style = NICHES_MINI_STYLE)
+        Text(
+            text = "Старый список Niches, возраст $cacheHour часов",
+            fontSize = 14.sp,
+            color = Color.White,
+            fontFamily = Theme.R.fontFamilyDMsanss
+        )
 
-        Spacer(SPACER_HEIGHT_8_MODIFIER)
+        Spacer(Modifier.height(8.dp))
 
         Box {
             if (nichesCacheProgress == 0f) {
-                IconButton(onClick = onRefreshNichesCacheClick, modifier = INDICATOR_SIZE_MODIFIER) {
+                IconButton(onClick = onRefreshNichesCacheClick, modifier = Modifier.size(36.dp)) {
                     Icon(
-                        ICON_REFRESH,
-                        contentDescription = CD_REFRESH,
-                        tint = COLOR_WHITE,
-                        modifier = ICON_SIZE_MODIFIER
+                        Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(34.dp)
                             .background(Theme.R.colorBlue, CircleShape)
-                            .then(ICON_PADDING_MODIFIER)
+                            .padding(4.dp)
                     )
                 }
             }
 
             CircularWavyProgressIndicator(
                 progress = { nichesCacheProgress },
-                modifier = INDICATOR_SIZE_MODIFIER.graphicsLayer {
+                modifier = Modifier.size(36.dp).graphicsLayer {
                     alpha = if (nichesCacheProgress > 0f) 1f else 0f
                 }
             )

@@ -30,14 +30,7 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val BAR_START_PADDING = 8.dp
-private val COLLECTION_TITLE_FONT_SIZE = 18.sp
-private val SORT_ORDER_FONT_SIZE = 12.sp
-private const val CD_COLLECTION_SORT = "Сортировка коллекций"
-private const val COLLECTION_TITLE_PREFIX = ">"
-private val ROW_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(start = BAR_START_PADDING)
+
 
 @Composable
 internal fun LCollectionsTopBar(
@@ -50,7 +43,7 @@ internal fun LCollectionsTopBar(
     val onOpenMenu = remember { { menuExpanded = true } }
     val onDismissMenu = remember { { menuExpanded = false } }
     val collectionTitle = remember(selectedCollection) {
-        selectedCollection?.let { "$COLLECTION_TITLE_PREFIX$it" }
+        selectedCollection?.let { ">$it" }
     }
 
     // Топ-бар лежит в Scaffold(topBar = ...) — Material3 не применяет инсет
@@ -72,7 +65,9 @@ internal fun LCollectionsTopBar(
         modifier = columnModifier
     ) {
         Row(
-            modifier = ROW_BASE_MODIFIER,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -80,7 +75,7 @@ internal fun LCollectionsTopBar(
                     Text(
                         collectionTitle,
                         color = Theme.L.primaryColor,
-                        fontSize = COLLECTION_TITLE_FONT_SIZE,
+                        fontSize = 18.sp,
                         fontFamily = Theme.L.fontFamilyPopinsRegular
                     )
                 }
@@ -89,7 +84,7 @@ internal fun LCollectionsTopBar(
                     Text(
                         sortOrder.title,
                         color = Theme.L.grey2,
-                        fontSize = SORT_ORDER_FONT_SIZE,
+                        fontSize = 12.sp,
                         fontFamily = Theme.L.fontFamilyDMsanss
                     )
                 }
@@ -100,7 +95,7 @@ internal fun LCollectionsTopBar(
                     IconButton(onClick = onOpenMenu) {
                         Icon(
                             Icons.Default.FilterList,
-                            contentDescription = CD_COLLECTION_SORT,
+                            contentDescription = "Сортировка коллекций",
                             tint = Theme.L.textColor
                         )
                     }

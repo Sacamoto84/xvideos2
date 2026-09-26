@@ -51,8 +51,6 @@ fun calculateNextAlbumPage(page: Int, pageMax: Int): Int =
     (page + 1).coerceAtMost((pageMax - 1).coerceAtLeast(0))
 
 private val PAGE_SELECTOR_DIALOG_SHAPE = RoundedCornerShape(16.dp)
-private val PAGE_SELECTOR_DIALOG_BORDER_COLOR = Color(0xFF3E3E3E)
-private val PAGE_SELECTOR_DIALOG_BG_COLOR = Color(0xFF373737)
 
 private val DEFAULT_ALBUM_KEYBOARD_THEME = KeyboardNumberTheme(
     colorBackground = Color(0xFF2D2D2D),
@@ -61,39 +59,6 @@ private val DEFAULT_ALBUM_KEYBOARD_THEME = KeyboardNumberTheme(
     buttonColor = Color(0xFF282828),
     colorButtonBorder = Color(0xFF232323),
 )
-
-private val SELECTOR_HEIGHT = 48.dp
-private val DIALOG_BORDER_WIDTH = 2.dp
-private val DIALOG_PADDING = 16.dp
-private val BORDER_LINE_WIDTH = 1.dp
-private const val DEFAULT_KEYBOARD_VALUE = -1
-private const val CD_PREV_PAGE = "Предыдущая страница"
-private const val CD_NEXT_PAGE = "Следующая страница"
-
-private val PREV_PAGE_ICON = Icons.AutoMirrored.Filled.KeyboardArrowLeft
-private val NEXT_PAGE_ICON = Icons.AutoMirrored.Filled.KeyboardArrowRight
-private val BOX_CENTER_ALIGNMENT = Alignment.Center
-private val COLOR_WHITE = Color.White
-
-private val PAGE_NAV_BUTTON_BASE_MODIFIER = Modifier
-    .fillMaxHeight()
-    .background(Theme.L.red)
-
-private val PAGE_SELECTOR_DIALOG_MODIFIER = Modifier
-    .clip(PAGE_SELECTOR_DIALOG_SHAPE)
-    .border(DIALOG_BORDER_WIDTH, PAGE_SELECTOR_DIALOG_BORDER_COLOR, PAGE_SELECTOR_DIALOG_SHAPE)
-    .background(PAGE_SELECTOR_DIALOG_BG_COLOR)
-    .padding(DIALOG_PADDING)
-
-private val SELECTOR_ROW_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .height(SELECTOR_HEIGHT)
-
-private val SELECTOR_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val SELECTOR_ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val PAGE_CENTER_BOX_BASE_MODIFIER = Modifier.fillMaxHeight()
-
-private val HAPTIC_CONFIRM = HapticFeedbackType.Confirm
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +76,7 @@ fun AlbumListPageSelector(
     val onNextPage = remember(page, pageMax, onChange) { { onChange(calculateNextAlbumPage(page, pageMax)) } }
     val onOpenDialog = remember(haptic) {
         {
-            haptic.performHapticFeedback(HAPTIC_CONFIRM)
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             expanded = true
         }
     }
@@ -128,9 +93,10 @@ fun AlbumListPageSelector(
 
     val borderLineColor = Theme.L.grey3
     val centerBoxModifier = remember(borderLineColor, onOpenDialog) {
-        PAGE_CENTER_BOX_BASE_MODIFIER
+        Modifier
+            .fillMaxHeight()
             .drawBehind {
-                val strokeWidth = BORDER_LINE_WIDTH.toPx()
+                val strokeWidth = 1.dp.toPx()
                 drawLine(
                     color = borderLineColor,
                     start = Offset(0f, 0f),
@@ -147,15 +113,19 @@ fun AlbumListPageSelector(
             .clickable(onClick = onOpenDialog)
     }
 
+    val rowBaseModifier = Modifier
+        .fillMaxWidth()
+        .height(48.dp)
+
     Row(
-        modifier = if (modifier == Modifier) SELECTOR_ROW_BASE_MODIFIER else modifier.then(SELECTOR_ROW_BASE_MODIFIER),
-        horizontalArrangement = SELECTOR_ROW_HORIZONTAL_ARRANGEMENT,
-        verticalAlignment = SELECTOR_ROW_VERTICAL_ALIGNMENT
+        modifier = if (modifier == Modifier) rowBaseModifier else modifier.then(rowBaseModifier),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
         AlbumPageNavButton(
-            icon = PREV_PAGE_ICON,
-            contentDescription = CD_PREV_PAGE,
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            contentDescription = "Предыдущая страница",
             onClick = onPrevPage,
             modifier = Modifier.weight(1f)
         )
@@ -164,7 +134,7 @@ fun AlbumListPageSelector(
             modifier = Modifier
                 .weight(2f)
                 .then(centerBoxModifier),
-            contentAlignment = BOX_CENTER_ALIGNMENT
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 pageText,
@@ -174,8 +144,8 @@ fun AlbumListPageSelector(
         }
 
         AlbumPageNavButton(
-            icon = NEXT_PAGE_ICON,
-            contentDescription = CD_NEXT_PAGE,
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = "Следующая страница",
             onClick = onNextPage,
             modifier = Modifier.weight(1f)
         )
@@ -199,14 +169,17 @@ private fun AlbumPageNavButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val baseModifier = if (modifier == Modifier) PAGE_NAV_BUTTON_BASE_MODIFIER else modifier.then(PAGE_NAV_BUTTON_BASE_MODIFIER)
+    val navButtonBase = Modifier
+        .fillMaxHeight()
+        .background(Theme.L.red)
+    val baseModifier = if (modifier == Modifier) navButtonBase else modifier.then(navButtonBase)
     Box(
         modifier = baseModifier.clickable(onClick = onClick),
-        contentAlignment = BOX_CENTER_ALIGNMENT
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
-            tint = COLOR_WHITE,
+            tint = Color.White,
             contentDescription = contentDescription
         )
     }
@@ -218,13 +191,18 @@ private fun PageSelectorDialogContent(
     onKeyboardNumberClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val dialogBaseModifier = Modifier
+        .clip(PAGE_SELECTOR_DIALOG_SHAPE)
+        .border(2.dp, Color(0xFF3E3E3E), PAGE_SELECTOR_DIALOG_SHAPE)
+        .background(Color(0xFF373737))
+        .padding(16.dp)
     Box(
-        modifier = if (modifier == Modifier) PAGE_SELECTOR_DIALOG_MODIFIER else modifier.then(PAGE_SELECTOR_DIALOG_MODIFIER),
-        contentAlignment = BOX_CENTER_ALIGNMENT
+        modifier = if (modifier == Modifier) dialogBaseModifier else modifier.then(dialogBaseModifier),
+        contentAlignment = Alignment.Center
     ) {
         KeyboardNumber(
             theme = DEFAULT_ALBUM_KEYBOARD_THEME,
-            value = DEFAULT_KEYBOARD_VALUE,
+            value = -1,
             max = pageMax,
             onClick = onKeyboardNumberClick
         )

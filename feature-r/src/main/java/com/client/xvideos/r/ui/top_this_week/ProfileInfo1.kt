@@ -33,13 +33,6 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import com.client.xvideos.r.model.UserInfo
 
-private val profileUserNameOffsetY = (-3).dp
-private val DEFAULT_SIZE_ICON = 48.dp
-private val DEFAULT_CORNER_RADIUS = 12.dp
-private val DEFAULT_AVATAR_SHAPE = RoundedCornerShape(DEFAULT_CORNER_RADIUS)
-private val DEFAULT_PERSON_ICON_SIZE = 24.dp
-private val USER_NAME_AUTO_SIZE = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 18.sp)
-
 @Composable
 fun ProfileInfo1(
     modifier: Modifier = Modifier,
@@ -47,19 +40,15 @@ fun ProfileInfo1(
     videoItem: GifsInfo,
     listUsers: List<UserInfo>,
     visibleUserName: Boolean = true,
-    sizeIcon: Dp = DEFAULT_SIZE_ICON,
-    cornerRadius: Dp = DEFAULT_CORNER_RADIUS,
+    sizeIcon: Dp = 48.dp,
+    cornerRadius: Dp = 12.dp,
     verticalAlignment: Alignment.Vertical = Alignment.Bottom
 ) {
     val matchedUser = remember(listUsers, videoItem.userName) {
         listUsers.firstOrNull { it.username == videoItem.userName }
     }
     val avatarUrl = matchedUser?.profileImageUrl
-    val avatarShape = if (cornerRadius == DEFAULT_CORNER_RADIUS) {
-        DEFAULT_AVATAR_SHAPE
-    } else {
-        remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
-    }
+    val avatarShape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
 
     Row(
         modifier = modifier.clickable(onClick = onClick),
@@ -89,7 +78,7 @@ fun ProfileInfo1(
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(DEFAULT_PERSON_ICON_SIZE),
+                    modifier = Modifier.size(24.dp),
                     tint = Color.White
                 )
             }
@@ -99,7 +88,7 @@ fun ProfileInfo1(
             Column {
                 Text(
                     text = videoItem.userName,
-                    autoSize = USER_NAME_AUTO_SIZE,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = 18.sp),
                     minLines = 1,
                     maxLines = 1,
                     color = Color.White,
@@ -107,7 +96,7 @@ fun ProfileInfo1(
                     fontSize = 18.sp,
                     modifier = Modifier
                         .padding(start = 4.dp)
-                        .offset(y = profileUserNameOffsetY)
+                        .offset(y = (-3).dp)
                 )
             }
         }

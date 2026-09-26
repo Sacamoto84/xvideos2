@@ -20,19 +20,7 @@ import com.client.xvideos.common.util.capitalizeEachWord
 import com.client.xvideos.l.model.Tag
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val TAG_CHIP_CORNER = 4.dp
-private val TAG_CHIP_SHAPE = RoundedCornerShape(TAG_CHIP_CORNER)
-private val TAG_BORDER_WIDTH = 1.dp
-private val TAG_VERTICAL_PADDING = 2.dp
-private val TAG_CONTENT_PADDING = 4.dp
-private val TAG_FONT_SIZE = 14.sp
-
-private val TAG_CHIP_BASE_MODIFIER = Modifier
-    .padding(vertical = TAG_VERTICAL_PADDING)
-    .clip(TAG_CHIP_SHAPE)
-
-private val TAG_CHIP_CONTENT_PADDING_MODIFIER = Modifier.padding(TAG_CONTENT_PADDING)
-private val FLOW_ROW_VERTICAL_ARRANGEMENT = Arrangement.Center
+private val CHIP_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
 fun AlbumInfoTags(
@@ -41,14 +29,14 @@ fun AlbumInfoTags(
     modifier: Modifier = Modifier
 ) {
     val tagTextStyle = remember(Theme.L.Type.caption, Theme.L.textColor) {
-        Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = TAG_FONT_SIZE)
+        Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
     }
 
     val tagList = tags()
 
     FlowRow(
         modifier = modifier,
-        verticalArrangement = FLOW_ROW_VERTICAL_ARRANGEMENT
+        verticalArrangement = Arrangement.Center
     ) {
         tagList.forEach { tag ->
             key(tag.id) {
@@ -76,7 +64,10 @@ private fun AlbumTagChip(
 ) {
     val borderColor = Theme.L.secondaryColor
     val chipBorderModifier = remember(borderColor) {
-        TAG_CHIP_BASE_MODIFIER.border(TAG_BORDER_WIDTH, borderColor, TAG_CHIP_SHAPE)
+        Modifier
+            .padding(vertical = 2.dp)
+            .clip(CHIP_SHAPE)
+            .border(1.dp, borderColor, CHIP_SHAPE)
     }
     val chipModifier = if (modifier == Modifier) chipBorderModifier else modifier.then(chipBorderModifier)
 
@@ -84,7 +75,7 @@ private fun AlbumTagChip(
         text = label,
         modifier = chipModifier
             .clickable(onClick = onClick)
-            .then(TAG_CHIP_CONTENT_PADDING_MODIFIER),
+            .padding(4.dp),
         color = Theme.L.textColor,
         style = textStyle
     )

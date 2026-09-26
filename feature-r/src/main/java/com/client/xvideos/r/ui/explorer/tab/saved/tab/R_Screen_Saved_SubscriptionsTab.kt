@@ -194,17 +194,6 @@ fun SubscriptionsTabContent(
     }
 }
 
-private val CREATOR_CHIP_SHAPE = CircleShape
-private val CREATOR_CHIP_OUTER_PADDING = 4.dp
-private val CREATOR_CHIP_INNER_PADDING = 4.dp
-private val CREATOR_CHIP_BORDER_WIDTH = 1.dp
-private val CREATOR_CHIP_AVATAR_SIZE = 48.dp
-private val CREATOR_CHIP_ICON_SIZE = 24.dp
-private val CREATOR_CHIP_TEXT_START_SPACER = 8.dp
-private val CREATOR_CHIP_TEXT_END_SPACER = 4.dp
-private val CREATOR_CHIP_FONT_SIZE = 16.sp
-private val CREATORS_HEADER_PADDING = 4.dp
-
 @Composable
 fun CreatorsHeader(
     listCreators: List<SelectedCreator>,
@@ -215,7 +204,7 @@ fun CreatorsHeader(
     FlowRow(
         modifier = modifier
             .fillMaxWidth()
-            .padding(CREATORS_HEADER_PADDING)
+            .padding(4.dp)
     ) {
         listCreators.forEach { creator ->
             key(creator.name) {
@@ -257,12 +246,12 @@ fun CreatorChip(
 ) {
     Row(
         modifier = modifier
-            .padding(CREATOR_CHIP_OUTER_PADDING)
-            .clip(CREATOR_CHIP_SHAPE)
-            .border(CREATOR_CHIP_BORDER_WIDTH, Color.Gray, CREATOR_CHIP_SHAPE)
+            .padding(4.dp)
+            .clip(CircleShape)
+            .border(1.dp, Color.Gray, CircleShape)
             .background(
                 if (isSelected) Color.Gray else Color.Transparent,
-                CREATOR_CHIP_SHAPE
+                CircleShape
             )
             .combinedClickable(
                 onClick = onClick,
@@ -270,12 +259,12 @@ fun CreatorChip(
                 indication = null,
                 interactionSource = null,
             )
-            .padding(CREATOR_CHIP_INNER_PADDING),
+            .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(CREATOR_CHIP_AVATAR_SIZE)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(Color.DarkGray),
             contentAlignment = Alignment.Center
@@ -287,20 +276,20 @@ fun CreatorChip(
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(CREATOR_CHIP_ICON_SIZE),
+                    modifier = Modifier.size(24.dp),
                     tint = Color.White
                 )
             }
         }
 
-        Spacer(Modifier.width(CREATOR_CHIP_TEXT_START_SPACER))
+        Spacer(Modifier.width(8.dp))
         Text(
             text = creator,
-            fontSize = CREATOR_CHIP_FONT_SIZE,
+            fontSize = 16.sp,
             color = Color.White,
             fontFamily = Theme.R.fontFamilyPopinsRegular
         )
-        Spacer(Modifier.width(CREATOR_CHIP_TEXT_END_SPACER))
+        Spacer(Modifier.width(4.dp))
     }
 }
 

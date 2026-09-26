@@ -16,12 +16,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val TEXT_LIKE = "Like"
-private const val TEXT_UNLIKE = "Unlike"
-private const val LIKE_ACTION_DELAY_MS = 200L
-private val ICON_FAVORITE = Icons.Default.Favorite
-private val ICON_FAVORITE_BORDER = Icons.Default.FavoriteBorder
-
 @Composable
 fun DropdownMenuItem_Like(item: GifsInfo? = null, onRunLike: () -> Unit, savedRed: () -> SavedRed, onDismiss: () -> Unit) {
     val isLiked = savedRed.invoke().likes.list.any { it.id == item?.id }
@@ -33,7 +27,7 @@ fun DropdownMenuItem_Like(item: GifsInfo? = null, onRunLike: () -> Unit, savedRe
                 // (нужна, чтобы список не дёргался во время анимации скрытия) точно
                 // выполнится. При этом scope управляемый, в отличие от GlobalScope.
                 savedRed.invoke().scope.launch {
-                    delay(LIKE_ACTION_DELAY_MS)
+                    delay(200L)
                     if (!isLiked) savedRed.invoke().likes.add(item) else savedRed.invoke().likes.remove(item)
                     withContext(Dispatchers.Main) {
                         onRunLike.invoke()
@@ -55,8 +49,8 @@ private fun DropdownMenuItem_LikeContent(
     onClick: () -> Unit
 ) {
     ExpandMenuActionItem(
-        icon = if (isLiked) ICON_FAVORITE else ICON_FAVORITE_BORDER,
-        text = if (isLiked) TEXT_UNLIKE else TEXT_LIKE,
+        icon = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+        text = if (isLiked) "Unlike" else "Like",
         onClick = onClick
     )
 }

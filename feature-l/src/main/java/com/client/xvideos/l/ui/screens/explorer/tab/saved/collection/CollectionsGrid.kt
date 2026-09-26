@@ -38,38 +38,14 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 
-private val PREVIEW_CORNER = 8.dp
-private val PREVIEW_CORNER_SHAPE = RoundedCornerShape(PREVIEW_CORNER)
-private val ADD_BUTTON_PADDING_START = 8.dp
-private val ADD_BUTTON_PADDING_TOP = 4.dp
-private val ADD_BUTTON_SIZE = 72.dp
-private val ADD_ICON_SIZE = 24.dp
-private val CELL_HORIZONTAL_PADDING = 8.dp
-private val CELL_VERTICAL_PADDING = 4.dp
-private val PREVIEW_SIZE = 72.dp
-private val TEXT_SPACER_WIDTH = 8.dp
-private val COUNT_FONT_SIZE = 12.sp
-private const val GRID_COLUMNS = 2
-
-private const val CONTENT_TYPE_COLLECTION_ITEM = "collection_item"
-private const val KEY_ADD_BUTTON = "add_button"
-private const val CONTENT_TYPE_ADD_BUTTON = "add_button"
-private const val COUNT_PREFIX = "Элементов: "
-private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val GRID_CELLS = GridCells.Fixed(GRID_COLUMNS)
-private val BOX_FILL_MAX_WIDTH = Modifier.fillMaxWidth()
-private val ADD_BUTTON_BASE_MODIFIER = Modifier
-    .padding(start = ADD_BUTTON_PADDING_START, top = ADD_BUTTON_PADDING_TOP)
-    .size(ADD_BUTTON_SIZE)
-    .clip(PREVIEW_CORNER_SHAPE)
-private val ADD_ICON_MODIFIER = Modifier.size(ADD_ICON_SIZE)
+private val PREVIEW_CORNER_SHAPE = RoundedCornerShape(8.dp)
 private val CELL_BASE_MODIFIER = Modifier
     .fillMaxWidth()
-    .padding(horizontal = CELL_HORIZONTAL_PADDING, vertical = CELL_VERTICAL_PADDING)
+    .padding(horizontal = 8.dp, vertical = 4.dp)
 private val PREVIEW_BASE_MODIFIER = Modifier
     .clip(PREVIEW_CORNER_SHAPE)
-    .size(PREVIEW_SIZE)
-private val TEXT_SPACER_MODIFIER = Modifier.width(TEXT_SPACER_WIDTH)
+    .size(72.dp)
+
 
 /**
  * Сетка коллекций: список + заголовок ([topBar]) + кнопка «+».
@@ -91,7 +67,7 @@ fun CollectionsGrid(
 ) {
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = ZERO_WINDOW_INSETS,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { topBar?.invoke() },
         containerColor = style.backgroundColor
     ) { padding ->
@@ -100,12 +76,12 @@ fun CollectionsGrid(
                 .fillMaxSize()
                 .padding(padding),
             state = gridState,
-            columns = GRID_CELLS
+            columns = GridCells.Fixed(2)
         ) {
             itemsIndexed(
                 items = collections,
                 key = { index, item -> "${item.name}#$index" },
-                contentType = { _, _ -> CONTENT_TYPE_COLLECTION_ITEM }
+                contentType = { _, _ -> "collection_item" }
             ) { _, collection ->
                 CollectionGridCell(
                     collection = collection,
@@ -116,10 +92,13 @@ fun CollectionsGrid(
                 )
             }
 
-            item(key = KEY_ADD_BUTTON, contentType = CONTENT_TYPE_ADD_BUTTON) {
-                Box(modifier = BOX_FILL_MAX_WIDTH) {
+            item(key = "add_button", contentType = "add_button") {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     Box(
-                        modifier = ADD_BUTTON_BASE_MODIFIER
+                        modifier = Modifier
+                            .padding(start = 8.dp, top = 4.dp)
+                            .size(72.dp)
+                            .clip(PREVIEW_CORNER_SHAPE)
                             .background(style.addButtonBackground)
                             .clickable(onClick = onCreateNewCollectionClick),
                         contentAlignment = Alignment.Center
@@ -128,7 +107,7 @@ fun CollectionsGrid(
                             Icons.Default.Add,
                             contentDescription = null,
                             tint = style.addButtonIconColor,
-                            modifier = ADD_ICON_MODIFIER
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -149,7 +128,7 @@ private fun CollectionGridCell(
     val handleClick = remember(collection.name, onClick) { { onClick(collection.name) } }
     val handleLongClick = remember(collection.name, onLongClick) { { onLongClick(collection.name) } }
     val countText = remember(collection.itemsCount) {
-        collection.itemsCount?.let { "$COUNT_PREFIX$it" }
+        collection.itemsCount?.let { "Элементов: $it" }
     }
     val rowModifier = if (modifier == Modifier) {
         CELL_BASE_MODIFIER
@@ -164,7 +143,7 @@ private fun CollectionGridCell(
     } else {
         Modifier
             .clip(shape)
-            .size(PREVIEW_SIZE)
+            .size(72.dp)
     }
 
     Row(
@@ -183,7 +162,7 @@ private fun CollectionGridCell(
                     .background(style.placeholderColor)
             )
         }
-        Spacer(TEXT_SPACER_MODIFIER)
+        Spacer(Modifier.width(8.dp))
         Column {
             Text(
                 collection.name,
@@ -194,7 +173,7 @@ private fun CollectionGridCell(
                 Text(
                     countText,
                     color = style.itemSecondaryColor,
-                    fontSize = COUNT_FONT_SIZE,
+                    fontSize = 12.sp,
                     fontFamily = style.itemFontFamily
                 )
             }

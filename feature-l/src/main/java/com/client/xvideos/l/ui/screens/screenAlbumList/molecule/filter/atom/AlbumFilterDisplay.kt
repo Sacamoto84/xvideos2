@@ -31,17 +31,7 @@ import com.client.xvideos.l.model.DataAlbumFilterDisplay
 import com.client.xvideos.l.model.albumFilterDisplay
 
 private val UNIQUE_PRIMARY_LIST = albumFilterDisplay.map { it.primary }.distinct()
-private val FILTER_FIELD_SHAPE = RoundedCornerShape(6.dp)
-private val FILTER_FIELD_HEIGHT = 48.dp
-private val FILTER_FIELD_BORDER_WIDTH = 1.dp
-private val FILTER_FIELD_PADDING_HORIZONTAL = 8.dp
-private val FILTER_ROW_SPACING = 8.dp
-private const val TITLE_SORT_BY = "Sort by"
-private val FILTER_ROW_ARRANGEMENT = Arrangement.spacedBy(FILTER_ROW_SPACING)
-private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
-private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
-private val PRIMARY_ITEM_TITLE: (String) -> String = { it }
-private val SECONDARY_ITEM_TITLE: (DataAlbumFilterDisplay) -> String = { it.secondary }
+private val FIELD_SHAPE = RoundedCornerShape(6.dp)
 
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C)
 @Composable
@@ -93,8 +83,8 @@ fun AlbumFilterDisplay(
 
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
-        horizontalArrangement = FILTER_ROW_ARRANGEMENT
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         FilterDropdownField(
             text = selected.primary,
@@ -116,10 +106,10 @@ fun AlbumFilterDisplay(
     // --- Диалог выбора Primary ---
     if (showPrimaryDialog) {
         AlbumFilterSelectDialog(
-            title = TITLE_SORT_BY,
+            title = "Sort by",
             items = UNIQUE_PRIMARY_LIST,
             selectedItem = selected.primary,
-            itemTitle = PRIMARY_ITEM_TITLE,
+            itemTitle = { it },
             onDismiss = onDismissPrimary,
             onSelect = onSelectPrimary
         )
@@ -134,7 +124,7 @@ fun AlbumFilterDisplay(
             title = selected.primary,
             items = secondaryItems,
             selectedItem = selected,
-            itemTitle = SECONDARY_ITEM_TITLE,
+            itemTitle = { it.secondary },
             onDismiss = onDismissSecondary,
             onSelect = onSelectSecondary
         )
@@ -151,18 +141,18 @@ private fun FilterDropdownField(
 ) {
     Box(
         modifier = modifier
-            .height(FILTER_FIELD_HEIGHT)
-            .clip(FILTER_FIELD_SHAPE)
-            .border(FILTER_FIELD_BORDER_WIDTH, palette.border, FILTER_FIELD_SHAPE)
+            .height(48.dp)
+            .clip(FIELD_SHAPE)
+            .border(1.dp, palette.border, FIELD_SHAPE)
             .background(palette.field)
             .clickable(onClick = onClick)
-            .padding(horizontal = FILTER_FIELD_PADDING_HORIZONTAL),
+            .padding(horizontal = 8.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
-            horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = text,

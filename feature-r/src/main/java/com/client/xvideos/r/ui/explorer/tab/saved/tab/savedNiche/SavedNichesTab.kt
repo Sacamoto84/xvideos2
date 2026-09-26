@@ -58,48 +58,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
-private val NICHE_ROW_CORNER = 8.dp
-private val NICHE_ROW_SHAPE = RoundedCornerShape(NICHE_ROW_CORNER)
-private val NICHE_ROW_VERTICAL_PADDING = 2.dp
-private val NICHE_ROW_HORIZONTAL_PADDING = 6.dp
-private val NICHE_THUMBNAIL_SIZE = 96.dp
-private val NICHE_SPACER_WIDTH = 8.dp
-private val DELETE_BUTTON_WIDTH = 96.dp
-private val DELETE_BUTTON_HEIGHT = 48.dp
-private val DELETE_BUTTON_BORDER_WIDTH = 1.dp
-private val TOP_BAR_PADDING = 8.dp
-private val TOP_BAR_TITLE_FONT_SIZE = 18.sp
-private val NICHE_NAME_FONT_SIZE = 20.sp
-private val DELETE_TEXT_FONT_SIZE = 18.sp
-private val SCROLLBAR_WIDTH = 2.dp
-private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private const val TEXT_NICHES_TITLE = "Группы"
-private const val TEXT_LEAVE_NICHE = "Выйти"
-
-private val TOP_BAR_HORIZONTAL_PADDING_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(start = TOP_BAR_PADDING, top = TOP_BAR_PADDING, bottom = TOP_BAR_PADDING)
-
-private val LAZY_COLUMN_MODIFIER = Modifier.fillMaxSize()
-private val SCROLLBAR_CONTAINER_MODIFIER = Modifier
-    .fillMaxHeight()
-    .width(SCROLLBAR_WIDTH)
-
-private val NICHE_ROW_BASE_MODIFIER = Modifier
-    .padding(vertical = NICHE_ROW_VERTICAL_PADDING, horizontal = NICHE_ROW_HORIZONTAL_PADDING)
-    .fillMaxWidth()
-    .clip(NICHE_ROW_SHAPE)
-
-private val NICHE_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val NICHE_THUMBNAIL_MODIFIER = Modifier.size(NICHE_THUMBNAIL_SIZE)
-private val NICHE_SPACER_MODIFIER = Modifier.width(NICHE_SPACER_WIDTH)
-
-private val DELETE_BUTTON_BASE_MODIFIER = Modifier
-    .width(DELETE_BUTTON_WIDTH)
-    .height(DELETE_BUTTON_HEIGHT)
-    .clip(NICHE_ROW_SHAPE)
-    .border(DELETE_BUTTON_BORDER_WIDTH, Color.White, NICHE_ROW_SHAPE)
-    .background(Color.Black)
 
 object SavedNichesTab : Screen {
 
@@ -145,18 +103,19 @@ object SavedNichesTab : Screen {
         val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
         Scaffold(
-            contentWindowInsets = ZERO_WINDOW_INSETS,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 Row(
                     modifier = Modifier
                         .padding(top = getTopInsetDp())
-                        .then(TOP_BAR_HORIZONTAL_PADDING_MODIFIER),
+                        .fillMaxWidth()
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        TEXT_NICHES_TITLE,
+                        "Группы",
                         color = Theme.R.colorYellow,
-                        fontSize = TOP_BAR_TITLE_FONT_SIZE,
+                        fontSize = 18.sp,
                         fontFamily = Theme.R.fontFamilyPopinsRegular
                     )
                 }
@@ -172,7 +131,7 @@ object SavedNichesTab : Screen {
 
                 LazyColumn(
                     state = state,
-                    modifier = LAZY_COLUMN_MODIFIER
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(vm.savedRed.niches.list, key = { it.id }, contentType = { "saved_niche" }) { item ->
                         SavedNicheRow(
@@ -184,7 +143,9 @@ object SavedNichesTab : Screen {
                 }
 
                 Box(
-                    modifier = SCROLLBAR_CONTAINER_MODIFIER
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(2.dp)
                         .align(Alignment.CenterEnd)
                 ) {
                     VerticalScrollbar(scrollPercentProvider)
@@ -203,21 +164,24 @@ private fun SavedNicheRow(
 ) {
     val onRowClick = remember(item, onClick) { { onClick(item) } }
     val onRowDelete = remember(item, onDeleteClick) { { onDeleteClick(item) } }
+    val rowShape = RoundedCornerShape(8.dp)
 
     Row(
         modifier = modifier
-            .then(NICHE_ROW_BASE_MODIFIER)
+            .padding(vertical = 2.dp, horizontal = 6.dp)
+            .fillMaxWidth()
+            .clip(rowShape)
             .background(Theme.tabLevel3)
             .clickable(onClick = onRowClick),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = NICHE_ROW_HORIZONTAL_ARRANGEMENT
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        UrlImage(item.thumbnail, modifier = NICHE_THUMBNAIL_MODIFIER)
-        Spacer(modifier = NICHE_SPACER_MODIFIER)
+        UrlImage(item.thumbnail, modifier = Modifier.size(96.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             item.name,
             color = Color.White,
-            fontSize = NICHE_NAME_FONT_SIZE,
+            fontSize = 20.sp,
             fontFamily = Theme.R.fontFamilyDMsanss,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
@@ -225,18 +189,24 @@ private fun SavedNicheRow(
         )
 
         Box(
-            modifier = DELETE_BUTTON_BASE_MODIFIER.clickable(onClick = onRowDelete),
+            modifier = Modifier
+                .width(96.dp)
+                .height(48.dp)
+                .clip(rowShape)
+                .border(1.dp, Color.White, rowShape)
+                .background(Color.Black)
+                .clickable(onClick = onRowDelete),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                TEXT_LEAVE_NICHE,
+                "Выйти",
                 fontFamily = Theme.R.fontFamilyDMsanss,
-                fontSize = DELETE_TEXT_FONT_SIZE,
+                fontSize = 18.sp,
                 color = Color.White
             )
         }
 
-        Spacer(modifier = NICHE_SPACER_MODIFIER)
+        Spacer(modifier = Modifier.width(8.dp))
     }
 }
 

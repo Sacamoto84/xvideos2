@@ -34,39 +34,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val TAG_CHIP_CORNER = 16.dp
-private val TAG_CHIP_SHAPE = RoundedCornerShape(TAG_CHIP_CORNER)
-private val TAG_CHIP_HEIGHT = 32.dp
-private val TAG_CHIP_BORDER_WIDTH = 1.dp
-private val TAG_CHIP_OUTER_HORIZONTAL_PADDING = 4.dp
-private val TAG_CHIP_OUTER_VERTICAL_PADDING = 2.dp
-private val TAG_CHIP_INNER_HORIZONTAL_PADDING = 12.dp
-private val TAG_CHIP_INNER_VERTICAL_PADDING = 4.dp
-private val TAG_CHIP_FONT_SIZE = 14.sp
-
-private val EXPAND_BUTTON_SIZE = 32.dp
-private val EXPAND_ICON_SIZE = 18.dp
-private val EXPAND_BUTTON_BORDER_WIDTH = 1.dp
-
-private const val CD_EXPAND_TAGS = "Развернуть теги"
-private const val CD_COLLAPSE_TAGS = "Свернуть теги"
-
-private val TAG_CHIP_BASE_MODIFIER = Modifier
-    .padding(horizontal = TAG_CHIP_OUTER_HORIZONTAL_PADDING, vertical = TAG_CHIP_OUTER_VERTICAL_PADDING)
-    .height(TAG_CHIP_HEIGHT)
-    .clip(TAG_CHIP_SHAPE)
-
-private val TAG_CHIP_CONTENT_PADDING_MODIFIER = Modifier
-    .padding(horizontal = TAG_CHIP_INNER_HORIZONTAL_PADDING, vertical = TAG_CHIP_INNER_VERTICAL_PADDING)
-    .wrapContentWidth()
-
-private val EXPAND_BUTTON_BASE_MODIFIER = Modifier
-    .padding(horizontal = TAG_CHIP_OUTER_HORIZONTAL_PADDING, vertical = TAG_CHIP_OUTER_VERTICAL_PADDING)
-    .size(EXPAND_BUTTON_SIZE)
-    .clip(CircleShape)
-    .background(Color.Transparent)
-
-private val EXPAND_ICON_MODIFIER = Modifier.size(EXPAND_ICON_SIZE)
 
 @Composable
 fun TagsBlock(
@@ -175,17 +142,21 @@ private fun TagChip(
     modifier: Modifier = Modifier,
 ) {
     val handleTagClick = remember(text, onClick) { { onClick(text) } }
+    val chipShape = RoundedCornerShape(16.dp)
     Text(
         text = text,
         color = if (select) Color.Black else Color.White,
-        fontSize = TAG_CHIP_FONT_SIZE,
+        fontSize = 14.sp,
         fontFamily = Theme.R.fontFamilyPopinsRegular,
         modifier = modifier
-            .then(TAG_CHIP_BASE_MODIFIER)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .height(32.dp)
+            .clip(chipShape)
             .background(if (select) Theme.R.colorYellow else Color.Transparent)
-            .border(TAG_CHIP_BORDER_WIDTH, Theme.R.colorYellow, TAG_CHIP_SHAPE)
+            .border(1.dp, Theme.R.colorYellow, chipShape)
             .clickable(onClick = handleTagClick)
-            .then(TAG_CHIP_CONTENT_PADDING_MODIFIER)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .wrapContentWidth()
     )
 }
 
@@ -197,16 +168,19 @@ private fun ExpandCollapseButton(
 ) {
     Box(
         modifier = modifier
-            .then(EXPAND_BUTTON_BASE_MODIFIER)
-            .border(EXPAND_BUTTON_BORDER_WIDTH, Theme.R.colorYellow, CircleShape)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(Color.Transparent)
+            .border(1.dp, Theme.R.colorYellow, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = if (expanded) Icons.Default.Close else Icons.Default.MoreHoriz,
-            contentDescription = if (expanded) CD_COLLAPSE_TAGS else CD_EXPAND_TAGS,
+            contentDescription = if (expanded) "Свернуть теги" else "Развернуть теги",
             tint = Color.White,
-            modifier = EXPAND_ICON_MODIFIER
+            modifier = Modifier.size(18.dp)
         )
     }
 }

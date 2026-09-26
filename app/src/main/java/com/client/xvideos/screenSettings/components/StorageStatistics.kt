@@ -31,41 +31,14 @@ import java.io.File
 
 import kotlinx.collections.immutable.persistentListOf
 
-private val PROGRESS_CORNER = 6.dp
-private val PROGRESS_SHAPE = RoundedCornerShape(PROGRESS_CORNER)
-private const val TEXT_TOTAL_DATA = "Всего данных"
-private const val TEXT_FILES_COUNT_PREFIX = " \u2022 файлов: "
-private const val SUBTITLE_X = "XVideos"
-private const val SUBTITLE_L = "Luscious"
-private const val SUBTITLE_R = "RedGifs"
-private val STORAGE_ROW_HORIZONTAL_PADDING = 16.dp
-private val STORAGE_ROW_VERTICAL_PADDING = 12.dp
-private val PROGRESS_BAR_HEIGHT = 6.dp
-private val ICON_SPACER_WIDTH = 16.dp
-private val SUBTITLE_SPACER_HEIGHT = 4.dp
-private const val PROGRESS_COERCE_MIN = 0f
-private const val PROGRESS_COERCE_MAX = 1f
-private val PROGRESS_BAR_MODIFIER = Modifier
-    .fillMaxWidth()
-    .height(PROGRESS_BAR_HEIGHT)
-    .clip(PROGRESS_SHAPE)
 private val STORAGE_ROW_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .background(SettingsCardColor)
-    .padding(horizontal = STORAGE_ROW_HORIZONTAL_PADDING, vertical = STORAGE_ROW_VERTICAL_PADDING)
-private val ICON_SPACER_MODIFIER = Modifier.width(ICON_SPACER_WIDTH)
-private val PROGRESS_BAR_SPACER_MODIFIER = Modifier.height(PROGRESS_BAR_HEIGHT)
-private val SUBTITLE_SPACER_MODIFIER = Modifier.height(SUBTITLE_SPACER_HEIGHT)
-private val INNER_ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val INNER_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
+    .padding(horizontal = 16.dp, vertical = 12.dp)
+
 private val STORAGE_ROW_TITLE_STYLE = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
 private val STORAGE_ROW_SUBTITLE_STYLE = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
 private val STORAGE_CAPTION_STYLE = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-
-private const val ICON_X = R.drawable.icon_xvideos_mini
-private const val ICON_L = R.drawable.icon_luscious
-private const val ICON_RED = R.drawable.icon_red
 
 @Immutable
 internal data class StorageStat(
@@ -96,8 +69,8 @@ internal fun StorageStatisticsSection(
     val formattedTotal = remember(totalBytes) { formatBytes(totalBytes) }
     SettingsGroup(modifier = modifier) {
         SettingsValueRow(
-            icon = ICON_RED,
-            text = TEXT_TOTAL_DATA,
+            icon = R.drawable.icon_red,
+            text = "Всего данных",
             value = formattedTotal
         )
 
@@ -105,7 +78,7 @@ internal fun StorageStatisticsSection(
             key(stat.key) {
                 SettingsDivider()
                 val progress = if (totalBytes > 0L) {
-                    (stat.sizeBytes.toFloat() / totalBytes.toFloat()).coerceIn(PROGRESS_COERCE_MIN, PROGRESS_COERCE_MAX)
+                    (stat.sizeBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
                 } else {
                     0f
                 }
@@ -136,20 +109,20 @@ internal fun StorageProgressRow(
 ) {
     val formattedSize = remember(stat.sizeBytes) { formatBytes(stat.sizeBytes) }
     val subtitleText = remember(stat.key, stat.fileCount) {
-        "${sectionSubtitle(stat.key)}$TEXT_FILES_COUNT_PREFIX${stat.fileCount}"
+        "${sectionSubtitle(stat.key)} \u2022 файлов: ${stat.fileCount}"
     }
     val rowModifier = if (modifier == Modifier) STORAGE_ROW_BASE_MODIFIER else modifier.then(STORAGE_ROW_BASE_MODIFIER)
     Row(
         modifier = rowModifier,
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+        verticalAlignment = Alignment.CenterVertically
     ) {
         SettingsIcon(storageIcon(stat.key))
-        Spacer(ICON_SPACER_MODIFIER)
+        Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Row(
-                modifier = INNER_ROW_BASE_MODIFIER,
-                horizontalArrangement = INNER_ROW_HORIZONTAL_ARRANGEMENT,
-                verticalAlignment = ROW_VERTICAL_ALIGNMENT
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = stat.title,
@@ -162,15 +135,18 @@ internal fun StorageProgressRow(
                     style = STORAGE_ROW_SUBTITLE_STYLE
                 )
             }
-            Spacer(PROGRESS_BAR_SPACER_MODIFIER)
+            Spacer(Modifier.height(6.dp))
             val progressProvider: () -> Float = remember(progress) { { progress } }
             LinearProgressIndicator(
                 progress = progressProvider,
-                modifier = PROGRESS_BAR_MODIFIER,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(6.dp)),
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor
             )
-            Spacer(SUBTITLE_SPACER_MODIFIER)
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = subtitleText,
                 color = SettingsRowTextSecondary,
@@ -193,17 +169,17 @@ private fun StorageProgressRowPreview() = SettingsPreview {
 @DrawableRes
 private fun storageIcon(key: String): Int {
     return when (key) {
-        "X" -> ICON_X
-        "L" -> ICON_L
-        else -> ICON_RED
+        "X" -> R.drawable.icon_xvideos_mini
+        "L" -> R.drawable.icon_luscious
+        else -> R.drawable.icon_red
     }
 }
 
 private fun sectionSubtitle(key: String): String {
     return when (key) {
-        "X" -> SUBTITLE_X
-        "L" -> SUBTITLE_L
-        else -> SUBTITLE_R
+        "X" -> "XVideos"
+        "L" -> "Luscious"
+        else -> "RedGifs"
     }
 }
 

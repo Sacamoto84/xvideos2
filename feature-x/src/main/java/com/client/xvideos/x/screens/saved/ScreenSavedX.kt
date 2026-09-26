@@ -59,47 +59,9 @@ import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.snackbar.SnackBar
 import java.io.File
 
-private const val VIDEO_ASPECT_RATIO = 352f / 198f
-private const val TEXT_SAVED_TITLE = "Сохранённое"
-private const val TEXT_EMPTY = "Пусто"
-private const val TEXT_DELETE_CONFIRM_TITLE = "Удалить из сохранённого?"
-private const val TEXT_DELETE = "Удалить"
-private const val CD_P2P = "P2P"
-private const val CD_DELETE = "Удалить"
 private const val CONTENT_TYPE_HEADER = "header"
 private const val CONTENT_TYPE_SAVED_ROW = "saved_row"
 
-private val SAVED_DIVIDER_COLOR = Color(0xFF9E9E9E)
-private val SHARE_ICON_SIZE = 26.dp
-private val DELETE_ICON_SIZE = 28.dp
-private val DIALOG_PREVIEW_WIDTH = 160.dp
-private val DIALOG_IMAGE_SHAPE = RoundedCornerShape(8.dp)
-
-private val SAVED_ROW_COLUMN_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(vertical = 2.dp)
-private val SAVED_ROW_MEDIA_BOX_BASE = Modifier
-    .fillMaxWidth()
-    .aspectRatio(VIDEO_ASPECT_RATIO)
-    .background(Color.DarkGray)
-private val SAVED_ROW_ACTIONS_ROW_MODIFIER = Modifier
-    .fillMaxWidth()
-    .background(Theme.L.grey6)
-private val FILL_MAX_SIZE_MODIFIER = Modifier.fillMaxSize()
-private val SAVED_ROOT_BASE_MODIFIER = Modifier
-    .fillMaxSize()
-    .background(Theme.L.grey6)
-private val SHARE_ICON_MODIFIER = Modifier.size(SHARE_ICON_SIZE)
-private val DELETE_ICON_MODIFIER = Modifier.size(DELETE_ICON_SIZE)
-private val SAVED_HEADER_ROW_MODIFIER = Modifier
-    .fillMaxWidth()
-    .background(Theme.L.grey6)
-private val SAVED_HEADER_TITLE_MODIFIER = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-private val DIALOG_IMAGE_MODIFIER = Modifier
-    .width(DIALOG_PREVIEW_WIDTH)
-    .aspectRatio(VIDEO_ASPECT_RATIO)
-    .clip(DIALOG_IMAGE_SHAPE)
-private val SAVED_ROW_CONTENT_TYPE = { _: ItemsX -> CONTENT_TYPE_SAVED_ROW }
 
 /**
  * Контент экрана «Сохранённое» (загруженные превью-mp4).
@@ -157,7 +119,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
             saved.downloads.localPosterPath(item.id) ?: item.previewImage
         }
         ConfirmDeleteVideoDialog(
-            title = TEXT_DELETE_CONFIRM_TITLE,
+            title = "Удалить из сохранённого?",
             imageUrl = dialogImageUrl,
             onConfirm = onConfirmItem,
             onDismiss = onDismissDelete,
@@ -165,26 +127,23 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
     }
 
     val topCutout = getTopInsetDp()
-    val rootModifier = if (modifier == Modifier) {
-        SAVED_ROOT_BASE_MODIFIER
-    } else {
-        modifier.then(SAVED_ROOT_BASE_MODIFIER)
-    }
 
     Column(
-        modifier = rootModifier
+        modifier = modifier
+            .fillMaxSize()
+            .background(Theme.L.grey6)
     ) {
         if (list.isEmpty()) {
-            Column(modifier = FILL_MAX_SIZE_MODIFIER) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 SavedHeader(topCutout = topCutout)
-                Box(modifier = FILL_MAX_SIZE_MODIFIER, contentAlignment = Alignment.Center) {
-                    Text(TEXT_EMPTY, color = Color.Gray, fontSize = 16.sp)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Пусто", color = Color.Gray, fontSize = 16.sp)
                 }
             }
         } else {
             LazyColumn(
                 state = listState,
-                modifier = FILL_MAX_SIZE_MODIFIER
+                modifier = Modifier.fillMaxSize()
             ) {
                 item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER) {
                     SavedHeader(topCutout = topCutout)
@@ -192,7 +151,7 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 items(
                     items = list,
                     key = { it.id },
-                    contentType = SAVED_ROW_CONTENT_TYPE
+                    contentType = { CONTENT_TYPE_SAVED_ROW }
                 ) { item ->
                     val posterUrl = remember(item.id, item.previewImage, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage
@@ -215,31 +174,26 @@ private fun SavedHeader(
     modifier: Modifier = Modifier,
     topCutout: Dp = 0.dp,
 ) {
-    val headerModifier = if (modifier == Modifier) {
-        Modifier
-            .fillMaxWidth()
-            .padding(top = topCutout)
-    } else {
-        modifier
-            .fillMaxWidth()
-            .padding(top = topCutout)
-    }
     Column(
-        modifier = headerModifier
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = topCutout)
     ) {
         Row(
-            modifier = SAVED_HEADER_ROW_MODIFIER,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Theme.L.grey6),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                TEXT_SAVED_TITLE,
+                "Сохранённое",
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = SAVED_HEADER_TITLE_MODIFIER
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
             )
         }
-        HorizontalDivider(color = SAVED_DIVIDER_COLOR)
+        HorizontalDivider(color = Color(0xFF9E9E9E))
     }
 }
 
@@ -256,13 +210,18 @@ private fun SavedRow(
     val handleDelete = remember(item, onDelete) { { onDelete(item) } }
 
     Column(
-        modifier = SAVED_ROW_COLUMN_MODIFIER
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
     ) {
         Box(
-            modifier = SAVED_ROW_MEDIA_BOX_BASE
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(352f / 198f)
+                .background(Color.DarkGray)
                 .clickable(onClick = handlePlay)
         ) {
-            UrlImage(url = posterUrl, modifier = FILL_MAX_SIZE_MODIFIER)
+            UrlImage(url = posterUrl, modifier = Modifier.fillMaxSize())
 
             // Продолжительность видео в правом верхнем углу.
             Text(
@@ -277,7 +236,9 @@ private fun SavedRow(
         }
 
         Row(
-            modifier = SAVED_ROW_ACTIONS_ROW_MODIFIER,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Theme.L.grey6),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -293,18 +254,18 @@ private fun SavedRow(
             IconButton(onClick = handleShareP2p) {
                 Icon(
                     imageVector = Icons.Filled.Share,
-                    contentDescription = CD_P2P,
+                    contentDescription = "P2P",
                     tint = Color.Gray,
-                    modifier = SHARE_ICON_MODIFIER
+                    modifier = Modifier.size(26.dp)
                 )
             }
 
             IconButton(onClick = handleDelete) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = CD_DELETE,
+                    contentDescription = "Удалить",
                     tint = Color.Gray,
-                    modifier = DELETE_ICON_MODIFIER
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
@@ -325,11 +286,15 @@ fun ConfirmDeleteVideoDialog(
         icon = {
             UrlImage(
                 url = imageUrl,
-                modifier = DIALOG_IMAGE_MODIFIER
+                modifier = Modifier
+                    .width(160.dp)
+                    .aspectRatio(352f / 198f)
+                    .clip(RoundedCornerShape(8.dp))
             )
         },
-        confirmText = TEXT_DELETE,
+        confirmText = "Удалить",
         onConfirm = onConfirm,
         destructive = true,
     )
 }
+

@@ -16,49 +16,35 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.model.TopCreator
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val TOP_CREATOR_SHAPE = RoundedCornerShape(8.dp)
-private val TOP_CREATOR_SIZE = 96.dp
-private val HORIZONTAL_PADDING = 2.dp
-private const val INNER_SHADOW_RADIUS = 3f
-private const val INNER_SHADOW_SPREAD = 0f
-
-private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
-private val TOP_CREATOR_BASE_MODIFIER = Modifier
-    .padding(horizontal = HORIZONTAL_PADDING)
-    .size(TOP_CREATOR_SIZE)
-    .clip(TOP_CREATOR_SHAPE)
-
-private val SHADOW_BOX_MODIFIER = Modifier
-    .size(TOP_CREATOR_SIZE)
-    .innerShadow(
-        shape = TOP_CREATOR_SHAPE,
-        block = {
-            radius = INNER_SHADOW_RADIUS
-            spread = INNER_SHADOW_SPREAD
-        }
-    )
-
 @Composable
 fun NicheTopCreator(
     creator: TopCreator,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val boxModifier = if (modifier == Modifier) {
-        TOP_CREATOR_BASE_MODIFIER
-    } else {
-        modifier.then(TOP_CREATOR_BASE_MODIFIER)
-    }.clickable(onClick = onClick)
-
     Box(
-        modifier = boxModifier
+        modifier = modifier
+            .padding(horizontal = 2.dp)
+            .size(96.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
     ) {
         UrlImage(
             creator.profileImageUrl,
-            modifier = FULL_SIZE_MODIFIER
+            modifier = Modifier.fillMaxSize()
         )
 
-        Box(modifier = SHADOW_BOX_MODIFIER)
+        Box(
+            modifier = Modifier
+                .size(96.dp)
+                .innerShadow(
+                    shape = RoundedCornerShape(8.dp),
+                    block = {
+                        radius = 3f
+                        spread = 0f
+                    }
+                )
+        )
     }
 }
 

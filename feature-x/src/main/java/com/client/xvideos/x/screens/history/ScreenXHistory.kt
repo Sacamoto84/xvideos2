@@ -87,36 +87,7 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.composables.core.HorizontalSeparator
 
-private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val HISTORY_GRID_CELLS = GridCells.Fixed(2)
-private val HISTORY_ROW_CONTENT_TYPE = { _: XHistoryItem -> "history_row" }
 private const val CARD_ASPECT_RATIO = 352f / 198f
-private val CARD_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(1.dp)
-    .aspectRatio(CARD_ASPECT_RATIO)
-    .background(Color.DarkGray)
-private val CARD_SELECTED_MODIFIER = CARD_BASE_MODIFIER
-    .border(2.dp, Color(0xFFE91E63))
-private val WATCHED_BADGE_SHAPE = RoundedCornerShape(4.dp)
-private val WATCHED_BADGE_BASE_MODIFIER = Modifier
-    .padding(4.dp)
-    .clip(WATCHED_BADGE_SHAPE)
-    .background(Color(0xCC1B5E20))
-    .padding(horizontal = 4.dp, vertical = 2.dp)
-private val WATCHED_ICON_MODIFIER = Modifier.size(12.dp)
-private val WATCHED_TEXT_MODIFIER = Modifier.padding(start = 2.dp)
-private val SELECTION_BADGE_SELECTED_MODIFIER = Modifier
-    .size(28.dp)
-    .clip(CircleShape)
-    .background(Color(0xFFE91E63))
-    .border(width = 1.5.dp, color = Color.White, shape = CircleShape)
-private val SELECTION_BADGE_UNSELECTED_MODIFIER = Modifier
-    .size(28.dp)
-    .clip(CircleShape)
-    .background(Color(0x99000000))
-    .border(width = 1.5.dp, color = Color.LightGray, shape = CircleShape)
-private val SELECTION_CHECK_ICON_MODIFIER = Modifier.size(18.dp)
 
 /**
  * Контент экрана «История просмотров» раздела X.
@@ -266,7 +237,7 @@ fun HistoryContent(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        contentWindowInsets = ZERO_WINDOW_INSETS,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.L.grey6,
         topBar = {
             HistoryTopBarHost(
@@ -324,14 +295,14 @@ private fun HistoryGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
-        columns = HISTORY_GRID_CELLS,
+        columns = GridCells.Fixed(2),
         state = gridState,
         modifier = modifier,
     ) {
         items(
             items = history,
             key = { historyItem -> historyItem.item.id },
-            contentType = HISTORY_ROW_CONTENT_TYPE
+            contentType = { "history_row" }
         ) { historyItem ->
             val isSelected = historyItem.item.id in selectedIds
             val localUrl = remember(historyItem.item, localUrlOf) { localUrlOf(historyItem.item) }
@@ -593,8 +564,20 @@ private fun SelectionCheckBadge(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val badgeBase = if (isSelected) SELECTION_BADGE_SELECTED_MODIFIER else SELECTION_BADGE_UNSELECTED_MODIFIER
-    val badgeModifier = if (modifier == Modifier) badgeBase else modifier.then(badgeBase)
+    val badgeModifier = modifier
+        .size(28.dp)
+        .clip(CircleShape)
+        .then(
+            if (isSelected) {
+                Modifier
+                    .background(Color(0xFFE91E63))
+                    .border(width = 1.5.dp, color = Color.White, shape = CircleShape)
+            } else {
+                Modifier
+                    .background(Color(0x99000000))
+                    .border(width = 1.5.dp, color = Color.LightGray, shape = CircleShape)
+            }
+        )
     Box(
         modifier = badgeModifier,
         contentAlignment = Alignment.Center,
@@ -604,7 +587,7 @@ private fun SelectionCheckBadge(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Выбрано",
                 tint = Color.White,
-                modifier = SELECTION_CHECK_ICON_MODIFIER,
+                modifier = Modifier.size(18.dp),
             )
         }
     }
@@ -710,22 +693,25 @@ private fun HistoryCardMedia(
 
 @Composable
 private fun HistoryWatchedBadge(modifier: Modifier = Modifier) {
-    val rowModifier = if (modifier == Modifier) WATCHED_BADGE_BASE_MODIFIER else modifier.then(WATCHED_BADGE_BASE_MODIFIER)
     Row(
-        modifier = rowModifier,
+        modifier = modifier
+            .padding(4.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(Color(0xCC1B5E20))
+            .padding(horizontal = 4.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Default.Check,
             contentDescription = null,
             tint = Color.White,
-            modifier = WATCHED_ICON_MODIFIER,
+            modifier = Modifier.size(12.dp),
         )
         Text(
             text = "Просмотрено",
             color = Color.White,
             fontSize = 10.sp,
-            modifier = WATCHED_TEXT_MODIFIER,
+            modifier = Modifier.padding(start = 2.dp),
         )
     }
 }
@@ -759,11 +745,18 @@ private fun HistoryRow(
     val handleOpenVideo = remember(item, actions.onOpenVideo) { { actions.onOpenVideo(item) } }
     val handleSaveToGallery = remember(item, actions.onSaveToGallery) { { actions.onSaveToGallery(item) } }
 
-    val cardModifier = if (selectionState.isSelected) {
-        CARD_SELECTED_MODIFIER
-    } else {
-        CARD_BASE_MODIFIER
-    }
+    val cardModifier = Modifier
+        .fillMaxWidth()
+        .padding(1.dp)
+        .aspectRatio(CARD_ASPECT_RATIO)
+        .background(Color.DarkGray)
+        .then(
+            if (selectionState.isSelected) {
+                Modifier.border(2.dp, Color(0xFFE91E63))
+            } else {
+                Modifier
+            }
+        )
 
     Box(
         modifier = cardModifier
@@ -927,7 +920,6 @@ private fun HistoryActionsMenu(
     }
 }
 
-private val historyPosterShape = RoundedCornerShape(8.dp)
 private val historyDurationOffsetY = (-3).dp
 
 @Composable
@@ -946,7 +938,7 @@ private fun ConfirmDeleteHistoryDialog(
                 modifier = Modifier
                     .width(160.dp)
                     .aspectRatio(CARD_ASPECT_RATIO)
-                    .clip(historyPosterShape)
+                    .clip(RoundedCornerShape(8.dp))
             )
         },
         confirmText = "Удалить",

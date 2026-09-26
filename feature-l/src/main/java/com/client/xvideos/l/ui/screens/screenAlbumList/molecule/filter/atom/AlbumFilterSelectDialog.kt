@@ -37,16 +37,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
 
-private val DIALOG_SHAPE_16 = RoundedCornerShape(16.dp)
-private val LIST_SHAPE_8 = RoundedCornerShape(8.dp)
-private val ROW_SHAPE_6 = RoundedCornerShape(6.dp)
-private val BORDER_WIDTH_1 = 1.dp
-private const val DIALOG_WIDTH_FRACTION = 0.9f
-private val DIALOG_MAX_WIDTH = 420.dp
-private val DIALOG_PADDING = 16.dp
-private val ROW_VERTICAL_ALIGNMENT_CENTER = Alignment.CenterVertically
-private val ROW_ARRANGEMENT_SPACE_BETWEEN = Arrangement.SpaceBetween
-private val DIALOG_PROPERTIES = DialogProperties(usePlatformDefaultWidth = false)
+private val DIALOG_SHAPE = RoundedCornerShape(16.dp)
+private val ROW_SHAPE = RoundedCornerShape(6.dp)
 
 @Composable
 fun <T> AlbumFilterSelectDialog(
@@ -71,16 +63,16 @@ fun <T> AlbumFilterSelectDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DIALOG_PROPERTIES
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(DIALOG_WIDTH_FRACTION)
-                .widthIn(max = DIALOG_MAX_WIDTH)
-                .clip(DIALOG_SHAPE_16)
-                .border(BORDER_WIDTH_1, palette.border, DIALOG_SHAPE_16)
+                .fillMaxWidth(0.9f)
+                .widthIn(max = 420.dp)
+                .clip(DIALOG_SHAPE)
+                .border(1.dp, palette.border, DIALOG_SHAPE)
                 .background(palette.surface)
-                .padding(DIALOG_PADDING)
+                .padding(16.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -88,8 +80,8 @@ fun <T> AlbumFilterSelectDialog(
                 // Заголовок и кнопка закрытия
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN,
-                    verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = title,
@@ -119,8 +111,8 @@ fun <T> AlbumFilterSelectDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = maxListHeight)
-                        .clip(LIST_SHAPE_8)
-                        .border(BORDER_WIDTH_1, palette.border, LIST_SHAPE_8)
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, palette.border, RoundedCornerShape(8.dp))
                         .background(palette.panelBlack)
                         .padding(vertical = 4.dp)
                 ) {
@@ -159,13 +151,13 @@ private fun SelectDialogRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 6.dp, vertical = 3.dp)
-            .clip(ROW_SHAPE_6)
-            .border(BORDER_WIDTH_1, borderColor, ROW_SHAPE_6)
+            .clip(ROW_SHAPE)
+            .border(1.dp, borderColor, ROW_SHAPE)
             .background(backgroundColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT_CENTER,
-        horizontalArrangement = ROW_ARRANGEMENT_SPACE_BETWEEN
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = title,

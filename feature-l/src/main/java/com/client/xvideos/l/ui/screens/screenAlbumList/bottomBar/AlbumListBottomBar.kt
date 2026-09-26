@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,32 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListPageSelector
 
-private val FILTER_BUTTON_SHAPE = RoundedCornerShape(4.dp)
-private val FILTER_BUTTON_BORDER_COLOR = Color(0xFF434343)
-private val FILTER_BUTTON_BG_COLOR = Color(0xFF414141)
-private val FILTER_BUTTON_SIZE = 48.dp
-private val FILTER_BUTTON_BORDER_WIDTH = 2.dp
-private val ROW_BAR_HEIGHT = 48.dp
-private val FILTER_START_PADDING = 2.dp
-private val FILTER_END_PADDING = 2.dp
-private const val CD_FILTER_BUTTON = "Фильтры"
-
-private val COLOR_WHITE = Color.White
-private val ICON_FILTER_LIST = Icons.Default.FilterList
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-
-private val FILTER_BUTTON_BASE_MODIFIER = Modifier
-    .size(FILTER_BUTTON_SIZE)
-    .border(FILTER_BUTTON_BORDER_WIDTH, FILTER_BUTTON_BORDER_COLOR, FILTER_BUTTON_SHAPE)
-    .background(FILTER_BUTTON_BG_COLOR)
-
-private val FILTER_BUTTON_START_BASE_MODIFIER = FILTER_BUTTON_BASE_MODIFIER.padding(start = FILTER_START_PADDING)
-private val FILTER_BUTTON_END_BASE_MODIFIER = FILTER_BUTTON_BASE_MODIFIER.padding(end = FILTER_END_PADDING)
-private val ROW_BAR_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .height(ROW_BAR_HEIGHT)
+private val BUTTON_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
 fun AlbumListBottomBar(
@@ -61,20 +36,19 @@ fun AlbumListBottomBar(
     modifier: Modifier = Modifier,
     onChange: (Int) -> Unit = {}
 ) {
-    val rowModifier = remember(Theme.tabLevel1) {
-        ROW_BAR_BASE_MODIFIER.background(Theme.tabLevel1)
-    }
-
     Column(modifier = modifier) {
         HorizontalDivider()
 
         Row(
-            modifier = rowModifier,
-            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
-            horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(Theme.tabLevel1),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             FilterButton(
-                baseModifier = FILTER_BUTTON_END_BASE_MODIFIER,
+                modifier = Modifier.padding(end = 2.dp),
                 onClick = onClickVisibleFilter
             )
 
@@ -87,7 +61,7 @@ fun AlbumListBottomBar(
             }
 
             FilterButton(
-                baseModifier = FILTER_BUTTON_START_BASE_MODIFIER,
+                modifier = Modifier.padding(start = 2.dp),
                 onClick = onClickVisibleFilter
             )
         }
@@ -100,14 +74,16 @@ fun AlbumListBottomBar(
 private fun FilterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    baseModifier: Modifier = FILTER_BUTTON_BASE_MODIFIER,
 ) {
-    val resolvedBase = if (modifier == Modifier) baseModifier else modifier.then(baseModifier)
     Box(
-        modifier = resolvedBase.clickable(onClick = onClick),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        modifier = modifier
+            .size(48.dp)
+            .border(2.dp, Color(0xFF434343), BUTTON_SHAPE)
+            .background(Color(0xFF414141))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(ICON_FILTER_LIST, contentDescription = CD_FILTER_BUTTON, tint = COLOR_WHITE)
+        Icon(Icons.Default.FilterList, contentDescription = "Фильтры", tint = Color.White)
     }
 }
 

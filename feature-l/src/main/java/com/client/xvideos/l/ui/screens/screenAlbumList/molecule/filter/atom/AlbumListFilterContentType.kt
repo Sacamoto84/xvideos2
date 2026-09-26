@@ -21,9 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.enum.ContentId
 import kotlinx.collections.immutable.persistentListOf
 
-private val style = Theme.L.Type.rowValue
 private val CONTENT_TYPE_OPTIONS = persistentListOf("All", "Hentai", "NErotic", "RPeople")
-private val BUTTON_ROW_HEIGHT = 48.dp
 private val BASE_SEGMENT_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
@@ -53,20 +51,20 @@ fun AlbumListFilterContentType(
         inactiveBorderColor = palette.border,
     )
     val activeStyle = remember(palette.selectedText) {
-        style.copy(color = palette.selectedText)
+        Theme.L.Type.rowValue.copy(color = palette.selectedText)
     }
     val inactiveStyle = remember(palette.textSecondary) {
-        style.copy(color = palette.textSecondary)
+        Theme.L.Type.rowValue.copy(color = palette.textSecondary)
     }
 
     SingleChoiceSegmentedButtonRow(
         modifier = modifier
             .fillMaxWidth()
-            .height(BUTTON_ROW_HEIGHT)
+            .height(48.dp)
     ) {
         CONTENT_TYPE_OPTIONS.forEachIndexed { index, label ->
             SegmentedButton(
-                modifier = Modifier.height(BUTTON_ROW_HEIGHT),
+                modifier = Modifier.height(48.dp),
                 colors = buttonColors,
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,

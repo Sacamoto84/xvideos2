@@ -29,14 +29,6 @@ import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 
-private val ALIGN_CENTER = Alignment.Center
-private val COLOR_GRAY = Color.Gray
-private val CONTENT_SCALE_FIT = ContentScale.Fit
-private val FULL_SIZE_MODIFIER = Modifier.fillMaxSize()
-private val FULL_SIZE_CLIP_BOUNDS = Modifier.fillMaxSize().clipToBounds()
-private const val NO_IMAGE_TEXT = "Нет ссылки на изображение"
-private val NO_OP_SUCCESS: () -> Unit = {}
-
 /**
  * Одна страница полноэкранного пейджера: видео или картинка с зумом.
  *
@@ -103,8 +95,8 @@ internal fun LFullScreenPage(
     // UrlImage) рисуют за пределами layout-границ, из-за чего соседние страницы
     // накладывались друг на друга при прокрутке.
     Box(
-        modifier = FULL_SIZE_CLIP_BOUNDS,
-        contentAlignment = ALIGN_CENTER
+        modifier = Modifier.fillMaxSize().clipToBounds(),
+        contentAlignment = Alignment.Center
     ) {
     val pageRatio = if (pageItem.width > 0 && pageItem.height > 0) {
         if (rotate) pageItem.height.toFloat() / pageItem.width
@@ -113,10 +105,11 @@ internal fun LFullScreenPage(
         1f
     }
     Box(
-        modifier = FULL_SIZE_MODIFIER
+        modifier = Modifier
+            .fillMaxSize()
             .aspectRatio(pageRatio, matchHeightConstraintsFirst = false)
     ) {
-        Box(modifier = FULL_SIZE_MODIFIER) {
+        Box(modifier = Modifier.fillMaxSize()) {
             val videoUrl = pageItem.lAnimationVideoUrl()
             if (videoUrl != null) {
                 val handleVideoZoomChanged: (Boolean) -> Unit = remember(isCurrentPage, onZoomChanged) {
@@ -138,7 +131,7 @@ internal fun LFullScreenPage(
                     rotate = rotate,
                     resetZoomTrigger = resetZoomTrigger,
                     onZoomChanged = handleVideoZoomChanged,
-                    modifier = FULL_SIZE_MODIFIER,
+                    modifier = Modifier.fillMaxSize(),
                     onTap = onToggleFullScreen
                 )
             } else {
@@ -155,9 +148,10 @@ internal fun LFullScreenPage(
                 if (imageUrl.isNotBlank()) {
                     UrlImage(
                         rotate = rotate,
-                        contentScale = CONTENT_SCALE_FIT,
+                        contentScale = ContentScale.Fit,
                         url = imageUrl,
-                        modifier = FULL_SIZE_MODIFIER
+                        modifier = Modifier
+                            .fillMaxSize()
                             .zoomable(
                                 zoomState = zoomState,
                                 enableOneFingerZoom = false,
@@ -172,7 +166,7 @@ internal fun LFullScreenPage(
                                 },
                                 onTap = onZoomTap
                             ),
-                        onSuccess = NO_OP_SUCCESS,
+                        onSuccess = {},
                         onFailure = {
                             if (imageUrlIndex < imageUrls.lastIndex) {
                                 imageUrlIndex += 1
@@ -187,10 +181,10 @@ internal fun LFullScreenPage(
                     )
                 } else {
                     Box(
-                        modifier = FULL_SIZE_MODIFIER,
-                        contentAlignment = ALIGN_CENTER
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(NO_IMAGE_TEXT, color = COLOR_GRAY)
+                        Text("Нет ссылки на изображение", color = Color.Gray)
                     }
                 }
             }

@@ -16,24 +16,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-private val PANEL_TOP_SHAPE = RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp)
-private val HANDLE_SHAPE = RoundedCornerShape(2.dp)
-private val DEFAULT_CONTENT_HEIGHT = 80.dp
-private val DEFAULT_INDICATOR_HEIGHT = 4.dp
-private val HANDLE_WIDTH = 40.dp
-private val HANDLE_OFFSET_Y = 2.dp
-private val HANDLE_BOTTOM_PADDING = 8.dp
-private val PANEL_BG_COLOR = Color.DarkGray
-private val HANDLE_BG_COLOR = Color.Gray
-
-/**
- * Нижняя панель для полноэкранного просмотра картинок.
- */
 @Composable
 fun SwipeableBottomPanel(
     modifier: Modifier = Modifier,
-    contentHeight: Dp = DEFAULT_CONTENT_HEIGHT,
-    indicatorHeight: Dp = DEFAULT_INDICATOR_HEIGHT,
+    contentHeight: Dp = 80.dp,
+    indicatorHeight: Dp = 4.dp,
     content: @Composable () -> Unit
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -42,17 +29,17 @@ fun SwipeableBottomPanel(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(contentHeight)
-                .background(PANEL_BG_COLOR, PANEL_TOP_SHAPE)
+                .background(Color.DarkGray, RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
         ) {
             // Индикатор-ручка
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(bottom = HANDLE_BOTTOM_PADDING)
-                    .width(HANDLE_WIDTH)
+                    .padding(bottom = 8.dp)
+                    .width(40.dp)
                     .height(indicatorHeight)
-                    .offset(y = HANDLE_OFFSET_Y)
-                    .background(HANDLE_BG_COLOR, HANDLE_SHAPE)
+                    .offset(y = 2.dp)
+                    .background(Color.Gray, RoundedCornerShape(2.dp))
             )
 
             content()

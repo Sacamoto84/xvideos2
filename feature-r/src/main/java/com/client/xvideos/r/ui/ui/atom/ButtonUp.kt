@@ -23,85 +23,49 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-private val BUTTON_UP_BORDER_COLOR = Color(0x80757575)
-private val BUTTON_UP_BORDER_WIDTH = 1.dp
-private val BUTTON_UP_CORNER_RADIUS = 8.dp
-private val BUTTON_UP_ROUNDED_SHAPE = RoundedCornerShape(BUTTON_UP_CORNER_RADIUS)
-private val BUTTON_UP_HEIGHT = 46.dp
-private val DEFAULT_BUTTON_UP_WIDTH = 32.dp
-private val DEFAULT_BUTTON_UP_CIRCLE_SIZE = 46.dp
-private val BUTTON_UP_ICON_TINT = Color.LightGray
-private const val CD_SCROLL_UP = "Вверх"
-private val ARROW_UP_ICON = Icons.Filled.ArrowUpward
-private val BUTTON_UP_ALIGNMENT = Alignment.Center
-
-private val BUTTON_UP_BASE_MODIFIER = Modifier
-    .clip(BUTTON_UP_ROUNDED_SHAPE)
-    .border(BUTTON_UP_BORDER_WIDTH, BUTTON_UP_BORDER_COLOR, BUTTON_UP_ROUNDED_SHAPE)
-    .background(Theme.tabLevel0)
-
-private val BUTTON_UP_DEFAULT_SIZE_MODIFIER = Modifier
-    .height(BUTTON_UP_HEIGHT)
-    .width(DEFAULT_BUTTON_UP_WIDTH)
-
-private val BUTTON_UP_DEFAULT_FULL_MODIFIER = BUTTON_UP_DEFAULT_SIZE_MODIFIER.then(BUTTON_UP_BASE_MODIFIER)
-
-private val BUTTON_UP_CIRCLE_BASE_MODIFIER = Modifier
-    .clip(CircleShape)
-    .border(BUTTON_UP_BORDER_WIDTH, BUTTON_UP_BORDER_COLOR, CircleShape)
-    .background(Theme.tabLevel0)
-
-private val BUTTON_UP_CIRCLE_DEFAULT_SIZE_MODIFIER = Modifier.size(DEFAULT_BUTTON_UP_CIRCLE_SIZE)
-private val BUTTON_UP_CIRCLE_DEFAULT_FULL_MODIFIER = BUTTON_UP_CIRCLE_DEFAULT_SIZE_MODIFIER.then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
-
 @Composable
 fun ButtonUp(
-    width: Dp = DEFAULT_BUTTON_UP_WIDTH,
+    width: Dp = 32.dp,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val baseModifier = if (width == DEFAULT_BUTTON_UP_WIDTH) {
-        BUTTON_UP_DEFAULT_FULL_MODIFIER
-    } else {
-        Modifier.height(BUTTON_UP_HEIGHT).width(width).then(BUTTON_UP_BASE_MODIFIER)
-    }
-
-    val resolvedModifier = if (modifier == Modifier) baseModifier else modifier.then(baseModifier)
-
     Box(
-        modifier = resolvedModifier.clickable(onClick = onClick),
-        contentAlignment = BUTTON_UP_ALIGNMENT
+        modifier = modifier
+            .height(46.dp)
+            .width(width)
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, Color(0x80757575), RoundedCornerShape(8.dp))
+            .background(Theme.tabLevel0)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = ARROW_UP_ICON,
-            contentDescription = CD_SCROLL_UP,
-            tint = BUTTON_UP_ICON_TINT
+            imageVector = Icons.Filled.ArrowUpward,
+            contentDescription = "Вверх",
+            tint = Color.LightGray
         )
     }
 }
 
 @Composable
 fun ButtonUpCircle(
-    size: Dp = DEFAULT_BUTTON_UP_CIRCLE_SIZE,
+    size: Dp = 46.dp,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val baseModifier = if (size == DEFAULT_BUTTON_UP_CIRCLE_SIZE) {
-        BUTTON_UP_CIRCLE_DEFAULT_FULL_MODIFIER
-    } else {
-        Modifier.size(size).then(BUTTON_UP_CIRCLE_BASE_MODIFIER)
-    }
-
-    val resolvedModifier = if (modifier == Modifier) baseModifier else modifier.then(baseModifier)
-
     Box(
-        modifier = resolvedModifier.clickable(onClick = onClick),
-        contentAlignment = BUTTON_UP_ALIGNMENT
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .border(1.dp, Color(0x80757575), CircleShape)
+            .background(Theme.tabLevel0)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = ARROW_UP_ICON,
-            contentDescription = CD_SCROLL_UP,
-            tint = BUTTON_UP_ICON_TINT
+            imageVector = Icons.Filled.ArrowUpward,
+            contentDescription = "Вверх",
+            tint = Color.LightGray
         )
     }
 }

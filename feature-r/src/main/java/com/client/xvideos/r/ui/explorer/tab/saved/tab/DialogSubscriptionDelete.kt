@@ -25,27 +25,6 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.common.saved.SelectedCreator
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val SUBSCRIPTION_AVATAR_CORNER = 8.dp
-private val SUBSCRIPTION_AVATAR_SHAPE = RoundedCornerShape(SUBSCRIPTION_AVATAR_CORNER)
-private val SUBSCRIPTION_AVATAR_PLACEHOLDER_BG = Color.DarkGray
-private val AVATAR_BOX_SIZE = 96.dp
-private val PERSON_ICON_SIZE = 32.dp
-private val COLOR_WHITE = Color.White
-private val PERSON_ICON_TINT = COLOR_WHITE
-private val ICON_PERSON = Icons.Default.Person
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-private val SPAN_STYLE_BOLD = SpanStyle(fontWeight = FontWeight.Bold)
-private val AVATAR_BOX_BASE_MODIFIER = Modifier
-    .clip(SUBSCRIPTION_AVATAR_SHAPE)
-    .size(AVATAR_BOX_SIZE)
-    .background(SUBSCRIPTION_AVATAR_PLACEHOLDER_BG)
-private val PERSON_ICON_MODIFIER = Modifier.size(PERSON_ICON_SIZE)
-private val URL_IMAGE_MODIFIER = Modifier.fillMaxSize()
-private const val DIALOG_TITLE = "Удалить подписку?"
-private const val CONFIRM_TEXT = "Удалить"
-private const val TEXT_DELETE_AUTHOR_PREFIX = "Удалить автора «"
-private const val TEXT_DELETE_AUTHOR_SUFFIX = "» из подписок?"
-
 @Composable
 fun DialogSubscriptionDelete(
     user: SelectedCreator?,
@@ -58,26 +37,29 @@ fun DialogSubscriptionDelete(
         }
         val dialogBody = remember(pending.name) {
             buildAnnotatedString {
-                append(TEXT_DELETE_AUTHOR_PREFIX)
-                withStyle(SPAN_STYLE_BOLD) { append(pending.name) }
-                append(TEXT_DELETE_AUTHOR_SUFFIX)
+                append("Удалить автора «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                append("» из подписок?")
             }
         }
         val iconContent: @Composable () -> Unit = remember(pending.urlProfile) {
             {
                 Box(
-                    modifier = AVATAR_BOX_BASE_MODIFIER,
-                    contentAlignment = BOX_ALIGNMENT_CENTER
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .size(96.dp)
+                        .background(Color.DarkGray),
+                    contentAlignment = Alignment.Center
                 ) {
                     val url = pending.urlProfile
                     if (url != null) {
-                        UrlImage(url = url, modifier = URL_IMAGE_MODIFIER)
+                        UrlImage(url = url, modifier = Modifier.fillMaxSize())
                     } else {
                         Icon(
-                            ICON_PERSON,
+                            Icons.Default.Person,
                             contentDescription = null,
-                            modifier = PERSON_ICON_MODIFIER,
-                            tint = PERSON_ICON_TINT
+                            modifier = Modifier.size(32.dp),
+                            tint = Color.White
                         )
                     }
                 }
@@ -85,11 +67,11 @@ fun DialogSubscriptionDelete(
         }
 
         LavenderDialog(
-            title = DIALOG_TITLE,
+            title = "Удалить подписку?",
             onDismiss = onDismiss,
             icon = iconContent,
             body = dialogBody,
-            confirmText = CONFIRM_TEXT,
+            confirmText = "Удалить",
             onConfirm = handleConfirm,
             destructive = true,
         )

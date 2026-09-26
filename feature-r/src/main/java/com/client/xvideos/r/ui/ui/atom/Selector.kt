@@ -26,19 +26,6 @@ import com.client.xvideos.feature.r.R
 
 private const val INDEX_SINGLE = 1
 private const val INDEX_DOUBLE = 2
-private val SELECTOR_SHAPE = RoundedCornerShape(8.dp)
-private val SELECTOR_BUTTON_SIZE = 46.dp
-private val SELECTOR_ICON_SIZE = 24.dp
-private val SELECTOR_DIVIDER_WIDTH = 1.dp
-private val SELECTOR_BORDER_WIDTH = 1.dp
-private val SELECTOR_DIVIDER_MODIFIER = Modifier
-    .width(SELECTOR_DIVIDER_WIDTH)
-    .height(SELECTOR_BUTTON_SIZE)
-
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-private val COLOR_WHITE = Color.White
-private val BUTTON_SIZE_MODIFIER = Modifier.size(SELECTOR_BUTTON_SIZE)
-private val ICON_SIZE_MODIFIER = Modifier.size(SELECTOR_ICON_SIZE)
 
 @Preview
 @Composable
@@ -55,19 +42,10 @@ fun Selector(
     val onSelect1 = remember(onSelect) { { onSelect(INDEX_SINGLE) } }
     val onSelect2 = remember(onSelect) { { onSelect(INDEX_DOUBLE) } }
 
-    val borderColor = Theme.R.colorBorderGray
-    val borderModifier = remember(borderColor) {
-        Modifier
-            .clip(SELECTOR_SHAPE)
-            .border(SELECTOR_BORDER_WIDTH, borderColor, SELECTOR_SHAPE)
-    }
-    val dividerModifier = remember(borderColor) {
-        SELECTOR_DIVIDER_MODIFIER.background(borderColor)
-    }
-    val rowModifier = if (modifier == Modifier) borderModifier else modifier.then(borderModifier)
-
     Row(
-        modifier = rowModifier
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, Theme.R.colorBorderGray, RoundedCornerShape(8.dp))
     ) {
         SelectorButton(
             iconRes = R.drawable.select_2,
@@ -76,7 +54,10 @@ fun Selector(
         )
 
         Box(
-            modifier = dividerModifier
+            modifier = Modifier
+                .width(1.dp)
+                .height(46.dp)
+                .background(Theme.R.colorBorderGray)
         )
 
         SelectorButton(
@@ -95,22 +76,20 @@ private fun SelectorButton(
     modifier: Modifier = Modifier,
 ) {
     val bg = if (isSelected) Theme.R.colorBorderSelect else Theme.background
-    val tint = if (isSelected) COLOR_WHITE else Theme.R.colorTextGray
-    val styledBase = remember(bg) {
-        BUTTON_SIZE_MODIFIER.background(bg)
-    }
-    val boxModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
+    val tint = if (isSelected) Color.White else Theme.R.colorTextGray
 
     Box(
-        modifier = boxModifier
+        modifier = modifier
+            .size(46.dp)
+            .background(bg)
             .clickable(onClick = onClick),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = tint,
-            modifier = ICON_SIZE_MODIFIER
+            modifier = Modifier.size(24.dp)
         )
     }
 }

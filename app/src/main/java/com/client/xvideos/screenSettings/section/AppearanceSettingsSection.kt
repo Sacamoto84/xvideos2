@@ -44,9 +44,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
-private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
-private val PREVIEW_CARD_CORNER = 24.dp
-private val PREVIEW_CARD_SHAPE = RoundedCornerShape(PREVIEW_CARD_CORNER)
 private val PREVIEW_GRADIENT = Brush.linearGradient(
     colors = listOf(
         Color(0xFF2C194D),
@@ -55,72 +52,13 @@ private val PREVIEW_GRADIENT = Brush.linearGradient(
         Color(0xFF004D40)
     )
 )
-private const val CIRCLE_PINK_ALPHA = 0.85f
-private const val CIRCLE_ORANGE_ALPHA = 0.85f
-private const val CIRCLE_CYAN_ALPHA = 0.70f
-private val CIRCLE_COLOR_PINK = Color(0xFFE91E63).copy(alpha = CIRCLE_PINK_ALPHA)
-private val CIRCLE_COLOR_ORANGE = Color(0xFFFF9800).copy(alpha = CIRCLE_ORANGE_ALPHA)
-private val CIRCLE_COLOR_CYAN = Color(0xFF00E5FF).copy(alpha = CIRCLE_CYAN_ALPHA)
-private const val TITLE_PREVIEW = "Предпросмотр"
-private const val TITLE_SCROLL_BUTTONS = "Кнопки быстрой прокрутки"
-private const val PREVIEW_LABEL_PREFIX = "Режим: "
-
-private val SECTION_SPACER_HEIGHT = 8.dp
-private val PREVIEW_CARD_HORIZONTAL_PADDING = 16.dp
-private val PREVIEW_CARD_HEIGHT = 180.dp
-private val CIRCLE_PINK_SIZE = 110.dp
-private val CIRCLE_PINK_PADDING_START = 16.dp
-private val CIRCLE_PINK_PADDING_TOP = 16.dp
-private val CIRCLE_ORANGE_SIZE = 90.dp
-private val CIRCLE_CYAN_SIZE = 120.dp
-private val CIRCLE_CYAN_PADDING_END = 24.dp
-private val PREVIEW_LABEL_PADDING = 16.dp
-private val PREVIEW_LABEL_FONT_SIZE = 13.sp
-private const val PREVIEW_LABEL_ALPHA = 0.9f
-private val SCROLL_BUTTONS_END_PADDING = 20.dp
-private val PREVIEW_LABEL_COLOR = Color.White.copy(alpha = PREVIEW_LABEL_ALPHA)
-private val PREVIEW_LABEL_FONT_WEIGHT = FontWeight.Medium
-private val ON_SCROLL_NOOP: () -> Unit = {}
-
-private val SECTION_SPACER_MODIFIER = Modifier.height(SECTION_SPACER_HEIGHT)
 
 private val PREVIEW_CARD_BASE_MODIFIER = Modifier
     .fillMaxWidth()
-    .padding(horizontal = PREVIEW_CARD_HORIZONTAL_PADDING)
-    .height(PREVIEW_CARD_HEIGHT)
-    .clip(PREVIEW_CARD_SHAPE)
+    .padding(horizontal = 16.dp)
+    .height(180.dp)
+    .clip(RoundedCornerShape(24.dp))
     .background(SettingsCardColor)
-
-private val CIRCLE_PINK_BASE_MODIFIER = Modifier
-    .size(CIRCLE_PINK_SIZE)
-    .padding(start = CIRCLE_PINK_PADDING_START, top = CIRCLE_PINK_PADDING_TOP)
-    .clip(CircleShape)
-    .background(CIRCLE_COLOR_PINK)
-
-private val CIRCLE_ORANGE_BASE_MODIFIER = Modifier
-    .size(CIRCLE_ORANGE_SIZE)
-    .clip(CircleShape)
-    .background(CIRCLE_COLOR_ORANGE)
-
-private val CIRCLE_CYAN_BASE_MODIFIER = Modifier
-    .size(CIRCLE_CYAN_SIZE)
-    .padding(end = CIRCLE_CYAN_PADDING_END)
-    .clip(CircleShape)
-    .background(CIRCLE_COLOR_CYAN)
-
-private val PREVIEW_LABEL_BASE_MODIFIER = Modifier.padding(PREVIEW_LABEL_PADDING)
-
-private val SCROLL_BUTTONS_BASE_MODIFIER = Modifier.padding(end = SCROLL_BUTTONS_END_PADDING)
-private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val PREVIEW_GRADIENT_BASE_MODIFIER = Modifier
-    .fillMaxSize()
-    .background(PREVIEW_GRADIENT)
-private val ALIGN_TOP_START = Alignment.TopStart
-private val ALIGN_BOTTOM_CENTER = Alignment.BottomCenter
-private val ALIGN_CENTER_END = Alignment.CenterEnd
-private val SCROLL_BUTTON_EFFECT_ENTRIES = ScrollButtonEffect.entries
-
-private const val ICON_BLUR = R.drawable.ic_blur_24
 
 /**
  * Экран настроек «Отображение» (Appearance).
@@ -138,18 +76,18 @@ internal fun AppearanceSettingsSection(
         { effect -> Settings.scroll_buttons_effect.setValue(effect.name) }
     }
 
-    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
-        SettingsSectionTitle(TITLE_PREVIEW)
+    Column(modifier = if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth()) {
+        SettingsSectionTitle("Предпросмотр")
         ScrollButtonPreviewCard(
             hazeState = previewHazeState,
             currentEffect = currentEffect
         )
 
-        Spacer(SECTION_SPACER_MODIFIER)
+        Spacer(Modifier.height(8.dp))
 
-        SettingsSectionTitle(TITLE_SCROLL_BUTTONS)
+        SettingsSectionTitle("Кнопки быстрой прокрутки")
         SettingsGroup {
-            SCROLL_BUTTON_EFFECT_ENTRIES.forEachIndexed { index, effect ->
+            ScrollButtonEffect.entries.forEachIndexed { index, effect ->
                 key(effect.name) {
                     if (index > 0) {
                         SettingsDivider()
@@ -175,7 +113,7 @@ private fun ScrollEffectItem(
     val onClick = remember(effect, onSelect) { { onSelect(effect) } }
     val radioColors = RadioButtonDefaults.colors(
         selectedColor = SettingsAccentColor,
-        unselectedColor = RADIO_UNSELECTED_COLOR
+        unselectedColor = Color(0xFF938F99)
     )
     val trailingContent: @Composable () -> Unit = remember(isSelected, radioColors) {
         {
@@ -187,7 +125,7 @@ private fun ScrollEffectItem(
         }
     }
     SettingsListItem(
-        icon = ICON_BLUR,
+        icon = R.drawable.ic_blur_24,
         text = effect.title,
         subtitle = effect.subtitle,
         trailing = trailingContent,
@@ -212,44 +150,55 @@ private fun ScrollButtonPreviewCard(
     ) {
         // Цветной имитационный фон галереи, помеченный как hazeSource
         Box(
-            modifier = PREVIEW_GRADIENT_BASE_MODIFIER.hazeSource(hazeState)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(PREVIEW_GRADIENT)
+                .hazeSource(hazeState)
         ) {
             // Декоративные цветные круги для проверки преломления и размытия
             Box(
                 modifier = Modifier
-                    .align(ALIGN_TOP_START)
-                    .then(CIRCLE_PINK_BASE_MODIFIER)
+                    .align(Alignment.TopStart)
+                    .size(110.dp)
+                    .padding(start = 16.dp, top = 16.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFE91E63).copy(alpha = 0.85f))
             )
             Box(
                 modifier = Modifier
-                    .align(ALIGN_BOTTOM_CENTER)
-                    .then(CIRCLE_ORANGE_BASE_MODIFIER)
+                    .align(Alignment.BottomCenter)
+                    .size(90.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFF9800).copy(alpha = 0.85f))
             )
             Box(
                 modifier = Modifier
-                    .align(ALIGN_CENTER_END)
-                    .then(CIRCLE_CYAN_BASE_MODIFIER)
+                    .align(Alignment.CenterEnd)
+                    .size(120.dp)
+                    .padding(end = 24.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF00E5FF).copy(alpha = 0.70f))
             )
         }
 
         val previewLabelStyle = remember(Theme.L.Type.caption) {
             Theme.L.Type.caption.copy(
-                fontWeight = PREVIEW_LABEL_FONT_WEIGHT,
-                fontSize = PREVIEW_LABEL_FONT_SIZE
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp
             )
         }
         val previewLabelText = remember(currentEffect) {
-            "$PREVIEW_LABEL_PREFIX${currentEffect.title}"
+            "Режим: ${currentEffect.title}"
         }
 
         // Подпись образца
         Text(
             text = previewLabelText,
-            color = PREVIEW_LABEL_COLOR,
+            color = Color.White.copy(alpha = 0.9f),
             style = previewLabelStyle,
             modifier = Modifier
-                .align(ALIGN_TOP_START)
-                .then(PREVIEW_LABEL_BASE_MODIFIER)
+                .align(Alignment.TopStart)
+                .padding(16.dp)
         )
 
         // Плавающие кнопки скролла в правом краю карточки
@@ -257,12 +206,12 @@ private fun ScrollButtonPreviewCard(
             showScrollToTop = true,
             showScrollToBottom = true,
             hazeState = hazeState,
-            onScrollToTop = ON_SCROLL_NOOP,
-            onScrollToBottom = ON_SCROLL_NOOP,
+            onScrollToTop = {},
+            onScrollToBottom = {},
             effect = currentEffect,
             modifier = Modifier
-                .align(ALIGN_CENTER_END)
-                .then(SCROLL_BUTTONS_BASE_MODIFIER)
+                .align(Alignment.CenterEnd)
+                .padding(end = 20.dp)
         )
     }
 }

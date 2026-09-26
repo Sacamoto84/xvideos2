@@ -16,12 +16,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-private const val TEXT_FOLLOW = "Follow"
-private const val TEXT_UNFOLLOW = "Unfollow"
-private const val FOLLOW_ACTION_DELAY_MS = 200L
-private val ICON_PERSON = Icons.Default.Person
-private val ICON_PERM_IDENTITY = Icons.Default.PermIdentity
-
 @Composable
 fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi: () -> RedApi, savedRed: () -> SavedRed, onDismiss: () -> Unit) {
     val isFollowed = item?.userName?.takeIf { it.isNotBlank() }?.let { name ->
@@ -35,7 +29,7 @@ fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi: () -> RedApi, savedR
                 // см. комментарий в DropdownMenuItem_Like: управляемый scope из
                 // SavedRed вместо GlobalScope, переживающий закрытие меню.
                 savedRed.invoke().scope.launch {
-                    delay(FOLLOW_ACTION_DELAY_MS)
+                    delay(200L)
                     if (!isFollowed) {
                         // Раньше здесь было `creators.add(getOrNull()!!)` внутри
                         // `catch { printStackTrace() }` молча проглатывал NPE
@@ -66,8 +60,8 @@ fun DropdownMenuItem_FollowContent(
     onClick: () -> Unit
 ) {
     ExpandMenuActionItem(
-        icon = if (isFollowed) ICON_PERSON else ICON_PERM_IDENTITY,
-        text = if (isFollowed) TEXT_UNFOLLOW else TEXT_FOLLOW,
+        icon = if (isFollowed) Icons.Default.Person else Icons.Default.PermIdentity,
+        text = if (isFollowed) "Unfollow" else "Follow",
         onClick = onClick
     )
 }

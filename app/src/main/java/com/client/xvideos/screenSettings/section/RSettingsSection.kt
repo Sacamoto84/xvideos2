@@ -35,32 +35,7 @@ import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 import com.client.xvideos.r.common.saved.SavedRed
 import kotlinx.coroutines.launch
 
-private val PROGRESS_HORIZONTAL_PADDING = 16.dp
-
-private const val TEXT_RED_ALL_FOLDERS = "Размер всех папок Red"
-private const val TEXT_RED_DOWNLOAD_FOLDER = "Размер папки Download"
-private const val TEXT_CLEAR_DOWNLOAD = "Очистить папку Download"
-private const val TEXT_CLEAR = "Очистить"
-private const val TEXT_CLEAR_DIALOG_TITLE = "Очистка папки Download"
-private const val TEXT_RECOVER_DOWNLOAD = "Докачать Download по .info"
-private const val TEXT_NICHES_CACHE = "Кэш Niches"
-private const val TEXT_UPDATE_NICHES_CACHE = "Обновить кэш Niches"
-private const val TEXT_START = "Старт"
-private const val TEXT_UPDATE = "Обновить"
-private const val TEXT_UPDATING = "Идёт обновление"
-private const val TEXT_NICHES_SUBTITLE_DEFAULT = "Данные для поиска и фильтров R"
-private const val CLEAR_DIALOG_BODY_PREFIX = "Подтвердить очистку: "
-private const val SNACK_DOWNLOAD_CHECKED_OK = "Download проверен: все файлы на месте"
-private const val SNACK_RECOVERY_STARTED_PREFIX = "Запущено: видео "
-private const val SNACK_RECOVERY_PREVIEW_PREFIX = ", превью "
-private const val NICHES_CACHE_SEPARATOR = " \u2022 "
-private const val NICHES_CACHE_HOUR_SUFFIX = "h"
 private const val ICON_RED = R.drawable.icon_red
-private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
-
-private val PROGRESS_INDICATOR_BASE_MODIFIER = Modifier
-    .padding(horizontal = PROGRESS_HORIZONTAL_PADDING)
-    .fillMaxWidth()
 
 @Composable
 internal fun RSettingsSection(
@@ -90,10 +65,10 @@ internal fun RSettingsSection(
                             recoveryReport = report
                             isRecoveringDownload = false
                             if (report.incompleteItems == 0) {
-                                SnackBar.success(SNACK_DOWNLOAD_CHECKED_OK)
+                                SnackBar.success("Download проверен: все файлы на месте")
                             } else {
                                 SnackBar.success(
-                                    "$SNACK_RECOVERY_STARTED_PREFIX${report.queuedVideo}$SNACK_RECOVERY_PREVIEW_PREFIX${report.queuedPreview}"
+                                    "Запущено: видео ${report.queuedVideo}, превью ${report.queuedPreview}"
                                 )
                             }
                         }
@@ -124,11 +99,11 @@ internal fun RSettingsSection(
 
     val formattedTotal = remember(sizeRedTotal) { formatBytes(sizeRedTotal) }
     val formattedDownload = remember(sizeRedDownload) { formatBytes(sizeRedDownload) }
-    val clearDialogBody = remember(formattedDownload) { "$CLEAR_DIALOG_BODY_PREFIX$formattedDownload" }
+    val clearDialogBody = remember(formattedDownload) { "Подтвердить очистку: $formattedDownload" }
     val nichesCacheValue = remember(nichesCacheSize, nichesCacheLastModifiedHour) {
-        "$nichesCacheSize$NICHES_CACHE_SEPARATOR$nichesCacheLastModifiedHour$NICHES_CACHE_HOUR_SUFFIX"
+        "$nichesCacheSize \u2022 ${nichesCacheLastModifiedHour}h"
     }
-    val nichesSubtitle = if (isNichesCacheDownloading) TEXT_UPDATING else TEXT_NICHES_SUBTITLE_DEFAULT
+    val nichesSubtitle = if (isNichesCacheDownloading) "Идёт обновление" else "Данные для поиска и фильтров R"
     val recoverySubtitle = remember(recoveryReport, isRecoveringDownload) {
         redDownloadRecoveryText(recoveryReport, isRecoveringDownload)
     }
@@ -136,32 +111,32 @@ internal fun RSettingsSection(
     SettingsGroup(modifier = modifier) {
         SettingsValueRow(
             icon = ICON_RED,
-            text = TEXT_RED_ALL_FOLDERS,
+            text = "Размер всех папок Red",
             value = formattedTotal
         )
         SettingsDivider()
 
         SettingsValueRow(
             icon = ICON_RED,
-            text = TEXT_RED_DOWNLOAD_FOLDER,
+            text = "Размер папки Download",
             value = formattedDownload
         )
         SettingsDivider()
 
         SettingsButtonRowWithDialog(
             icon = ICON_RED,
-            text = TEXT_CLEAR_DOWNLOAD,
-            value = TEXT_CLEAR,
-            textDialogTitle = TEXT_CLEAR_DIALOG_TITLE,
+            text = "Очистить папку Download",
+            value = "Очистить",
+            textDialogTitle = "Очистка папки Download",
             textDialogBody = clearDialogBody,
-            textDialogButton = TEXT_CLEAR,
+            textDialogButton = "Очистить",
             onClick = onClearDownload
         )
         SettingsDivider()
 
         SettingsListItem(
-            icon = ICON_HARD_DRIVE,
-            text = TEXT_RECOVER_DOWNLOAD,
+            icon = R.drawable.hard_drive_2_24,
+            text = "Докачать Download по .info",
             subtitle = recoverySubtitle,
             trailing = recoveryTrailing
         )
@@ -169,7 +144,7 @@ internal fun RSettingsSection(
 
         SettingsValueRow(
             icon = ICON_RED,
-            text = TEXT_NICHES_CACHE,
+            text = "Кэш Niches",
             value = nichesCacheValue
         )
 
@@ -177,7 +152,9 @@ internal fun RSettingsSection(
             val progressProvider = remember(nichesCacheProgress) { { nichesCacheProgress } }
             LinearProgressIndicator(
                 progress = progressProvider,
-                modifier = PROGRESS_INDICATOR_BASE_MODIFIER,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
                 color = WhatsAppGreen,
                 trackColor = SettingsDividerColor,
                 strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
@@ -187,7 +164,7 @@ internal fun RSettingsSection(
 
         SettingsListItem(
             icon = ICON_RED,
-            text = TEXT_UPDATE_NICHES_CACHE,
+            text = "Обновить кэш Niches",
             subtitle = nichesSubtitle,
             trailing = nichesTrailing
         )
@@ -205,7 +182,7 @@ private fun RecoveryTrailingButton(
         onClick = onClick,
         modifier = modifier
     ) {
-        Text(TEXT_START)
+        Text("Старт")
     }
 }
 
@@ -220,7 +197,7 @@ private fun NichesTrailingButton(
         onClick = onClick,
         modifier = modifier
     ) {
-        Text(TEXT_UPDATE)
+        Text("Обновить")
     }
 }
 

@@ -66,70 +66,10 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.normalizeXUrl
 import com.composables.core.HorizontalSeparator
 
-private const val FAVORITE_CARD_ASPECT_RATIO = 352f / 198f
 private const val GRID_COLUMNS = 2
-private val GRID_CELLS_FIXED = GridCells.Fixed(GRID_COLUMNS)
-private val HEADER_GRID_SPAN: androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope.() -> GridItemSpan = {
-    GridItemSpan(maxLineSpan)
-}
 private const val CONTENT_TYPE_HEADER = "header"
 private const val CONTENT_TYPE_FAVORITE_ROW = "favorite_row"
-private const val TEXT_EMPTY = "Пусто"
-private const val TEXT_FAVORITES_TITLE = "Избранное"
-private const val TEXT_DOWNLOAD = "Скачать"
-private const val TEXT_IN_GALLERY = "В галерею"
-private const val TEXT_DELETE = "Удалить"
-private const val TEXT_ACTIONS = "Действия"
-private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val ACTION_ICON_BUTTON_SIZE = 48.dp
-private val ACTION_ICON_SIZE = 24.dp
-private val CARD_PADDING_HORIZONTAL = 1.dp
-private val CARD_PADDING_VERTICAL = 1.dp
-private val DOWNLOAD_ICON_PADDING = 4.dp
-private val HEADER_START_PADDING = 16.dp
-private val HEADER_VERTICAL_PADDING = 8.dp
-private val DURATION_END_PADDING = 8.dp
-private val HEADER_TITLE_SIZE = 24.sp
-private val EMPTY_FONT_SIZE = 16.sp
-private val DURATION_FONT_SIZE = 14.sp
-private val ACTION_ICON_SHADOW_OFFSET = 0.5.dp
-private val DURATION_SHADOW_OFFSET = 1.dp
-private val SEPARATOR_COLOR = Color(0xFF9E9E9E)
-private val durationOffsetY = (-3).dp
 
-private val ICON_MORE_VERT = Icons.Default.MoreVert
-private val ICON_DOWNLOAD = Icons.Filled.ArrowCircleDown
-private val ICON_SAVE_ALT = Icons.Filled.SaveAlt
-private val ICON_DELETE = Icons.Filled.Delete
-
-private val COLOR_BLACK = Color.Black
-private val COLOR_WHITE = Color.White
-private val COLOR_DARK_GRAY = Color.DarkGray
-private val COLOR_GRAY = Color.Gray
-
-private val FONT_WEIGHT_BOLD = FontWeight.Bold
-
-private val ALIGN_TOP_CENTER = Alignment.TopCenter
-private val ALIGN_CENTER = Alignment.Center
-private val ALIGN_TOP_END = Alignment.TopEnd
-private val ALIGN_BOTTOM_END = Alignment.BottomEnd
-
-private val ACTION_BUTTON_SIZE_MODIFIER = Modifier.size(ACTION_ICON_BUTTON_SIZE)
-private val ACTION_ICON_SIZE_MODIFIER = Modifier.size(ACTION_ICON_SIZE)
-private val ACTION_ICON_SHADOW_MODIFIER = Modifier
-    .size(ACTION_ICON_SIZE)
-    .offset(ACTION_ICON_SHADOW_OFFSET, ACTION_ICON_SHADOW_OFFSET)
-private val MENU_WIDTH_MODIFIER = Modifier.width(IntrinsicSize.Min)
-private val DOWNLOAD_ICON_PADDING_MODIFIER = Modifier.padding(DOWNLOAD_ICON_PADDING)
-private val DURATION_SHADOW_MODIFIER = Modifier
-    .fillMaxWidth()
-    .offset(DURATION_SHADOW_OFFSET, durationOffsetY + DURATION_SHADOW_OFFSET)
-private val DURATION_TEXT_MODIFIER = Modifier
-    .fillMaxWidth()
-    .offset(0.dp, durationOffsetY)
-private val HEADER_TEXT_PADDING = Modifier.padding(start = HEADER_START_PADDING, top = HEADER_VERTICAL_PADDING, bottom = HEADER_VERTICAL_PADDING)
-private val TEXT_ALIGN_RIGHT = TextAlign.Right
-private val NO_OP_CLICK: () -> Unit = {}
 
 class ScreenFavorites : Screen {
 
@@ -215,7 +155,7 @@ private fun FavoritesContent(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        contentWindowInsets = ZERO_WINDOW_INSETS,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.L.grey6
     ) { padding ->
 
@@ -224,24 +164,24 @@ private fun FavoritesContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = padding.calculateBottomPadding()),
-                contentAlignment = ALIGN_TOP_CENTER
+                contentAlignment = Alignment.TopCenter
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FavoritesHeader(topCutout = topCutout)
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = ALIGN_CENTER) {
-                        Text(TEXT_EMPTY, color = COLOR_GRAY, fontSize = EMPTY_FONT_SIZE)
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Пусто", color = Color.Gray, fontSize = 16.sp)
                     }
                 }
             }
         } else {
             LazyVerticalGrid(
-                columns = GRID_CELLS_FIXED,
+                columns = GridCells.Fixed(GRID_COLUMNS),
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = padding.calculateBottomPadding())
             ) {
-                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER, span = HEADER_GRID_SPAN) {
+                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER, span = { GridItemSpan(maxLineSpan) }) {
                     FavoritesHeader(topCutout = topCutout)
                 }
 
@@ -273,21 +213,15 @@ private fun FavoritesHeader(
             .padding(top = topCutout)
     ) {
         Text(
-            TEXT_FAVORITES_TITLE,
-            color = COLOR_WHITE,
-            fontSize = HEADER_TITLE_SIZE,
-            fontWeight = FONT_WEIGHT_BOLD,
-            modifier = HEADER_TEXT_PADDING
+            "Избранное",
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
         )
-        HorizontalSeparator(color = SEPARATOR_COLOR)
+        HorizontalSeparator(color = Color(0xFF9E9E9E))
     }
 }
-
-private val FAVORITE_CARD_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .padding(vertical = CARD_PADDING_VERTICAL, horizontal = CARD_PADDING_HORIZONTAL)
-    .aspectRatio(FAVORITE_CARD_ASPECT_RATIO)
-    .background(COLOR_DARK_GRAY)
 
 @Composable
 private fun FavoriteRow(
@@ -309,10 +243,12 @@ private fun FavoriteRow(
         localUrl?.let { url -> { onPlayLocal(url, item) } }
     }
 
-    val rowModifier = if (modifier == Modifier) FAVORITE_CARD_BASE_MODIFIER else modifier.then(FAVORITE_CARD_BASE_MODIFIER)
-
     Box(
-        modifier = rowModifier
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp, horizontal = 1.dp)
+            .aspectRatio(352f / 198f)
+            .background(Color.DarkGray)
     ) {
         when {
             // Скачано: показываем постер, по тапу — локальное воспроизведение полного файла.
@@ -325,7 +261,7 @@ private fun FavoriteRow(
                 )
                 // Значок «скачано» (как в R — IconSave18).
                 Row(
-                    modifier = DOWNLOAD_ICON_PADDING_MODIFIER
+                    modifier = Modifier.padding(4.dp)
                 ) {
                     IconSave18()
                 }
@@ -338,7 +274,7 @@ private fun FavoriteRow(
             )
         }
 
-        Row(Modifier.align(ALIGN_TOP_END)) {
+        Row(Modifier.align(Alignment.TopEnd)) {
             FavoriteActionsExpandMenu(
                 onDelete = onDeleteThis,
                 onDownload = onDownloadThis,
@@ -346,7 +282,7 @@ private fun FavoriteRow(
             )
         }
 
-        Row(Modifier.align(ALIGN_BOTTOM_END).padding(end = DURATION_END_PADDING)) { DurationOverlay(item.duration) }
+        Row(Modifier.align(Alignment.BottomEnd).padding(end = 8.dp)) { DurationOverlay(item.duration) }
     }
 }
 
@@ -385,33 +321,36 @@ private fun FavoriteActionsExpandMenu(
         onExpandedChange = onExpandedChange
     ) {
         IconButton(
-            modifier = ACTION_BUTTON_SIZE_MODIFIER
+            modifier = Modifier
+                .size(48.dp)
                 .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
-            onClick = NO_OP_CLICK
+            onClick = {}
         ) {
             Icon(
-                ICON_MORE_VERT,
-                contentDescription = TEXT_ACTIONS,
-                tint = COLOR_BLACK,
-                modifier = ACTION_ICON_SHADOW_MODIFIER
+                Icons.Default.MoreVert,
+                contentDescription = "Действия",
+                tint = Color.Black,
+                modifier = Modifier
+                    .size(24.dp)
+                    .offset(0.5.dp, 0.5.dp)
             )
             Icon(
-                ICON_MORE_VERT,
+                Icons.Default.MoreVert,
                 contentDescription = null,
-                tint = COLOR_WHITE,
-                modifier = ACTION_ICON_SIZE_MODIFIER
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
             )
         }
 
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = onDismissMenu,
-            modifier = MENU_WIDTH_MODIFIER,
+            modifier = Modifier.width(IntrinsicSize.Min),
             containerColor = Theme.ExpandMenu.backgroundColor
         ) {
-            ExpandMenuActionItem(ICON_DOWNLOAD, TEXT_DOWNLOAD, onClick = handleDownload)
-            ExpandMenuActionItem(ICON_SAVE_ALT, TEXT_IN_GALLERY, onClick = handleSaveToGallery)
-            ExpandMenuActionItem(ICON_DELETE, TEXT_DELETE, onClick = handleDelete)
+            ExpandMenuActionItem(Icons.Filled.ArrowCircleDown, "Скачать", onClick = handleDownload)
+            ExpandMenuActionItem(Icons.Filled.SaveAlt, "В галерею", onClick = handleSaveToGallery)
+            ExpandMenuActionItem(Icons.Filled.Delete, "Удалить", onClick = handleDelete)
         }
     }
 }
@@ -424,17 +363,21 @@ private fun DurationOverlay(duration: String) {
     Box {
         Text(
             text = text,
-            modifier = DURATION_SHADOW_MODIFIER,
-            textAlign = TEXT_ALIGN_RIGHT,
-            fontSize = DURATION_FONT_SIZE,
-            color = COLOR_BLACK
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(1.dp, (-2).dp),
+            textAlign = TextAlign.Right,
+            fontSize = 14.sp,
+            color = Color.Black
         )
         Text(
             text = text,
-            modifier = DURATION_TEXT_MODIFIER,
-            textAlign = TEXT_ALIGN_RIGHT,
-            fontSize = DURATION_FONT_SIZE,
-            color = COLOR_WHITE
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(0.dp, (-3).dp),
+            textAlign = TextAlign.Right,
+            fontSize = 14.sp,
+            color = Color.White
         )
     }
 }

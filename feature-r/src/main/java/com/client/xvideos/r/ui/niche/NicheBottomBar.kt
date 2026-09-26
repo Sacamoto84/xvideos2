@@ -29,29 +29,6 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.persistentListOf
 
 private val NICHE_SORT_ORDERS = persistentListOf(Order.TRENDING, Order.TOP, Order.LATEST)
-private val BAR_HEIGHT = 48.dp
-private val INDICATOR_CONTAINER_SIZE = 44.dp
-private val INDICATOR_BORDER_WIDTH = 1.dp
-private val INDICATOR_BORDER_COLOR = Color.DarkGray
-private val INNER_HORIZONTAL_SPACER = 4.dp
-private val EDGE_HORIZONTAL_SPACER = 2.dp
-
-private val ROW_BAR_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .height(BAR_HEIGHT)
-
-private val ROW_BAR_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-
-private val EDGE_SPACER_MODIFIER = Modifier.width(EDGE_HORIZONTAL_SPACER)
-private val INNER_SPACER_MODIFIER = Modifier.width(INNER_HORIZONTAL_SPACER)
-
-private val INDICATOR_CONTAINER_BASE_MODIFIER = Modifier
-    .size(INDICATOR_CONTAINER_SIZE)
-    .clip(CircleShape)
-    .border(INDICATOR_BORDER_WIDTH, INDICATOR_BORDER_COLOR, CircleShape)
-
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
 
 @Composable
 fun NicheBottomBar(
@@ -63,12 +40,14 @@ fun NicheBottomBar(
 ) {
     Column(modifier = modifier) {
         Row(
-            modifier = ROW_BAR_BASE_MODIFIER,
-            verticalAlignment = ROW_VERTICAL_ALIGNMENT,
-            horizontalArrangement = ROW_BAR_HORIZONTAL_ARRANGEMENT
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
-                Spacer(modifier = EDGE_SPACER_MODIFIER)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.width(2.dp))
 
                 SortByOrder(
                     NICHE_SORT_ORDERS,
@@ -78,19 +57,23 @@ fun NicheBottomBar(
                     circle = true
                 )
 
-                Spacer(modifier = INNER_SPACER_MODIFIER)
+                Spacer(modifier = Modifier.width(4.dp))
             }
-            Spacer(modifier = INNER_SPACER_MODIFIER)
+            Spacer(modifier = Modifier.width(4.dp))
 
-            Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = INDICATOR_CONTAINER_BASE_MODIFIER.background(Theme.tabLevel0),
-                    contentAlignment = BOX_ALIGNMENT_CENTER
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, Color.DarkGray, CircleShape)
+                        .background(Theme.tabLevel0),
+                    contentAlignment = Alignment.Center
                 ) {
                     TabBarPoints(columns, true)
                 }
 
-                Spacer(modifier = EDGE_SPACER_MODIFIER)
+                Spacer(modifier = Modifier.width(2.dp))
             }
         }
     }

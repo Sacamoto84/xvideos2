@@ -31,32 +31,15 @@ import com.skydoves.compose.stability.runtime.TraceRecomposition
 
 import androidx.compose.runtime.key
 
-private val ROW_HORIZONTAL_PADDING = 8.dp
-private val ROW_VERTICAL_PADDING = 2.dp
-private val ROW_HEIGHT = 48.dp
-private val LABEL_WIDTH = 64.dp
-private val SEGMENT_START_PADDING = 16.dp
-private val TAB_BAR_SIZE = 24.dp
-private val POINT_SPACING = 2.dp
-private val POINT_SIZE = 4.dp
-private val POINT_ACTIVE_COLOR = Color.White
-private val POINT_INACTIVE_COLOR = Color.Gray
-private val POINT_SHAPE = CircleShape
-private val LABEL_TEXT_MODIFIER = Modifier.width(LABEL_WIDTH)
-private val SEGMENT_ROW_MODIFIER = Modifier.padding(start = SEGMENT_START_PADDING).fillMaxWidth()
 private val POINT_BASE_MODIFIER = Modifier
-    .padding(end = POINT_SPACING)
-    .clip(POINT_SHAPE)
-    .size(POINT_SIZE)
+    .padding(end = 2.dp)
+    .clip(CircleShape)
+    .size(4.dp)
 
 private val CONFIG_ROW_BASE_MODIFIER = Modifier
-    .padding(horizontal = ROW_HORIZONTAL_PADDING, vertical = ROW_VERTICAL_PADDING)
-    .height(ROW_HEIGHT)
+    .padding(horizontal = 8.dp, vertical = 2.dp)
+    .height(48.dp)
     .fillMaxWidth()
-
-private val ROW_HORIZONTAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
 
 @Composable
 fun Config_G_0_4(
@@ -71,10 +54,10 @@ fun Config_G_0_4(
     val rowModifier = if (modifier == Modifier) CONFIG_ROW_BASE_MODIFIER else modifier.then(CONFIG_ROW_BASE_MODIFIER)
     Row(
         modifier = rowModifier,
-        horizontalArrangement = ROW_HORIZONTAL_ARRANGEMENT,
-        verticalAlignment = ROW_VERTICAL_ALIGNMENT
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text, modifier = LABEL_TEXT_MODIFIER, style = styleTextConfig)
+        Text(text, modifier = Modifier.width(64.dp), style = styleTextConfig)
 
         val onToggleIndex: (Int) -> Unit = remember(setting, list) {
             { settingIndex ->
@@ -85,7 +68,7 @@ fun Config_G_0_4(
         }
 
         MultiChoiceSegmentedButtonRow(
-            modifier = SEGMENT_ROW_MODIFIER
+            modifier = Modifier.padding(start = 16.dp).fillMaxWidth()
         ) {
             visibleIndices.forEachIndexed { buttonIndex, settingIndex ->
                 key(settingIndex) {
@@ -121,10 +104,10 @@ private fun TabBarPoints(
     modifier: Modifier = Modifier,
 ) {
     val safeCount = count.takeIf { it in 1..4 } ?: 2
-    val pointColor = if (screenType) POINT_ACTIVE_COLOR else POINT_INACTIVE_COLOR
+    val pointColor = if (screenType) Color.White else Color.Gray
     Box(
-        modifier = modifier.size(TAB_BAR_SIZE),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        modifier = modifier.size(24.dp),
+        contentAlignment = Alignment.Center
     ) {
         Row {
             repeat(safeCount) {

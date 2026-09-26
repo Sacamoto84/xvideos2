@@ -26,29 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
-private val SAVE_ALBUM_BUTTON_CORNER = 4.dp
-private val SAVE_ALBUM_BUTTON_SHAPE = RoundedCornerShape(SAVE_ALBUM_BUTTON_CORNER)
-private val BUTTON_HEIGHT = 46.dp
-private val BUTTON_TOP_PADDING = 2.dp
-private val BUTTON_BOTTOM_PADDING = 4.dp
-private val BUTTON_BORDER_WIDTH = 1.dp
-private val CONTENT_SPACING = 8.dp
-private val ICON_SIZE = 20.dp
-private const val TEXT_SAVE_ALBUM = "Сохранить альбом"
-private const val TEXT_REMOVE_ALBUM = "Удалить из сохранённых"
-private val ICON_BOOKMARK_FILLED = Icons.Filled.Bookmark
-private val ICON_BOOKMARK_BORDER = Icons.Outlined.BookmarkBorder
-private val CONTENT_ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val BOX_ALIGNMENT_CENTER = Alignment.Center
-private val COLOR_WHITE = Color.White
-
-private val SAVE_ALBUM_BUTTON_BASE_MODIFIER = Modifier
-    .padding(top = BUTTON_TOP_PADDING, bottom = BUTTON_BOTTOM_PADDING)
-    .height(BUTTON_HEIGHT)
-    .fillMaxWidth()
-    .clip(SAVE_ALBUM_BUTTON_SHAPE)
-private val CONTENT_ROW_HORIZONTAL_ARRANGEMENT = Arrangement.spacedBy(CONTENT_SPACING)
-private val ICON_MODIFIER = Modifier.size(ICON_SIZE)
+private val BUTTON_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
 fun AlbumInfoButtonSaveAlbum(
@@ -56,37 +34,41 @@ fun AlbumInfoButtonSaveAlbum(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val buttonText = if (!saved) TEXT_SAVE_ALBUM else TEXT_REMOVE_ALBUM
-    val iconVector = if (saved) ICON_BOOKMARK_FILLED else ICON_BOOKMARK_BORDER
-    val iconTint = if (saved) Theme.L.red else COLOR_WHITE
+    val buttonText = if (!saved) "Сохранить альбом" else "Удалить из сохранённых"
+    val iconVector = if (saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder
+    val iconTint = if (saved) Theme.L.red else Color.White
     val backgroundColor = if (!saved) Theme.L.red else Theme.L.grey6
     val buttonTextStyle = remember(Theme.L.Type.button) {
-        Theme.L.Type.button.copy(color = COLOR_WHITE)
+        Theme.L.Type.button.copy(color = Color.White)
     }
     val styledBase = remember(Theme.L.grey3, backgroundColor) {
-        SAVE_ALBUM_BUTTON_BASE_MODIFIER
-            .border(BUTTON_BORDER_WIDTH, Theme.L.grey3, SAVE_ALBUM_BUTTON_SHAPE)
+        Modifier
+            .padding(top = 2.dp, bottom = 4.dp)
+            .height(46.dp)
+            .fillMaxWidth()
+            .clip(BUTTON_SHAPE)
+            .border(1.dp, Theme.L.grey3, BUTTON_SHAPE)
             .background(backgroundColor)
     }
     val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
 
     Box(
         modifier = baseModifier.clickable(onClick = onClick),
-        contentAlignment = BOX_ALIGNMENT_CENTER
+        contentAlignment = Alignment.Center
     ) {
         Row(
-            horizontalArrangement = CONTENT_ROW_HORIZONTAL_ARRANGEMENT,
-            verticalAlignment = CONTENT_ROW_VERTICAL_ALIGNMENT
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = iconVector,
                 contentDescription = buttonText,
                 tint = iconTint,
-                modifier = ICON_MODIFIER
+                modifier = Modifier.size(20.dp)
             )
             Text(
                 text = buttonText,
-                color = COLOR_WHITE,
+                color = Color.White,
                 style = buttonTextStyle
             )
         }

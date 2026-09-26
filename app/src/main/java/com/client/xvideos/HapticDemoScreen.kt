@@ -41,20 +41,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
 
-private val ZERO_INSETS = WindowInsets(0, 0, 0, 0)
 private val HAPTIC_BUTTON_SHAPE = RoundedCornerShape(14.dp)
 private val HAPTIC_BUTTON_PADDING = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-
-private val TOP_BAR_BG = Color(0xFF1B1B1B)
-private val SUBTITLE_COLOR = Color(0xFFB0B0B0)
-private val SCREEN_CONTAINER_COLOR = Color(0xFF2A2A2A)
-private val WAVEFORM_CONTAINER_COLOR = Color(0xFF4A3B00)
-private val BUTTON_CONTAINER_COLOR = Color(0xFF3A3A3A)
-private val DESC_COLOR = Color(0xFFBFBFBF)
-
-private const val TITLE_DEMO = "Haptic Feedback — демо"
-private const val LABEL_CUSTOM_WAVEFORM = "Кастомный waveform (мимо Compose, прямой Vibrator)"
-private const val LABEL_WAVEFORM_BTN = "Waveform: 255 → пауза → 127"
 
 private data class HapticItem(
     val name: String,
@@ -78,8 +66,6 @@ private val HAPTIC_ITEMS = listOf(
     HapticItem("SegmentTick", "Шаг по дискретным позициям", HapticFeedbackType.SegmentTick),
     HapticItem("SegmentFrequentTick", "Шаг по множеству мелких позиций", HapticFeedbackType.SegmentFrequentTick),
 )
-
-private val SUBTITLE_TEXT = "Нажми кнопку, чтобы почувствовать отклик. Доступно ${HAPTIC_ITEMS.size} типов."
 
 /**
  * Демо-экран для тестирования виброоткликов.
@@ -116,30 +102,30 @@ object HapticDemoScreen : Screen {
         }
 
         Scaffold(
-            contentWindowInsets = ZERO_INSETS,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(TOP_BAR_BG)
+                        .background(Color(0xFF1B1B1B))
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
                 ) {
                     Text(
-                        text = TITLE_DEMO,
+                        text = "Haptic Feedback — демо",
                         color = Color.White,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                     Text(
-                        text = SUBTITLE_TEXT,
-                        color = SUBTITLE_COLOR,
+                        text = "Нажми кнопку, чтобы почувствовать отклик. Доступно ${HAPTIC_ITEMS.size} типов.",
+                        color = Color(0xFFB0B0B0),
                         fontSize = 13.sp,
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 10.dp)
                     )
                 }
             },
-            containerColor = SCREEN_CONTAINER_COLOR
+            containerColor = Color(0xFF2A2A2A)
         ) { padding ->
             Column(
                 modifier = Modifier
@@ -167,16 +153,16 @@ object HapticDemoScreen : Screen {
 
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = LABEL_CUSTOM_WAVEFORM,
-                    color = SUBTITLE_COLOR,
+                    text = "Кастомный waveform (мимо Compose, прямой Vibrator)",
+                    color = Color(0xFFB0B0B0),
                     fontSize = 13.sp
                 )
                 Button(
                     onClick = onCustomVibrate,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = WAVEFORM_CONTAINER_COLOR)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A3B00))
                 ) {
-                    Text(LABEL_WAVEFORM_BTN, color = Color.White)
+                    Text("Waveform: 255 → пауза → 127", color = Color.White)
                 }
                 Spacer(Modifier.height(24.dp))
             }
@@ -195,7 +181,7 @@ private fun HapticButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = HAPTIC_BUTTON_SHAPE,
-        colors = ButtonDefaults.buttonColors(containerColor = BUTTON_CONTAINER_COLOR),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A)),
         contentPadding = HAPTIC_BUTTON_PADDING
     ) {
         Column(
@@ -211,7 +197,7 @@ private fun HapticButton(
             )
             Text(
                 text = desc,
-                color = DESC_COLOR,
+                color = Color(0xFFBFBFBF),
                 fontSize = 13.sp
             )
         }

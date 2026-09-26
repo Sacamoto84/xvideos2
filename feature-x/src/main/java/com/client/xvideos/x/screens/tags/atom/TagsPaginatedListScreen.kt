@@ -44,29 +44,6 @@ private const val ITEMS_PER_ROW_LANDSCAPE = 4
 private const val ITEMS_PER_ROW_PORTRAIT = 2
 private const val CONTENT_TYPE_TAG_HEADER = "tag_header"
 private const val CONTENT_TYPE_TAG_ROW = "tag_row"
-private const val MSG_FAILED_TO_LOAD = "Страница не загрузилась"
-private const val MSG_NO_VIDEOS = "Видео не найдены"
-private const val BUTTON_RETRY_TEXT = "Повторить"
-private val SPINNER_SIZE = 40.dp
-private val CELL_PADDING = 1.dp
-private val SPACER_HEIGHT = 12.dp
-private val CELL_BG_COLOR = Color.DarkGray
-private val MESSAGE_COLOR = Color.Gray
-
-private val SPINNER_MODIFIER = Modifier.size(SPINNER_SIZE)
-private val ROW_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val BOX_FILL_MAX_SIZE_MODIFIER = Modifier.fillMaxSize()
-private val SPACER_MODIFIER = Modifier.height(SPACER_HEIGHT)
-private val CELL_BOX_BASE_MODIFIER = Modifier
-    .aspectRatio(TAG_CARD_ASPECT_RATIO)
-    .padding(CELL_PADDING)
-    .background(CELL_BG_COLOR)
-
-private val ALIGNMENT_CENTER = Alignment.Center
-private val ALIGNMENT_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
-
-private val TAG_ROW_KEY_PROVIDER: (Int, List<ItemsX>) -> String = { index, row -> "${index}_${row.first().id}" }
-private val TAG_ROW_CONTENT_TYPE: (Int, List<ItemsX>) -> String = { _, _ -> CONTENT_TYPE_TAG_ROW }
 
 /**
  * Одна страница выдачи по тегу.
@@ -116,11 +93,11 @@ fun TagsPaginatedListScreen(
         TagsStatusLayout(modifier = modifier, header = header) {
             if (failed) {
                 TagsStateMessage(
-                    message = MSG_FAILED_TO_LOAD,
+                    message = "Страница не загрузилась",
                     onRetry = onRetry
                 )
             } else {
-                CircularProgressIndicator(modifier = SPINNER_MODIFIER)
+                CircularProgressIndicator(modifier = Modifier.size(40.dp))
             }
         }
         return
@@ -129,7 +106,7 @@ fun TagsPaginatedListScreen(
     if (loaded.isEmpty()) {
         TagsStatusLayout(modifier = modifier, header = header) {
             TagsStateMessage(
-                message = MSG_NO_VIDEOS,
+                message = "Видео не найдены",
                 onRetry = onRetry
             )
         }
@@ -140,12 +117,10 @@ fun TagsPaginatedListScreen(
     val itemsPerRow = if (orientation == Configuration.ORIENTATION_LANDSCAPE) ITEMS_PER_ROW_LANDSCAPE else ITEMS_PER_ROW_PORTRAIT
     val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
-    val listModifier = if (modifier == Modifier) BOX_FILL_MAX_SIZE_MODIFIER else modifier.then(BOX_FILL_MAX_SIZE_MODIFIER)
-
     LazyColumn(
         state = listState,
-        modifier = listModifier,
-        horizontalAlignment = ALIGNMENT_CENTER_HORIZONTALLY
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (header != null) {
             item(key = CONTENT_TYPE_TAG_HEADER, contentType = CONTENT_TYPE_TAG_HEADER) {
@@ -157,10 +132,10 @@ fun TagsPaginatedListScreen(
         // ключ уронил бы список.
         itemsIndexed(
             items = chunkedRows,
-            key = TAG_ROW_KEY_PROVIDER,
-            contentType = TAG_ROW_CONTENT_TYPE
+            key = { index, row -> "${index}_${row.first().id}" },
+            contentType = { _, _ -> CONTENT_TYPE_TAG_ROW }
         ) { _, row ->
-            Row(modifier = ROW_BASE_MODIFIER) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEach { cell ->
                     key(cell.id) {
                         TagGridCell(
@@ -187,10 +162,9 @@ private fun TagsStatusLayout(
     header: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val layoutModifier = if (modifier == Modifier) BOX_FILL_MAX_SIZE_MODIFIER else modifier.then(BOX_FILL_MAX_SIZE_MODIFIER)
-    Column(modifier = layoutModifier) {
+    Column(modifier = modifier.fillMaxSize()) {
         header?.invoke()
-        Box(modifier = BOX_FILL_MAX_SIZE_MODIFIER, contentAlignment = ALIGNMENT_CENTER) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             content()
         }
     }
@@ -203,9 +177,11 @@ private fun TagGridCell(
     modifier: Modifier = Modifier,
 ) {
     val handleOpen = remember(cell, onOpenVideo) { { onOpenVideo(cell) } }
-    val boxModifier = if (modifier == Modifier) CELL_BOX_BASE_MODIFIER else modifier.then(CELL_BOX_BASE_MODIFIER)
     Box(
-        modifier = boxModifier
+        modifier = modifier
+            .aspectRatio(TAG_CARD_ASPECT_RATIO)
+            .padding(1.dp)
+            .background(Color.DarkGray)
     ) {
         // Жесты как в ленте раздела: тап — превью, долгий тап и
         // двойной — открыть плеер.
@@ -225,12 +201,12 @@ private fun TagsStateMessage(
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = ALIGNMENT_CENTER_HORIZONTALLY
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(message, color = MESSAGE_COLOR)
-        Spacer(modifier = SPACER_MODIFIER)
+        Text(message, color = Color.Gray)
+        Spacer(modifier = Modifier.height(12.dp))
         Button(onClick = onRetry) {
-            Text(BUTTON_RETRY_TEXT)
+            Text("Повторить")
         }
     }
 }
@@ -240,7 +216,7 @@ private fun TagsStateMessage(
 private fun TagsStateMessagePreview() {
     XvideosTheme(darkTheme = true) {
         TagsStateMessage(
-            message = MSG_FAILED_TO_LOAD,
+            message = "Страница не загрузилась",
             onRetry = {}
         )
     }

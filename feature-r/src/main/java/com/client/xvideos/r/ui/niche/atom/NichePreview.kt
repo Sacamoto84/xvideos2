@@ -34,44 +34,6 @@ import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.Preview as NichePreviewModel
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private val NICHE_CARD_SHAPE = RoundedCornerShape(8.dp)
-private val NICHE_THUMBNAIL_SHAPE = RoundedCornerShape(6.dp)
-private val NICHE_CARD_HEIGHT = 80.dp
-private val NICHE_SHADOW_ELEVATION = 10.dp
-private val NICHE_THUMBNAIL_SIZE = 72.dp
-private val STAT_ICON_SIZE = 16.dp
-private val STAT_FONT_SIZE = 16.sp
-private val CARD_HORIZONTAL_PADDING = 4.dp
-private val THUMBNAIL_PADDING = 4.dp
-private val INFO_VERTICAL_PADDING = 4.dp
-private val STAT_TEXT_PADDING = 4.dp
-
-private val COLOR_WHITE = Color.White
-private val ALIGN_START = Alignment.Start
-private val ALIGN_CENTER_HORIZONTALLY = Alignment.CenterHorizontally
-private val ROW_VERTICAL_ALIGNMENT = Alignment.CenterVertically
-private val COLUMN_VERTICAL_ARRANGEMENT = Arrangement.SpaceBetween
-private val TEXT_ALIGN_START = TextAlign.Start
-private val TEXT_ALIGN_CENTER = TextAlign.Center
-
-private val STAT_ICON_SIZE_MODIFIER = Modifier.size(STAT_ICON_SIZE)
-private val THUMBNAIL_BASE_MODIFIER = Modifier
-    .padding(THUMBNAIL_PADDING)
-    .clip(NICHE_THUMBNAIL_SHAPE)
-    .size(NICHE_THUMBNAIL_SIZE)
-private val NAME_TEXT_PADDING = Modifier.padding(end = STAT_TEXT_PADDING)
-private val STAT_TEXT_PADDING_MODIFIER = Modifier
-    .padding(start = STAT_TEXT_PADDING, end = STAT_TEXT_PADDING)
-    .wrapContentWidth(ALIGN_CENTER_HORIZONTALLY)
-private val INFO_COLUMN_BASE_MODIFIER = Modifier
-    .padding(vertical = INFO_VERTICAL_PADDING)
-    .fillMaxHeight()
-
-private val NICHE_CARD_STATIC_MODIFIER = Modifier
-    .height(NICHE_CARD_HEIGHT)
-    .padding(horizontal = CARD_HORIZONTAL_PADDING)
-    .shadow(NICHE_SHADOW_ELEVATION, NICHE_CARD_SHAPE)
-    .clip(NICHE_CARD_SHAPE)
 
 @Composable
 fun NichePreview(
@@ -83,63 +45,71 @@ fun NichePreview(
     val subscribersText = remember(niche.subscribers) { niche.subscribers.toPrettyCount() }
     val gifsText = remember(niche.gifs) { niche.gifs.toPrettyCount() }
 
-    val baseModifier = if (modifier == Modifier) {
-        NICHE_CARD_STATIC_MODIFIER
-    } else {
-        modifier.then(NICHE_CARD_STATIC_MODIFIER)
-    }
-
+    val cardShape = RoundedCornerShape(8.dp)
     Column(
-        modifier = baseModifier
+        modifier = modifier
+            .height(80.dp)
+            .padding(horizontal = 4.dp)
+            .shadow(10.dp, cardShape)
+            .clip(cardShape)
             .background(Theme.tabLevel3)
             .clickable(onClick = onClick)
     ) {
         Row {
             UrlImage(
                 url = niche.thumbnail,
-                modifier = THUMBNAIL_BASE_MODIFIER
+                modifier = Modifier
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .size(72.dp)
             )
 
             Column(
-                verticalArrangement = COLUMN_VERTICAL_ARRANGEMENT,
-                horizontalAlignment = ALIGN_START,
-                modifier = INFO_COLUMN_BASE_MODIFIER
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .fillMaxHeight()
             ) {
                 Text(
                     text = niche.name,
-                    modifier = NAME_TEXT_PADDING,
-                    color = COLOR_WHITE,
-                    textAlign = TEXT_ALIGN_START,
+                    modifier = Modifier.padding(end = 4.dp),
+                    color = Color.White,
+                    textAlign = TextAlign.Start,
                 )
 
-                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painter = painterResource(R.drawable.members),
                         contentDescription = null,
-                        tint = COLOR_WHITE,
-                        modifier = STAT_ICON_SIZE_MODIFIER
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = subscribersText,
-                        modifier = STAT_TEXT_PADDING_MODIFIER,
-                        color = COLOR_WHITE,
-                        textAlign = TEXT_ALIGN_CENTER,
-                        fontSize = STAT_FONT_SIZE
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .wrapContentWidth(Alignment.CenterHorizontally),
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp
                     )
                 }
-                Row(verticalAlignment = ROW_VERTICAL_ALIGNMENT) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painter = painterResource(R.drawable.posts),
                         contentDescription = null,
-                        tint = COLOR_WHITE,
-                        modifier = STAT_ICON_SIZE_MODIFIER
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = gifsText,
-                        modifier = STAT_TEXT_PADDING_MODIFIER,
-                        color = COLOR_WHITE,
-                        textAlign = TEXT_ALIGN_CENTER,
-                        fontSize = STAT_FONT_SIZE
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .wrapContentWidth(Alignment.CenterHorizontally),
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp
                     )
                 }
             }

@@ -60,17 +60,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import timber.log.Timber
 
-private val TOP_BAR_START_PADDING = 4.dp
-private val TOP_BAR_END_PADDING = 8.dp
-private val TITLE_START_PADDING = 4.dp
-private val TITLE_FONT_SIZE = 18.sp
-private const val CD_BACK = "Назад"
-private val ZERO_WINDOW_INSETS = WindowInsets(0, 0, 0, 0)
-private val TOP_BAR_BASE_MODIFIER = Modifier.fillMaxWidth()
-private val TITLE_MODIFIER = Modifier.padding(start = TITLE_START_PADDING)
-private val CONTENT_BOX_BASE_MODIFIER = Modifier.fillMaxSize()
-private val LAZY_ROW_MODIFIER = Modifier.fillMaxSize()
-
 class ScreenCollectionName(
     val collectionName: String,
     private val popOnBack: Boolean = false
@@ -112,41 +101,44 @@ class ScreenCollectionName(
         val titleText = selectedCollection ?: collectionName
 
         Scaffold(
-            contentWindowInsets = ZERO_WINDOW_INSETS,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 Row(
-                    modifier = TOP_BAR_BASE_MODIFIER
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(
-                            start = TOP_BAR_START_PADDING,
+                            start = 4.dp,
                             top = getTopInsetDp(),
-                            end = TOP_BAR_END_PADDING
+                            end = 8.dp
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = closeCollection) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = CD_BACK,
+                            contentDescription = "Назад",
                             tint = Theme.R.colorYellow
                         )
                     }
                     Text(
                         text = titleText,
-                        modifier = TITLE_MODIFIER,
+                        modifier = Modifier.padding(start = 4.dp),
                         color = Theme.R.colorYellow,
-                        fontSize = TITLE_FONT_SIZE,
+                        fontSize = 18.sp,
                         fontFamily = Theme.R.fontFamilyPopinsRegular
                     )
                 }
             }
         ) { padding ->
             Box(
-                modifier = CONTENT_BOX_BASE_MODIFIER.padding(padding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
                 LazyRow123(
                     host = vm.likedHost,
-                    modifier = LAZY_ROW_MODIFIER,
+                    modifier = Modifier.fillMaxSize(),
                     onClickOpenProfile = onClickOpenProfile
                 )
             }
