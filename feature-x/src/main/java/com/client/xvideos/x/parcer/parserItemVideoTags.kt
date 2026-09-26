@@ -105,4 +105,16 @@ fun parsePornstarsOnly(html: String): List<TagsMainUploaderPornstar> =
 fun parseUploadersOnly(html: String): List<TagsMainUploaderPornstar> =
     parserItemVideoTags(html).mainUploader
 
+/**
+ * Проверяет наличие секций моделей или загрузчиков в сырой разметке.
+ */
+fun hasModelsOrPornstars(html: String?): Boolean =
+    if (html.isNullOrBlank()) false else html.contains("class=\"model\"") || html.contains("main-uploader")
+
+/**
+ * Подсчитывает суммарное число всех извлеченных элементов тегов, моделей и авторов.
+ */
+fun countTotalParsedTags(model: TagsModel): Int =
+    model.mainUploader.size + model.pornstars.size + model.tags.size
+
 

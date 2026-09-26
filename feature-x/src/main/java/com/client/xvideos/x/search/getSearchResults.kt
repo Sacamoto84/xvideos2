@@ -63,6 +63,17 @@ fun buildSuggestUrl(query: String): String {
 }
 
 /**
+ * Проверяет валидность поискового запроса для подсказок.
+ */
+fun isValidSuggestQuery(query: String?): Boolean = !query.isNullOrBlank()
+
+/**
+ * Проверяет, является ли переданный URL ссылкой на эндпоинт поисковых подсказок.
+ */
+fun isSuggestUrl(url: String?): Boolean =
+    !url.isNullOrBlank() && url.contains("/search-suggest/")
+
+/**
  * Запрашивает поисковые подсказки (автокомплит) по введенному префиксу запроса.
  *
  * @param query Пользовательский поисковый запрос.

@@ -58,6 +58,12 @@ fun parseVideoIds(html: String): List<Long> {
 }
 
 /**
+ * Быстро извлекает первый числовой ID видеоролика из разметки страницы или null.
+ */
+fun parseFirstVideoIdOrNull(html: String): Long? =
+    parseVideoIds(html).firstOrNull()
+
+/**
  * Возвращает количество карточек видеороликов в переданной HTML-разметке.
  */
 fun parseVideoCount(html: String): Int {

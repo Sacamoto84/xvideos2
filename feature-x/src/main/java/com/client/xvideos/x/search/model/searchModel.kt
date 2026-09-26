@@ -15,7 +15,10 @@ data class Keyword(val N: String, val R: String) { //N группа R-рейти
     val isValid: Boolean get() = N.isNotBlank()
     val hasRating: Boolean get() = R.isNotBlank()
     val ratingDoubleOrNull: Double? get() = R.toDoubleOrNull()
+    val isValidRating: Boolean get() = (ratingDoubleOrNull ?: -1.0) >= 0.0
     val normalizedName: String get() = N.trim().lowercase()
+
+    fun withRating(newRating: String): Keyword = copy(R = newRating)
 
     fun matches(query: String?): Boolean {
         if (query.isNullOrBlank()) return true
@@ -60,9 +63,15 @@ data class Pornstar(
     val isValid: Boolean get() = N.isNotBlank()
     val hasAvatar: Boolean get() = P.isNotBlank()
     val hasSubscribers: Boolean get() = RF.isNotBlank() && RF != "0"
+    val hasValidSubscribers: Boolean get() = hasSubscribers
     val hasVideos: Boolean get() = MV > 0
     val normalizedName: String get() = N.trim().lowercase()
     val cleanProfilePath: String get() = F.removePrefix("/")
+    val profileUrl: String get() = if (F.startsWith("http")) F else "https://www.xvideos.com/$cleanProfilePath"
+
+    /** Форматирует количество видеороликов модели в компактный вид. */
+    fun formatVideos(): String =
+        if (videoCount >= 1000) String.format(java.util.Locale.US, "%.1fk", videoCount / 1000.0) else videoCount.toString()
 
     fun matches(query: String?): Boolean {
         if (query.isNullOrBlank()) return true
@@ -107,8 +116,10 @@ data class Channel(
     val hasAvatar: Boolean get() = P.isNotBlank()
     val hasSubscribers: Boolean get() = RF.isNotBlank() && RF != "0"
     val isCpv: Boolean get() = CPV
+    val isVerified: Boolean get() = CPV
     val normalizedName: String get() = N.trim().lowercase()
     val cleanProfilePath: String get() = F.removePrefix("/")
+    val profileUrl: String get() = if (F.startsWith("http")) F else "https://www.xvideos.com/$cleanProfilePath"
 
     fun matches(query: String?): Boolean {
         if (query.isNullOrBlank()) return true
@@ -148,10 +159,22 @@ data class SearchResult(
     val totalSuggestionsCount: Int
         get() = keywords.size + (pornstar?.size ?: 0) + (channel?.size ?: 0)
 
+    val allSuggestions: List<String> get() = allSuggestionNames()
+
     fun allSuggestionNames(): List<String> =
         keywords.map { it.name } +
             (pornstar?.map { it.name } ?: emptyList()) +
             (channel?.map { it.name } ?: emptyList())
+
+    /** Фильтрует ключевые слова, порнозвезд и каналы по поисковому запросу. */
+    fun filterByQuery(query: String?): SearchResult {
+        if (query.isNullOrBlank()) return this
+        return copy(
+            keywords = keywords.filter { it.matches(query) },
+            pornstar = pornstar?.filter { it.matches(query) },
+            channel = channel?.filter { it.matches(query) }
+        )
+    }
 
     fun findPornstarByName(name: String?): Pornstar? {
         if (name.isNullOrBlank()) return null

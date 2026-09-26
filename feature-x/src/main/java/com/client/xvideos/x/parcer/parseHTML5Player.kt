@@ -121,6 +121,14 @@ fun hasPlayableStream(script: String?): Boolean {
     return high.isNotEmpty() || low.isNotEmpty() || hls.isNotEmpty()
 }
 
+/**
+ * Извлекает наиболее приоритетный доступный URL потока воспроизведения (High -> Low -> HLS).
+ */
+fun extractPrimaryStreamUrl(script: String): String {
+    val (high, low, hls) = extractVideoUrls(script)
+    return high.ifEmpty { low.ifEmpty { hls } }
+}
+
 /** Извлекает первое совпадение группы regex из текста скрипта. */
 private fun extractValue(script: String, pattern: Pattern): String? {
     val matcher = pattern.matcher(script)

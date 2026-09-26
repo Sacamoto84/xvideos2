@@ -101,6 +101,18 @@ fun isVideoPreviewUrl(url: String?): Boolean {
 }
 
 /**
+ * Проверяет, является ли видео-превью широкоформатным высоким качеством (16:9).
+ */
+fun isHighQualityPreview(url: String?): Boolean =
+    !url.isNullOrBlank() && url.contains("_169.mp4")
+
+/**
+ * Проверяет, оканчивается ли URL на расширение .mp4.
+ */
+fun hasMp4Extension(url: String?): Boolean =
+    !url.isNullOrBlank() && url.substringBefore('?').substringBefore('#').endsWith(".mp4", ignoreCase = true)
+
+/**
  * Проверяет, является ли ссылка статическим постером/миниатюрой.
  */
 fun isStaticThumbUrl(url: String?): Boolean {

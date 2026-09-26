@@ -45,3 +45,21 @@ fun isValidSearchJson(json: String?): Boolean =
 fun parseJsonKeywords(json: String?): List<String> =
     parseJson(json)?.keywords?.map { it.name } ?: emptyList()
 
+/**
+ * Быстро извлекает список найденных порнозвезд из JSON-ответа.
+ */
+fun parseJsonPornstars(json: String?): List<com.client.xvideos.x.search.model.Pornstar> =
+    parseJson(json)?.pornstar.orEmpty()
+
+/**
+ * Быстро извлекает список найденных каналов из JSON-ответа.
+ */
+fun parseJsonChannels(json: String?): List<com.client.xvideos.x.search.model.Channel> =
+    parseJson(json)?.channel.orEmpty()
+
+/**
+ * Возвращает суммарное количество подсказок (ключевые слова + модели + каналы) из ответа.
+ */
+fun parseJsonTotalCount(json: String?): Int =
+    parseJson(json)?.totalSuggestionsCount ?: 0
+
