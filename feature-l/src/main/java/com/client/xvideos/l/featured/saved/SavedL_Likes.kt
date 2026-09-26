@@ -40,9 +40,23 @@ class SavedL_Likes(
     val percentDownload: StateFlow<Float> = progress.percentDownload
     private var mutationJob: Job? = null
 
+    val isEmpty: Boolean get() = listUrl.isEmpty()
+    val isNotEmpty: Boolean get() = listUrl.isNotEmpty()
+    val count: Int get() = listUrl.size
+
+    fun contains(id: String?): Boolean =
+        if (id.isNullOrBlank()) false else listUrl.any { it.id == id }
+
+    fun contains(item: PicsDetails?): Boolean =
+        item != null && !item.id.isNullOrBlank() && contains(item.id)
+
+    fun findByIdOrNull(id: String?): PicsDetails? =
+        if (id.isNullOrBlank()) null else listUrl.firstOrNull { it.id == id }
+
     init {
         refresh()
     }
+
 
     /**
      * Скачивает и сохраняет элемент медиа [item] в локальное хранилище лайков (`AppPath.l_likes`).

@@ -25,6 +25,15 @@ enum class SelectIndex(val value: Int) {
     val isHentai: Boolean get() = this == Hentai
     val isPorn: Boolean get() = this == Porn
 
+    val title: String
+        get() = when (this) {
+            Unselect -> "Unselect"
+            Default -> "Default"
+            Manga -> "Manga"
+            Hentai -> "Hentai"
+            Porn -> "Porn"
+        }
+
     companion object {
         val DEFAULT = Default
 
@@ -34,7 +43,16 @@ enum class SelectIndex(val value: Int) {
         fun fromValue(value: Int?, default: SelectIndex = DEFAULT): SelectIndex =
             fromValueOrNull(value) ?: default
 
+        fun fromIndexOrDefault(index: Int, default: SelectIndex = DEFAULT): SelectIndex =
+            fromValue(index, default)
+
+        fun fromNameOrNull(name: String?): SelectIndex? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
         fun fromStringOrNull(value: String?): SelectIndex? =
-            value?.toIntOrNull()?.let { fromValueOrNull(it) }
+            value?.toIntOrNull()?.let { fromValueOrNull(it) } ?: fromNameOrNull(value)
+
+        fun fromString(value: String?, default: SelectIndex = DEFAULT): SelectIndex =
+            fromStringOrNull(value) ?: default
     }
 }

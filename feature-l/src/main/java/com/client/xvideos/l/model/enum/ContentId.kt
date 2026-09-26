@@ -24,15 +24,33 @@ enum class ContentId(val value: Int) {
     val isNonErotic: Boolean get() = this == NonErotic
     val isRealPeople: Boolean get() = this == RealPeople
 
+    val title: String
+        get() = when (this) {
+            All -> "All"
+            Hentai -> "Hentai"
+            NonErotic -> "Non-Erotic"
+            RealPeople -> "Real People"
+        }
+
     companion object {
         val DEFAULT = All
+
         fun fromValueOrNull(value: Int?): ContentId? =
             if (value != null) entries.firstOrNull { it.value == value } else null
 
         fun fromValue(value: Int?, default: ContentId = DEFAULT): ContentId =
             fromValueOrNull(value) ?: default
 
+        fun fromNameOrNull(name: String?): ContentId? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
         fun fromStringOrNull(value: String?): ContentId? =
-            value?.toIntOrNull()?.let { fromValueOrNull(it) }
+            value?.toIntOrNull()?.let { fromValueOrNull(it) } ?: fromNameOrNull(value)
+
+        fun fromString(value: String?, default: ContentId = DEFAULT): ContentId =
+            fromStringOrNull(value) ?: default
+
+        fun fromIdOrDefault(id: String?, default: ContentId = DEFAULT): ContentId =
+            fromString(id, default)
     }
 }

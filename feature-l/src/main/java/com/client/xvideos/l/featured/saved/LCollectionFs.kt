@@ -67,7 +67,13 @@ data class LCollectionEntity(
     val lastModifiedAt: Long,
     val duplicateCount: Int,
     val hasManualCover: Boolean
-)
+) {
+    val name: String get() = collection
+    val isEmpty: Boolean get() = itemsCount == 0
+    val isNotEmpty: Boolean get() = itemsCount > 0
+    val hasDuplicates: Boolean get() = duplicateCount > 0
+    val hasPreview: Boolean get() = !previewUrl.isNullOrBlank()
+}
 
 /**
  * Читает список коллекций из корня [collectionsRoot]. Каждая коллекция — это

@@ -33,6 +33,10 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
     val list = albumDb.list
     private var mutationJob: Job? = null
 
+    val isEmpty: Boolean get() = list.isEmpty()
+    val isNotEmpty: Boolean get() = list.isNotEmpty()
+    val count: Int get() = list.size
+
     /**
      * Сохраняет метаданные альбома [item] в локальную базу данных.
      *
@@ -130,7 +134,18 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
      * @param id Строковый ID альбома.
      * @return `true`, если альбом присутствует в локальном списке.
      */
-    fun contains(id: String): Boolean = id.isNotBlank() && list.any { it.id == id }
+    fun contains(id: String?): Boolean = !id.isNullOrBlank() && list.any { it.id == id }
+
+    /**
+     * Проверяет, сохранен ли альбом [item].
+     */
+    fun contains(item: AlbumDetails?): Boolean = item != null && contains(item.id)
+
+    /**
+     * Возвращает альбом с указанным [id], если он сохранен, либо null.
+     */
+    fun findByIdOrNull(id: String?): AlbumDetails? =
+        if (id.isNullOrBlank()) null else list.firstOrNull { it.id == id }
 
     private var refreshJob: Job? = null
 

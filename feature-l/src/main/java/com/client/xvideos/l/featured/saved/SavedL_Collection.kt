@@ -45,6 +45,20 @@ class SavedL_Collection(
     /** Список групп дубликатов в текущей коллекции. */
     val duplicateGroups = mutableStateListOf<LCollectionDuplicateGroup>()
 
+    val isCollectionsEmpty: Boolean get() = collectionList.isEmpty()
+    val isCollectionsNotEmpty: Boolean get() = collectionList.isNotEmpty()
+    val collectionsCount: Int get() = collectionList.size
+
+    val isCurrentItemsEmpty: Boolean get() = listUrl.isEmpty()
+    val isCurrentItemsNotEmpty: Boolean get() = listUrl.isNotEmpty()
+    val currentItemsCount: Int get() = listUrl.size
+
+    fun containsCollection(name: String?): Boolean =
+        if (name.isNullOrBlank()) false else collectionList.any { it.collection.equals(name, ignoreCase = true) }
+
+    fun findCollectionByNameOrNull(name: String?): LCollectionEntity? =
+        if (name.isNullOrBlank()) null else collectionList.firstOrNull { it.collection.equals(name, ignoreCase = true) }
+
     private val progress = LDownloadProgress(scope)
     /** Поток совокупного процента скачивания файлов при добавлении в коллекцию. */
     val percentDownload: StateFlow<Float> = progress.percentDownload
