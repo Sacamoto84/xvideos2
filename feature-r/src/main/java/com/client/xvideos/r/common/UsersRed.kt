@@ -34,6 +34,13 @@ object UsersRed {
         }
     }
 
+    /** Пакетно добавляет пользователей в кэш. */
+    fun addUsers(users: Collection<UserInfo>) {
+        for (u in users) {
+            addUser(u)
+        }
+    }
+
     /** Проверить наличие пользователя в кэше по его никнейму. */
     fun containsUser(username: String): Boolean {
         if (username.isBlank()) return false
@@ -44,6 +51,15 @@ object UsersRed {
     fun findUser(username: String): UserInfo? {
         if (username.isBlank()) return null
         return usersMap[username]
+    }
+
+    /** Возвращает множество всех закэшированных никнеймов. */
+    fun getAllUsernames(): Set<String> = usersMap.keys.toSet()
+
+    /** Находит всех пользователей, соответствующих поисковому запросу. */
+    fun findUsersMatching(query: String?): List<UserInfo> {
+        if (query.isNullOrBlank()) return emptyList()
+        return usersMap.values.filter { it.matches(query) }
     }
 
     /** Удалить пользователя из кэша. */

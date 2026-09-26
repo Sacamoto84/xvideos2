@@ -99,6 +99,25 @@ data class NichesInfo(
     /** Проверяет наличие правил. */
     val hasRules: Boolean get() = !rules.isNullOrBlank()
 
+    /** Проверяет наличие статистики (гифок или подписчиков). */
+    val hasStats: Boolean get() = hasGifs || hasSubscribers
+
+    /** Создает копию с обновленной обложкой. */
+    fun withCover(newCover: String?): NichesInfo = copy(cover = newCover)
+
+    /** Создает копию с обновленным превью. */
+    fun withThumbnail(newThumbnail: String): NichesInfo = copy(thumbnail = newThumbnail)
+
+    /** Форматирует число подписчиков ниши в компактный вид. */
+    fun formatSubscribers(): String {
+        if (subscribers <= 0L) return "0"
+        return when {
+            subscribers >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", subscribers / 1_000_000.0)
+            subscribers >= 1_000L -> String.format(java.util.Locale.US, "%.1fk", subscribers / 1_000.0)
+            else -> subscribers.toString()
+        }
+    }
+
     /** Выбирает наилучшую картинку: обложку или иконку. */
     val bestImageUrl: String get() = cover?.takeIf { it.isNotBlank() } ?: thumbnail
 

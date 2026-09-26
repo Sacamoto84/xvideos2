@@ -47,7 +47,22 @@ data class RedDownloadRecoveryReport(
     val invalidInfoFiles: Int = 0,
     val skippedNoVideoUrl: Int = 0,
     val skippedNoPreviewUrl: Int = 0
-)
+) {
+    /** Суммарное количество файлов, поставленных в очередь докачки. */
+    val totalQueued: Int get() = queuedVideo + queuedPreview
+
+    /** Суммарное количество пропущенных файлов. */
+    val totalSkipped: Int get() = skippedNoVideoUrl + skippedNoPreviewUrl
+
+    /** Флаг наличия неполных медиаэлементов. */
+    val hasIncomplete: Boolean get() = incompleteItems > 0
+
+    /** Флаг наличия поврежденных .info файлов. */
+    val hasErrors: Boolean get() = invalidInfoFiles > 0
+
+    /** Флаг абсолютной целостности и полноты всех скачанных элементов. */
+    val isClean: Boolean get() = incompleteItems == 0 && invalidInfoFiles == 0
+}
 
 /** Кандидат на восстановление загрузки (элемент с отсутствующим `.mp4` или `.jpg`). */
 private data class RedDownloadRecoveryCandidate(
@@ -94,6 +109,16 @@ class DownloadRed @Inject constructor(
     private val _downloadedVideoKeys = MutableStateFlow<Set<String>>(emptySet())
     val downloadedVideoKeys: StateFlow<Set<String>> = _downloadedVideoKeys.asStateFlow()
 
+    /** Проверяет, скачан ли видеофайл ролика по имени автора и id. */
+    fun isDownloaded(userName: String, id: String): Boolean =
+        downloadedVideoKey(userName, id) in downloadedVideoKeys.value
+
+    /** Проверяет, скачан ли ролик [item]. */
+    fun isDownloaded(item: GifsInfo): Boolean =
+        isDownloaded(item.userName, item.id)
+
+    /** Количество готовых видеофайлов в локальном хранилище. */
+    fun getDownloadedCount(): Int = downloadedVideoKeys.value.size
 
     init {
         refreshDownloadList()

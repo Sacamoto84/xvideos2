@@ -92,3 +92,31 @@ fun unblockItem(item: GifsInfo): Result<Boolean> {
         Result.failure(e)
     }
 }
+
+/**
+ * Возвращает дескриптор файла блокировки `<userName>/<id>.block` с проверкой безопасности путей.
+ * Если путь небезопасен, возвращает null.
+ */
+fun getBlockFile(userName: String, id: String): File? {
+    if (userName.isBlank() || id.isBlank()) return null
+    if (isUnsafeItemName(userName) || isUnsafeItemName(id)) return null
+    val rootDir = File(AppPath.r_block)
+    val blockDir = File(rootDir, userName)
+    val blockFile = File(blockDir, "$id.block")
+    return try {
+        requireInside(rootDir, blockDir)
+        requireInside(blockDir, blockFile)
+        blockFile
+    } catch (e: Exception) {
+        Timber.d(e, "Недопустимый путь к файлу блокировки: userName=%s, id=%s", userName, id)
+        null
+    }
+}
+
+/**
+ * Проверяет наличие файла блокировки непосредственно на файловой системе.
+ */
+fun isItemBlockedOnDisk(userName: String, id: String): Boolean {
+    val file = getBlockFile(userName, id) ?: return false
+    return file.exists() && file.length() > 0L
+}

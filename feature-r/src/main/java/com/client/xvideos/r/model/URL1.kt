@@ -37,6 +37,12 @@ data class URL1(
     /** Проверяет наличие непустого HD URL. */
     val hasHd: Boolean get() = !hd.isNullOrBlank()
 
+    /** Проверяет наличие аудиодорожки (наличие HD). */
+    val hasSound: Boolean get() = hasHd
+
+    /** Проверяет наличие только беззвучного видеопотока. */
+    val isSilentOnly: Boolean get() = hasSilent && !hasHd
+
     /** Проверяет наличие ссылки на видео без звука. */
     val hasSilent: Boolean get() = !silent.isNullOrBlank()
 
@@ -69,6 +75,18 @@ data class URL1(
      * отдает [hd], затем [silent], иначе [sd].
      */
     val bestDownloadUrl: String get() = hd?.takeIf { it.isNotBlank() } ?: silent?.takeIf { it.isNotBlank() } ?: sd
+
+    /** Создает копию с обновленным HD URL. */
+    fun withHd(newHd: String?): URL1 = copy(hd = newHd)
+
+    /** Создает копию с обновленным SD URL. */
+    fun withSd(newSd: String): URL1 = copy(sd = newSd)
+
+    /** Создает копию с обновленным постером. */
+    fun withPoster(newPoster: String?): URL1 = copy(poster = newPoster)
+
+    /** Создает копию с обновленным thumbnail. */
+    fun withThumbnail(newThumbnail: String): URL1 = copy(thumbnail = newThumbnail)
 
     /**
      * Проверяет, содержится ли искомая подстрока URL в каком-либо из адресов объекта.

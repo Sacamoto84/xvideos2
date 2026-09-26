@@ -87,8 +87,23 @@ data class GifsInfo(
     /** Проверяет наличие корректных положительных габаритов. */
     val hasDimensions: Boolean get() = width > 0 && height > 0
 
+    /** Проверяет, является ли ориентация портретной. */
+    val isPortrait: Boolean get() = width > 0 && height > 0 && height > width
+
+    /** Проверяет, является ли ориентация альбомной. */
+    val isLandscape: Boolean get() = width > 0 && height > 0 && width > height
+
+    /** Проверяет, является ли ориентация квадратной. */
+    val isSquare: Boolean get() = width > 0 && height > 0 && width == height
+
     /** Вычисляет соотношение сторон медиа (width / height). */
     val aspectRatio: Float get() = if (height > 0) width.toFloat() / height.toFloat() else 1f
+
+    /** Проверяет наличие определенного тега (без учета регистра). */
+    fun hasTag(tag: String): Boolean = tags.any { it.equals(tag, ignoreCase = true) }
+
+    /** Проверяет принадлежность ролика определенной нише (без учета регистра). */
+    fun hasNiche(niche: String): Boolean = niches?.any { it.equals(niche, ignoreCase = true) } == true
 
     /** Проверяет совпадение по ID, автору, описанию, тегам или нишам. */
     fun matches(query: String?): Boolean {

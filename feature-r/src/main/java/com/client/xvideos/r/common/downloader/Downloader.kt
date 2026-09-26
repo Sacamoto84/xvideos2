@@ -50,7 +50,19 @@ data class RedDownloadEnqueueReport(
     val queuedPreview: Int = 0,
     val skippedNoVideoUrl: Int = 0,
     val skippedNoPreviewUrl: Int = 0
-)
+) {
+    /** Суммарное количество файлов, поставленных в очередь загрузки. */
+    val totalQueued: Int get() = queuedVideo + queuedPreview
+
+    /** Суммарное количество пропущенных файлов. */
+    val totalSkipped: Int get() = skippedNoVideoUrl + skippedNoPreviewUrl
+
+    /** Флаг наличия хотя бы одного файла, поставленного в очередь. */
+    val hasQueued: Boolean get() = totalQueued > 0
+
+    /** Флаг отсутствия пропущенных файлов при постановке в очередь. */
+    val isClean: Boolean get() = totalSkipped == 0
+}
 
 /**
  * Низкоуровневый сервис скачивания медиафайлов RedGifs на базе [KDownloader].
@@ -73,6 +85,15 @@ class Downloader @Inject constructor(
      * - `-3f` — ошибка скачивания.
      */
     val percent = MutableStateFlow(-2f)
+
+    /** Проверяет, идет ли активный процесс скачивания. */
+    fun isDownloading(): Boolean = percent.value in 0f..1f
+
+    /** Проверяет, находится ли загрузчик в состоянии покоя. */
+    fun isIdle(): Boolean = percent.value == -2f
+
+    /** Проверяет, завершилась ли последняя загрузка ошибкой. */
+    fun hasDownloadError(): Boolean = percent.value == -3f
 
     /**
      * Скачивает медиафайл [item] (видео и превью), если он еще не присутствует на диске.

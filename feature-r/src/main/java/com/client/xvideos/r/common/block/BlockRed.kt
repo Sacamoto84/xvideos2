@@ -89,6 +89,26 @@ class BlockRed @Inject constructor(
     fun isBlockedUser(userName: String): Boolean =
         userName.isNotEmpty() && blockList.value.any { it.userName.equals(userName, ignoreCase = true) }
 
+    /** Возвращает все заблокированные элементы автора [userName]. */
+    fun getBlockedByUserName(userName: String): List<GifsInfo> =
+        if (userName.isBlank()) emptyList() else blockList.value.filter { it.userName.equals(userName, ignoreCase = true) }
+
+    /** Проверяет, заблокирован ли хотя бы один элемент из коллекции [items]. */
+    fun isAnyBlocked(items: Collection<GifsInfo>): Boolean = items.any { isBlocked(it) }
+
+    /** Возвращает только незаблокированные элементы из списка [items]. */
+    fun filterUnblocked(items: List<GifsInfo>): List<GifsInfo> {
+        val blocked = blockedIds.value
+        if (blocked.isEmpty()) return items
+        return items.filterNot { it.id in blocked }
+    }
+
+    /** Сбрасывает выбранный элемент и скрывает диалог блокировки. */
+    fun clearDialogSelection() {
+        blockItem = null
+        blockVisibleDialog = false
+    }
+
     /**
      * Фильтрует переданный список [list], удаляя из него элементы, находящиеся в [blockedIds].
      */

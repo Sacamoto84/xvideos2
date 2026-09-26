@@ -112,6 +112,12 @@ enum class Order(val value: String) {
         /** Сортировка по умолчанию. */
         val DEFAULT = LATEST
 
+        /** Список всех имен вариантов сортировки. */
+        val allNames: List<String> = entries.map { it.name }
+
+        /** Список всех сетевых строковых значений сортировок. */
+        val allValues: List<String> = entries.map { it.value }
+
         /** Поиск [Order] по порядковому номеру или дефолт. */
         fun fromOrdinalOrDefault(ordinal: Int, default: Order = DEFAULT): Order =
             entries.getOrNull(ordinal) ?: default
@@ -174,6 +180,12 @@ enum class MediaType(val value: String) {
     companion object {
         /** Тип по умолчанию (ALL). */
         val DEFAULT = ALL
+
+        /** Список всех имен типов медиа. */
+        val allNames: List<String> = entries.map { it.name }
+
+        /** Список всех сетевых кодов типов медиа. */
+        val allValues: List<String> = entries.map { it.value }
 
         /** Поиск [MediaType] по порядковому номеру или дефолт. */
         fun fromOrdinalOrDefault(ordinal: Int, default: MediaType = DEFAULT): MediaType =

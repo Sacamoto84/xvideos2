@@ -88,6 +88,18 @@ data class UserInfo(
     /** Проверяет наличие просмотров. */
     val hasViews: Boolean get() = views > 0L
 
+    /** Проверяет наличие опубликованных гифок или просмотров. */
+    val hasGifsOrViews: Boolean get() = hasGifs || hasViews
+
+    /** Создает копию с обновленным аватаром. */
+    fun withAvatar(url: String?): UserInfo = copy(profileImageUrl = url)
+
+    /** Создает копию с обновленным описанием. */
+    fun withDescription(desc: String?): UserInfo = copy(description = desc)
+
+    /** Создает копию с обновленным флагом верификации. */
+    fun withVerified(isVerified: Boolean): UserInfo = copy(verified = isVerified)
+
     /** Нормализованное имя пользователя (в нижнем регистре без лишних пробелов). */
     val normalizedUsername: String get() = username.trim().lowercase()
 
