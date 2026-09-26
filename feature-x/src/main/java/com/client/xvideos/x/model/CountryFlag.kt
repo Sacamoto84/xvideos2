@@ -28,3 +28,9 @@ fun getFlagEmoji(countryCode: String): String {
     Character.toChars(secondChar, chars, 2)
     return String(chars)
 }
+
+fun getFlagEmojiOrNull(countryCode: String?): String? {
+    if (countryCode == null) return null
+    val emoji = getFlagEmoji(countryCode)
+    return if (emoji != UNKNOWN_FLAG) emoji else null
+}

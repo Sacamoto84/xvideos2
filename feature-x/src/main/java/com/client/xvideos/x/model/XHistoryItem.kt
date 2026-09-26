@@ -52,6 +52,9 @@ data class XHistoryItem(
     val isValid: Boolean get() = item.id > 0L
     val isEmpty: Boolean get() = item.id <= 0L
     val isNotEmpty: Boolean get() = item.id > 0L
+    val id: Long get() = item.id
+    val title: String get() = item.title
+    val previewImage: String get() = item.previewImage
 
     companion object {
         val EMPTY = XHistoryItem()

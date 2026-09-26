@@ -61,6 +61,9 @@ fun extractXVideoId(href: String): Long? {
 
 fun isXVideoUrl(href: String): Boolean = extractXVideoId(href) != null
 
+fun extractXVideoIdOrDefault(href: String?, default: Long = 0L): Long =
+    if (!href.isNullOrBlank()) extractXVideoId(href) ?: default else default
+
 
 /**
  * Разбирает текстовую длительность видео (например, "10 мин.", "15 min", "1 hr 12 min", "12:34")
