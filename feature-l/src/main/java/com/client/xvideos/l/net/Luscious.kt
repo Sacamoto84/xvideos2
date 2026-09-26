@@ -111,3 +111,16 @@ internal fun extractIdFromUrl(url: String): String? {
     if (!trimmed.contains("albums/")) return null
     return ALBUM_ID_REGEX.find(trimmed)?.groupValues?.getOrNull(1)
 }
+
+/**
+ * Публичная функция для безопасного извлечения ID альбома из URL.
+ */
+fun extractAlbumIdOrNull(input: String?): String? =
+    if (input.isNullOrBlank()) null else extractIdFromUrl(input)
+
+/**
+ * Проверяет, является ли строка корректным URL страницы альбома Luscious.
+ */
+fun isValidAlbumUrl(url: String?): Boolean =
+    !extractAlbumIdOrNull(url).isNullOrBlank()
+

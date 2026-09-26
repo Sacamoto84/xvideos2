@@ -89,3 +89,26 @@ fun RepositoryResult.errorMessageOrNull(): String? = (this as? RepositoryResult.
  * Возвращает исходное исключение ошибки, если результат является [RepositoryResult.Error], либо `null`.
  */
 fun RepositoryResult.throwableOrNull(): Throwable? = (this as? RepositoryResult.Error)?.throwable
+
+/**
+ * Сворачивает результат в единое значение [R].
+ */
+@Suppress("UNCHECKED_CAST")
+inline fun <T, R> RepositoryResult.fold(
+    onSuccess: (T) -> R,
+    onError: (String, Throwable?) -> R,
+    onLoading: () -> R
+): R {
+    return when (this) {
+        is RepositoryResult.Success<*> -> onSuccess(this.data as T)
+        is RepositoryResult.Error -> onError(this.message, this.throwable)
+        else -> onLoading()
+    }
+}
+
+/**
+ * Заменяет ошибку на успешный fallback результат.
+ */
+fun <T> RepositoryResult.recover(fallback: T): RepositoryResult =
+    if (this is RepositoryResult.Error) RepositoryResult.Success(fallback) else this
+

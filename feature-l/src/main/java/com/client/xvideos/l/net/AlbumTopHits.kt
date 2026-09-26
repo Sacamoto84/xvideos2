@@ -65,5 +65,8 @@ class AlbumTopHitsImpl(
 
     val isEmpty: Boolean get() = items.isEmpty()
     val isNotEmpty: Boolean get() = items.isNotEmpty()
+    val hasHits: Boolean get() = items.isNotEmpty()
     val count: Int get() = items.size
+    val firstOrNull: AlbumListTopHits? get() = items.firstOrNull()
+    val allTitles: List<String> get() = items.map { it.title }
 }

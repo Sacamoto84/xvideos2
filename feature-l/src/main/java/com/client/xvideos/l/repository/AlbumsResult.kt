@@ -23,4 +23,8 @@ val AlbumResult.albumInfoOrNull: com.client.xvideos.l.net.AlbumInfo?
 
 val AlbumResult.isEmpty: Boolean get() = this is AlbumResult.Empty
 val AlbumResult.isNotEmpty: Boolean get() = this is AlbumResult.Albums
+val AlbumResult.isAlbums: Boolean get() = this is AlbumResult.Albums
 val AlbumResult.hasAlbumInfo: Boolean get() = albumInfoOrNull != null
+val AlbumResult.albumIdOrNull: Int? get() = albumInfoOrNull?.id
+val AlbumResult.albumTitleOrEmpty: String get() = albumInfoOrNull?.albumInfo?.value?.title.orEmpty()
+

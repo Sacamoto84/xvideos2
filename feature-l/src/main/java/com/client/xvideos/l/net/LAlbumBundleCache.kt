@@ -33,6 +33,11 @@ internal data class LAlbumBundleCache(
     val isValid: Boolean get() = isCurrentSchema && album.id.isNotBlank()
     val hasPics: Boolean get() = pics.isNotEmpty()
     val picsCount: Int get() = pics.size
+    val hasAlbum: Boolean get() = album.isValid
+    val ageMs: Long get() = (System.currentTimeMillis() - cachedAtMs).coerceAtLeast(0L)
+
+    /** Возвращает возраст кэша относительно указанного времени [nowMs]. */
+    fun ageAt(nowMs: Long): Long = (nowMs - cachedAtMs).coerceAtLeast(0L)
 
     /** Проверяет свежесть кэша относительно указанной временной метки [nowMs]. */
     fun isFreshAt(nowMs: Long): Boolean = (nowMs - cachedAtMs) < L_ALBUM_BUNDLE_CACHE_MAX_AGE_MS

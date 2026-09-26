@@ -27,3 +27,13 @@ sealed class RepositoryAction {
      */
     data object Login : RepositoryAction()
 }
+
+/** Истина, если действие — загрузка альбома. */
+val RepositoryAction.isLoadAlbum: Boolean get() = this is RepositoryAction.LoadAlbum
+
+/** Истина, если действие — вход в систему. */
+val RepositoryAction.isLogin: Boolean get() = this is RepositoryAction.Login
+
+/** Идентификатор альбома для действия [RepositoryAction.LoadAlbum] или `null`. */
+val RepositoryAction.albumIdOrNull: Long? get() = (this as? RepositoryAction.LoadAlbum)?.id
+
