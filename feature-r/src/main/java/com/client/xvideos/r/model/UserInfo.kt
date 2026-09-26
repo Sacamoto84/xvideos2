@@ -64,5 +64,13 @@ data class UserInfo(
     @SerialName("username")        val username: String = "",                    // * Имя пользователя. маленькие буквы>"lilijunex"
     @SerialName("verified")        val verified: Boolean = false,                // *
     @SerialName("views")           val views: Long  = 0L,                           // * Общее количество просмотров всех опубликованных пользователем GIF. > 123194825
-)
+) {
+    val isValid: Boolean get() = username.isNotBlank()
+    val displayName: String get() = name.ifBlank { username }
+    val hasAvatar: Boolean get() = !profileImageUrl.isNullOrBlank()
+
+    companion object {
+        val EMPTY = UserInfo()
+    }
+}
 

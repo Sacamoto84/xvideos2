@@ -46,15 +46,32 @@ enum class Order(val value: String) {
 
     NICHES_POST_A("posts"),
     NICHES_NAME_A_Z("name"),
-    NICHES_NAME_Z_A("name"),
+    NICHES_NAME_Z_A("name");
 
+    val isNichesOrder: Boolean get() = this.name.startsWith("NICHES_")
+
+    companion object {
+        fun fromValue(value: String): Order? = entries.firstOrNull { it.value.equals(value, ignoreCase = true) }
+    }
 }
 
 enum class MediaType(val value: String) {
     IMAGE("i"),
     GIF("g"),
-    ALL("all")
+    ALL("all");
+
+    val isAll: Boolean get() = this == ALL
+    val isImage: Boolean get() = this == IMAGE
+    val isGif: Boolean get() = this == GIF
+
+    companion object {
+        val DEFAULT = ALL
+        fun fromValue(value: String): MediaType = entries.firstOrNull { it.value.equals(value, ignoreCase = true) } ?: DEFAULT
+    }
 }
+
+private val RELEVANT_FALLBACKS = listOf(Order.TOP, Order.TRENDING)
+private val TOP_FALLBACKS = listOf(Order.TOP_WEEK, Order.TRENDING)
 
 /**
  * Ближайшая сортировка из [list] к текущей.
@@ -74,10 +91,11 @@ enum class MediaType(val value: String) {
  * всех меню сортировки, включая профиль и ниши.
  */
 fun Order.nearestIn(list: List<Order>): Order {
+    if (list.isEmpty()) return this
     if (this in list) return this
     val preferred = when (this) {
-        Order.RELEVANT -> listOf(Order.TOP, Order.TRENDING)
-        Order.TOP -> listOf(Order.TOP_WEEK, Order.TRENDING)
+        Order.RELEVANT -> RELEVANT_FALLBACKS
+        Order.TOP -> TOP_FALLBACKS
         else -> emptyList()
     }
     return preferred.firstOrNull { it in list } ?: list.firstOrNull() ?: this

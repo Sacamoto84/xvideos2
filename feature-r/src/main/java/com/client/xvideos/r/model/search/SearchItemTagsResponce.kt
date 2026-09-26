@@ -13,4 +13,10 @@ data class SearchItemTagsResponse(
     @SerialName("type") val type: String = "tag",
     @SerialName("text") val text: String = "",
     @SerialName("gifs") val gifs: Long = 0L
-)
+) {
+    val isValid: Boolean get() = text.isNotBlank()
+
+    companion object {
+        val EMPTY = SearchItemTagsResponse()
+    }
+}

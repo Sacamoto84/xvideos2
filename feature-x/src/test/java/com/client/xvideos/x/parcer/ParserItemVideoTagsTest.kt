@@ -64,4 +64,19 @@ class ParserItemVideoTagsTest {
         assertEquals("/pornstars/actor1", result.pornstars[0].href)
         assertEquals("99k", result.pornstars[0].count)
     }
+
+    @Test
+    fun tagsModelAndPornstarHelperProperties() {
+        val emptyModel = com.client.xvideos.x.model.TagsModel.EMPTY
+        assertTrue(emptyModel.isEmpty)
+
+        val emptyPornstar = com.client.xvideos.x.model.TagsMainUploaderPornstar.EMPTY
+        org.junit.Assert.assertFalse(emptyPornstar.isValid)
+
+        val validPornstar = com.client.xvideos.x.model.TagsMainUploaderPornstar(
+            href = "/pornstars/test",
+            name = "Test Star"
+        )
+        assertTrue(validPornstar.isValid)
+    }
 }

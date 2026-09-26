@@ -41,8 +41,23 @@ private val PLACEHOLDER = Regex("""\{(\w+)\}""")
 class Route(val method: String, val path: String, vararg parameters: Pair<String, Any>) {
 
     val url: String = when {
+        path.isEmpty() -> ""
         parameters.isEmpty() || !path.contains('{') -> BASE + path
         else -> BASE + path.fillPlaceholders(parameters)
+    }
+
+    override fun toString(): String = url
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Route) return false
+        return method == other.method && url == other.url
+    }
+
+    override fun hashCode(): Int {
+        var result = method.hashCode()
+        result = 31 * result + url.hashCode()
+        return result
     }
 
     private fun String.fillPlaceholders(params: Array<out Pair<String, Any>>): String =
@@ -59,7 +74,7 @@ class Route(val method: String, val path: String, vararg parameters: Pair<String
             }
         }
 
-    private companion object {
+    companion object {
         const val BASE = "https://api.redgifs.com"
     }
 }

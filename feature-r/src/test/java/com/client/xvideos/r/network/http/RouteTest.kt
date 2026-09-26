@@ -110,4 +110,22 @@ class RouteTest {
     fun `путь без подстановок не меняется`() {
         assertEquals("https://api.redgifs.com/v1/tags", urlOf("/v1/tags"))
     }
+
+    @Test
+    fun `пустой путь возвращает пустую строку`() {
+        assertEquals("", urlOf(""))
+    }
+
+    @Test
+    fun `toString, equals, hashCode и BASE работают корректно`() {
+        val r1 = Route("GET", "/v1/tags")
+        val r2 = Route("GET", "/v1/tags")
+        val r3 = Route("POST", "/v1/tags")
+
+        assertEquals("https://api.redgifs.com", Route.BASE)
+        assertEquals(r1.url, r1.toString())
+        assertEquals(r1, r2)
+        assertEquals(r1.hashCode(), r2.hashCode())
+        assertTrue(r1 != r3)
+    }
 }

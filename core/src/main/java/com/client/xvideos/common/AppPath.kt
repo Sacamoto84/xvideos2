@@ -43,6 +43,8 @@ object AppPath {
                 "в начале App.onCreate(), до обращения к путям."
         )
 
+    val isInitialized: Boolean get() = root != null
+
     /** Корень хранилища приложения: `filesDir/store`. */
     val main: String get() = requireRoot.path
 

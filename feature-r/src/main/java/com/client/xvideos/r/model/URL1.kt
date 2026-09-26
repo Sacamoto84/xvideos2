@@ -14,12 +14,20 @@ data class URL1(
     @SerialName("html") val html: String? = null,       // * Ссылка на веб-страницу с медиа. Полноэкранный режим. Типа ссылки
     @SerialName("sd") val sd: String = "",            // * SD-ссылка на медиафайл.                                 3.5 MB
     @SerialName("hd") val hd: String? = null,         // * HD-ссылка на медиафайл (может отсутствовать). Со звуком 21MB
-) : Serializable
+) : Serializable {
+    val hasHd: Boolean get() = !hd.isNullOrBlank()
+    val hasSilent: Boolean get() = !silent.isNullOrBlank()
+    val bestVideoUrl: String get() = hd?.takeIf { it.isNotBlank() } ?: sd
+    val bestImageUrl: String get() = poster?.takeIf { it.isNotBlank() } ?: thumbnail
+    val isValid: Boolean get() = thumbnail.isNotBlank() || sd.isNotBlank()
 
-private val EMPTY_URL1 = URL1()
+    companion object {
+        val EMPTY = URL1()
+    }
+}
 
 fun URL1.sanitize(): URL1 {
-    if (this == EMPTY_URL1) return this
+    if (this == URL1.EMPTY) return this
     val safeThumbnail: String? = thumbnail
     val safeSd: String? = sd
     if (safeThumbnail != null && safeSd != null) return this

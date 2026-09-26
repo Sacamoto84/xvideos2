@@ -11,7 +11,15 @@ data class SearchNichesShortResponse(
     @SerialName("pages") val pages: Long = 0L,
     @SerialName("total") val total: Long = 0L,
     @SerialName("niches") val niches: List<SearchItemNichesResponse> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = niches.isEmpty()
+    val isNotEmpty: Boolean get() = niches.isNotEmpty()
+    val hasMorePages: Boolean get() = page < pages
+
+    companion object {
+        val EMPTY = SearchNichesShortResponse()
+    }
+}
 
 /**
 {
@@ -43,4 +51,10 @@ data class SearchItemNichesResponse(
     @SerialName("tags") val tags: List<String> = emptyList(),
     @SerialName("preferences") val preferences: List<String> = emptyList(),
     @SerialName("thumbnail") val thumbnail: String = ""
-)
+) {
+    val isValid: Boolean get() = id.isNotBlank()
+
+    companion object {
+        val EMPTY = SearchItemNichesResponse()
+    }
+}

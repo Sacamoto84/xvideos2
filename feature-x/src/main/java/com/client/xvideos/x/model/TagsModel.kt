@@ -14,7 +14,17 @@ import androidx.compose.runtime.Immutable
 //</a>
 //</li>
 @Immutable
-data class TagsMainUploaderPornstar(val href: String, val name: String, val count: String)
+data class TagsMainUploaderPornstar(
+    val href: String = "",
+    val name: String = "",
+    val count: String = ""
+) {
+    val isValid: Boolean get() = href.isNotBlank() && name.isNotBlank()
+
+    companion object {
+        val EMPTY = TagsMainUploaderPornstar()
+    }
+}
 
 
 //<li class="model">

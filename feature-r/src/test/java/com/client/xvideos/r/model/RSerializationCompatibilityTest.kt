@@ -1,5 +1,9 @@
 package com.client.xvideos.r.model
 
+import com.client.xvideos.r.model.search.SearchCreatorsResponse
+import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
+import com.client.xvideos.r.model.search.SearchItemNichesResponse
+import com.client.xvideos.r.model.search.SearchItemTagsResponse
 import com.client.xvideos.r.model.search.SearchNichesShortResponse
 import com.client.xvideos.r.model.tag.TagSuggestion
 import com.client.xvideos.common.json.AppJson
@@ -244,5 +248,64 @@ class RSerializationCompatibilityTest {
         assertEquals(false, pagedResponse.isEmpty)
         assertEquals(true, pagedResponse.isNotEmpty)
         assertEquals(true, pagedResponse.hasMorePages)
+    }
+
+    @Test
+    fun `URL1 and UserInfo helper properties and defaults operate correctly`() {
+        val emptyUrl = URL1.EMPTY
+        assertEquals(false, emptyUrl.hasHd)
+        assertEquals(false, emptyUrl.hasSilent)
+        assertEquals(false, emptyUrl.isValid)
+        assertEquals("", emptyUrl.bestVideoUrl)
+
+        val fullUrl = URL1(thumbnail = "https://cdn/t.jpg", sd = "https://cdn/sd.mp4", hd = "https://cdn/hd.mp4")
+        assertEquals(true, fullUrl.hasHd)
+        assertEquals(true, fullUrl.isValid)
+        assertEquals("https://cdn/hd.mp4", fullUrl.bestVideoUrl)
+
+        val emptyUser = UserInfo.EMPTY
+        assertEquals(false, emptyUser.isValid)
+        assertEquals(false, emptyUser.hasAvatar)
+        assertEquals("", emptyUser.displayName)
+
+        val user = UserInfo(username = "bob", name = "Bob Dylan", profileImageUrl = "https://cdn/a.png")
+        assertEquals(true, user.isValid)
+        assertEquals(true, user.hasAvatar)
+        assertEquals("Bob Dylan", user.displayName)
+    }
+
+    @Test
+    fun `Order and MediaType helper methods operate correctly`() {
+        assertEquals(Order.TOP, Order.fromValue("top"))
+        assertEquals(null, Order.fromValue("unknown_order"))
+        assertEquals(true, Order.NICHES_POST_A.isNichesOrder)
+        assertEquals(false, Order.TOP.isNichesOrder)
+
+        assertEquals(MediaType.IMAGE, MediaType.fromValue("i"))
+        assertEquals(MediaType.ALL, MediaType.fromValue("unknown"))
+        assertEquals(true, MediaType.ALL.isAll)
+
+        assertEquals(Order.TOP, Order.RELEVANT.nearestIn(listOf(Order.TOP, Order.LATEST)))
+    }
+
+    @Test
+    fun `Search models helpers and defaults operate correctly`() {
+        val emptyCreators = SearchCreatorsResponse.EMPTY
+        assertEquals(true, emptyCreators.isEmpty)
+        assertEquals(false, emptyCreators.isNotEmpty)
+
+        val creatorItem = SearchItemCreatorsResponse(text = "@test", name = "Test")
+        assertEquals(true, creatorItem.isValid)
+        assertEquals("test", creatorItem.username)
+
+        val emptyShortNiches = SearchNichesShortResponse.EMPTY
+        assertEquals(true, emptyShortNiches.isEmpty)
+        assertEquals(false, emptyShortNiches.isNotEmpty)
+
+        val nicheItem = SearchItemNichesResponse(id = "niche-1", name = "Niche")
+        assertEquals(true, nicheItem.isValid)
+
+        val tagItem = SearchItemTagsResponse.EMPTY
+        assertEquals(false, tagItem.isValid)
     }
 }

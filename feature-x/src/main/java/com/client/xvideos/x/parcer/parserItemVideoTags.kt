@@ -7,22 +7,25 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
-private val EMPTY_TAGS_MODEL = TagsModel()
-
 fun parserItemVideoTags(document: Document): TagsModel {
     val mainElements = document.select("li.main-uploader")
+    val modelElements = document.select("li.model")
+    val tagElements = document.select("li a.is-keyword")
+
+    if (mainElements.isEmpty() && modelElements.isEmpty() && tagElements.isEmpty()) {
+        return TagsModel.EMPTY
+    }
+
     val listMain = ArrayList<TagsMainUploaderPornstar>(mainElements.size)
     for (el in mainElements) {
         el.parseUploaderOrModel()?.let { listMain.add(it) }
     }
 
-    val modelElements = document.select("li.model")
     val listPornstar = ArrayList<TagsMainUploaderPornstar>(modelElements.size)
     for (el in modelElements) {
         el.parseUploaderOrModel()?.let { listPornstar.add(it) }
     }
 
-    val tagElements = document.select("li a.is-keyword")
     val tagsSet = TreeSet<String>()
     for (el in tagElements) {
         val text = el.text().trim()
@@ -32,7 +35,7 @@ fun parserItemVideoTags(document: Document): TagsModel {
     }
 
     if (listMain.isEmpty() && listPornstar.isEmpty() && tagsSet.isEmpty()) {
-        return EMPTY_TAGS_MODEL
+        return TagsModel.EMPTY
     }
 
     val finalTags = if (tagsSet.isEmpty()) emptyList() else tagsSet.toList()
@@ -53,6 +56,6 @@ private fun Element.parseUploaderOrModel(): TagsMainUploaderPornstar? {
 }
 
 fun parserItemVideoTags(html: String): TagsModel {
-    if (html.isBlank()) return EMPTY_TAGS_MODEL
+    if (html.isBlank()) return TagsModel.EMPTY
     return parserItemVideoTags(Jsoup.parse(html))
 }

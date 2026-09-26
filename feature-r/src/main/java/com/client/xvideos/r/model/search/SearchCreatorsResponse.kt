@@ -8,7 +8,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SearchCreatorsResponse(
     @SerialName("items") val items: List<SearchItemCreatorsResponse> = emptyList()
-)
+) {
+    val isEmpty: Boolean get() = items.isEmpty()
+    val isNotEmpty: Boolean get() = items.isNotEmpty()
+
+    companion object {
+        val EMPTY = SearchCreatorsResponse()
+    }
+}
 
 //{
 //    "type": "creator",
@@ -32,10 +39,17 @@ data class SearchCreatorsResponse(
 @Serializable
 data class SearchItemCreatorsResponse(
     @SerialName("type") val type: String = "creator",
-    @SerialName("text") val text: String = "@elfsandi",
-    @SerialName("name") val name: String = "Ana",
+    @SerialName("text") val text: String = "",
+    @SerialName("name") val name: String = "",
     @SerialName("image") val image: String? = null,
-    @SerialName("verified") val verified: Boolean = true,
+    @SerialName("verified") val verified: Boolean = false,
     @SerialName("studio") val studio: Boolean = false,
     @SerialName("followers") val followers: Long = 0L
-)
+) {
+    val username: String get() = text.removePrefix("@")
+    val isValid: Boolean get() = text.isNotBlank()
+
+    companion object {
+        val EMPTY = SearchItemCreatorsResponse()
+    }
+}
