@@ -29,6 +29,15 @@ data class TagsResponse(
     /** Первый тег или null. */
     val firstOrNull: TagInfo? get() = tags.firstOrNull()
 
+    /**
+     * Поиск тега по имени без учета регистра.
+     *
+     * @param name Название тега для поиска.
+     * @return Найденный тег [TagInfo] или null.
+     */
+    fun findByNameOrNull(name: String?): TagInfo? =
+        if (name.isNullOrBlank()) null else tags.firstOrNull { it.name.equals(name, ignoreCase = true) }
+
     companion object {
         /** Пустой экземпляр ответа. */
         val EMPTY = TagsResponse()

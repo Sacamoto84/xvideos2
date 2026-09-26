@@ -26,6 +26,18 @@ data class NichesResponse(
     /** Проверяет, содержит ли список хотя бы одну нишу. */
     val isNotEmpty: Boolean get() = niches.isNotEmpty()
 
+    /** Количество ниш в ответе. */
+    val count: Int get() = niches.size
+
+    /** Проверяет наличие ниш в ответе. */
+    val hasNiches: Boolean get() = niches.isNotEmpty()
+
+    /** Проверяет, является ли страница первой. */
+    val isFirstPage: Boolean get() = page <= 1
+
+    /** Проверяет, является ли страница последней. */
+    val isLastPage: Boolean get() = pages > 0 && page >= pages
+
     /** Проверяет наличие последующих страниц в каталоге. */
     val hasMorePages: Boolean get() = page < pages
 
@@ -99,6 +111,12 @@ data class Preview(
 ) {
     /** Проверяет валидность превью (непустые id и thumbnail). */
     val isValid: Boolean get() = id.isNotBlank() && thumbnail.isNotBlank()
+
+    /** Проверяет наличие идентификатора. */
+    val hasId: Boolean get() = id.isNotBlank()
+
+    /** Проверяет наличие картинки превью. */
+    val hasThumbnail: Boolean get() = thumbnail.isNotBlank()
 
     companion object {
         /** Пустой экземпляр [Preview]. */

@@ -40,14 +40,23 @@ data class CreatorResponse(
     /** Проверяет наличие последующих страниц для пагинации. */
     val hasMorePages: Boolean get() = page < pages
 
+    /** Проверяет, является ли страница последней. */
+    val isLastPage: Boolean get() = pages > 0 && page >= pages
+
     /** Возвращает основной объект автора из списка users. */
     val primaryUser: UserInfo? get() = users.firstOrNull()
 
     /** Проверяет наличие гифок в ответе. */
     val hasGifs: Boolean get() = gifs.isNotEmpty()
 
+    /** Количество гифок в ответе. */
+    val gifsCount: Int get() = gifs.size
+
     /** Проверяет наличие данных автора. */
     val hasUsers: Boolean get() = users.isNotEmpty()
+
+    /** Проверяет наличие ниш в ответе. */
+    val hasNiches: Boolean get() = niches.isNotEmpty()
 
     /** Проверяет наличие тегов. */
     val hasTags: Boolean get() = tags.isNotEmpty()

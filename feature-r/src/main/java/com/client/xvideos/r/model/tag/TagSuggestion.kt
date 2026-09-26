@@ -21,6 +21,9 @@ data class TagSuggestion(
     /** Проверяет валидность текста подсказки. */
     val isValid: Boolean get() = text.isNotBlank()
 
+    /** Проверяет непустоту текста подсказки. */
+    val hasText: Boolean get() = text.isNotBlank()
+
     /** Проверяет наличие гифок по этой подсказке. */
     val hasGifs: Boolean get() = gifs > 0L
 

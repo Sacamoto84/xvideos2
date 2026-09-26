@@ -19,6 +19,9 @@ data class TagInfo(
     /** Проверяет валидность имени тега. */
     val isValid: Boolean get() = name.isNotBlank()
 
+    /** Проверяет непустоту имени тега. */
+    val hasName: Boolean get() = name.isNotBlank()
+
     /** Проверяет наличие связанных материалов. */
     val hasCount: Boolean get() = count > 0L
 

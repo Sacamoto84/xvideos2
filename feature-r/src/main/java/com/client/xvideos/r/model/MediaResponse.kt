@@ -40,14 +40,26 @@ data class MediaResponse(
     /** Проверяет, есть ли следующие страницы для догрузки в пагинации. */
     val hasMorePages: Boolean get() = page < pages
 
+    /** Проверяет, является ли текущая страница последней. */
+    val isLastPage: Boolean get() = pages > 0 && page >= pages
+
     /** Проверяет наличие гифок в ответе. */
     val hasGifs: Boolean get() = gifs.isNotEmpty()
+
+    /** Количество гифок в ответе. */
+    val gifsCount: Int get() = gifs.size
 
     /** Проверяет наличие пользователей в ответе. */
     val hasUsers: Boolean get() = users.isNotEmpty()
 
+    /** Количество пользователей в ответе. */
+    val usersCount: Int get() = users.size
+
     /** Проверяет наличие ниш в ответе. */
     val hasNiches: Boolean get() = niches.isNotEmpty()
+
+    /** Количество ниш в ответе. */
+    val nichesCount: Int get() = niches.size
 
     /** Проверяет наличие тегов в ответе. */
     val hasTags: Boolean get() = tags.isNotEmpty()

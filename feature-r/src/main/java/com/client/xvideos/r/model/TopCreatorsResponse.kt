@@ -23,6 +23,9 @@ data class TopCreatorsResponse(
     /** Количество создателей в ответе. */
     val size: Int get() = creators.size
 
+    /** Проверяет наличие создателей в ответе. */
+    val hasCreators: Boolean get() = creators.isNotEmpty()
+
     companion object {
         /** Пустой экземпляр ответа. */
         val EMPTY = TopCreatorsResponse()
@@ -77,6 +80,12 @@ data class TopCreator(
 
     /** Проверяет наличие подписчиков. */
     val hasFollowers: Boolean get() = followers > 0
+
+    /** Проверяет наличие описания. */
+    val hasDescription: Boolean get() = description.isNotBlank()
+
+    /** Проверяет наличие просмотров. */
+    val hasViews: Boolean get() = views > 0
 
     companion object {
         /** Пустой экземпляр [TopCreator]. */

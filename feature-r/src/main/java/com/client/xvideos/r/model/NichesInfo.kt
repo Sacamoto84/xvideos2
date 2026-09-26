@@ -75,6 +75,27 @@ data class NichesInfo(
     /** Проверяет, не пуст ли идентификатор ниши. */
     val isNotEmpty: Boolean get() = id.isNotEmpty()
 
+    /** Отображаемое имя ниши или id как fallback. */
+    val displayName: String get() = name.ifBlank { id }
+
+    /** Проверяет наличие картинки обложки. */
+    val hasCover: Boolean get() = !cover.isNullOrBlank()
+
+    /** Проверяет наличие иконки/превью. */
+    val hasThumbnail: Boolean get() = thumbnail.isNotBlank()
+
+    /** Проверяет наличие описания. */
+    val hasDescription: Boolean get() = description.isNotBlank()
+
+    /** Проверяет наличие владельца/куратора. */
+    val hasOwner: Boolean get() = owner.isNotBlank()
+
+    /** Проверяет наличие гифок. */
+    val hasGifs: Boolean get() = gifs > 0L
+
+    /** Проверяет наличие подписчиков. */
+    val hasSubscribers: Boolean get() = subscribers > 0L
+
     companion object {
         /** Пустой экземпляр ниши. */
         val EMPTY = NichesInfo()
