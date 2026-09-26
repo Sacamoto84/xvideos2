@@ -80,4 +80,29 @@ class AlbumFilterPresetManagerTest {
         assertEquals(1, AlbumFilterPresetManager.presets.value.size)
         assertEquals("Test Preset", AlbumFilterPresetManager.presets.value.first().name)
     }
+
+    @Test
+    fun `query helpers find presets and report counts accurately`() {
+        val preset1 = SavedAlbumFilter(id = "p-1", name = "Favorite Manga", filter = AlbumListFilter())
+        val preset2 = SavedAlbumFilter(id = "p-2", name = "Quick Cosplay", filter = AlbumListFilter())
+        
+        assertEquals(0, AlbumFilterPresetManager.count)
+        assertEquals(true, AlbumFilterPresetManager.isEmpty)
+        assertEquals(false, AlbumFilterPresetManager.isNotEmpty)
+
+        AlbumFilterPresetManager.resetForTesting(listOf(preset1, preset2))
+
+        assertEquals(2, AlbumFilterPresetManager.count)
+        assertEquals(false, AlbumFilterPresetManager.isEmpty)
+        assertEquals(true, AlbumFilterPresetManager.isNotEmpty)
+
+        assertEquals(preset1, AlbumFilterPresetManager.getPresetById("p-1"))
+        assertEquals(null, AlbumFilterPresetManager.getPresetById("non-existent"))
+
+        assertEquals(preset2, AlbumFilterPresetManager.getPresetByName("quick cosplay"))
+        assertEquals(null, AlbumFilterPresetManager.getPresetByName("unknown"))
+
+        assertEquals(true, AlbumFilterPresetManager.hasPreset("favorite manga"))
+        assertEquals(false, AlbumFilterPresetManager.hasPreset("non-existent"))
+    }
 }

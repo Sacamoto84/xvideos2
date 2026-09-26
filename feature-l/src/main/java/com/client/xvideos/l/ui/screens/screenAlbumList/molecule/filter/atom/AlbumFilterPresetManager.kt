@@ -27,6 +27,18 @@ object AlbumFilterPresetManager {
     private val _presets = MutableStateFlow<List<SavedAlbumFilter>>(emptyList())
     val presets: StateFlow<List<SavedAlbumFilter>> = _presets.asStateFlow()
 
+    val count: Int get() = _presets.value.size
+    val isEmpty: Boolean get() = _presets.value.isEmpty()
+    val isNotEmpty: Boolean get() = _presets.value.isNotEmpty()
+
+    fun getPresetById(id: String): SavedAlbumFilter? = _presets.value.find { it.id == id }
+
+    fun getPresetByName(name: String): SavedAlbumFilter? =
+        _presets.value.find { it.name.equals(name.trim(), ignoreCase = true) }
+
+    fun hasPreset(name: String): Boolean =
+        _presets.value.any { it.name.equals(name.trim(), ignoreCase = true) }
+
     private val isInitialized = AtomicBoolean(false)
     private val scope = CoroutineScope(Dispatchers.IO)
     private val persistMutex = Mutex()

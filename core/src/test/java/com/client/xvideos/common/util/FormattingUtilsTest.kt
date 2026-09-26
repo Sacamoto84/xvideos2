@@ -97,6 +97,48 @@ class FormattingUtilsTest {
         assertEquals("0 Bs", Float.NaN.formatAsSpeed())
         assertEquals("1 KBs", 1024f.formatAsSpeed())
     }
+
+    @Test
+    fun `toPrettyCount Int overload and String fallback format properly`() {
+        assertEquals("0", 0.toPrettyCount())
+        assertEquals("500", 500.toPrettyCount())
+        assertEquals("1.5K", 1500.toPrettyCount())
+        assertEquals("2.0M", 2_000_000.toPrettyCount())
+
+        assertEquals("0", null.toPrettyCountOrDefault())
+        assertEquals("N/A", "invalid".toPrettyCountOrDefault("N/A"))
+        assertEquals("1.0K", "1000".toPrettyCountOrDefault())
+    }
+
+    @Test
+    fun `capitalizeEachWordOrEmpty handles null and blank safely`() {
+        assertEquals("", null.capitalizeEachWordOrEmpty())
+        assertEquals("", "".capitalizeEachWordOrEmpty())
+        assertEquals("", "   ".capitalizeEachWordOrEmpty())
+        assertEquals("Hello World", "hello world".capitalizeEachWordOrEmpty())
+    }
+
+    @Test
+    fun `toTwoDecimalPlacesWithColon Double overload and String fallback format properly`() {
+        assertEquals("0:00", 0.0.toTwoDecimalPlacesWithColon())
+        assertEquals("2:50", 2.5.toTwoDecimalPlacesWithColon())
+        assertEquals("0:00", Double.NaN.toTwoDecimalPlacesWithColon())
+
+        assertEquals("0:00", null.toTwoDecimalPlacesWithColonOrDefault())
+        assertEquals("0:00", "invalid".toTwoDecimalPlacesWithColonOrDefault())
+        assertEquals("12:34", "12.34".toTwoDecimalPlacesWithColonOrDefault())
+    }
+
+    @Test
+    fun `getFolderSize and folderSize handle null or nonexistent directory safely`() {
+        val nullFile: java.io.File? = null
+        assertEquals(0L, getFolderSize(nullFile))
+        assertEquals(0L, nullFile.folderSize())
+
+        val nonExistent = java.io.File("non_existent_folder_path_12345")
+        assertEquals(0L, getFolderSize(nonExistent))
+        assertEquals(0L, nonExistent.folderSize())
+    }
 }
 
 

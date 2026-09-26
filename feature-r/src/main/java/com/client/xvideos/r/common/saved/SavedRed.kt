@@ -24,6 +24,9 @@ class SavedRed @Inject constructor(
 
     val nichesCache = R_Saved_NichesCaches(scope, redApi)
 
+    val totalSavedCount: Int
+        get() = likes.list.size + creators.list.size + niches.list.size + collections.collectionList.size
+
 
 
     init {

@@ -101,8 +101,20 @@ object NetworkIpHelper {
         }.getOrDefault("Wi-Fi")
     }
 
+    fun isValidPort(port: Int): Boolean = port in 1..65535
+
+    fun isValidIpv4(ip: String?): Boolean {
+        if (ip.isNullOrBlank()) return false
+        val parts = ip.split('.')
+        if (parts.size != 4) return false
+        return parts.all { part ->
+            val num = part.toIntOrNull() ?: return@all false
+            num in 0..255 && (part == "0" || !part.startsWith('0'))
+        }
+    }
+
     fun buildServerUrl(ip: String, port: Int): String {
-        if (ip.isEmpty()) return ""
+        if (ip.isBlank() || !isValidPort(port)) return ""
         return "http://$ip:$port"
     }
 }

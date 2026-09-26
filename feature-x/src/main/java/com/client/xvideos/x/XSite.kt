@@ -24,6 +24,11 @@ fun normalizeXUrl(href: String): String {
     return "$urlStart/${trimmed.removePrefix("/")}"
 }
 
+fun String.toNormalizedXUrl(): String = normalizeXUrl(this)
+
+fun isValidXUrl(href: String): Boolean =
+    href.isNotBlank() && (href.startsWith("http://") || href.startsWith("https://") || href.startsWith("/") || href.startsWith("//"))
+
 private val NUMERIC_VIDEO_ID_REGEX = Regex("""/video\.?(\d+)""")
 private val SLUG_VIDEO_ID_REGEX = Regex("""/video[._-]?([a-zA-Z0-9]+)""")
 private val HOURS_REGEX = Regex("""(\d+)\s*(?:hr|ч|hour)""")
@@ -39,7 +44,7 @@ private val SECONDS_REGEX = Regex("""(\d+)\s*(?:sec|сек|s)""")
  * - Современный формат с токеном: `/video.uicfdab07bd/_` -> стабильный детерминированный положительный Long ID
  */
 fun extractXVideoId(href: String): Long? {
-    if (href.isEmpty() || !href.contains("/video")) return null
+    if (href.isBlank() || !href.contains("/video")) return null
     // 1. Числовой id: /video12345/ или /video.12345/
     val numericMatch = NUMERIC_VIDEO_ID_REGEX.find(href)?.groupValues?.get(1)?.toLongOrNull()
     if (numericMatch != null && numericMatch > 0L) return numericMatch
@@ -53,6 +58,9 @@ fun extractXVideoId(href: String): Long? {
     }
     return null
 }
+
+fun isXVideoUrl(href: String): Boolean = extractXVideoId(href) != null
+
 
 /**
  * Разбирает текстовую длительность видео (например, "10 мин.", "15 min", "1 hr 12 min", "12:34")

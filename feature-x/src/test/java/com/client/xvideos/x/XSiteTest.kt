@@ -68,6 +68,27 @@ class XSiteTest {
         assertEquals(0L, parseDurationToMs("   "))
         assertEquals(0L, parseDurationToMs("No duration"))
     }
+
+    @Test
+    fun `toNormalizedXUrl extension matches top-level function`() {
+        assertEquals("/video123".toNormalizedXUrl(), normalizeXUrl("/video123"))
+        assertEquals("".toNormalizedXUrl(), "")
+    }
+
+    @Test
+    fun `isXVideoUrl and isValidXUrl validate urls properly`() {
+        assertEquals(true, isXVideoUrl("/video12345/test"))
+        assertEquals(true, isXVideoUrl("https://www.xv-ru.com/video.789/title"))
+        assertEquals(false, isXVideoUrl("/tags/blonde/1"))
+        assertEquals(false, isXVideoUrl(""))
+
+        assertEquals(true, isValidXUrl("https://example.com/video"))
+        assertEquals(true, isValidXUrl("http://example.com/video"))
+        assertEquals(true, isValidXUrl("/video123"))
+        assertEquals(true, isValidXUrl("//cdn.example.com"))
+        assertEquals(false, isValidXUrl(""))
+        assertEquals(false, isValidXUrl("   "))
+    }
 }
 
 

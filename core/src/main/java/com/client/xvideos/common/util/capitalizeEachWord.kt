@@ -37,3 +37,6 @@ fun String.capitalizeEachWord(): String {
     }
     return sb.toString()
 }
+
+fun String?.capitalizeEachWordOrEmpty(): String = if (this.isNullOrBlank()) "" else this.capitalizeEachWord()
+

@@ -96,3 +96,15 @@ fun Long.toPrettyCountInt(): String {
         else -> "${(absValue / 1_000_000_000.0).roundToLong()}B"
     }
 }
+
+fun Int.toPrettyCount(): String = this.toLong().toPrettyCount()
+
+fun Int.toPrettyCount2(): String = this.toLong().toPrettyCount2()
+
+fun Int.toPrettyCount3(): String = this.toLong().toPrettyCount3()
+
+fun Int.toPrettyCountInt(): String = this.toLong().toPrettyCountInt()
+
+fun String?.toPrettyCountOrDefault(default: String = "0"): String =
+    this?.toLongOrNull()?.toPrettyCount() ?: default
+

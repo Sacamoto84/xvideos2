@@ -26,3 +26,10 @@ fun Float.toTwoDecimalPlacesWithColon(): String {
     val fracStr = if (frac in 0..99) TWO_DIGIT_FRACS[frac] else if (frac < 10) "0$frac" else "$frac"
     return "$whole:$fracStr"
 }
+
+fun Double.toTwoDecimalPlacesWithColon(): String =
+    if (this.isNaN() || this.isInfinite() || this <= 0.0) "0:00" else this.toFloat().toTwoDecimalPlacesWithColon()
+
+fun String?.toTwoDecimalPlacesWithColonOrDefault(default: String = "0:00"): String =
+    this?.toFloatOrNull()?.toTwoDecimalPlacesWithColon() ?: default
+

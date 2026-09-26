@@ -10,12 +10,14 @@ import timber.log.Timber
 
 class ItemCollectionPagingSource(val collection: String?, val savedRed: SavedRed) : PagingSource<Int, GifsInfo>() {
 
+    val hasCollection: Boolean get() = !collection.isNullOrBlank()
+
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, GifsInfo> {
 
         return try {
             Timber.d("!!! ItemCollectionPagingSource::load() collection:${collection}")
 
-            val items = if (!collection.isNullOrEmpty()) {
+            val items = if (!collection.isNullOrBlank()) {
                 savedRed.collections.collectionList.firstOrNull { it.collection == collection }?.items ?: emptyList()
             } else {
                 emptyList()

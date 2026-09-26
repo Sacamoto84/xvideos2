@@ -2,8 +2,8 @@ package com.client.xvideos.common.util
 
 import java.io.File
 
-fun getFolderSize(dir: File): Long {
-    if (!dir.exists() || !dir.isDirectory) return 0L
+fun getFolderSize(dir: File?): Long {
+    if (dir == null || !dir.exists() || !dir.isDirectory) return 0L
     val files = dir.listFiles()
     if (files.isNullOrEmpty()) return 0L
     var size = 0L
@@ -14,3 +14,6 @@ fun getFolderSize(dir: File): Long {
     }
     return size
 }
+
+fun File?.folderSize(): Long = getFolderSize(this)
+
