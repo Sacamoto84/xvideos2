@@ -47,6 +47,15 @@ data class DohResponse(
     /** Возвращает список всех извлеченных IP-адресов (IPv4 и IPv6). */
     fun allIpAddresses(): List<String> = answer.filter { it.isA || it.isAaaa }.map { it.data }
 
+    /** Проверяет, что все полученные ответы относятся исключительно к IPv4. */
+    val hasOnlyIpv4: Boolean get() = answer.isNotEmpty() && answer.all { it.isA }
+
+    /** Проверяет наличие хотя бы одного IPv6-адреса в ответах. */
+    val hasIpv6: Boolean get() = answer.any { it.isAaaa }
+
+    /** Фильтрует ресурсные записи ответа по числовому DNS-типу. */
+    fun filterByType(type: Int): List<DohAnswer> = answer.filter { it.type == type }
+
     companion object {
         /** Пустой объект ответа для fallback-сценариев. */
         val EMPTY = DohResponse()
@@ -97,6 +106,9 @@ data class DohAnswer(
 
     /** Истина, если запись относится к типу IPv6 (AAAA). */
     val isAaaa: Boolean get() = type == 28
+
+    /** Истина, если запись относится к каноническому имени (CNAME, тип 5). */
+    val isCname: Boolean get() = type == 5
 
     companion object {
         val EMPTY = DohAnswer()

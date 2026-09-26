@@ -59,6 +59,9 @@ enum class DohProvider(
     /** Истина, если выбран пользовательский сервер. */
     val isCustom: Boolean get() = this == CUSTOM
 
+    /** Истина, если выбран один из встроенных предустановленных провайдеров. */
+    val isPreset: Boolean get() = !isCustom
+
     /** Истина, если выбран провайдер Cloudflare. */
     val isCloudflare: Boolean get() = this == CLOUDFLARE
 
@@ -90,11 +93,20 @@ enum class DohProvider(
         /** Список отображаемых названий всех провайдеров. */
         val allTitles: List<String> = entries.map { it.title }
 
+        /** Список строковых имен всех констант перечисления. */
+        val allNames: List<String> = entries.map { it.name }
+
+        /**
+         * Находит провайдера по строковому имени (без учета регистра) или возвращает null.
+         */
+        fun fromNameOrNull(name: String?): DohProvider? =
+            if (name != null) entries.firstOrNull { it.name.equals(name, ignoreCase = true) } else null
+
         /**
          * Находит провайдера по строковому имени (без учета регистра) или возвращает [DEFAULT].
          */
         fun fromNameOrDefault(name: String?): DohProvider =
-            entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: DEFAULT
+            fromNameOrNull(name) ?: DEFAULT
 
         /**
          * Находит провайдера по порядковому номеру или возвращает [default].

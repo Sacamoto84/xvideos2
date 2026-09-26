@@ -51,4 +51,25 @@ fun Long.toMinSec(): String {
 fun String?.toMinSecOrDefault(default: String = "00:00"): String =
     this?.toDoubleOrNull()?.toMinSec() ?: default
 
+/**
+ * Форматирует секунды в формат "h:mm:ss", если длительность превышает 1 час, иначе "mm:ss".
+ */
+fun Long.toHoursMinSec(): String {
+    if (this <= 0L) return "00:00"
+    val totalSec = if (this > Int.MAX_VALUE) Int.MAX_VALUE else this.toInt()
+    val hours = totalSec / 3600
+    val remainder = totalSec % 3600
+    val minutes = remainder / 60
+    val seconds = remainder % 60
+    val mStr = if (minutes < 60) DIGIT_STRINGS[minutes] else minutes.toString()
+    val sStr = if (seconds < 60) DIGIT_STRINGS[seconds] else seconds.toString()
+    return if (hours > 0) "$hours:$mStr:$sStr" else "$mStr:$sStr"
+}
+
+/**
+ * Безопасно парсит строку в количество секунд или возвращает 0.
+ */
+fun String?.toSecondsOrZero(): Long =
+    this?.toDoubleOrNull()?.toLong()?.coerceAtLeast(0L) ?: 0L
+
 

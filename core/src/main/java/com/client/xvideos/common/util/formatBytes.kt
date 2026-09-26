@@ -44,3 +44,10 @@ fun Float.formatAsBytes(): String =
 fun formatBytesOrDefault(bytes: Long?, default: String = "0 B"): String =
     if (bytes == null) default else formatBytes(bytes)
 
+/** Проверяет, соответствует ли строка формату отформатированного объема байт (B, KB, MB, GB). */
+fun isValidByteString(formatted: String?): Boolean {
+    if (formatted.isNullOrBlank()) return false
+    val trimmed = formatted.trim()
+    return trimmed.endsWith(" B") || trimmed.endsWith(" KB") || trimmed.endsWith(" MB") || trimmed.endsWith(" GB")
+}
+

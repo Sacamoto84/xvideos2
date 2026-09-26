@@ -33,4 +33,7 @@ fun Double.formatAsSpeed(): String =
 fun formatSpeedOrDefault(bytesPerSecond: Long?, default: String = "0 Bs"): String =
     if (bytesPerSecond == null) default else formatSpeed(bytesPerSecond)
 
+/** Расширение для форматирования скорости в битах в секунду (bps). */
+fun Long.formatAsBitsPerSec(): String = "${this * 8L} bps"
+
 

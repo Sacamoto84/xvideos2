@@ -37,12 +37,20 @@ data class PlayerPlaybackConfig(
     val hasHeaders: Boolean get() = !headers.isNullOrEmpty()
     val hasDrm: Boolean get() = drmConfig != null
     val isSeeking: Boolean get() = isSliding || seekToTime != null
+    val isNormalSpeed: Boolean get() = speed.isNormal
+    val hasCustomSpeed: Boolean get() = !speed.isNormal
 
     fun withVolume(newVolume: Float): PlayerPlaybackConfig =
         copy(volume = newVolume.coerceIn(0f, 1f))
 
     fun withSpeed(newSpeed: PlayerSpeed): PlayerPlaybackConfig =
         copy(speed = newSpeed)
+
+    fun withFitMode(resize: ScreenResize): PlayerPlaybackConfig =
+        copy(size = resize)
+
+    fun withUrl(newUrl: String): PlayerPlaybackConfig =
+        copy(url = newUrl)
 
     fun withSeek(time: Float?): PlayerPlaybackConfig =
         copy(seekToTime = time?.coerceAtLeast(0f))

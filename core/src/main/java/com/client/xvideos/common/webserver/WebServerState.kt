@@ -28,6 +28,12 @@ object WebServerState {
     private val _lastError = MutableStateFlow<String?>(null)
     val lastError: StateFlow<String?> = _lastError.asStateFlow()
 
+    /** Истина, если в состоянии сервера зафиксирована ошибка. */
+    val hasError: Boolean get() = lastError.value != null
+
+    /** Истина, если сервер запущен и доступен по сетевому адресу. */
+    val isOnline: Boolean get() = isRunning.value && !serverUrl.value.isNullOrBlank()
+
     fun updateRunning(
         running: Boolean,
         url: String? = null,
@@ -43,6 +49,16 @@ object WebServerState {
         if (running) {
             _lastError.value = null
         }
+    }
+
+    /** Сбрасывает состояние веб-сервера к значениям по умолчанию. */
+    fun reset() {
+        _isRunning.value = false
+        _serverUrl.value = null
+        _ipAddress.value = null
+        _port.value = 8080
+        _networkName.value = "Wi-Fi"
+        _lastError.value = null
     }
 
     fun clearError() {

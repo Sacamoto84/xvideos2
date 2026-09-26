@@ -12,6 +12,8 @@ enum class PlayerSpeed(val speed: Float, val displayName: String) {
     val isNormal: Boolean get() = this == X1
     val isSlow: Boolean get() = speed < 1.0f
     val isFast: Boolean get() = speed > 1.0f
+    val isFastest: Boolean get() = this == X2
+    val isSlowest: Boolean get() = this == X0_25
 
     /** Шаг к следующей скорости циклически. */
     fun nextSpeed(): PlayerSpeed {
@@ -35,6 +37,9 @@ enum class PlayerSpeed(val speed: Float, val displayName: String) {
 
     companion object {
         val DEFAULT = X1
+
+        /** Список всех отображаемых текстовых меток скоростей. */
+        val allDisplayNames: List<String> = entries.map { it.displayName }
 
         fun fromSpeed(speed: Float): PlayerSpeed =
             entries.find { it.speed == speed } ?: DEFAULT
@@ -84,6 +89,8 @@ enum class PlayerOption {
 
     companion object {
         val DEFAULT = NONE
+
+        val allOptions: List<PlayerOption> = entries.toList()
 
         fun fromOrdinalOrDefault(ordinal: Int, default: PlayerOption = DEFAULT): PlayerOption =
             entries.getOrNull(ordinal) ?: default
