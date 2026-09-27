@@ -33,6 +33,9 @@ class SavedX @Inject constructor(
     /** «История просмотров» с сохранением позиции воспроизведения и ротацией до 200 записей. */
     val history = SavedX_History(scope)
 
+    /** Подписки на каналы и актрис/моделей с сохранением в FileDB. */
+    val subscriptions = SavedX_Subscriptions(scope)
+
     //val collection = SavedL_Collection(snackBarEvent)
 
     //val albums = SavedL_Albums(snackBarEvent, db, scope)

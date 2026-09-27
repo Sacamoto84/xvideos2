@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -54,6 +56,7 @@ import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.videoplayer.atom.ComposeTags
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
@@ -61,11 +64,32 @@ import com.client.xvideos.x.screens.videoplayer.atom.X_PlayerBottomBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
+
+// Отступы для корректного отображения контента с учётом выреза под камеру (cutout) сверху и слева
 private val CutoutTopStartInsets: WindowInsets
     @Composable get() = WindowInsets.displayCutout.only(
         WindowInsetsSides.Top + WindowInsetsSides.Start
     )
 
+/**
+ * Экран видеоплеера (Voyager Screen).
+ * Управляет жизненным циклом ScreenModel, системной ориентацией экрана
+ * и переключением между состояниями: ошибка, загрузка и контент плеера.
+ *
+ * @param url URL страницы или видеопотока.
+ * @param item Опциональные метаданные видео (ItemsX).
+ */
 class ScreenX_VideoPlayer(
     val url: String,
     val item: ItemsX? = null,
@@ -78,10 +102,12 @@ class ScreenX_VideoPlayer(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
+        // Инициализация ScreenModel с фабрикой параметров
         val vm = getScreenModel<ScreenX_VideoPlayerSM, ScreenX_VideoPlayerSM.Factory> { factory ->
             factory.create(url, item)
         }
 
+        // Управление ориентацией устройства и системными панелями (status bar, navigation bar)
         OrientationAndSystemBarsEffect(vm.isFullScreen)
 
         val onRetryLoad: () -> Unit = remember(vm) { { vm.loadVideo(forceReload = true) } }
@@ -90,6 +116,7 @@ class ScreenX_VideoPlayer(
         // Нажатие кнопки «Назад» при ошибке или загрузке закрывает экран
         BackHandler(enabled = vm.isError || vm.isLoading || vm.passedHLS.isBlank(), onBack = onPopBack)
 
+        // Отображение соответствующего UI в зависимости от состояния ScreenModel
         when {
             vm.isError -> {
                 VideoPlayerErrorView(
@@ -107,6 +134,11 @@ class ScreenX_VideoPlayer(
     }
 }
 
+/**
+ * Управляет ориентацией экрана (альбомная/портретная) и отображением системных панелей.
+ * При входе в полноэкранный режим скрывает статус-бар и навигационную панель,
+ * а при выходе или закрытии экрана возвращает стандартные настройки.
+ */
 @Composable
 private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
     val context = LocalContext.current
@@ -120,6 +152,7 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             window?.let {
                 val controller = WindowCompat.getInsetsController(it, it.decorView)
+                // Скрытые бары временно появляются по свайпу от края экрана
                 controller.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 controller.hide(WindowInsetsCompat.Type.navigationBars())
@@ -146,7 +179,7 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
         }
     }
 
-    // При полном уходе с экрана гарантированно возвращаем портретную ориентацию и скрытый статус-бар
+    // При полном уходе с экрана гарантированно возвращаем портретную ориентацию и восстанавливаем навигацию
     DisposableEffect(Unit) {
         onDispose {
             val activity = context.findActivity()
@@ -160,6 +193,9 @@ private fun OrientationAndSystemBarsEffect(isFullScreen: Boolean) {
     }
 }
 
+/**
+ * Экран ошибки загрузки или воспроизведения видео с кнопками повтора и выхода назад.
+ */
 @Composable
 private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
     Box(
@@ -182,6 +218,9 @@ private fun VideoPlayerErrorView(onRetry: () -> Unit, onBack: () -> Unit) {
     }
 }
 
+/**
+ * Индикатор ожидания при первичной загрузке страницы/потока видео.
+ */
 @Composable
 private fun VideoPlayerLoadingView(onBack: () -> Unit) {
     Box(
@@ -192,6 +231,10 @@ private fun VideoPlayerLoadingView(onBack: () -> Unit) {
     }
 }
 
+/**
+ * Stateful-обёртка над контентом плеера.
+ * Извлекает данные из [ScreenX_VideoPlayerSM] и связывает события UI с методами ScreenModel и Navigator.
+ */
 @OptIn(UnstableApi::class)
 @Composable
 private fun VideoPlayerContentView(
@@ -200,6 +243,12 @@ private fun VideoPlayerContentView(
 ) {
     VideoPlayerContentView(
         passedHLS = vm.passedHLS,
+        videoTitle = vm.currentItem.title,
+        isFavorite = vm.isFavorite,
+        onFavoriteAdd = { vm.addFavorite() },
+        onFavoriteRemove = { vm.removeFavorite() },
+        onDownload = { vm.download() },
+        onSaveToGallery = { vm.saveToGallery() },
         resumePositionSeconds = vm.resumePositionSeconds,
         isFullScreen = vm.isFullScreen,
         resumeNoticeText = vm.resumeNoticeText,
@@ -209,6 +258,8 @@ private fun VideoPlayerContentView(
         onPopBack = { navigator.pop() },
         onDismissResumeNotice = { vm.dismissResumeNotice() },
         onTagClick = { tag -> vm.openTag(tag, navigator) },
+        onChannelClick = { channel -> vm.openChannel(channel, navigator) },
+        onPornstarClick = { pornstar -> vm.openPornstar(pornstar, navigator) },
         onRestartFromBeginning = { vm.restartFromBeginning() },
         onToggleFullScreen = { vm.toggleFullScreen() },
         onSaveProgress = { positionSeconds, durationSeconds ->
@@ -217,11 +268,37 @@ private fun VideoPlayerContentView(
     )
 }
 
+/**
+ * Основной компонент воспроизведения видео (Stateless).
+ * Содержит плеер [ComposeVideoPlayer], оверлеи тегов, уведомления и нижнюю панель управления.
+ *
+ * @param passedHLS HLS URL видеопотока (.m3u8).
+ * @param resumePositionSeconds Позиция возобновления в секундах (из истории), либо null.
+ * @param isFullScreen Флаг отображения на весь экран (альбомная ориентация).
+ * @param resumeNoticeText Текст плашки о возобновлении просмотра.
+ * @param tags Список тегов видео.
+ * @param onPlaybackError Обработчик ошибки плеера.
+ * @param onExitFullScreen Выход из полноэкранного режима.
+ * @param onPopBack Возврат на предыдущий экран.
+ * @param onDismissResumeNotice Закрытие плашки о возобновлении.
+ * @param onTagClick Нажатие на тег.
+ * @param onChannelClick Нажатие на канал.
+ * @param onPornstarClick Нажатие на порнозвезду/модель.
+ * @param onRestartFromBeginning Перезапуск видео с начала.
+ * @param onToggleFullScreen Переключение полноэкранного режима.
+ * @param onSaveProgress Периодическое сохранение прогресса просмотра в историю.
+ */
 @OptIn(UnstableApi::class)
 @Suppress("LongMethod", "LongParameterList")
 @Composable
 private fun VideoPlayerContentView(
     passedHLS: String,
+    videoTitle: String = "",
+    isFavorite: Boolean = false,
+    onFavoriteAdd: () -> Unit = {},
+    onFavoriteRemove: () -> Unit = {},
+    onDownload: () -> Unit = {},
+    onSaveToGallery: () -> Unit = {},
     resumePositionSeconds: Float?,
     isFullScreen: Boolean,
     resumeNoticeText: String?,
@@ -231,11 +308,17 @@ private fun VideoPlayerContentView(
     onPopBack: () -> Unit,
     onDismissResumeNotice: () -> Unit,
     onTagClick: (String) -> Unit,
+    onChannelClick: (TagsMainUploaderPornstar) -> Unit = {},
+    onPornstarClick: (TagsMainUploaderPornstar) -> Unit = {},
     onRestartFromBeginning: () -> Unit,
     onToggleFullScreen: () -> Unit,
     onSaveProgress: (positionSeconds: Float, durationSeconds: Int) -> Unit,
 ) {
+    // Режим предпросмотра в IDE (Android Studio @Preview или Layout Inspector).
+    // Реальный ExoPlayer (MediaPlayerHost) и системные декодеры не могут инициализироваться в JVM среды IDE.
+    // Если активен режим инспекции, отрисовываем легковесный статический макет-заглушку и выходим из функции.
     if (LocalInspectionMode.current) {
+
         Box(modifier = Modifier.fillMaxSize().background(Color(0xFF040404))) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -244,6 +327,7 @@ private fun VideoPlayerContentView(
                 Text(text = "Video Preview", color = Color.White)
             }
 
+            // Теги для предпросмотра расположения верстки
             if (!isFullScreen) {
                 Box(
                     modifier = Modifier
@@ -260,6 +344,7 @@ private fun VideoPlayerContentView(
                 }
             }
 
+            // Плашка возобновления для предпросмотра
             if (resumeNoticeText != null) {
                 Box(
                     modifier = Modifier
@@ -291,7 +376,9 @@ private fun VideoPlayerContentView(
         }
     }
 
+    // Состояния видимости элементов управления и масштабирования (pinch-to-zoom)
     var areControlsVisible by remember { mutableStateOf(true) }
+    var isMenuExpanded by remember { mutableStateOf(false) }
     var isZoomed by remember { mutableStateOf(false) }
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
@@ -305,12 +392,14 @@ private fun VideoPlayerContentView(
     BackHandler(enabled = !isZoomed && isFullScreen, onBack = onExitFullScreen)
     BackHandler(enabled = !isZoomed && !isFullScreen, onBack = onPopBack)
 
+    // При смене режима экрана (полноэкранный/обычный) сбрасываем видимость контроллеров в активное состояние
     LaunchedEffect(isFullScreen) {
         areControlsVisible = true
     }
 
-    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused) {
-        if (isFullScreen && areControlsVisible && !host.isPaused) {
+    // Автоматическое скрытие контроллеров через 3.5 секунды неактивности при воспроизведении на полном экране (если меню не открыто)
+    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused, isMenuExpanded) {
+        if (isFullScreen && areControlsVisible && !host.isPaused && !isMenuExpanded) {
             delay(3500)
             areControlsVisible = false
         }
@@ -324,9 +413,14 @@ private fun VideoPlayerContentView(
         }
     }
 
+    // Синхронизация сохранённой позиции воспроизведения в историю
     RememberHistoryProgressSync(onSaveProgress = onSaveProgress, host = host)
 
     val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
+
+    // Обработка одиночного тапа по видео:
+    // - В полноэкранном режиме: показать / скрыть контроллеры
+    // - В портретном режиме: переключить воспроизведение / паузу
     val onTap: () -> Unit = remember(isFullScreen, host) {
         {
             if (isFullScreen) {
@@ -337,12 +431,31 @@ private fun VideoPlayerContentView(
         }
     }
 
+    // Пауза перед переходом по тегу, чтобы видео не продолжало проигрываться
     val handleTagClick: (String) -> Unit = remember(host) {
         { tag ->
             host.pause()
             onTagClick(tag)
         }
     }
+
+    // Пауза перед переходом в канал автора
+    val handleChannelClick: (TagsMainUploaderPornstar) -> Unit = remember(host, onChannelClick) {
+        { channel ->
+            host.pause()
+            onChannelClick(channel)
+        }
+    }
+
+    // Пауза перед переходом на страницу модели
+    val handlePornstarClick: (TagsMainUploaderPornstar) -> Unit = remember(host, onPornstarClick) {
+        { pornstar ->
+            host.pause()
+            onPornstarClick(pornstar)
+        }
+    }
+
+    // Перемотка в начало (0 секунд) и сброс уведомления о возобновлении
     val onRestartPlayback: () -> Unit = remember(host) {
         {
             host.seekTo(0f)
@@ -359,20 +472,64 @@ private fun VideoPlayerContentView(
             onTap = onTap,
             overlay = {
 
-                // Теги/каналы поверх видео (только в портретном режиме)
-                if (!isFullScreen) {
-                    Box(
+                // Верхняя панель:
+                // В полноэкранном режиме: Back, Название ролика, Кнопка 3-точки с выпадающим меню.
+                // В портретном режиме: теги/каналы слева и кнопка 3-точки справа.
+                if (isFullScreen) {
+                    AnimatedVisibility(
+                        visible = areControlsVisible,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                    ) {
+                        PlayerFullScreenTopBar(
+                            title = videoTitle,
+                            isFavorite = isFavorite,
+                            onFavoriteAdd = onFavoriteAdd,
+                            onFavoriteRemove = onFavoriteRemove,
+                            onDownload = onDownload,
+                            onSaveToGallery = onSaveToGallery,
+                            onExpandedChange = { isMenuExpanded = it },
+                            onBack = onExitFullScreen,
+                        )
+                    }
+                } else {
+                    Row(
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .windowInsetsPadding(CutoutTopStartInsets)
                             .padding(start = 4.dp, end = 4.dp, top = 4.dp)
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        ComposeTags(
-                            tags,
-                            onClick = handleTagClick,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Box(modifier = Modifier.weight(1f, fill = false)) {
+                            ComposeTags(
+                                tags,
+                                onChannelClick = handleChannelClick,
+                                onPornstarClick = handlePornstarClick,
+                                onClick = handleTagClick,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 4.dp, top = 2.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x80000000))
+                        ) {
+                            X_DashboardExpandMenu(
+                                isFavorite = isFavorite,
+                                onFavoriteAdd = onFavoriteAdd,
+                                onFavoriteRemove = onFavoriteRemove,
+                                onDownload = onDownload,
+                                onSaveToGallery = onSaveToGallery,
+                                onExpandedChange = { isMenuExpanded = it },
+                            )
+                        }
                     }
                 }
 
@@ -411,6 +568,90 @@ private fun VideoPlayerContentView(
     }
 }
 
+/**
+ * Верхняя панель управления видеоплеером в полноэкранном режиме.
+ */
+@Composable
+private fun PlayerFullScreenTopBar(
+    title: String,
+    isFavorite: Boolean,
+    onFavoriteAdd: () -> Unit,
+    onFavoriteRemove: () -> Unit,
+    onDownload: () -> Unit,
+    onSaveToGallery: () -> Unit,
+    onExpandedChange: (Boolean) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xCC000000), Color.Transparent)
+                )
+            )
+            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color(0x66000000))
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Выйти из полного экрана",
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            if (title.isNotBlank()) {
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(Color(0x66000000))
+        ) {
+            X_DashboardExpandMenu(
+                isFavorite = isFavorite,
+                onFavoriteAdd = onFavoriteAdd,
+                onFavoriteRemove = onFavoriteRemove,
+                onDownload = onDownload,
+                onSaveToGallery = onSaveToGallery,
+                onExpandedChange = onExpandedChange,
+            )
+        }
+    }
+}
+
+/**
+ * Фоновая синхронизация прогресса воспроизведения видео.
+ * - Периодически (каждые 3 секунды) передает текущую позицию в [onSaveProgress].
+ * - При выходе из композиции (закрытии экрана) гарантированно фиксирует финальную позицию.
+ */
 @Composable
 private fun RememberHistoryProgressSync(
     onSaveProgress: (positionSeconds: Float, durationSeconds: Int) -> Unit,
@@ -435,6 +676,10 @@ private fun RememberHistoryProgressSync(
     }
 }
 
+/**
+ * Предпросмотр верстки плеера для вкладки Design / Preview в Android Studio.
+ * Благодаря проверке [LocalInspectionMode] безопасно рендерится без инициализации нативного ExoPlayer.
+ */
 @Preview(showBackground = true, backgroundColor = 0xFF040404)
 @Composable
 private fun VideoPlayerContentViewPreview() {

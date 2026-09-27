@@ -11,6 +11,8 @@ import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,11 +40,22 @@ fun X_DashboardExpandMenu(
     onDownload: () -> Unit,
     modifier: Modifier = Modifier,
     onSaveToGallery: () -> Unit = {},
-    isExpanded: Boolean = false
+    isExpanded: Boolean = false,
+    onExpandedChange: (Boolean) -> Unit = {},
 ) {
     var expanded by remember(isExpanded) { mutableStateOf(isExpanded) }
-    val onOpen = remember { { expanded = true } }
-    val onDismissMenu = remember { { expanded = false } }
+    val onOpen = remember(onExpandedChange) {
+        {
+            expanded = true
+            onExpandedChange(true)
+        }
+    }
+    val onDismissMenu = remember(onExpandedChange) {
+        {
+            expanded = false
+            onExpandedChange(false)
+        }
+    }
 
     Box(
         modifier = modifier,
@@ -111,7 +124,8 @@ fun X_DashboardExpandMenuContent(
         {
             Icon(
                 imageVector = favoriteIcon,
-                contentDescription = "Избранное"
+                contentDescription = "Избранное",
+                tint = Color.Black
             )
         }
     }
@@ -119,7 +133,8 @@ fun X_DashboardExpandMenuContent(
         {
             Icon(
                 Icons.Outlined.Save,
-                contentDescription = "Сохранить"
+                contentDescription = "Сохранить",
+                tint = Color.Black
             )
         }
     }
@@ -127,7 +142,8 @@ fun X_DashboardExpandMenuContent(
         {
             Icon(
                 Icons.Outlined.SaveAlt,
-                contentDescription = "В галерею"
+                contentDescription = "В галерею",
+                tint = Color.Black
             )
         }
     }
@@ -139,19 +155,22 @@ fun X_DashboardExpandMenuContent(
     DropdownMenuItem(
         text = favoriteItemText,
         onClick = handleFavorite,
-        leadingIcon = favoriteLeadingIcon
+        leadingIcon = favoriteLeadingIcon,
+        colors = MenuDefaults.itemColors(textColor = Color.Black)
     )
 
     DropdownMenuItem(
         text = saveItemText,
         onClick = handleDownload,
-        leadingIcon = saveLeadingIcon
+        leadingIcon = saveLeadingIcon,
+        colors = MenuDefaults.itemColors(textColor = Color.Black)
     )
 
     DropdownMenuItem(
         text = galleryItemText,
         onClick = handleSaveToGallery,
-        leadingIcon = galleryLeadingIcon
+        leadingIcon = galleryLeadingIcon,
+        colors = MenuDefaults.itemColors(textColor = Color.Black)
     )
 }
 

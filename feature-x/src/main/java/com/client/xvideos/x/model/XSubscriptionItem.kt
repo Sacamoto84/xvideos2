@@ -1,0 +1,87 @@
+package com.client.xvideos.x.model
+
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+import kotlinx.serialization.Serializable
+
+/**
+ * Элемент сохранённой подписки на канал или актрису/модель X.
+ *
+ * @property slug Уникальный slug канала/модели (без префиксов).
+ * @property name Отображаемое имя автора.
+ * @property avatarUrl URL аватара автора.
+ * @property bannerUrl URL баннера (если есть).
+ * @property isModel Флаг: true — модель/актриса, false — канал/студия.
+ * @property subscribers Число подписчиков (например, "12,3 к").
+ * @property totalViews Суммарные просмотры (например, "5 М").
+ * @property videoCount Количество видео.
+ * @property dateAdded Временная метка добавления в подписки.
+ */
+@Serializable
+@Immutable
+data class XSubscriptionItem(
+    val slug: String = "",
+    val name: String = "",
+    val avatarUrl: String = "",
+    val bannerUrl: String = "",
+    val isModel: Boolean = false,
+    val subscribers: String = "",
+    val totalViews: String = "",
+    val videoCount: Int = 0,
+    val dateAdded: Long = System.currentTimeMillis(),
+) : java.io.Serializable {
+
+    val cleanSlug: String
+        get() = slug
+            .trim()
+            .removePrefix("/models/")
+            .removePrefix("models/")
+            .removePrefix("/channels/")
+            .removePrefix("channels/")
+            .removePrefix("/profiles/")
+            .removePrefix("profiles/")
+            .trim('/')
+            .trim()
+
+    val displayName: String
+        get() = name.ifBlank { cleanSlug }
+}
+
+/**
+ * Преобразует [ChannelHeaderModel] в [XSubscriptionItem] для сохранения в подписки.
+ */
+fun ChannelHeaderModel.toSubscriptionItem(): XSubscriptionItem = XSubscriptionItem(
+    slug = slug.trim()
+        .removePrefix("/models/")
+        .removePrefix("models/")
+        .removePrefix("/channels/")
+        .removePrefix("channels/")
+        .removePrefix("/profiles/")
+        .removePrefix("profiles/")
+        .trim('/')
+        .trim(),
+    name = displayName,
+    avatarUrl = avatarUrl,
+    bannerUrl = bannerUrl,
+    isModel = isModel,
+    subscribers = subscribers,
+    totalViews = totalViews,
+    videoCount = videoCount,
+)
+
+/**
+ * Состояние элемента в фильтре авторов ленты подписок.
+ *
+ * @property item Данные подписки [XSubscriptionItem].
+ * @property isSelected Включен ли данный автор в выборку ленты.
+ */
+@Stable
+data class SelectedXCreator(
+    val item: XSubscriptionItem,
+    val isSelected: Boolean = true,
+) {
+    val slug: String get() = item.cleanSlug
+    val name: String get() = item.displayName
+    val avatarUrl: String get() = item.avatarUrl
+    val isModel: Boolean get() = item.isModel
+}

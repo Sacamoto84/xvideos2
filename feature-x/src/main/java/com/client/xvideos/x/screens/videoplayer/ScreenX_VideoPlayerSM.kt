@@ -14,6 +14,7 @@ import com.client.xvideos.x.extractXVideoId
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.model.XHistoryItem
 import com.client.xvideos.x.parseDurationToMs
@@ -130,6 +131,38 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         initialItem ?: ItemsX(id = extractXVideoId(url) ?: 0L, href = url)
     )
         private set
+
+    /** Реактивная проверка: находится ли текущий ролик в избранном. */
+    val isFavorite: Boolean
+        get() = currentItem.id > 0L && saved.favorites.favoriteIds.contains(currentItem.id)
+
+    /** Добавляет текущий ролик в избранное. */
+    fun addFavorite() {
+        if (currentItem.id > 0L) {
+            saved.favorites.add(currentItem)
+        }
+    }
+
+    /** Удаляет текущий ролик из избранного. */
+    fun removeFavorite() {
+        if (currentItem.id > 0L) {
+            saved.favorites.remove(currentItem)
+        }
+    }
+
+    /** Скачивает ролик в приложение (раздел «Сохранённое»). */
+    fun download() {
+        if (currentItem.id > 0L || currentItem.href.isNotBlank()) {
+            saved.downloads.download(currentItem)
+        }
+    }
+
+    /** Экспортирует скачанный ролик в системную галерею. */
+    fun saveToGallery() {
+        if (currentItem.id > 0L || currentItem.href.isNotBlank()) {
+            saved.downloads.saveToGallery(currentItem)
+        }
+    }
 
     /** Сохранённый элемент истории для данного видео (если был). */
     var historyItem: XHistoryItem? by mutableStateOf(null)
@@ -310,6 +343,32 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     fun openTag(tag: String, navigator: Navigator) {
         if (tag.isNotBlank()) {
             navigator.push(ScreenTags(tag.trim()))
+        }
+    }
+
+    /**
+     * Открывает экран канала автора/студии X.
+     *
+     * @param channel Модель канала.
+     * @param navigator Навигатор Voyager.
+     */
+    fun openChannel(channel: TagsMainUploaderPornstar, navigator: Navigator) {
+        val slug = channel.cleanHref.ifBlank { channel.name }.trim()
+        if (slug.isNotBlank()) {
+            navigator.push(com.client.xvideos.x.screens.channel.ScreenX_Channel(slug = slug, initialModel = channel, isModel = false))
+        }
+    }
+
+    /**
+     * Открывает экран порнозвезды/модели X.
+     *
+     * @param pornstar Модель актрисы/модели.
+     * @param navigator Навигатор Voyager.
+     */
+    fun openPornstar(pornstar: TagsMainUploaderPornstar, navigator: Navigator) {
+        val slug = pornstar.cleanHref.ifBlank { pornstar.name }.trim()
+        if (slug.isNotBlank()) {
+            navigator.push(com.client.xvideos.x.screens.channel.ScreenX_Channel(slug = slug, initialModel = pornstar, isModel = true))
         }
     }
 

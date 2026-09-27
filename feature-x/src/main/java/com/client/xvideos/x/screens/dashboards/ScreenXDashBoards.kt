@@ -37,10 +37,13 @@ import kotlinx.collections.immutable.persistentListOf
 import com.client.xvideos.x.screens.dashboards.bottomBar.DashboardControlsRow
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Tv
 import com.client.xvideos.common.ui.atom.DownloadIndicator
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.history.ScreenXHistory
 import com.client.xvideos.x.screens.saved.X_SavedContent
+import com.client.xvideos.x.screens.subscriptions.X_SubscriptionsContent
 import com.client.xvideos.x.model.ItemsX
 
 /**
@@ -142,6 +145,8 @@ class ScreenXDashBoards : Screen {
                         SAVED_FAVORITES -> favoritesScreen.Content()
                         SAVED_DOWNLOADS -> X_SavedContent(vm.saved)
                         SAVED_HISTORY -> ScreenXHistory(vm.saved)
+                        SAVED_CHANNELS -> X_SubscriptionsContent(saved = vm.saved, isModel = false)
+                        SAVED_MODELS -> X_SubscriptionsContent(saved = vm.saved, isModel = true)
                         else -> favoritesScreen.Content()
                     }
                     else -> HorizontalPager(
@@ -173,6 +178,8 @@ class ScreenXDashBoards : Screen {
         private const val SAVED_FAVORITES = 0
         private const val SAVED_DOWNLOADS = 1
         private const val SAVED_HISTORY = 2
+        private const val SAVED_CHANNELS = 3
+        private const val SAVED_MODELS = 4
 
         /** Иконки главного таб-ряда: дашборды + сохранённое. */
         // persistentListOf, а не listOf: обычный List для Compose нестабилен,
@@ -182,11 +189,13 @@ class ScreenXDashBoards : Screen {
             Icons.Outlined.BookmarkBorder,
         )
 
-        /** Под-табы раздела Savable: «Избранное» + «Сохранённое» + «История». */
+        /** Под-табы раздела Savable: «Избранное» + «Сохранённое» + «История» + «Каналы» + «Актрисы». */
         private val savedTabs: ImmutableList<ImageVector> = persistentListOf(
             Icons.Outlined.FavoriteBorder,
             Icons.Outlined.Save,
             Icons.Outlined.History,
+            Icons.Outlined.Tv,
+            Icons.Outlined.Person,
         )
     }
 }

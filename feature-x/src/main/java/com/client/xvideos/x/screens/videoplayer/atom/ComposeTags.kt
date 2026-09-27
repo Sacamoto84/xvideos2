@@ -129,6 +129,8 @@ fun computeVisibleTags(
 fun ComposeTags(
     tags: TagsModel,
     modifier: Modifier = Modifier,
+    onChannelClick: ((TagsMainUploaderPornstar) -> Unit)? = null,
+    onPornstarClick: ((TagsMainUploaderPornstar) -> Unit)? = null,
     onClick: (String) -> Unit,
 ) {
     var isExpanded by rememberSaveable(tags) { mutableStateOf(false) }
@@ -146,10 +148,11 @@ fun ComposeTags(
 
     val containerModifier = if (tagsState.isExpanded) {
         Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(Color(0xE6141418))
-            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
-            .padding(6.dp)
+            //.border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
+            //.padding(6.dp)
+            .padding(bottom = 2.dp)
             //.heightIn(max = 160.dp)
             .verticalScroll(scrollState)
     } else {
@@ -169,10 +172,17 @@ fun ComposeTags(
                 key("${item::class.simpleName}_${item.name}") {
                     when (item) {
                         is TagItem.Channel -> {
-                            val handleChannelClick = remember(item.model.name, onClick) {
-                                { onClick(item.model.name) }
+                            val handleChannelClick = remember(item.model, onChannelClick, onClick) {
+                                {
+                                    if (onChannelClick != null) {
+                                        onChannelClick(item.model)
+                                    } else {
+                                        onClick(item.model.name)
+                                    }
+                                }
                             }
                             ScreenItemTagsModelPornostars(
+                                icon = "\uE956",
                                 text = item.model.name,
                                 color = Color(0xFF1E88E5),
                                 count = item.model.count,
@@ -180,10 +190,17 @@ fun ComposeTags(
                             )
                         }
                         is TagItem.Pornstar -> {
-                            val handlePornstarClick = remember(item.model.name, onClick) {
-                                { onClick(item.model.name) }
+                            val handlePornstarClick = remember(item.model, onPornstarClick, onClick) {
+                                {
+                                    if (onPornstarClick != null) {
+                                        onPornstarClick(item.model)
+                                    } else {
+                                        onClick(item.model.name)
+                                    }
+                                }
                             }
                             ScreenItemTagsModelPornostars(
+                                icon = "\uE9B8",
                                 text = item.model.name,
                                 color = Color(0xFFDE2600),
                                 count = item.model.count,
@@ -224,81 +241,6 @@ fun ComposeTags(
     }
 }
 
-@Composable
-private fun TagChip(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .padding(horizontal = 3.dp, vertical = 2.dp)
-            .height(28.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xCC26262B))
-            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(6.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            style = TextStyle(
-                color = Color.White,
-                fontSize = 13.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Medium,
-            )
-        )
-    }
-}
-
-@Composable
-private fun TagToggleChip(
-    text: String,
-    isExpanded: Boolean,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .padding(horizontal = 3.dp, vertical = 2.dp)
-            .height(28.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xDD444444))
-            .border(1.dp, Color(0x55FFFFFF), RoundedCornerShape(6.dp))
-            .clickable(onClick = onClick)
-            .padding(start = 8.dp, end = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = text,
-            style = TextStyle(
-                color = Color.White,
-                fontSize = 12.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.SemiBold,
-            )
-        )
-        Icon(
-            imageVector = Icons.Default.ArrowDropDown,
-            contentDescription = contentDescription,
-            tint = Color.White,
-            modifier = Modifier
-                .size(18.dp)
-                .rotate(if (isExpanded) 180f else 0f),
-        )
-    }
-}
-
-
-@Preview(showBackground = true, backgroundColor = 0xFF141418)
-@Composable
-private fun TagChipPreview() {
-    TagChip(text = "tag", onClick = {})
-}
-
 @Preview(showBackground = true, backgroundColor = 0xFF141418)
 @Composable
 private fun ComposeTagsPreview() {
@@ -311,30 +253,3 @@ private fun ComposeTagsPreview() {
         onClick = {}
     )
 }
-
-@Preview(showBackground = true, backgroundColor = 0xFF141418)
-@Composable
-private fun TagToggleChipPreview() {
-    Row {
-        TagToggleChip(
-            text = "+5",
-            isExpanded = false,
-            contentDescription = "Развернуть теги",
-            onClick = {},
-        )
-        TagToggleChip(
-            text = "",
-            isExpanded = true,
-            contentDescription = "Свернуть теги",
-            onClick = {},
-        )
-
-        TagToggleChip(
-            text = "",
-            isExpanded = false,
-            contentDescription = "Свернуть теги",
-            onClick = {},
-        )
-    }
-}
-

@@ -14,23 +14,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.core.R
 
 /**
  * ## Отображение текста канала и порноактрисы и показ количества подписок на них
  */
 @Composable
 fun ScreenItemTagsModelPornostars(
+    icon : String = "",
     text: String,
     color: Color,
     count: String,
     onClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val hasCount = count.isNotBlank()
     val baseModifier = modifier
@@ -44,6 +47,20 @@ fun ScreenItemTagsModelPornostars(
         modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
+
+        if (icon.isNotBlank()) {
+            Text(
+                text = icon,
+                modifier = Modifier.padding(start = 8.dp, end = if (hasCount) 4.dp else 8.dp),
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily(Font(R.font.iconfont))
+                )
+            )
+        }
+
         Text(
             text = text,
             modifier = Modifier.padding(start = 8.dp, end = if (hasCount) 4.dp else 8.dp),

@@ -54,6 +54,7 @@ object AppPath {
     val x_favorites: String get() = "$main/${Folder.X.value}/Favorites"
     val x_cache_download: String get() = "$main/${Folder.X.value}/Download"
     val x_history: String get() = "$main/${Folder.X.value}/History"
+    val x_subscriptions: String get() = "$main/${Folder.X.value}/Subscriptions"
 
     //--- R ---
     /**
@@ -139,6 +140,7 @@ object AppPath {
         File(x_favorites).mkdirs()
         File(x_cache_download).mkdirs()
         File(x_history).mkdirs()
+        File(x_subscriptions).mkdirs()
 
         File(p2p_inbox).mkdirs()
         File(p2p_outbox).mkdirs()

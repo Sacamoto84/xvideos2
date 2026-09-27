@@ -5,9 +5,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.Parameters
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
@@ -73,3 +77,50 @@ suspend fun readHtmlFromURLDirect(url: String = "https://www.xvideos.com"): Stri
         ""
     }
 }
+
+/**
+ * Выполняет HTTP POST-запрос с form-urlencoded параметрами и возвращает строковый ответ.
+ *
+ * @param url Целевой URL.
+ * @param formParameters Словарь параметров формы.
+ * @return Ответ сервера в виде строки либо пустая строка при сетевой ошибке.
+ */
+suspend fun postFormDataFromURLDirect(
+    url: String,
+    formParameters: Map<String, String>,
+): String {
+    val trimmed = url.trim()
+    if (trimmed.isEmpty()) return ""
+    if (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true)) {
+        Timber.w("postFormDataFromURLDirect: invalid scheme for url: $trimmed")
+        return ""
+    }
+
+    return try {
+        val response = htmlClient.post(trimmed) {
+            header("Accept", "application/json, text/javascript, */*; q=0.01")
+            header("X-Requested-With", "XMLHttpRequest")
+            setBody(
+                FormDataContent(
+                    Parameters.build {
+                        formParameters.forEach { (key, value) ->
+                            append(key, value)
+                        }
+                    }
+                )
+            )
+        }
+        if (!response.status.isSuccess()) {
+            Timber.w("postFormDataFromURLDirect: HTTP ${response.status.value} for $trimmed")
+            ""
+        } else {
+            response.bodyAsText()
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "!!! postFormDataFromURLDirect: Ошибка ${e.message}")
+        ""
+    }
+}
+

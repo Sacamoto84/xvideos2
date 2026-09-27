@@ -1,6 +1,7 @@
 package com.client.xvideos.x.model
 
 import androidx.compose.runtime.Immutable
+import java.io.Serializable
 
 /**
  * Элемент автора, канала или порнозвезды в блоке тегов под видеороликом.
@@ -14,13 +15,27 @@ data class TagsMainUploaderPornstar(
     val href: String = "",
     val name: String = "",
     val count: String = ""
-) {
+) : Serializable {
     val isValid: Boolean get() = href.isNotBlank() && name.isNotBlank()
     val hasHref: Boolean get() = href.isNotBlank()
     val hasName: Boolean get() = name.isNotBlank()
     val hasCount: Boolean get() = count.isNotBlank()
     val normalizedName: String get() = name.trim().lowercase()
-    val cleanHref: String get() = href.removePrefix("/profiles/").removePrefix("/pornstars/").removePrefix("/")
+    val cleanHref: String get() = href
+        .removePrefix("https://www.xvideos.com")
+        .removePrefix("http://www.xvideos.com")
+        .removePrefix("https://www.xv-ru.com")
+        .removePrefix("http://www.xv-ru.com")
+        .removePrefix("/models/")
+        .removePrefix("models/")
+        .removePrefix("/channels/")
+        .removePrefix("channels/")
+        .removePrefix("/profiles/")
+        .removePrefix("profiles/")
+        .removePrefix("/pornstars/")
+        .removePrefix("pornstars/")
+        .removePrefix("/")
+        .trim()
 
     fun matches(query: String?): Boolean {
         if (query.isNullOrBlank()) return true
@@ -48,7 +63,7 @@ data class TagsModel(
     val mainUploader: List<TagsMainUploaderPornstar> = emptyList(),
     val pornstars: List<TagsMainUploaderPornstar> = emptyList(),
     val tags: List<String> = emptyList()
-) {
+) : Serializable {
     val isEmpty: Boolean get() = mainUploader.isEmpty() && pornstars.isEmpty() && tags.isEmpty()
     val isNotEmpty: Boolean get() = !isEmpty
     val hasMainUploader: Boolean get() = mainUploader.isNotEmpty()
