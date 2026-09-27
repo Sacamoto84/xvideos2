@@ -22,7 +22,6 @@ import com.client.xvideos.l.model.enum.ContentId
 import kotlinx.collections.immutable.persistentListOf
 
 private val CONTENT_TYPE_OPTIONS = persistentListOf("All", "Hentai", "NErotic", "RPeople")
-private val BASE_SEGMENT_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
 fun AlbumListFilterContentType(
@@ -69,7 +68,7 @@ fun AlbumListFilterContentType(
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
                     count = CONTENT_TYPE_OPTIONS.size,
-                    baseShape = BASE_SEGMENT_SHAPE
+                    baseShape = RoundedCornerShape(4.dp)
                 ),
                 onClick = {
                     selectedIndex = index

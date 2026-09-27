@@ -59,10 +59,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-private const val GRID_COLUMNS = 2
-private const val CONTENT_TYPE_DASHBOARD_CELL = "dashboard_cell"
-
-
 internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
     val raw = urlStart + if (currentNumberScreen == 0) "" else "/new/$currentNumberScreen"
@@ -209,7 +205,7 @@ fun DashboardsPaginatedListContent(
     val topCutout = getTopInsetDp()
     val contentPadding = remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
-        columns = GridCells.Fixed(GRID_COLUMNS),
+        columns = GridCells.Fixed(2),
         modifier = modifier.fillMaxSize(),
         state = gridState,
         contentPadding = contentPadding,
@@ -217,7 +213,7 @@ fun DashboardsPaginatedListContent(
         itemsIndexed(
             items = items,
             key = { index, cell -> "${cell.id}#$index" },
-            contentType = { _, _ -> CONTENT_TYPE_DASHBOARD_CELL }
+            contentType = { _, _ -> "dashboard_cell" }
         ) { _, cell ->
             DashboardGridCell(
                 cell = cell,

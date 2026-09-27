@@ -26,8 +26,6 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListPageSelector
 
-private val BUTTON_SHAPE = RoundedCornerShape(4.dp)
-
 @Composable
 fun AlbumListBottomBar(
     onClickVisibleFilter: () -> Unit,
@@ -78,7 +76,7 @@ private fun FilterButton(
     Box(
         modifier = modifier
             .size(48.dp)
-            .border(2.dp, Color(0xFF434343), BUTTON_SHAPE)
+            .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
             .background(Color(0xFF414141))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

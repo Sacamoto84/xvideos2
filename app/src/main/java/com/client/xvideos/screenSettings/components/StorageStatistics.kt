@@ -31,15 +31,6 @@ import java.io.File
 
 import kotlinx.collections.immutable.persistentListOf
 
-private val STORAGE_ROW_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .background(SettingsCardColor)
-    .padding(horizontal = 16.dp, vertical = 12.dp)
-
-private val STORAGE_ROW_TITLE_STYLE = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
-private val STORAGE_ROW_SUBTITLE_STYLE = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
-private val STORAGE_CAPTION_STYLE = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
-
 @Immutable
 internal data class StorageStat(
     val key: String,
@@ -111,7 +102,11 @@ internal fun StorageProgressRow(
     val subtitleText = remember(stat.key, stat.fileCount) {
         "${sectionSubtitle(stat.key)} \u2022 файлов: ${stat.fileCount}"
     }
-    val rowModifier = if (modifier == Modifier) STORAGE_ROW_BASE_MODIFIER else modifier.then(STORAGE_ROW_BASE_MODIFIER)
+    val rowBaseModifier = Modifier
+        .fillMaxWidth()
+        .background(SettingsCardColor)
+        .padding(horizontal = 16.dp, vertical = 12.dp)
+    val rowModifier = if (modifier == Modifier) rowBaseModifier else modifier.then(rowBaseModifier)
     Row(
         modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically
@@ -127,12 +122,12 @@ internal fun StorageProgressRow(
                 Text(
                     text = stat.title,
                     color = SettingsRowTextPrimary,
-                    style = STORAGE_ROW_TITLE_STYLE
+                    style = Theme.L.Type.rowTitle.copy(color = SettingsRowTextPrimary)
                 )
                 Text(
                     text = formattedSize,
                     color = SettingsRowTextSecondary,
-                    style = STORAGE_ROW_SUBTITLE_STYLE
+                    style = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary)
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -150,7 +145,7 @@ internal fun StorageProgressRow(
             Text(
                 text = subtitleText,
                 color = SettingsRowTextSecondary,
-                style = STORAGE_CAPTION_STYLE
+                style = Theme.L.Type.caption.copy(color = SettingsRowTextSecondary)
             )
         }
     }

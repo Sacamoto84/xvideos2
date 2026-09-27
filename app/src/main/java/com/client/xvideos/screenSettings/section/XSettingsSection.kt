@@ -14,8 +14,6 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 
-private const val TEXT_TWO_COLUMNS = "2 столбика"
-private const val TEXT_SHEMALE = "Shemale"
 private const val TEXT_ENABLED = "Включено"
 private const val TEXT_DISABLED = "Выключено"
 private const val ICON_XVIDEOS = R.drawable.icon_xvideos_white
@@ -36,7 +34,7 @@ internal fun XSettingsSection(
     SettingsGroup(modifier = modifier) {
         SettingsSwitchRow(
             icon = ICON_XVIDEOS,
-            text = TEXT_TWO_COLUMNS,
+            text = "2 столбика",
             subtitle = row2Subtitle,
             value = xvideosRow2,
             onValueChange = onRow2Change
@@ -45,7 +43,7 @@ internal fun XSettingsSection(
 
         SettingsSwitchRow(
             icon = ICON_XVIDEOS,
-            text = TEXT_SHEMALE,
+            text = "Shemale",
             subtitle = shemaleSubtitle,
             value = xvideosShemale,
             onValueChange = onShemaleChange

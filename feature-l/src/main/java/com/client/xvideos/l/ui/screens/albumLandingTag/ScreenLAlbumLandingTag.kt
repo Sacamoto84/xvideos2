@@ -92,9 +92,6 @@ import timber.log.Timber
 
 
 
-private val SEE_ALL_BORDER_SHAPE = RoundedCornerShape(8.dp)
-
-
 private val CutoutTopInsets: WindowInsets
     @Composable get() = WindowInsets.displayCutout.only(WindowInsetsSides.Top)
 
@@ -241,7 +238,7 @@ private fun LandingTagSectionItem(
             .padding(top = 4.dp, start = 4.dp, end = 4.dp)
             .fillMaxWidth()
             .height(40.dp)
-            .border(2.dp, Theme.L.grey3, SEE_ALL_BORDER_SHAPE)
+            .border(2.dp, Theme.L.grey3, RoundedCornerShape(8.dp))
             .clickable(onClick = onSeeAll),
         contentAlignment = Alignment.Center
     ) {

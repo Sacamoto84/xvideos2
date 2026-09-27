@@ -21,14 +21,6 @@ import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.common.snackbar.SnackBar
 
-private const val TEXT_BACKGROUND_RECEIVE = "Приём в фоне"
-private const val TEXT_ENABLED = "Включён"
-private const val TEXT_DISABLED = "Выключен"
-private const val MSG_PERMISSIONS_REQUIRED = "Нужны разрешения для работы P2P в фоне"
-private const val MSG_BG_RECEIVE_ENABLED = "Приём в фоне включен"
-private const val MSG_BG_RECEIVE_DISABLED = "Приём в фоне выключен"
-private const val ICON_RED = R.drawable.icon_red
-
 @Composable
 internal fun P2PSettingsSection(
     modifier: Modifier = Modifier,
@@ -43,7 +35,7 @@ internal fun P2PSettingsSection(
             toggleP2pService(context, true)
         } else {
             Settings.p2p_background_receive.setValue(false)
-            SnackBar.error(MSG_PERMISSIONS_REQUIRED)
+            SnackBar.error("Нужны разрешения для работы P2P в фоне")
         }
     }
 
@@ -59,16 +51,16 @@ internal fun P2PSettingsSection(
             } else {
                 toggleP2pService(context, false)
             }
-            SnackBar.success(if (enabled) MSG_BG_RECEIVE_ENABLED else MSG_BG_RECEIVE_DISABLED)
+            SnackBar.success(if (enabled) "Приём в фоне включен" else "Приём в фоне выключен")
         }
     }
 
-    val bgReceiveSubtitle = if (bgReceive) TEXT_ENABLED else TEXT_DISABLED
+    val bgReceiveSubtitle = if (bgReceive) "Включён" else "Выключен"
 
     SettingsGroup(modifier = modifier) {
         SettingsSwitchRow(
-            icon = ICON_RED,
-            text = TEXT_BACKGROUND_RECEIVE,
+            icon = R.drawable.icon_red,
+            text = "Приём в фоне",
             subtitle = bgReceiveSubtitle,
             value = bgReceive,
             onValueChange = onBgReceiveChanged

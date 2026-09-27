@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.persistentListOf
 
 private val ALBUM_TYPE_OPTIONS = persistentListOf("All", "Manga", "Pictures")
-private val BASE_SEGMENT_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
 fun AlbumListFilterAlbumType(
@@ -57,7 +56,7 @@ fun AlbumListFilterAlbumType(
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
                     count = ALBUM_TYPE_OPTIONS.size,
-                    baseShape = BASE_SEGMENT_SHAPE
+                    baseShape = RoundedCornerShape(4.dp)
                 ),
                 onClick = {
                     selectedIndex = index

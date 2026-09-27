@@ -73,42 +73,11 @@ private val BACKUP_SELECTOR_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .height(56.dp)
     .padding(horizontal = 16.dp, vertical = 6.dp)
-private val BACKUP_CONSOLE_BASE_MODIFIER = Modifier
-    .fillMaxWidth()
-    .height(260.dp)
-    .padding(horizontal = 16.dp, vertical = 8.dp)
-    .background(SettingsTopBarColor, BACKUP_COMPONENT_SHAPE)
-    .padding(10.dp)
 
-private const val TEXT_CONSOLE_EMPTY = "Пока пусто"
-private const val TEXT_CONSOLE_DEFAULT_SUBTITLE = "Здесь будет процесс восстановления файлов из сети"
-private const val TEXT_CONSOLE_CLEAR = "Очистить"
-private const val MODE_TITLE_MINI = "Мини"
-private const val MODE_TITLE_FULL = "Полный"
-private const val TEXT_SELECT_ALL = "Все X/L/R"
-private const val TEXT_DESELECT_ALL = "Снять"
-private const val TEXT_FOLDERS = "Папки"
-private const val TEXT_NO_DATA_FOR_BACKUP = "Нет данных для backup"
-private const val CONSOLE_SUMMARY_PREFIX = "---------"
-private const val CONSOLE_KEYWORD_TOTAL = "итог"
-
-private const val TEXT_COLLAPSE = "Свернуть"
-private const val TEXT_EXPAND = "Развернуть"
-private const val TEXT_NO_CHILD_FOLDERS = "Нет вложенных папок"
-
-private const val MIN_PASSWORD_LENGTH = 4
-private const val TEXT_CREATE_PASSWORD_TITLE = "Шифрование бэкапа"
-private const val TEXT_CREATE_PASSWORD_CONFIRM = "Создать"
-private const val TEXT_CREATE_PASSWORD_DESCRIPTION = "Задайте пароль для шифрования архива. Без этого пароля восстановить данные будет невозможно."
 private const val TEXT_PASSWORD_LABEL = "Пароль архива"
-private const val TEXT_PASSWORD_CONFIRM_LABEL = "Подтверждение пароля"
-private const val TEXT_PASSWORD_TOO_SHORT = "Пароль должен быть не короче 4 символов"
-private const val TEXT_PASSWORDS_DO_NOT_MATCH = "Пароли не совпадают"
 private const val TEXT_PASSWORD_HIDE = "Скрыть пароль"
 private const val TEXT_PASSWORD_SHOW = "Показать пароль"
-private const val TEXT_RESTORE_PASSWORD_TITLE = "Ввод пароля бэкапа"
-private const val TEXT_RESTORE_PASSWORD_CONFIRM = "Открыть"
-private const val TEXT_RESTORE_PASSWORD_DESCRIPTION = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого."
+
 
 
 @Composable
@@ -187,8 +156,8 @@ internal fun BackupContentModeSelector(
 
 internal fun backupContentModeTitle(mode: XlrBackupContentMode): String {
     return when (mode) {
-        XlrBackupContentMode.MINI -> MODE_TITLE_MINI
-        XlrBackupContentMode.FULL -> MODE_TITLE_FULL
+        XlrBackupContentMode.MINI -> "Мини"
+        XlrBackupContentMode.FULL -> "Полный"
     }
 }
 
@@ -200,7 +169,7 @@ internal fun BackupConsole(
 ) {
     val visibleLines = remember(lines) {
         lines
-            .ifEmpty { listOf(TEXT_CONSOLE_EMPTY) }
+            .ifEmpty { listOf("Пока пусто") }
             .flatMap { entry -> entry.lineSequence().toList() }
     }
 
@@ -220,19 +189,24 @@ internal fun BackupConsole(
     SettingsListItem(
         icon = R.drawable.hard_drive_2_24,
         text = "Консоль backup",
-        subtitle = if (lines.isEmpty()) TEXT_CONSOLE_DEFAULT_SUBTITLE else "${visibleLines.size} строк",
+        subtitle = if (lines.isEmpty()) "Здесь будет процесс восстановления файлов из сети" else "${visibleLines.size} строк",
         trailing = {
             TextButton(
                 enabled = lines.isNotEmpty(),
                 onClick = onClear
             ) {
-                Text(TEXT_CONSOLE_CLEAR, color = SettingsAccentColor)
+                Text("Очистить", color = SettingsAccentColor)
             }
         }
     )
     LazyColumn(
         state = listState,
-        modifier = modifier.then(BACKUP_CONSOLE_BASE_MODIFIER)
+        modifier = modifier
+            .fillMaxWidth()
+            .height(260.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(SettingsTopBarColor, BACKUP_COMPONENT_SHAPE)
+            .padding(10.dp)
     ) {
         items(
             count = visibleLines.size,
@@ -249,7 +223,7 @@ internal fun BackupConsoleLine(
     modifier: Modifier = Modifier,
 ) {
     val lower = line.lowercase()
-    val isSummary = line.startsWith(CONSOLE_SUMMARY_PREFIX) || lower.contains(CONSOLE_KEYWORD_TOTAL)
+    val isSummary = line.startsWith("---------") || lower.contains("итог")
     val isError = lower.contains("ошиб") ||
             lower.contains("бит") ||
             lower.contains("не скачан") ||
@@ -306,14 +280,14 @@ internal fun BackupSelectionActions(
             enabled = enabled,
             onClick = onSelectAll
         ) {
-            Text(TEXT_SELECT_ALL)
+            Text("Все X/L/R")
         }
         Spacer(Modifier.width(8.dp))
         TextButton(
             enabled = enabled,
             onClick = onSelectNone
         ) {
-            Text(TEXT_DESELECT_ALL, color = SettingsAccentColor)
+            Text("Снять", color = SettingsAccentColor)
         }
     }
 }
@@ -330,8 +304,8 @@ internal fun BackupFolderList(
         Column(modifier = modifier) {
             SettingsValueRow(
                 icon = R.drawable.hard_drive_2_24,
-                text = TEXT_FOLDERS,
-                value = TEXT_NO_DATA_FOR_BACKUP
+                text = "Папки",
+                value = "Нет данных для backup"
             )
         }
         return
@@ -400,7 +374,7 @@ internal fun BackupSectionGroup(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.exo_ic_chevron_right),
-                            contentDescription = if (expanded) TEXT_COLLAPSE else TEXT_EXPAND,
+                            contentDescription = if (expanded) "Свернуть" else "Развернуть",
                             tint = SettingsAccentColor,
                             modifier = Modifier.graphicsLayer {
                                 rotationZ = if (expanded) 90f else 0f
@@ -422,7 +396,7 @@ internal fun BackupSectionGroup(
                     SettingsValueRow(
                         icon = backupItemIcon(section.section),
                         text = section.title,
-                        value = TEXT_NO_CHILD_FOLDERS
+                        value = "Нет вложенных папок"
                     )
                 } else {
                     children.forEach { child ->
@@ -457,18 +431,18 @@ internal fun BackupCreatePasswordDialog(
     var passwordVisible by remember { mutableStateOf(false) }
     var passwordConfirmVisible by remember { mutableStateOf(false) }
 
-    val isLengthValid = password.length >= MIN_PASSWORD_LENGTH
+    val isLengthValid = password.length >= 4
     val isMatching = password == passwordConfirm
     val isValid = isLengthValid && isMatching
 
     LavenderDialog(
-        title = TEXT_CREATE_PASSWORD_TITLE,
+        title = "Шифрование бэкапа",
         onDismiss = {
             password = ""
             passwordConfirm = ""
             onDismiss()
         },
-        confirmText = TEXT_CREATE_PASSWORD_CONFIRM,
+        confirmText = "Создать",
         confirmEnabled = isValid,
         onConfirm = {
             if (isValid) {
@@ -482,7 +456,7 @@ internal fun BackupCreatePasswordDialog(
             DisableAppLockAutofill()
             val dialogTheme = Theme.DialogLavande
             Text(
-                text = TEXT_CREATE_PASSWORD_DESCRIPTION,
+                text = "Задайте пароль для шифрования архива. Без этого пароля восстановить данные будет невозможно.",
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -516,7 +490,7 @@ internal fun BackupCreatePasswordDialog(
             OutlinedTextField(
                 value = passwordConfirm,
                 onValueChange = { passwordConfirm = it },
-                label = { Text(TEXT_PASSWORD_CONFIRM_LABEL) },
+                label = { Text("Подтверждение пароля") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -539,14 +513,14 @@ internal fun BackupCreatePasswordDialog(
             if (password.isNotEmpty() && !isLengthValid) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = TEXT_PASSWORD_TOO_SHORT,
+                    text = "Пароль должен быть не короче 4 символов",
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
             } else if (passwordConfirm.isNotEmpty() && !isMatching) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = TEXT_PASSWORDS_DO_NOT_MATCH,
+                    text = "Пароли не совпадают",
                     style = Theme.L.Type.dialogBody.copy(color = dialogTheme.buttonBackgroundDestructive),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -567,12 +541,12 @@ internal fun BackupRestorePasswordDialog(
     val isValid = password.isNotEmpty()
 
     LavenderDialog(
-        title = TEXT_RESTORE_PASSWORD_TITLE,
+        title = "Ввод пароля бэкапа",
         onDismiss = {
             password = ""
             onDismiss()
         },
-        confirmText = TEXT_RESTORE_PASSWORD_CONFIRM,
+        confirmText = "Открыть",
         confirmEnabled = isValid,
         onConfirm = {
             if (isValid) {
@@ -585,7 +559,7 @@ internal fun BackupRestorePasswordDialog(
             DisableAppLockAutofill()
             val dialogTheme = Theme.DialogLavande
             Text(
-                text = TEXT_RESTORE_PASSWORD_DESCRIPTION,
+                text = "Архив зашифрован. Введите пароль для расшифровки и чтения содержимого.",
                 style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor),
                 modifier = Modifier.fillMaxWidth()
             )

@@ -40,7 +40,6 @@ private val DIGIT_BG = Color(0xFF333333)
 private val DIGIT_TEXT = Color.White
 private val OPERATOR_BG = Color(0xFFFF9F0A)
 private val OPERATOR_TEXT = Color.White
-private val BUTTON_SHAPE = CircleShape
 private val DISPLAY_HORIZONTAL_PADDING = 12.dp
 
 /**
@@ -224,7 +223,7 @@ private fun RowScope.CalcButton(
         modifier = modifier
             .weight(1f)
             .aspectRatio(1f)
-            .clip(BUTTON_SHAPE)
+            .clip(CircleShape)
             .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

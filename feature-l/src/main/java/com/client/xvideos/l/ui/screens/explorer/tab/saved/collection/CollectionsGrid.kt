@@ -42,9 +42,7 @@ private val PREVIEW_CORNER_SHAPE = RoundedCornerShape(8.dp)
 private val CELL_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .padding(horizontal = 8.dp, vertical = 4.dp)
-private val PREVIEW_BASE_MODIFIER = Modifier
-    .clip(PREVIEW_CORNER_SHAPE)
-    .size(72.dp)
+
 
 
 /**
@@ -138,13 +136,9 @@ private fun CollectionGridCell(
         onClick = handleClick,
         onLongClick = handleLongClick
     )
-    val previewModifier = if (shape == PREVIEW_CORNER_SHAPE) {
-        PREVIEW_BASE_MODIFIER
-    } else {
-        Modifier
-            .clip(shape)
-            .size(72.dp)
-    }
+    val previewModifier = Modifier
+        .clip(shape)
+        .size(72.dp)
 
     Row(
         modifier = rowModifier,

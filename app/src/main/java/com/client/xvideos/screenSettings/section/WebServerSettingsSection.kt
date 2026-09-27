@@ -61,15 +61,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 private val ACTION_BUTTON_SHAPE = RoundedCornerShape(12.dp)
-private const val ICON_HARD_DRIVE = R.drawable.hard_drive_2_24
-private const val ICON_MEMORY = R.drawable.memory_24
 private const val TEXT_COPY = "Скопировать"
 private const val TEXT_SHARE = "Поделиться"
-private const val MSG_CONNECT_WIFI = "Подключитесь к Wi-Fi или включите точку доступа"
-private const val MSG_SERVER_STARTING = "Запуск веб-сервера..."
-private const val MSG_SERVER_STOPPED = "Веб-сервер остановлен"
-private const val MSG_COPIED_TO_CLIPBOARD = "Ссылка скопирована в буфер"
-private const val TEXT_SHARE_CHOOSER = "Поделиться ссылкой"
+
 
 
 @Suppress("DEPRECATION")
@@ -106,14 +100,14 @@ internal fun WebServerSettingsSection(
             if (enable) {
                 val ip = NetworkIpHelper.getLocalIpAddress(context)
                 if (ip == null) {
-                    SnackBar.error(MSG_CONNECT_WIFI)
+                    SnackBar.error("Подключитесь к Wi-Fi или включите точку доступа")
                 } else {
                     WebServerService.start(context, port)
-                    SnackBar.info(MSG_SERVER_STARTING)
+                    SnackBar.info("Запуск веб-сервера...")
                 }
             } else {
                 WebServerService.stop(context)
-                SnackBar.info(MSG_SERVER_STOPPED)
+                SnackBar.info("Веб-сервер остановлен")
             }
         }
     }
@@ -132,7 +126,7 @@ internal fun WebServerSettingsSection(
 
         SettingsGroup {
             SettingsSwitchRow(
-                icon = ICON_HARD_DRIVE,
+                icon = R.drawable.hard_drive_2_24,
                 text = "Трансляция на ПК",
                 subtitle = serverSubtitle,
                 value = isRunning,
@@ -142,7 +136,7 @@ internal fun WebServerSettingsSection(
             SettingsDivider()
 
             SettingsSwitchRow(
-                icon = ICON_MEMORY,
+                icon = R.drawable.memory_24,
                 text = "Не усыплять Wi-Fi и процессор",
                 subtitle = "Стабильный стриминг при заблокированном экране",
                 value = keepAwake,
@@ -186,7 +180,7 @@ private fun WebServerConnectionCard(
     val onCopyUrl: () -> Unit = remember(serverUrl, clipboardManager) {
         {
             clipboardManager.setText(AnnotatedString(serverUrl))
-            SnackBar.success(MSG_COPIED_TO_CLIPBOARD)
+            SnackBar.success("Ссылка скопирована в буфер")
         }
     }
 
@@ -304,7 +298,7 @@ private fun WebServerActionButtons(
                 putExtra(Intent.EXTRA_TEXT, serverUrl)
                 type = "text/plain"
             }
-            val shareIntent = Intent.createChooser(sendIntent, TEXT_SHARE_CHOOSER)
+            val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой")
             context.startActivity(shareIntent)
         }
     }

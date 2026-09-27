@@ -41,9 +41,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
 
-private val HAPTIC_BUTTON_SHAPE = RoundedCornerShape(14.dp)
-private val HAPTIC_BUTTON_PADDING = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-
 private data class HapticItem(
     val name: String,
     val desc: String,
@@ -180,9 +177,9 @@ private fun HapticButton(
     Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = HAPTIC_BUTTON_SHAPE,
+        shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A)),
-        contentPadding = HAPTIC_BUTTON_PADDING
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),

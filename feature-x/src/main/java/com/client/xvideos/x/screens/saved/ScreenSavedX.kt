@@ -59,10 +59,6 @@ import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.snackbar.SnackBar
 import java.io.File
 
-private const val CONTENT_TYPE_HEADER = "header"
-private const val CONTENT_TYPE_SAVED_ROW = "saved_row"
-
-
 /**
  * Контент экрана «Сохранённое» (загруженные превью-mp4).
  *
@@ -145,13 +141,13 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                 state = listState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER) {
+                item(key = "header", contentType = "header") {
                     SavedHeader(topCutout = topCutout)
                 }
                 items(
                     items = list,
                     key = { it.id },
-                    contentType = { CONTENT_TYPE_SAVED_ROW }
+                    contentType = { "saved_row" }
                 ) { item ->
                     val posterUrl = remember(item.id, item.previewImage, saved.downloads) {
                         saved.downloads.localPosterPath(item.id) ?: item.previewImage

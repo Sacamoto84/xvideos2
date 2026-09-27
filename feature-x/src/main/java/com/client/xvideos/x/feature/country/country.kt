@@ -64,7 +64,6 @@ private data class Country(
 )
 
 private val EMOJI_FONT = FontFamily(Font(R.font.flag))
-private const val CONTENT_TYPE_COUNTRY_ITEM = "country_item"
 
 @Preview
 @Composable
@@ -148,7 +147,7 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
                     items(
                         items = countries,
                         key = { it.url },
-                        contentType = { CONTENT_TYPE_COUNTRY_ITEM }
+                        contentType = { "country_item" }
                     ) { item ->
                         CountryRowItem(
                             item = item,

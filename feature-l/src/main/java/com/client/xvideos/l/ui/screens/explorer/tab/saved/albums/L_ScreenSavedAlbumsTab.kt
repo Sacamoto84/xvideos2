@@ -50,9 +50,6 @@ import dagger.multibindings.IntoMap
 import timber.log.Timber
 import javax.inject.Inject
 
-private val ITEM_PADDING_MODIFIER = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
-
-
 object L_ScreenSavedAlbumsTab : Screen {
 
     override val key: ScreenKey = "L_ScreenSavedAlbumsTab"
@@ -148,7 +145,7 @@ fun SavedAlbumsTabContent(
                     SavedAlbumGridItem(
                         item = item,
                         onAlbumClick = onAlbumClick,
-                        modifier = ITEM_PADDING_MODIFIER
+                        modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
                     )
                 }
             }

@@ -31,10 +31,7 @@ import com.client.xvideos.l.model.lImageMediaUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
 
 private const val TAG_URL = "url"
-private val LINK_SPAN_STYLE = SpanStyle(
-    color = Color(0xFF8AB4F8),
-    textDecoration = TextDecoration.Underline
-)
+
 
 /**
  * Диалог «Информация» о картинке и сборка его текста.
@@ -156,7 +153,10 @@ private fun String.withClickableHttpsLinks() = buildAnnotatedString {
         append(url)
         addStringAnnotation(TAG_URL, url, annotatedStart, annotatedStart + url.length)
         addStyle(
-            LINK_SPAN_STYLE,
+            SpanStyle(
+                color = Color(0xFF8AB4F8),
+                textDecoration = TextDecoration.Underline
+            ),
             annotatedStart,
             annotatedStart + url.length
         )

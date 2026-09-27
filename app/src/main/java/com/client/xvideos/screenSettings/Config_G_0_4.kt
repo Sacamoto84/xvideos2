@@ -31,11 +31,6 @@ import com.skydoves.compose.stability.runtime.TraceRecomposition
 
 import androidx.compose.runtime.key
 
-private val POINT_BASE_MODIFIER = Modifier
-    .padding(end = 2.dp)
-    .clip(CircleShape)
-    .size(4.dp)
-
 private val CONFIG_ROW_BASE_MODIFIER = Modifier
     .padding(horizontal = 8.dp, vertical = 2.dp)
     .height(48.dp)
@@ -112,7 +107,11 @@ private fun TabBarPoints(
         Row {
             repeat(safeCount) {
                 Box(
-                    modifier = POINT_BASE_MODIFIER.background(pointColor)
+                    modifier = Modifier
+                        .padding(end = 2.dp)
+                        .clip(CircleShape)
+                        .size(4.dp)
+                        .background(pointColor)
                 )
             }
         }

@@ -39,12 +39,6 @@ import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
-private const val TAG_CARD_ASPECT_RATIO = 352f / 198f
-private const val ITEMS_PER_ROW_LANDSCAPE = 4
-private const val ITEMS_PER_ROW_PORTRAIT = 2
-private const val CONTENT_TYPE_TAG_HEADER = "tag_header"
-private const val CONTENT_TYPE_TAG_ROW = "tag_row"
-
 /**
  * Одна страница выдачи по тегу.
  *
@@ -114,7 +108,7 @@ fun TagsPaginatedListScreen(
     }
 
     val orientation = LocalConfiguration.current.orientation
-    val itemsPerRow = if (orientation == Configuration.ORIENTATION_LANDSCAPE) ITEMS_PER_ROW_LANDSCAPE else ITEMS_PER_ROW_PORTRAIT
+    val itemsPerRow = if (orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
     val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
     LazyColumn(
@@ -123,7 +117,7 @@ fun TagsPaginatedListScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (header != null) {
-            item(key = CONTENT_TYPE_TAG_HEADER, contentType = CONTENT_TYPE_TAG_HEADER) {
+            item(key = "tag_header", contentType = "tag_header") {
                 header()
             }
         }
@@ -133,7 +127,7 @@ fun TagsPaginatedListScreen(
         itemsIndexed(
             items = chunkedRows,
             key = { index, row -> "${index}_${row.first().id}" },
-            contentType = { _, _ -> CONTENT_TYPE_TAG_ROW }
+            contentType = { _, _ -> "tag_row" }
         ) { _, row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEach { cell ->
@@ -179,7 +173,7 @@ private fun TagGridCell(
     val handleOpen = remember(cell, onOpenVideo) { { onOpenVideo(cell) } }
     Box(
         modifier = modifier
-            .aspectRatio(TAG_CARD_ASPECT_RATIO)
+            .aspectRatio(352f / 198f)
             .padding(1.dp)
             .background(Color.DarkGray)
     ) {

@@ -66,11 +66,6 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.normalizeXUrl
 import com.composables.core.HorizontalSeparator
 
-private const val GRID_COLUMNS = 2
-private const val CONTENT_TYPE_HEADER = "header"
-private const val CONTENT_TYPE_FAVORITE_ROW = "favorite_row"
-
-
 class ScreenFavorites : Screen {
 
     override val key: ScreenKey = "ScreenFavorites"
@@ -175,17 +170,17 @@ private fun FavoritesContent(
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(GRID_COLUMNS),
+                columns = GridCells.Fixed(2),
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = padding.calculateBottomPadding())
             ) {
-                item(key = CONTENT_TYPE_HEADER, contentType = CONTENT_TYPE_HEADER, span = { GridItemSpan(maxLineSpan) }) {
+                item(key = "header", contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
                     FavoritesHeader(topCutout = topCutout)
                 }
 
-                items(items = favorites, key = { item -> item.id }, contentType = { CONTENT_TYPE_FAVORITE_ROW }) { item ->
+                items(items = favorites, key = { item -> item.id }, contentType = { "favorite_row" }) { item ->
                     FavoriteRow(
                         item = item,
                         localUrl = localUrlOf(item),

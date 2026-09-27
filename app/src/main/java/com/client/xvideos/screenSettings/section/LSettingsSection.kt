@@ -19,21 +19,6 @@ import com.client.xvideos.common.settings.ThumbnailsSize
 import com.client.xvideos.screenSettings.components.ThumbnailSizeSelector
 import com.client.xvideos.common.snackbar.SnackBar
 
-private const val TEXT_NO = "Нет"
-private const val TEXT_LOGOUT = "Выйти"
-private const val TEXT_PROFILE_L = "Профиль L"
-private const val TEXT_LOGOUT_DIALOG_TITLE = "Выйти из профиля L"
-private const val TEXT_THUMBNAIL_SIZE = "Размер миниатюры"
-private const val TEXT_NOT_AUTHORIZED = "Вы не авторизованы в L."
-private const val TEXT_UNKNOWN_SIZE = "?"
-private const val TAB_L_GIFS = "L Gifs"
-private const val TAB_L_LIKES = "L Likes"
-private const val TAB_L_COLLECTION = "L Collection"
-private const val LOGOUT_CONFIRM_TEMPLATE_PREFIX = "При следующем открытии L нужно будет снова ввести логин и пароль: "
-private const val SNACK_L_PROFILE_CLOSED = "Профиль L закрыт"
-private const val SNACK_THUMBNAIL_PREFIX = "Размер миниатюры: "
-private const val ICON_LUSCIOUS = R.drawable.icon_luscious
-
 @Composable
 internal fun LSettingsSection(
     lLogin: String,
@@ -41,16 +26,16 @@ internal fun LSettingsSection(
 ) {
     val thumbnailSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
     val currentDisplayName = remember(thumbnailSize) {
-        ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: TEXT_UNKNOWN_SIZE
+        ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: "?"
     }
 
     val isLoginBlank = lLogin.isBlank()
-    val loginValueText = if (isLoginBlank) TEXT_NO else TEXT_LOGOUT
+    val loginValueText = if (isLoginBlank) "Нет" else "Выйти"
     val logoutDialogBody = remember(lLogin) {
         if (lLogin.isBlank()) {
-            TEXT_NOT_AUTHORIZED
+            "Вы не авторизованы в L."
         } else {
-            "$LOGOUT_CONFIRM_TEMPLATE_PREFIX$lLogin"
+            "При следующем открытии L нужно будет снова ввести логин и пароль: $lLogin"
         }
     }
 
@@ -58,32 +43,32 @@ internal fun LSettingsSection(
         {
             Settings.l_login.setValue("")
             Settings.l_pass.setValue("")
-            SnackBar.success(SNACK_L_PROFILE_CLOSED)
+            SnackBar.success("Профиль L закрыт")
         }
     }
     val onSelectThumbnailSize: (String) -> Unit = remember {
         { selectedDisplayName ->
             ThumbnailsSize.fromDisplayName(selectedDisplayName)?.apply {
                 Settings.thumbalistSize.setValue(value)
-                SnackBar.success("$SNACK_THUMBNAIL_PREFIX$displayName")
+                SnackBar.success("Размер миниатюры: $displayName")
             }
         }
     }
 
     SettingsGroup(modifier = modifier) {
         SettingsButtonRowWithDialog(
-            icon = ICON_LUSCIOUS,
-            text = TEXT_PROFILE_L,
+            icon = R.drawable.icon_luscious,
+            text = "Профиль L",
             value = loginValueText,
-            textDialogTitle = TEXT_LOGOUT_DIALOG_TITLE,
+            textDialogTitle = "Выйти из профиля L",
             textDialogBody = logoutDialogBody,
-            textDialogButton = TEXT_LOGOUT,
+            textDialogButton = "Выйти",
             onClick = onLogoutL
         )
         SettingsDivider()
         SettingsValueRow(
-            icon = ICON_LUSCIOUS,
-            text = TEXT_THUMBNAIL_SIZE,
+            icon = R.drawable.icon_luscious,
+            text = "Размер миниатюры",
             value = currentDisplayName
         )
         ThumbnailSizeSelector(
@@ -92,9 +77,9 @@ internal fun LSettingsSection(
         )
         SettingsDivider()
 
-        Config_G_0_4(TAB_L_GIFS, Settings.l_gifsTab_G_0_4)
-        Config_G_0_4(TAB_L_LIKES, Settings.l_likesTab_G_0_4)
-        Config_G_0_4(TAB_L_COLLECTION, Settings.l_collectionTab_G_0_4)
+        Config_G_0_4("L Gifs", Settings.l_gifsTab_G_0_4)
+        Config_G_0_4("L Likes", Settings.l_likesTab_G_0_4)
+        Config_G_0_4("L Collection", Settings.l_collectionTab_G_0_4)
     }
 }
 

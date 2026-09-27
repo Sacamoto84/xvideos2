@@ -41,45 +41,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val ICON_DNS = R.drawable.ic_dns_24
-private const val ICON_DIAGNOSTICS = R.drawable.diagnostics_24
-private const val ICON_HARD_DISK = R.drawable.hard_disk_24
-
-private val DOH_PROVIDER_ENTRIES = DohProvider.entries
-
-private val RADIO_UNSELECTED_COLOR = Color(0xFF938F99)
-private const val DIAGNOSTIC_TEST_HOST = "api.redgifs.com"
-
-private const val TITLE_DOH = "DNS-over-HTTPS (DoH)"
-private const val TEXT_DOH = "DNS-over-HTTPS"
-private const val SUBTITLE_DOH_ENABLED = "Шифрование DNS и обход блокировок включены"
-private const val SUBTITLE_DOH_DISABLED = "Выключено (используется системный DNS)"
-private const val MSG_DOH_ACTIVATED = "DNS-over-HTTPS активирован"
-private const val MSG_DOH_DEACTIVATED = "DoH выключен: активен системный DNS"
-private const val MSG_URL_SAVED = "DoH URL сохранён"
-private const val TITLE_PROVIDER = "Провайдер DNS"
-private const val TEXT_DOH_SERVER_URL = "Адрес DoH сервера"
-private const val HINT_ENTER_URL = "Нажмите для ввода URL"
-private const val TITLE_NETWORK_PARAMS = "Параметры сети"
-private const val TEXT_FALLBACK = "Fallback на системный DNS"
-private const val SUBTITLE_FALLBACK_ENABLED = "При сбое DoH запрос отправится через DNS оператора"
-private const val SUBTITLE_FALLBACK_DISABLED = "Строгая изоляция: запросы только через DoH"
-private const val TEXT_IPV4_ONLY = "Только IPv4"
-private const val SUBTITLE_IPV4_ENABLED = "Отключает задержки IPv6, ускоряет запуск видео"
-private const val SUBTITLE_IPV4_DISABLED = "Разрешены IPv4 и IPv6 адреса"
-private const val TITLE_DIAGNOSTICS = "Диагностика"
-private const val TEXT_CHECK_DNS = "Проверить DNS-резолвинг"
-private const val SUBTITLE_CHECK_DNS = "Тестовый замер скорости отклика DoH-сервера"
-private const val TEXT_CLEAR_CACHE = "Очистить DNS-кэш"
-private const val SUBTITLE_CLEAR_CACHE = "Сброс всех закэшированных IP-адресов"
-private const val MSG_TESTING_CONNECTION = "Тестирование соединения..."
-private const val MSG_NO_IP = "нет IP"
-private const val MSG_DNS_ERROR_PREFIX = "Ошибка DNS: "
-private const val MSG_CACHE_CLEARED = "DNS-кэш успешно очищен"
-private const val TITLE_CUSTOM_URL_DIALOG = "Пользовательский DoH URL"
-private const val BUTTON_SAVE = "Сохранить"
-private const val TEXT_CUSTOM_URL_DESCRIPTION = "Введите HTTPS URL эндпоинта DoH резолвера (поддерживаются серверы с JSON API, RFC 8427):"
-private const val PLACEHOLDER_URL = "https://dns.example.com/dns-query"
 private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
+
 
 @Composable
 internal fun NetworkSettingsSection(
@@ -114,7 +77,7 @@ internal fun NetworkSettingsSection(
             Settings.doh_custom_url.setValue(newUrl)
             AppDns.clearCache()
             showCustomUrlDialog = false
-            SnackBar.success(MSG_URL_SAVED)
+            SnackBar.success("DoH URL сохранён")
         }
     }
 
@@ -123,25 +86,25 @@ internal fun NetworkSettingsSection(
             Settings.doh_enabled.setValue(enabled)
             AppDns.clearCache()
             if (enabled) {
-                SnackBar.success(MSG_DOH_ACTIVATED)
+                SnackBar.success("DNS-over-HTTPS активирован")
             } else {
-                SnackBar.info(MSG_DOH_DEACTIVATED)
+                SnackBar.info("DoH выключен: активен системный DNS")
             }
         }
     }
 
     val dohSubtitle = if (dohEnabled) {
-        SUBTITLE_DOH_ENABLED
+        "Шифрование DNS и обход блокировок включены"
     } else {
-        SUBTITLE_DOH_DISABLED
+        "Выключено (используется системный DNS)"
     }
 
     Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
-        SettingsSectionTitle(TITLE_DOH)
+        SettingsSectionTitle("DNS-over-HTTPS (DoH)")
         SettingsGroup {
             SettingsSwitchRow(
                 icon = ICON_DNS,
-                text = TEXT_DOH,
+                text = "DNS-over-HTTPS",
                 subtitle = dohSubtitle,
                 value = dohEnabled,
                 onValueChange = onToggleDoh
@@ -183,17 +146,17 @@ private fun DohProviderSelectionGroup(
     modifier: Modifier = Modifier,
 ) {
     val customSubtitle = remember(customUrl) {
-        if (customUrl.isNotBlank()) customUrl else HINT_ENTER_URL
+        if (customUrl.isNotBlank()) customUrl else "Нажмите для ввода URL"
     }
     val radioColors = RadioButtonDefaults.colors(
         selectedColor = SettingsAccentColor,
-        unselectedColor = RADIO_UNSELECTED_COLOR
+        unselectedColor = Color(0xFF938F99)
     )
 
     Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
-        SettingsSectionTitle(TITLE_PROVIDER)
+        SettingsSectionTitle("Провайдер DNS")
         SettingsGroup {
-            DOH_PROVIDER_ENTRIES.forEachIndexed { index, provider ->
+            DohProvider.entries.forEachIndexed { index, provider ->
                 key(provider.name) {
                     if (index > 0) SettingsDivider()
 
@@ -219,7 +182,7 @@ private fun DohProviderSelectionGroup(
                 SettingsDivider()
                 SettingsListItem(
                     icon = ICON_DNS,
-                    text = TEXT_DOH_SERVER_URL,
+                    text = "Адрес DoH сервера",
                     subtitle = customSubtitle,
                     onClick = onOpenCustomUrlDialog
                 )
@@ -274,22 +237,22 @@ private fun NetworkParamsGroup(
     }
 
     val fallbackSubtitle = if (fallbackToSystem) {
-        SUBTITLE_FALLBACK_ENABLED
+        "При сбое DoH запрос отправится через DNS оператора"
     } else {
-        SUBTITLE_FALLBACK_DISABLED
+        "Строгая изоляция: запросы только через DoH"
     }
     val ipv4OnlySubtitle = if (ipv4Only) {
-        SUBTITLE_IPV4_ENABLED
+        "Отключает задержки IPv6, ускоряет запуск видео"
     } else {
-        SUBTITLE_IPV4_DISABLED
+        "Разрешены IPv4 и IPv6 адреса"
     }
 
     Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
-        SettingsSectionTitle(TITLE_NETWORK_PARAMS)
+        SettingsSectionTitle("Параметры сети")
         SettingsGroup {
             SettingsSwitchRow(
                 icon = ICON_DNS,
-                text = TEXT_FALLBACK,
+                text = "Fallback на системный DNS",
                 subtitle = fallbackSubtitle,
                 value = fallbackToSystem,
                 onValueChange = onFallbackChange
@@ -297,7 +260,7 @@ private fun NetworkParamsGroup(
             SettingsDivider()
             SettingsSwitchRow(
                 icon = ICON_DNS,
-                text = TEXT_IPV4_ONLY,
+                text = "Только IPv4",
                 subtitle = ipv4OnlySubtitle,
                 value = ipv4Only,
                 onValueChange = onIpv4OnlyChange
@@ -314,17 +277,17 @@ private fun DohDiagnosticsGroup(
     val onDiagnose: () -> Unit = remember(scope) {
         {
             scope.launch {
-                SnackBar.info(MSG_TESTING_CONNECTION)
+                SnackBar.info("Тестирование соединения...")
                 val result = withContext(Dispatchers.IO) {
-                    AppDns.diagnose(DIAGNOSTIC_TEST_HOST)
+                    AppDns.diagnose("api.redgifs.com")
                 }
                 result.fold(
                     onSuccess = { diag ->
-                        val ipText = diag.addresses.firstOrNull() ?: MSG_NO_IP
+                        val ipText = diag.addresses.firstOrNull() ?: "нет IP"
                         SnackBar.success("${diag.providerTitle}: ${diag.elapsedMs} мс ($ipText)")
                     },
                     onFailure = { err ->
-                        SnackBar.error("$MSG_DNS_ERROR_PREFIX${err.message}")
+                        SnackBar.error("Ошибка DNS: ${err.message}")
                     }
                 )
             }
@@ -333,24 +296,24 @@ private fun DohDiagnosticsGroup(
     val onClearCache = remember {
         {
             AppDns.clearCache()
-            SnackBar.success(MSG_CACHE_CLEARED)
+            SnackBar.success("DNS-кэш успешно очищен")
         }
     }
 
     Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
-        SettingsSectionTitle(TITLE_DIAGNOSTICS)
+        SettingsSectionTitle("Диагностика")
         SettingsGroup {
             SettingsListItem(
-                icon = ICON_DIAGNOSTICS,
-                text = TEXT_CHECK_DNS,
-                subtitle = SUBTITLE_CHECK_DNS,
+                icon = R.drawable.diagnostics_24,
+                text = "Проверить DNS-резолвинг",
+                subtitle = "Тестовый замер скорости отклика DoH-сервера",
                 onClick = onDiagnose
             )
             SettingsDivider()
             SettingsListItem(
-                icon = ICON_HARD_DISK,
-                text = TEXT_CLEAR_CACHE,
-                subtitle = SUBTITLE_CLEAR_CACHE,
+                icon = R.drawable.hard_disk_24,
+                text = "Очистить DNS-кэш",
+                subtitle = "Сброс всех закэшированных IP-адресов",
                 onClick = onClearCache
             )
         }
@@ -367,13 +330,13 @@ private fun CustomDohUrlDialog(
     val onConfirmSave: () -> Unit = remember(onSave) { { onSave(tempUrl.trim()) } }
     val onUrlChange: (String) -> Unit = remember { { newUrl -> tempUrl = newUrl } }
     val placeholderContent: @Composable () -> Unit = remember {
-        { Text(PLACEHOLDER_URL) }
+        { Text("https://dns.example.com/dns-query") }
     }
     val dialogContent: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit =
         remember(tempUrl, onUrlChange, placeholderContent) {
             {
                 Text(
-                    TEXT_CUSTOM_URL_DESCRIPTION,
+                    "Введите HTTPS URL эндпоинта DoH резолвера (поддерживаются серверы с JSON API, RFC 8427):",
                     style = Theme.L.Type.caption,
                     color = Theme.L.grey1
                 )
@@ -389,9 +352,9 @@ private fun CustomDohUrlDialog(
         }
 
     LavenderDialog(
-        title = TITLE_CUSTOM_URL_DIALOG,
+        title = "Пользовательский DoH URL",
         onDismiss = onDismiss,
-        confirmText = BUTTON_SAVE,
+        confirmText = "Сохранить",
         onConfirm = onConfirmSave,
         content = dialogContent
     )

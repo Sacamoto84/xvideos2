@@ -57,39 +57,12 @@ import kotlinx.coroutines.launch
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
 private val appLockErrorColor = Color(0xFFB3261E)
-private val TIMEOUT_ITEM_SHAPE = RoundedCornerShape(12.dp)
 private val TIMEOUT_ITEM_FULL_MODIFIER = Modifier
     .fillMaxWidth()
-    .clip(TIMEOUT_ITEM_SHAPE)
+    .clip(RoundedCornerShape(12.dp))
     .padding(horizontal = 8.dp, vertical = 10.dp)
 private val ERROR_TEXT_STYLE = Theme.L.Type.dialogBody.copy(color = appLockErrorColor)
-private val TIMEOUT_SELECTED_TEXT_STYLE = Theme.L.Type.dialogBody.copy(
-    color = SettingsAccentColor,
-    fontWeight = FontWeight.SemiBold
-)
-private val TIMEOUT_UNSELECTED_TEXT_STYLE = Theme.L.Type.dialogBody.copy(
-    color = Theme.DialogLavande.bodyColor,
-    fontWeight = FontWeight.Normal
-)
 
-private const val TEXT_APP_LOCK_TITLE = "Блокировка при запуске"
-private const val TEXT_AUTO_LOCK = "Автоблокировка"
-private const val TEXT_ACCESS_CODE = "Код доступа"
-private const val TEXT_DISABLE_APP_LOCK = "Отключить блокировку приложения"
-private const val TEXT_INCOGNITO_KEYBOARD = "Инкогнито-клавиатура"
-private const val TEXT_BLUR_RECENT = "Защита в диспетчере задач"
-private const val TEXT_CAMOUFLAGE = "Маскировка под калькулятор"
-private const val BUTTON_CHANGE = "Изменить"
-private const val BUTTON_SET = "Задать"
-private const val BUTTON_DISABLE = "Отключить"
-private const val SUBTITLE_ENABLED = "Включена"
-private const val SUBTITLE_DISABLED = "Выключена"
-private const val TIMEOUT_IMMEDIATELY = "Сразу при выходе"
-private const val TIMEOUT_NEVER = "Выключена (только при перезапуске)"
-private const val KEYBOARD_INCOGNITO_ACTIVE = "Клавиатура не сохраняет поисковые запросы"
-private const val KEYBOARD_INCOGNITO_INACTIVE = "Стандартный режим ввода"
-private const val BLUR_ACTIVE = "Превью скрыто/размыто в карусели недавних задач"
-private const val BLUR_INACTIVE = "Отображается обычный снимок экрана"
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
@@ -179,7 +152,7 @@ fun AppLockSettingsSection(
     val setOrChangeTrailing: @Composable () -> Unit = remember(enabled, onSetOrChangeLock) {
         {
             Button(onClick = onSetOrChangeLock) {
-                Text(if (enabled) BUTTON_CHANGE else BUTTON_SET)
+                Text(if (enabled) "Изменить" else "Задать")
             }
         }
     }
@@ -187,34 +160,34 @@ fun AppLockSettingsSection(
     val disableTrailing: @Composable () -> Unit = remember(onDisableLock) {
         {
             TextButton(onClick = onDisableLock) {
-                Text(BUTTON_DISABLE, color = Color(0xFFFF7A7A))
+                Text("Отключить", color = Color(0xFFFF7A7A))
             }
         }
     }
 
-    val lockSubtitle = remember(enabled) { if (enabled) SUBTITLE_ENABLED else SUBTITLE_DISABLED }
+    val lockSubtitle = remember(enabled) { if (enabled) "Включена" else "Выключена" }
     val timeoutSubtitle = remember(currentTimeout) {
         when (currentTimeout) {
-            AppLockTimeout.IMMEDIATELY -> TIMEOUT_IMMEDIATELY
-            AppLockTimeout.NEVER -> TIMEOUT_NEVER
+            AppLockTimeout.IMMEDIATELY -> "Сразу при выходе"
+            AppLockTimeout.NEVER -> "Выключена (только при перезапуске)"
             else -> "Через ${currentTimeout.displayName.lowercase()} в фоне"
         }
     }
     val keyboardSubtitle = remember(keyboardIncognito) {
-        if (keyboardIncognito) KEYBOARD_INCOGNITO_ACTIVE else KEYBOARD_INCOGNITO_INACTIVE
+        if (keyboardIncognito) "Клавиатура не сохраняет поисковые запросы" else "Стандартный режим ввода"
     }
     val blurSubtitle = remember(blurRecentTasks) {
         if (blurRecentTasks) {
-            BLUR_ACTIVE
+            "Превью скрыто/размыто в карусели недавних задач"
         } else {
-            BLUR_INACTIVE
+            "Отображается обычный снимок экрана"
         }
     }
 
     SettingsGroup(modifier = modifier) {
         SettingsListItem(
             icon = R.drawable.key_24,
-            text = TEXT_APP_LOCK_TITLE,
+            text = "Блокировка при запуске",
             subtitle = lockSubtitle,
             trailing = setOrChangeTrailing
         )
@@ -223,7 +196,7 @@ fun AppLockSettingsSection(
             SettingsDivider2()
             SettingsListItem(
                 icon = R.drawable.key_24,
-                text = TEXT_AUTO_LOCK,
+                text = "Автоблокировка",
                 subtitle = timeoutSubtitle,
                 onClick = onShowTimeoutClick
             )
@@ -231,8 +204,8 @@ fun AppLockSettingsSection(
             SettingsDivider2()
             SettingsListItem(
                 icon = R.drawable.key_24,
-                text = TEXT_ACCESS_CODE,
-                subtitle = TEXT_DISABLE_APP_LOCK,
+                text = "Код доступа",
+                subtitle = "Отключить блокировку приложения",
                 trailing = disableTrailing
             )
         }
@@ -248,7 +221,7 @@ fun AppLockSettingsSection(
 
         SettingsSwitchRow(
             icon = R.drawable.memory_24,
-            text = TEXT_INCOGNITO_KEYBOARD,
+            text = "Инкогнито-клавиатура",
             subtitle = keyboardSubtitle,
             value = keyboardIncognito,
             onValueChange = onToggleIncognito
@@ -258,7 +231,7 @@ fun AppLockSettingsSection(
 
         SettingsSwitchRow(
             icon = R.drawable.ic_blur_24,
-            text = TEXT_BLUR_RECENT,
+            text = "Защита в диспетчере задач",
             subtitle = blurSubtitle,
             value = blurRecentTasks,
             onValueChange = onToggleBlurRecent
@@ -298,7 +271,7 @@ private fun CamouflageGroup(
     SettingsSwitchRow(
         modifier = modifier,
         icon = R.drawable.ic_launcher_calculator,
-        text = TEXT_CAMOUFLAGE,
+        text = "Маскировка под калькулятор",
         subtitle = camouflageSubtitle,
         value = isCamouflage && passwordSet,
         enabled = passwordSet,
@@ -716,7 +689,17 @@ private fun AppLockTimeoutItem(
         }
     }
     val itemBaseModifier = if (modifier == Modifier) TIMEOUT_ITEM_FULL_MODIFIER else modifier.then(TIMEOUT_ITEM_FULL_MODIFIER)
-    val itemTextStyle = if (isSelected) TIMEOUT_SELECTED_TEXT_STYLE else TIMEOUT_UNSELECTED_TEXT_STYLE
+    val itemTextStyle = if (isSelected) {
+        Theme.L.Type.dialogBody.copy(
+            color = SettingsAccentColor,
+            fontWeight = FontWeight.SemiBold
+        )
+    } else {
+        Theme.L.Type.dialogBody.copy(
+            color = Theme.DialogLavande.bodyColor,
+            fontWeight = FontWeight.Normal
+        )
+    }
 
     Row(
         modifier = itemBaseModifier.clickable(onClick = onClick),

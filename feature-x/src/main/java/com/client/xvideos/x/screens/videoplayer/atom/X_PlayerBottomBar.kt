@@ -37,7 +37,6 @@ import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import java.util.Locale
 
-private const val SAFE_MAX_PROGRESS_FALLBACK = 0.1f
 
 /**
  * Нижняя панель управления X-плеером поверх видео.
@@ -128,7 +127,7 @@ fun X_PlayerBottomBar(
             .takeIf { it.isFinite() }
             ?.coerceIn(0f, safeTotalTime)
             ?: 0f
-        val safeMaxProgress = if (safeTotalTime > 0f) safeTotalTime else SAFE_MAX_PROGRESS_FALLBACK
+        val safeMaxProgress = if (safeTotalTime > 0f) safeTotalTime else 0.1f
 
         CustomSeekBar(
             modifier = Modifier.weight(1f),
@@ -199,20 +198,17 @@ private fun FitModeToggle(
     )
 }
 
-private const val MAX_FORMATTED_SECONDS = 86400 * 7
 private const val SECONDS_PER_HOUR = 3600
 private const val SECONDS_PER_MINUTE = 60
-private const val TIME_FORMAT_WITH_HOURS = "%d:%02d:%02d"
-private const val TIME_FORMAT_MINUTES_ONLY = "%d:%02d"
 
 /** Секунды → `M:SS` (или `H:MM:SS` для длинных видео). */
 internal fun formatTime(totalSeconds: Int): String {
-    val validSeconds = totalSeconds.coerceIn(0, MAX_FORMATTED_SECONDS)
+    val validSeconds = totalSeconds.coerceIn(0, 86400 * 7)
     val hours = validSeconds / SECONDS_PER_HOUR
     val minutes = (validSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
     val seconds = validSeconds % SECONDS_PER_MINUTE
-    return if (hours > 0) String.format(Locale.US, TIME_FORMAT_WITH_HOURS, hours, minutes, seconds)
-    else String.format(Locale.US, TIME_FORMAT_MINUTES_ONLY, minutes, seconds)
+    return if (hours > 0) String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+    else String.format(Locale.US, "%d:%02d", minutes, seconds)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)

@@ -54,9 +54,6 @@ fun ScreenDashBoardsBottomNavigationButtonsPreview() {
     }
 }
 
-private const val PAGE_FRACTION = 0.2f
-private const val CONTENT_TYPE_PAGE_NUMBER = "page_number_item"
-
 /**
  * Bottom navigation buttons
  * Навигация для переключения экранов, возвращает которая будет выбирать номер экрана
@@ -109,7 +106,7 @@ fun BottomListDashBoardNavigationButtons2(
             items(
                 count = safeMax,
                 key = { index -> index },
-                contentType = { CONTENT_TYPE_PAGE_NUMBER }
+                contentType = { "page_number_item" }
             ) { index ->
                 val onPageClick = remember(index, maxPageIndex, onChange) {
                     { onChange(index.coerceIn(0, maxPageIndex)) }
@@ -118,7 +115,7 @@ fun BottomListDashBoardNavigationButtons2(
                     pageNumber = index + 1,
                     isSelected = value == index,
                     onClick = onPageClick,
-                    modifier = Modifier.fillParentMaxWidth(PAGE_FRACTION)
+                    modifier = Modifier.fillParentMaxWidth(0.2f)
                 )
             }
         }

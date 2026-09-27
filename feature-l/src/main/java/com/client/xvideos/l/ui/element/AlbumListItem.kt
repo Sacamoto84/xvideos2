@@ -27,8 +27,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 
-private const val ALBUM_CARD_ASPECT_RATIO = 137f / 200f
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlbumListItem(
@@ -78,7 +76,7 @@ fun AlbumListItem(
             coverUrl,
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(ALBUM_CARD_ASPECT_RATIO),
+                .aspectRatio(137f / 200f),
             contentScale = ContentScale.Crop
         )
 

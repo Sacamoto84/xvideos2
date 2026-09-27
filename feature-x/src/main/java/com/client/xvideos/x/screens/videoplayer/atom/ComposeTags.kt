@@ -43,9 +43,6 @@ import com.client.xvideos.x.model.TagsModel
 internal const val DEFAULT_COLLAPSED_TAGS_LIMIT = 2
 internal const val DEFAULT_TAGS_EXPAND_THRESHOLD = 3
 
-private val TAG_CHANNEL_COLOR = Color(0xFF1E88E5)
-private val TAG_PORNSTAR_COLOR = Color(0xFFDE2600)
-
 sealed interface TagItem {
     val name: String
 
@@ -179,7 +176,7 @@ fun ComposeTags(
                             }
                             ScreenItemTagsModelPornostars(
                                 text = item.model.name,
-                                color = TAG_CHANNEL_COLOR,
+                                color = Color(0xFF1E88E5),
                                 count = item.model.count,
                                 onClick = handleChannelClick,
                             )
@@ -190,7 +187,7 @@ fun ComposeTags(
                             }
                             ScreenItemTagsModelPornostars(
                                 text = item.model.name,
-                                color = TAG_PORNSTAR_COLOR,
+                                color = Color(0xFFDE2600),
                                 count = item.model.count,
                                 onClick = handlePornstarClick,
                             )
