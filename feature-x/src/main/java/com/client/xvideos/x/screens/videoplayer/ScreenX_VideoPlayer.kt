@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -249,10 +250,12 @@ private fun VideoPlayerContentView(
                         .align(Alignment.TopStart)
                         .windowInsetsPadding(CutoutTopStartInsets)
                         .padding(start = 4.dp, end = 4.dp, top = 4.dp)
+                        .fillMaxWidth()
                 ) {
                     ComposeTags(
                         tags,
-                        onClick = onTagClick
+                        onClick = onTagClick,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -363,10 +366,12 @@ private fun VideoPlayerContentView(
                             .align(Alignment.TopStart)
                             .windowInsetsPadding(CutoutTopStartInsets)
                             .padding(start = 4.dp, end = 4.dp, top = 4.dp)
+                            .fillMaxWidth()
                     ) {
                         ComposeTags(
                             tags,
-                            onClick = handleTagClick
+                            onClick = handleTagClick,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

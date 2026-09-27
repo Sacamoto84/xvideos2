@@ -40,9 +40,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 
-internal const val DEFAULT_COLLAPSED_TAGS_LIMIT = 2
-internal const val DEFAULT_TAGS_EXPAND_THRESHOLD = 3
-
 sealed interface TagItem {
     val name: String
 
@@ -72,8 +69,8 @@ data class VisibleTagsState(
 fun computeVisibleTags(
     tags: TagsModel,
     isExpanded: Boolean,
-    collapsedLimit: Int = DEFAULT_COLLAPSED_TAGS_LIMIT,
-    expandThreshold: Int = DEFAULT_TAGS_EXPAND_THRESHOLD,
+    collapsedLimit: Int = 2,
+    expandThreshold: Int = 3,
 ): VisibleTagsState {
     val estimatedCapacity = tags.mainUploader.size + tags.pornstars.size + tags.tags.size
     val allItems = ArrayList<TagItem>(estimatedCapacity)
@@ -146,13 +143,14 @@ fun ComposeTags(
     val onCollapseTags = remember { { isExpanded = false } }
 
     val scrollState = rememberScrollState()
+
     val containerModifier = if (tagsState.isExpanded) {
         Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xE6141418))
             .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
             .padding(6.dp)
-            .heightIn(max = 160.dp)
+            //.heightIn(max = 160.dp)
             .verticalScroll(scrollState)
     } else {
         Modifier
@@ -268,7 +266,7 @@ private fun TagToggleChip(
             .padding(horizontal = 3.dp, vertical = 2.dp)
             .height(28.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xDD34343B))
+            .background(Color(0xDD444444))
             .border(1.dp, Color(0x55FFFFFF), RoundedCornerShape(6.dp))
             .clickable(onClick = onClick)
             .padding(start = 8.dp, end = 4.dp),
@@ -294,10 +292,11 @@ private fun TagToggleChip(
     }
 }
 
+
 @Preview(showBackground = true, backgroundColor = 0xFF141418)
 @Composable
 private fun TagChipPreview() {
-    TagChip(text = "sample_tag", onClick = {})
+    TagChip(text = "tag", onClick = {})
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF141418)
@@ -306,9 +305,36 @@ private fun ComposeTagsPreview() {
     ComposeTags(
         tags = TagsModel(
             tags = listOf("tag1", "tag2", "tag3"),
-            mainUploader = emptyList(),
-            pornstars = emptyList()
+            mainUploader = listOf(TagsMainUploaderPornstar(name = "channel1", count = "100k")),
+            pornstars = listOf(TagsMainUploaderPornstar(name = "pornstar1", count = "100k"))
         ),
         onClick = {}
     )
 }
+
+@Preview(showBackground = true, backgroundColor = 0xFF141418)
+@Composable
+private fun TagToggleChipPreview() {
+    Row {
+        TagToggleChip(
+            text = "+5",
+            isExpanded = false,
+            contentDescription = "Развернуть теги",
+            onClick = {},
+        )
+        TagToggleChip(
+            text = "",
+            isExpanded = true,
+            contentDescription = "Свернуть теги",
+            onClick = {},
+        )
+
+        TagToggleChip(
+            text = "",
+            isExpanded = false,
+            contentDescription = "Свернуть теги",
+            onClick = {},
+        )
+    }
+}
+
