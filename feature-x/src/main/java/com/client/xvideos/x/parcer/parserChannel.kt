@@ -261,3 +261,24 @@ fun parseChannelModels(html: String): List<ChannelModelFilterItem> {
     }
 }
 
+/**
+ * Разбирает ответ JSON API рейтингов канала или модели (`/profiles/{username}/ranks/straight`)
+ * в структурированный список категорий [com.client.xvideos.x.model.ChannelRankingCategory].
+ *
+ * @param jsonString Текст ответа в формате JSON.
+ * @return Список категорий рейтингов.
+ */
+fun parserChannelRanksJson(jsonString: String): List<com.client.xvideos.x.model.ChannelRankingCategory> {
+    if (jsonString.isBlank()) return emptyList()
+    val trimmed = jsonString.trim()
+    if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return emptyList()
+
+    return try {
+        val dto = channelJson.decodeFromString(com.client.xvideos.x.model.ChannelRanksResponseDto.serializer(), trimmed)
+        if (dto.result) dto.rankings else emptyList()
+    } catch (_: Exception) {
+        emptyList()
+    }
+}
+
+

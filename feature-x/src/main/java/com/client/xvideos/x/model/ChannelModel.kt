@@ -87,6 +87,7 @@ data class ChannelCollaborator(
  * @property workedWith Список партнеров/студий, с кем работала модель.
  * @property collaborators Структурированный список партнеров/студий с ссылками.
  * @property availableModels Список моделей или каналов, доступных для фильтрации видео.
+ * @property rankings Список категорий рейтингов модели или канала.
  */
 @Immutable
 data class ChannelHeaderModel(
@@ -105,6 +106,7 @@ data class ChannelHeaderModel(
     val workedWith: String = "",
     val collaborators: List<ChannelCollaborator> = emptyList(),
     val availableModels: List<ChannelModelFilterItem> = emptyList(),
+    val rankings: List<ChannelRankingCategory> = emptyList(),
 ) : Serializable {
     val isModel: Boolean get() = profileType == ProfileType.MODEL
     val hasBanner: Boolean get() = bannerUrl.isNotBlank()
@@ -118,6 +120,7 @@ data class ChannelHeaderModel(
     val hasWorkedWith: Boolean get() = workedWith.isNotBlank() || collaborators.isNotEmpty()
     val hasCollaborators: Boolean get() = collaborators.isNotEmpty()
     val hasAvailableModels: Boolean get() = availableModels.isNotEmpty()
+    val hasRankings: Boolean get() = rankings.isNotEmpty()
     val displayName: String get() = name.ifBlank { slug }
 
     /** Формирует подзаголовок модели, например: "Женщина, Бразилия, 26 лет". */
@@ -134,6 +137,59 @@ data class ChannelHeaderModel(
         val EMPTY = ChannelHeaderModel()
     }
 }
+
+/**
+ * Элемент рейтинга модели или канала (например: Мировой #342).
+ *
+ * @property rank Числовой номер в рейтинге (например, 342).
+ * @property geo Название региона/страны (например, «Мировой», «Латинский», «Бразилия»).
+ * @property link Относительная ссылка на страницу каталога/индекса рейтинга (например, `"/porn-actresses-index/from/brazil/ever"`).
+ * @property label Описание/подсказка (например, `"Топ 76 230 порноактрис"`).
+ */
+@kotlinx.serialization.Serializable
+@Immutable
+data class ChannelRankItem(
+    val rank: Int = 0,
+    val geo: String = "",
+    val link: String = "",
+    val label: String = "",
+) : Serializable {
+    val formattedRank: String get() = "# $rank"
+    val cleanLink: String get() = link.trim()
+}
+
+/**
+ * Подгруппа рейтингов по региону (например: «Только из Бразилия», «По всему миру»).
+ *
+ * @property label Название подгруппы (например, `"Только из Бразилия"`).
+ * @property ranks Список элементов рейтинга.
+ */
+@kotlinx.serialization.Serializable
+@Immutable
+data class ChannelRankGroup(
+    val label: String = "",
+    val ranks: List<ChannelRankItem> = emptyList(),
+) : Serializable
+
+/**
+ * Категория рейтингов (например: «Рейтинги порноактрис», «Глобальные рейтинги»).
+ *
+ * @property label Название категории.
+ * @property ranks Список подгрупп рейтингов.
+ */
+@kotlinx.serialization.Serializable
+@Immutable
+data class ChannelRankingCategory(
+    val label: String = "",
+    val ranks: List<ChannelRankGroup> = emptyList(),
+) : Serializable
+
+@kotlinx.serialization.Serializable
+internal data class ChannelRanksResponseDto(
+    val result: Boolean = false,
+    val code: Int = 0,
+    val rankings: List<ChannelRankingCategory> = emptyList(),
+)
 
 /**
  * Режим сортировки видеороликов канала.

@@ -16,6 +16,7 @@ import com.client.xvideos.x.model.ChannelSortOrder
 import com.client.xvideos.x.model.ChannelUiState
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.parcer.parserChannelHeader
+import com.client.xvideos.x.parcer.parserChannelRanksJson
 import com.client.xvideos.x.parcer.parserChannelVideosJson
 import com.client.xvideos.x.urlStart
 import com.client.xvideos.x.feature.saved.SavedX
@@ -218,8 +219,25 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     }
                 }
 
+                // 1.5. Загрузка рейтингов автора / модели из JSON API сайта (/profiles/{slug}/ranks/straight)
+                val headerWithRanks = if (parsedHeader.rankings.isNotEmpty()) {
+                    parsedHeader
+                } else {
+                    try {
+                        val ranksJson = withContext(Dispatchers.IO) {
+                            readHtmlFromURLDirect("$urlStart/profiles/$cleanSlug/ranks/straight")
+                        }
+                        val ranks = withContext(Dispatchers.Default) {
+                            parserChannelRanksJson(ranksJson)
+                        }
+                        if (ranks.isNotEmpty()) parsedHeader.copy(rankings = ranks) else parsedHeader
+                    } catch (_: Exception) {
+                        parsedHeader
+                    }
+                }
+
                 // 2. Загрузка 0-й страницы видео из JSON API
-                val effectivePrefix = if (parsedHeader.isModel) "models" else "channels"
+                val effectivePrefix = if (headerWithRanks.isModel) "models" else "channels"
                 var jsonVideos = fetchVideosJson(0, overridePrefix = effectivePrefix)
                 if (jsonVideos.isBlank() || jsonVideos.trim() == "{\"videos\":[]}") {
                     val altPrefix = if (effectivePrefix == "models") "channels" else "models"
@@ -234,7 +252,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 }
 
                 uiState = uiState.copy(
-                    header = parsedHeader,
+                    header = headerWithRanks,
                     videos = parsedVideos,
                     isLoadingInitial = false,
                     isEndReached = parsedVideos.isEmpty(),

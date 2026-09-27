@@ -274,4 +274,79 @@ class ParserChannelTest {
         assertEquals(0, parseChannelModels("\"workedForFree\": []").size)
         assertEquals(0, parseChannelModels("\"workedForFree\": invalid").size)
     }
+
+    @Test
+    fun `parserChannelRanksJson correctly parses ranks json response`() {
+        val json = """
+            {
+                "result": true,
+                "code": 0,
+                "rankings": [
+                    {
+                        "label": "Рейтинги порноактрис",
+                        "ranks": [
+                            {
+                                "label": "Только из Бразилия",
+                                "ranks": [
+                                    {
+                                        "rank": 342,
+                                        "geo": "Мировой",
+                                        "link": "/porn-actresses-index/from/brazil/ever",
+                                        "label": "Топ 76 230 порноактрис"
+                                    },
+                                    {
+                                        "rank": 342,
+                                        "geo": "Латинский",
+                                        "link": "/porn-actresses-index/latin/from/brazil/ever",
+                                        "label": "Топ 100"
+                                    }
+                                ]
+                            },
+                            {
+                                "label": "Только из Россия",
+                                "ranks": [
+                                    {
+                                        "rank": 22310,
+                                        "geo": "Мировой",
+                                        "link": "/porn-actresses-index/from/russia/ever",
+                                        "label": "Топ 76 230"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        """.trimIndent()
+
+        val rankings = parserChannelRanksJson(json)
+        assertEquals(1, rankings.size)
+
+        val cat1 = rankings[0]
+        assertEquals("Рейтинги порноактрис", cat1.label)
+        assertEquals(2, cat1.ranks.size)
+
+        val g1 = cat1.ranks[0]
+        assertEquals("Только из Бразилия", g1.label)
+        assertEquals(2, g1.ranks.size)
+
+        val r1 = g1.ranks[0]
+        assertEquals(342, r1.rank)
+        assertEquals("Мировой", r1.geo)
+        assertEquals("/porn-actresses-index/from/brazil/ever", r1.link)
+        assertEquals("# 342", r1.formattedRank)
+
+        val g2 = cat1.ranks[1]
+        assertEquals("Только из Россия", g2.label)
+        assertEquals(1, g2.ranks.size)
+        assertEquals(22310, g2.ranks[0].rank)
+    }
+
+    @Test
+    fun `parserChannelRanksJson handles empty or invalid json safely`() {
+        assertEquals(0, parserChannelRanksJson("").size)
+        assertEquals(0, parserChannelRanksJson("invalid").size)
+        assertEquals(0, parserChannelRanksJson("{\"result\":false}").size)
+    }
 }
+

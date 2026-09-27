@@ -52,6 +52,7 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.core.R
 import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelHeaderModel
+import com.client.xvideos.x.model.ChannelRankingCategory
 
 /**
  * Шапка профиля канала или актрисы/модели X с баннером, аватаром, статистикой и информацией.
@@ -61,6 +62,7 @@ import com.client.xvideos.x.model.ChannelHeaderModel
  * @param isSubscribed Флаг, подписан ли пользователь на этот профиль.
  * @param onToggleSubscription Колбэк переключения подписки (подписаться / отписаться).
  * @param onCollaboratorClick Колбэк нажатия на автора/студию/модель из списка «Сотрудничество».
+ * @param onRankingClick Колбэк нажатия на элемент рейтинга актрисы/канала.
  * @param modifier Модификатор макета.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -71,6 +73,7 @@ fun ChannelHeader(
     isSubscribed: Boolean = false,
     onToggleSubscription: () -> Unit = {},
     onCollaboratorClick: (ChannelCollaborator) -> Unit = {},
+    onRankingClick: (targetUrl: String, title: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     var isAboutExpanded by remember { mutableStateOf(false) }
@@ -273,7 +276,7 @@ fun ChannelHeader(
             }
 
             // Блок «О модели» / «О канале»
-            val hasInfo = header.hasAboutMe || header.hasCollaborators || (header.isModel && (header.hasAge || header.hasCountry || header.hasGender || header.hasWorkedWith))
+            val hasInfo = header.hasAboutMe || header.hasCollaborators || header.hasRankings || (header.isModel && (header.hasAge || header.hasCountry || header.hasGender || header.hasWorkedWith))
             if (hasInfo) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Column(
@@ -327,6 +330,14 @@ fun ChannelHeader(
                     } else if (header.hasWorkedWith) {
                         Spacer(modifier = Modifier.height(6.dp))
                         InfoFieldItem(label = "Сотрудничество", value = header.workedWith)
+                    }
+
+                    if (header.hasRankings) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ChannelRankingsSection(
+                            rankings = header.rankings,
+                            onRankingClick = onRankingClick,
+                        )
                     }
 
                     if (header.hasAboutMe) {
@@ -525,4 +536,81 @@ private fun SubscribeHeaderButton(
         )
     }
 }
+
+/**
+ * Блок отображения рейтингов модели или канала («Рейтинги порноактрис», «Глобальные рейтинги»).
+ */
+@Composable
+private fun ChannelRankingsSection(
+    rankings: List<ChannelRankingCategory>,
+    onRankingClick: (targetUrl: String, title: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF1E1719))
+            .border(1.dp, Color(0x33DE2600), RoundedCornerShape(8.dp))
+            .padding(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            rankings.forEach { category ->
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "${category.label}:",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    category.ranks.forEach { group ->
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "${group.label}:",
+                            fontSize = 11.sp,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            color = Color(0xFFCCCCCC)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        group.ranks.forEach { item ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = item.geo,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFFE0E0E0)
+                                )
+                                Text(
+                                    text = "# ${item.rank}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFDE2600),
+                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .clickable {
+                                            onRankingClick(
+                                                item.link,
+                                                item.label.ifBlank { "${category.label} - ${item.geo} #${item.rank}" }
+                                            )
+                                        }
+                                        .padding(horizontal = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 

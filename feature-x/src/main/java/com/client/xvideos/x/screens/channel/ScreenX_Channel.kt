@@ -102,6 +102,19 @@ class ScreenX_Channel(
             }
         }
 
+        val onRankingClick = remember(navigator) {
+            { targetUrl: String, title: String ->
+                if (targetUrl.isNotBlank()) {
+                    navigator.push(
+                        com.client.xvideos.x.screens.actresses.ScreenX_ActressesIndex(
+                            urlPath = targetUrl,
+                            initialTitle = title,
+                        )
+                    )
+                }
+            }
+        }
+
         ChannelScreenContent(
             uiState = vm.uiState,
             onBack = onBack,
@@ -112,6 +125,7 @@ class ScreenX_Channel(
             onRetry = vm::loadInitial,
             onOpenVideo = onOpenVideo,
             onCollaboratorClick = onCollaboratorClick,
+            onRankingClick = onRankingClick,
             onSelectModel = vm::selectModel,
             onModelQueryChange = vm::onModelFilterQueryChange,
             onModelExpandedChange = vm::setModelFilterExpanded,
@@ -130,6 +144,7 @@ fun ChannelScreenContent(
     onRetry: () -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     onCollaboratorClick: (ChannelCollaborator) -> Unit = {},
+    onRankingClick: (targetUrl: String, title: String) -> Unit = { _, _ -> },
     onSelectModel: (ChannelModelFilterItem?) -> Unit = {},
     onModelQueryChange: (String) -> Unit = {},
     onModelExpandedChange: (Boolean) -> Unit = {},
@@ -173,6 +188,7 @@ fun ChannelScreenContent(
                     isSubscribed = isSubscribed,
                     onToggleSubscription = onToggleSubscription,
                     onCollaboratorClick = onCollaboratorClick,
+                    onRankingClick = onRankingClick,
                 )
             }
 
