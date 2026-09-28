@@ -1,8 +1,11 @@
 package com.client.xvideos.x.screens.common.bottomKeyboard
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,20 +18,29 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.client.xvideos.common.ui.keyboard.KeyboardNumber
+import com.client.xvideos.common.ui.keyboard.KeyboardNumberTheme
 
 @Preview
 @Composable
@@ -55,11 +67,19 @@ fun ScreenDashBoardsBottomNavigationButtonsPreview() {
 }
 
 /**
- * Bottom navigation buttons
- * Навигация для переключения экранов, возвращает которая будет выбирать номер экрана
- * max - Максимальный индекс экрана
- * onChange - Функция вызывается при изменении экрана и передается номер экрана
+ * Нижняя панель навигации по страницам (`BottomListDashBoardNavigationButtons2`).
+ *
+ * Предоставляет:
+ * - Кнопки со стрелками «<» и «>» для последовательного перехода.
+ * - Горизонтальную прокручиваемую ленту номеров страниц.
+ * - Кнопку вызова цифровой клавиатуры (иконка диапада) для прямого ввода целевой страницы.
+ * - Открытие клавиатуры при тапе на текущую страницу или долгом нажатии на любой номер.
+ *
+ * @param value Индекс текущей страницы (0-based, т.е. 0 = Страница 1).
+ * @param onChange Колбэк при выборе новой страницы (передаётся 0-based индекс).
+ * @param max Общее количество доступных страниц (1-based, минимум 1).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomListDashBoardNavigationButtons2(
     value: Int,
@@ -67,9 +87,14 @@ fun BottomListDashBoardNavigationButtons2(
     max: Int,
     modifier: Modifier = Modifier,
 ) {
-
     val safeMax = max.coerceAtLeast(1)
     val maxPageIndex = safeMax - 1
+
+    var showKeyboardDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = showKeyboardDialog) {
+        showKeyboardDialog = false
+    }
 
     val state = rememberLazyListState()
     LaunchedEffect(value, safeMax) {
@@ -89,7 +114,8 @@ fun BottomListDashBoardNavigationButtons2(
         modifier = modifier
             .height(48.dp)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         ArrowNavigationButton(
             arrow = "<",
@@ -108,16 +134,45 @@ fun BottomListDashBoardNavigationButtons2(
                 key = { index -> index },
                 contentType = { "page_number_item" }
             ) { index ->
-                val onPageClick = remember(index, maxPageIndex, onChange) {
-                    { onChange(index.coerceIn(0, maxPageIndex)) }
+                val onPageClick = remember(index, value, maxPageIndex, onChange) {
+                    {
+                        if (value == index) {
+                            showKeyboardDialog = true
+                        } else {
+                            onChange(index.coerceIn(0, maxPageIndex))
+                        }
+                    }
+                }
+                val onPageLongClick = remember(index) {
+                    {
+                        showKeyboardDialog = true
+                    }
                 }
                 PageNumberButton(
                     pageNumber = index + 1,
                     isSelected = value == index,
                     onClick = onPageClick,
+                    onLongClick = onPageLongClick,
                     modifier = Modifier.fillParentMaxWidth(0.2f)
                 )
             }
+        }
+
+        // Кнопка прямого ввода номера страницы
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 0.5.dp)
+                .size(48.dp)
+                .background(Color(0xFF2C2C2C))
+                .clickable { showKeyboardDialog = true },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Dialpad,
+                contentDescription = "Ввести номер страницы",
+                tint = Color(0xFFFF9900),
+                modifier = Modifier.size(20.dp)
+            )
         }
 
         ArrowNavigationButton(
@@ -125,6 +180,36 @@ fun BottomListDashBoardNavigationButtons2(
             enabled = value < maxPageIndex,
             onClick = onForwardClick
         )
+    }
+
+    // Диалог с цифровой клавиатурой
+    if (showKeyboardDialog) {
+        Dialog(onDismissRequest = { showKeyboardDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(2.dp, Color(0xFF3E3E3E), RoundedCornerShape(16.dp))
+                    .background(Color(0xFF282828))
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                KeyboardNumber(
+                    theme = KeyboardNumberTheme(
+                        colorBackground = Color(0xFF2D2D2D),
+                        colorBorderBackground = Color(0xFF282828),
+                        colorText = Color(0xFFFFFFFF),
+                        buttonColor = Color(0xFF383838),
+                        colorButtonBorder = Color(0xFF303030),
+                    ),
+                    value = -1,
+                    max = safeMax,
+                    onClick = { page1Based ->
+                        onChange((page1Based - 1).coerceIn(0, maxPageIndex))
+                        showKeyboardDialog = false
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -152,11 +237,13 @@ private fun ArrowNavigationButton(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PageNumberButton(
     pageNumber: Int,
     isSelected: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val pageText = remember(pageNumber) { pageNumber.toString() }
@@ -167,7 +254,10 @@ private fun PageNumberButton(
     val selectedModifier = if (isSelected) baseModifier.border(2.dp, Color(0xFFFF9900)) else baseModifier
 
     Box(
-        modifier = selectedModifier.clickable(onClick = onClick),
+        modifier = selectedModifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick,
+        ),
         contentAlignment = Alignment.Center
     ) {
         Text(text = pageText, color = Color(0xFFCCCCCC))

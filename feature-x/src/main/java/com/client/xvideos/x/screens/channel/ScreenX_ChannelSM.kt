@@ -18,6 +18,7 @@ import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.parcer.parserChannelHeader
 import com.client.xvideos.x.parcer.parserChannelRanksJson
 import com.client.xvideos.x.parcer.parserChannelVideosJson
+import com.client.xvideos.x.parcer.parserChannelVideosResult
 import com.client.xvideos.x.urlStart
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.toSubscriptionItem
@@ -247,15 +248,17 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     }
                 }
 
-                val parsedVideos = withContext(Dispatchers.Default) {
-                    parserChannelVideosJson(jsonVideos)
+                val result = withContext(Dispatchers.Default) {
+                    parserChannelVideosResult(jsonVideos)
                 }
 
                 uiState = uiState.copy(
                     header = headerWithRanks,
-                    videos = parsedVideos,
+                    videos = result.videos,
+                    totalVideosCount = result.totalVideos ?: 0,
+                    currentPage = 0,
                     isLoadingInitial = false,
-                    isEndReached = parsedVideos.isEmpty(),
+                    isEndReached = result.videos.isEmpty(),
                     error = null,
                 )
             } catch (e: CancellationException) {
@@ -271,45 +274,75 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     }
 
     /**
-     * Подгружает следующую страницу видеороликов при бесконечной прокрутке.
+     * Загружает конкретную страницу видеороликов автора ([page], 0-based).
      */
-    fun loadNextPage() {
-        if (uiState.isLoadingInitial || uiState.isLoadingMore || uiState.isEndReached) return
+    fun goToPage(page: Int) {
+        val targetPage = page.coerceAtLeast(0)
+        if (targetPage == currentPage && uiState.videos.isNotEmpty() && !uiState.isLoadingInitial) return
 
         pagingJob?.cancel()
-        val nextPage = currentPage + 1
+        initialJob?.cancel()
+        currentPage = targetPage
 
-        uiState = uiState.copy(isLoadingMore = true)
+        uiState = uiState.copy(
+            currentPage = targetPage,
+            isLoadingInitial = true,
+            isLoadingMore = false,
+            isEndReached = false,
+            error = null,
+        )
 
-        pagingJob = screenModelScope.launch {
+        initialJob = screenModelScope.launch {
             try {
-                val json = fetchVideosJson(nextPage)
-
-                val newVideos = withContext(Dispatchers.Default) {
-                    parserChannelVideosJson(json)
+                val effectivePrefix = if (uiState.header.isModel) "models" else "channels"
+                var jsonVideos = fetchVideosJson(targetPage, overridePrefix = effectivePrefix)
+                if (jsonVideos.isBlank() || jsonVideos.trim() == "{\"videos\":[]}") {
+                    val altPrefix = if (effectivePrefix == "models") "channels" else "models"
+                    val altJson = fetchVideosJson(targetPage, overridePrefix = altPrefix)
+                    if (altJson.isNotBlank() && altJson.trim() != "{\"videos\":[]}") {
+                        jsonVideos = altJson
+                    }
                 }
 
-                if (newVideos.isEmpty()) {
-                    uiState = uiState.copy(
-                        isLoadingMore = false,
-                        isEndReached = true,
-                    )
-                } else {
-                    currentPage = nextPage
-                    val existingIds = uiState.videos.map { it.id }.toSet()
-                    val distinctNew = newVideos.filter { it.id !in existingIds }
-                    uiState = uiState.copy(
-                        videos = uiState.videos + distinctNew,
-                        isLoadingMore = false,
-                        isEndReached = distinctNew.isEmpty(),
-                    )
+                val result = withContext(Dispatchers.Default) {
+                    parserChannelVideosResult(jsonVideos)
                 }
+
+                uiState = uiState.copy(
+                    videos = result.videos,
+                    totalVideosCount = result.totalVideos ?: uiState.totalVideosCount,
+                    currentPage = targetPage,
+                    isLoadingInitial = false,
+                    isEndReached = result.videos.isEmpty(),
+                    error = null,
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w(e, "ScreenX_ChannelSM: сбой подгрузки страницы %d для %s", nextPage, cleanSlug)
-                uiState = uiState.copy(isLoadingMore = false)
+                Timber.e(e, "ScreenX_ChannelSM: сбой загрузки страницы %d для %s", targetPage, cleanSlug)
+                uiState = uiState.copy(
+                    isLoadingInitial = false,
+                    error = "Не удалось загрузить страницу ${targetPage + 1}",
+                )
             }
+        }
+    }
+
+    /**
+     * Переход на следующую страницу.
+     */
+    fun loadNextPage() {
+        if (currentPage < uiState.maxPages - 1) {
+            goToPage(currentPage + 1)
+        }
+    }
+
+    /**
+     * Переход на предыдущую страницу.
+     */
+    fun loadPrevPage() {
+        if (currentPage > 0) {
+            goToPage(currentPage - 1)
         }
     }
 

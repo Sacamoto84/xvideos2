@@ -49,6 +49,7 @@ import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.channel.atom.ChannelHeader
 import com.client.xvideos.x.screens.channel.atom.ChannelModelFilterBar
 import com.client.xvideos.x.screens.channel.atom.ChannelSortBar
+import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -121,7 +122,7 @@ class ScreenX_Channel(
             isSubscribed = vm.isSubscribed,
             onToggleSubscription = vm::toggleSubscription,
             onSortChange = vm::changeSort,
-            onLoadMore = vm::loadNextPage,
+            onPageChange = vm::goToPage,
             onRetry = vm::loadInitial,
             onOpenVideo = onOpenVideo,
             onCollaboratorClick = onCollaboratorClick,
@@ -140,7 +141,7 @@ fun ChannelScreenContent(
     isSubscribed: Boolean = false,
     onToggleSubscription: () -> Unit = {},
     onSortChange: (com.client.xvideos.x.model.ChannelSortOrder) -> Unit,
-    onLoadMore: () -> Unit,
+    onPageChange: (Int) -> Unit = {},
     onRetry: () -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     onCollaboratorClick: (ChannelCollaborator) -> Unit = {},
@@ -153,23 +154,29 @@ fun ChannelScreenContent(
     val gridState = rememberLazyGridState()
     val topCutout = getTopInsetDp()
 
-    // Триггер бесконечной пагинации при приближении к концу ленты
-    LaunchedEffect(gridState, uiState.videos.size, uiState.isLoadingMore, uiState.isEndReached) {
-        snapshotFlow {
-            val layoutInfo = gridState.layoutInfo
-            val totalItems = layoutInfo.totalItemsCount
-            val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            totalItems > 0 && lastVisible >= totalItems - 6
-        }.distinctUntilChanged().collect { nearEnd ->
-            if (nearEnd && !uiState.isLoadingMore && !uiState.isEndReached) {
-                onLoadMore()
-            }
+    // Скролл к началу списка при переключении страницы
+    LaunchedEffect(uiState.currentPage) {
+        gridState.scrollToItem(0)
+    }
+
+    val bottomBarContent: @Composable () -> Unit = remember(uiState.currentPage, uiState.maxPages, onPageChange) {
+        {
+            BottomListDashBoardNavigationButtons2(
+                value = uiState.currentPage,
+                onChange = onPageChange,
+                max = uiState.maxPages,
+            )
         }
     }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color(0xFF040404),
+        bottomBar = {
+            if (uiState.videos.isNotEmpty() || uiState.currentPage > 0) {
+                bottomBarContent()
+            }
+        },
     ) { paddingValues ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -178,7 +185,7 @@ fun ChannelScreenContent(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(top = topCutout),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             // 1. Шапка канала (баннер, аватар, имя, подписчики, описание)
             item(span = { GridItemSpan(2) }) {

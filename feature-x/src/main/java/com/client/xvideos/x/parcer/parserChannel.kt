@@ -177,15 +177,28 @@ internal data class ChannelVideoItemDto(
 )
 
 /**
- * Разбирает ответ JSON API канала (`/channels/{slug}/videos/{sort}/{page}`) в список моделей [ItemsX].
+ * Результат парсинга ответа видеоленты канала/модели.
+ *
+ * @property videos Список видеороликов.
+ * @property totalVideos Общее количество видео автора (если возвращено сервером).
+ * @property currentPage Номер текущей страницы от сервера.
+ */
+data class ChannelVideosResult(
+    val videos: List<ItemsX> = emptyList(),
+    val totalVideos: Int? = null,
+    val currentPage: Int? = null,
+)
+
+/**
+ * Разбирает ответ JSON API канала (`/channels/{slug}/videos/{sort}/{page}`) в структуру [ChannelVideosResult].
  *
  * @param jsonString Текст ответа в формате JSON.
- * @return Список видеороликов [ItemsX].
+ * @return [ChannelVideosResult] со списком роликов и метаинформацией пагинации.
  */
-fun parserChannelVideosJson(jsonString: String): List<ItemsX> {
-    if (jsonString.isBlank()) return emptyList()
+fun parserChannelVideosResult(jsonString: String): ChannelVideosResult {
+    if (jsonString.isBlank()) return ChannelVideosResult()
     val trimmed = jsonString.trim()
-    if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return emptyList()
+    if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return ChannelVideosResult()
 
     return try {
         val dto = channelJson.decodeFromString(ChannelVideosResponseDto.serializer(), trimmed)
@@ -217,11 +230,24 @@ fun parserChannelVideosJson(jsonString: String): List<ItemsX> {
                 )
             )
         }
-        result
+        ChannelVideosResult(
+            videos = result,
+            totalVideos = dto.nb_videos,
+            currentPage = dto.current_page,
+        )
     } catch (_: Exception) {
-        emptyList()
+        ChannelVideosResult()
     }
 }
+
+/**
+ * Разбирает ответ JSON API канала (`/channels/{slug}/videos/{sort}/{page}`) в список моделей [ItemsX].
+ *
+ * @param jsonString Текст ответа в формате JSON.
+ * @return Список видеороликов [ItemsX].
+ */
+fun parserChannelVideosJson(jsonString: String): List<ItemsX> =
+    parserChannelVideosResult(jsonString).videos
 
 /**
  * Извлекает список доступных для фильтрации моделей/партнёров из JSON-конфигурации страницы канала.

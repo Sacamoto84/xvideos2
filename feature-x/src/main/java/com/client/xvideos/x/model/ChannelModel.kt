@@ -225,6 +225,8 @@ data class ChannelUiState(
     val selectedModel: ChannelModelFilterItem? = null,
     val modelFilterQuery: String = "",
     val isModelFilterExpanded: Boolean = false,
+    val currentPage: Int = 0,
+    val totalVideosCount: Int = 0,
     val isLoadingInitial: Boolean = true,
     val isLoadingMore: Boolean = false,
     val isEndReached: Boolean = false,
@@ -238,6 +240,22 @@ data class ChannelUiState(
     } else {
         availableModels.filter { it.matches(modelFilterQuery) }
     }
+
+    val maxPages: Int
+        get() {
+            val total = when {
+                totalVideosCount > 0 -> totalVideosCount
+                selectedModel != null && selectedModel.nbVideos > 0 -> selectedModel.nbVideos
+                header.videoCount > 0 -> header.videoCount
+                else -> 0
+            }
+            val perPage = 36
+            return when {
+                total > 0 -> ((total + perPage - 1) / perPage).coerceAtLeast(1)
+                videos.size >= 20 -> maxOf(currentPage + 2, 10)
+                else -> maxOf(currentPage + 1, 1)
+            }
+        }
 
     val isEmpty: Boolean get() = !isLoadingInitial && videos.isEmpty() && error == null
     val isSuccess: Boolean get() = !isLoadingInitial && error == null

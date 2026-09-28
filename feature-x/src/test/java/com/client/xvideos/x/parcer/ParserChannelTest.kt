@@ -1,5 +1,9 @@
 package com.client.xvideos.x.parcer
 
+import com.client.xvideos.x.model.ChannelHeaderModel
+import com.client.xvideos.x.model.ChannelModelFilterItem
+import com.client.xvideos.x.model.ChannelUiState
+import com.client.xvideos.x.model.ItemsX
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -347,6 +351,55 @@ class ParserChannelTest {
         assertEquals(0, parserChannelRanksJson("").size)
         assertEquals(0, parserChannelRanksJson("invalid").size)
         assertEquals(0, parserChannelRanksJson("{\"result\":false}").size)
+    }
+
+    @Test
+    fun `parserChannelVideosResult extracts videos, totalVideos and currentPage`() {
+        val json = """
+            {
+                "videos": [
+                    {"id": 1, "tf": "Video 1", "u": "/v1", "i": "thumb.jpg"}
+                ],
+                "nb_videos": 180,
+                "current_page": 2
+            }
+        """.trimIndent()
+
+        val result = parserChannelVideosResult(json)
+
+        assertEquals(1, result.videos.size)
+        assertEquals("Video 1", result.videos[0].title)
+        assertEquals(180, result.totalVideos)
+        assertEquals(2, result.currentPage)
+    }
+
+    @Test
+    fun `ChannelUiState maxPages calculates correctly`() {
+        // 1. По totalVideosCount (180 видео / 36 в порции = 5 страниц)
+        val state1 = ChannelUiState(totalVideosCount = 180)
+        assertEquals(5, state1.maxPages)
+
+        // 2. По header.videoCount (72 видео / 36 = 2 страницы)
+        val state2 = ChannelUiState(
+            header = ChannelHeaderModel(videoCount = 72)
+        )
+        assertEquals(2, state2.maxPages)
+
+        // 3. По выбранной модели (413 видео / 36 = 12 страниц)
+        val state3 = ChannelUiState(
+            header = ChannelHeaderModel(videoCount = 1000),
+            selectedModel = ChannelModelFilterItem(nbVideos = 413)
+        )
+        assertEquals(12, state3.maxPages)
+
+        // 4. Fallback при 0 видео
+        val state4 = ChannelUiState(currentPage = 0)
+        assertEquals(1, state4.maxPages)
+
+        // 5. Fallback при наличии видео, но без известного счетчика
+        val dummyVideos = List(25) { ItemsX(id = it.toLong()) }
+        val state5 = ChannelUiState(currentPage = 2, videos = dummyVideos)
+        assertEquals(10, state5.maxPages)
     }
 }
 
