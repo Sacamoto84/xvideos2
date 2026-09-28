@@ -2,11 +2,17 @@ package com.client.xvideos.x.screens.channel
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,15 +54,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
@@ -78,6 +88,7 @@ import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNav
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -279,15 +290,20 @@ fun ChannelScreenContent(
     val density = LocalDensity.current
     val topCutoutPx = with(density) { topCutout.roundToPx() }
 
-    // Сброс на страницу 0 и раскрытие шапки при смене сортировки или фильтра
+    // Сброс на страницу 0 при смене сортировки или фильтра (шапка сохраняет позицию)
     LaunchedEffect(uiState.currentSort, uiState.selectedModel) {
         pagerState.scrollToPage(0)
-        headerOffsetPx = 0f
     }
 
-    val nestedScrollConnection = remember(headerHeightPx) {
+    var flingAnimationJob by remember { mutableStateOf<Job?>(null) }
+
+    val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput) {
+                    flingAnimationJob?.cancel()
+                    flingAnimationJob = null
+                }
                 val delta = available.y
                 if (delta < 0f && headerHeightPx > 0f) {
                     val newOffset = (headerOffsetPx + delta).coerceIn(-headerHeightPx, 0f)
@@ -308,8 +324,65 @@ fun ChannelScreenContent(
                 }
                 return Offset.Zero
             }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                if (available.y > 0f && headerOffsetPx < 0f) {
+                    flingAnimationJob?.cancel()
+                    val anim = Animatable(headerOffsetPx)
+                    flingAnimationJob = coroutineScope.launch {
+                        anim.animateTo(
+                            targetValue = 0f,
+                            initialVelocity = available.y,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            )
+                        ) {
+                            headerOffsetPx = value
+                        }
+                    }
+                    return Velocity(0f, available.y)
+                }
+                return Velocity.Zero
+            }
         }
     }
+
+    val headerScrollableState = rememberScrollableState { delta ->
+        flingAnimationJob?.cancel()
+        flingAnimationJob = null
+        var consumed = 0f
+        if (delta < 0f) {
+            // Палец вверх: схлопываем шапку
+            if (headerHeightPx > 0f && headerOffsetPx > -headerHeightPx) {
+                val newOffset = (headerOffsetPx + delta).coerceIn(-headerHeightPx, 0f)
+                val headerConsumed = newOffset - headerOffsetPx
+                headerOffsetPx = newOffset
+                consumed += headerConsumed
+            }
+            // Если шапка уже схлопнута, передаем скролл в сетку видео
+            val remaining = delta - consumed
+            if (remaining < 0f) {
+                val gridState = getGridState(pagerState.currentPage)
+                val gridConsumed = gridState.dispatchRawDelta(remaining)
+                consumed += gridConsumed
+            }
+        } else if (delta > 0f) {
+            // Палец вниз: разворачиваем шапку
+            if (headerHeightPx > 0f && headerOffsetPx < 0f) {
+                val newOffset = (headerOffsetPx + delta).coerceIn(-headerHeightPx, 0f)
+                val headerConsumed = newOffset - headerOffsetPx
+                headerOffsetPx = newOffset
+                consumed += headerConsumed
+            }
+        }
+        consumed
+    }
+
+    val headerScrollModifier = Modifier.scrollable(
+        state = headerScrollableState,
+        orientation = Orientation.Vertical,
+    )
 
     val onPageChange: (Int) -> Unit = remember(pagerState, coroutineScope, uiState.maxPages) {
         { targetPage ->
@@ -341,27 +414,41 @@ fun ChannelScreenContent(
     ) { paddingValues ->
         ChannelCollapsingLayout(
             headerOffsetPx = headerOffsetPx,
-            onHeaderHeightMeasured = { height ->
-                if (headerHeightPx != height) {
-                    headerHeightPx = height
-                }
-            },
             topInsetPx = topCutoutPx,
             header = {
-                ChannelHeader(
-                    header = uiState.header,
-                    onBack = onBack,
-                    isSubscribed = isSubscribed,
-                    onToggleSubscription = onToggleSubscription,
-                    onCollaboratorClick = onCollaboratorClick,
-                    onRankingClick = onRankingClick,
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(headerScrollModifier)
+                        .onSizeChanged { size ->
+                            val height = size.height.toFloat()
+                            if (headerHeightPx != height) {
+                                val wasFullyCollapsed = headerHeightPx > 0f && headerOffsetPx <= -headerHeightPx + 1f
+                                headerHeightPx = height
+                                if (wasFullyCollapsed) {
+                                    headerOffsetPx = -height
+                                } else if (headerOffsetPx < -height) {
+                                    headerOffsetPx = -height
+                                }
+                            }
+                        }
+                ) {
+                    ChannelHeader(
+                        header = uiState.header,
+                        onBack = handleBack,
+                        isSubscribed = isSubscribed,
+                        onToggleSubscription = onToggleSubscription,
+                        onCollaboratorClick = onCollaboratorClick,
+                        onRankingClick = onRankingClick,
+                    )
+                }
             },
             stickyBar = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFF040404))
+                        .then(headerScrollModifier)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -373,7 +460,7 @@ fun ChannelScreenContent(
                             exit = fadeOut() + shrinkHorizontally(),
                         ) {
                             IconButton(
-                                onClick = onBack,
+                                onClick = handleBack,
                                 modifier = Modifier
                                     .padding(start = 8.dp)
                                     .size(34.dp)
@@ -428,7 +515,9 @@ fun ChannelScreenContent(
 
                     if (isPageLoading && pageVideos == null) {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .then(headerScrollModifier),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
@@ -440,6 +529,7 @@ fun ChannelScreenContent(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .then(headerScrollModifier)
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -463,6 +553,7 @@ fun ChannelScreenContent(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .then(headerScrollModifier)
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -509,11 +600,13 @@ fun ChannelScreenContent(
                         .fillMaxWidth()
                         .height(topCutout)
                         .background(Color(0xFF040404))
+                        .then(headerScrollModifier)
                 )
             },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .clipToBounds()
                 .nestedScroll(nestedScrollConnection)
         )
     }
@@ -526,7 +619,6 @@ fun ChannelScreenContent(
 @Composable
 private fun ChannelCollapsingLayout(
     headerOffsetPx: Float,
-    onHeaderHeightMeasured: (Float) -> Unit,
     topInsetPx: Int,
     header: @Composable () -> Unit,
     stickyBar: @Composable () -> Unit,
@@ -550,7 +642,6 @@ private fun ChannelCollapsingLayout(
 
         val headerPlaceable = headerMeasurable?.measure(constraints.copy(minHeight = 0))
         val headerHeight = headerPlaceable?.height ?: 0
-        onHeaderHeightMeasured(headerHeight.toFloat())
 
         val stickyBarPlaceable = stickyBarMeasurable?.measure(constraints.copy(minHeight = 0))
         val stickyBarHeight = stickyBarPlaceable?.height ?: 0

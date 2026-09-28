@@ -168,7 +168,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     }
 
     private var initialJob: Job? = null
-    private var pagingJob: Job? = null
+    private val pageJobs = mutableMapOf<Int, Job>()
     var currentPage: Int = 0
 
     /** Кэш загруженных страниц видеороликов: pageIndex -> List<ItemsX>. */
@@ -222,7 +222,8 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         }
 
         initialJob?.cancel()
-        pagingJob?.cancel()
+        pageJobs.values.forEach { it.cancel() }
+        pageJobs.clear()
         currentPage = 0
         pagesCache.clear()
         loadingPages.clear()
@@ -339,7 +340,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         loadingPages.add(targetPage)
         errorPages.remove(targetPage)
 
-        screenModelScope.launch {
+        val job = screenModelScope.launch {
             try {
                 val effectivePrefix = if (uiState.header.isModel) "models" else "channels"
                 var jsonVideos = fetchVideosJson(targetPage, overridePrefix = effectivePrefix)
@@ -360,6 +361,15 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 if (result.totalVideos != null && result.totalVideos > 0) {
                     uiState = uiState.copy(totalVideosCount = result.totalVideos)
                 }
+
+                // Ограничение кэша в памяти: если сохранено > 20 страниц, освобождаем удалённые от текущей
+                if (pagesCache.size > 20) {
+                    val farPages = pagesCache.keys.filter { kotlin.math.abs(it - targetPage) > 8 }
+                    farPages.forEach { farPage ->
+                        pagesCache.remove(farPage)
+                        gridStates.remove(farPage)
+                    }
+                }
             } catch (e: CancellationException) {
                 loadingPages.remove(targetPage)
                 throw e
@@ -367,8 +377,11 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 Timber.e(e, "ScreenX_ChannelSM: сбой загрузки страницы %d для %s", targetPage, cleanSlug)
                 loadingPages.remove(targetPage)
                 errorPages[targetPage] = "Не удалось загрузить страницу ${targetPage + 1}"
+            } finally {
+                pageJobs.remove(targetPage)
             }
         }
+        pageJobs[targetPage] = job
     }
 
     /**
