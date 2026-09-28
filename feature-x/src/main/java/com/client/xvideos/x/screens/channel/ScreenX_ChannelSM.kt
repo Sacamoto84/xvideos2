@@ -20,6 +20,9 @@ import com.client.xvideos.x.parcer.parserChannelRanksJson
 import com.client.xvideos.x.parcer.parserChannelVideosJson
 import com.client.xvideos.x.parcer.parserChannelVideosResult
 import com.client.xvideos.x.urlStart
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateSetOf
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.toSubscriptionItem
@@ -166,7 +169,21 @@ class ScreenX_ChannelSM @AssistedInject constructor(
 
     private var initialJob: Job? = null
     private var pagingJob: Job? = null
-    private var currentPage: Int = 0
+    var currentPage: Int = 0
+
+    /** Кэш загруженных страниц видеороликов: pageIndex -> List<ItemsX>. */
+    val pagesCache = mutableStateMapOf<Int, List<ItemsX>>()
+
+    /** Множество номеров страниц, находящихся в процессе сетевой загрузки. */
+    val loadingPages = mutableStateSetOf<Int>()
+
+    /** Карта ошибок загрузки страниц: pageIndex -> текст ошибки. */
+    val errorPages = mutableStateMapOf<Int, String>()
+
+    /** Сохранённые состояния скролла для каждой страницы. */
+    val gridStates = mutableMapOf<Int, LazyGridState>()
+
+    fun getGridState(page: Int): LazyGridState = gridStates.getOrPut(page) { LazyGridState() }
 
     init {
         loadInitial()
@@ -207,6 +224,10 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         initialJob?.cancel()
         pagingJob?.cancel()
         currentPage = 0
+        pagesCache.clear()
+        loadingPages.clear()
+        errorPages.clear()
+        gridStates.clear()
 
         uiState = uiState.copy(
             isLoadingInitial = true,
@@ -286,6 +307,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     parserChannelVideosResult(jsonVideos)
                 }
 
+                pagesCache[0] = result.videos
                 uiState = uiState.copy(
                     header = headerWithRanks,
                     videos = result.videos,
@@ -308,25 +330,16 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     }
 
     /**
-     * Загружает конкретную страницу видеороликов автора ([page], 0-based).
+     * Загружает конкретную страницу [page] (0-based) в [pagesCache].
      */
-    fun goToPage(page: Int) {
+    fun loadPage(page: Int) {
         val targetPage = page.coerceAtLeast(0)
-        if (targetPage == currentPage && uiState.videos.isNotEmpty() && !uiState.isLoadingInitial) return
+        if (pagesCache.containsKey(targetPage) || loadingPages.contains(targetPage)) return
 
-        pagingJob?.cancel()
-        initialJob?.cancel()
-        currentPage = targetPage
+        loadingPages.add(targetPage)
+        errorPages.remove(targetPage)
 
-        uiState = uiState.copy(
-            currentPage = targetPage,
-            isLoadingInitial = true,
-            isLoadingMore = false,
-            isEndReached = false,
-            error = null,
-        )
-
-        initialJob = screenModelScope.launch {
+        screenModelScope.launch {
             try {
                 val effectivePrefix = if (uiState.header.isModel) "models" else "channels"
                 var jsonVideos = fetchVideosJson(targetPage, overridePrefix = effectivePrefix)
@@ -342,24 +355,37 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     parserChannelVideosResult(jsonVideos)
                 }
 
-                uiState = uiState.copy(
-                    videos = result.videos,
-                    totalVideosCount = result.totalVideos ?: uiState.totalVideosCount,
-                    currentPage = targetPage,
-                    isLoadingInitial = false,
-                    isEndReached = result.videos.isEmpty(),
-                    error = null,
-                )
+                pagesCache[targetPage] = result.videos
+                loadingPages.remove(targetPage)
+                if (result.totalVideos != null && result.totalVideos > 0) {
+                    uiState = uiState.copy(totalVideosCount = result.totalVideos)
+                }
             } catch (e: CancellationException) {
+                loadingPages.remove(targetPage)
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ScreenX_ChannelSM: сбой загрузки страницы %d для %s", targetPage, cleanSlug)
-                uiState = uiState.copy(
-                    isLoadingInitial = false,
-                    error = "Не удалось загрузить страницу ${targetPage + 1}",
-                )
+                loadingPages.remove(targetPage)
+                errorPages[targetPage] = "Не удалось загрузить страницу ${targetPage + 1}"
             }
         }
+    }
+
+    /**
+     * Повторяет загрузку страницы после ошибки.
+     */
+    fun retryPage(page: Int) {
+        errorPages.remove(page)
+        loadPage(page)
+    }
+
+    /**
+     * Переход на конкретную страницу видеороликов автора ([page], 0-based).
+     */
+    fun goToPage(page: Int) {
+        val targetPage = page.coerceAtLeast(0)
+        currentPage = targetPage
+        loadPage(targetPage)
     }
 
     /**

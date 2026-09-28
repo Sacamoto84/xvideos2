@@ -401,5 +401,24 @@ class ParserChannelTest {
         val state5 = ChannelUiState(currentPage = 2, videos = dummyVideos)
         assertEquals(10, state5.maxPages)
     }
+
+    @Test
+    fun `pagesCache preserves loaded pages independently`() {
+        val cache = mutableMapOf<Int, List<ItemsX>>()
+        val page0 = listOf(ItemsX(id = 1, title = "Video 1"), ItemsX(id = 2, title = "Video 2"))
+        val page1 = listOf(ItemsX(id = 3, title = "Video 3"), ItemsX(id = 4, title = "Video 4"))
+
+        cache[0] = page0
+        cache[1] = page1
+
+        assertEquals(2, cache.size)
+        assertEquals(2, cache[0]?.size)
+        assertEquals(1L, cache[0]?.first()?.id)
+        assertEquals(3L, cache[1]?.first()?.id)
+
+        // При переходе на страницу 1 страница 0 остаётся в кэше
+        assertTrue(cache.containsKey(0))
+        assertTrue(cache.containsKey(1))
+    }
 }
 

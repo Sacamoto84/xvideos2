@@ -1,6 +1,11 @@
 package com.client.xvideos.x.screens.channel
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,27 +18,42 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,14 +78,15 @@ import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNav
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * Экран канала автора/студии X (`ScreenX_Channel`).
  *
  * Отображает обложку-баннер, аватарку, статистику, блок описания «Обо мне»,
  * переключатель сортировок («Свежие», «Новые», «Топ»), фильтр поиска по моделям
- * и бесконечную ленту видео в 2 колонки.
+ * и горизонтальный пейджер страниц видео с плавно схлопывающейся шапкой при скролле.
  *
  * @param slug Идентификатор канала (например, `"dart_oficial"`).
  * @param initialModel Исходная модель автора из блока тегов плеера (для быстрого первого кадра).
@@ -87,7 +108,6 @@ class ScreenX_Channel(
         }
 
         val onBack = remember(navigator) { { navigator.pop().let {} } }
-        BackHandler(onBack = onBack)
 
         val onOpenVideo = remember(navigator) {
             { item: ItemsX ->
@@ -132,12 +152,19 @@ class ScreenX_Channel(
 
         ChannelScreenContent(
             uiState = vm.uiState,
+            pagesCache = vm.pagesCache,
+            loadingPages = vm.loadingPages,
+            errorPages = vm.errorPages,
+            getGridState = vm::getGridState,
+            onLoadPage = vm::loadPage,
+            onRetryPage = vm::retryPage,
+            initialPage = vm.currentPage,
+            onCurrentPageChange = { page -> vm.currentPage = page },
             onBack = onBack,
             isSubscribed = vm.isSubscribed,
             onToggleSubscription = vm::toggleSubscription,
             onSortChange = vm::changeSort,
-            onPageChange = vm::goToPage,
-            onRetry = vm::loadInitial,
+            onRetryInitial = vm::loadInitial,
             onOpenVideo = onOpenVideo,
             isFavorite = isFavorite,
             isDownloaded = isDownloaded,
@@ -157,12 +184,19 @@ class ScreenX_Channel(
 @Composable
 fun ChannelScreenContent(
     uiState: com.client.xvideos.x.model.ChannelUiState,
+    pagesCache: Map<Int, List<ItemsX>>,
+    loadingPages: Set<Int>,
+    errorPages: Map<Int, String>,
+    getGridState: (Int) -> LazyGridState,
+    onLoadPage: (Int) -> Unit,
+    onRetryPage: (Int) -> Unit,
+    initialPage: Int,
+    onCurrentPageChange: (Int) -> Unit,
     onBack: () -> Unit,
     isSubscribed: Boolean = false,
     onToggleSubscription: () -> Unit = {},
     onSortChange: (com.client.xvideos.x.model.ChannelSortOrder) -> Unit,
-    onPageChange: (Int) -> Unit = {},
-    onRetry: () -> Unit,
+    onRetryInitial: () -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     isFavorite: (Long) -> Boolean = { false },
     isDownloaded: (Long) -> Boolean = { false },
@@ -177,18 +211,119 @@ fun ChannelScreenContent(
     onModelExpandedChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val gridState = rememberLazyGridState()
-    val topCutout = getTopInsetDp()
-
-    // Скролл к началу списка при переключении страницы
-    LaunchedEffect(uiState.currentPage) {
-        gridState.scrollToItem(0)
+    if (uiState.isLoadingInitial && uiState.header.name.isBlank()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(Color(0xFF040404)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color(0xFFDE2600))
+        }
+        return
     }
 
-    val bottomBarContent: @Composable () -> Unit = remember(uiState.currentPage, uiState.maxPages, onPageChange) {
+    if (uiState.error != null && uiState.header.name.isBlank()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(Color(0xFF040404))
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = uiState.error,
+                    color = Color(0xFFCCCCCC),
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onRetryInitial,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
+                ) {
+                    Text("Повторить", color = Color.White)
+                }
+            }
+        }
+        return
+    }
+
+    val coroutineScope = rememberCoroutineScope()
+    val pagerState = rememberPagerState(
+        initialPage = initialPage.coerceIn(0, (uiState.maxPages - 1).coerceAtLeast(0))
+    ) { uiState.maxPages }
+
+    LaunchedEffect(pagerState.currentPage) {
+        onCurrentPageChange(pagerState.currentPage)
+    }
+
+    // При возврате назад: если мы не на 0-й странице, сначала возвращаемся на страницу 0
+    val handleBack: () -> Unit = remember(pagerState.currentPage, coroutineScope, onBack) {
+        {
+            if (pagerState.currentPage > 0) {
+                coroutineScope.launch {
+                    pagerState.animateScrollToPage(0)
+                }.let {}
+            } else {
+                onBack()
+            }
+        }
+    }
+    BackHandler(onBack = handleBack)
+
+    var headerOffsetPx by rememberSaveable { mutableFloatStateOf(0f) }
+    var headerHeightPx by remember { mutableFloatStateOf(0f) }
+    val topCutout = getTopInsetDp()
+    val density = LocalDensity.current
+    val topCutoutPx = with(density) { topCutout.roundToPx() }
+
+    // Сброс на страницу 0 и раскрытие шапки при смене сортировки или фильтра
+    LaunchedEffect(uiState.currentSort, uiState.selectedModel) {
+        pagerState.scrollToPage(0)
+        headerOffsetPx = 0f
+    }
+
+    val nestedScrollConnection = remember(headerHeightPx) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                if (delta < 0f && headerHeightPx > 0f) {
+                    val newOffset = (headerOffsetPx + delta).coerceIn(-headerHeightPx, 0f)
+                    val consumed = newOffset - headerOffsetPx
+                    headerOffsetPx = newOffset
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                if (delta > 0f && headerHeightPx > 0f) {
+                    val newOffset = (headerOffsetPx + delta).coerceIn(-headerHeightPx, 0f)
+                    val consumedY = newOffset - headerOffsetPx
+                    headerOffsetPx = newOffset
+                    return Offset(0f, consumedY)
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
+    val onPageChange: (Int) -> Unit = remember(pagerState, coroutineScope, uiState.maxPages) {
+        { targetPage ->
+            val clamped = targetPage.coerceIn(0, (uiState.maxPages - 1).coerceAtLeast(0))
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(clamped)
+            }
+        }
+    }
+
+    val bottomBarContent: @Composable () -> Unit = remember(pagerState.currentPage, uiState.maxPages, onPageChange) {
         {
             BottomListDashBoardNavigationButtons2(
-                value = uiState.currentPage,
+                value = pagerState.currentPage,
                 onChange = onPageChange,
                 max = uiState.maxPages,
             )
@@ -199,22 +334,20 @@ fun ChannelScreenContent(
         modifier = modifier.fillMaxSize(),
         containerColor = Color(0xFF040404),
         bottomBar = {
-            if (uiState.videos.isNotEmpty() || uiState.currentPage > 0) {
+            if (uiState.maxPages > 1) {
                 bottomBarContent()
             }
         },
     ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            state = gridState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(top = topCutout),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
-            // 1. Шапка канала (баннер, аватар, имя, подписчики, описание)
-            item(span = { GridItemSpan(2) }) {
+        ChannelCollapsingLayout(
+            headerOffsetPx = headerOffsetPx,
+            onHeaderHeightMeasured = { height ->
+                if (headerHeightPx != height) {
+                    headerHeightPx = height
+                }
+            },
+            topInsetPx = topCutoutPx,
+            header = {
                 ChannelHeader(
                     header = uiState.header,
                     onBack = onBack,
@@ -223,144 +356,229 @@ fun ChannelScreenContent(
                     onCollaboratorClick = onCollaboratorClick,
                     onRankingClick = onRankingClick,
                 )
-            }
-
-            // 2. Панель сортировки
-            item(span = { GridItemSpan(2) }) {
-                ChannelSortBar(
-                    selectedSort = uiState.currentSort,
-                    onSortChange = onSortChange,
-                )
-            }
-
-            // 2.5 Фильтрация по моделям/каналам (если на странице найдены доступные модели)
-            if (uiState.hasModelFilters) {
-                item(span = { GridItemSpan(2) }) {
-                    ChannelModelFilterBar(
-                        header = uiState.header,
-                        selectedModel = uiState.selectedModel,
-                        filteredModels = uiState.filteredModels,
-                        searchQuery = uiState.modelFilterQuery,
-                        isExpanded = uiState.isModelFilterExpanded,
-                        onQueryChange = onModelQueryChange,
-                        onExpandedChange = onModelExpandedChange,
-                        onSelectModel = onSelectModel,
-                        totalVideos = uiState.videos.size,
-                    )
-                }
-            }
-
-            // 3. Состояния: загрузка первой страницы
-            if (uiState.isLoadingInitial) {
-                item(span = { GridItemSpan(2) }) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(240.dp),
-                        contentAlignment = Alignment.Center
+            },
+            stickyBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF040404))
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CircularProgressIndicator(color = Color(0xFFDE2600))
+                        AnimatedVisibility(
+                            visible = headerOffsetPx < -80f,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally(),
+                        ) {
+                            IconButton(
+                                onClick = onBack,
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .size(34.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Назад",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        ChannelSortBar(
+                            selectedSort = uiState.currentSort,
+                            onSortChange = onSortChange,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    if (uiState.hasModelFilters) {
+                        ChannelModelFilterBar(
+                            header = uiState.header,
+                            selectedModel = uiState.selectedModel,
+                            filteredModels = uiState.filteredModels,
+                            searchQuery = uiState.modelFilterQuery,
+                            isExpanded = uiState.isModelFilterExpanded,
+                            onQueryChange = onModelQueryChange,
+                            onExpandedChange = onModelExpandedChange,
+                            onSelectModel = onSelectModel,
+                            totalVideos = uiState.videos.size,
+                        )
                     }
                 }
-            } else if (uiState.error != null) {
-                // 4. Ошибка загрузки с кнопкой повтора
-                item(span = { GridItemSpan(2) }) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = uiState.error,
-                            color = Color(0xFFCCCCCC),
-                            fontSize = 15.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = onRetry,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
-                        ) {
-                            Text("Повторить", color = Color.White)
+            },
+            pager = {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    beyondViewportPageCount = 1,
+                    key = { pageIndex -> pageIndex }
+                ) { page ->
+                    val pageVideos = pagesCache[page]
+                    val isPageLoading = page in loadingPages
+                    val pageError = errorPages[page]
+                    val gridState = getGridState(page)
+
+                    LaunchedEffect(page, uiState.currentSort, uiState.selectedModel) {
+                        if (pageVideos == null && !isPageLoading && pageError == null) {
+                            onLoadPage(page)
                         }
                     }
-                }
-            } else if (uiState.isEmpty) {
-                // 5. Профиль пуст
-                item(span = { GridItemSpan(2) }) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (uiState.header.isModel) {
-                                "У этой модели пока нет опубликованных видео"
-                            } else {
-                                "У этого канала пока нет опубликованных видео"
-                            },
-                            color = Color.Gray,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            } else {
-                // 6. Сетка видеороликов
-                items(
-                    items = uiState.videos,
-                    key = { it.id }
-                ) { video ->
-                    ChannelVideoItem(
-                        item = video,
-                        isFavorite = isFavorite(video.id),
-                        isDownloaded = isDownloaded(video.id),
-                        onOpenVideo = onOpenVideo,
-                        onFavoriteAdd = onFavoriteAdd,
-                        onFavoriteRemove = onFavoriteRemove,
-                        onDownload = onDownload,
-                        onSaveToGallery = onSaveToGallery,
-                    )
-                }
 
-                // 7. Индикатор подгрузки следующей страницы
-                if (uiState.isLoadingMore) {
-                    item(span = { GridItemSpan(2) }) {
+                    if (isPageLoading && pageVideos == null) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
                                 color = Color(0xFFDE2600),
-                                modifier = Modifier.height(28.dp)
+                                modifier = Modifier.size(36.dp)
                             )
+                        }
+                    } else if (pageError != null && pageVideos == null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = pageError,
+                                    color = Color(0xFFCCCCCC),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Button(
+                                    onClick = { onRetryPage(page) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
+                                ) {
+                                    Text("Повторить", color = Color.White)
+                                }
+                            }
+                        }
+                    } else if (pageVideos != null && pageVideos.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (uiState.header.isModel) {
+                                    "У этой модели пока нет опубликованных видео"
+                                } else {
+                                    "У этого канала пока нет опубликованных видео"
+                                },
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else if (pageVideos != null) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            state = gridState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 16.dp)
+                        ) {
+                            items(
+                                items = pageVideos,
+                                key = { it.id }
+                            ) { video ->
+                                ChannelVideoItem(
+                                    item = video,
+                                    isFavorite = isFavorite(video.id),
+                                    isDownloaded = isDownloaded(video.id),
+                                    onOpenVideo = onOpenVideo,
+                                    onFavoriteAdd = onFavoriteAdd,
+                                    onFavoriteRemove = onFavoriteRemove,
+                                    onDownload = onDownload,
+                                    onSaveToGallery = onSaveToGallery,
+                                )
+                            }
                         }
                     }
                 }
+            },
+            statusCover = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(topCutout)
+                        .background(Color(0xFF040404))
+                )
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .nestedScroll(nestedScrollConnection)
+        )
+    }
+}
 
-                // 8. Все видео загружены
-                if (uiState.isEndReached && uiState.videos.isNotEmpty()) {
-                    item(span = { GridItemSpan(2) }) {
-                        Text(
-                            text = if (uiState.header.isModel) {
-                                "Все видео модели загружены"
-                            } else {
-                                "Все видео канала загружены"
-                            },
-                            color = Color(0xFF666666),
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        )
-                    }
-                }
-            }
+/**
+ * Кастомный макет для схлопывающейся шапки профиля канала, липкой панели сортировок/фильтров
+ * и горизонтального пейджера страниц с видеороликами.
+ */
+@Composable
+private fun ChannelCollapsingLayout(
+    headerOffsetPx: Float,
+    onHeaderHeightMeasured: (Float) -> Unit,
+    topInsetPx: Int,
+    header: @Composable () -> Unit,
+    stickyBar: @Composable () -> Unit,
+    pager: @Composable () -> Unit,
+    statusCover: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Layout(
+        content = {
+            header()
+            stickyBar()
+            pager()
+            statusCover()
+        },
+        modifier = modifier
+    ) { measurables, constraints ->
+        val headerMeasurable = measurables.getOrNull(0)
+        val stickyBarMeasurable = measurables.getOrNull(1)
+        val pagerMeasurable = measurables.getOrNull(2)
+        val statusCoverMeasurable = measurables.getOrNull(3)
+
+        val headerPlaceable = headerMeasurable?.measure(constraints.copy(minHeight = 0))
+        val headerHeight = headerPlaceable?.height ?: 0
+        onHeaderHeightMeasured(headerHeight.toFloat())
+
+        val stickyBarPlaceable = stickyBarMeasurable?.measure(constraints.copy(minHeight = 0))
+        val stickyBarHeight = stickyBarPlaceable?.height ?: 0
+
+        val availablePagerHeight = (constraints.maxHeight - stickyBarHeight - topInsetPx).coerceAtLeast(0)
+        val pagerPlaceable = pagerMeasurable?.measure(
+            constraints.copy(minHeight = availablePagerHeight, maxHeight = availablePagerHeight)
+        )
+
+        val statusCoverPlaceable = statusCoverMeasurable?.measure(
+            constraints.copy(minHeight = topInsetPx, maxHeight = topInsetPx)
+        )
+
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            val offset = headerOffsetPx.roundToInt()
+            val headerY = topInsetPx + offset
+            val stickyY = (topInsetPx + headerHeight + offset).coerceAtLeast(topInsetPx)
+            val pagerY = stickyY + stickyBarHeight
+
+            // Порядок отрисовки слоёв:
+            // 1. Пейджер снизу
+            pagerPlaceable?.placeWithLayer(0, pagerY)
+            // 2. Шапка профиля
+            headerPlaceable?.placeWithLayer(0, headerY)
+            // 3. Липкая панель сортировок (перекрывает шапку при схлопывании)
+            stickyBarPlaceable?.placeWithLayer(0, stickyY)
+            // 4. Плашка выреза под строку состояния в самом верху
+            statusCoverPlaceable?.placeWithLayer(0, 0)
         }
     }
 }
