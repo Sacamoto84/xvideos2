@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -40,6 +43,8 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.icons.IconFavorite18
+import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelModelFilterItem
@@ -51,6 +56,7 @@ import com.client.xvideos.x.screens.channel.atom.ChannelModelFilterBar
 import com.client.xvideos.x.screens.channel.atom.ChannelSortBar
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
+import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -89,6 +95,14 @@ class ScreenX_Channel(
             }
         }
 
+        val downloadedVideoIds by vm.saved.downloads.downloadedVideoIds.collectAsState()
+        val isFavorite: (Long) -> Boolean = remember(vm) { { id -> vm.isFavorite(id) } }
+        val isDownloaded: (Long) -> Boolean = remember(downloadedVideoIds) { { id -> downloadedVideoIds.contains(id) } }
+        val onFavoriteAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
+        val onFavoriteRemove: (ItemsX) -> Unit = remember(vm) { { item -> vm.removeFavorite(item) } }
+        val onDownload: (ItemsX) -> Unit = remember(vm) { { item -> vm.download(item) } }
+        val onSaveToGallery: (ItemsX) -> Unit = remember(vm) { { item -> vm.saveToGallery(item) } }
+
         val onCollaboratorClick = remember(navigator) {
             { collaborator: ChannelCollaborator ->
                 val targetSlug = collaborator.cleanSlug
@@ -125,6 +139,12 @@ class ScreenX_Channel(
             onPageChange = vm::goToPage,
             onRetry = vm::loadInitial,
             onOpenVideo = onOpenVideo,
+            isFavorite = isFavorite,
+            isDownloaded = isDownloaded,
+            onFavoriteAdd = onFavoriteAdd,
+            onFavoriteRemove = onFavoriteRemove,
+            onDownload = onDownload,
+            onSaveToGallery = onSaveToGallery,
             onCollaboratorClick = onCollaboratorClick,
             onRankingClick = onRankingClick,
             onSelectModel = vm::selectModel,
@@ -144,6 +164,12 @@ fun ChannelScreenContent(
     onPageChange: (Int) -> Unit = {},
     onRetry: () -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
+    isFavorite: (Long) -> Boolean = { false },
+    isDownloaded: (Long) -> Boolean = { false },
+    onFavoriteAdd: (ItemsX) -> Unit = {},
+    onFavoriteRemove: (ItemsX) -> Unit = {},
+    onDownload: (ItemsX) -> Unit = {},
+    onSaveToGallery: (ItemsX) -> Unit = {},
     onCollaboratorClick: (ChannelCollaborator) -> Unit = {},
     onRankingClick: (targetUrl: String, title: String) -> Unit = { _, _ -> },
     onSelectModel: (ChannelModelFilterItem?) -> Unit = {},
@@ -289,7 +315,13 @@ fun ChannelScreenContent(
                 ) { video ->
                     ChannelVideoItem(
                         item = video,
+                        isFavorite = isFavorite(video.id),
+                        isDownloaded = isDownloaded(video.id),
                         onOpenVideo = onOpenVideo,
+                        onFavoriteAdd = onFavoriteAdd,
+                        onFavoriteRemove = onFavoriteRemove,
+                        onDownload = onDownload,
+                        onSaveToGallery = onSaveToGallery,
                     )
                 }
 
@@ -336,10 +368,20 @@ fun ChannelScreenContent(
 @Composable
 private fun ChannelVideoItem(
     item: ItemsX,
+    isFavorite: Boolean,
+    isDownloaded: Boolean,
     onOpenVideo: (ItemsX) -> Unit,
+    onFavoriteAdd: (ItemsX) -> Unit,
+    onFavoriteRemove: (ItemsX) -> Unit,
+    onDownload: (ItemsX) -> Unit,
+    onSaveToGallery: (ItemsX) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val handleOpen = remember(item, onOpenVideo) { { onOpenVideo(item) } }
+    val handleFavoriteAdd = remember(item, onFavoriteAdd) { { onFavoriteAdd(item) } }
+    val handleFavoriteRemove = remember(item, onFavoriteRemove) { { onFavoriteRemove(item) } }
+    val handleDownload = remember(item, onDownload) { { onDownload(item) } }
+    val handleSaveToGallery = remember(item, onSaveToGallery) { { onSaveToGallery(item) } }
 
     Box(
         modifier = modifier
@@ -354,22 +396,48 @@ private fun ChannelVideoItem(
             onLongClick = handleOpen,
             onDoubleClick = handleOpen,
         ) {
-            // Длительность в правом нижнем углу
-            if (item.duration.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xB3000000))
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = item.duration,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.White
-                    )
+            // Длительность, иконка избранного и индикатор скачивания в правом нижнем углу
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (isDownloaded) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xB3000000))
+                            .padding(2.dp)
+                    ) {
+                        IconSave18()
+                    }
+                }
+                if (isFavorite) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xB3000000))
+                            .padding(2.dp)
+                    ) {
+                        IconFavorite18()
+                    }
+                }
+                if (item.duration.isNotBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xB3000000))
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = item.duration,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
@@ -391,6 +459,49 @@ private fun ChannelVideoItem(
                     )
                 }
             }
+
+            // Меню с тремя точками в правом верхнем углу
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(2.dp)
+            ) {
+                X_DashboardExpandMenu(
+                    isFavorite = isFavorite,
+                    onFavoriteAdd = handleFavoriteAdd,
+                    onFavoriteRemove = handleFavoriteRemove,
+                    onDownload = handleDownload,
+                    onSaveToGallery = handleSaveToGallery,
+                )
+            }
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF040404)
+@Composable
+private fun ChannelVideoItemPreview() {
+    com.client.xvideos.ui.theme.XvideosTheme(darkTheme = true) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            ChannelVideoItem(
+                item = ItemsX(
+                    id = 12345L,
+                    title = "Sample Video Title",
+                    duration = "12:34",
+                    views = "1.2M",
+                    channel = "Sample Channel",
+                    href = "/video12345",
+                    nameProfile = "Sample Channel",
+                    linkProfile = "/channels/sample",
+                ),
+                isFavorite = true,
+                isDownloaded = true,
+                onOpenVideo = {},
+                onFavoriteAdd = {},
+                onFavoriteRemove = {},
+                onDownload = {},
+                onSaveToGallery = {},
+            )
         }
     }
 }

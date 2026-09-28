@@ -21,6 +21,7 @@ import com.client.xvideos.x.parcer.parserChannelVideosJson
 import com.client.xvideos.x.parcer.parserChannelVideosResult
 import com.client.xvideos.x.urlStart
 import com.client.xvideos.x.feature.saved.SavedX
+import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.toSubscriptionItem
 import dagger.Binds
 import dagger.Module
@@ -118,6 +119,39 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 saved.subscriptions.addChannel(item.copy(isModel = false))
             }
         }
+    }
+
+    /**
+     * Проверяет, находится ли видеоролик в избранном.
+     */
+    fun isFavorite(id: Long): Boolean = saved.favorites.contains(id)
+
+    /**
+     * Добавляет видеоролик в избранное.
+     */
+    fun addFavorite(item: ItemsX) {
+        saved.favorites.add(item)
+    }
+
+    /**
+     * Удаляет видеоролик из избранного.
+     */
+    fun removeFavorite(item: ItemsX) {
+        saved.favorites.remove(item)
+    }
+
+    /**
+     * Скачивает видеоролик в наилучшем качестве в локальное хранилище.
+     */
+    fun download(item: ItemsX) {
+        saved.downloads.download(item)
+    }
+
+    /**
+     * Сохраняет видеоролик в галерею устройства.
+     */
+    fun saveToGallery(item: ItemsX) {
+        saved.downloads.saveToGallery(item)
     }
 
     /** Фабрика assisted injection для передачи параметров [slug], [initialModel] и [isModel]. */
