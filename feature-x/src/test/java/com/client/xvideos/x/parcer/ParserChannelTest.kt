@@ -172,6 +172,44 @@ class ParserChannelTest {
     }
 
     @Test
+    fun `parserChannelHeader correctly detects models in channel collaborators`() {
+        val html = """
+            <!doctype html>
+            <html>
+            <body>
+                <div class="profile-infos">
+                    <h2><strong class="text-danger">Dartoficial</strong></h2>
+                </div>
+                <p id="pinfo-workedfor">
+                    <strong>Работал для/с:</strong>
+                    <span>
+                        <a href="/profiles/dart-model" class="text-danger">Dart</a>, 
+                        <a href="/profiles/joy-sky" class="text-danger">Joy Ski</a>, 
+                        <a href="/profiles/thonny111-model" class="text-danger">Tonny231</a>
+                    </span>
+                </p>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val header = parserChannelHeader(html, fallbackSlug = "dart_oficial", isModel = false)
+        assertTrue(header.hasCollaborators)
+        assertEquals(3, header.collaborators.size)
+
+        val c1 = header.collaborators[0]
+        assertEquals("Dart", c1.name)
+        assertTrue(c1.isModel)
+
+        val c2 = header.collaborators[1]
+        assertEquals("Joy Ski", c2.name)
+        assertTrue(c2.isModel)
+
+        val c3 = header.collaborators[2]
+        assertEquals("Tonny231", c3.name)
+        assertTrue(c3.isModel)
+    }
+
+    @Test
     fun `parserChannelVideosJson extracts video cards and unescapes titles`() {
         val json = """
             {

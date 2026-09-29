@@ -46,7 +46,19 @@ fun parserChannelHeader(
     )
 
     val models = parseChannelModels(html)
-    return if (models.isNotEmpty()) header.copy(availableModels = models) else header
+    return if (models.isNotEmpty()) {
+        val modelNames = models.map { it.displayName.lowercase().trim() }.filter { it.isNotBlank() }.toSet()
+        val updatedCollaborators = header.collaborators.map { c ->
+            if (!c.isModel && modelNames.contains(c.name.lowercase().trim())) {
+                c.copy(isModel = true)
+            } else {
+                c
+            }
+        }
+        header.copy(availableModels = models, collaborators = updatedCollaborators)
+    } else {
+        header
+    }
 }
 
 /**
@@ -124,11 +136,19 @@ fun parserChannelHeader(
     val country = document.selectFirst("#pinfo-country span")?.text()?.trim().orEmpty()
     val countryCode = parseProfileCountryCode(document, country)
     val workedWith = document.selectFirst("#pinfo-workedfor span")?.text()?.trim().orEmpty()
+    val isCurrentPageChannel = profileType == com.client.xvideos.x.model.ProfileType.CHANNEL
     val collaboratorElements = document.select("#pinfo-workedfor span a[href]")
     val collaborators = collaboratorElements.mapNotNull { a ->
         val href = a.attr("href").trim()
         val name = a.text().trim()
-        if (name.isNotBlank()) ChannelCollaborator(name = name, href = href) else null
+        if (name.isNotBlank()) {
+            val isCollaboratorModel = detectCollaboratorIsModel(
+                name = name,
+                href = href,
+                isCurrentPageChannel = isCurrentPageChannel,
+            )
+            ChannelCollaborator(name = name, href = href, isModel = isCollaboratorModel)
+        } else null
     }
 
     return ChannelHeaderModel(
@@ -148,6 +168,57 @@ fun parserChannelHeader(
         workedWith = workedWith,
         collaborators = collaborators,
     )
+}
+
+private val STUDIO_KEYWORDS = setOf(
+    "studio", "studios", "productions", "production", "producoes", "producao",
+    "films", "film", "media", "tv", "canal", "channel", "channels", "network",
+    "porn", "xxx", "amador", "amateurs", "entertainment", "magazine", "pictures",
+    "club", "clube", "cuckold"
+)
+
+internal fun detectCollaboratorIsModel(
+    name: String,
+    href: String,
+    isCurrentPageChannel: Boolean,
+    knownModelNames: Set<String> = emptySet(),
+): Boolean {
+    val lowerHref = href.lowercase().trim()
+    val lowerName = name.lowercase().trim()
+
+    // 1. Явные указатели на модель в URL или slug
+    if (lowerHref.contains("/models/") || lowerHref.contains("/pornstars/")) return true
+    if (lowerHref.endsWith("-model") || lowerHref.endsWith("_model") ||
+        lowerHref.contains("-model/") || lowerHref.contains("_model/") ||
+        lowerHref.contains("/model-") || lowerHref.contains("/model_")
+    ) return true
+
+    // 2. Явные указатели на канал в URL
+    if (lowerHref.contains("/channels/")) return false
+
+    // 3. Совпадение с зарегистрированными моделями канала
+    if (knownModelNames.isNotEmpty()) {
+        val cleanSlug = lowerHref.substringAfterLast('/').substringBefore('?').substringBefore('#').trim()
+        if (lowerName in knownModelNames || cleanSlug in knownModelNames) {
+            return true
+        }
+    }
+
+    // 4. Студийные маркеры в названии или slug
+    val nameTokens = lowerName.split(' ', '_', '-', '.', '/')
+    val slugTokens = lowerHref.split('/', '_', '-', '.')
+    val hasStudioMarker = (nameTokens + slugTokens).any { it in STUDIO_KEYWORDS } ||
+        STUDIO_KEYWORDS.any { lowerName.contains(it) || lowerHref.contains(it) }
+
+    if (hasStudioMarker) return false
+
+    // 5. Контекст страницы: на странице канала список «Работал для/с» перечисляет моделей студии
+    if (isCurrentPageChannel) {
+        return true
+    }
+
+    // На странице модели, если нет маркеров студии, участник считается коллегой-моделью
+    return true
 }
 
 private val FLAG_CLASS_REGEX = Regex("""\bflag-([a-z]{2})\b""", RegexOption.IGNORE_CASE)

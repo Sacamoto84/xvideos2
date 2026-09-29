@@ -440,11 +440,17 @@ private fun CollaboratorChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isModel = collaborator.isModel
+    val accentColor = if (isModel) Color(0xFFDE2600) else Color(0xFF1E88E5)
+    val bgColor = if (isModel) Color(0xFF261418) else Color(0xFF141E26)
+    val borderColor = if (isModel) Color(0x4DDE2600) else Color(0x4D1E88E5)
+    val iconChar = if (isModel) "\uE9B8" else "\uE956"
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF261418))
-            .border(1.dp, Color(0x4DDE2600), RoundedCornerShape(6.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(6.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
@@ -454,9 +460,9 @@ private fun CollaboratorChip(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = if (collaborator.isModel) "\uE9B8" else "\uE956",
+                text = iconChar,
                 style = TextStyle(
-                    color = Color(0xFFDE2600),
+                    color = accentColor,
                     fontSize = 11.sp,
                     fontFamily = FontFamily(Font(R.font.iconfont))
                 )

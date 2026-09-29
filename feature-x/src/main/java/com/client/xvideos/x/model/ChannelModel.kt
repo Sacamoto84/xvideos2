@@ -50,6 +50,7 @@ data class ChannelModelFilterItem(
 data class ChannelCollaborator(
     val name: String = "",
     val href: String = "",
+    val isModel: Boolean = false,
 ) : Serializable {
     /** Извлекает чистый slug без URL-префиксов и параметров. */
     val cleanSlug: String get() = href
@@ -59,14 +60,13 @@ data class ChannelCollaborator(
         .removePrefix("channels/")
         .removePrefix("/models/")
         .removePrefix("models/")
+        .removePrefix("/pornstars/")
+        .removePrefix("pornstars/")
         .removePrefix("/")
         .substringBefore('/')
         .substringBefore('?')
         .substringBefore('#')
         .trim()
-
-    /** Определяет, ведет ли ссылка на профиль порнозвезды/модели. */
-    val isModel: Boolean get() = href.contains("/models/")
 }
 
 /**
