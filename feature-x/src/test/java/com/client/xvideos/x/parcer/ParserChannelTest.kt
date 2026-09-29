@@ -426,12 +426,19 @@ class ParserChannelTest {
         )
         assertEquals(2, state2.maxPages)
 
-        // 3. По выбранной модели (413 видео / 36 = 12 страниц)
+        // 3. По выбранной модели (413 видео / 36 = 12 страниц, приоритет над header.videoCount)
         val state3 = ChannelUiState(
             header = ChannelHeaderModel(videoCount = 1000),
             selectedModel = ChannelModelFilterItem(nbVideos = 413)
         )
         assertEquals(12, state3.maxPages)
+
+        // 3b. selectedModel приоритетнее totalVideosCount (регрессия: ранее totalVideosCount затенял фильтр)
+        val state3b = ChannelUiState(
+            totalVideosCount = 1000,
+            selectedModel = ChannelModelFilterItem(nbVideos = 93)
+        )
+        assertEquals(3, state3b.maxPages)
 
         // 4. Fallback при 0 видео
         val state4 = ChannelUiState(currentPage = 0)

@@ -201,7 +201,9 @@ class ScreenXSearchSM @Inject constructor(
         val url = com.client.xvideos.x.search.buildSearchVideosUrl(trimmed, page)
         Timber.d("ScreenXSearchSM.fetchVideosPage: url=%s", url)
 
-        var html = com.client.xvideos.x.feature.net.readHtmlFromURLDirect(url)
+        var html = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            com.client.xvideos.x.feature.net.readHtmlFromURLDirect(url)
+        }
         if (html.isBlank()) {
             Timber.w("ScreenXSearchSM: direct HTTP empty, trying WebView: %s", url)
             html = com.client.xvideos.x.feature.net.readHtmlFromURLWebView(url)

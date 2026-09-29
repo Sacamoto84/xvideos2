@@ -247,8 +247,8 @@ data class ChannelUiState(
     val maxPages: Int
         get() {
             val total = when {
-                totalVideosCount > 0 -> totalVideosCount
                 selectedModel != null && selectedModel.nbVideos > 0 -> selectedModel.nbVideos
+                totalVideosCount > 0 -> totalVideosCount
                 header.videoCount > 0 -> header.videoCount
                 else -> 0
             }

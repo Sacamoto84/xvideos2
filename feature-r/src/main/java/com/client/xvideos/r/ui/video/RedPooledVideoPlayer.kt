@@ -208,7 +208,9 @@ fun RedPooledVideoPlayer(
             if (isValidABRange(enableAB, timeA, timeB) && position >= timeB) {
                 exo.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
             }
-            if (!play) break
+            // Останавливаем цикл при паузе: `play` — состояние Compose-параметра,
+            // `exo.playWhenReady` — фактическое состояние плеера (например, при паузе через PlayerControls).
+            if (!play || !exo.playWhenReady) break
             delay(50)
         }
     }
