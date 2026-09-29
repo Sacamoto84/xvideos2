@@ -1,5 +1,6 @@
 package com.client.xvideos.x.search.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,6 +10,7 @@ import kotlinx.serialization.Serializable
  * @property R Рейтинг релевантности/популярности запроса.
  */
 @Serializable
+@Immutable
 data class Keyword(val N: String, val R: String) { //N группа R-рейтинг
     val name: String get() = N
     val rating: String get() = R
@@ -44,6 +46,7 @@ data class Keyword(val N: String, val R: String) { //N группа R-рейти
  * @property A Дополнительные атрибуты ответа API.
  */
 @Serializable
+@Immutable
 data class Pornstar(
     val N: String,
     val F: String,
@@ -97,6 +100,7 @@ data class Pornstar(
  * @property A Дополнительные атрибуты ответа API.
  */
 @Serializable
+@Immutable
 data class Channel(
     val N: String, //Отображаемое название канала в поисковике
     val F: String, //путь к /profiles/xxx
@@ -135,6 +139,7 @@ data class Channel(
  * Контейнер данных подсказок внутри ключа `data` API X.
  */
 @Serializable
+@Immutable
 data class SearchSuggestData(
     val keywords: List<Keyword> = emptyList(),
     val pornstar: List<Pornstar>? = null,
@@ -153,6 +158,7 @@ data class SearchSuggestData(
  * @property BLACKLISTED Флаг блокировки запроса в поисковом индексе.
  */
 @Serializable
+@Immutable
 data class SearchResult(
     val result: Boolean = false,
     val code: Int = 0,

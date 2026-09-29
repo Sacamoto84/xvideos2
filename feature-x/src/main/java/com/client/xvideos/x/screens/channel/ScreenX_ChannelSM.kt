@@ -209,6 +209,22 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     }
 
     /**
+     * Загружает JSON порцию видеороликов с fallback между models и channels.
+     */
+    private suspend fun fetchVideosJsonWithFallback(page: Int, isModel: Boolean): String {
+        val effectivePrefix = if (isModel) "models" else "channels"
+        var jsonVideos = fetchVideosJson(page, overridePrefix = effectivePrefix)
+        if (jsonVideos.isBlank() || jsonVideos.trim() == "{\"videos\":[]}") {
+            val altPrefix = if (effectivePrefix == "models") "channels" else "models"
+            val altJson = fetchVideosJson(page, overridePrefix = altPrefix)
+            if (altJson.isNotBlank() && altJson.trim() != "{\"videos\":[]}") {
+                jsonVideos = altJson
+            }
+        }
+        return jsonVideos
+    }
+
+    /**
      * Загружает HTML-разметку страницы канала или модели с fallback-проверками альтернативных путей.
      */
     private suspend fun fetchChannelHtml(cleanSlug: String, pathPrefix: String, isModel: Boolean): String = withContext(Dispatchers.IO) {
@@ -291,15 +307,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 }
 
                 // 2. Загрузка 0-й страницы видео из JSON API
-                val effectivePrefix = if (headerWithRanks.isModel) "models" else "channels"
-                var jsonVideos = fetchVideosJson(0, overridePrefix = effectivePrefix)
-                if (jsonVideos.isBlank() || jsonVideos.trim() == "{\"videos\":[]}") {
-                    val altPrefix = if (effectivePrefix == "models") "channels" else "models"
-                    val altJson = fetchVideosJson(0, overridePrefix = altPrefix)
-                    if (altJson.isNotBlank() && altJson.trim() != "{\"videos\":[]}") {
-                        jsonVideos = altJson
-                    }
-                }
+                val jsonVideos = fetchVideosJsonWithFallback(0, isModel = headerWithRanks.isModel)
 
                 val result = withContext(Dispatchers.Default) {
                     parserChannelVideosResult(jsonVideos)
@@ -339,15 +347,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
 
         val job = screenModelScope.launch {
             try {
-                val effectivePrefix = if (uiState.header.isModel) "models" else "channels"
-                var jsonVideos = fetchVideosJson(targetPage, overridePrefix = effectivePrefix)
-                if (jsonVideos.isBlank() || jsonVideos.trim() == "{\"videos\":[]}") {
-                    val altPrefix = if (effectivePrefix == "models") "channels" else "models"
-                    val altJson = fetchVideosJson(targetPage, overridePrefix = altPrefix)
-                    if (altJson.isNotBlank() && altJson.trim() != "{\"videos\":[]}") {
-                        jsonVideos = altJson
-                    }
-                }
+                val jsonVideos = fetchVideosJsonWithFallback(targetPage, isModel = uiState.header.isModel)
 
                 val result = withContext(Dispatchers.Default) {
                     parserChannelVideosResult(jsonVideos)
