@@ -184,7 +184,7 @@ fun RedPooledVideoPlayer(
 
     // Время/длительность и петля A-B. Шаг 50 мс — как в прежнем CMPPlayer2,
     // чтобы поведение полосы времени и A-B не изменилось.
-    LaunchedEffect(player, isCurrentPage, enableAB, timeA, timeB) {
+    LaunchedEffect(player, isCurrentPage, enableAB, timeA, timeB, play) {
         val exo = player ?: return@LaunchedEffect
         // Нетекущие страницы не играют (playWhenReady = play && isCurrentPage), время на них
         // не движется — крутить на них опрос смысла нет. Без этого выхода при трёх живых
@@ -208,6 +208,7 @@ fun RedPooledVideoPlayer(
             if (isValidABRange(enableAB, timeA, timeB) && position >= timeB) {
                 exo.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
             }
+            if (!play) break
             delay(50)
         }
     }
@@ -358,3 +359,5 @@ fun RedPooledVideoPlayer(
         }
     }
 }
+
+
