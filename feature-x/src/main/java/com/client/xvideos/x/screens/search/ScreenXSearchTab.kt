@@ -433,36 +433,7 @@ private fun SearchSuggestionsView(
                     SectionHeader(title = "Категории и фразы")
                 }
                 items(keywords, key = { "kw_${it.name}" }) { kw ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectKeyword(kw.name) }
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = Color(0xFFFF9900),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = kw.name,
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (kw.hasRating) {
-                            Text(
-                                text = kw.rating,
-                                color = Color.Gray,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
+                    KeywordSuggestionItem(keyword = kw, onSelect = onSelectKeyword)
                     HorizontalDivider(color = Color(0xFF252525), thickness = 0.5.dp)
                 }
             }
@@ -473,43 +444,7 @@ private fun SearchSuggestionsView(
                     SectionHeader(title = "Модели")
                 }
                 items(models, key = { "md_${it.name}_${it.profilePath}" }) { star ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectModel(star) }
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        UrlImage(
-                            url = star.avatarUrl,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF333333))
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = star.name,
-                                color = Color.White,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            val subtitleParts = buildList {
-                                if (star.hasVideos) add("${star.formatVideos()} видео")
-                                if (star.hasValidSubscribers) add("${star.subscribers} подп.")
-                            }
-                            if (subtitleParts.isNotEmpty()) {
-                                Text(
-                                    text = subtitleParts.joinToString(" • "),
-                                    color = Color(0xFF9E9E9E),
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-                    }
+                    ModelSuggestionItem(star = star, onSelect = onSelectModel)
                     HorizontalDivider(color = Color(0xFF252525), thickness = 0.5.dp)
                 }
             }
@@ -520,51 +455,140 @@ private fun SearchSuggestionsView(
                     SectionHeader(title = "Каналы")
                 }
                 items(channels, key = { "ch_${it.name}_${it.profilePath}" }) { channel ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectChannel(channel) }
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        UrlImage(
-                            url = channel.avatarUrl,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF333333))
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = channel.name,
-                                    color = Color.White,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                if (channel.isVerified) {
-                                    Text(
-                                        text = " ✓",
-                                        color = Color(0xFFFF9900),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
-                                }
-                            }
-                            if (channel.hasSubscribers) {
-                                Text(
-                                    text = "${channel.subscribers} подписчиков",
-                                    color = Color(0xFF9E9E9E),
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-                    }
+                    ChannelSuggestionItem(channel = channel, onSelect = onSelectChannel)
                     HorizontalDivider(color = Color(0xFF252525), thickness = 0.5.dp)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun KeywordSuggestionItem(
+    keyword: Keyword,
+    onSelect: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(keyword.name) }
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            tint = Color(0xFFFF9900),
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = keyword.name,
+            color = Color.White,
+            fontSize = 15.sp,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        if (keyword.hasRating) {
+            Text(
+                text = keyword.rating,
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModelSuggestionItem(
+    star: Pornstar,
+    onSelect: (Pornstar) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(star) }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        UrlImage(
+            url = star.avatarUrl,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF333333))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = star.name,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            val subtitleParts = buildList {
+                if (star.hasVideos) add("${star.formatVideos()} видео")
+                if (star.hasValidSubscribers) add("${star.subscribers} подп.")
+            }
+            if (subtitleParts.isNotEmpty()) {
+                Text(
+                    text = subtitleParts.joinToString(" • "),
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 12.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChannelSuggestionItem(
+    channel: Channel,
+    onSelect: (Channel) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(channel) }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        UrlImage(
+            url = channel.avatarUrl,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF333333))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = channel.name,
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (channel.isVerified) {
+                    Text(
+                        text = " ✓",
+                        color = Color(0xFFFF9900),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+            if (channel.hasSubscribers) {
+                Text(
+                    text = "${channel.subscribers} подписчиков",
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 12.sp
+                )
             }
         }
     }

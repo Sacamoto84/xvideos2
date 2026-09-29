@@ -130,28 +130,18 @@ class ScreenXDashBoards : Screen {
                     HorizontalDivider(color = Color(0xFF333333))
 
                     // Второй ряд — зависит от выбранного главного таба.
-                    when (vm.mainTab) {
-                        SAVABLE -> TabRow(
-                            titlesIcon = savedTabs,
-                            value = vm.savedTab,
-                            onChangeState = onSavedTabChange,
-                            containerColor = Theme.tabLevel1,
-                        )
-                        SEARCH -> {
-                            if (searchUiMode == SearchUiMode.RESULTS) {
-                                BottomListDashBoardNavigationButtons2(
-                                    value = searchPage,
-                                    onChange = onSearchPageChange,
-                                    max = searchMaxPages
-                                )
-                            }
-                        }
-                        else -> DashboardControlsRow(
-                            isCurrentPage = vm.pagerState.currentPage,
-                            isMax = vm.pagerState.pageCount,
-                            onChange = onDashboardPageChange
-                        )
-                    }
+                    DashboardSecondaryControls(
+                        mainTab = vm.mainTab,
+                        savedTab = vm.savedTab,
+                        searchUiMode = searchUiMode,
+                        searchPage = searchPage,
+                        searchMaxPages = searchMaxPages,
+                        pagerCurrentPage = vm.pagerState.currentPage,
+                        pagerPageCount = vm.pagerState.pageCount,
+                        onSavedTabChange = onSavedTabChange,
+                        onDashboardPageChange = onDashboardPageChange,
+                        onSearchPageChange = onSearchPageChange
+                    )
 
                     // Главный таб-ряд (R/L-стиль).
                     TabRow(
@@ -175,14 +165,11 @@ class ScreenXDashBoards : Screen {
                     .fillMaxSize()
             ) {
                 when (vm.mainTab) {
-                    SAVABLE -> when (vm.savedTab) {
-                        SAVED_FAVORITES -> favoritesScreen.Content()
-                        SAVED_DOWNLOADS -> X_SavedContent(vm.saved)
-                        SAVED_HISTORY -> ScreenXHistory(vm.saved)
-                        SAVED_CHANNELS -> X_SubscriptionsContent(saved = vm.saved, isModel = false)
-                        SAVED_MODELS -> X_SubscriptionsContent(saved = vm.saved, isModel = true)
-                        else -> favoritesScreen.Content()
-                    }
+                    SAVABLE -> SavedTabContent(
+                        savedTab = vm.savedTab,
+                        favoritesScreen = favoritesScreen,
+                        saved = vm.saved
+                    )
                     SEARCH -> X_SearchContent(
                         vm = searchVm,
                         onOpenVideoPlayer = onOpenVideoPlayer,
@@ -207,6 +194,59 @@ class ScreenXDashBoards : Screen {
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun DashboardSecondaryControls(
+        mainTab: Int,
+        savedTab: Int,
+        searchUiMode: SearchUiMode,
+        searchPage: Int,
+        searchMaxPages: Int,
+        pagerCurrentPage: Int,
+        pagerPageCount: Int,
+        onSavedTabChange: (Int) -> Unit,
+        onDashboardPageChange: suspend (Int) -> Unit,
+        onSearchPageChange: (Int) -> Unit
+    ) {
+        when (mainTab) {
+            SAVABLE -> TabRow(
+                titlesIcon = savedTabs,
+                value = savedTab,
+                onChangeState = onSavedTabChange,
+                containerColor = Theme.tabLevel1,
+            )
+            SEARCH -> {
+                if (searchUiMode == SearchUiMode.RESULTS) {
+                    BottomListDashBoardNavigationButtons2(
+                        value = searchPage,
+                        onChange = onSearchPageChange,
+                        max = searchMaxPages
+                    )
+                }
+            }
+            else -> DashboardControlsRow(
+                isCurrentPage = pagerCurrentPage,
+                isMax = pagerPageCount,
+                onChange = onDashboardPageChange
+            )
+        }
+    }
+
+    @Composable
+    private fun SavedTabContent(
+        savedTab: Int,
+        favoritesScreen: ScreenFavorites,
+        saved: SavedX
+    ) {
+        when (savedTab) {
+            SAVED_FAVORITES -> favoritesScreen.Content()
+            SAVED_DOWNLOADS -> X_SavedContent(saved)
+            SAVED_HISTORY -> ScreenXHistory(saved)
+            SAVED_CHANNELS -> X_SubscriptionsContent(saved = saved, isModel = false)
+            SAVED_MODELS -> X_SubscriptionsContent(saved = saved, isModel = true)
+            else -> favoritesScreen.Content()
         }
     }
 
