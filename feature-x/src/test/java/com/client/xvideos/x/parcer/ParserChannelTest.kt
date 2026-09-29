@@ -115,6 +115,9 @@ class ParserChannelTest {
         assertEquals("Женщина", header.gender)
         assertEquals("26 лет", header.age)
         assertEquals("Бразилия", header.country)
+        assertEquals("br", header.countryCode)
+        assertEquals("🇧🇷", header.flagEmoji)
+        assertTrue(header.hasFlag)
         assertEquals("Studio X, Private", header.workedWith)
         assertEquals("Женщина, Бразилия, 26 лет", header.subtitle)
         assertTrue(header.aboutMe.contains("Official Joy Ski profile"))
@@ -419,6 +422,29 @@ class ParserChannelTest {
         // При переходе на страницу 1 страница 0 остаётся в кэше
         assertTrue(cache.containsKey(0))
         assertTrue(cache.containsKey(1))
+    }
+
+    @Test
+    fun `parserChannelHeader correctly extracts flag from h2 class`() {
+        val html = """
+            <!doctype html>
+            <html>
+            <body>
+                <div class="profile-infos">
+                    <h2 class="with-aka">
+                        <span class="flag flag-ru" title="Россия"></span>
+                        <strong class="text-danger">Sweetie Fox</strong>
+                    </h2>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val header = parserChannelHeader(html, fallbackSlug = "sweetie-fox", isModel = true)
+        assertEquals("Sweetie Fox", header.name)
+        assertEquals("ru", header.countryCode)
+        assertEquals("🇷🇺", header.flagEmoji)
+        assertTrue(header.hasFlag)
     }
 }
 

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -53,6 +54,8 @@ import com.client.xvideos.core.R
 import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ChannelRankingCategory
+
+private val FLAG_FONT = FontFamily(Font(com.client.xvideos.feature.x.R.font.flag))
 
 /**
  * Шапка профиля канала или актрисы/модели X с баннером, аватаром, статистикой и информацией.
@@ -196,14 +199,28 @@ fun ChannelHeader(
                         .offset(y = (-12).dp)
                         .weight(1f)
                 ) {
-                    Text(
-                        text = header.displayName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (header.hasFlag) {
+                            Text(
+                                text = header.flagEmoji,
+                                fontFamily = FLAG_FONT,
+                                fontSize = 18.sp,
+                                modifier = Modifier.padding(end = 6.dp)
+                            )
+                        }
+                        Text(
+                            text = header.displayName,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                    }
 
                     if (header.isModel && header.subtitle.isNotBlank()) {
                         Spacer(modifier = Modifier.height(2.dp))
@@ -552,59 +569,66 @@ private fun ChannelRankingsSection(
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF1E1719))
             .border(1.dp, Color(0x33DE2600), RoundedCornerShape(8.dp))
-            .padding(10.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            rankings.forEach { category ->
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
+        rankings.forEachIndexed { index, category ->
+            if (index > 0) {
+                HorizontalDivider(
+                    color = Color(0x22FFFFFF),
+                    thickness = 0.5.dp,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "${category.label}:",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                category.ranks.forEach { group ->
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${category.label}:",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        text = "${group.label}:",
+                        fontSize = 11.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        color = Color(0xFFCCCCCC)
                     )
-                    category.ranks.forEach { group ->
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "${group.label}:",
-                            fontSize = 11.sp,
-                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                            color = Color(0xFFCCCCCC)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        group.ranks.forEach { item ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.padding(vertical = 1.dp)
-                            ) {
-                                Text(
-                                    text = item.geo,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFFE0E0E0)
-                                )
-                                Text(
-                                    text = "# ${item.rank}",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFDE2600),
-                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(3.dp))
-                                        .clickable {
-                                            onRankingClick(
-                                                item.link,
-                                                item.label.ifBlank { "${category.label} - ${item.geo} #${item.rank}" }
-                                            )
-                                        }
-                                        .padding(horizontal = 2.dp)
-                                )
-                            }
+                    Spacer(modifier = Modifier.height(3.dp))
+                    group.ranks.forEach { item ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = item.geo,
+                                fontSize = 12.sp,
+                                color = Color(0xFFE0E0E0),
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "# ${item.rank}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFDE2600),
+                                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .clickable {
+                                        onRankingClick(
+                                            item.link,
+                                            item.label.ifBlank { "${category.label} - ${item.geo} #${item.rank}" }
+                                        )
+                                    }
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
                         }
                     }
                 }

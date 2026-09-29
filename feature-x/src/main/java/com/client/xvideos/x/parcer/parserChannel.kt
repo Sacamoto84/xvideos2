@@ -122,6 +122,7 @@ fun parserChannelHeader(
     val gender = document.selectFirst("#pinfo-sex span")?.text()?.trim().orEmpty()
     val age = document.selectFirst("#pinfo-age span")?.text()?.trim().orEmpty()
     val country = document.selectFirst("#pinfo-country span")?.text()?.trim().orEmpty()
+    val countryCode = parseProfileCountryCode(document, country)
     val workedWith = document.selectFirst("#pinfo-workedfor span")?.text()?.trim().orEmpty()
     val collaboratorElements = document.select("#pinfo-workedfor span a[href]")
     val collaborators = collaboratorElements.mapNotNull { a ->
@@ -143,9 +144,86 @@ fun parserChannelHeader(
         gender = gender,
         age = age,
         country = country,
+        countryCode = countryCode,
         workedWith = workedWith,
         collaborators = collaborators,
     )
+}
+
+private val FLAG_CLASS_REGEX = Regex("""\bflag-([a-z]{2})\b""", RegexOption.IGNORE_CASE)
+
+private val KNOWN_COUNTRY_NAMES_TO_CODE = mapOf(
+    "россия" to "ru", "russia" to "ru",
+    "бразилия" to "br", "brazil" to "br",
+    "сша" to "us", "usa" to "us", "соединенные штаты" to "us", "united states" to "us",
+    "украина" to "ua", "ukraine" to "ua",
+    "франция" to "fr", "france" to "fr",
+    "германия" to "de", "germany" to "de",
+    "италия" to "it", "italy" to "it",
+    "испания" to "es", "spain" to "es",
+    "великобритания" to "gb", "united kingdom" to "gb", "uk" to "gb",
+    "канада" to "ca", "canada" to "ca",
+    "япония" to "jp", "japan" to "jp",
+    "чехия" to "cz", "чешская республика" to "cz", "czech republic" to "cz", "czechia" to "cz",
+    "мексика" to "mx", "mexico" to "mx",
+    "аргентина" to "ar", "argentina" to "ar",
+    "колумбия" to "co", "colombia" to "co",
+    "австралия" to "au", "australia" to "au",
+    "нидерланды" to "nl", "netherlands" to "nl",
+    "бельгия" to "be", "belgium" to "be",
+    "польша" to "pl", "poland" to "pl",
+    "швеция" to "se", "sweden" to "se",
+    "швейцария" to "ch", "switzerland" to "ch",
+    "австрия" to "at", "austria" to "at",
+    "венгрия" to "hu", "hungary" to "hu",
+    "португалия" to "pt", "portugal" to "pt",
+    "китай" to "cn", "china" to "cn",
+    "южная корея" to "kr", "корея" to "kr", "south korea" to "kr",
+    "индия" to "in", "india" to "in",
+    "румыния" to "ro", "romania" to "ro",
+    "сербия" to "rs", "serbia" to "rs",
+    "словакия" to "sk", "slovakia" to "sk",
+    "таиланд" to "th", "thailand" to "th",
+    "тайвань" to "tw", "taiwan" to "tw",
+    "турция" to "tr", "turkey" to "tr",
+    "чили" to "cl", "chile" to "cl",
+    "эквадор" to "ec", "ecuador" to "ec",
+    "венесуэла" to "ve", "venezuela" to "ve",
+    "беларусь" to "by", "belarus" to "by",
+    "казахстан" to "kz", "kazakhstan" to "kz",
+    "израиль" to "il", "israel" to "il",
+    "южная африка" to "za", "south africa" to "za",
+    "филиппины" to "ph", "philippines" to "ph",
+    "вьетнам" to "vn", "vietnam" to "vn",
+    "греция" to "gr", "greece" to "gr",
+    "норвегия" to "no", "norway" to "no",
+    "дания" to "dk", "denmark" to "dk",
+    "финляндия" to "fi", "finland" to "fi",
+    "ирландия" to "ie", "ireland" to "ie",
+)
+
+internal fun parseProfileCountryCode(document: Document, countryName: String): String {
+    val flagEl = document.selectFirst(".profile-infos h2 span[class*='flag']")
+        ?: document.selectFirst("h2.with-aka span[class*='flag']")
+        ?: document.selectFirst("h2 span[class*='flag']")
+        ?: document.selectFirst("#pinfo-country span[class*='flag']")
+        ?: document.selectFirst(".profile-infos span.flag")
+        ?: document.selectFirst("#pinfo-country span.flag")
+
+    val classString = flagEl?.className().orEmpty()
+    val match = FLAG_CLASS_REGEX.find(classString)
+    if (match != null) {
+        val code = match.groupValues[1].lowercase()
+        if (com.client.xvideos.x.model.isIsoCountryCode(code)) return code
+    }
+
+    val trimmedCountry = countryName.trim().lowercase()
+    if (trimmedCountry.isNotBlank()) {
+        val mapped = KNOWN_COUNTRY_NAMES_TO_CODE[trimmedCountry]
+        if (mapped != null) return mapped
+        if (com.client.xvideos.x.model.isIsoCountryCode(trimmedCountry)) return trimmedCountry
+    }
+    return ""
 }
 
 private val channelJson = kotlinx.serialization.json.Json {

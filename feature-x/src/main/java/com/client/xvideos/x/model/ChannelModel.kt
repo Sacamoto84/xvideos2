@@ -103,6 +103,7 @@ data class ChannelHeaderModel(
     val gender: String = "",
     val age: String = "",
     val country: String = "",
+    val countryCode: String = "",
     val workedWith: String = "",
     val collaborators: List<ChannelCollaborator> = emptyList(),
     val availableModels: List<ChannelModelFilterItem> = emptyList(),
@@ -122,6 +123,8 @@ data class ChannelHeaderModel(
     val hasAvailableModels: Boolean get() = availableModels.isNotEmpty()
     val hasRankings: Boolean get() = rankings.isNotEmpty()
     val displayName: String get() = name.ifBlank { slug }
+    val flagEmoji: String get() = getFlagEmojiOrNull(countryCode).orEmpty()
+    val hasFlag: Boolean get() = flagEmoji.isNotBlank()
 
     /** Формирует подзаголовок модели, например: "Женщина, Бразилия, 26 лет". */
     val subtitle: String get() {

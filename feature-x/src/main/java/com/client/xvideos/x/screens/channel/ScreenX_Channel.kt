@@ -10,7 +10,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
@@ -315,23 +317,17 @@ fun ChannelScreenContent(
             }
 
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                val delta = available.y
-                if (delta > 0f && headerHeightPx > 0f) {
-                    val newOffset = (headerOffsetPx + delta).coerceIn(-headerHeightPx, 0f)
-                    val consumedY = newOffset - headerOffsetPx
-                    headerOffsetPx = newOffset
-                    return Offset(0f, consumedY)
-                }
+                // Изоляция скролла списка: достижение верха сетки видео не стягивает шапку вниз
                 return Offset.Zero
             }
 
-            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                if (available.y > 0f && headerOffsetPx < 0f) {
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (available.y < 0f && headerOffsetPx > -headerHeightPx && headerHeightPx > 0f) {
                     flingAnimationJob?.cancel()
                     val anim = Animatable(headerOffsetPx)
                     flingAnimationJob = coroutineScope.launch {
                         anim.animateTo(
-                            targetValue = 0f,
+                            targetValue = -headerHeightPx,
                             initialVelocity = available.y,
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioNoBouncy,
@@ -341,8 +337,12 @@ fun ChannelScreenContent(
                             headerOffsetPx = value
                         }
                     }
-                    return Velocity(0f, available.y)
                 }
+                return Velocity.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                // Изоляция флинга списка: инерция сетки не раскрывает шапку
                 return Velocity.Zero
             }
         }
@@ -379,9 +379,38 @@ fun ChannelScreenContent(
         consumed
     }
 
+    val headerFlingBehavior = remember(coroutineScope, headerHeightPx) {
+        object : FlingBehavior {
+            override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
+                if (headerHeightPx <= 0f) return 0f
+                flingAnimationJob?.cancel()
+                val target = if (initialVelocity > 300f || (initialVelocity >= -300f && headerOffsetPx > -headerHeightPx * 0.5f)) {
+                    0f
+                } else {
+                    -headerHeightPx
+                }
+                val anim = Animatable(headerOffsetPx)
+                flingAnimationJob = coroutineScope.launch {
+                    anim.animateTo(
+                        targetValue = target,
+                        initialVelocity = initialVelocity,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    ) {
+                        headerOffsetPx = value
+                    }
+                }
+                return initialVelocity
+            }
+        }
+    }
+
     val headerScrollModifier = Modifier.scrollable(
         state = headerScrollableState,
         orientation = Orientation.Vertical,
+        flingBehavior = headerFlingBehavior,
     )
 
     val onPageChange: (Int) -> Unit = remember(pagerState, coroutineScope, uiState.maxPages) {
