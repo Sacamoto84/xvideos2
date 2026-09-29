@@ -43,19 +43,19 @@ fun isValidSearchJson(json: String?): Boolean =
  * Быстро извлекает только список подсказок-ключевых слов из JSON-ответа.
  */
 fun parseJsonKeywords(json: String?): List<String> =
-    parseJson(json)?.keywords?.map { it.name } ?: emptyList()
+    parseJson(json)?.resolvedKeywords?.map { it.name } ?: emptyList()
 
 /**
  * Быстро извлекает список найденных порнозвезд из JSON-ответа.
  */
 fun parseJsonPornstars(json: String?): List<com.client.xvideos.x.search.model.Pornstar> =
-    parseJson(json)?.pornstar.orEmpty()
+    parseJson(json)?.resolvedPornstars.orEmpty()
 
 /**
  * Быстро извлекает список найденных каналов из JSON-ответа.
  */
 fun parseJsonChannels(json: String?): List<com.client.xvideos.x.search.model.Channel> =
-    parseJson(json)?.channel.orEmpty()
+    parseJson(json)?.resolvedChannels.orEmpty()
 
 /**
  * Возвращает суммарное количество подсказок (ключевые слова + модели + каналы) из ответа.

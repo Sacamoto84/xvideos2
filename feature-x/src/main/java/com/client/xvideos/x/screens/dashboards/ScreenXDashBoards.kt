@@ -45,6 +45,12 @@ import com.client.xvideos.x.screens.history.ScreenXHistory
 import com.client.xvideos.x.screens.saved.X_SavedContent
 import com.client.xvideos.x.screens.subscriptions.X_SubscriptionsContent
 import com.client.xvideos.x.model.ItemsX
+import androidx.compose.material.icons.outlined.Search
+import com.client.xvideos.x.screens.channel.ScreenX_Channel
+import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
+import com.client.xvideos.x.screens.search.ScreenXSearchSM
+import com.client.xvideos.x.screens.search.SearchUiMode
+import com.client.xvideos.x.screens.search.X_SearchContent
 
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
@@ -66,8 +72,23 @@ class ScreenXDashBoards : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenXDashBoardsScreenModel = getScreenModel()
-        // При нажатии «Назад» во вторичных табах сохраненного возвращаемся в ленту дашбордов
-        val onBack: () -> Unit = remember(vm) { { vm.mainTab = 0 } }
+        val searchVm: ScreenXSearchSM = getScreenModel()
+        val searchUiMode by searchVm.uiMode.collectAsStateWithLifecycle()
+        val searchPage by searchVm.currentPage.collectAsStateWithLifecycle()
+        val searchMaxPages by searchVm.maxPages.collectAsStateWithLifecycle()
+
+        // При нажатии «Назад» во вторичных табах сохраненного/поиска возвращаемся в ленту дашбордов
+        val onBack: () -> Unit = remember(vm, searchVm) {
+            {
+                if (vm.mainTab == SEARCH) {
+                    if (!searchVm.onBackPress()) {
+                        vm.mainTab = 0
+                    }
+                } else {
+                    vm.mainTab = 0
+                }
+            }
+        }
         BackHandler(enabled = vm.mainTab != 0, onBack = onBack)
 
         // Стабильный экземпляр «Избранного» для инлайн-рендера (как object-табы saved в R/L).
@@ -79,7 +100,11 @@ class ScreenXDashBoards : Screen {
         val onSavedTabChange: (Int) -> Unit = remember(vm) { { newTab -> vm.savedTab = newTab } }
         val onMainTabChange: (Int) -> Unit = remember(vm) { { newTab -> vm.mainTab = newTab } }
         val onDashboardPageChange: suspend (Int) -> Unit = remember(vm) { { page -> vm.pagerState.scrollToPage(page.coerceAtLeast(0)) } }
+        val onSearchPageChange: (Int) -> Unit = remember(searchVm) { { page -> searchVm.onPageChange(page) } }
         val onOpenVideoPlayer: (ItemsX) -> Unit = remember(vm, navigator) { { item -> vm.openVideoPlayer(item, navigator) } }
+        val onOpenChannel: (String, Boolean) -> Unit = remember(navigator) {
+            { slug, isModel -> navigator.push(ScreenX_Channel(slug = slug, isModel = isModel)) }
+        }
         val onIsFavorite: (Long) -> Boolean = remember(vm) { { itemId -> vm.isFavorite(itemId) } }
         val onFavoriteAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
         val onFavoriteRemove: (ItemsX) -> Unit = remember(vm) { { item -> vm.removeFavorite(item) } }
@@ -112,6 +137,15 @@ class ScreenXDashBoards : Screen {
                             onChangeState = onSavedTabChange,
                             containerColor = Theme.tabLevel1,
                         )
+                        SEARCH -> {
+                            if (searchUiMode == SearchUiMode.RESULTS) {
+                                BottomListDashBoardNavigationButtons2(
+                                    value = searchPage,
+                                    onChange = onSearchPageChange,
+                                    max = searchMaxPages
+                                )
+                            }
+                        }
                         else -> DashboardControlsRow(
                             isCurrentPage = vm.pagerState.currentPage,
                             isMax = vm.pagerState.pageCount,
@@ -149,6 +183,11 @@ class ScreenXDashBoards : Screen {
                         SAVED_MODELS -> X_SubscriptionsContent(saved = vm.saved, isModel = true)
                         else -> favoritesScreen.Content()
                     }
+                    SEARCH -> X_SearchContent(
+                        vm = searchVm,
+                        onOpenVideoPlayer = onOpenVideoPlayer,
+                        onOpenChannel = onOpenChannel
+                    )
                     else -> HorizontalPager(
                         state = vm.pagerState,
                         modifier = Modifier.fillMaxSize(),
@@ -173,6 +212,7 @@ class ScreenXDashBoards : Screen {
 
     companion object {
         private const val SAVABLE = 1
+        private const val SEARCH = 2
 
         // Под-табы раздела Savable.
         private const val SAVED_FAVORITES = 0
@@ -181,12 +221,13 @@ class ScreenXDashBoards : Screen {
         private const val SAVED_CHANNELS = 3
         private const val SAVED_MODELS = 4
 
-        /** Иконки главного таб-ряда: дашборды + сохранённое. */
+        /** Иконки главного таб-ряда: дашборды + сохранённое + поиск. */
         // persistentListOf, а не listOf: обычный List для Compose нестабилен,
         // и TabRow перекомпоновывался чаще, чем нужно.
         private val mainTabs: ImmutableList<ImageVector> = persistentListOf(
             Icons.Outlined.Dashboard,
             Icons.Outlined.BookmarkBorder,
+            Icons.Outlined.Search,
         )
 
         /** Под-табы раздела Savable: «Избранное» + «Сохранённое» + «История» + «Каналы» + «Актрисы». */

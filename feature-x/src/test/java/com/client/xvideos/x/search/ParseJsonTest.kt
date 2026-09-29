@@ -169,5 +169,69 @@ class ParseJsonTest {
         assertEquals(true, populatedResult.hasChannels)
         assertEquals(true, populatedResult.isBlacklisted)
     }
+
+    @Test
+    fun `parseJson корректно разбирает живой ответ API со структурой data`() {
+        val json = """
+            {
+                "result": true,
+                "code": 0,
+                "data": {
+                    "keywords": [
+                        {"N": "lap dance", "R": "18 351"},
+                        {"N": "strip dance", "R": "31 061"}
+                    ],
+                    "pornstar": [
+                        {
+                            "N": "Tessa Taylor",
+                            "F": "tessa-taylor",
+                            "T": "pornstar",
+                            "MV": 113,
+                            "M": 0,
+                            "L": 0,
+                            "P": "https://img.xv-ru.com/tessa.jpg",
+                            "RF": "768"
+                        }
+                    ],
+                    "channel": [
+                        {
+                            "N": "Amateur Lapdancer",
+                            "F": "gaara-sama",
+                            "T": "channel",
+                            "CPV": true,
+                            "M": 0,
+                            "L": 0,
+                            "P": "https://img.xv-ru.com/channel.jpg",
+                            "RF": "10 201"
+                        }
+                    ]
+                }
+            }
+        """.trimIndent()
+
+        val parsed = parseJson(json)
+        assertNotNull(parsed)
+        assertEquals(true, parsed?.result)
+        assertEquals(0, parsed?.code)
+        assertEquals(2, parsed?.resolvedKeywords?.size)
+        assertEquals("lap dance", parsed?.resolvedKeywords?.first()?.name)
+        assertEquals("18 351", parsed?.resolvedKeywords?.first()?.rating)
+        assertEquals(1, parsed?.resolvedPornstars?.size)
+        assertEquals("Tessa Taylor", parsed?.resolvedPornstars?.first()?.name)
+        assertEquals(1, parsed?.resolvedChannels?.size)
+        assertEquals("Amateur Lapdancer", parsed?.resolvedChannels?.first()?.name)
+        assertEquals(4, parsed?.totalSuggestionsCount)
+
+        val kwList = parseJsonKeywords(json)
+        assertEquals(listOf("lap dance", "strip dance"), kwList)
+
+        val psList = parseJsonPornstars(json)
+        assertEquals(1, psList.size)
+        assertEquals("Tessa Taylor", psList.first().name)
+
+        val chList = parseJsonChannels(json)
+        assertEquals(1, chList.size)
+        assertEquals("Amateur Lapdancer", chList.first().name)
+    }
 }
 

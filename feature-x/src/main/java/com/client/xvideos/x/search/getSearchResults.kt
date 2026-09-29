@@ -79,7 +79,6 @@ fun isSuggestUrl(url: String?): Boolean =
  * @param query Пользовательский поисковый запрос.
  * @return Сырой JSON-ответ API либо `null` при ошибке сети или пустом запросе.
  */
-@Deprecated("Не используется в проекте; оставлен для возможной интеграции search-suggest")
 suspend fun getSearchResults(query: String): String? {
     val trimmed = query.trim()
     if (trimmed.isEmpty()) return null

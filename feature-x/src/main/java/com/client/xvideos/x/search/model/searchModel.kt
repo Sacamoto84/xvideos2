@@ -132,11 +132,22 @@ data class Channel(
 }
 
 /**
+ * Контейнер данных подсказок внутри ключа `data` API X.
+ */
+@Serializable
+data class SearchSuggestData(
+    val keywords: List<Keyword> = emptyList(),
+    val pornstar: List<Pornstar>? = null,
+    val channel: List<Channel>? = null,
+)
+
+/**
  * Ответ поискового автодополнения X.
  *
  * @property result Флаг успешности ответа.
  * @property code Числовой код статуса.
- * @property keywords Список предложенных ключевых фраз ([Keyword]).
+ * @property data Вложенный объект с результатами (актуальный формат API).
+ * @property keywords Список предложенных ключевых фраз ([Keyword]) (плоский формат).
  * @property pornstar Список предложенных моделей ([Pornstar]).
  * @property channel Список предложенных каналов ([Channel]).
  * @property BLACKLISTED Флаг блокировки запроса в поисковом индексе.
@@ -145,45 +156,59 @@ data class Channel(
 data class SearchResult(
     val result: Boolean = false,
     val code: Int = 0,
+    val data: SearchSuggestData? = null,
     val keywords: List<Keyword> = emptyList(),
     val pornstar: List<Pornstar>? = null, // Может отсутствовать
     val channel: List<Channel>? = null,   // Может отсутствовать
     val BLACKLISTED: Boolean? = null      // Может отсутствовать
 ) {
-    val isEmpty: Boolean get() = keywords.isEmpty() && pornstar.isNullOrEmpty() && channel.isNullOrEmpty()
+    val resolvedKeywords: List<Keyword>
+        get() = if (keywords.isNotEmpty()) keywords else (data?.keywords.orEmpty())
+
+    val resolvedPornstars: List<Pornstar>
+        get() = if (!pornstar.isNullOrEmpty()) pornstar else (data?.pornstar.orEmpty())
+
+    val resolvedChannels: List<Channel>
+        get() = if (!channel.isNullOrEmpty()) channel else (data?.channel.orEmpty())
+
+    val isEmpty: Boolean get() = resolvedKeywords.isEmpty() && resolvedPornstars.isEmpty() && resolvedChannels.isEmpty()
     val isNotEmpty: Boolean get() = !isEmpty
-    val hasKeywords: Boolean get() = keywords.isNotEmpty()
-    val hasPornstars: Boolean get() = !pornstar.isNullOrEmpty()
-    val hasChannels: Boolean get() = !channel.isNullOrEmpty()
+    val hasKeywords: Boolean get() = resolvedKeywords.isNotEmpty()
+    val hasPornstars: Boolean get() = resolvedPornstars.isNotEmpty()
+    val hasChannels: Boolean get() = resolvedChannels.isNotEmpty()
     val isBlacklisted: Boolean get() = BLACKLISTED == true
     val totalSuggestionsCount: Int
-        get() = keywords.size + (pornstar?.size ?: 0) + (channel?.size ?: 0)
+        get() = resolvedKeywords.size + resolvedPornstars.size + resolvedChannels.size
 
     val allSuggestions: List<String> get() = allSuggestionNames()
 
     fun allSuggestionNames(): List<String> =
-        keywords.map { it.name } +
-            (pornstar?.map { it.name } ?: emptyList()) +
-            (channel?.map { it.name } ?: emptyList())
+        resolvedKeywords.map { it.name } +
+            resolvedPornstars.map { it.name } +
+            resolvedChannels.map { it.name }
 
     /** Фильтрует ключевые слова, порнозвезд и каналы по поисковому запросу. */
     fun filterByQuery(query: String?): SearchResult {
         if (query.isNullOrBlank()) return this
+        val filteredKw = resolvedKeywords.filter { it.matches(query) }
+        val filteredPs = resolvedPornstars.filter { it.matches(query) }
+        val filteredCh = resolvedChannels.filter { it.matches(query) }
         return copy(
-            keywords = keywords.filter { it.matches(query) },
-            pornstar = pornstar?.filter { it.matches(query) },
-            channel = channel?.filter { it.matches(query) }
+            data = SearchSuggestData(keywords = filteredKw, pornstar = filteredPs, channel = filteredCh),
+            keywords = filteredKw,
+            pornstar = filteredPs,
+            channel = filteredCh
         )
     }
 
     fun findPornstarByName(name: String?): Pornstar? {
         if (name.isNullOrBlank()) return null
-        return pornstar?.firstOrNull { it.name.equals(name, ignoreCase = true) }
+        return resolvedPornstars.firstOrNull { it.name.equals(name, ignoreCase = true) }
     }
 
     fun findChannelByName(name: String?): Channel? {
         if (name.isNullOrBlank()) return null
-        return channel?.firstOrNull { it.name.equals(name, ignoreCase = true) }
+        return resolvedChannels.firstOrNull { it.name.equals(name, ignoreCase = true) }
     }
 
     companion object {

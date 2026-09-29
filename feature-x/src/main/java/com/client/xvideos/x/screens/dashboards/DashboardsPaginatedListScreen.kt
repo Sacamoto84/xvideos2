@@ -200,15 +200,16 @@ fun DashboardsPaginatedListContent(
     openVideoPlayer: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit = {},
     gridState: LazyGridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
+    contentPadding: PaddingValues? = null,
     modifier: Modifier = Modifier,
 ) {
     val topCutout = getTopInsetDp()
-    val contentPadding = remember(topCutout) { PaddingValues(top = topCutout) }
+    val actualContentPadding = contentPadding ?: remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = modifier.fillMaxSize(),
         state = gridState,
-        contentPadding = contentPadding,
+        contentPadding = actualContentPadding,
     ) {
         itemsIndexed(
             items = items,
