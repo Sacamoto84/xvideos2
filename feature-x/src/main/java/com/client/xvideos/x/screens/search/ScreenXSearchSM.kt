@@ -267,8 +267,8 @@ class ScreenXSearchSM @Inject constructor(
 
     fun download(item: ItemsX) = saved.downloads.download(item)
     fun saveToGallery(item: ItemsX) = saved.downloads.saveToGallery(item)
-    fun addFavorite(item: ItemsX) = screenModelScope.launch { saved.favorites.add(item) }
-    fun removeFavorite(item: ItemsX) = screenModelScope.launch { saved.favorites.remove(item) }
+    fun addFavorite(item: ItemsX) = saved.favorites.add(item)
+    fun removeFavorite(item: ItemsX) = saved.favorites.remove(item)
     fun isFavorite(id: Long): Boolean = saved.favorites.contains(id)
 }
 

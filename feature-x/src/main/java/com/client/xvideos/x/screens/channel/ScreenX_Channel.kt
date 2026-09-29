@@ -274,7 +274,7 @@ fun ChannelScreenContent(
     }
 
     // При возврате назад: если мы не на 0-й странице, сначала возвращаемся на страницу 0
-    val handleBack: () -> Unit = remember(pagerState.currentPage, coroutineScope, onBack) {
+    val handleBack: () -> Unit = remember(pagerState, coroutineScope, onBack) {
         {
             if (pagerState.currentPage > 0) {
                 coroutineScope.launch {
@@ -520,7 +520,8 @@ fun ChannelScreenContent(
                             onQueryChange = onModelQueryChange,
                             onExpandedChange = onModelExpandedChange,
                             onSelectModel = onSelectModel,
-                            totalVideos = uiState.videos.size,
+                            totalVideos = uiState.totalVideosCount.takeIf { it > 0 }
+                                ?: uiState.header.videoCount,
                         )
                     }
                 }

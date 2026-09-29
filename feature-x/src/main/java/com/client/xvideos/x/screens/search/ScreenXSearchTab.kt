@@ -199,16 +199,22 @@ fun X_SearchContent(
                     )
                 }
                 SearchUiMode.RESULTS -> {
+                    val onRetry = remember(vm) { { vm.retrySearch() } }
+                    val isFavoriteFn: (Long) -> Boolean = remember(vm) { { id -> vm.isFavorite(id) } }
+                    val onFavAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
+                    val onFavRemove: (ItemsX) -> Unit = remember(vm) { { item -> vm.removeFavorite(item) } }
+                    val onDl: (ItemsX) -> Unit = remember(vm) { { item -> vm.download(item) } }
+                    val onGallery: (ItemsX) -> Unit = remember(vm) { { item -> vm.saveToGallery(item) } }
                     SearchResultsView(
                         items = videoItems,
                         isLoading = isVideoLoading,
                         isError = isSearchError,
-                        onRetry = { vm.retrySearch() },
-                        isFavorite = { vm.isFavorite(it) },
-                        onFavoriteAdd = { vm.addFavorite(it) },
-                        onFavoriteRemove = { vm.removeFavorite(it) },
-                        onDownload = { vm.download(it) },
-                        onSaveToGallery = { vm.saveToGallery(it) },
+                        onRetry = onRetry,
+                        isFavorite = isFavoriteFn,
+                        onFavoriteAdd = onFavAdd,
+                        onFavoriteRemove = onFavRemove,
+                        onDownload = onDl,
+                        onSaveToGallery = onGallery,
                         openVideoPlayer = onOpenVideoPlayer
                     )
                 }
