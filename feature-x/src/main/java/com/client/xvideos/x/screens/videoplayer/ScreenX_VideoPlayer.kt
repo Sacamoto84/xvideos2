@@ -289,7 +289,7 @@ private fun VideoPlayerContentView(
  * @param onSaveProgress Периодическое сохранение прогресса просмотра в историю.
  */
 @OptIn(UnstableApi::class)
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 @Composable
 private fun VideoPlayerContentView(
     passedHLS: String,
@@ -399,7 +399,9 @@ private fun VideoPlayerContentView(
 
     // Автоматическое скрытие контроллеров через 3.5 секунды неактивности при воспроизведении на полном экране (если меню не открыто)
     LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused, isMenuExpanded) {
-        if (isFullScreen && areControlsVisible && !host.isPaused && !isMenuExpanded) {
+        val shouldAutoHide = isFullScreen && areControlsVisible
+        val canAutoHide = !host.isPaused && !isMenuExpanded
+        if (shouldAutoHide && canAutoHide) {
             delay(3500)
             areControlsVisible = false
         }

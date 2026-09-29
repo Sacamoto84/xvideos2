@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -209,55 +208,12 @@ private fun DropdownOptionsPanel(
             }
         }
 
-        // Поле поиска (если применимо)
         if (showSearch) {
             Spacer(modifier = Modifier.height(4.dp))
-            TextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                placeholder = {
-                    Text(
-                        text = if (group.type == ActressesIndexDropdownType.GEO) "Поиск страны..." else "Поиск типа профиля...",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = Color.Gray,
-                        modifier = Modifier.size(16.dp)
-                    )
-                },
-                trailingIcon = if (searchQuery.isNotBlank()) {
-                    {
-                        IconButton(
-                            onClick = { onSearchQueryChange("") },
-                            modifier = Modifier.size(20.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Очистить",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                    }
-                } else null,
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF1F1F24),
-                    unfocusedContainerColor = Color(0xFF1A1A1E),
-                    focusedIndicatorColor = Color(0xFFDE2600),
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                ),
-                shape = RoundedCornerShape(6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp)
+            DropdownOptionsSearchField(
+                groupType = group.type,
+                searchQuery = searchQuery,
+                onSearchQueryChange = onSearchQueryChange
             )
         }
 
@@ -285,38 +241,101 @@ private fun DropdownOptionsPanel(
                 }
             } else {
                 filteredOptions.forEach { option ->
-                    val isSelected = option.isActive
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(if (isSelected) Color(0xFF2A1518) else Color.Transparent)
-                            .clickable { onSelectOption(option) }
-                            .padding(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = option.title,
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) Color(0xFFDE2600) else Color(0xFFE0E0E0),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                tint = Color(0xFFDE2600),
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                    }
+                    DropdownOptionRow(option = option, onSelectOption = onSelectOption)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DropdownOptionsSearchField(
+    groupType: ActressesIndexDropdownType,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit
+) {
+    TextField(
+        value = searchQuery,
+        onValueChange = onSearchQueryChange,
+        placeholder = {
+            Text(
+                text = if (groupType == ActressesIndexDropdownType.GEO) "Поиск страны..." else "Поиск типа профиля...",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(16.dp)
+            )
+        },
+        trailingIcon = if (searchQuery.isNotBlank()) {
+            {
+                IconButton(
+                    onClick = { onSearchQueryChange("") },
+                    modifier = Modifier.size(20.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Очистить",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        } else null,
+        singleLine = true,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color(0xFF1F1F24),
+            unfocusedContainerColor = Color(0xFF1A1A1E),
+            focusedIndicatorColor = Color(0xFFDE2600),
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+        ),
+        shape = RoundedCornerShape(6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+    )
+}
+
+@Composable
+private fun DropdownOptionRow(
+    option: ActressesIndexFilterOption,
+    onSelectOption: (ActressesIndexFilterOption) -> Unit
+) {
+    val isSelected = option.isActive
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .background(if (isSelected) Color(0xFF2A1518) else Color.Transparent)
+            .clickable { onSelectOption(option) }
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = option.title,
+            fontSize = 12.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = if (isSelected) Color(0xFFDE2600) else Color(0xFFE0E0E0),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = Color(0xFFDE2600),
+                modifier = Modifier.size(14.dp)
+            )
         }
     }
 }

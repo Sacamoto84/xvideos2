@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.channel.atom
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -86,304 +85,341 @@ fun ChannelHeader(
             .fillMaxWidth()
             .background(Color(0xFF040404))
     ) {
-        // Баннер и верхняя панель с кнопкой «Назад»
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-        ) {
-            if (header.hasBanner) {
-                UrlImage(
-                    url = header.bannerUrl,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = if (header.isModel) {
-                                    listOf(Color(0xFF5A101C), Color(0xFF1F080C))
-                                } else {
-                                    listOf(Color(0xFF1E3C72), Color(0xFF2A5298))
-                                }
-                            )
-                        )
-                )
-            }
+        ChannelHeaderBanner(header = header, onBack = onBack)
 
-            // Градиентное затемнение снизу для плавного перехода в темный фон
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xFF040404))
-                        )
-                    )
-            )
-
-            // Кнопка возврата «Назад»
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .size(36.dp)
-                    .align(Alignment.TopStart)
-                    .clip(CircleShape)
-                    .background(Color(0x80000000))
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Назад",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
-        // Блок информации об авторе (аватарка, имя, счетчики)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
+            ChannelHeaderProfileRow(
+                header = header,
+                isSubscribed = isSubscribed,
+                onToggleSubscription = onToggleSubscription
+            )
+
+            ChannelHeaderStatsRow(header = header)
+
+            val hasInfo = header.hasAboutMe || header.hasCollaborators || header.hasRankings ||
+                (header.isModel && (header.hasAge || header.hasCountry || header.hasGender || header.hasWorkedWith))
+            if (hasInfo) {
+                Spacer(modifier = Modifier.height(4.dp))
+                ChannelHeaderInfoCard(
+                    header = header,
+                    isAboutExpanded = isAboutExpanded,
+                    onToggleAboutExpanded = { isAboutExpanded = !isAboutExpanded },
+                    onCollaboratorClick = onCollaboratorClick,
+                    onRankingClick = onRankingClick,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun ChannelHeaderBanner(
+    header: ChannelHeaderModel,
+    onBack: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+    ) {
+        if (header.hasBanner) {
+            UrlImage(
+                url = header.bannerUrl,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = if (header.isModel) {
+                                listOf(Color(0xFF5A101C), Color(0xFF1F080C))
+                            } else {
+                                listOf(Color(0xFF1E3C72), Color(0xFF2A5298))
+                            }
+                        )
+                    )
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .align(Alignment.BottomCenter)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color(0xFF040404))
+                    )
+                )
+        )
+
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .padding(8.dp)
+                .size(36.dp)
+                .align(Alignment.TopStart)
+                .clip(CircleShape)
+                .background(Color(0x80000000))
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Назад",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChannelHeaderProfileRow(
+    header: ChannelHeaderModel,
+    isSubscribed: Boolean,
+    onToggleSubscription: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(y = (-24).dp)
+                .size(68.dp)
+                .clip(CircleShape)
+                .border(2.dp, Color.White, CircleShape)
+                .background(Color(0xFF1A1A1A)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (header.hasAvatar) {
+                UrlImage(
+                    url = header.avatarUrl,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else if (header.isModel) {
+                Text(
+                    text = "\uE9B8",
+                    style = TextStyle(
+                        color = Color(0xFFDE2600),
+                        fontSize = 30.sp,
+                        fontFamily = FontFamily(Font(R.font.iconfont))
+                    )
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Tv,
+                    contentDescription = null,
+                    tint = Color(0xFF1E88E5),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier
+                .offset(y = (-12).dp)
+                .weight(1f)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Аватарка канала / модели
-                Box(
-                    modifier = Modifier
-                        .offset(y = (-24).dp)
-                        .size(68.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.White, CircleShape)
-                        .background(Color(0xFF1A1A1A)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (header.hasAvatar) {
-                        UrlImage(
-                            url = header.avatarUrl,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else if (header.isModel) {
-                        Text(
-                            text = "\uE9B8",
-                            style = TextStyle(
-                                color = Color(0xFFDE2600),
-                                fontSize = 30.sp,
-                                fontFamily = FontFamily(Font(R.font.iconfont))
-                            )
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Tv,
-                            contentDescription = null,
-                            tint = Color(0xFF1E88E5),
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+                if (header.hasFlag) {
+                    Text(
+                        text = header.flagEmoji,
+                        fontFamily = FLAG_FONT,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
                 }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Имя канала / модели и бейдж
-                Column(
-                    modifier = Modifier
-                        .offset(y = (-12).dp)
-                        .weight(1f)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (header.hasFlag) {
-                            Text(
-                                text = header.flagEmoji,
-                                fontFamily = FLAG_FONT,
-                                fontSize = 18.sp,
-                                modifier = Modifier.padding(end = 6.dp)
-                            )
-                        }
-                        Text(
-                            text = header.displayName,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                    }
-
-                    if (header.isModel && header.subtitle.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = header.subtitle,
-                            fontSize = 12.sp,
-                            color = Color(0xFFBBBBBB),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Чип «Модель» / «Канал» + Кнопка подписки
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(if (header.isModel) Color(0xFFDE2600) else Color(0xFF1E88E5))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = if (header.isModel) "\uE9B8" else "\uE956",
-                                style = TextStyle(
-                                    color = Color.White,
-                                    fontSize = 11.sp,
-                                    fontFamily = FontFamily(Font(R.font.iconfont))
-                                )
-                            )
-                            Text(
-                                text = if (header.isModel) "Модель" else "Канал",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White
-                            )
-                        }
-
-                        SubscribeHeaderButton(
-                            isSubscribed = isSubscribed,
-                            isModel = header.isModel,
-                            onClick = onToggleSubscription
-                        )
-                    }
-                }
+                Text(
+                    text = header.displayName,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
             }
 
-            // Статистика (подписчики, просмотры, видео)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = (-10).dp)
+            if (header.isModel && header.subtitle.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = header.subtitle,
+                    fontSize = 12.sp,
+                    color = Color(0xFFBBBBBB),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (header.hasSubscribers) {
-                    StatPill(text = "${header.subscribers} подписчиков")
-                }
-                if (header.hasTotalViews) {
-                    StatPill(text = "${header.totalViews} просмотров")
-                }
-                if (header.videoCount > 0) {
-                    StatPill(text = "${header.videoCount} видео")
-                }
-            }
-
-            // Блок «О модели» / «О канале»
-            val hasInfo = header.hasAboutMe || header.hasCollaborators || header.hasRankings || (header.isModel && (header.hasAge || header.hasCountry || header.hasGender || header.hasWorkedWith))
-            if (hasInfo) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Column(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF161618))
-                        .padding(10.dp)
-                        .animateContentSize()
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (header.isModel) Color(0xFFDE2600) else Color(0xFF1E88E5))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = if (header.isModel) "О модели" else "О канале",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFB0B0B0)
+                        text = if (header.isModel) "\uE9B8" else "\uE956",
+                        style = TextStyle(
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily(Font(R.font.iconfont))
+                        )
                     )
+                    Text(
+                        text = if (header.isModel) "Модель" else "Канал",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
 
-                    if (header.isModel) {
-                        if (header.hasGender || header.hasAge || header.hasCountry) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                if (header.hasGender) {
-                                    InfoFieldItem(label = "Пол", value = header.gender)
-                                }
-                                if (header.hasAge) {
-                                    InfoFieldItem(label = "Возраст", value = header.age)
-                                }
-                                if (header.hasCountry) {
-                                    InfoFieldItem(label = "Страна", value = header.country)
-                                }
-                            }
-                        }
+                SubscribeHeaderButton(
+                    isSubscribed = isSubscribed,
+                    isModel = header.isModel,
+                    onClick = onToggleSubscription
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ChannelHeaderStatsRow(header: ChannelHeaderModel) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .offset(y = (-10).dp)
+    ) {
+        if (header.hasSubscribers) {
+            StatPill(text = "${header.subscribers} подписчиков")
+        }
+        if (header.hasTotalViews) {
+            StatPill(text = "${header.totalViews} просмотров")
+        }
+        if (header.videoCount > 0) {
+            StatPill(text = "${header.videoCount} видео")
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ChannelHeaderInfoCard(
+    header: ChannelHeaderModel,
+    isAboutExpanded: Boolean,
+    onToggleAboutExpanded: () -> Unit,
+    onCollaboratorClick: (ChannelCollaborator) -> Unit,
+    onRankingClick: (targetUrl: String, title: String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF161618))
+            .padding(10.dp)
+            .animateContentSize()
+    ) {
+        Text(
+            text = if (header.isModel) "О модели" else "О канале",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFFB0B0B0)
+        )
+
+        if (header.isModel) {
+            if (header.hasGender || header.hasAge || header.hasCountry) {
+                Spacer(modifier = Modifier.height(6.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (header.hasGender) {
+                        InfoFieldItem(label = "Пол", value = header.gender)
                     }
-
-                    if (header.hasCollaborators) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Сотрудничество:",
-                            fontSize = 12.sp,
-                            color = Color(0xFF888888),
-                            fontWeight = FontWeight.Normal
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        CollaboratorsFlow(
-                            collaborators = header.collaborators,
-                            onCollaboratorClick = onCollaboratorClick,
-                        )
-                    } else if (header.hasWorkedWith) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        InfoFieldItem(label = "Сотрудничество", value = header.workedWith)
+                    if (header.hasAge) {
+                        InfoFieldItem(label = "Возраст", value = header.age)
                     }
-
-                    if (header.hasRankings) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ChannelRankingsSection(
-                            rankings = header.rankings,
-                            onRankingClick = onRankingClick,
-                        )
-                    }
-
-                    if (header.hasAboutMe) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = header.aboutMe,
-                            fontSize = 13.sp,
-                            color = Color(0xFFE0E0E0),
-                            maxLines = if (isAboutExpanded) Int.MAX_VALUE else 2,
-                            overflow = TextOverflow.Ellipsis,
-                            lineHeight = 18.sp
-                        )
-
-                        if (header.aboutMe.length > 80 || header.aboutMe.contains("\n")) {
-                            Text(
-                                text = if (isAboutExpanded) "Свернуть" else "Показать полностью...",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFF2196F3),
-                                modifier = Modifier
-                                    .padding(top = 4.dp)
-                                    .clickable { isAboutExpanded = !isAboutExpanded }
-                            )
-                        }
+                    if (header.hasCountry) {
+                        InfoFieldItem(label = "Страна", value = header.country)
                     }
                 }
             }
+        }
 
+        if (header.hasCollaborators) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Сотрудничество:",
+                fontSize = 12.sp,
+                color = Color(0xFF888888),
+                fontWeight = FontWeight.Normal
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            CollaboratorsFlow(
+                collaborators = header.collaborators,
+                onCollaboratorClick = onCollaboratorClick,
+            )
+        } else if (header.hasWorkedWith) {
+            Spacer(modifier = Modifier.height(6.dp))
+            InfoFieldItem(label = "Сотрудничество", value = header.workedWith)
+        }
+
+        if (header.hasRankings) {
             Spacer(modifier = Modifier.height(8.dp))
+            ChannelRankingsSection(
+                rankings = header.rankings,
+                onRankingClick = onRankingClick,
+            )
+        }
+
+        if (header.hasAboutMe) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = header.aboutMe,
+                fontSize = 13.sp,
+                color = Color(0xFFE0E0E0),
+                maxLines = if (isAboutExpanded) Int.MAX_VALUE else 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 18.sp
+            )
+
+            if (header.aboutMe.length > 80 || header.aboutMe.contains("\n")) {
+                Text(
+                    text = if (isAboutExpanded) "Свернуть" else "Показать полностью...",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF2196F3),
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .clickable(onClick = onToggleAboutExpanded)
+                )
+            }
         }
     }
 }

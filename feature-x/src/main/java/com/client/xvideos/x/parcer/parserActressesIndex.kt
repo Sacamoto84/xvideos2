@@ -57,61 +57,7 @@ fun parseActressesIndexPage(document: Document): ActressesIndexCatalog {
 
     // 4. Список карточек актрис/моделей
     val cards = document.select(".thumb-block.thumb-block-profile")
-    val items = ArrayList<ActressesIndexItem>(cards.size)
-
-    for (card in cards) {
-        val rawId = card.id().trim()
-        val nameLink = card.selectFirst(".profile-name a")
-        val href = nameLink?.attr("href")?.trim().orEmpty()
-
-        val slug = rawId.removePrefix("profile_").trim().ifBlank {
-            href.removePrefix("/pornstars/")
-                .removePrefix("/models/")
-                .removePrefix("/profiles/")
-                .removePrefix("/")
-                .substringBefore('/')
-                .trim()
-        }
-
-        val name = nameLink?.text()?.trim().orEmpty()
-        val rankText = card.selectFirst(".profile-name strong")?.text()?.trim().orEmpty()
-        val videoCount = card.selectFirst(".profile-counts .with-sub")?.text()?.trim().orEmpty()
-
-        val flagEl = card.selectFirst("span.flag")
-        val country = flagEl?.attr("title")?.trim().orEmpty()
-        val flagClass = flagEl?.classNames()?.firstOrNull { it.startsWith("flag-") && it != "flag-small" }
-        val countryCode = flagClass?.removePrefix("flag-")?.trim().orEmpty()
-
-        // Извлечение URL аватара/превью (может быть в img или внутри скрипта xv.thumbs.replaceThumbUrl)
-        val imgEl = card.selectFirst(".thumb img") ?: card.selectFirst("img")
-        var avatarUrl = imgEl?.attr("src")?.trim().orEmpty()
-        if (avatarUrl.isBlank() || avatarUrl.contains("blank.gif") || avatarUrl.contains("lightbox-blank")) {
-            avatarUrl = imgEl?.attr("data-src")?.trim().orEmpty()
-        }
-        if (avatarUrl.isBlank() || avatarUrl.contains("blank.gif") || avatarUrl.contains("lightbox-blank")) {
-            val scriptHtml = card.select("script").html()
-            val match = Regex("https?://[^'\"\\s]+_t\\.jpg").find(scriptHtml)
-                ?: Regex("profile_thumb:\\s*['\"](https?://[^'\"]+)['\"]").find(scriptHtml)
-                ?: Regex("src=\\\\['\"](https?://[^'\\s]+)\\\\['\"]").find(scriptHtml)
-            avatarUrl = match?.groupValues?.getOrNull(1) ?: match?.value.orEmpty()
-        }
-        if (avatarUrl.startsWith("//")) avatarUrl = "https:$avatarUrl"
-
-        if (slug.isNotBlank() || name.isNotBlank()) {
-            items.add(
-                ActressesIndexItem(
-                    slug = slug,
-                    name = name,
-                    rankText = rankText,
-                    avatarUrl = avatarUrl,
-                    country = country,
-                    countryCode = countryCode,
-                    videoCount = videoCount,
-                    profileUrl = href,
-                )
-            )
-        }
-    }
+    val items = cards.mapNotNull { parseActressesCard(it) }
 
     // 5. Пагинация
     val paginationEl = document.selectFirst(".pagination")
@@ -170,5 +116,60 @@ private fun parseFilterGroup(
         type = type,
         activeTitle = buttonText,
         options = optionsList,
+    )
+}
+
+private fun parseCardAvatarUrl(card: Element): String {
+    val imgEl = card.selectFirst(".thumb img") ?: card.selectFirst("img")
+    var avatarUrl = imgEl?.attr("src")?.trim().orEmpty()
+    if (avatarUrl.isBlank() || avatarUrl.contains("blank.gif") || avatarUrl.contains("lightbox-blank")) {
+        avatarUrl = imgEl?.attr("data-src")?.trim().orEmpty()
+    }
+    if (avatarUrl.isBlank() || avatarUrl.contains("blank.gif") || avatarUrl.contains("lightbox-blank")) {
+        val scriptHtml = card.select("script").html()
+        val match = Regex("https?://[^'\"\\s]+_t\\.jpg").find(scriptHtml)
+            ?: Regex("profile_thumb:\\s*['\"](https?://[^'\"]+)['\"]").find(scriptHtml)
+            ?: Regex("src=\\\\['\"](https?://[^'\\s]+)\\\\['\"]").find(scriptHtml)
+        avatarUrl = match?.groupValues?.getOrNull(1) ?: match?.value.orEmpty()
+    }
+    if (avatarUrl.startsWith("//")) avatarUrl = "https:$avatarUrl"
+    return avatarUrl
+}
+
+private fun parseActressesCard(card: Element): ActressesIndexItem? {
+    val rawId = card.id().trim()
+    val nameLink = card.selectFirst(".profile-name a")
+    val href = nameLink?.attr("href")?.trim().orEmpty()
+
+    val slug = rawId.removePrefix("profile_").trim().ifBlank {
+        href.removePrefix("/pornstars/")
+            .removePrefix("/models/")
+            .removePrefix("/profiles/")
+            .removePrefix("/")
+            .substringBefore('/')
+            .trim()
+    }
+
+    val name = nameLink?.text()?.trim().orEmpty()
+    val rankText = card.selectFirst(".profile-name strong")?.text()?.trim().orEmpty()
+    val videoCount = card.selectFirst(".profile-counts .with-sub")?.text()?.trim().orEmpty()
+
+    val flagEl = card.selectFirst("span.flag")
+    val country = flagEl?.attr("title")?.trim().orEmpty()
+    val flagClass = flagEl?.classNames()?.firstOrNull { it.startsWith("flag-") && it != "flag-small" }
+    val countryCode = flagClass?.removePrefix("flag-")?.trim().orEmpty()
+
+    val avatarUrl = parseCardAvatarUrl(card)
+
+    if (slug.isBlank() && name.isBlank()) return null
+    return ActressesIndexItem(
+        slug = slug,
+        name = name,
+        rankText = rankText,
+        avatarUrl = avatarUrl,
+        country = country,
+        countryCode = countryCode,
+        videoCount = videoCount,
+        profileUrl = href,
     )
 }

@@ -194,6 +194,7 @@ class ScreenX_Channel(
     }
 }
 
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun ChannelScreenContent(
     uiState: com.client.xvideos.x.model.ChannelUiState,

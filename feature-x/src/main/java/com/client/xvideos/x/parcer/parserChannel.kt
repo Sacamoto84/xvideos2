@@ -6,8 +6,8 @@ import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.urlStart
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.builtins.ListSerializer
-import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Parser
@@ -71,21 +71,10 @@ fun parserChannelHeader(
     fallbackSubscribers: String = "",
     isModel: Boolean = false,
 ): ChannelHeaderModel {
-    // 1. Баннер-обложка (cover banner)
-    val bannerImg = document.selectFirst("#profile-title .banner-slider img")
-        ?: document.selectFirst(".banner-slider img")
-        ?: document.selectFirst("a.banner-slide img")
-        ?: document.selectFirst("picture.img-responsive img")
-    var bannerUrl = bannerImg?.attr("src")?.trim().orEmpty()
-    if (bannerUrl.startsWith("//")) bannerUrl = "https:$bannerUrl"
+    val bannerUrl = parseChannelBannerUrl(document)
+    val avatarUrl = parseChannelAvatarUrl(document)
 
-    // 2. Аватарка (profile picture)
-    val avatarImg = document.selectFirst(".profile-infos .profile-pic img")
-        ?: document.selectFirst(".profile-pic img")
-    var avatarUrl = avatarImg?.attr("src")?.trim().orEmpty()
-    if (avatarUrl.startsWith("//")) avatarUrl = "https:$avatarUrl"
-
-    // 3. Отображаемое имя канала / модели
+    // Отображаемое имя канала / модели
     val nameText = document.selectFirst(".profile-infos h2 strong.text-danger")?.text()?.trim()
         ?: document.selectFirst("h2.with-aka strong")?.text()?.trim()
         ?: document.selectFirst(".profile-infos h2 strong")?.text()?.trim()
@@ -94,41 +83,21 @@ fun parserChannelHeader(
         ?: fallbackName.takeIf { it.isNotBlank() }
         ?: fallbackSlug
 
-    // 4. Число подписчиков
+    // Число подписчиков
     val subsText = document.selectFirst(".profile-infos .user-subscribe .count")?.text()?.trim()
         ?: document.selectFirst("#pinfo-subscribers span")?.text()?.trim()
     val resolvedSubscribers = subsText?.takeIf { it.isNotBlank() }
         ?: fallbackSubscribers
 
-    // 5. Суммарные просмотры
+    // Суммарные просмотры
     val totalViews = document.selectFirst("#pinfo-videos-views span")?.text()?.trim()
         ?: document.selectFirst(".profile-infos small span.mobile-hide")?.text()?.trim()
         ?: ""
 
-    // 6. Блок «Обо мне» (текстовое описание)
-    val aboutEl = document.selectFirst("#header-about-me")
-        ?: document.selectFirst("#pinfo-aboutme")
-    val aboutMeText = if (aboutEl != null) {
-        val clone = aboutEl.clone()
-        clone.select(".show-more").remove()
-        clone.select("br").append("\\n")
-        val raw = clone.text().replace("\\n", "\n").trim()
-        Parser.unescapeEntities(raw, false)
-    } else {
-        ""
-    }
-
-    // 7. Количество видео
+    val aboutMeText = parseChannelAboutMe(document)
     val videoCount = document.selectFirst("#tab-videos .count")?.text()?.trim()?.toIntOrNull() ?: 0
 
-    // 8. Специфичные данные модели/актрисы
-    val isModelDetected = isModel ||
-        document.html().contains("\"model\":true") ||
-        document.selectFirst("a[href*='/models/']") != null ||
-        document.selectFirst("h2.is-pornstar") != null ||
-        document.selectFirst(".is-pornstar") != null ||
-        document.selectFirst("#pinfo-sex") != null ||
-        fallbackSlug.startsWith("model")
+    val isModelDetected = detectIsModelProfile(document, fallbackSlug, isModel)
     val profileType = if (isModelDetected) com.client.xvideos.x.model.ProfileType.MODEL else com.client.xvideos.x.model.ProfileType.CHANNEL
 
     val gender = document.selectFirst("#pinfo-sex span")?.text()?.trim().orEmpty()
@@ -137,19 +106,7 @@ fun parserChannelHeader(
     val countryCode = parseProfileCountryCode(document, country)
     val workedWith = document.selectFirst("#pinfo-workedfor span")?.text()?.trim().orEmpty()
     val isCurrentPageChannel = profileType == com.client.xvideos.x.model.ProfileType.CHANNEL
-    val collaboratorElements = document.select("#pinfo-workedfor span a[href]")
-    val collaborators = collaboratorElements.mapNotNull { a ->
-        val href = a.attr("href").trim()
-        val name = a.text().trim()
-        if (name.isNotBlank()) {
-            val isCollaboratorModel = detectCollaboratorIsModel(
-                name = name,
-                href = href,
-                isCurrentPageChannel = isCurrentPageChannel,
-            )
-            ChannelCollaborator(name = name, href = href, isModel = isCollaboratorModel)
-        } else null
-    }
+    val collaborators = parseChannelCollaborators(document, isCurrentPageChannel)
 
     return ChannelHeaderModel(
         slug = fallbackSlug,
@@ -170,6 +127,67 @@ fun parserChannelHeader(
     )
 }
 
+private fun parseChannelBannerUrl(document: Document): String {
+    val bannerImg = document.selectFirst("#profile-title .banner-slider img")
+        ?: document.selectFirst(".banner-slider img")
+        ?: document.selectFirst("a.banner-slide img")
+        ?: document.selectFirst("picture.img-responsive img")
+    var bannerUrl = bannerImg?.attr("src")?.trim().orEmpty()
+    if (bannerUrl.startsWith("//")) bannerUrl = "https:$bannerUrl"
+    return bannerUrl
+}
+
+private fun parseChannelAvatarUrl(document: Document): String {
+    val avatarImg = document.selectFirst(".profile-infos .profile-pic img")
+        ?: document.selectFirst(".profile-pic img")
+    var avatarUrl = avatarImg?.attr("src")?.trim().orEmpty()
+    if (avatarUrl.startsWith("//")) avatarUrl = "https:$avatarUrl"
+    return avatarUrl
+}
+
+private fun parseChannelAboutMe(document: Document): String {
+    val aboutEl = document.selectFirst("#header-about-me")
+        ?: document.selectFirst("#pinfo-aboutme")
+    return if (aboutEl != null) {
+        val clone = aboutEl.clone()
+        clone.select(".show-more").remove()
+        clone.select("br").append("\\n")
+        val raw = clone.text().replace("\\n", "\n").trim()
+        Parser.unescapeEntities(raw, false)
+    } else {
+        ""
+    }
+}
+
+private fun detectIsModelProfile(document: Document, fallbackSlug: String, isModel: Boolean): Boolean {
+    return isModel ||
+        document.html().contains("\"model\":true") ||
+        document.selectFirst("a[href*='/models/']") != null ||
+        document.selectFirst("h2.is-pornstar") != null ||
+        document.selectFirst(".is-pornstar") != null ||
+        document.selectFirst("#pinfo-sex") != null ||
+        fallbackSlug.startsWith("model")
+}
+
+private fun parseChannelCollaborators(
+    document: Document,
+    isCurrentPageChannel: Boolean
+): List<ChannelCollaborator> {
+    val collaboratorElements = document.select("#pinfo-workedfor span a[href]")
+    return collaboratorElements.mapNotNull { a ->
+        val href = a.attr("href").trim()
+        val name = a.text().trim()
+        if (name.isNotBlank()) {
+            val isCollaboratorModel = detectCollaboratorIsModel(
+                name = name,
+                href = href,
+                isCurrentPageChannel = isCurrentPageChannel,
+            )
+            ChannelCollaborator(name = name, href = href, isModel = isCollaboratorModel)
+        } else null
+    }
+}
+
 private val STUDIO_KEYWORDS = setOf(
     "studio", "studios", "productions", "production", "producoes", "producao",
     "films", "film", "media", "tv", "canal", "channel", "channels", "network",
@@ -188,10 +206,8 @@ internal fun detectCollaboratorIsModel(
 
     // 1. Явные указатели на модель в URL или slug
     if (lowerHref.contains("/models/") || lowerHref.contains("/pornstars/")) return true
-    if (lowerHref.endsWith("-model") || lowerHref.endsWith("_model") ||
-        lowerHref.contains("-model/") || lowerHref.contains("_model/") ||
-        lowerHref.contains("/model-") || lowerHref.contains("/model_")
-    ) return true
+    val modelPatterns = listOf("-model", "_model", "/model-", "/model_")
+    if (modelPatterns.any { lowerHref.contains(it) }) return true
 
     // 2. Явные указатели на канал в URL
     if (lowerHref.contains("/channels/")) return false
@@ -306,8 +322,10 @@ private val channelJson = kotlinx.serialization.json.Json {
 @kotlinx.serialization.Serializable
 internal data class ChannelVideosResponseDto(
     val videos: List<ChannelVideoItemDto> = emptyList(),
-    val nb_videos: Int? = null,
-    val current_page: Int? = null,
+    @SerialName("nb_videos")
+    val nbVideos: Int? = null,
+    @SerialName("current_page")
+    val currentPage: Int? = null,
 )
 
 @kotlinx.serialization.Serializable
@@ -381,8 +399,8 @@ fun parserChannelVideosResult(jsonString: String): ChannelVideosResult {
         }
         ChannelVideosResult(
             videos = result,
-            totalVideos = dto.nb_videos,
-            currentPage = dto.current_page,
+            totalVideos = dto.nbVideos,
+            currentPage = dto.currentPage,
         )
     } catch (_: Exception) {
         ChannelVideosResult()

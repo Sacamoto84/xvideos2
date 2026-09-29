@@ -3,7 +3,6 @@ package com.client.xvideos.x.parcer
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -12,89 +11,7 @@ class ParserActressesIndexTest {
 
     @Test
     fun `parseActressesIndexPage correctly parses catalog filters, items and pagination`() {
-        val html = """
-            <!doctype html>
-            <html>
-            <body>
-                <div class="ordered-label-list">
-                    <ul>
-                        <strong class="btn btn-default main label btn-text">Топ 76 230 порноактрис</strong>
-                        <li>
-                            <span class="btn btn-default main label btn-profiles-date-links btn-geo-links">Мировые модели ▼</span>
-                            <ul class="profiles-date-links geo-links hidden">
-                                <li class="active"><a href="/porn-actresses-index/from/russia/ever">Мировые модели</a></li>
-                                <li><a href="/porn-actresses-index/south_africa/from/russia/ever">Южноафриканское модели</a></li>
-                            </ul>
-                        </li>
-                        <li>
-                            <span class="btn btn-default main label btn-profiles-date-links btn-profile-links">Порноактрисы ▼</span>
-                            <ul class="profiles-date-links profile-links hidden">
-                                <li><a href="/pornstars-index">Все типы моделей</a></li>
-                                <li class="active"><a href="/porn-actresses-index">Порноактрисы</a></li>
-                                <li><a href="/amateurs-index">Любители</a></li>
-                            </ul>
-                        </li>
-                        <li>
-                            <span class="btn btn-default main label btn-profiles-date-links btn-time-links">Рейтинг ▼</span>
-                            <ul class="profiles-date-links time-links hidden">
-                                <li><a href="/porn-actresses-index/from/worldwide/ever">Подписчиков со всего мира (за всё время)</a></li>
-                                <li class="active"><a href="/porn-actresses-index/from/russia/ever">Подписчиков Россиянки (за всё время)</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-                <h5 class="bg-title grey">Рейтинг на этой странице основан на просмотрах</h5>
-                <div class="pagination">
-                    <ul>
-                        <li><a class="active" href="">1</a></li>
-                        <li><a href="/porn-actresses-index/from/russia/ever/1">2</a></li>
-                        <li><a href="/porn-actresses-index/from/russia/ever/952" class="last-page">953</a></li>
-                        <li><a href="/porn-actresses-index/from/russia/ever/1" class="no-page next-page">Следующий</a></li>
-                    </ul>
-                </div>
-                <div class="mozaique">
-                    <div id="profile_sweetie-fox1" class="thumb-block thumb-block-profile">
-                        <div class="thumb-inside">
-                            <div class="thumb">
-                                <a href="/pornstars/sweetie-fox1">
-                                    <img src="https://thumb.example.com/xv_18_t.jpg" id="pic_sweetie-fox1" />
-                                </a>
-                            </div>
-                            <span class="flag flag-ru" title="Россия"></span>
-                        </div>
-                        <div class="thumb-under">
-                            <p class="profile-name">
-                                <strong>#1</strong>&nbsp;<a href="/pornstars/sweetie-fox1">Sweetie Fox</a>
-                            </p>
-                            <p class="profile-counts">
-                                <span class="with-sub">867 видео</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div id="profile_joy-sky" class="thumb-block thumb-block-profile">
-                        <div class="thumb-inside">
-                            <div class="thumb">
-                                <a href="/models/joy-sky">
-                                    <img src="https://thumb.example.com/joy_sky.jpg" />
-                                </a>
-                            </div>
-                            <span class="flag flag-br" title="Бразилия"></span>
-                        </div>
-                        <div class="thumb-under">
-                            <p class="profile-name">
-                                <strong>#2</strong>&nbsp;<a href="/models/joy-sky">Joy Ski</a>
-                            </p>
-                            <p class="profile-counts">
-                                <span class="with-sub">279 видео</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-        """.trimIndent()
-
-        val catalog = parseActressesIndexPage(html)
+        val catalog = parseActressesIndexPage(SAMPLE_CATALOG_HTML)
 
         assertEquals("Топ 76 230 порноактрис", catalog.totalCountTitle)
         assertEquals("Рейтинг на этой странице основан на просмотрах", catalog.subtitle)
@@ -177,5 +94,89 @@ class ParserActressesIndexTest {
         assertEquals("", catalog.totalCountTitle)
         assertEquals(0, catalog.items.size)
         assertFalse(catalog.hasNextPage)
+    }
+
+    private companion object {
+        private val SAMPLE_CATALOG_HTML = """
+            <!doctype html>
+            <html>
+            <body>
+                <div class="ordered-label-list">
+                    <ul>
+                        <strong class="btn btn-default main label btn-text">Топ 76 230 порноактрис</strong>
+                        <li>
+                            <span class="btn btn-default main label btn-profiles-date-links btn-geo-links">Мировые модели ▼</span>
+                            <ul class="profiles-date-links geo-links hidden">
+                                <li class="active"><a href="/porn-actresses-index/from/russia/ever">Мировые модели</a></li>
+                                <li><a href="/porn-actresses-index/south_africa/from/russia/ever">Южноафриканское модели</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <span class="btn btn-default main label btn-profiles-date-links btn-profile-links">Порноактрисы ▼</span>
+                            <ul class="profiles-date-links profile-links hidden">
+                                <li><a href="/pornstars-index">Все типы моделей</a></li>
+                                <li class="active"><a href="/porn-actresses-index">Порноактрисы</a></li>
+                                <li><a href="/amateurs-index">Любители</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <span class="btn btn-default main label btn-profiles-date-links btn-time-links">Рейтинг ▼</span>
+                            <ul class="profiles-date-links time-links hidden">
+                                <li><a href="/porn-actresses-index/from/worldwide/ever">Подписчиков со всего мира (за всё время)</a></li>
+                                <li class="active"><a href="/porn-actresses-index/from/russia/ever">Подписчиков Россиянки (за всё время)</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <h5 class="bg-title grey">Рейтинг на этой странице основан на просмотрах</h5>
+                <div class="pagination">
+                    <ul>
+                        <li><a class="active" href="">1</a></li>
+                        <li><a href="/porn-actresses-index/from/russia/ever/1">2</a></li>
+                        <li><a href="/porn-actresses-index/from/russia/ever/952" class="last-page">953</a></li>
+                        <li><a href="/porn-actresses-index/from/russia/ever/1" class="no-page next-page">Следующий</a></li>
+                    </ul>
+                </div>
+                <div class="mozaique">
+                    <div id="profile_sweetie-fox1" class="thumb-block thumb-block-profile">
+                        <div class="thumb-inside">
+                            <div class="thumb">
+                                <a href="/pornstars/sweetie-fox1">
+                                    <img src="https://thumb.example.com/xv_18_t.jpg" id="pic_sweetie-fox1" />
+                                </a>
+                            </div>
+                            <span class="flag flag-ru" title="Россия"></span>
+                        </div>
+                        <div class="thumb-under">
+                            <p class="profile-name">
+                                <strong>#1</strong>&nbsp;<a href="/pornstars/sweetie-fox1">Sweetie Fox</a>
+                            </p>
+                            <p class="profile-counts">
+                                <span class="with-sub">867 видео</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div id="profile_joy-sky" class="thumb-block thumb-block-profile">
+                        <div class="thumb-inside">
+                            <div class="thumb">
+                                <a href="/models/joy-sky">
+                                    <img src="https://thumb.example.com/joy_sky.jpg" />
+                                </a>
+                            </div>
+                            <span class="flag flag-br" title="Бразилия"></span>
+                        </div>
+                        <div class="thumb-under">
+                            <p class="profile-name">
+                                <strong>#2</strong>&nbsp;<a href="/models/joy-sky">Joy Ski</a>
+                            </p>
+                            <p class="profile-counts">
+                                <span class="with-sub">279 видео</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
     }
 }

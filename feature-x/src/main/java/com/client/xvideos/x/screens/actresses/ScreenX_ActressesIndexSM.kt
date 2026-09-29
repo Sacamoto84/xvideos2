@@ -9,7 +9,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
-import com.client.xvideos.x.model.ActressesIndexCatalog
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.ActressesIndexUiState
