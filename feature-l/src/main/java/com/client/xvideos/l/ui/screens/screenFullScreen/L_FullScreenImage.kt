@@ -1,43 +1,18 @@
 package com.client.xvideos.l.ui.screens.screenFullScreen
 
-import com.client.xvideos.common.theme.Theme
-
 import android.os.Parcelable
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.ScreenRotation
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material.icons.automirrored.filled.VolumeOff
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,9 +24,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,49 +33,33 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.noRippleClickable
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.model.isLVideoFileUrl
-import com.client.xvideos.l.model.lPreviewImageUrl
-import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
-import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
+import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenBottomThumbnails
+import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenTopControls
+import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenUiState
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
-// Соседние файлы того же пакета, выделенные отсюда: LFullScreenPage.kt (страница
-// пейджера), LFullScreenVideo.kt (видео и постер), LPictureInfo.kt (диалог
-// «Информация»), CheckerboardBackground.kt (подложка). Здесь остался сам экран.
-
-// Хелперы offsetForPage/startOffsetForPage/endOffsetForPage удалены: они читали
-// currentPageOffsetFraction в composition, из-за чего каждая страница пейджера
-// рекомпозилась на каждом кадре прокрутки. Если понадобится анимация перехода —
-// читать offset только внутри graphicsLayer { } (фаза отрисовки).
-
-private val THUMB_CORNER_SHAPE = RoundedCornerShape(4.dp)
-
 @Parcelize
 class L_FullScreenImage(
     val item: PicsDetails,
-    /** Имя источника: id альбома, "l_likes" или имя коллекции. Идёт в загрузку файлов. */
     val albumName: String,
-    /** Числовой id альбома для меню элемента. Пусто для лайков и коллекций. */
     val idAlbum: String = "",
-    /** Ключ списка картинок в [LFullScreenPayload]. Сам список в Bundle не влезает. */
     val payloadKey: String = "",
     val autoPlay: Boolean = false,
     val isAnimated: Boolean = false,
     val expandMenu: ExpandMenuType,
     val isCollection: Boolean = false,
     @IgnoredOnParcel val onClose: (Int) -> Unit = {},
-
-    ) : Screen, Parcelable {
+) : Screen, Parcelable {
 
     @IgnoredOnParcel
     override val key: ScreenKey = "L_FullScreenImage:$albumName:${item.id}:$payloadKey"
@@ -110,82 +68,50 @@ class L_FullScreenImage(
         ExperimentalFoundationApi::class,
         DelicateCoroutinesApi::class
     )
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
     @Composable
     override fun Content() {
 
-//        run {
-//            Timber.d("!!! >>>> filteredPic type: ${filteredPic::class.java.simpleName}")
-//            //filteredPic.toList()
-//        }
-
-        /**
-         * Показ полностью фуллскрин
-         */
-        var isFullScreen by remember { mutableStateOf(false) }
-
-        // Снимок берём один раз: toList() + indexOf (equals по всем полям PicsDetails)
-        // на каждой рекомпозиции давали заметный провал кадров при смене страницы.
-        //
-        // ifEmpty: хранилище списков не переживает смерть процесса, а сам экран
-        // Parcelable и восстанавливается Voyager'ом. Без запасного варианта
-        // indexOf вернёт -1 и coerceIn(0, -1) уронит экран.
         val filteredPic = remember(payloadKey, item) {
             LFullScreenPayload.get(payloadKey).ifEmpty { listOf(item) }
         }
 
         val expandMenuViewModel: ExpandMenuViewModel = hiltViewModel()
-
         val navigator = LocalNavigator.currentOrThrow
 
         var isClosing by remember { mutableStateOf(false) }
         var isCurrentPageZoomed by remember { mutableStateOf(false) }
         var resetZoomTrigger by remember { mutableIntStateOf(0) }
-
         var corruptCancel by remember { mutableStateOf(false) }
-        val coroutineScope = rememberCoroutineScope()
-
-        var rotate by remember { mutableStateOf(false) }
         var showInfoDialog by remember { mutableStateOf(false) }
+        var isFullScreen by remember { mutableStateOf(false) }
+
         val verticalPager by Settings.l_fullscreen_vertical_pager.field.collectAsStateWithLifecycle()
         val videoMuted by Settings.l_fullscreen_video_muted.field.collectAsStateWithLifecycle()
 
         val initialIndex = remember(filteredPic, item) { resolveInitialIndex(filteredPic, item) }
-
-        val pagerState = rememberPagerState( initialIndex, pageCount = { filteredPic.size } )
-
-        // Состояние для LazyRow
-        val lazyRowState = rememberLazyListState( cacheWindow = LazyLayoutCacheWindow( ahead = 200.dp, behind = 200.dp ) )
-
+        val pagerState = rememberPagerState(initialIndex, pageCount = { filteredPic.size })
+        val lazyRowState = rememberLazyListState(cacheWindow = LazyLayoutCacheWindow(ahead = 200.dp, behind = 200.dp))
 
         LaunchedEffect(isClosing) {
             if (isClosing) {
                 runCatching {
-                    onClose( if (corruptCancel) pagerState.currentPage else -1 )
+                    onClose(if (corruptCancel) pagerState.currentPage else -1)
                 }
                 navigator.pop()
             }
         }
 
         val onDismissInfo: () -> Unit = remember { { showInfoDialog = false } }
+        val onShowInfo: () -> Unit = remember { { showInfoDialog = true } }
         val onResetZoom: () -> Unit = remember { { resetZoomTrigger++ } }
         val onExitFullScreen: () -> Unit = remember { { isFullScreen = false } }
         val onCloseScreen: () -> Unit = remember { { isClosing = true } }
 
-        // Диалог информации об элементе: первый жест «Назад» закрывает диалог
         BackHandler(enabled = showInfoDialog, onBack = onDismissInfo)
-
-        // Нажатие кнопки «Назад» при активном зуме плавно сбрасывает масштаб до 1.0x
         BackHandler(enabled = !showInfoDialog && isCurrentPageZoomed, onBack = onResetZoom)
-
-        // В полноэкранном режиме (контролы скрыты) первый жест «Назад» возвращает контролы
         BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && isFullScreen, onBack = onExitFullScreen)
-
-        // Выход из экрана просмотра
         BackHandler(enabled = !showInfoDialog && !isCurrentPageZoomed && !isFullScreen, onBack = onCloseScreen)
 
-
-        // Текущий индекс из pagerState
         val currentIndex = pagerState.currentPage
 
         LaunchedEffect(currentIndex) {
@@ -193,10 +119,6 @@ class L_FullScreenImage(
             if (currentIndex != initialIndex) { corruptCancel = true }
         }
 
-
-        // Автоматическая прокрутка LazyRow к текущему элементу.
-        // scrollToItem, а не animateScrollToItem: анимация ленты миниатюр шла
-        // одновременно со снапом пейджера и на слабом телефоне отъедала кадры.
         LaunchedEffect(currentIndex) {
             if (filteredPic.isNotEmpty()) {
                 lazyRowState.scrollToItem(resolveScrollIndex(currentIndex, filteredPic.lastIndex))
@@ -215,195 +137,182 @@ class L_FullScreenImage(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                //Шахматная доска
-                .checkerboardBackground( squareSize = 12.dp, lightColor = Color(0xFF252525), darkColor = Color(0xFF181818) )
-                .noRippleClickable( onClick = { isFullScreen = isFullScreen.not() } )
+        val uiState = FullScreenUiState(
+            item = item,
+            filteredPic = filteredPic,
+            albumName = albumName,
+            idAlbum = idAlbum,
+            expandMenu = expandMenu,
+            isCollection = isCollection,
+            autoPlay = autoPlay,
+            currentIndex = currentIndex,
+            isFullScreen = isFullScreen,
+            showInfoDialog = showInfoDialog,
+            verticalPager = verticalPager,
+            videoMuted = videoMuted,
+            resetZoomTrigger = resetZoomTrigger,
+        )
 
-        ) {
-            if (showInfoDialog) {
-                LPictureInfoDialog(
-                    item = filteredPic.getOrNull(currentIndex) ?: item,
-                    position = currentIndex,
-                    total = filteredPic.size,
-                    onDismiss = onDismissInfo,
-                    onAlbumClick = onAlbumClick
-                )
-            }
+        FullScreenImageContent(
+            state = uiState,
+            pagerState = pagerState,
+            lazyRowState = lazyRowState,
+            expandMenuViewModel = expandMenuViewModel,
+            onDismissInfo = onDismissInfo,
+            onShowInfo = onShowInfo,
+            onAlbumClick = onAlbumClick,
+            onToggleFullScreen = { isFullScreen = !isFullScreen },
+            onZoomChanged = { isCurrentPageZoomed = it },
+            onCorruptCancel = { corruptCancel = true }
+        )
+    }
+}
 
-            val onZoomChanged = remember { { zoomed: Boolean -> isCurrentPageZoomed = zoomed } }
-            val onToggleFullScreen = remember { { isFullScreen = isFullScreen.not() } }
+@Composable
+fun FullScreenImageContent(
+    state: FullScreenUiState,
+    pagerState: PagerState,
+    lazyRowState: LazyListState,
+    expandMenuViewModel: ExpandMenuViewModel,
+    onDismissInfo: () -> Unit,
+    onShowInfo: () -> Unit,
+    onAlbumClick: (Long) -> Unit,
+    onToggleFullScreen: () -> Unit,
+    onZoomChanged: (Boolean) -> Unit,
+    onCorruptCancel: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val coroutineScope = rememberCoroutineScope()
+    var rotate by remember { mutableStateOf(false) }
 
-            if (verticalPager) {
-                VerticalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    userScrollEnabled = !isCurrentPageZoomed,
-                    pageSpacing = 0.dp,
-                    beyondViewportPageCount = 1,
-                    // url_to_original не уникален (см. L_LazyRowPictureDetails): дубль
-                    // картинки в альбоме давал одинаковый ключ и падение пейджера.
-                    key = { page -> "${filteredPic.getOrNull(page)?.url_to_original}#$page" }
-                ) { page ->
-                    LFullScreenPage(
-                        pageItem = filteredPic.getOrNull(page) ?: item,
-                        page = page,
-                        currentIndex = currentIndex,
-                        pagerState = pagerState,
-                        rotate = rotate,
-                        albumName = albumName,
-                        autoPlay = autoPlay,
-                        videoMuted = videoMuted,
-                        // Пейджер листается вертикально — горизонтальная перемотка не мешает.
-                        seekDragEnabled = true,
-                        resetZoomTrigger = resetZoomTrigger,
-                        onZoomChanged = onZoomChanged,
-                        onToggleFullScreen = onToggleFullScreen
-                    )
-                }
-            } else {
-            HorizontalPager(
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .checkerboardBackground(squareSize = 12.dp, lightColor = Color(0xFF252525), darkColor = Color(0xFF181818))
+            .noRippleClickable(onClick = onToggleFullScreen)
+    ) {
+        if (state.showInfoDialog) {
+            LPictureInfoDialog(
+                item = state.filteredPic.getOrNull(state.currentIndex) ?: state.item,
+                position = state.currentIndex,
+                total = state.filteredPic.size,
+                onDismiss = onDismissInfo,
+                onAlbumClick = onAlbumClick
+            )
+        }
+
+        if (state.verticalPager) {
+            VerticalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = !isCurrentPageZoomed,
                 pageSpacing = 0.dp,
                 beyondViewportPageCount = 1,
-                reverseLayout = false,
-                // См. VerticalPager выше: url_to_original не уникален.
-                key = { page -> "${filteredPic.getOrNull(page)?.url_to_original}#$page" }
+                key = { page -> "${state.filteredPic.getOrNull(page)?.url_to_original}#$page" }
             ) { page ->
                 LFullScreenPage(
-                    pageItem = filteredPic.getOrNull(page) ?: item,
+                    pageItem = state.filteredPic.getOrNull(page) ?: state.item,
                     page = page,
-                    currentIndex = currentIndex,
+                    currentIndex = state.currentIndex,
                     pagerState = pagerState,
                     rotate = rotate,
-                    albumName = albumName,
-                    autoPlay = autoPlay,
-                    videoMuted = videoMuted,
-                    // Зона перемотки в нижней трети плеера перехватывала
-                    // горизонтальный свайп и страницы не листались.
-                    seekDragEnabled = false,
-                    resetZoomTrigger = resetZoomTrigger,
+                    albumName = state.albumName,
+                    autoPlay = state.autoPlay,
+                    videoMuted = state.videoMuted,
+                    seekDragEnabled = true,
+                    resetZoomTrigger = state.resetZoomTrigger,
                     onZoomChanged = onZoomChanged,
                     onToggleFullScreen = onToggleFullScreen
                 )
             }
-            }
-
-            val onRotateToggle = remember { { rotate = !rotate } }
-            val onVerticalPagerToggle = remember(verticalPager) { { Settings.l_fullscreen_vertical_pager.setValue(!verticalPager) } }
-            val onVideoMutedToggle = remember(videoMuted) { { Settings.l_fullscreen_video_muted.setValue(!videoMuted) } }
-            val onShowInfoDialog = remember { { showInfoDialog = true } }
-
-            Box(modifier = Modifier.align(Alignment.TopStart)) {
-                Text(
-                    text = currentIndex.toString(),
-                    color = Color.Gray,
-                    modifier = Modifier.padding(start = 8.dp),
-                    fontFamily = Theme.L.fontFamilyKarla
+        } else {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                pageSpacing = 0.dp,
+                beyondViewportPageCount = 1,
+                reverseLayout = false,
+                key = { page -> "${state.filteredPic.getOrNull(page)?.url_to_original}#$page" }
+            ) { page ->
+                LFullScreenPage(
+                    pageItem = state.filteredPic.getOrNull(page) ?: state.item,
+                    page = page,
+                    currentIndex = state.currentIndex,
+                    pagerState = pagerState,
+                    rotate = rotate,
+                    albumName = state.albumName,
+                    autoPlay = state.autoPlay,
+                    videoMuted = state.videoMuted,
+                    seekDragEnabled = false,
+                    resetZoomTrigger = state.resetZoomTrigger,
+                    onZoomChanged = onZoomChanged,
+                    onToggleFullScreen = onToggleFullScreen
                 )
             }
-
-            AnimatedVisibility(visible = !isFullScreen, enter = fadeIn(), exit = fadeOut())
-            {
-                //Верхние кнопки
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxWidth()
-                        .offset(y = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                )
-                {
-                    Row {
-                        IconButton(onClick = onRotateToggle) { Icon(Icons.Default.ScreenRotation, contentDescription = "Повернуть изображение", tint = Color.White) }
-                        IconButton(onClick = onVerticalPagerToggle) { Icon( if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz, contentDescription = if (verticalPager) "Листать по горизонтали" else "Листать по вертикали", tint = Color.White) }
-                        // Звук был зашит в mute без единой кнопки включить.
-                        IconButton(onClick = onVideoMutedToggle) { Icon( if (videoMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = if (videoMuted) "Включить звук" else "Выключить звук", tint = Color.White) }
-                    }
-
-                    Row {
-                        IconButton(onClick = onShowInfoDialog) { Icon( Icons.Default.Info, contentDescription = "Информация о картинке", tint = Color.White ) }
-                        expandMenuViewModel.ExpandMenu( expandMenu, filteredPic.getOrNull(pagerState.currentPage) ?: item, idAlbum, isCollection )
-                    }
-                }
-            }
-
-            /** Единственный экземпляр P2P-хоста на экран — вне AnimatedVisibility,
-             *  чтобы диалог/навигация не умирали при скрытии панели. */
-            expandMenuViewModel.P2pShareHost()
-
-            AnimatedVisibility(
-                visible = !isFullScreen,
-                // Панель выезжает снизу и уезжает вниз ({ it } = на полную свою высоту).
-                enter = fadeIn(),
-                exit  = fadeOut(),
-            ) {
-                SwipeableBottomPanel {
-                    Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                        LazyRow( state = lazyRowState, modifier = Modifier.height(72.dp) )
-                        {
-                            itemsIndexed(
-                                filteredPic,
-                                // См. VerticalPager выше: url_to_original не уникален.
-                                key = { index, item -> "${item.url_to_original}#$index" }) { index, it1 ->
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 1.dp)
-                                        .clip(THUMB_CORNER_SHAPE)
-                                        .aspectRatio(it1.safeAspectRatio())
-                                        // Раньше клик выставлял dataItem, а обратный
-                                        // indexOf(dataItem) на дубликатах картинки
-                                        // возвращал чужой индекс и пейджер прыгал назад.
-                                        .clickable(onClick = {
-                                             coroutineScope.launch { pagerState.scrollToPage(index) }
-                                             corruptCancel = true
-                                         })
-                                        .border(2.dp, if (index == currentIndex) Color.Yellow else Color.Transparent, THUMB_CORNER_SHAPE).padding(2.dp)
-                                ) {
-                                    val thumbUrl = it1.lPreviewImageUrl("large_thumbnail")
-                                    if (thumbUrl.isNotBlank() && !thumbUrl.isLVideoFileUrl()) {
-                                        UrlImage(
-                                            url = thumbUrl,
-                                            modifier = Modifier.clip(THUMB_CORNER_SHAPE).fillMaxSize(),
-                                            contentScale = ContentScale.FillBounds,
-                                            onSuccess = { }, albumName = albumName, autoPlay = false, isAnimated = false, sizeButton = 20.dp, sizeButtonIcon = 12.dp
-                                        )
-                                    } else {
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(THUMB_CORNER_SHAPE)
-                                                .background(Color(0xFF202020))
-                                                .fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-
         }
+
+        Box(modifier = Modifier.align(Alignment.TopStart)) {
+            Text(
+                text = state.currentIndex.toString(),
+                color = Color.Gray,
+                modifier = Modifier.padding(start = 8.dp),
+                fontFamily = Theme.L.fontFamilyKarla
+            )
+        }
+
+        val onRotateToggle = remember { { rotate = !rotate } }
+        val onVerticalPagerToggle = remember(state.verticalPager) {
+            { Settings.l_fullscreen_vertical_pager.setValue(!state.verticalPager) }
+        }
+        val onVideoMutedToggle = remember(state.videoMuted) {
+            { Settings.l_fullscreen_video_muted.setValue(!state.videoMuted) }
+        }
+
+        FullScreenTopControls(
+            visible = !state.isFullScreen,
+            verticalPager = state.verticalPager,
+            videoMuted = state.videoMuted,
+            onRotateToggle = onRotateToggle,
+            onVerticalPagerToggle = onVerticalPagerToggle,
+            onVideoMutedToggle = onVideoMutedToggle,
+            onShowInfoDialog = onShowInfo,
+            modifier = Modifier.align(Alignment.TopStart),
+            expandMenuContent = {
+                expandMenuViewModel.ExpandMenu(
+                    state.expandMenu,
+                    state.filteredPic.getOrNull(pagerState.currentPage) ?: state.item,
+                    state.idAlbum,
+                    state.isCollection
+                )
+            }
+        )
+
+        expandMenuViewModel.P2pShareHost()
+
+        val onThumbnailClick = remember(coroutineScope, pagerState, onCorruptCancel) {
+            { index: Int ->
+                coroutineScope.launch { pagerState.scrollToPage(index) }
+                onCorruptCancel()
+            }
+        }
+
+        FullScreenBottomThumbnails(
+            visible = !state.isFullScreen,
+            lazyRowState = lazyRowState,
+            filteredPic = state.filteredPic,
+            currentIndex = state.currentIndex,
+            albumName = state.albumName,
+            onThumbnailClick = onThumbnailClick,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
-internal fun resolveInitialIndex(items: List<PicsDetails>, target: PicsDetails): Int {
-    if (items.isEmpty()) return 0
-    val exact = items.indexOf(target)
-    if (exact >= 0) return exact
-    val targetKey = target.selectionKey()
-    val byKey = items.indexOfFirst { it.selectionKey() == targetKey }
-    if (byKey >= 0) return byKey
-    return 0
+@Preview
+@Composable
+private fun L_FullScreenImagePreview() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .checkerboardBackground(squareSize = 12.dp, lightColor = Color(0xFF252525), darkColor = Color(0xFF181818))
+    )
 }
-
-internal fun resolveScrollIndex(currentIndex: Int, maxIndex: Int): Int =
-    (currentIndex - 2).coerceIn(0, maxIndex.coerceAtLeast(0))

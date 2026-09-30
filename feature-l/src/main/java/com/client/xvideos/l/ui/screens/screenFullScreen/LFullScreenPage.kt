@@ -192,3 +192,14 @@ internal fun LFullScreenPage(
     }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun LFullScreenPagePreview() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Fullscreen Page Preview", color = Color.White)
+    }
+}
