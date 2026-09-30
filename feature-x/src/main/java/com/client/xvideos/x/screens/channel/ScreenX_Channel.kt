@@ -15,13 +15,11 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,7 +32,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -56,17 +53,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Velocity
@@ -74,31 +68,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import com.client.xvideos.ui.theme.XvideosTheme
-import com.client.xvideos.x.model.ChannelHeaderModel
-import com.client.xvideos.x.model.ChannelUiState
-import com.client.xvideos.x.model.ProfileType
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.common.icons.IconFavorite18
-import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelCollaborator
+import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ChannelModelFilterItem
+import com.client.xvideos.x.model.ChannelUiState
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.model.ProfileType
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.normalizeXUrl
-import com.client.xvideos.x.screens.channel.atom.ChannelHeader
-import com.client.xvideos.x.screens.channel.atom.ChannelModelFilterBar
-import com.client.xvideos.x.screens.channel.atom.ChannelSortBar
+import com.client.xvideos.x.screens.channel.molecule.ChannelCollapsingLayout
+import com.client.xvideos.x.screens.channel.molecule.ChannelHeader
+import com.client.xvideos.x.screens.channel.molecule.ChannelModelFilterBar
+import com.client.xvideos.x.screens.channel.molecule.ChannelSortBar
+import com.client.xvideos.x.screens.channel.molecule.ChannelVideoItem
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
-import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
-import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 /**
  * Экран канала автора/студии X (`ScreenX_Channel`).
@@ -646,209 +637,6 @@ fun ChannelScreenContent(
                 .clipToBounds()
                 .nestedScroll(nestedScrollConnection)
         )
-    }
-}
-
-/**
- * Кастомный макет для схлопывающейся шапки профиля канала, липкой панели сортировок/фильтров
- * и горизонтального пейджера страниц с видеороликами.
- */
-@Composable
-private fun ChannelCollapsingLayout(
-    headerOffsetPx: Float,
-    topInsetPx: Int,
-    header: @Composable () -> Unit,
-    stickyBar: @Composable () -> Unit,
-    pager: @Composable () -> Unit,
-    statusCover: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Layout(
-        content = {
-            header()
-            stickyBar()
-            pager()
-            statusCover()
-        },
-        modifier = modifier
-    ) { measurables, constraints ->
-        val headerMeasurable = measurables.getOrNull(0)
-        val stickyBarMeasurable = measurables.getOrNull(1)
-        val pagerMeasurable = measurables.getOrNull(2)
-        val statusCoverMeasurable = measurables.getOrNull(3)
-
-        val headerPlaceable = headerMeasurable?.measure(constraints.copy(minHeight = 0))
-        val headerHeight = headerPlaceable?.height ?: 0
-
-        val stickyBarPlaceable = stickyBarMeasurable?.measure(constraints.copy(minHeight = 0))
-        val stickyBarHeight = stickyBarPlaceable?.height ?: 0
-
-        val availablePagerHeight = (constraints.maxHeight - stickyBarHeight - topInsetPx).coerceAtLeast(0)
-        val pagerPlaceable = pagerMeasurable?.measure(
-            constraints.copy(minHeight = availablePagerHeight, maxHeight = availablePagerHeight)
-        )
-
-        val statusCoverPlaceable = statusCoverMeasurable?.measure(
-            constraints.copy(minHeight = topInsetPx, maxHeight = topInsetPx)
-        )
-
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            val offset = headerOffsetPx.roundToInt()
-            val headerY = topInsetPx + offset
-            val stickyY = (topInsetPx + headerHeight + offset).coerceAtLeast(topInsetPx)
-            val pagerY = stickyY + stickyBarHeight
-
-            // Порядок отрисовки слоёв:
-            // 1. Пейджер снизу
-            pagerPlaceable?.placeWithLayer(0, pagerY)
-            // 2. Шапка профиля
-            headerPlaceable?.placeWithLayer(0, headerY)
-            // 3. Липкая панель сортировок (перекрывает шапку при схлопывании)
-            stickyBarPlaceable?.placeWithLayer(0, stickyY)
-            // 4. Плашка выреза под строку состояния в самом верху
-            statusCoverPlaceable?.placeWithLayer(0, 0)
-        }
-    }
-}
-
-@Composable
-private fun ChannelVideoItem(
-    item: ItemsX,
-    isFavorite: Boolean,
-    isDownloaded: Boolean,
-    onOpenVideo: (ItemsX) -> Unit,
-    onFavoriteAdd: (ItemsX) -> Unit,
-    onFavoriteRemove: (ItemsX) -> Unit,
-    onDownload: (ItemsX) -> Unit,
-    onSaveToGallery: (ItemsX) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val handleOpen = remember(item, onOpenVideo) { { onOpenVideo(item) } }
-    val handleFavoriteAdd = remember(item, onFavoriteAdd) { { onFavoriteAdd(item) } }
-    val handleFavoriteRemove = remember(item, onFavoriteRemove) { { onFavoriteRemove(item) } }
-    val handleDownload = remember(item, onDownload) { { onDownload(item) } }
-    val handleSaveToGallery = remember(item, onSaveToGallery) { { onSaveToGallery(item) } }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(352f / 198f)
-            .padding(2.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF141418))
-    ) {
-        UrlVideoImageAndLongClickX(
-            item = item,
-            onLongClick = handleOpen,
-            onDoubleClick = handleOpen,
-        ) {
-            // Длительность, иконка избранного и индикатор скачивания в правом нижнем углу
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                if (isDownloaded) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xB3000000))
-                            .padding(2.dp)
-                    ) {
-                        IconSave18()
-                    }
-                }
-                if (isFavorite) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xB3000000))
-                            .padding(2.dp)
-                    ) {
-                        IconFavorite18()
-                    }
-                }
-                if (item.duration.isNotBlank()) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xB3000000))
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = item.duration,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-
-            // Количество просмотров в левом нижнем углу
-            if (item.views.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xB3000000))
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = item.views,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFFDDDDDD)
-                    )
-                }
-            }
-
-            // Меню с тремя точками в правом верхнем углу
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(2.dp)
-            ) {
-                X_DashboardExpandMenu(
-                    isFavorite = isFavorite,
-                    onFavoriteAdd = handleFavoriteAdd,
-                    onFavoriteRemove = handleFavoriteRemove,
-                    onDownload = handleDownload,
-                    onSaveToGallery = handleSaveToGallery,
-                )
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF040404)
-@Composable
-private fun ChannelVideoItemPreview() {
-    XvideosTheme(darkTheme = true) {
-        Box(modifier = Modifier.padding(16.dp)) {
-            ChannelVideoItem(
-                item = ItemsX(
-                    id = 12345L,
-                    title = "Sample Video Title",
-                    duration = "12:34",
-                    views = "1.2M",
-                    channel = "Sample Channel",
-                    href = "/video12345",
-                    nameProfile = "Sample Channel",
-                    linkProfile = "/channels/sample",
-                ),
-                isFavorite = true,
-                isDownloaded = true,
-                onOpenVideo = {},
-                onFavoriteAdd = {},
-                onFavoriteRemove = {},
-                onDownload = {},
-                onSaveToGallery = {},
-            )
-        }
     }
 }
 
