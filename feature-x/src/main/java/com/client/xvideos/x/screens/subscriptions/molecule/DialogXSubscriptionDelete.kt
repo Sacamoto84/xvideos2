@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.subscriptions
+package com.client.xvideos.x.screens.subscriptions.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
@@ -103,4 +104,18 @@ fun DialogXSubscriptionDelete(
             onConfirm = { onConfirm(creator) }
         )
     }
+}
+
+@Preview
+@Composable
+private fun DialogXSubscriptionDeletePreview() {
+    DialogXSubscriptionDelete(
+        item = XSubscriptionItem(
+            slug = "sample-model",
+            name = "Sweet Model",
+            isModel = true
+        ),
+        onDismiss = {},
+        onConfirm = {}
+    )
 }
