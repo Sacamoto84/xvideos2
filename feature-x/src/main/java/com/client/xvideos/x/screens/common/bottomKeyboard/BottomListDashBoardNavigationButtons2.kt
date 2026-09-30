@@ -5,12 +5,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,11 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,37 +29,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.client.xvideos.common.ui.keyboard.KeyboardNumber
 import com.client.xvideos.common.ui.keyboard.KeyboardNumberTheme
-
-@Preview
-@Composable
-fun ScreenDashBoardsBottomNavigationButtonsPreview() {
-
-    var value by remember { mutableIntStateOf(1) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Gray),
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Text(value.toString(), fontSize = 32.sp)
-
-        BottomListDashBoardNavigationButtons2(value, { newValue ->
-            value = newValue
-            println("!!! $newValue")
-        }, 20000)
-
-    }
-}
+import com.client.xvideos.x.screens.common.bottomKeyboard.atom.ArrowNavigationButton
+import com.client.xvideos.x.screens.common.bottomKeyboard.atom.PageNumberButton
 
 /**
  * Нижняя панель навигации по страницам (`BottomListDashBoardNavigationButtons2`).
@@ -213,57 +184,6 @@ fun BottomListDashBoardNavigationButtons2(
     }
 }
 
-@Composable
-private fun ArrowNavigationButton(
-    arrow: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .padding(horizontal = 0.5.dp)
-            .size(48.dp)
-            .background(if (!enabled) Color(0xFF2C2C2C) else Color(0xFFFF9000))
-            .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = arrow,
-            color = if (!enabled) Color.DarkGray else Color.Black,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun PageNumberButton(
-    pageNumber: Int,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val pageText = remember(pageNumber) { pageNumber.toString() }
-    val baseModifier = modifier
-        .padding(horizontal = 0.5.dp)
-        .height(48.dp)
-        .background(Color(0xFF252525))
-    val selectedModifier = if (isSelected) baseModifier.border(2.dp, Color(0xFFFF9900)) else baseModifier
-
-    Box(
-        modifier = selectedModifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick,
-        ),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = pageText, color = Color(0xFFCCCCCC))
-    }
-}
-
 // Функция для вычисления смещения, чтобы элемент был в центре экрана
 fun calculateCenterOffset(state: LazyListState, index: Int): Int {
     val layoutInfo = state.layoutInfo
@@ -280,4 +200,14 @@ fun calculateCenterOffset(state: LazyListState, index: Int): Int {
 
 internal fun calculateCenterOffset(viewportWidth: Int, itemWidth: Int): Int {
     return ((viewportWidth - itemWidth) / 2).coerceAtLeast(0) // Центр экрана минус половина ширины элемента
+}
+
+@Preview
+@Composable
+private fun BottomListDashBoardNavigationButtons2Preview() {
+    BottomListDashBoardNavigationButtons2(
+        value = 0,
+        onChange = {},
+        max = 10
+    )
 }
