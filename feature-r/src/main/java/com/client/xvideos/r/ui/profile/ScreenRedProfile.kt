@@ -27,8 +27,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.r.model.UserInfo
-import com.client.xvideos.r.ui.profile.atom.RedProfileCreaterInfo
-import com.client.xvideos.r.ui.profile.tags.TagsBlock
+import com.client.xvideos.r.ui.profile.molecule.RedProfileCreaterInfo
+import com.client.xvideos.r.ui.profile.molecule.TagsBlock
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.common.util.getTopInsetDp
 import kotlinx.collections.immutable.ImmutableList
@@ -70,7 +70,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
         }
         val savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed = remember(vm) { { vm.savedRed } }
 
-        RedProfileScreenContent(
+        ScreenRedProfileContent(
             creator = vm.creator,
             tags = tagsList,
             tagsSelect = tagsSelectList,
@@ -85,7 +85,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
 }
 
 @Composable
-fun RedProfileScreenContent(
+fun ScreenRedProfileContent(
     creator: UserInfo?,
     tags: ImmutableList<String>,
     tagsSelect: ImmutableList<String>,

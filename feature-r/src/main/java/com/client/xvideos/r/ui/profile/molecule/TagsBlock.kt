@@ -1,22 +1,5 @@
-package com.client.xvideos.r.ui.profile.tags
+package com.client.xvideos.r.ui.profile.molecule
 
-import com.client.xvideos.common.theme.Theme
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,16 +7,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
+import com.client.xvideos.r.ui.profile.atom.ExpandCollapseButton
+import com.client.xvideos.r.ui.profile.atom.TagChip
 
 @Composable
 fun TagsBlock(
@@ -43,11 +22,11 @@ fun TagsBlock(
     onClick: (String) -> Unit = {}
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    
+
     // Оптимизация 1: Мемоизация сортировки и сета для быстрого поиска
     val sortedTags = remember(tags) { tags.sorted() }
     val selectedSet = remember(tagsSelect) { tagsSelect.toSet() }
-    
+
     // Оптимизация 2: Стабильная лямбда для предотвращения рекомпозиции чипов
     val currentOnClick by rememberUpdatedState(onClick)
     val stableOnClick = remember { { tag: String -> currentOnClick(tag) } }
@@ -70,7 +49,7 @@ fun TagsBlock(
         // Оптимизация 3: Subcompose только тех элементов, которые реально будут отображены
         for (tag in sortedTags) {
             val isSelected = tag in selectedSet
-            
+
             // Предварительный замер (через subcompose только нужных)
             val placeable = subcompose(tag) {
                 TagChip(tag, isSelected, stableOnClick)
@@ -91,7 +70,7 @@ fun TagsBlock(
                     currentRowW = 0
                 }
             }
-            
+
             shownPlaceables.add(placeable)
             currentRowW += placeable.width
         }
@@ -131,57 +110,6 @@ fun TagsBlock(
                 lineH = maxOf(lineH, placeable.height)
             }
         }
-    }
-}
-
-@Composable
-private fun TagChip(
-    text: String,
-    select: Boolean,
-    onClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val handleTagClick = remember(text, onClick) { { onClick(text) } }
-    val chipShape = RoundedCornerShape(16.dp)
-    Text(
-        text = text,
-        color = if (select) Color.Black else Color.White,
-        fontSize = 14.sp,
-        fontFamily = Theme.R.fontFamilyPopinsRegular,
-        modifier = modifier
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .height(32.dp)
-            .clip(chipShape)
-            .background(if (select) Theme.R.colorYellow else Color.Transparent)
-            .border(1.dp, Theme.R.colorYellow, chipShape)
-            .clickable(onClick = handleTagClick)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .wrapContentWidth()
-    )
-}
-
-@Composable
-private fun ExpandCollapseButton(
-    expanded: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(Color.Transparent)
-            .border(1.dp, Theme.R.colorYellow, CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = if (expanded) Icons.Default.Close else Icons.Default.MoreHoriz,
-            contentDescription = if (expanded) "Свернуть теги" else "Развернуть теги",
-            tint = Color.White,
-            modifier = Modifier.size(18.dp)
-        )
     }
 }
 
