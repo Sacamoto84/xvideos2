@@ -29,8 +29,8 @@ import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.collection.ScreenCollectionName
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.R_CollectionDialogActions
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.R_CollectionDialogData
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogActions
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogData
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.R_CollectionDialogsHost
 import com.client.xvideos.ui.theme.XvideosTheme
 import timber.log.Timber

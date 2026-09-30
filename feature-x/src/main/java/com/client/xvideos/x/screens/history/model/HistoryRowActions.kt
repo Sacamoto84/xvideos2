@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.history.molecule
+package com.client.xvideos.x.screens.history.model
 
 import androidx.compose.runtime.Immutable
 import com.client.xvideos.x.model.ItemsX

@@ -1,4 +1,5 @@
 package com.client.xvideos.screenSettings.molecule
+import com.client.xvideos.screenSettings.model.SettingsDetailParams
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height

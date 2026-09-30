@@ -1,4 +1,6 @@
 package com.client.xvideos.x.screens.history.molecule
+import com.client.xvideos.x.screens.history.model.HistorySelectionState
+import com.client.xvideos.x.screens.history.model.HistoryRowActions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

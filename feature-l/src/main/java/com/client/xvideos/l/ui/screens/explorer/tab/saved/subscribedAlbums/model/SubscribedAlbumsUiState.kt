@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule
+package com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.model
 
 import androidx.compose.runtime.Immutable
 import com.client.xvideos.l.model.AlbumDetails

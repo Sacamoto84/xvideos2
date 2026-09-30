@@ -24,7 +24,7 @@ import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.CollectionDialogData
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.CollectionDialogData
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.CollectionDialogsHost
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.L_CollectionNameContent
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.L_SavedCollectionTabContent

@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule
+package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model
 
 import androidx.compose.runtime.Immutable
 

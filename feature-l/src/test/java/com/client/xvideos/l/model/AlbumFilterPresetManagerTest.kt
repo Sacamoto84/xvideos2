@@ -1,9 +1,9 @@
 package com.client.xvideos.l.model
+import com.client.xvideos.l.featured.filter.AlbumFilterPresetManager
 
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterPresetManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

@@ -1,4 +1,4 @@
-package com.client.xvideos.screenSettings.molecule
+package com.client.xvideos.screenSettings.model
 
 import android.content.Context
 import androidx.compose.runtime.Immutable

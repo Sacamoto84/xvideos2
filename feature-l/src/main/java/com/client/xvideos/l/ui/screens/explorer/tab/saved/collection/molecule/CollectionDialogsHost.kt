@@ -1,4 +1,5 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.CollectionDialogData
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

@@ -1,4 +1,5 @@
 package com.client.xvideos.x.screens.history.molecule
+import com.client.xvideos.x.screens.history.model.HistoryDialogData
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

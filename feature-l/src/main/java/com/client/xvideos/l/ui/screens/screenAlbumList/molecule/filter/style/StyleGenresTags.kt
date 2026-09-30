@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
+package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

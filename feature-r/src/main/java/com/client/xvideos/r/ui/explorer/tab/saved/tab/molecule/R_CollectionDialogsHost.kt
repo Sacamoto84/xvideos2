@@ -11,7 +11,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,26 +24,8 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.CollectionCoverIcon
 
-@Immutable
-data class R_CollectionDialogData(
-    val itemPendingAction: String?,
-    val itemPendingRename: String?,
-    val itemPendingDelete: String?,
-    val renameValue: String,
-)
-
-@Immutable
-data class R_CollectionDialogActions(
-    val onDismissAction: () -> Unit,
-    val onDismissRename: () -> Unit,
-    val onDismissDelete: () -> Unit,
-    val onRenameValueChange: (String) -> Unit,
-    val onRenameAction: (String) -> Unit,
-    val onShareAction: (String) -> Unit,
-    val onDeleteAction: (String) -> Unit,
-    val onConfirmRename: (String, String) -> Unit,
-    val onConfirmDelete: (String) -> Unit,
-)
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogActions
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogData
 
 @Composable
 fun R_CollectionDialogsHost(

@@ -36,7 +36,7 @@ import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.StorageStat
 import com.client.xvideos.screenSettings.components.loadStorageStats
 import com.client.xvideos.screenSettings.molecule.AppSettingsScreenBody
-import com.client.xvideos.screenSettings.molecule.SettingsDetailParams
+import com.client.xvideos.screenSettings.model.SettingsDetailParams
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

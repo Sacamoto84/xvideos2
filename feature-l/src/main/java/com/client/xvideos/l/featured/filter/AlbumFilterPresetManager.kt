@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
+package com.client.xvideos.l.featured.filter
 
 import android.content.Context
 import android.content.SharedPreferences

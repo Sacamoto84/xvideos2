@@ -23,10 +23,10 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.XHistoryItem
 import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.history.atom.HistoryEmptyState
-import com.client.xvideos.x.screens.history.molecule.HistoryDialogData
+import com.client.xvideos.x.screens.history.model.HistoryDialogData
 import com.client.xvideos.x.screens.history.molecule.HistoryDialogHost
 import com.client.xvideos.x.screens.history.molecule.HistoryGrid
-import com.client.xvideos.x.screens.history.molecule.HistoryRowActions
+import com.client.xvideos.x.screens.history.model.HistoryRowActions
 import com.client.xvideos.x.screens.history.molecule.HistoryTopBarHost
 import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer

@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenFullScreen.molecule
+package com.client.xvideos.l.ui.screens.screenFullScreen.model
 
 import androidx.compose.runtime.Immutable
 import com.client.xvideos.l.model.PicsDetails

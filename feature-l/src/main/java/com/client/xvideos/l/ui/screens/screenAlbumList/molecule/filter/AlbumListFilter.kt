@@ -53,7 +53,7 @@ import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterDisplay
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterPresetManager
+import com.client.xvideos.l.featured.filter.AlbumFilterPresetManager
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSaveDialog
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSavedPresetsDialog
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterAlbumType
@@ -62,7 +62,7 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.Albu
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterGenres
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterSize
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterTags
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
 
 private val CARD_SHAPE = RoundedCornerShape(8.dp)
 private val BUTTON_SHAPE = RoundedCornerShape(6.dp)

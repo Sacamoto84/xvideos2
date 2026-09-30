@@ -44,7 +44,7 @@ import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumUnlikeDialog
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsEmptyOrErrorState
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsGrid
-import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsUiState
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.model.SubscribedAlbumsUiState
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.ui.theme.XvideosTheme
 

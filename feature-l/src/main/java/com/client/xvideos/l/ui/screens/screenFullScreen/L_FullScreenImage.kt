@@ -42,7 +42,7 @@ import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenBottomThumbnails
 import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenTopControls
-import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenUiState
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.FullScreenUiState
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.IgnoredOnParcel
