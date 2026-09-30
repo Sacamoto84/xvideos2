@@ -1,11 +1,8 @@
 package com.client.xvideos.r.ui.explorer.tab.niches
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,15 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,14 +40,19 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.r.common.saved.SavedRed
-import com.client.xvideos.r.ui.search.RSearchTextField
-import com.client.xvideos.r.model.Niche
-import com.client.xvideos.r.model.Order
-
-import com.client.xvideos.r.ui.niche.R_ScreenNiche
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
+import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.r.common.saved.SavedRed
+import com.client.xvideos.r.model.Niche
+import com.client.xvideos.r.model.Order
+import com.client.xvideos.r.ui.explorer.tab.niches.atom.RefreshMini
+import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NicheItemRow
+import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NichesBottomBar
+import com.client.xvideos.r.ui.explorer.tab.niches.molecule.Refresh
+import com.client.xvideos.r.ui.niche.R_ScreenNiche
+import com.client.xvideos.r.ui.search.RSearchTextField
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -62,30 +61,6 @@ private data class NicheScrollSnapshot(
     val index: Int,
     val offset: Int
 )
-
-
-
-internal fun filterAndSortNiches(
-    niches: List<Niche>,
-    query: String,
-    order: Order
-): List<Niche> {
-    val filtered = if (query.isBlank()) {
-        niches
-    } else {
-        niches.filter { it.name.contains(query, ignoreCase = true) }
-    }
-
-    return when (order) {
-        Order.NICHES_SUBSCRIBERS_D -> filtered.sortedByDescending { it.subscribers }
-        Order.NICHES_POST_D -> filtered.sortedByDescending { it.gifs }
-        Order.NICHES_SUBSCRIBERS_A -> filtered.sortedBy { it.subscribers }
-        Order.NICHES_POST_A -> filtered.sortedBy { it.gifs }
-        Order.NICHES_NAME_A_Z -> filtered.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
-        Order.NICHES_NAME_Z_A -> filtered.sortedWith(compareByDescending(String.CASE_INSENSITIVE_ORDER) { it.name })
-        else -> filtered.sortedBy { it.subscribers }
-    }
-}
 
 object R_ScreenNichesTab : Screen {
 
@@ -154,71 +129,73 @@ object R_ScreenNichesTab : Screen {
 
         val onSortTypeChange: (Order) -> Unit = remember(vm) { { vm.changeSortType(it) } }
 
-        val onUpClick: () -> Unit = remember(listState, coroutineScope, navigationState) { {
-            coroutineScope.launch {
-                listState.scrollToItem(0)
-                navigationState.resetNichesScrollPosition()
+        val onUpClick: () -> Unit = remember(listState, coroutineScope, navigationState) {
+            {
+                coroutineScope.launch {
+                    listState.scrollToItem(0)
+                    navigationState.resetNichesScrollPosition()
+                }
             }
-        } }
+        }
 
         val onNicheClick: (String) -> Unit = remember(navigator) { { id -> navigator.push(R_ScreenNiche(id)) } }
         val onRefreshNichesCacheClick: () -> Unit = remember(vm.savedRed) { { vm.savedRed.nichesCache.refresh() } }
         val getSavedRed: () -> SavedRed = remember(vm.savedRed) { { vm.savedRed } }
 
-        /**
-         * Количество элементов в кэше
-         */
         val countNichesInCache = vm.savedRed.nichesCache.list.size
 
         val searchWidget: @Composable (Modifier) -> Unit = remember(vm.search) {
             { modifier -> RSearchTextField(vm.search, modifier = modifier) }
         }
 
-        NichesTabContent(
+        val actions = remember(onSortTypeChange, onUpClick, onNicheClick, onRefreshNichesCacheClick) {
+            com.client.xvideos.r.ui.explorer.tab.niches.model.NichesTabActions(
+                onSortTypeChange = onSortTypeChange,
+                onUpClick = onUpClick,
+                onNicheClick = onNicheClick,
+                onRefreshNichesCacheClick = onRefreshNichesCacheClick
+            )
+        }
+
+        val cacheState = com.client.xvideos.r.ui.explorer.tab.niches.model.NichesCacheState(
+            count = countNichesInCache,
+            progress = vm.savedRed.nichesCache.progress,
+            lastModifiedHour = vm.savedRed.nichesCache.lastModifiedHour
+        )
+
+        R_ScreenNichesTabContent(
             listState = listState,
             niches = nicheItems,
             sortType = sortType,
-            onSortTypeChange = onSortTypeChange,
             isSearchFocused = isSearchFocused,
-            onUpClick = onUpClick,
-            onNicheClick = onNicheClick,
             savedRed = getSavedRed,
             searchWidget = searchWidget,
-            onRefreshNichesCacheClick = onRefreshNichesCacheClick,
-            nichesCacheProgress = vm.savedRed.nichesCache.progress,
-            countNichesInCache = countNichesInCache,
-            cacheHour = vm.savedRed.nichesCache.lastModifiedHour
+            cacheState = cacheState,
+            actions = actions
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun NichesTabContent(
+fun R_ScreenNichesTabContent(
     listState: LazyListState,
     niches: List<Niche>,
     sortType: Order,
-    onSortTypeChange: (Order) -> Unit,
     isSearchFocused: Boolean,
-    onUpClick: () -> Unit,
-    onNicheClick: (String) -> Unit,
     savedRed: () -> SavedRed?,
     searchWidget: @Composable (Modifier) -> Unit,
-    onRefreshNichesCacheClick: () -> Unit,
-    nichesCacheProgress: Float,
-    countNichesInCache : Int,
-    cacheHour : Long
+    cacheState: com.client.xvideos.r.ui.explorer.tab.niches.model.NichesCacheState,
+    actions: com.client.xvideos.r.ui.explorer.tab.niches.model.NichesTabActions,
+    modifier: Modifier = Modifier,
 ) {
-
-    // Без `by`: позиция скролла меняется каждый кадр, чтение здесь
-    // перекомпоновывало бы весь экран. См. VerticalScrollbar.
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(gridState = listState)
     val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
-    if (countNichesInCache == 0) {
+    if (cacheState.count == 0) {
         Refresh(
-            onRefreshNichesCacheClick = onRefreshNichesCacheClick,
-            nichesCacheProgress = nichesCacheProgress,
+            onRefreshNichesCacheClick = actions.onRefreshNichesCacheClick,
+            nichesCacheProgress = cacheState.progress,
+            modifier = modifier,
         )
     } else {
         Scaffold(
@@ -227,27 +204,30 @@ fun NichesTabContent(
                 NichesBottomBar(
                     isSearchFocused = isSearchFocused,
                     sortType = sortType,
-                    onSortTypeChange = onSortTypeChange,
-                    onUpClick = onUpClick,
+                    onSortTypeChange = actions.onSortTypeChange,
+                    onUpClick = actions.onUpClick,
                     searchWidget = searchWidget
                 )
             },
             containerColor = Theme.tabLevel1,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize()
         ) { paddingValues ->
             Box(
-                modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()).fillMaxSize()
-            )
-            {
-                LazyColumn( state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(top = getTopInsetDp()) )
-                {
-
+                modifier = Modifier
+                    .padding(bottom = paddingValues.calculateBottomPadding())
+                    .fillMaxSize()
+            ) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(top = getTopInsetDp())
+                ) {
                     item(key = "refresh_mini", contentType = "refresh_mini") {
-                        AnimatedVisibility(cacheHour > 72, enter = fadeIn(), exit = fadeOut()) {
+                        AnimatedVisibility(cacheState.lastModifiedHour > 72, enter = fadeIn(), exit = fadeOut()) {
                             RefreshMini(
-                                onRefreshNichesCacheClick = onRefreshNichesCacheClick,
-                                nichesCacheProgress = nichesCacheProgress,
-                                cacheHour = cacheHour
+                                onRefreshNichesCacheClick = actions.onRefreshNichesCacheClick,
+                                nichesCacheProgress = cacheState.progress,
+                                cacheHour = cacheState.lastModifiedHour
                             )
                         }
                     }
@@ -274,11 +254,10 @@ fun NichesTabContent(
                                 NicheItemRow(
                                     item = item,
                                     savedRed = currentRed,
-                                    onNicheClick = onNicheClick,
+                                    onNicheClick = actions.onNicheClick,
                                     modifier = Modifier.padding(vertical = 2.dp)
                                 )
                             } else {
-                                // Placeholder for Preview
                                 Box(
                                     modifier = Modifier
                                         .padding(vertical = 2.dp)
@@ -300,7 +279,6 @@ fun NichesTabContent(
                     }
                 }
 
-                // Scrollbar
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -314,46 +292,22 @@ fun NichesTabContent(
     }
 }
 
-@Composable
-private fun NicheItemRow(
-    item: Niche,
-    savedRed: SavedRed,
-    onNicheClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val onClick = remember(item.id, onNicheClick) { { onNicheClick(item.id) } }
-    val nicheProvider = remember(item) { { item } }
-    val redProvider = remember(savedRed) { { savedRed } }
-    Box(modifier = modifier) {
-        NichePreview2(
-            niches = nicheProvider,
-            onClick = onClick,
-            savedRed = redProvider,
-        )
-    }
-}
-
 @Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
-fun R_ScreenNichesTabPreview() {
+private fun R_ScreenNichesTabPreview() {
     val items = remember {
         listOf(
             Niche("1", "Amateurs", 1200, 5000, "", null),
             Niche("2", "Anal", 1500, 8000, "", null),
-            Niche("3", "Babe", 800, 3000, "", null),
-            Niche("4", "Blowjob", 2500, 15000, "", null),
-            Niche("5", "Creampie", 1800, 9000, "", null)
+            Niche("3", "Babe", 800, 3000, "", null)
         )
     }
 
-    NichesTabContent(
+    R_ScreenNichesTabContent(
         listState = rememberLazyListState(),
         niches = items,
         sortType = Order.NICHES_SUBSCRIBERS_D,
-        onSortTypeChange = {},
         isSearchFocused = false,
-        onUpClick = {},
-        onNicheClick = {},
         savedRed = { null },
         searchWidget = { modifier ->
             Box(
@@ -368,10 +322,16 @@ fun R_ScreenNichesTabPreview() {
                 )
             }
         },
-        onRefreshNichesCacheClick = {},
-        nichesCacheProgress = 1f,
-        countNichesInCache = 10,
-        cacheHour = 1
+        cacheState = com.client.xvideos.r.ui.explorer.tab.niches.model.NichesCacheState(
+            count = 10,
+            progress = 1f,
+            lastModifiedHour = 1L
+        ),
+        actions = com.client.xvideos.r.ui.explorer.tab.niches.model.NichesTabActions(
+            onSortTypeChange = {},
+            onUpClick = {},
+            onNicheClick = {},
+            onRefreshNichesCacheClick = {}
+        )
     )
 }
-

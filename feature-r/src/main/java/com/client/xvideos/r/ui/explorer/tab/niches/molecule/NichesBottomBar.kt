@@ -1,4 +1,4 @@
-package com.client.xvideos.r.ui.explorer.tab.niches
+package com.client.xvideos.r.ui.explorer.tab.niches.molecule
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
