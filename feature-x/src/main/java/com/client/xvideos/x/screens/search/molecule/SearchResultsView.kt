@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.screens.dashboards.DashboardsPaginatedListContent
+import com.client.xvideos.x.screens.dashboards.molecule.DashboardsPaginatedListContent
 import kotlinx.collections.immutable.toImmutableList
 
 /**
