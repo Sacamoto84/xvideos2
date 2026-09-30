@@ -1,81 +1,25 @@
 package com.client.xvideos.r.ui.explorer.tab.search
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PersonOutline
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.common.util.replaceWith
-import com.client.xvideos.common.util.runCatchingCancellable
-import com.client.xvideos.common.util.toPrettyCount
-import timber.log.Timber
-import com.client.xvideos.r.network.api.RedApi
-import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
-import com.client.xvideos.r.model.search.SearchItemNichesResponse
-import com.client.xvideos.r.model.search.SearchItemTagsResponse
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
+import com.client.xvideos.r.ui.explorer.tab.search.molecule.SearchCreatorsList
+import com.client.xvideos.r.ui.explorer.tab.search.molecule.SearchTopBar
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 
 object SearchTab : Screen {
@@ -105,7 +49,6 @@ object SearchTab : Screen {
             onCreatorClick = onCreatorClick
         )
     }
-
 }
 
 @Composable
@@ -114,168 +57,39 @@ fun SearchTabContent(
     isLoading: Boolean,
     onSearchTextChange: (String) -> Unit,
     creatorsList: List<SearchItemCreatorsResponse>,
-    onCreatorClick: (String) -> Unit
+    onCreatorClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
 ) {
-    val listState = rememberLazyListState()
-
-    val onClearSearch: () -> Unit = remember(onSearchTextChange) {
-        { onSearchTextChange("") }
-    }
-
     BackHandler(enabled = searchText.isNotEmpty()) {
         onSearchTextChange("")
     }
 
     Scaffold(
-        modifier = Modifier,
+        modifier = modifier,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
-            ) {
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = onSearchTextChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Поиск авторов...") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = "Поиск", tint = Color.Gray)
-                    },
-                    trailingIcon = {
-                        if (searchText.isNotBlank()) {
-                            IconButton(onClick = onClearSearch) {
-                                Icon(Icons.Default.Close, contentDescription = "Очистить", tint = Color.Gray)
-                            }
-                        }
-                    },
-                    singleLine = true
-                )
-                if (isLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        color = Color(0xFFE5A00D)
-                    )
-                }
-            }
+            SearchTopBar(
+                searchText = searchText,
+                isLoading = isLoading,
+                onSearchTextChange = onSearchTextChange
+            )
         }
     ) { paddingValues ->
-        if (creatorsList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                if (searchText.isNotBlank() && !isLoading) {
-                    Text("Ничего не найдено", color = Color.Gray)
-                } else if (searchText.isBlank()) {
-                    Text("Введите имя автора для поиска", color = Color.Gray)
-                }
-            }
-        } else {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                contentPadding = PaddingValues(vertical = 4.dp)
-            ) {
-                items(creatorsList, key = { it.text.ifBlank { it.name } }) { item ->
-                    SearchCreatorListItem(item = item, onCreatorClick = onCreatorClick)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SearchCreatorListItem(
-    item: SearchItemCreatorsResponse,
-    onCreatorClick: (String) -> Unit
-) {
-    val handle = remember(item.text, item.name) {
-        item.text.removePrefix("@").ifBlank { item.name }
-    }
-    val onClick = remember(handle, onCreatorClick) {
-        { onCreatorClick(handle) }
-    }
-    SearchCreatorItem(item = item, onClick = onClick)
-}
-
-@Composable
-fun SearchCreatorItem(
-    item: SearchItemCreatorsResponse,
-    onClick: () -> Unit
-) {
-    val handle = item.text.removePrefix("@").ifBlank { item.name }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val image = item.image
-        if (!image.isNullOrBlank()) {
-            UrlImage(
-                image,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(56.dp)
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(56.dp)
-                    .background(Color(0xFF2A2A2A)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.PersonOutline,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-        }
-        Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = item.name.ifBlank { handle },
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    maxLines = 1
-                )
-                if (item.verified) {
-                    Text(
-                        text = " ✓",
-                        color = Color(0xFFE5A00D),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-            Text(
-                text = "@$handle",
-                color = Color.Gray,
-                fontSize = 13.sp,
-                maxLines = 1
-            )
-            if (item.followers > 0) {
-                Text(
-                    text = "Подписчиков: ${item.followers.toPrettyCount()}",
-                    color = Color(0xFF9E9E9E),
-                    fontSize = 12.sp
-                )
-            }
-        }
+        SearchCreatorsList(
+            creatorsList = creatorsList,
+            searchText = searchText,
+            isLoading = isLoading,
+            onCreatorClick = onCreatorClick,
+            listState = listState,
+            modifier = Modifier.padding(paddingValues)
+        )
     }
 }
 
 @Preview(backgroundColor = 0xFF303030)
 @Composable
-fun SearchTabPreview() {
+private fun SearchTabPreview() {
     SearchTabContent(
         searchText = "Ana",
         isLoading = false,
@@ -294,60 +108,4 @@ fun SearchTabPreview() {
         ),
         onCreatorClick = {}
     )
-}
-
-@Stable
-class ScreenRedExplorerSearchSM @Inject constructor(
-    val redApi: RedApi
-) : ScreenModel {
-
-    private val _searchText = MutableStateFlow<String>("")
-    val searchText: StateFlow<String> = _searchText.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    val creatorsList = mutableStateListOf<SearchItemCreatorsResponse>()
-    val nichesList = mutableStateListOf<SearchItemNichesResponse>()
-    val tagsList = mutableStateListOf<SearchItemTagsResponse>()
-
-    fun updateSearchText(query: String) {
-        _searchText.value = query
-    }
-
-    init {
-        screenModelScope.launch {
-            @OptIn(FlowPreview::class)
-            _searchText
-                .debounce(300)
-                .collectLatest { rawText ->
-                    val text = rawText.trim()
-                    if (text.isBlank()) {
-                        creatorsList.clear()
-                        _isLoading.value = false
-                        return@collectLatest
-                    }
-
-                    _isLoading.value = true
-                    try {
-                        runCatchingCancellable { redApi.search.searchCreatorsShort(text).getOrThrow() }
-                            .onSuccess { creatorsList.replaceWith(it.items) }
-                            .onFailure { Timber.w(it, "Поиск авторов не удался: %s", text) }
-                    } finally {
-                        _isLoading.value = false
-                    }
-                }
-        }
-    }
-
-}
-
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class ScreenModuleRedExplorerSearch {
-    @Binds
-    @IntoMap
-    @ScreenModelKey(ScreenRedExplorerSearchSM::class)
-    abstract fun bindScreenRedExplorerSearchSreenModel(hiltListScreenModel: ScreenRedExplorerSearchSM): ScreenModel
 }
