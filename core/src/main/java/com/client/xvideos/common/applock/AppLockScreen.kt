@@ -2,7 +2,6 @@ package com.client.xvideos.common.applock
 
 import com.client.xvideos.common.theme.Theme
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,11 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -53,18 +50,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.client.xvideos.core.R
+import com.client.xvideos.common.applock.atom.AppLockHeader
 import com.client.xvideos.ui.theme.Pink80
 import com.client.xvideos.ui.theme.Purple80
 import com.client.xvideos.ui.theme.PurpleGrey80
@@ -206,27 +201,6 @@ fun AppLockScreen(
     )
 }
 
-@Composable
-private fun AppLockHeader() {
-    Image(
-        painter = painterResource(R.drawable.logo),
-        contentDescription = null,
-        modifier = Modifier.size(88.dp)
-    )
-    Spacer(Modifier.height(28.dp))
-    Icon(
-        imageVector = Icons.Default.Lock,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(30.dp)
-    )
-    Spacer(Modifier.height(10.dp))
-    Text(
-        text = "Введите код доступа",
-        color = MaterialTheme.colorScheme.onBackground,
-        style = Theme.L.Type.heroTitle.copy(textAlign = TextAlign.Center)
-    )
-}
 
 @Composable
 private fun appLockTextFieldColors() = OutlinedTextFieldDefaults.colors(

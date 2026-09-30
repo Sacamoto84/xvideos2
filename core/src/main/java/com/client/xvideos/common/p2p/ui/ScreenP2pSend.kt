@@ -5,7 +5,6 @@ import android.content.ContextWrapper
 import android.os.Build
 import timber.log.Timber
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,7 +26,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.theme.LavenderDialog
-import com.client.xvideos.common.p2p.P2pEndpoint
+import com.client.xvideos.common.p2p.ui.atom.P2pEndpointItem
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.P2pReceiveManager
@@ -308,15 +308,10 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-private fun P2pEndpointItem(
-    endpoint: P2pEndpoint,
-    onConnect: (String) -> Unit
-) {
-    val handleConnect = remember(endpoint.id, onConnect) { { onConnect(endpoint.id) } }
-    ListItem(
-        headlineContent = { Text(endpoint.name) },
-        supportingContent = { Text("Нажмите, чтобы подключиться") },
-        modifier = Modifier.clickable(onClick = handleConnect)
-    )
+private fun ScreenP2pSendPreview() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Text("P2P Send Preview")
+    }
 }
