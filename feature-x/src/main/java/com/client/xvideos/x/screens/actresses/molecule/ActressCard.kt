@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.actresses.atom
+package com.client.xvideos.x.screens.actresses.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
@@ -175,4 +176,19 @@ fun ActressCard(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun ActressCardPreview() {
+    ActressCard(
+        item = ActressesIndexItem(
+            name = "Jane Doe",
+            rankText = "#1",
+            country = "Россия",
+            countryCode = "ru",
+            videoCount = "120 видео"
+        ),
+        onClick = {}
+    )
 }
