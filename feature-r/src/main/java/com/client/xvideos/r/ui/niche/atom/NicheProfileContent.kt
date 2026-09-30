@@ -1,19 +1,12 @@
 package com.client.xvideos.r.ui.niche.atom
 
-import com.client.xvideos.common.theme.Theme
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -30,49 +23,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.feature.r.R
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.toPrettyCount
-import com.client.xvideos.r.common.saved.SavedRed
+import com.client.xvideos.feature.r.R
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
 private const val DEFAULT_PLACEHOLDER_ID = "id"
 
-@Composable
-fun NicheProfile(
-    savedRed: () -> SavedRed,
-    niche: NichesInfo,
-    modifier: Modifier = Modifier,
-) {
-    val isFollowed = savedRed().niches.list.any { it.id == niche.id }
-
-    val handleFollowClick = remember(niche, isFollowed, savedRed) {
-        {
-            val nichesInfo = NichesInfo(
-                id = niche.id,
-                name = niche.name,
-                subscribers = niche.subscribers,
-                gifs = niche.gifs,
-                thumbnail = niche.thumbnail,
-            )
-
-            if (isFollowed) {
-                savedRed().niches.remove(nichesInfo)
-            } else {
-                savedRed().niches.add(nichesInfo)
-            }
-        }
-    }
-
-    NicheProfileContent(
-        niche = { niche },
-        isFollowed = isFollowed,
-        onFollowClick = handleFollowClick,
-        modifier = modifier
-    )
-}
-
+/**
+ * Блок информации о профиле ниши (обложка, название, счетчики и кнопка подписки).
+ */
 @Composable
 fun NicheProfileContent(
     niche: () -> NichesInfo,
@@ -155,79 +117,22 @@ fun NicheProfileContent(
     }
 }
 
-@Composable
-private fun ButtonFollowContent(
-    isFollowed: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val buttonText = if (isFollowed) "Выйти" else "Подписаться"
-    val buttonTextColor = if (isFollowed) Color.White else Color.Black
-    val buttonBgColor = if (isFollowed) Theme.tabLevel1 else Theme.R.colorYellow
-    val buttonShape = RoundedCornerShape(8.dp)
-
-    Box(
-        modifier = modifier
-            .padding(end = 4.dp)
-            .clip(buttonShape)
-            .width(128.dp)
-            .height(44.dp)
-            .then(
-                if (isFollowed) {
-                    Modifier.border(1.dp, Color.White, buttonShape)
-                } else {
-                    Modifier.border(1.dp, Color.Transparent, buttonShape)
-                }
-            )
-            .background(buttonBgColor)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = buttonText,
-            color = buttonTextColor
-        )
-    }
-}
-
 @Preview
 @Composable
-fun NicheProfilePreview() {
+private fun NicheProfileContentPreview() {
     XvideosTheme {
         NicheProfileContent(
             niche = {
                 NichesInfo(
-                id = "female-backs",
-                name = "Female Backs",
-                subscribers = 914,
-                gifs = 245,
-                thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg"
+                    id = "female-backs",
+                    name = "Female Backs",
+                    subscribers = 914,
+                    gifs = 245,
+                    thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg"
                 )
             },
             isFollowed = false,
             onFollowClick = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-fun ButtonFollowPreview() {
-    XvideosTheme {
-        ButtonFollowContent(
-            isFollowed = false,
-            onClick = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-fun ButtonFollowFollowedPreview() {
-    XvideosTheme {
-        ButtonFollowContent(
-            isFollowed = true,
-            onClick = {}
         )
     }
 }
