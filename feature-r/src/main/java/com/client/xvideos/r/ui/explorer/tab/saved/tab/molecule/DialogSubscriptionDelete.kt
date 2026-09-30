@@ -1,4 +1,4 @@
-package com.client.xvideos.r.ui.explorer.tab.saved.tab
+package com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

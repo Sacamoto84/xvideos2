@@ -1,63 +1,45 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
 import androidx.activity.compose.BackHandler
-import com.client.xvideos.common.theme.Theme
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.common.coil.UrlImage
-import com.client.xvideos.r.common.saved.SavedRed
-import com.client.xvideos.r.model.NichesInfo
-import com.client.xvideos.r.ui.niche.R_ScreenNiche
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
-import javax.inject.Inject
-
+import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.r.model.NichesInfo
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule.DialogNicheDelete
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule.SavedNicheRow
+import com.client.xvideos.r.ui.niche.R_ScreenNiche
+import com.client.xvideos.ui.theme.XvideosTheme
 
 object SavedNichesTab : Screen {
 
@@ -71,8 +53,6 @@ object SavedNichesTab : Screen {
         val vm: ScreenSavedNichesSM = getScreenModel()
         val state = rememberLazyListState()
 
-        // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
-        // перекомпоновывало бы весь экран на каждом кадре.
         val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
             gridState = state, itemsToIgnore = 0
         )
@@ -102,125 +82,91 @@ object SavedNichesTab : Screen {
         }
         val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
-        Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            topBar = {
-                Row(
-                    modifier = Modifier
-                        .padding(top = getTopInsetDp())
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Группы",
-                        color = Theme.R.colorYellow,
-                        fontSize = 18.sp,
-                        fontFamily = Theme.R.fontFamilyPopinsRegular
+        SavedNichesTabContent(
+            niches = vm.savedRed.niches.list,
+            state = state,
+            topInset = getTopInsetDp(),
+            scrollPercentProvider = scrollPercentProvider,
+            onNicheClick = onNicheClick,
+            onDeleteClick = onDeleteClick
+        )
+    }
+}
+
+@Composable
+fun SavedNichesTabContent(
+    niches: List<NichesInfo>,
+    state: LazyListState,
+    topInset: Dp,
+    scrollPercentProvider: () -> Pair<Float, Float>,
+    onNicheClick: (NichesInfo) -> Unit,
+    onDeleteClick: (NichesInfo) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .padding(top = topInset)
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Группы",
+                    color = Theme.R.colorYellow,
+                    fontSize = 18.sp,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular
+                )
+            }
+        },
+        containerColor = Theme.background,
+        modifier = modifier
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .padding(top = padding.calculateTopPadding())
+                .fillMaxSize()
+        ) {
+            LazyColumn(
+                state = state,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(niches, key = { it.id }, contentType = { "saved_niche" }) { item ->
+                    SavedNicheRow(
+                        item = item,
+                        onClick = onNicheClick,
+                        onDeleteClick = onDeleteClick
                     )
                 }
-            },
-            containerColor = Theme.background
-        ) { padding ->
+            }
 
             Box(
                 modifier = Modifier
-                    .padding(top = padding.calculateTopPadding())
-                    .fillMaxSize()
+                    .fillMaxHeight()
+                    .width(2.dp)
+                    .align(Alignment.CenterEnd)
             ) {
-
-                LazyColumn(
-                    state = state,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(vm.savedRed.niches.list, key = { it.id }, contentType = { "saved_niche" }) { item ->
-                        SavedNicheRow(
-                            item = item,
-                            onClick = onNicheClick,
-                            onDeleteClick = onDeleteClick
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(2.dp)
-                        .align(Alignment.CenterEnd)
-                ) {
-                    VerticalScrollbar(scrollPercentProvider)
-                }
+                VerticalScrollbar(scrollPercentProvider)
             }
         }
     }
 }
 
+@Preview
 @Composable
-private fun SavedNicheRow(
-    item: NichesInfo,
-    onClick: (NichesInfo) -> Unit,
-    onDeleteClick: (NichesInfo) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val onRowClick = remember(item, onClick) { { onClick(item) } }
-    val onRowDelete = remember(item, onDeleteClick) { { onDeleteClick(item) } }
-    val rowShape = RoundedCornerShape(8.dp)
-
-    Row(
-        modifier = modifier
-            .padding(vertical = 2.dp, horizontal = 6.dp)
-            .fillMaxWidth()
-            .clip(rowShape)
-            .background(Theme.tabLevel3)
-            .clickable(onClick = onRowClick),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        UrlImage(item.thumbnail, modifier = Modifier.size(96.dp))
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            item.name,
-            color = Color.White,
-            fontSize = 20.sp,
-            fontFamily = Theme.R.fontFamilyDMsanss,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
+private fun SavedNichesTabContentPreview() {
+    XvideosTheme(darkTheme = true) {
+        SavedNichesTabContent(
+            niches = listOf(
+                NichesInfo(id = "1", name = "Sample Group", thumbnail = "")
+            ),
+            state = rememberLazyListState(),
+            topInset = 24.dp,
+            scrollPercentProvider = { 0f to 1f },
+            onNicheClick = {},
+            onDeleteClick = {}
         )
-
-        Box(
-            modifier = Modifier
-                .width(96.dp)
-                .height(48.dp)
-                .clip(rowShape)
-                .border(1.dp, Color.White, rowShape)
-                .background(Color.Black)
-                .clickable(onClick = onRowDelete),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                "Выйти",
-                fontFamily = Theme.R.fontFamilyDMsanss,
-                fontSize = 18.sp,
-                color = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
     }
 }
-
-
-
-@Stable
-class ScreenSavedNichesSM @Inject constructor( val savedRed: SavedRed ) : ScreenModel
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class ScreenModuleRedSavedNiches {
-    @Binds
-    @IntoMap
-    @ScreenModelKey(ScreenSavedNichesSM::class)
-    abstract fun bindScreenRedSavedNichesScreenModel(screenModel: ScreenSavedNichesSM): ScreenModel
-}
-

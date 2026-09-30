@@ -1,48 +1,32 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import com.client.xvideos.common.util.getTopInsetDp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.flow.drop
-import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.r.common.block.BlockRed
-import com.client.xvideos.r.common.downloader.DownloadRed
-import com.client.xvideos.r.common.saved.SavedRed
-import com.client.xvideos.r.common.search.R_SearchExplorer
-import com.client.xvideos.r.common.search.R_SearchNiches
-import com.client.xvideos.r.network.api.RedApi
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
-import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
-import javax.inject.Inject
+import com.client.xvideos.ui.theme.XvideosTheme
+import kotlinx.coroutines.flow.drop
 
 object R_Screen_Saved_LikesTab : Screen {
 
@@ -78,59 +62,44 @@ object R_Screen_Saved_LikesTab : Screen {
             }
         }
 
-        val topInset = getTopInsetDp()
-        val contentPadding = remember(topInset) { PaddingValues(top = topInset) }
+        SavedLikesTabContent(
+            host = vm.likedHost,
+            topInset = getTopInsetDp(),
+            onClickOpenProfile = onClickOpenProfile
+        )
+    }
+}
 
-        Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
+@Composable
+fun SavedLikesTabContent(
+    host: LazyRow123Host?,
+    topInset: Dp,
+    onClickOpenProfile: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val contentPadding = remember(topInset) { PaddingValues(top = topInset) }
 
+    Box(modifier = modifier.fillMaxSize().background(Theme.background)) {
+        if (host != null) {
             LazyRow123(
-                host = vm.likedHost,
+                host = host,
                 modifier = Modifier.fillMaxSize(),
                 onClickOpenProfile = onClickOpenProfile,
                 contentPadding = contentPadding,
                 isRunLike = true
             )
-
         }
-
-
     }
-
-
-
 }
 
-@Stable
-class ScreenSavedLikesSM @Inject constructor(
-    connectivityObserver: ConnectivityObserver,
-    val block: BlockRed,
-    val redApi: RedApi,
-    val savedRed: SavedRed,
-    val downloadRed: DownloadRed,
-    val search: R_SearchExplorer,
-    val searchNiches: R_SearchNiches,
-
-) : ScreenModel {
-
-    val likedHost = LazyRow123Host(
-        connectivityObserver = connectivityObserver,
-        scope = screenModelScope,
-        typePager = TypePager.R_SAVED_LIKES,
-        block = block,
-        redApi = redApi,
-        savedRed = savedRed,
-        downloadRed = downloadRed,
-        search = search,
-        searchNiches = searchNiches
-    )
-
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class ScreenModuleRedSavedLikes {
-    @Binds
-    @IntoMap
-    @ScreenModelKey(ScreenSavedLikesSM::class)
-    abstract fun bindScreenRedSavedLikesScreenModel(hiltListScreenModel: ScreenSavedLikesSM): ScreenModel
+@Preview
+@Composable
+private fun SavedLikesTabContentPreview() {
+    XvideosTheme(darkTheme = true) {
+        SavedLikesTabContent(
+            host = null,
+            topInset = getTopInsetDp(),
+            onClickOpenProfile = {}
+        )
+    }
 }

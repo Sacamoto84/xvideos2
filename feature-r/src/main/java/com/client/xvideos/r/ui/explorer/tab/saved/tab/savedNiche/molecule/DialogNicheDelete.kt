@@ -1,4 +1,4 @@
-package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
+package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.model.NichesInfo
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun DialogNicheDelete(
@@ -59,15 +58,13 @@ fun DialogNicheDelete(
 @Preview(showBackground = true)
 @Composable
 private fun DialogNicheDeletePreview() {
-    XvideosTheme {
-        DialogNicheDelete(
-            item = NichesInfo(
-                id = "id",
-                name = "Sample Niche",
-                thumbnail = "https://via.placeholder.com/96"
-            ),
-            onDismiss = {},
-            onConfirm = {}
-        )
-    }
+    DialogNicheDelete(
+        item = NichesInfo(
+            id = "id",
+            name = "Sample Niche",
+            thumbnail = "https://via.placeholder.com/96"
+        ),
+        onDismiss = {},
+        onConfirm = {}
+    )
 }
