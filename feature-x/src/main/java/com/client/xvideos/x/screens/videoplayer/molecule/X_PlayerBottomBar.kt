@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.atom
+package com.client.xvideos.x.screens.videoplayer.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -22,11 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,8 +32,8 @@ import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
+import com.client.xvideos.x.screens.videoplayer.atom.FitModeToggle
 import java.util.Locale
-
 
 /**
  * Нижняя панель управления X-плеером поверх видео.
@@ -96,7 +93,6 @@ fun X_PlayerBottomBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
         // Play / Pause
         Icon(
             imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
@@ -177,32 +173,11 @@ fun X_PlayerBottomBar(
     }
 }
 
-@Composable
-private fun FitModeToggle(
-    videoFitMode: ScreenResize,
-    onToggleFitMode: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text = if (videoFitMode == ScreenResize.FILL) "Fill" else "Fit",
-        style = TextStyle(
-            color = Color.White,
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp
-        ),
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .clickable(onClick = onToggleFitMode)
-    )
-}
-
 private const val SECONDS_PER_HOUR = 3600
 private const val SECONDS_PER_MINUTE = 60
 
 /** Секунды → `M:SS` (или `H:MM:SS` для длинных видео). */
-internal fun formatTime(totalSeconds: Int): String {
+fun formatTime(totalSeconds: Int): String {
     val validSeconds = totalSeconds.coerceIn(0, 86400 * 7)
     val hours = validSeconds / SECONDS_PER_HOUR
     val minutes = (validSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE

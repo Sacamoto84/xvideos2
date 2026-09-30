@@ -1,6 +1,6 @@
 package com.client.xvideos.x
 
-import com.client.xvideos.x.screens.videoplayer.atom.formatTime
+import com.client.xvideos.x.screens.videoplayer.molecule.formatTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

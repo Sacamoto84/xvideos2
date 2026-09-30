@@ -24,7 +24,7 @@ import com.client.xvideos.x.parcer.parserItemVideoTags
 import com.client.xvideos.x.screens.tags.ScreenTags
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.normalizeXUrl
-import com.client.xvideos.x.screens.videoplayer.atom.formatTime
+import com.client.xvideos.x.screens.videoplayer.molecule.formatTime
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted

@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.atom
+package com.client.xvideos.x.screens.videoplayer.molecule
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -23,6 +23,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
+import com.client.xvideos.x.screens.videoplayer.atom.ScreenItemTagsModelPornostars
+import com.client.xvideos.x.screens.videoplayer.atom.TagChip
+import com.client.xvideos.x.screens.videoplayer.atom.TagToggleChip
 
 sealed interface TagItem {
     val name: String
@@ -134,10 +137,7 @@ fun ComposeTags(
         Modifier
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xE6141418))
-            //.border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
-            //.padding(6.dp)
             .padding(bottom = 2.dp)
-            //.heightIn(max = 160.dp)
             .verticalScroll(scrollState)
     } else {
         Modifier
