@@ -1,46 +1,35 @@
 package com.client.xvideos.x.screens.tags
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import com.client.xvideos.common.util.getTopInsetDp
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.ui.theme.XvideosTheme
-import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
-import com.client.xvideos.x.screens.tags.atom.TagsPaginatedListScreen
-import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
+import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
+import com.client.xvideos.x.screens.tags.atom.TagsHeader
+import com.client.xvideos.x.screens.tags.molecule.TagsPaginatedListScreen
+import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.launch
-
 
 class ScreenTags(val tag: String) : Screen {
 
@@ -48,7 +37,6 @@ class ScreenTags(val tag: String) : Screen {
 
     @Composable
     override fun Content() {
-
         val vm = getScreenModel<ScreenTagsViewModel, ScreenTagsViewModel.Factory> { factory -> factory.create(tag) }
         val navigator = LocalNavigator.currentOrThrow
         val job = rememberCoroutineScope()
@@ -74,7 +62,7 @@ class ScreenTags(val tag: String) : Screen {
             { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) }
         }
 
-        TagsContent(
+        ScreenTagsContent(
             tag = tag,
             title0 = vm.screen.title0,
             title1 = vm.screen.title1,
@@ -87,11 +75,10 @@ class ScreenTags(val tag: String) : Screen {
             onPageChange = onPageChange
         )
     }
-
 }
 
 @Composable
-fun TagsContent(
+fun ScreenTagsContent(
     tag: String,
     title0: String,
     title1: String,
@@ -151,69 +138,6 @@ fun TagsContent(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TagsHeader(
-    tag: String,
-    title0: String,
-    title1: String,
-    topCutout: Dp,
-    modifier: Modifier = Modifier
-) {
-    val hasTitle0 = remember(title0) { title0.isNotBlank() }
-    val hasTitle1 = remember(title1) { title1.isNotBlank() }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                top = topCutout + 8.dp,
-                start = 16.dp,
-                end = 16.dp,
-                bottom = 8.dp
-            )
-    ) {
-        Text(
-            text = tag,
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (hasTitle0 || hasTitle1) {
-            Row {
-                if (hasTitle0) {
-                    Text(
-                        text = "$title0 ",
-                        color = Color(0xFFB0B0B0),
-                        fontSize = 12.sp,
-                    )
-                }
-                if (hasTitle1) {
-                    Text(
-                        text = title1,
-                        color = Color(0xFF787878),
-                        fontSize = 12.sp,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF262626)
-@Composable
-private fun TagsHeaderPreview() {
-    XvideosTheme(darkTheme = true) {
-        TagsHeader(
-            tag = "vr",
-            title0 = "Virtual Reality Videos",
-            title1 = "12,450 results",
-            topCutout = 24.dp
-        )
     }
 }
 
