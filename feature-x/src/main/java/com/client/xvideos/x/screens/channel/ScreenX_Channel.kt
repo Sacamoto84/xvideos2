@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,11 +68,16 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
+import com.client.xvideos.ui.theme.XvideosTheme
+import com.client.xvideos.x.model.ChannelHeaderModel
+import com.client.xvideos.x.model.ChannelUiState
+import com.client.xvideos.x.model.ProfileType
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -818,10 +824,10 @@ private fun ChannelVideoItem(
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF040404)
+@Preview(showBackground = true, backgroundColor = 0xFF040404)
 @Composable
 private fun ChannelVideoItemPreview() {
-    com.client.xvideos.ui.theme.XvideosTheme(darkTheme = true) {
+    XvideosTheme(darkTheme = true) {
         Box(modifier = Modifier.padding(16.dp)) {
             ChannelVideoItem(
                 item = ItemsX(
@@ -845,3 +851,53 @@ private fun ChannelVideoItemPreview() {
         }
     }
 }
+
+@Preview(showBackground = true, backgroundColor = 0xFF040404)
+@Composable
+private fun ChannelScreenContentPreview() {
+    val sampleVideos = List(6) { index ->
+        ItemsX(
+            id = index.toLong(),
+            title = "Sample Video Title ${index + 1}",
+            duration = "10:20",
+            views = "100K",
+            channel = "Sample Channel",
+            href = "/video$index",
+            nameProfile = "Sample Channel",
+            linkProfile = "/channels/sample",
+        )
+    }
+    val sampleUiState = ChannelUiState(
+        header = ChannelHeaderModel(
+            slug = "sample_channel",
+            name = "Sample Channel",
+            subscribers = "10.5K",
+            totalViews = "1.2M",
+            aboutMe = "Welcome to the official Sample Channel!",
+            videoCount = 36,
+            profileType = ProfileType.CHANNEL,
+        ),
+        isLoadingInitial = false,
+        totalVideosCount = 36,
+    )
+    val gridState = rememberLazyGridState()
+
+    XvideosTheme(darkTheme = true) {
+        ChannelScreenContent(
+            uiState = sampleUiState,
+            pagesCache = mapOf(0 to sampleVideos),
+            loadingPages = emptySet(),
+            errorPages = emptyMap(),
+            getGridState = { gridState },
+            onLoadPage = {},
+            onRetryPage = {},
+            initialPage = 0,
+            onCurrentPageChange = {},
+            onBack = {},
+            onSortChange = {},
+            onRetryInitial = {},
+            onOpenVideo = {},
+        )
+    }
+}
+

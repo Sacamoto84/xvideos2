@@ -48,11 +48,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.core.R
+import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelHeaderModel
+import com.client.xvideos.x.model.ChannelRankGroup
+import com.client.xvideos.x.model.ChannelRankItem
 import com.client.xvideos.x.model.ChannelRankingCategory
+import com.client.xvideos.x.model.ProfileType
 
 private val FLAG_FONT = FontFamily(Font(com.client.xvideos.feature.x.R.font.flag))
 
@@ -328,7 +333,6 @@ private fun ChannelHeaderStatsRow(header: ChannelHeaderModel) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChannelHeaderInfoCard(
     header: ChannelHeaderModel,
@@ -424,7 +428,6 @@ private fun ChannelHeaderInfoCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CollaboratorsFlow(
     collaborators: List<ChannelCollaborator>,
@@ -676,6 +679,49 @@ private fun ChannelRankingsSection(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF040404)
+@Composable
+private fun ChannelHeaderInfoCardPreview() {
+    XvideosTheme(darkTheme = true) {
+        ChannelHeaderInfoCard(
+            header = ChannelHeaderModel(
+                slug = "sample_model",
+                name = "Sample Model",
+                subscribers = "150.5K",
+                totalViews = "25.4M",
+                aboutMe = "Welcome to my official profile! Thank you for all your support.",
+                videoCount = 128,
+                profileType = ProfileType.MODEL,
+                gender = "Женщина",
+                age = "24 года",
+                country = "Бразилия",
+                countryCode = "br",
+                collaborators = listOf(
+                    ChannelCollaborator(name = "Studio Alpha", href = "/channels/studio-alpha", isModel = false),
+                    ChannelCollaborator(name = "Jane Doe", href = "/models/jane-doe", isModel = true),
+                ),
+                rankings = listOf(
+                    ChannelRankingCategory(
+                        label = "Рейтинги моделей",
+                        ranks = listOf(
+                            ChannelRankGroup(
+                                label = "По всему миру",
+                                ranks = listOf(
+                                    ChannelRankItem(rank = 42, geo = "Мировой", link = "/rankings/world", label = "Мировой рейтинг")
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            isAboutExpanded = false,
+            onToggleAboutExpanded = {},
+            onCollaboratorClick = {},
+            onRankingClick = { _, _ -> }
+        )
     }
 }
 

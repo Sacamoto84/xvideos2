@@ -4,7 +4,7 @@ activityKtx = "1.13.0"
 agp = "9.4.1"
 
 coil = "3.6.3"
-componentsResources = "1.12.0"
+componentsResources = "1.12.1"
 composeExtendedGestures = "3.1"
 composeThemeAdapter = "1.2.1"
 composeZoom = "0.5.0"
@@ -18,7 +18,7 @@ hiltAndroid = "2.60.1"
 hiltAndroidCompiler = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 imageLoader = "1.10.0"
-haze = "2.0.0"
+haze = "2.0.1"
 jsoup = "1.23.2"
 kotlin = "2.4.20"
 detekt = "1.23.8"
@@ -54,9 +54,9 @@ googleGmsGoogleServices = "4.5.0"
 uiAndroid = "1.12.1"
 volley = "1.2.1"
 voyager = "2.2.21-1.10.3"
-zoomable = "2.14.0"
+zoomable = "2.15.0"
 runtimeSavedInstanceState = "1.0.0-alpha11"
-playServicesNearby = "19.5.0"
+playServicesNearby = "19.5.1"
 kotlinxCoroutinesTest = "1.11.0"
 zxing = "3.5.4"
 
@@ -198,5 +198,5 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 
-stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.14.0" }
+stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.15.0" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
