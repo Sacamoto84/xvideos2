@@ -1,27 +1,16 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes
 
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -41,8 +31,12 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.molecule.ServerLikesEmptyOrErrorState
+import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Экран лайкнутых картинок пользователя с сервера Luscious.
@@ -100,129 +94,101 @@ object L_ScreenServerLikesTab : Screen {
             }
         }
 
-        val itemBefore: @Composable () -> Unit = remember(topInset) {
-            {
-                Box(modifier = Modifier.fillMaxWidth().height(topInset))
-            }
-        }
-
-        PullToRefreshBox(
+        ServerLikesTabContent(
+            host = vm.host,
+            pictures = pictures,
+            isLoading = isLoading,
             isRefreshing = isRefreshing,
+            errorMessage = errorMessage,
+            topInset = topInset,
+            pullToRefreshState = pullToRefreshState,
             onRefresh = handleRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Theme.background),
-            state = pullToRefreshState,
-            indicator = {
-                Indicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = topInset),
-                    isRefreshing = isRefreshing,
-                    containerColor = Theme.tabLevel1,
-                    color = Theme.L.red,
-                    state = pullToRefreshState
+            onRetry = onRetry
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ServerLikesTabContent(
+    host: LazyRowPictureDetailsHost,
+    pictures: List<PicsDetails>,
+    isLoading: Boolean,
+    isRefreshing: Boolean,
+    errorMessage: String?,
+    topInset: Dp,
+    pullToRefreshState: PullToRefreshState,
+    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val itemBefore: @Composable () -> Unit = remember(topInset) {
+        {
+            Box(modifier = Modifier.fillMaxWidth().height(topInset))
+        }
+    }
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier
+            .fillMaxSize()
+            .background(Theme.background),
+        state = pullToRefreshState,
+        indicator = {
+            Indicator(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = topInset),
+                isRefreshing = isRefreshing,
+                containerColor = Theme.tabLevel1,
+                color = Theme.L.red,
+                state = pullToRefreshState
+            )
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (pictures.isEmpty() && !isLoading && !isRefreshing) {
+                ServerLikesEmptyOrErrorState(
+                    topInset = topInset,
+                    errorMessage = errorMessage,
+                    onRetry = onRetry,
+                    onRefresh = onRefresh
+                )
+            } else {
+                L_LazyRowPictureDetails(
+                    host = host,
+                    expandMenu = ExpandMenuType.SERVER_LIKES,
+                    tag = "l_server_likes",
+                    itemBefore = itemBefore
                 )
             }
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (pictures.isEmpty() && !isLoading && !isRefreshing) {
-                    ServerLikesEmptyOrErrorState(
-                        topInset = topInset,
-                        errorMessage = errorMessage,
-                        onRetry = onRetry,
-                        onRefresh = onRefresh
-                    )
-                } else {
-                    L_LazyRowPictureDetails(
-                        host = vm.host,
-                        expandMenu = ExpandMenuType.SERVER_LIKES,
-                        tag = "l_server_likes",
-                        itemBefore = itemBefore
-                    )
-                }
 
-                if (isLoading && pictures.isEmpty() && !isRefreshing) {
-                    CircularProgressIndicator(
-                        color = Theme.L.red,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+            if (isLoading && pictures.isEmpty() && !isRefreshing) {
+                CircularProgressIndicator(
+                    color = Theme.L.red,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-private fun ServerLikesEmptyOrErrorState(
-    topInset: androidx.compose.ui.unit.Dp,
-    errorMessage: String?,
-    onRetry: () -> Unit,
-    onRefresh: () -> Unit
-) {
-    if (errorMessage != null) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = topInset, start = 24.dp, end = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ErrorOutline,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(64.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Не удалось загрузить лайки",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = errorMessage,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(onClick = onRetry) {
-                Text("Повторить")
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = topInset, start = 24.dp, end = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.FavoriteBorder,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.size(64.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Нет лайкнутых картинок",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Здесь будут отображаться картинки, которые вы лайкнули на сервере Luscious",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(onClick = onRefresh) {
-                Text("Обновить")
-            }
-        }
+private fun ServerLikesTabContentPreview() {
+    XvideosTheme(darkTheme = true) {
+        ServerLikesTabContent(
+            host = remember { LazyRowPictureDetailsHost("preview_server_likes") },
+            pictures = emptyList(),
+            isLoading = false,
+            isRefreshing = false,
+            errorMessage = null,
+            topInset = 24.dp,
+            pullToRefreshState = rememberPullToRefreshState(),
+            onRefresh = {},
+            onRetry = {}
+        )
     }
 }

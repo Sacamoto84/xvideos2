@@ -16,20 +16,16 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import com.client.xvideos.l.model.AlbumDetails
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
-import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -38,17 +34,10 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
-import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.ui.element.AlbumListItem
+import com.client.xvideos.l.model.AlbumDetails
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.atom.SavedAlbumGridItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.ui.theme.XvideosTheme
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
-import timber.log.Timber
-import javax.inject.Inject
 
 object L_ScreenSavedAlbumsTab : Screen {
 
@@ -156,55 +145,6 @@ fun SavedAlbumsTabContent(
             }
         }
     }
-}
-
-@Composable
-private fun SavedAlbumGridItem(
-    item: AlbumDetails,
-    onAlbumClick: (AlbumDetails) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val onClick = remember(item, onAlbumClick) { { onAlbumClick(item) } }
-    AlbumListItem(
-        title = item.title,
-        coverUrl = item.cover?.url.orEmpty(),
-        numberOfAnimatedPictures = item.number_of_animated_pictures,
-        numberOfPictures = item.number_of_pictures,
-        modifier = modifier,
-        onClick = onClick,
-    )
-}
-
-
-@Stable
-class ScreenLSavedAlbumsSM @Inject constructor(
-    val saved: SavedL
-) : ScreenModel {
-
-    val state = LazyGridState()
-
-    val albums: List<AlbumDetails>
-        get() = saved.albums.list.filter { it.id.toLongOrNull() != null }
-
-    init {
-        Timber.d("ScreenLSavedAlbumsSM init")
-        if (albums.isEmpty()) saved.albums.refresh()
-    }
-
-    override fun onDispose() {
-        super.onDispose()
-        Timber.d("ScreenLSavedAlbumsSM onDispose")
-    }
-
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class ScreenModuleLSavedAlbums {
-    @Binds
-    @IntoMap
-    @ScreenModelKey(ScreenLSavedAlbumsSM::class)
-    abstract fun bindScreenRedFulScreenSreenModel(hiltListScreenModel: ScreenLSavedAlbumsSM): ScreenModel
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)

@@ -1,34 +1,19 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums
 
 import androidx.activity.compose.BackHandler
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Subscriptions
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -55,8 +41,12 @@ import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.model.AlbumDetails
-import com.client.xvideos.l.ui.element.AlbumListItem
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumUnlikeDialog
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsEmptyOrErrorState
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsGrid
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsUiState
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
+import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Экран подписанных альбомов пользователя с сервера Luscious.
@@ -139,7 +129,6 @@ object L_ScreenSubscribedAlbumsTab : Screen {
             }
         }
         val onRetry = remember(vm) { { vm.loadInitial() } }
-        val onRefresh = remember(vm) { { vm.refresh() } }
         val handleRefresh = remember(haptic, vm) {
             {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -148,256 +137,116 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         }
         val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = handleRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Theme.background),
-            state = pullToRefreshState,
-            indicator = {
-                Indicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = topInset),
-                    isRefreshing = isRefreshing,
-                    containerColor = Theme.tabLevel1,
-                    color = Theme.L.red,
-                    state = pullToRefreshState
-                )
-            }
-        ) {
-            SubscribedAlbumsContent(
-                state = state,
+        val uiState = remember(albums, isLoading, isRefreshing, errorMessage) {
+            SubscribedAlbumsUiState(
                 albums = albums,
                 isLoading = isLoading,
                 isRefreshing = isRefreshing,
-                errorMessage = errorMessage,
-                topInset = topInset,
-                scrollPercentProvider = scrollPercentProvider,
-                onAlbumClick = onAlbumClick,
-                onAlbumLongClick = onAlbumLongClick,
-                onRetry = onRetry,
-                onRefresh = onRefresh
+                errorMessage = errorMessage
             )
         }
+
+        SubscribedAlbumsTabContent(
+            state = state,
+            uiState = uiState,
+            topInset = topInset,
+            pullToRefreshState = pullToRefreshState,
+            scrollPercentProvider = scrollPercentProvider,
+            onAlbumClick = onAlbumClick,
+            onAlbumLongClick = onAlbumLongClick,
+            onRetry = onRetry,
+            onRefresh = handleRefresh
+        )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SubscribedAlbumsContent(
-    state: androidx.compose.foundation.lazy.grid.LazyGridState,
-    albums: List<AlbumDetails>,
-    isLoading: Boolean,
-    isRefreshing: Boolean,
-    errorMessage: String?,
-    topInset: androidx.compose.ui.unit.Dp,
+fun SubscribedAlbumsTabContent(
+    state: LazyGridState,
+    uiState: SubscribedAlbumsUiState,
+    topInset: Dp,
+    pullToRefreshState: PullToRefreshState,
     scrollPercentProvider: () -> Pair<Float, Float>,
     onAlbumClick: (Long?) -> Unit,
     onAlbumLongClick: (AlbumDetails) -> Unit,
     onRetry: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (albums.isEmpty() && !isLoading && !isRefreshing) {
-            SubscribedAlbumsEmptyOrErrorState(
-                topInset = topInset,
-                errorMessage = errorMessage,
-                onRetry = onRetry,
-                onRefresh = onRefresh
-            )
-        } else {
-            SubscribedAlbumsGrid(
-                state = state,
-                albums = albums,
-                topInset = topInset,
-                isLoading = isLoading,
-                onAlbumClick = onAlbumClick,
-                onAlbumLongClick = onAlbumLongClick
-            )
-
-            // Скроллбар
-            Box(
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier
+            .fillMaxSize()
+            .background(Theme.background),
+        state = pullToRefreshState,
+        indicator = {
+            Indicator(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterEnd)
-                    .width(2.dp)
-            ) {
-                VerticalScrollbar(scrollPercentProvider)
-            }
-        }
-
-        if (isLoading && albums.isEmpty() && !isRefreshing) {
-            CircularProgressIndicator(
+                    .align(Alignment.TopCenter)
+                    .padding(top = topInset),
+                isRefreshing = uiState.isRefreshing,
+                containerColor = Theme.tabLevel1,
                 color = Theme.L.red,
-                modifier = Modifier.align(Alignment.Center)
+                state = pullToRefreshState
             )
         }
-    }
-}
-
-@Composable
-private fun SubscribedAlbumUnlikeDialog(
-    album: AlbumDetails,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Удалить альбом с сервера?") },
-        text = { Text("Удалить «${album.title}» из подписок на сервере Luscious?") },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Удалить", color = MaterialTheme.colorScheme.error)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Отмена")
-            }
-        }
-    )
-}
-
-@Composable
-private fun SubscribedAlbumsEmptyOrErrorState(
-    topInset: androidx.compose.ui.unit.Dp,
-    errorMessage: String?,
-    onRetry: () -> Unit,
-    onRefresh: () -> Unit
-) {
-    if (errorMessage != null) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = topInset, start = 24.dp, end = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ErrorOutline,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(64.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Не удалось загрузить подписки",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = errorMessage,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(onClick = onRetry) {
-                Text("Повторить")
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = topInset, start = 24.dp, end = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Subscriptions,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(64.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Нет подписанных альбомов",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Здесь отображаются альбомы, на которые вы подписаны в Luscious",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(onClick = onRefresh) {
-                Text("Обновить")
-            }
-        }
-    }
-}
-
-@Composable
-private fun SubscribedAlbumsGrid(
-    state: androidx.compose.foundation.lazy.grid.LazyGridState,
-    albums: List<AlbumDetails>,
-    topInset: androidx.compose.ui.unit.Dp,
-    isLoading: Boolean,
-    onAlbumClick: (Long?) -> Unit,
-    onAlbumLongClick: (AlbumDetails) -> Unit
-) {
-    LazyVerticalGrid(
-        state = state,
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        item(key = "top_inset", contentType = "top_inset", span = { GridItemSpan(maxLineSpan) }) {
-            Box(modifier = Modifier.height(topInset))
-        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (uiState.albums.isEmpty() && !uiState.isLoading && !uiState.isRefreshing) {
+                SubscribedAlbumsEmptyOrErrorState(
+                    topInset = topInset,
+                    errorMessage = uiState.errorMessage,
+                    onRetry = onRetry,
+                    onRefresh = onRefresh
+                )
+            } else {
+                SubscribedAlbumsGrid(
+                    state = state,
+                    albums = uiState.albums,
+                    topInset = topInset,
+                    isLoading = uiState.isLoading,
+                    onAlbumClick = onAlbumClick,
+                    onAlbumLongClick = onAlbumLongClick
+                )
 
-        items(albums, key = { it.id }, contentType = { "album_item" }) { item ->
-            SubscribedAlbumGridItem(
-                item = item,
-                onAlbumClick = onAlbumClick,
-                onAlbumLongClick = onAlbumLongClick,
-                modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
-            )
-        }
-
-        if (isLoading && albums.isNotEmpty()) {
-            item(key = "loading_indicator", contentType = "loading_indicator", span = { GridItemSpan(maxLineSpan) }) {
+                // Скроллбар
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxHeight()
+                        .align(Alignment.CenterEnd)
+                        .width(2.dp)
                 ) {
-                    CircularProgressIndicator(color = Theme.L.red)
+                    VerticalScrollbar(scrollPercentProvider)
                 }
+            }
+
+            if (uiState.isLoading && uiState.albums.isEmpty() && !uiState.isRefreshing) {
+                CircularProgressIndicator(
+                    color = Theme.L.red,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-private fun SubscribedAlbumGridItem(
-    item: AlbumDetails,
-    onAlbumClick: (Long?) -> Unit,
-    onAlbumLongClick: (AlbumDetails) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val albumId = remember(item.id) { item.id.toLongOrNull() }
-    val coverUrl = remember(item.cover) { item.cover?.url.orEmpty() }
-    val onClick = remember(albumId, onAlbumClick) { { onAlbumClick(albumId) } }
-    val onLongClick = remember(item, onAlbumLongClick) { { onAlbumLongClick(item) } }
-    AlbumListItem(
-        title = item.title,
-        coverUrl = coverUrl,
-        numberOfAnimatedPictures = item.number_of_animated_pictures,
-        numberOfPictures = item.number_of_pictures,
-        modifier = modifier,
-        onLongClick = onLongClick,
-        onClick = onClick,
-    )
+private fun SubscribedAlbumsTabContentPreview() {
+    XvideosTheme(darkTheme = true) {
+        SubscribedAlbumsTabContent(
+            state = rememberLazyGridState(),
+            uiState = SubscribedAlbumsUiState(),
+            topInset = 24.dp,
+            pullToRefreshState = rememberPullToRefreshState(),
+            scrollPercentProvider = { 0f to 1f },
+            onAlbumClick = {},
+            onAlbumLongClick = {},
+            onRetry = {},
+            onRefresh = {}
+        )
+    }
 }
