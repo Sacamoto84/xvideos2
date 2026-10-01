@@ -41,7 +41,6 @@ import com.client.xvideos.x.screens.channel.model.rememberChannelHeaderCollapseS
 import com.client.xvideos.x.screens.channel.molecule.ChannelCollapsingLayout
 import com.client.xvideos.x.screens.channel.molecule.ChannelErrorView
 import com.client.xvideos.x.screens.channel.molecule.ChannelHeader
-import com.client.xvideos.x.screens.channel.molecule.ChannelLoadingView
 import com.client.xvideos.x.screens.channel.molecule.ChannelPagerBottomBar
 import com.client.xvideos.x.screens.channel.molecule.ChannelStickyBar
 import com.client.xvideos.x.screens.channel.molecule.ChannelVideosPager
@@ -179,11 +178,8 @@ fun ScreenX_ChannelContent(
     onModelExpandedChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    if (uiState.isLoadingInitial && uiState.header.name.isBlank()) {
-        ChannelLoadingView(modifier = modifier)
-        return
-    }
-
+    // Пустое имя — только у некорректного адреса: ошибка на весь экран. Загрузку и сбой
+    // при корректном адресе показывает страница 0 пейджера, шапка остаётся с именем.
     if (uiState.error != null && uiState.header.name.isBlank()) {
         ChannelErrorView(message = uiState.error, onRetry = onRetryInitial, modifier = modifier)
         return

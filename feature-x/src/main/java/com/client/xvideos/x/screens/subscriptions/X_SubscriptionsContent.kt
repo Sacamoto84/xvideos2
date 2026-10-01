@@ -3,10 +3,7 @@ package com.client.xvideos.x.screens.subscriptions
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,17 +12,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.XSubscriptionItem
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
-import com.client.xvideos.x.screens.subscriptions.atom.SubscriptionsEmptyState
-import com.client.xvideos.x.screens.subscriptions.atom.SubscriptionsHeader
 import com.client.xvideos.x.screens.subscriptions.molecule.DialogXSubscriptionDelete
-import com.client.xvideos.x.screens.subscriptions.molecule.SubscriptionListItem
+import com.client.xvideos.x.screens.subscriptions.molecule.X_SubscriptionsList
 
 /**
  * Контент экрана подписок раздела X (вкладки «Каналы» и «Актрисы»).
@@ -100,61 +94,3 @@ fun X_SubscriptionsContent(
         )
     }
 }
-
-@Composable
-fun X_SubscriptionsList(
-    itemsList: List<XSubscriptionItem>,
-    isModel: Boolean,
-    topCutout: androidx.compose.ui.unit.Dp,
-    listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
-    onOpenCreator: (XSubscriptionItem) -> Unit = {},
-    onDeleteRequest: (XSubscriptionItem) -> Unit = {},
-    modifier: Modifier = Modifier,
-) {
-    if (itemsList.isEmpty()) {
-        SubscriptionsEmptyState(
-            isModel = isModel,
-            topCutout = topCutout,
-            modifier = modifier.fillMaxSize()
-        )
-    } else {
-        LazyColumn(
-            state = listState,
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = topCutout, bottom = 24.dp)
-        ) {
-            item(key = "header", contentType = "header") {
-                SubscriptionsHeader(
-                    title = if (isModel) "Подписки на актрис" else "Подписки на каналы",
-                    count = itemsList.size,
-                    isModel = isModel,
-                )
-            }
-
-            items(
-                items = itemsList,
-                key = { it.cleanSlug },
-                contentType = { "subscription_item" }
-            ) { item ->
-                SubscriptionListItem(
-                    item = item,
-                    isModel = isModel,
-                    onClick = { onOpenCreator(item) },
-                    onLongClick = { onDeleteRequest(item) },
-                    onDeleteClick = { onDeleteRequest(item) },
-                )
-            }
-        }
-    }
-}
-
-@androidx.compose.ui.tooling.preview.Preview
-@Composable
-private fun X_SubscriptionsListPreview() {
-    X_SubscriptionsList(
-        itemsList = emptyList(),
-        isModel = true,
-        topCutout = 0.dp
-    )
-}
-

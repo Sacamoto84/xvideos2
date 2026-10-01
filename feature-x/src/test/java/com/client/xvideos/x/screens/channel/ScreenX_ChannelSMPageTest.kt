@@ -3,6 +3,7 @@ package com.client.xvideos.x.screens.channel
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.x.feature.saved.SavedX
+import com.client.xvideos.x.model.ChannelSortOrder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -11,6 +12,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 import java.io.File
@@ -56,6 +58,16 @@ class ScreenX_ChannelSMPageTest {
         assertEquals(9, sm.uiState.currentPage)
         assertEquals(10, sm.uiState.maxPages)
         assertEquals(9, sm.currentPage)
+    }
+
+    /** Пейджер не запрашивает страницу 0, пока её грузит первая загрузка. */
+    @Test
+    fun `первая загрузка отмечает страницу 0 загружаемой`() {
+        val sm = ScreenX_ChannelSM(SavedX(CoroutineScope(Dispatchers.Unconfined)), slug = "sample")
+        assertTrue(0 in sm.loadingPages)
+
+        sm.changeSort(ChannelSortOrder.NEW)
+        assertTrue(0 in sm.loadingPages)
     }
 
     @Test

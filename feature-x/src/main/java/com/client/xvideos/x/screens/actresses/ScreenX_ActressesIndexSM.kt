@@ -86,6 +86,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
             isLoadingMore = false,
             isEndReached = false,
             error = null,
+            loadMoreError = null,
             items = emptyList(),
             activeDropdown = null,
             dropdownSearchQuery = "",
@@ -140,7 +141,9 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
      * Загружает следующую страницу каталога при бесконечной прокрутке.
      */
     fun loadNextPage() {
-        if (uiState.isLoadingInitial || uiState.isLoadingMore || uiState.isEndReached) return
+        // После сбоя — только по «Повторить» (retryNextPage): прокрутка внизу списка
+        // иначе повторяла запрос сразу после каждой ошибки, без паузы.
+        if (!uiState.canLoadMore) return
 
         pagingJob?.cancel()
         val nextPage = currentPageIndex + 1
@@ -188,9 +191,20 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
                 throw e
             } catch (e: Exception) {
                 Timber.w(e, "ScreenX_ActressesIndexSM: сбой подгрузки следующей страницы %s", nextPagePath)
-                uiState = uiState.copy(isLoadingMore = false)
+                uiState = uiState.copy(
+                    isLoadingMore = false,
+                    loadMoreError = "Не удалось загрузить следующую страницу",
+                )
             }
         }
+    }
+
+    /**
+     * Повтор подгрузки следующей страницы после сбоя.
+     */
+    fun retryNextPage() {
+        uiState = uiState.copy(loadMoreError = null)
+        loadNextPage()
     }
 
     /**

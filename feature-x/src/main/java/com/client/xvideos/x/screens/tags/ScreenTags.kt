@@ -11,7 +11,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -45,7 +44,9 @@ class ScreenTags(val tag: String) : Screen {
         // держит одну. pageCount читается лениво, поэтому рост с 1 до 149
         // пейджер подхватывает без пересоздания состояния.
         val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
-        val listStates = remember { mutableStateMapOf<Int, LazyListState>() }
+        // Обычная карта: страница достаёт своё состояние прокрутки прямо в композиции,
+        // и снапшот-карта перекомпоновывала бы её из-за записи при первом обращении.
+        val listStates = remember { HashMap<Int, LazyListState>() }
 
         val onBack: () -> Unit = remember(navigator) { { navigator.pop().let {} } }
         BackHandler(onBack = onBack)
@@ -71,6 +72,7 @@ class ScreenTags(val tag: String) : Screen {
             pagerState = pagerState,
             listStates = listStates,
             loadPage = loadPage,
+            cachedItems = vm::cachedItems,
             onOpenVideo = onOpenVideo,
             onPageChange = onPageChange
         )
@@ -90,6 +92,7 @@ fun ScreenTagsContent(
     onOpenVideo: (ItemsX) -> Unit,
     onPageChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    cachedItems: (Int) -> List<ItemsX>? = { null },
 ) {
     val renderHeader: @Composable () -> Unit = remember(tag, title0, title1, topCutout) {
         {
@@ -132,6 +135,7 @@ fun ScreenTagsContent(
                 TagsPaginatedListScreen(
                     pageIndex = pageIndex,
                     loadPage = loadPage,
+                    initialItems = cachedItems(pageIndex),
                     onOpenVideo = onOpenVideo,
                     listState = listStates.getOrPut(pageIndex) { LazyListState() },
                     header = renderHeader

@@ -34,39 +34,19 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.feature.country.CountryState
-import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
-import com.client.xvideos.x.parcer.parseSiteCountryFlag
-import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.screens.dashboards.molecule.DashboardsPaginatedListContent
 import com.client.xvideos.x.urlStart
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
     val raw = urlStart + if (currentNumberScreen == 0) "" else "/new/$currentNumberScreen"
     return normalizeXUrl(raw)
-}
-
-private suspend fun openNew(numberScreen: Int = 0): Pair<String?, List<ItemsX>> {
-    val url = buildDashboardUrl(numberScreen)
-    Timber.d("openNew numberScreen:$numberScreen url:$url")
-    val html = readHtmlFromURLWebView(url)
-    return withContext(Dispatchers.Default) {
-        val document = org.jsoup.Jsoup.parse(html)
-        val flag = parseSiteCountryFlag(document)
-        val items = parserListVideo(document)
-            .filter { !it.href.contains("THUMBNUM") }
-            .distinctBy { it.id }
-        flag to items
-    }
 }
 
 /**
@@ -81,10 +61,14 @@ fun DashboardsPaginatedListScreen(
     onFavoriteAdd: (ItemsX) -> Unit,
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
+    loadPage: suspend (Int) -> ImmutableList<ItemsX>,
     modifier: Modifier = Modifier,
     onSaveToGallery: (ItemsX) -> Unit = {},
+    cachedPage: (Int) -> ImmutableList<ItemsX>? = { null },
 ) {
-    var videoItems by remember(pageIndex) { mutableStateOf<ImmutableList<ItemsX>>(persistentListOf()) }
+    // Загруженная страница хранится в ScreenModel: возврат к ней (соседняя страница
+    // пейджера, выход из плеера) показывает её сразу, без новой загрузки.
+    var videoItems by remember(pageIndex) { mutableStateOf<ImmutableList<ItemsX>>(cachedPage(pageIndex) ?: persistentListOf()) }
     var hasError by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
     val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
@@ -92,12 +76,11 @@ fun DashboardsPaginatedListScreen(
     LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch, key3 = retryTrigger) {
         hasError = false
         try {
-            val (flag, items) = openNew(pageIndex)
-            flag?.let { CountryState.updateCurrent(it) }
+            val items = loadPage(pageIndex)
             if (items.isEmpty()) {
                 hasError = true
             } else {
-                videoItems = items.toImmutableList()
+                videoItems = items
             }
         } catch (e: CancellationException) {
             throw e

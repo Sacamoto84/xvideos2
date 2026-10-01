@@ -71,6 +71,7 @@ class ScreenX_ActressesIndex(
             onBack = onBack,
             onActressClick = onActressClick,
             onLoadMore = vm::loadNextPage,
+            onRetryLoadMore = vm::retryNextPage,
             onRetry = vm::loadInitial,
             onToggleDropdown = vm::toggleDropdown,
             onSelectOption = vm::selectFilterOption,
@@ -86,6 +87,7 @@ fun ScreenX_ActressesIndexContent(
     onBack: () -> Unit,
     onActressClick: (ActressesIndexItem) -> Unit,
     onLoadMore: () -> Unit,
+    onRetryLoadMore: () -> Unit,
     onRetry: () -> Unit,
     onToggleDropdown: (ActressesIndexDropdownType) -> Unit,
     onSelectOption: (ActressesIndexFilterOption) -> Unit,
@@ -97,14 +99,14 @@ fun ScreenX_ActressesIndexContent(
     val topCutout = getTopInsetDp()
 
     // Бесконечная пагинация при прокрутке вниз
-    LaunchedEffect(gridState, uiState.items.size, uiState.isLoadingMore, uiState.isEndReached) {
+    LaunchedEffect(gridState, uiState.items.size, uiState.isLoadingMore, uiState.isEndReached, uiState.loadMoreError) {
         snapshotFlow {
             val layoutInfo = gridState.layoutInfo
             val totalItems = layoutInfo.totalItemsCount
             val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
             totalItems > 0 && lastVisible >= totalItems - 6
         }.distinctUntilChanged().collect { nearEnd ->
-            if (nearEnd && !uiState.isLoadingMore && !uiState.isEndReached) {
+            if (nearEnd && uiState.canLoadMore) {
                 onLoadMore()
             }
         }
@@ -134,6 +136,7 @@ fun ScreenX_ActressesIndexContent(
             gridState = gridState,
             onActressClick = onActressClick,
             onRetry = onRetry,
+            onRetryLoadMore = onRetryLoadMore,
             modifier = Modifier.padding(paddingValues),
         )
     }
@@ -147,6 +150,7 @@ private fun ScreenX_ActressesIndexContentPreview() {
         onBack = {},
         onActressClick = {},
         onLoadMore = {},
+        onRetryLoadMore = {},
         onRetry = {},
         onToggleDropdown = {},
         onSelectOption = {},

@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.ActressesIndexItem
 import com.client.xvideos.x.model.ActressesIndexUiState
+import com.client.xvideos.x.screens.actresses.atom.LoadMoreErrorFooter
 
 @Composable
 fun ActressesIndexGrid(
@@ -37,6 +38,7 @@ fun ActressesIndexGrid(
     onActressClick: (ActressesIndexItem) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    onRetryLoadMore: () -> Unit = {},
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -118,6 +120,12 @@ fun ActressesIndexGrid(
                             modifier = Modifier.size(28.dp)
                         )
                     }
+                }
+            }
+
+            if (uiState.loadMoreError != null) {
+                item(span = { GridItemSpan(2) }) {
+                    LoadMoreErrorFooter(message = uiState.loadMoreError, onRetry = onRetryLoadMore)
                 }
             }
 

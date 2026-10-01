@@ -277,6 +277,26 @@ class SavedX_HistoryTest {
     }
 
     @Test
+    fun `savePlayerProgress не затирает позицию, пока плеер ничего не сообщил`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val video = ItemsX(id = 990L, duration = "10 min")
+        history.updateProgress(video, positionMs = 90_000L, totalDurationMs = 600_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Плеер только создан: позиция 0, длительность неизвестна — запись не меняется.
+        history.savePlayerProgress(video, positionSeconds = 0f, playerDurationSeconds = 0)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(90_000L, history.get(990L)?.lastPositionMs)
+
+        // «С начала» при известной длительности — позиция сбрасывается.
+        history.savePlayerProgress(video, positionSeconds = 0f, playerDurationSeconds = 600)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(0L, history.get(990L)?.lastPositionMs)
+    }
+
+    @Test
     fun `deleteBatch игнорирует пустой список и невалидные ID`() = runTest(testDispatcher) {
         val history = SavedX_History(testScope, testDispatcher)
         testDispatcher.scheduler.advanceUntilIdle()

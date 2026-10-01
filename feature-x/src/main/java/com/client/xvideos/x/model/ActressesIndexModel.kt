@@ -112,6 +112,12 @@ data class ActressesIndexUiState(
     val isLoadingMore: Boolean = false,
     val isEndReached: Boolean = false,
     val error: String? = null,
+    /** Следующая страница не загрузилась: автоподгрузка ждёт «Повторить». */
+    val loadMoreError: String? = null,
 ) : Serializable {
     val isEmpty: Boolean get() = !isLoadingInitial && items.isEmpty() && error == null
+
+    /** Можно подгружать следующую страницу; после сбоя — только по «Повторить». */
+    val canLoadMore: Boolean
+        get() = !isLoadingInitial && !isLoadingMore && !isEndReached && loadMoreError == null
 }

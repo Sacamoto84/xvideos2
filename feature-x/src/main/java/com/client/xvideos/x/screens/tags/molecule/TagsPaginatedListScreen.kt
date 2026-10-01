@@ -45,8 +45,10 @@ fun TagsPaginatedListScreen(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     header: (@Composable () -> Unit)? = null,
+    initialItems: List<ItemsX>? = null,
 ) {
-    var items by remember(pageIndex) { mutableStateOf<List<ItemsX>?>(null) }
+    // Уже загруженная страница показывается сразу, без кадра с индикатором загрузки.
+    var items by remember(pageIndex) { mutableStateOf(initialItems) }
     var failed by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
 

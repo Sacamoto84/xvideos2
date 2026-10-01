@@ -8,8 +8,10 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ModelScreenTag
 import com.client.xvideos.x.parcer.parserScreenTags
+import com.client.xvideos.x.screens.common.PageCache
 import com.client.xvideos.x.urlStart
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import dagger.Binds
@@ -50,6 +52,12 @@ class ScreenTagsViewModel @AssistedInject constructor(
     var screen by mutableStateOf(ModelScreenTag("", "", emptyList()))
         private set
 
+    /**
+     * Загруженные страницы: возврат к странице в пейджере не грузит её заново.
+     * Объявлены до [init]: он сразу вызывает [loadPage].
+     */
+    private val pages = PageCache<ModelScreenTag>(maxPages = MAX_CACHED_PAGES)
+
     init {
         // Раньше здесь был runBlocking { readHtmlFromURLDirect(...) } — сетевой запрос
         // блокировал поток создания ScreenModel (UI-поток) → ANR на медленной сети.
@@ -68,17 +76,21 @@ class ScreenTagsViewModel @AssistedInject constructor(
         }
     }
 
+    /** Ролики уже загруженной страницы [index] или `null` — страницу надо грузить. */
+    fun cachedItems(index: Int): List<ItemsX>? = pages[index]?.items
+
     /**
      * Разбор страницы выдачи с номером [index] (считается с нуля).
      *
-     * Нулевая страница грузится дважды: здесь, в [init], ради заголовка и числа
-     * страниц, и ещё раз первой страницей пейджера. Принято сознательно —
-     * убирать кэшем в сетевом слое, если понадобится.
+     * Загруженная страница берётся из памяти. Нулевая страница может прийти
+     * дважды: в [init] ради заголовка и числа страниц и первой страницей
+     * пейджера, если он попросил её раньше, чем закончилась первая загрузка.
      *
      * @param index Номер страницы пагинации (0, 1, 2, ...).
      * @return Модель разобранной страницы [ModelScreenTag].
      */
     suspend fun loadPage(index: Int): ModelScreenTag {
+        pages[index]?.let { return it }
         // Страницы адресуются /tags/<тег>/N; /tags/<тег> и /tags/<тег>/0 — одно и то же.
         // Названия тегов парсятся с пробелами ("big tits"), а в URL XVideos использует дефисы ("big-tits").
         // Также санитизируем спецсимволы путей/запросов (#, ?, &, /, \), чтобы не ломать адрес запроса.
@@ -94,7 +106,12 @@ class ScreenTagsViewModel @AssistedInject constructor(
         if (index == 0 && (screen.lastPage <= 1 || screen.title0.isEmpty())) {
             screen = result
         }
+        pages[index] = result
         return result
+    }
+
+    private companion object {
+        const val MAX_CACHED_PAGES = 20
     }
 }
 

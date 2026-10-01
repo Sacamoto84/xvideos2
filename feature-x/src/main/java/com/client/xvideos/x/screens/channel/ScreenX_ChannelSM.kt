@@ -286,7 +286,12 @@ class ScreenX_ChannelSM @AssistedInject constructor(
             videos = emptyList(),
         )
 
-        initialJob = screenModelScope.launch {
+        // Страница 0 приходит вместе с шапкой: пока идёт первая загрузка, она отмечена
+        // загружаемой, и пейджер не запрашивает её второй раз. LAZY — как в loadPage:
+        // задача попадает в initialJob до первого шага, и finally сверяется с ней.
+        loadingPages.add(0)
+        val job = screenModelScope.launch(start = CoroutineStart.LAZY) {
+            val self = coroutineContext[Job]
             try {
                 // 1. Загрузка шапки профиля из HTML страницы канала / модели (только при первом открытии)
                 val currentHeader = uiState.header
@@ -334,7 +339,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     header = headerWithRanks,
                     videos = result.videos,
                     totalVideosCount = result.totalVideos ?: 0,
-                    currentPage = 0,
                     isLoadingInitial = false,
                     isEndReached = result.videos.isEmpty(),
                     error = null,
@@ -343,12 +347,20 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ScreenX_ChannelSM: ошибка загрузки %s (%s)", cleanSlug, pathPrefix)
+                // Ошибку показывает страница 0; её «Повторить» перезапускает первую загрузку.
+                errorPages[0] = INITIAL_LOAD_ERROR
                 uiState = uiState.copy(
                     isLoadingInitial = false,
-                    error = "Не удалось загрузить данные профиля",
+                    error = INITIAL_LOAD_ERROR,
                 )
+            } finally {
+                if (initialJob === self) {
+                    loadingPages.remove(0)
+                }
             }
         }
+        initialJob = job
+        job.start()
     }
 
     /**
@@ -406,6 +418,11 @@ class ScreenX_ChannelSM @AssistedInject constructor(
      * Повторяет загрузку страницы после ошибки.
      */
     fun retryPage(page: Int) {
+        // Страница 0 не пришла с первой загрузкой — повторяется загрузка целиком, с шапкой.
+        if (page == 0 && uiState.error != null) {
+            loadInitial()
+            return
+        }
         errorPages.remove(page)
         loadPage(page)
     }
@@ -481,6 +498,10 @@ class ScreenX_ChannelSM @AssistedInject constructor(
      */
     fun clearModelFilter() {
         selectModel(null)
+    }
+
+    private companion object {
+        const val INITIAL_LOAD_ERROR = "Не удалось загрузить данные профиля"
     }
 }
 

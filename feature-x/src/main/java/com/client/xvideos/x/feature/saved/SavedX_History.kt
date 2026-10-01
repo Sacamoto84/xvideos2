@@ -91,14 +91,19 @@ class SavedX_History(
      * Длительность берётся у плеера, а пока он её не знает — из текста карточки.
      * Нечисловая или отрицательная позиция считается нулём и не выходит за длительность.
      *
+     * Плеер, который ещё ничего не сообщил (позиция 0 и длительность неизвестна),
+     * ничего не записывает: плеер при открытии сохраняет позицию сразу, и такая
+     * запись затирала точку возобновления ролика нулём.
+     *
      * @param item Объект видео.
      * @param positionSeconds Позиция плеера в секундах.
      * @param playerDurationSeconds Длительность по данным плеера в секундах; 0 — ещё неизвестна.
      */
     fun savePlayerProgress(item: ItemsX, positionSeconds: Float, playerDurationSeconds: Int) {
+        val safeSeconds = positionSeconds.takeIf { it.isFinite() && it >= 0f } ?: 0f
+        if (safeSeconds == 0f && playerDurationSeconds <= 0) return
         val playerDurationMs = playerDurationSeconds.coerceAtLeast(0) * 1000L
         val durationMs = if (playerDurationMs > 0L) playerDurationMs else parseDurationToMs(item.duration)
-        val safeSeconds = positionSeconds.takeIf { it.isFinite() && it >= 0f } ?: 0f
         val maxPos = if (durationMs > 0L) durationMs else Long.MAX_VALUE
         val positionMs = (safeSeconds * 1000f).toLong().coerceIn(0L, maxPos)
         updateProgress(item, positionMs, durationMs)

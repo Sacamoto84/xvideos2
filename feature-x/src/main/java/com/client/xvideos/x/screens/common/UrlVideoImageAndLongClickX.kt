@@ -71,17 +71,9 @@ fun UrlVideoImageAndLongClickX(
             val nextIsVideo = !isVideo
             isVideo = nextIsVideo
             if (nextIsVideo) {
-                Timber.d(
-                    """
-                    !!! X preview item click
-                    id: ${item.id}
-                    title: ${item.title}
-                    href: ${item.href}
-                    poster: ${item.previewImage}
-                    parsed preview video: $previewVideoUrl
-                    saved preview video: ${item.previewVideo}
-                    """.trimIndent()
-                )
+                // Только id и наличие превью: название и адреса роликов в лог не пишутся
+                // (GEMINI.md, «Безопасность и политики»).
+                Timber.d("X: превью ролика %d, видео-превью %s", item.id, if (previewVideoUrl != null) "есть" else "нет")
             }
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         }

@@ -107,6 +107,8 @@ class ScreenXDashBoards : Screen {
             onFavoriteRemove = { item -> vm.removeFavorite(item) },
             onDownload = { item -> vm.download(item) },
             onSaveToGallery = { item -> vm.saveToGallery(item) },
+            onLoadDashboardPage = vm::loadDashboardPage,
+            cachedDashboardPage = vm::cachedDashboardPage,
         )
     }
 }
@@ -136,6 +138,8 @@ fun ScreenXDashBoardsContent(
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit,
+    onLoadDashboardPage: suspend (Int) -> ImmutableList<ItemsX>,
+    cachedDashboardPage: (Int) -> ImmutableList<ItemsX>?,
     modifier: Modifier = Modifier,
 ) {
     val onDashboardPageChange: suspend (Int) -> Unit = remember(pagerState) {
@@ -222,7 +226,9 @@ fun ScreenXDashBoardsContent(
                         onFavoriteAdd = onFavoriteAdd,
                         onFavoriteRemove = onFavoriteRemove,
                         onDownload = onDownload,
+                        loadPage = onLoadDashboardPage,
                         onSaveToGallery = onSaveToGallery,
+                        cachedPage = cachedDashboardPage,
                     )
                 }
             }

@@ -112,4 +112,20 @@ class SearchModelTest {
         assertTrue(populated.hasChannels)
         assertTrue(populated.isBlacklisted)
     }
+
+    /** Строки списка подсказок ключуются по этим полям: повтор ронял LazyColumn. */
+    @Test
+    fun `подсказки отдаются без повторов`() {
+        val star = Pornstar.EMPTY.copy(N = "Star", F = "/profiles/star")
+        val channel = Channel.EMPTY.copy(N = "Studio", F = "/channels/studio")
+        val result = SearchResult(
+            keywords = listOf(Keyword("solo", "1"), Keyword("solo", "2"), Keyword("duo", "3")),
+            pornstar = listOf(star, star),
+            channel = listOf(channel, channel.copy(F = "/channels/studio2")),
+        )
+
+        assertEquals(listOf("solo", "duo"), result.resolvedKeywords.map { it.name })
+        assertEquals(1, result.resolvedPornstars.size)
+        assertEquals(2, result.resolvedChannels.size)
+    }
 }

@@ -168,14 +168,19 @@ data class SearchResult(
     val channel: List<Channel>? = null,   // Может отсутствовать
     val BLACKLISTED: Boolean? = null      // Может отсутствовать
 ) {
+    // Без повторов: ответ подсказок бывает с дублями, а строки списка подсказок
+    // ключуются по этим же полям — одинаковый ключ роняет LazyColumn.
     val resolvedKeywords: List<Keyword>
-        get() = if (keywords.isNotEmpty()) keywords else (data?.keywords.orEmpty())
+        get() = (if (keywords.isNotEmpty()) keywords else data?.keywords.orEmpty())
+            .distinctBy { it.name }
 
     val resolvedPornstars: List<Pornstar>
-        get() = if (!pornstar.isNullOrEmpty()) pornstar else (data?.pornstar.orEmpty())
+        get() = (if (!pornstar.isNullOrEmpty()) pornstar else data?.pornstar.orEmpty())
+            .distinctBy { it.name to it.profilePath }
 
     val resolvedChannels: List<Channel>
-        get() = if (!channel.isNullOrEmpty()) channel else (data?.channel.orEmpty())
+        get() = (if (!channel.isNullOrEmpty()) channel else data?.channel.orEmpty())
+            .distinctBy { it.name to it.profilePath }
 
     val isEmpty: Boolean get() = resolvedKeywords.isEmpty() && resolvedPornstars.isEmpty() && resolvedChannels.isEmpty()
     val isNotEmpty: Boolean get() = !isEmpty
