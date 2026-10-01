@@ -17,7 +17,6 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.model.XHistoryItem
-import com.client.xvideos.x.parseDurationToMs
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
 import com.client.xvideos.x.parcer.parserItemVideoTags
@@ -176,8 +175,11 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     var resumeNoticeText: String? by mutableStateOf(null)
         private set
 
-    /** Проверяет историю просмотров и инициализирует позицию возобновления, если ролик не досмотрен. */
-    private fun checkAndInitResume(videoId: Long) {
+    /**
+     * Проверяет историю просмотров и инициализирует позицию возобновления, если ролик не досмотрен.
+     * Вызывается до [passedHLS]: плеер берёт позицию старта только при создании.
+     */
+    private suspend fun checkAndInitResume(videoId: Long) {
         if (videoId <= 0L || resumePositionSeconds != null) return
         val item = saved.history.get(videoId) ?: return
         if (item.isEligibleForResume) {
@@ -207,24 +209,14 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
      * @param durationSeconds Общая длительность ролика в секундах.
      */
     fun saveProgress(positionSeconds: Float, durationSeconds: Int) {
-        val playerDurationMs = durationSeconds.coerceAtLeast(0) * 1000L
-        val parsedDurationMs = parseDurationToMs(currentItem.duration)
-        val durationMs = if (playerDurationMs > 0L) playerDurationMs else parsedDurationMs
-        val safeSeconds = positionSeconds.takeIf { it.isFinite() && it >= 0f } ?: 0f
-        val maxPos = if (durationMs > 0L) durationMs else Long.MAX_VALUE
-        val positionMs = (safeSeconds * 1000f).toLong().coerceIn(0L, maxPos)
         val videoId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
         if (videoId > 0L) {
             val itemToSave = if (currentItem.id > 0L) currentItem else currentItem.copy(id = videoId)
-            saved.history.updateProgress(itemToSave, positionMs, durationMs)
+            saved.history.savePlayerProgress(itemToSave, positionSeconds, durationSeconds)
         }
     }
 
     init {
-        val initialId = currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L)
-        if (initialId > 0L) {
-            checkAndInitResume(initialId)
-        }
         loadVideo()
     }
 
@@ -247,6 +239,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         loadJob = screenModelScope.launch {
             try {
                 Timber.d("!!! ScreenVideoPlayerSM loadVideo(forceReload=$forceReload)")
+
+                // История — до сети: позиция нужна раньше, чем появится поток.
+                checkAndInitResume(currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L))
 
                 if (forceReload) {
                     withContext(Dispatchers.IO) {
@@ -274,7 +269,6 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
 
                 playerConfig = parsedData.config
                 tags = parsedData.tags
-                passedHLS = parsedData.streamCandidate
 
                 val parsedConfig = parsedData.config
                 val resolvedId = currentItem.id.takeIf { it > 0L }
@@ -294,6 +288,8 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                         checkAndInitResume(resolvedId)
                     }
                 }
+                // Поток — после позиции возобновления: с ним создаётся плеер.
+                passedHLS = parsedData.streamCandidate
                 if (parsedData.streamCandidate.isBlank()) {
                     isError = true
                     isFullScreen = false
@@ -370,16 +366,6 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         if (slug.isNotBlank()) {
             navigator.push(com.client.xvideos.x.screens.channel.ScreenX_Channel(slug = slug, initialModel = pornstar, isModel = true))
         }
-    }
-
-    /**
-     * Открыть плеер в полном окне.
-     * @deprecated Используйте [toggleFullScreen] или [enterFullScreen]: плеер переключается в ландшафт на месте.
-     */
-    @Suppress("UnusedParameter")
-    @Deprecated("Используйте toggleFullScreen() или enterFullScreen()")
-    fun openFullScreen(navigator: Navigator? = null, positionMs: Long = -1L) {
-        enterFullScreen()
     }
 }
 

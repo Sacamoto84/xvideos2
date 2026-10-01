@@ -1,6 +1,7 @@
 package com.client.xvideos.x.parcer
 
 import com.client.xvideos.x.extractXVideoId
+import com.client.xvideos.x.isValidXUrl
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ModelScreenTag
 import kotlin.math.abs
@@ -99,14 +100,16 @@ private fun parseLastPage(document: Document): Int {
  */
 private fun parseTagItemVideo(video: Element): ItemsX? {
     return try {
+        // Нет значения — пустая строка, а не текст-заглушка: экраны прячут пустые поля,
+        // а проверки isNotBlank() принимали заглушку за настоящее значение.
         val titleElement = video.selectFirst("p.title a")
-        val title = titleElement?.attr("title") ?: "Без названия"
+        val title = titleElement?.attr("title").orEmpty()
         val href = titleElement?.attr("href")?.trim().orEmpty()
-        if (href.isEmpty() || href == "Нет ссылки") return null
-        val duration = video.selectFirst("p.title .duration")?.text() ?: "Нет информации"
+        if (!isValidXUrl(href)) return null
+        val duration = video.selectFirst("p.title .duration")?.text().orEmpty()
 
-        val channelName = video.selectFirst("p.metadata .name")?.text() ?: "Нет имени канала"
-        val views = video.selectFirst("p.metadata .bg > span > span")?.ownText()?.trim() ?: "-"
+        val channelName = video.selectFirst("p.metadata .name")?.text().orEmpty()
+        val views = video.selectFirst("p.metadata .bg > span > span")?.ownText()?.trim().orEmpty()
         val profileLink = video.selectFirst("p.metadata a")?.attr("href") ?: ""
 
         // Реальный id из data-id; иначе — извлекаем id из href, и только потом abs(hash)

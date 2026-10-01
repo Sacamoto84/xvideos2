@@ -6,6 +6,7 @@ import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.XHistoryItem
+import com.client.xvideos.x.parseDurationToMs
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,14 +61,47 @@ class SavedX_History(
      * Возвращает сохранённый элемент истории по ID ролика.
      * Сначала проверяется in-memory кэш, затем чтение с диска.
      *
+     * Чтение с диска идёт в очереди файловых операций, а не в потоке вызова: до конца
+     * первого [refresh] записи в памяти может не быть, а синхронное чтение с главного
+     * потока ждало бы, пока `refresh` под тем же замком `FileDB` читает до 200 файлов.
+     *
      * @param id Числовой ID видео.
      * @return Объект [XHistoryItem] или `null`, если ролик не найден в истории.
      */
-    fun get(id: Long): XHistoryItem? {
+    suspend fun get(id: Long): XHistoryItem? {
         if (id <= 0L) return null
-        return historyMap[id] ?: historyDb.read(id.toString()).getOrNull()?.also {
-            historyMap[id] = it
+        historyMap[id]?.let { return it }
+        return withContext(writeDispatcher) {
+            historyMap[id] ?: historyDb.read(id.toString()).getOrNull()?.also {
+                historyMap[id] = it
+            }
         }
+    }
+
+    /**
+     * Позиция возобновления ролика в секундах или `null`, если продолжать нечего
+     * (ролика нет в истории, он короткий, досмотрен или едва начат).
+     */
+    suspend fun resumePositionSeconds(id: Long): Float? =
+        get(id)?.takeIf { it.isEligibleForResume }?.let { it.lastPositionMs / 1000f }
+
+    /**
+     * Сохраняет позицию, которую сообщил плеер.
+     *
+     * Длительность берётся у плеера, а пока он её не знает — из текста карточки.
+     * Нечисловая или отрицательная позиция считается нулём и не выходит за длительность.
+     *
+     * @param item Объект видео.
+     * @param positionSeconds Позиция плеера в секундах.
+     * @param playerDurationSeconds Длительность по данным плеера в секундах; 0 — ещё неизвестна.
+     */
+    fun savePlayerProgress(item: ItemsX, positionSeconds: Float, playerDurationSeconds: Int) {
+        val playerDurationMs = playerDurationSeconds.coerceAtLeast(0) * 1000L
+        val durationMs = if (playerDurationMs > 0L) playerDurationMs else parseDurationToMs(item.duration)
+        val safeSeconds = positionSeconds.takeIf { it.isFinite() && it >= 0f } ?: 0f
+        val maxPos = if (durationMs > 0L) durationMs else Long.MAX_VALUE
+        val positionMs = (safeSeconds * 1000f).toLong().coerceIn(0L, maxPos)
+        updateProgress(item, positionMs, durationMs)
     }
 
     /**

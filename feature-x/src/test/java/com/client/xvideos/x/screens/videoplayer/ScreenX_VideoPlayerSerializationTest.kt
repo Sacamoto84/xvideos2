@@ -2,7 +2,6 @@ package com.client.xvideos.x.screens.videoplayer
 
 import com.client.xvideos.x.feature.country.CountryState
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.screens.videoplayerFullScreen.ScreenX_VideoPlayerFullScreen
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -39,15 +38,6 @@ class ScreenX_VideoPlayerSerializationTest {
         assertEquals("https://example.com/video999", restored.url)
         assertEquals(999L, restored.item?.id)
         assertEquals("Sample Video", restored.item?.title)
-    }
-
-    @Suppress("DEPRECATION")
-    @Test
-    fun `ScreenX_VideoPlayerFullScreen serializes and deserializes with position`() {
-        val screen = ScreenX_VideoPlayerFullScreen(url = "https://example.com/hls.m3u8", position = 42000L)
-        val restored = roundTrip(screen)
-        assertEquals("https://example.com/hls.m3u8", restored.url)
-        assertEquals(42000L, restored.position)
     }
 
     @Test

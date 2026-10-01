@@ -5,7 +5,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.parseDurationToMs
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -30,16 +29,15 @@ class ScreenX_LocalVideoPlayerSM @Inject constructor(
         currentTimeSeconds: Float,
         totalTimeSeconds: Int,
     ) {
-        val playerDurationMs = totalTimeSeconds.coerceAtLeast(0) * 1000L
-        val parsedDurationMs = parseDurationToMs(item.duration)
-        val durationMs = if (playerDurationMs > 0L) playerDurationMs else parsedDurationMs
-        val safeSeconds = currentTimeSeconds.takeIf { it.isFinite() && it >= 0f } ?: 0f
-        val maxPos = if (durationMs > 0L) durationMs else Long.MAX_VALUE
-        val positionMs = (safeSeconds * 1000f).toLong().coerceIn(0L, maxPos)
-        if (item.id > 0L) {
-            saved.history.updateProgress(item, positionMs, durationMs)
-        }
+        saved.history.savePlayerProgress(item, currentTimeSeconds, totalTimeSeconds)
     }
+
+    /**
+     * Позиция старта в секундах: сохранённая позиция возобновления либо 0 — с начала.
+     * История может читаться с диска, поэтому функция приостанавливающая.
+     */
+    suspend fun startPositionSeconds(videoId: Long): Float =
+        saved.history.resumePositionSeconds(videoId) ?: 0f
 }
 
 /**

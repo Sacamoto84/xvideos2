@@ -43,7 +43,8 @@ fun isValidXUrl(href: String): Boolean =
 
 private val NUMERIC_VIDEO_ID_REGEX = Regex("""/video\.?(\d+)""")
 private val SLUG_VIDEO_ID_REGEX = Regex("""/video[._-]?([a-zA-Z0-9]+)""")
-private val HOURS_REGEX = Regex("""(\d+)\s*(?:hr|ч|hour)""")
+// «h» покрывает «h», «hr» и «hour(s)»: без него «1 h 5 min» разбиралось как 5 минут.
+private val HOURS_REGEX = Regex("""(\d+)\s*(?:h|ч)""")
 private val MINUTES_REGEX = Regex("""(\d+)\s*(?:min|мин|m)""")
 private val SECONDS_REGEX = Regex("""(\d+)\s*(?:sec|сек|s)""")
 
@@ -119,7 +120,7 @@ private fun parseColonDuration(text: String): Long {
 }
 
 /**
- * Разбирает произвольную текстовую длительность видео (например, `"10 мин."`, `"15 min"`, `"1 hr 12 min"`, `"12:34"`)
+ * Разбирает произвольную текстовую длительность видео (например, `"10 мин."`, `"15 min"`, `"1 h 12 min"`, `"12:34"`)
  * в миллисекунды.
  *
  * Поддерживает форматирование с двоеточиями, текстовые обозначения на русском и английском,

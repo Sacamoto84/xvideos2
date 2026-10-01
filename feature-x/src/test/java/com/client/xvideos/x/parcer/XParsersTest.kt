@@ -117,6 +117,32 @@ class XParsersTest {
         assertNull(parseHTML5Player(""))
     }
 
+    /** Кавычка перед скобкой внутри названия не обрывает значение, escape раскодируются. */
+    @Test
+    fun `название раскодируется из JS-строки целиком`() {
+        val script = """
+            html5player.setVideoTitle('It\'s \x22live\x22 (part 2\')é');
+            html5player.setUploaderName('A \\ B');
+            html5player.setVideoHLS('https:\/\/cdn\/master.m3u8');
+        """.trimIndent()
+
+        val config = parseHTML5Player(script)
+
+        assertEquals("It's \"live\" (part 2')é", config?.videoTitle)
+        assertEquals("A \\ B", config?.uploaderName)
+        assertEquals("https://cdn/master.m3u8", config?.videoHLS)
+    }
+
+    @Test
+    fun `unescapeJsString раскодирует escape-последовательности`() {
+        assertEquals("без экранирования", unescapeJsString("без экранирования"))
+        assertEquals("a'b\"c\\d/e", unescapeJsString("""a\'b\"c\\d\/e"""))
+        assertEquals("1\n2\t3", unescapeJsString("""1\n2\t3"""))
+        assertEquals("'é", unescapeJsString("""\x27é"""))
+        // Неполный \x — просто «x», как в нестрогом JS; хвостовой слэш остаётся.
+        assertEquals("xz\\", unescapeJsString("""\xz\"""))
+    }
+
     // --- parserVideoPreviewFromImageUrl --------------------------------------
 
     @Test

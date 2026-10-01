@@ -171,7 +171,16 @@ class ScreenX_ChannelSM @AssistedInject constructor(
 
     private var initialJob: Job? = null
     private val pageJobs = mutableMapOf<Int, Job>()
-    var currentPage: Int = 0
+
+    /**
+     * Текущая страница пейджера. Живёт в [uiState]: от неё считается
+     * [ChannelUiState.maxPages], когда сайт не сообщил число видео.
+     */
+    var currentPage: Int
+        get() = uiState.currentPage
+        set(value) {
+            if (uiState.currentPage != value) uiState = uiState.copy(currentPage = value)
+        }
 
     /** Кэш загруженных страниц видеороликов: pageIndex -> List<ItemsX>. */
     val pagesCache = mutableStateMapOf<Int, List<ItemsX>>()

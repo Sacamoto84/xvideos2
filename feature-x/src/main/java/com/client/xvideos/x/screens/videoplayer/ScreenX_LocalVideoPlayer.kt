@@ -3,6 +3,7 @@ package com.client.xvideos.x.screens.videoplayer
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -13,6 +14,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.videoplayer.molecule.LocalVideoPlayerContent
+import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerLoadingView
 
 /**
  * Плеер локального (скачанного) файла X.
@@ -69,11 +71,10 @@ fun ScreenX_LocalVideoPlayerContent(
             ?: ItemsX(id = videoId)
     }
 
-    val historyItem = remember(videoId) { if (videoId > 0L) sm.saved.history.get(videoId) else null }
-    val resumePosition = remember(historyItem) {
-        historyItem?.takeIf { it.isEligibleForResume }?.let {
-            (it.lastPositionMs / 1000f).takeIf { sec -> sec.isFinite() && sec >= 0f }
-        }
+    // Плеер берёт позицию старта только при создании, поэтому создаётся после чтения
+    // истории; `null` — история ещё читается (с диска, если записи нет в памяти).
+    val startSeconds by produceState<Float?>(initialValue = null, videoId) {
+        value = sm.startPositionSeconds(videoId)
     }
 
     val onSaveProgress: (Float, Int) -> Unit = remember(sm, resolvedItem) {
@@ -82,11 +83,16 @@ fun ScreenX_LocalVideoPlayerContent(
         }
     }
 
-    LocalVideoPlayerContent(
-        fileUrl = fileUrl,
-        resumePosition = resumePosition,
-        onSaveProgress = onSaveProgress,
-        onPopBack = onPopBack,
-        modifier = modifier
-    )
+    val start = startSeconds
+    if (start == null) {
+        VideoPlayerLoadingView(modifier = modifier)
+    } else {
+        LocalVideoPlayerContent(
+            fileUrl = fileUrl,
+            resumePosition = start.takeIf { it > 0f },
+            onSaveProgress = onSaveProgress,
+            onPopBack = onPopBack,
+            modifier = modifier
+        )
+    }
 }

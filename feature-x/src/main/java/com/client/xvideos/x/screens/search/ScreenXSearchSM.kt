@@ -4,10 +4,10 @@ import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.x.feature.net.getSearchResults
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.search.XSearchHistoryFileStore
-import com.client.xvideos.x.search.getSearchResults
 import com.client.xvideos.x.search.model.SearchResult
 import com.client.xvideos.x.search.parseJson
 import dagger.Binds

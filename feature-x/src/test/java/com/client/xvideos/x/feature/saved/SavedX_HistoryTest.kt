@@ -218,6 +218,65 @@ class SavedX_HistoryTest {
     }
 
     @Test
+    fun `get читает запись с диска, пока история не загружена в память`() = runTest(testDispatcher) {
+        val writer = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+        writer.updateProgress(ItemsX(id = 950L, title = "On Disk"), positionMs = 60_000L, totalDurationMs = 300_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Новый экземпляр: refresh ещё не выполнялся, в памяти пусто.
+        val reader = SavedX_History(testScope, testDispatcher)
+        val entry = reader.get(950L)
+
+        assertEquals("On Disk", entry?.item?.title)
+        assertEquals(60_000L, entry?.lastPositionMs)
+    }
+
+    @Test
+    fun `resumePositionSeconds отдаёт позицию только для ролика, который можно продолжить`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        history.updateProgress(ItemsX(id = 960L), positionMs = 90_000L, totalDurationMs = 600_000L)
+        history.updateProgress(ItemsX(id = 961L), positionMs = 30_000L, totalDurationMs = 60_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(90f, history.resumePositionSeconds(960L))
+        assertNull(history.resumePositionSeconds(961L)) // короткий ролик — с начала
+        assertNull(history.resumePositionSeconds(962L)) // ролика нет в истории
+    }
+
+    @Test
+    fun `savePlayerProgress берёт длительность из карточки, пока плеер её не знает`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        history.savePlayerProgress(ItemsX(id = 970L, duration = "10 min"), positionSeconds = 120f, playerDurationSeconds = 0)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val entry = history.get(970L)
+        assertEquals(600_000L, entry?.totalDurationMs)
+        assertEquals(120_000L, entry?.lastPositionMs)
+    }
+
+    @Test
+    fun `savePlayerProgress не выпускает позицию за длительность и отбрасывает NaN`() = runTest(testDispatcher) {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Позиция дальше конца обрезается до длительности — ролик досмотрен.
+        history.savePlayerProgress(ItemsX(id = 980L), positionSeconds = 400f, playerDurationSeconds = 300)
+        // NaN — позиция 0: менее секунды, в историю не попадает.
+        history.savePlayerProgress(ItemsX(id = 981L), positionSeconds = Float.NaN, playerDurationSeconds = 300)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val finished = history.get(980L)
+        assertEquals(true, finished?.isCompleted)
+        assertEquals(0L, finished?.lastPositionMs)
+        assertNull(history.get(981L))
+    }
+
+    @Test
     fun `deleteBatch игнорирует пустой список и невалидные ID`() = runTest(testDispatcher) {
         val history = SavedX_History(testScope, testDispatcher)
         testDispatcher.scheduler.advanceUntilIdle()

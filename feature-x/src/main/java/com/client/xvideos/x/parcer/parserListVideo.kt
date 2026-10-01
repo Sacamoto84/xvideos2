@@ -1,5 +1,6 @@
 package com.client.xvideos.x.parcer
 
+import com.client.xvideos.x.isValidXUrl
 import com.client.xvideos.x.model.getFlagEmoji
 import com.client.xvideos.x.model.ItemsX
 import org.jsoup.nodes.Document
@@ -102,11 +103,13 @@ fun parserListVideo(document: Document): List<ItemsX> {
             val videoId = block.attr("data-id").toLongOrNull() ?: continue
             if (videoId <= 0L) continue
 
+            // Нет значения — пустая строка, а не текст-заглушка: экраны прячут пустые поля,
+            // а проверки isNotBlank() принимали заглушку за настоящее значение.
             val titleAnchor = block.selectFirst("p.title a")
-            val videoTitle = titleAnchor?.text() ?: "No title"
+            val videoTitle = titleAnchor?.text().orEmpty()
             val href = titleAnchor?.attr("href")?.trim().orEmpty()
-            if (href.isEmpty() || href == "No link") continue
-            val videoDuration = block.selectFirst("span.duration")?.text() ?: "No duration"
+            if (!isValidXUrl(href)) continue
+            val videoDuration = block.selectFirst("span.duration")?.text().orEmpty()
 
             // Пусто, а не "null": ItemsX.previewImage — non-null String со значением
             // по умолчанию "", и строка-заглушка отсюда уезжала в модель и на экран.
@@ -114,9 +117,9 @@ fun parserListVideo(document: Document): List<ItemsX> {
             val videoPreviewUrl = parserVideoPreviewFromImageUrl(dataSrc).orEmpty()
 
             val metadataEl = block.selectFirst("p.metadata")
-            val channelName = metadataEl?.selectFirst(".name")?.text() ?: "No channel"
+            val channelName = metadataEl?.selectFirst(".name")?.text().orEmpty()
             val views = extractViews(metadataEl?.text())
-            val channelLink = metadataEl?.selectFirst("a")?.attr("href") ?: "No channel link"
+            val channelLink = metadataEl?.selectFirst("a")?.attr("href").orEmpty()
 
             list.add(
                 ItemsX(
@@ -147,7 +150,7 @@ fun parserListVideo(document: Document): List<ItemsX> {
  * даже если ответ пришёл не на русском.
  */
 private fun extractViews(metadata: String?): String {
-    if (metadata.isNullOrBlank()) return "No views"
+    if (metadata.isNullOrBlank()) return ""
     val lastToken = VIEWS_TOKEN_REGEX.findAll(metadata).lastOrNull()?.value?.trim()
     return if (!lastToken.isNullOrEmpty()) lastToken else metadata.trim()
 }

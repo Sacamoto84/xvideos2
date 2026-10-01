@@ -14,8 +14,8 @@ import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.ActressesIndexUiState
+import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.parcer.parseActressesIndexPage
-import com.client.xvideos.x.urlStart
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -73,14 +73,6 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
         loadInitial()
     }
 
-    private fun buildAbsoluteUrl(path: String): String {
-        return when {
-            path.startsWith("http://") || path.startsWith("https://") -> path
-            path.startsWith("/") -> "$urlStart$path"
-            else -> "$urlStart/$path"
-        }
-    }
-
     /**
      * Загружает начальную страницу каталога по текущему [currentUrlPath].
      */
@@ -101,7 +93,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
 
         initialJob = screenModelScope.launch {
             try {
-                val targetUrl = buildAbsoluteUrl(currentUrlPath)
+                val targetUrl = normalizeXUrl(currentUrlPath)
                 val html = withContext(Dispatchers.IO) {
                     readHtmlFromURLDirect(targetUrl)
                 }
@@ -164,7 +156,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
 
         pagingJob = screenModelScope.launch {
             try {
-                val targetUrl = buildAbsoluteUrl(nextPagePath)
+                val targetUrl = normalizeXUrl(nextPagePath)
                 // Сбой сети — исключение: список не помечается законченным, следующая
                 // прокрутка повторит запрос. 404 — каталог действительно кончился.
                 val html = withContext(Dispatchers.IO) {

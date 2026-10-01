@@ -52,16 +52,6 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
         navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item))
     }
 
-    /**
-     * Открывает экран видеоплеера по прямому URL.
-     *
-     * @param url Ссылка на видеоролик.
-     * @param navigator Навигатор Voyager.
-     */
-    fun openVideoPlayer(url: String, navigator: Navigator) {
-        navigator.push(ScreenX_VideoPlayer(url))
-    }
-
     /** Скачать (сохранить) видео в раздел «Сохранённое». */
     fun download(item: ItemsX) = saved.downloads.download(item)
 

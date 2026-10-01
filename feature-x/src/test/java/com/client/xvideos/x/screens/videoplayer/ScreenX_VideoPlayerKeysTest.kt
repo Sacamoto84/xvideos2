@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.videoplayer
 
-import com.client.xvideos.x.screens.videoplayerFullScreen.ScreenX_VideoPlayerFullScreen
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -37,14 +36,5 @@ class ScreenX_VideoPlayerKeysTest {
         val restored = assertJavaSerialization(screen)
         assertEquals("file:///data/local/vid_999.mp4", restored.fileUrl)
         assertEquals("ScreenX_LocalVideoPlayer:file:///data/local/vid_999.mp4", restored.key)
-    }
-
-    @Suppress("DEPRECATION")
-    @Test
-    fun `ScreenX_VideoPlayerFullScreen preserves deterministic key and survives serialization`() {
-        val screen = ScreenX_VideoPlayerFullScreen("https://example.com/video_full")
-        val restored = assertJavaSerialization(screen)
-        assertEquals("https://example.com/video_full", restored.url)
-        assertEquals("ScreenX_VideoPlayerFullScreen:https://example.com/video_full", restored.key)
     }
 }

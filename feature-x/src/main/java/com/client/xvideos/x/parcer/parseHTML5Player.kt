@@ -4,23 +4,33 @@ import com.client.xvideos.x.model.HTML5PlayerConfig
 import com.client.xvideos.x.normalizeXUrl
 import java.util.regex.Pattern
 
-private val PATTERN_VIDEO_TITLE = Pattern.compile("html5player\\.setVideoTitle\\('(.*?)'\\)")
-private val PATTERN_ENCODED_ID = Pattern.compile("html5player\\.setEncodedIdVideo\\('(.*?)'\\)")
-private val PATTERN_URL_LOW = Pattern.compile("html5player\\.setVideoUrlLow\\('(.*?)'\\)")
-private val PATTERN_URL_HIGH = Pattern.compile("html5player\\.setVideoUrlHigh\\('(.*?)'\\)")
-private val PATTERN_URL_HLS = Pattern.compile("html5player\\.setVideoHLS\\('(.*?)'\\)")
-private val PATTERN_THUMB_URL = Pattern.compile("html5player\\.setThumbUrl\\('(.*?)'\\)")
-private val PATTERN_THUMB_URL_169 = Pattern.compile("html5player\\.setThumbUrl169\\('(.*?)'\\)")
-private val PATTERN_THUMB_SLIDE = Pattern.compile("html5player\\.setThumbSlide\\('(.*?)'\\)")
-private val PATTERN_THUMB_SLIDE_BIG = Pattern.compile("html5player\\.setThumbSlideBig\\('(.*?)'\\)")
-private val PATTERN_THUMB_SLIDE_MINUTE = Pattern.compile("html5player\\.setThumbSlideMinute\\('(.*?)'\\)")
-private val PATTERN_ID_CDN = Pattern.compile("html5player\\.setIdCDN\\('(.*?)'\\)")
-private val PATTERN_ID_CDN_HLS = Pattern.compile("html5player\\.setIdCdnHLS\\('(.*?)'\\)")
-private val PATTERN_SEEK_BAR_COLOR = Pattern.compile("html5player\\.setSeekBarColor\\('(.*?)'\\)")
-private val PATTERN_UPLOADER_NAME = Pattern.compile("html5player\\.setUploaderName\\('(.*?)'\\)")
-private val PATTERN_VIDEO_URL = Pattern.compile("html5player\\.setVideoURL\\('(.*?)'\\)")
-private val PATTERN_STATIC_PATH = Pattern.compile("html5player\\.setStaticPath\\('(.*?)'\\)")
-private val PATTERN_VIEW_DATA = Pattern.compile("html5player\\.setViewData\\('(.*?)'\\)")
+/**
+ * Вызов `html5player.<setter>('...')`. Значение — тело JS-строки в одинарных кавычках
+ * вместе с escape-последовательностями: прежний `(.*?)` обрывался на `\')` внутри
+ * названия. Раскодирует [extractValue].
+ */
+private fun setterPattern(setter: String): Pattern =
+    Pattern.compile("""html5player\.$setter\('((?:[^'\\]|\\.)*)'\)""")
+
+private val PATTERN_VIDEO_TITLE = setterPattern("setVideoTitle")
+private val PATTERN_ENCODED_ID = setterPattern("setEncodedIdVideo")
+private val PATTERN_URL_LOW = setterPattern("setVideoUrlLow")
+private val PATTERN_URL_HIGH = setterPattern("setVideoUrlHigh")
+private val PATTERN_URL_HLS = setterPattern("setVideoHLS")
+private val PATTERN_THUMB_URL = setterPattern("setThumbUrl")
+private val PATTERN_THUMB_URL_169 = setterPattern("setThumbUrl169")
+private val PATTERN_THUMB_SLIDE = setterPattern("setThumbSlide")
+private val PATTERN_THUMB_SLIDE_BIG = setterPattern("setThumbSlideBig")
+private val PATTERN_THUMB_SLIDE_MINUTE = setterPattern("setThumbSlideMinute")
+private val PATTERN_ID_CDN = setterPattern("setIdCDN")
+private val PATTERN_ID_CDN_HLS = setterPattern("setIdCdnHLS")
+private val PATTERN_SEEK_BAR_COLOR = setterPattern("setSeekBarColor")
+private val PATTERN_UPLOADER_NAME = setterPattern("setUploaderName")
+private val PATTERN_VIDEO_URL = setterPattern("setVideoURL")
+private val PATTERN_STATIC_PATH = setterPattern("setStaticPath")
+private val PATTERN_VIEW_DATA = setterPattern("setViewData")
+
+private val JS_ESCAPE = Regex("""\\(?:x([0-9A-Fa-f]{2})|u([0-9A-Fa-f]{4})|(.))""")
 
 /**
  * Разбирает содержимое скрипта инициализации HTML5-видеоплеера страницы X в объект [HTML5PlayerConfig].
@@ -129,18 +139,33 @@ fun extractPrimaryStreamUrl(script: String): String {
     return high.ifEmpty { low.ifEmpty { hls } }
 }
 
-/** Извлекает первое совпадение группы regex из текста скрипта. */
+/** Извлекает значение первого вызова сеттера плеера с раскодированными JS-escape. */
 private fun extractValue(script: String, pattern: Pattern): String? {
     val matcher = pattern.matcher(script)
-    return if (matcher.find()) matcher.group(1) else null
+    return if (matcher.find()) unescapeJsString(matcher.group(1)) else null
 }
 
-/** Декодирует экранированные слэши `\/` из JS-строк и нормализует URL. */
-// X6: "https:\/\/cdn\/x.mp4" -> "https://cdn/x.mp4"; "//cdn..." -> "https://cdn..."; null -> "".
-private fun String?.unescapeUrl(): String {
-    if (this == null) return ""
-    val trimmed = trim()
-    if (trimmed.isEmpty()) return ""
-    val unescaped = if (trimmed.contains("\\/")) trimmed.replace("\\/", "/") else trimmed
-    return normalizeXUrl(unescaped)
+/**
+ * Раскодирует тело строкового литерала JavaScript: `\'`, `\"`, `\\`, `\/`, `\n`, `\r`,
+ * `\t`, `\xHH`, `\uHHHH`. Прочий символ после `\` остаётся без слэша, как в JS.
+ */
+internal fun unescapeJsString(raw: String): String {
+    if ('\\' !in raw) return raw
+    return JS_ESCAPE.replace(raw) { match ->
+        val hex = match.groups[1]?.value ?: match.groups[2]?.value
+        if (hex != null) {
+            hex.toInt(16).toChar().toString()
+        } else {
+            when (val escaped = match.groupValues[3]) {
+                "n" -> "\n"
+                "r" -> "\r"
+                "t" -> "\t"
+                else -> escaped
+            }
+        }
+    }
 }
+
+/** Нормализует URL; JS-экранирование (`\/`) уже снято в [extractValue]. */
+// X6: "https:\/\/cdn\/x.mp4" -> "https://cdn/x.mp4"; "//cdn..." -> "https://cdn..."; null -> "".
+private fun String?.unescapeUrl(): String = normalizeXUrl(this.orEmpty())

@@ -6,6 +6,7 @@ import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayerSM
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -71,14 +72,6 @@ class ScreenX_VideoPlayerSMTest {
         assertFalse(sm.isFullScreen)
     }
 
-    @Suppress("DEPRECATION")
-    @Test
-    fun `openFullScreen переключает в полный экран на месте`() {
-        val sm = ScreenX_VideoPlayerSM("https://example.com/video1", AppFileDatabase())
-        sm.openFullScreen()
-        assertTrue(sm.isFullScreen)
-    }
-
     @Test
     fun `onPlaybackError сбрасывает полноэкранный режим`() {
         val sm = ScreenX_VideoPlayerSM("https://example.com/video1", AppFileDatabase())
@@ -111,7 +104,7 @@ class ScreenX_VideoPlayerSMTest {
         sm.saveProgress(-5f, 300)
         sm.saveProgress(50f, 300)
 
-        val savedItem = sm.saved.history.get(99999L)
+        val savedItem = runBlocking { sm.saved.history.get(99999L) }
         // 50s * 1000 = 50000ms
         assertEquals(50_000L, savedItem?.lastPositionMs)
         assertEquals(300_000L, savedItem?.totalDurationMs)

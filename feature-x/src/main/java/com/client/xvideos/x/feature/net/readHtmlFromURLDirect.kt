@@ -11,9 +11,11 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.isSuccess
+import io.ktor.util.appendIfNameAbsent
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.io.IOException
@@ -40,8 +42,9 @@ private val htmlClient: HttpClient by lazy {
         }
         followRedirects = true // Обработка редиректов
         defaultRequest {
-            header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
-            header("Accept-Language", "en-US,en;q=0.9")
+            // Только если запрос не задал своё значение: иначе Ktor отправил бы оба через запятую.
+            headers.appendIfNameAbsent(HttpHeaders.UserAgent, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
+            headers.appendIfNameAbsent(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
         }
     }
 }
@@ -55,11 +58,15 @@ class HttpStatusException(val code: Int, url: String) : IOException("HTTP $code 
  * Ошибку не прячет, в отличие от [readHtmlFromURLDirect]: нет сети или неверный
  * адрес — [IOException], ответ с кодом ошибки — [HttpStatusException]. Так
  * вызывающий отличает «запрос не удался» от «страница пустая».
+ *
+ * @param extraHeaders Заголовки запроса; одноимённые заголовки клиента по умолчанию они заменяют.
  */
-suspend fun fetchHtml(url: String): String {
+suspend fun fetchHtml(url: String, extraHeaders: Map<String, String> = emptyMap()): String {
     val target = requireHttpUrl(url)
     Timber.d("fetchHtml %s", target)
-    val response = htmlClient.get(target)
+    val response = htmlClient.get(target) {
+        extraHeaders.forEach { (name, value) -> header(name, value) }
+    }
     if (!response.status.isSuccess()) throw HttpStatusException(response.status.value, target)
     return response.bodyAsText()
 }
