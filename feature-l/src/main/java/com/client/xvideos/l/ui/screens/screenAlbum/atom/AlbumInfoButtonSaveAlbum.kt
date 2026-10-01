@@ -26,8 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
-private val BUTTON_SHAPE = RoundedCornerShape(4.dp)
-
 @Composable
 fun AlbumInfoButtonSaveAlbum(
     saved: Boolean,
@@ -42,12 +40,13 @@ fun AlbumInfoButtonSaveAlbum(
         Theme.L.Type.button.copy(color = Color.White)
     }
     val styledBase = remember(Theme.L.grey3, backgroundColor) {
+        val shape = RoundedCornerShape(4.dp)
         Modifier
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
-            .clip(BUTTON_SHAPE)
-            .border(1.dp, Theme.L.grey3, BUTTON_SHAPE)
+            .clip(shape)
+            .border(1.dp, Theme.L.grey3, shape)
             .background(backgroundColor)
     }
     val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
@@ -77,12 +76,12 @@ fun AlbumInfoButtonSaveAlbum(
 
 @Preview
 @Composable
-fun AlbumInfoButtonSaveAlbumPreview() {
+private fun AlbumInfoButtonSaveAlbumPreview() {
     AlbumInfoButtonSaveAlbum(saved = false, onClick = {})
 }
 
 @Preview
 @Composable
-fun AlbumInfoButtonSaveAlbumSavedPreview() {
+private fun AlbumInfoButtonSaveAlbumSavedPreview() {
     AlbumInfoButtonSaveAlbum(saved = true, onClick = {})
 }

@@ -25,8 +25,6 @@ import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
 import com.client.xvideos.l.model.safeAspectRatio
 
-private val THUMB_CORNER_SHAPE = RoundedCornerShape(4.dp)
-
 @Composable
 fun FullScreenThumbnailItem(
     item: PicsDetails,
@@ -35,16 +33,17 @@ fun FullScreenThumbnailItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val thumbShape = RoundedCornerShape(4.dp)
     Box(
         modifier = modifier
             .padding(horizontal = 1.dp)
-            .clip(THUMB_CORNER_SHAPE)
+            .clip(thumbShape)
             .aspectRatio(item.safeAspectRatio())
             .clickable(onClick = onClick)
             .border(
                 2.dp,
                 if (isSelected) Color.Yellow else Color.Transparent,
-                THUMB_CORNER_SHAPE
+                thumbShape
             )
             .padding(2.dp)
     ) {
@@ -53,7 +52,7 @@ fun FullScreenThumbnailItem(
             UrlImage(
                 url = thumbUrl,
                 modifier = Modifier
-                    .clip(THUMB_CORNER_SHAPE)
+                    .clip(thumbShape)
                     .fillMaxSize(),
                 contentScale = ContentScale.FillBounds,
                 onSuccess = { },
@@ -66,7 +65,7 @@ fun FullScreenThumbnailItem(
         } else {
             Box(
                 modifier = Modifier
-                    .clip(THUMB_CORNER_SHAPE)
+                    .clip(thumbShape)
                     .background(Color(0xFF202020))
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center

@@ -2,33 +2,19 @@ package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,21 +48,21 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.Albu
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterGenres
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterSize
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSearchHeader
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterHeader
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
-
-private val CARD_SHAPE = RoundedCornerShape(8.dp)
-private val BUTTON_SHAPE = RoundedCornerShape(6.dp)
 
 /** Общий фон-«карточка» секции фильтра: отступ сверху, скругление, фон, опц. рамка. */
 private fun Modifier.filterCard(
     border: Boolean = true,
 ): Modifier {
     val palette = StyleGenresTags.Palette
+    val shape = RoundedCornerShape(8.dp)
     return this
         .padding(top = 8.dp)
-        .clip(CARD_SHAPE)
+        .clip(shape)
         .background(palette.surface)
-        .then(if (border) Modifier.border(1.dp, palette.border, CARD_SHAPE) else Modifier)
+        .then(if (border) Modifier.border(1.dp, palette.border, shape) else Modifier)
 }
 
 @Composable
@@ -198,133 +184,6 @@ fun AlbumListFilter(
         )
     }
 }
-
-@Composable
-private fun AlbumListFilterHeader(
-    presetsCount: Int,
-    onSaveClick: () -> Unit,
-    onSavedPresetsClick: () -> Unit,
-    onClose: () -> Unit
-) {
-    val palette = StyleGenresTags.Palette
-    val headerTitleStyle = remember(palette.textPrimary) {
-        Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
-    }
-    Row(
-        modifier = Modifier
-            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            "Filters",
-            color = palette.textPrimary,
-            style = headerTitleStyle
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            // Save button
-            Row(
-                modifier = Modifier
-                    .clip(BUTTON_SHAPE)
-                    .border(1.dp, palette.border, BUTTON_SHAPE)
-                    .background(palette.field)
-                    .clickable { onSaveClick() }
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Save,
-                    contentDescription = "Save filter preset",
-                    tint = palette.accent,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    "Save",
-                    color = palette.textPrimary,
-                    style = Theme.L.Type.button
-                )
-            }
-
-            // Saved presets button
-            Row(
-                modifier = Modifier
-                    .clip(BUTTON_SHAPE)
-                    .border(1.dp, palette.border, BUTTON_SHAPE)
-                    .background(palette.field)
-                    .clickable { onSavedPresetsClick() }
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.BookmarkBorder,
-                    contentDescription = "Saved presets",
-                    tint = palette.selectedBorder,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    "Saved ($presetsCount)",
-                    color = palette.textPrimary,
-                    style = Theme.L.Type.button
-                )
-            }
-
-            // Close button (X)
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close filters",
-                    tint = palette.textSecondary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AlbumFilterSearchHeader(
-    searchQuery: String
-) {
-    val palette = StyleGenresTags.Palette
-    Box(modifier = Modifier.filterCard(border = true).padding(8.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .clip(BUTTON_SHAPE)
-                .border(1.dp, palette.border, BUTTON_SHAPE)
-                .background(palette.field)
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Search:",
-                color = palette.textSecondary,
-                style = Theme.L.Type.rowSubtitle
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                searchQuery,
-                color = palette.textPrimary,
-                style = Theme.L.Type.rowValue,
-                maxLines = 1
-            )
-        }
-    }
-}
-
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C1C, widthDp = 390)
 @Composable
 private fun AlbumListFilterPreview() {

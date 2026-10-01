@@ -1,10 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,17 +26,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
-
-private val DIALOG_SHAPE = RoundedCornerShape(16.dp)
-private val ROW_SHAPE = RoundedCornerShape(6.dp)
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
 
 @Composable
 fun <T> AlbumFilterSelectDialog(
@@ -54,6 +48,7 @@ fun <T> AlbumFilterSelectDialog(
     val palette = StyleGenresTags.Palette
     val configuration = LocalConfiguration.current
     val maxListHeight = (configuration.screenHeightDp * 0.6f).dp.coerceIn(240.dp, 480.dp)
+    val dialogShape = RoundedCornerShape(16.dp)
     val headerStyle = remember(palette.textPrimary) {
         Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
     }
@@ -71,8 +66,8 @@ fun <T> AlbumFilterSelectDialog(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .widthIn(max = 420.dp)
-                .clip(DIALOG_SHAPE)
-                .border(1.dp, palette.border, DIALOG_SHAPE)
+                .clip(dialogShape)
+                .border(1.dp, palette.border, dialogShape)
                 .background(palette.surface)
                 .padding(16.dp)
         ) {
@@ -132,49 +127,15 @@ fun <T> AlbumFilterSelectDialog(
     }
 }
 
+@Preview
 @Composable
-private fun SelectDialogRow(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val palette = StyleGenresTags.Palette
-    val borderColor = if (isSelected) palette.selectedBorder else Color.Transparent
-    val backgroundColor = if (isSelected) palette.selected else Color.Transparent
-    val textColor = if (isSelected) palette.selectedText else palette.textPrimary
-    val titleStyle = remember(textColor, isSelected) {
-        Theme.L.Type.rowTitle.copy(
-            color = textColor,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 3.dp)
-            .clip(ROW_SHAPE)
-            .border(1.dp, borderColor, ROW_SHAPE)
-            .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = title,
-            color = textColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = titleStyle,
-            modifier = Modifier.weight(1f)
-        )
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = palette.selectedBorder
-            )
-        }
-    }
+private fun AlbumFilterSelectDialogPreview() {
+    AlbumFilterSelectDialog(
+        title = "Sort by",
+        items = listOf("Date", "Trending", "Views"),
+        selectedItem = "Trending",
+        itemTitle = { it },
+        onDismiss = {},
+        onSelect = {}
+    )
 }

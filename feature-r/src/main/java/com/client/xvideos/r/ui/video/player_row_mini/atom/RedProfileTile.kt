@@ -1,7 +1,5 @@
 package com.client.xvideos.r.ui.video.player_row_mini.atom
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,14 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.feature.r.R
-import com.client.xvideos.r.model.GifsInfo
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.toMinSec
 import com.client.xvideos.common.util.toPrettyCount
-import com.composables.core.Icon
+import com.client.xvideos.r.model.GifsInfo
 
 private const val PLACEHOLDER_TEXT = "-"
 
@@ -83,46 +79,6 @@ fun RedProfileTile(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun ShadowedIcon(
-    modifier: Modifier = Modifier,
-) {
-    val painter = painterResource(R.drawable.rg_button)
-    Box(modifier = modifier) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = Color.Black,
-            modifier = Modifier.offset(1.dp, 1.dp)
-        )
-        Icon(
-            painter = painter,
-            contentDescription = "Просмотры",
-            tint = Color.White
-        )
-    }
-}
-
-@Composable
-private fun ShadowedText(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier) {
-        Text(
-            text = text,
-            color = Color.Black,
-            modifier = Modifier.offset(1.dp, 1.dp),
-            fontFamily = Theme.R.fontFamilyPopinsMedium
-        )
-        Text(
-            text = text,
-            color = Color.White,
-            fontFamily = Theme.R.fontFamilyPopinsMedium
-        )
     }
 }
 

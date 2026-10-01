@@ -1,45 +1,18 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.theme.Theme
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
-import androidx.compose.runtime.key
-import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
 
 @Composable
 fun AlbumListFilterTags(
@@ -96,164 +69,6 @@ fun AlbumListFilterTags(
 }
 
 @Composable
-private fun TagsTriggerRow(
-    selectorText: String,
-    totalSelected: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val palette = StyleGenresTags.Palette
-    val titleStyle = remember(Theme.L.Type.rowTitle, palette.textPrimary) {
-        Theme.L.Type.rowTitle.copy(
-            fontWeight = FontWeight.Bold,
-            color = palette.textPrimary
-        )
-    }
-    val normalValueStyle = remember(Theme.L.Type.rowTitle, palette.textPrimary) {
-        Theme.L.Type.rowTitle.copy(
-            color = palette.textPrimary,
-            fontWeight = FontWeight.Bold
-        )
-    }
-    val selectedValueStyle = remember(Theme.L.Type.rowTitle, palette.selectedText) {
-        Theme.L.Type.rowTitle.copy(
-            color = palette.selectedText,
-            fontWeight = FontWeight.Bold
-        )
-    }
-    val dropdownBoxModifier = remember(palette.border, palette.field) {
-        Modifier
-            .widthIn(min = 160.dp, max = 220.dp)
-            .height(43.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .border(1.dp, palette.border, RoundedCornerShape(6.dp))
-            .background(palette.field)
-    }
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = "Tags",
-            style = titleStyle
-        )
-
-        Row(
-            modifier = dropdownBoxModifier
-                .clickable { onClick() }
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = selectorText,
-                modifier = Modifier.weight(1f, fill = false),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = if (totalSelected == 0) normalValueStyle else selectedValueStyle
-            )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = null,
-                tint = palette.textSecondary
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActiveTagsChips(
-    tagsPlus: List<String>,
-    tagsMinus: List<String>,
-    onRemovePlus: (String) -> Unit,
-    onRemoveMinus: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val palette = StyleGenresTags.Palette
-    val chipTextStyle = remember(Theme.L.Type.bodyLarge) {
-        Theme.L.Type.bodyLarge.copy(
-            color = StyleGenresTags.colorSelectTextItem,
-            fontWeight = FontWeight.Bold
-        )
-    }
-    val excludedChipTextStyle = remember(Theme.L.Type.bodyLarge) {
-        Theme.L.Type.bodyLarge.copy(
-            color = StyleGenresTags.colorExcludedTextItem,
-            fontWeight = FontWeight.Bold
-        )
-    }
-
-    Spacer(modifier = Modifier.height(6.dp))
-    Column(modifier = modifier.fillMaxWidth()) {
-        tagsPlus.forEach { item ->
-            key(item) {
-                Row(
-                    modifier = Modifier
-                        .then(StyleGenresTags.modifierSelectTextItem)
-                        .clickable { onRemovePlus(item) },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = item,
-                        color = StyleGenresTags.colorSelectTextItem,
-                        style = chipTextStyle,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Remove",
-                        tint = palette.selectedBorder,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-
-        tagsMinus.forEach { item ->
-            key(item) {
-                val annotatedText = remember(item, palette.excludedBorder) {
-                    buildAnnotatedString {
-                        withStyle(SpanStyle(color = palette.excludedBorder, textDecoration = TextDecoration.Underline)) {
-                            append("NOT")
-                        }
-                        append(" $item")
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .then(StyleGenresTags.modifierExcludedTextItem)
-                        .clickable { onRemoveMinus(item) },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = annotatedText,
-                        color = StyleGenresTags.colorExcludedTextItem,
-                        style = excludedChipTextStyle,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Remove",
-                        tint = palette.excludedBorder,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun rememberSelectableTags(
     tagCountItems: List<AlbumListFilterGenreCountResponse>,
     tagsPlus: List<String>,
@@ -281,4 +96,3 @@ private fun AlbumListFilterTagsPreview() {
         onChange = {}
     )
 }
-

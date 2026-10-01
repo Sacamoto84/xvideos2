@@ -21,8 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.R
 
-private val MENU_BUTTON_SHAPE = RoundedCornerShape(16.dp)
-
 /**
  * Универсальная кнопка выбора раздела с иконкой.
  *
@@ -37,11 +35,12 @@ fun MenuButtonSelect(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val buttonShape = RoundedCornerShape(16.dp)
     val baseModifier = modifier
         .padding(16.dp)
         .fillMaxWidth()
-        .clip(MENU_BUTTON_SHAPE)
-        .border(2.dp, Color(0xFF565656), MENU_BUTTON_SHAPE)
+        .clip(buttonShape)
+        .border(2.dp, Color(0xFF565656), buttonShape)
         .background(Color(0xFF212121))
         .clickable(onClick = onClick)
         .padding(vertical = 16.dp)

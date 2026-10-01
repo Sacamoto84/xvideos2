@@ -1,9 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
-
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloatAsState
@@ -27,16 +23,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
 import com.composeunstyled.Disclosure
 import com.composeunstyled.DisclosureHeading
 import com.composeunstyled.DisclosurePanel
 import com.composeunstyled.rememberDisclosureState
 
 @Composable
-fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @Composable () -> Unit) {
-
+fun DisclosureLayout(
+    contentDisclosureHeading: String,
+    contentDisclosurePanel: @Composable () -> Unit
+) {
     val state = rememberDisclosureState()
     val palette = StyleGenresTags.Palette
     val headingStyle = remember(palette.textPrimary) {
@@ -61,7 +62,6 @@ fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @
                 )
                 Text(contentDisclosureHeading, style = headingStyle)
             }
-
         }
         DisclosurePanel(
             enter = expandVertically(
@@ -72,5 +72,12 @@ fun DisclosureLayout(contentDisclosureHeading: String, contentDisclosurePanel: @
             contentDisclosurePanel.invoke()
         }
     }
+}
 
+@Preview
+@Composable
+private fun DisclosureLayoutPreview() {
+    DisclosureLayout(contentDisclosureHeading = "Advanced") {
+        Text("Panel content", color = Color.White)
+    }
 }

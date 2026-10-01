@@ -116,3 +116,15 @@ fun Red_Video_Lite_Row2(
     }
 
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun Red_Video_Lite_Row2Preview() {
+    Red_Video_Lite_Row2(
+        url = "sample_url",
+        play = false,
+        onClick = {},
+        onLongClick = {},
+        poster = {}
+    )
+}

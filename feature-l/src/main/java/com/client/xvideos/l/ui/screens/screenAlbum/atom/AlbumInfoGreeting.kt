@@ -1,32 +1,20 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.atom
 
-import com.client.xvideos.common.theme.Theme
-
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumDetails
-import com.client.xvideos.l.model.Audience
-import com.client.xvideos.l.model.Content
-import com.client.xvideos.l.model.Cover
 import com.client.xvideos.l.model.Genre
-import com.client.xvideos.l.model.Tag
-
-private val CHIP_SHAPE = RoundedCornerShape(4.dp)
 
 @Composable
 fun AlbumInfoGreeting(
@@ -34,98 +22,54 @@ fun AlbumInfoGreeting(
     onGenreClick: (Genre) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val headerStyle = remember(Theme.L.Type.rowTitle) {
-        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-    }
-    val genreTextStyle = remember(Theme.L.Type.rowValue, Theme.L.primaryColor) {
-        Theme.L.Type.rowValue.copy(color = Theme.L.primaryColor, fontSize = 14.sp)
-    }
-
-    val chipBorderModifier = remember(Theme.L.secondaryColor) {
-        Modifier.border(1.dp, Theme.L.secondaryColor, CHIP_SHAPE)
+    val titleStyle = remember(Theme.L.Type.caption, Theme.L.textColor) {
+        Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
     }
 
     FlowRow(
-        modifier = modifier,
+        modifier = modifier.padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Genres: ",
-            color = Theme.L.textColor,
-            style = headerStyle,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
+        parsed.genres.forEach { genre ->
+            key(genre.id) {
+                val handleClick = remember(genre, onGenreClick) { { onGenreClick(genre) } }
 
-        parsed.genres.forEach { item ->
-            key(item.id) {
-                val handleClick = remember(item, onGenreClick) { { onGenreClick(item) } }
                 GenreChip(
-                    item = item,
-                    style = genreTextStyle,
-                    borderModifier = chipBorderModifier,
+                    item = genre,
+                    style = titleStyle,
                     onClick = handleClick
                 )
             }
         }
-    }
-}
 
-@Composable
-private fun GenreChip(
-    item: Genre,
-    style: TextStyle,
-    borderModifier: Modifier,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val baseModifier = if (modifier == Modifier) {
-        Modifier
-            .padding(horizontal = 2.dp, vertical = 2.dp)
-            .clip(CHIP_SHAPE)
-    } else {
-        modifier
-            .padding(horizontal = 2.dp, vertical = 2.dp)
-            .clip(CHIP_SHAPE)
+        parsed.description.takeIf { it.isNotBlank() }?.let { description ->
+            Text(
+                text = description,
+                style = Theme.L.Type.caption.copy(
+                    color = Theme.L.textColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                ),
+                modifier = Modifier.padding(start = 2.dp)
+            )
+        }
     }
-    Text(
-        text = item.title,
-        modifier = baseModifier
-            .then(borderModifier)
-            .clickable(onClick = onClick)
-            .padding(4.dp),
-        color = Theme.L.primaryColor,
-        style = style
-    )
 }
 
 @Preview
 @Composable
-fun AlbumInfoGreetingPreview() {
+private fun AlbumInfoGreetingPreview() {
     val parsed = AlbumDetails(
-        created = 1678886400.0,
-        modified = 1678886400.0,
         id = "album123",
         title = "Sample Album",
-        tags = listOf(
-            Tag(id = "tag1", category = "Nature", text = "Mountains", url = "url/mountains", count = 100),
-            Tag(id = "tag2", category = "Nature", text = "Rivers", url = "url/rivers", count = 50)
-        ),
-        is_manga = false,
-        content = Content(id = "content1", title = "Album Content", url = "url/content"),
+        description = "This is a sample album description.",
         genres = listOf(
             Genre(id = "genre1", title = "Adventure", actsAsWarning = false, url = "url/adventure"),
             Genre(id = "genre2", title = "Sci-Fi", actsAsWarning = false, url = "url/scifi")
         ),
-        cover = Cover(width = 800, height = 600, size = "large", url = "url/cover.jpg"),
-        description = "This is a sample album description.",
-        audiences = listOf(
-            Audience(id = "audience1", title = "General", url = "url/general"),
-            Audience(id = "audience2", title = "Teens", url = "url/teens")
-        ),
         number_of_pictures = 10,
-        number_of_animated_pictures = 2,
-        url = "url/album123",
-        download_url = "url/download/album123"
+        number_of_animated_pictures = 2
     )
     AlbumInfoGreeting(parsed = parsed)
 }

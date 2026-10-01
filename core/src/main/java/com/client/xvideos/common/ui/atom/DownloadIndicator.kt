@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.composables.core.HorizontalSeparator
 
+import androidx.compose.ui.tooling.preview.Preview
+
 @Composable
 fun DownloadIndicator(percentDownload : Float) {
     //Индикатор загрузки
@@ -19,4 +21,10 @@ fun DownloadIndicator(percentDownload : Float) {
         -2f -> HorizontalSeparator(Color.Transparent, thickness = 2.dp)
         -3f -> Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Red))
     }
+}
+
+@Preview
+@Composable
+private fun DownloadIndicatorPreview() {
+    DownloadIndicator(percentDownload = 0.5f)
 }

@@ -19,8 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
-private val BUTTON_SHAPE = RoundedCornerShape(4.dp)
-
 /** Кнопка «поделиться альбомом по P2P» в шапке ScreenLAlbum. */
 @Composable
 fun AlbumInfoButtonShareAlbum(
@@ -31,12 +29,13 @@ fun AlbumInfoButtonShareAlbum(
         Theme.L.Type.button.copy(color = Color.White)
     }
     val styledBase = remember(Theme.L.grey3, Theme.L.grey6) {
+        val shape = RoundedCornerShape(4.dp)
         Modifier
             .padding(top = 2.dp, bottom = 4.dp)
             .height(46.dp)
             .fillMaxWidth()
-            .clip(BUTTON_SHAPE)
-            .border(1.dp, Theme.L.grey3, BUTTON_SHAPE)
+            .clip(shape)
+            .border(1.dp, Theme.L.grey3, shape)
             .background(Theme.L.grey6)
     }
     val boxModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
@@ -56,6 +55,6 @@ fun AlbumInfoButtonShareAlbum(
 
 @Preview
 @Composable
-fun AlbumInfoButtonShareAlbumPreview() {
+private fun AlbumInfoButtonShareAlbumPreview() {
     AlbumInfoButtonShareAlbum(onClick = {})
 }

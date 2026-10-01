@@ -1,7 +1,5 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.atom
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,8 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumDetails
+import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun AlbumInfoFilterButton(
@@ -43,5 +44,17 @@ fun AlbumInfoFilterButton(
             onCheckedChange = onCheckedChange,
         )
         Spacer(modifier = Modifier.width(4.dp))
+    }
+}
+
+@Preview
+@Composable
+private fun AlbumInfoFilterButtonPreview() {
+    XvideosTheme {
+        AlbumInfoFilterButton(
+            parsed = AlbumDetails(number_of_animated_pictures = 5),
+            checked = true,
+            onCheckedChange = {}
+        )
     }
 }
