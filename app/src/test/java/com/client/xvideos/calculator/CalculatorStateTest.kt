@@ -366,6 +366,26 @@ class CalculatorStateTest {
     }
 
     @Test
+    fun `каждая проверка PIN засчитывается как попытка`() = runTest {
+        // «01234»: набранные цифры и дисплей («1 234») дают два разных кода.
+        val state = CalculatorState()
+        listOf("0", "1", "2", "3", "4").forEach { state.onDigit(it, noOpHaptic) }
+
+        val checked = mutableListOf<String>()
+        var failedAttempts = 0
+        state.onEquals(
+            scope = this,
+            haptic = noOpHaptic,
+            onUnlock = { checked += it; false },
+            onUnlockFailed = { failedAttempts++ }
+        )
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(listOf("01234", "1234"), checked)
+        assertEquals(checked.size, failedAttempts)
+    }
+
+    @Test
     fun `onBackspace корректно удаляет цифры из форматированного числа с пробелами`() {
         val state = CalculatorState()
         state.displayValue = "-1 234"

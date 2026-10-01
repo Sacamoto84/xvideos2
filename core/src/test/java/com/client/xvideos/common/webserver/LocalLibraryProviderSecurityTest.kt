@@ -80,4 +80,28 @@ class LocalLibraryProviderSecurityTest {
         assertEquals(targetFile.canonicalPath, resolved?.first?.canonicalPath)
         assertEquals("preview.jpg", resolved?.second)
     }
+
+    @Test
+    fun `обложка коллекции L не выходит из папки элемента по именам из metadata json`() {
+        // Файл вне каталога коллекций — то, что пытается достать подложенный metadata.json.
+        val secret = File(File(AppPath.l_collection).parentFile, "secret.jpg").apply { writeText("private") }
+        val colDir = File(AppPath.l_collection, "Imported_Col").apply { mkdirs() }
+        val itemDir = File(colDir, "item1").apply { mkdirs() }
+        File(itemDir, "metadata.json").writeText(
+            """{"previewFileName": "../../../secret.jpg", "mediaFileName": "../../../secret.jpg"}"""
+        )
+
+        assertNull(LocalLibraryProvider.resolveCollectionCover("l", "Imported_Col"))
+        assertEquals("private", secret.readText())
+    }
+
+    @Test
+    fun `обложка коллекции L из metadata json внутри папки элемента находится`() {
+        val colDir = File(AppPath.l_collection, "Normal_Col").apply { mkdirs() }
+        val itemDir = File(colDir, "item1").apply { mkdirs() }
+        val preview = File(itemDir, "preview.jpg").apply { writeText("dummy-image-data") }
+        File(itemDir, "metadata.json").writeText("""{"previewFileName": "preview.jpg"}""")
+
+        assertEquals(preview.canonicalPath, LocalLibraryProvider.resolveCollectionCover("l", "Normal_Col")?.canonicalPath)
+    }
 }

@@ -104,6 +104,11 @@ class MediaDownloadWorker(
             targets.tempFile.delete()
             throw e
         } catch (e: Exception) {
+            if (isRetryable(e) && runAttemptCount < MAX_RETRY_ATTEMPTS) {
+                // Временный сбой: .tmp оставляем — следующая попытка докачает его по Range.
+                Timber.w(e, "MediaDownloadWorker: сбой при скачивании $fileName, повтор #${runAttemptCount + 1}")
+                return@withContext Result.retry()
+            }
             Timber.e(e, "MediaDownloadWorker: Ошибка при скачивании $fileName")
             targets.tempFile.delete()
             showFailedNotification(title, e.message ?: "Ошибка сети")
@@ -155,13 +160,14 @@ class MediaDownloadWorker(
             throw IOException("Загрузка не удалась: получен пустой файл (0 байт)")
         }
 
-        if (targets.targetFile.exists()) {
-            targets.targetFile.delete()
-        }
-
+        // .tmp лежит в том же каталоге: rename заменяет старый файл атомарно, и старая
+        // копия живёт, пока новая не на месте. Удаляем её, только если ФС не умеет
+        // переименовывать поверх; при отказе .tmp остаётся для повторной попытки.
         if (!targets.tempFile.renameTo(targets.targetFile)) {
-            targets.tempFile.copyTo(targets.targetFile, overwrite = true)
-            targets.tempFile.delete()
+            targets.targetFile.delete()
+            if (!targets.tempFile.renameTo(targets.targetFile)) {
+                throw IOException("Не удалось переместить ${targets.tempFile.name} в ${targets.targetFile.name}")
+            }
         }
 
         if (!metaContent.isNullOrBlank()) {
@@ -240,7 +246,7 @@ class MediaDownloadWorker(
             if (!isOk && !isResume) {
                 val message = response.message
                 response.close()
-                throw IOException("Сервер вернул HTTP $responseCode: $message")
+                throw HttpStatusException(responseCode, "Сервер вернул HTTP $responseCode: $message")
             }
 
             val responseBody = response.body
@@ -392,8 +398,21 @@ class MediaDownloadWorker(
         }
     }
 
+    /** Ответ сервера с кодом ошибки: повторять имеет смысл только 5xx, 408 и 429. */
+    internal class HttpStatusException(val code: Int, message: String) : IOException(message)
+
     companion object {
         const val WORK_TAG_DOWNLOAD = "media_download"
+
+        /** Сколько раз WorkManager повторяет загрузку после временного сбоя. */
+        internal const val MAX_RETRY_ATTEMPTS = 5
+
+        /** Сеть и 5xx/408/429 — временные сбои; 4xx и прочее повтор не исправит. */
+        internal fun isRetryable(error: Throwable): Boolean = when (error) {
+            is HttpStatusException -> error.code >= 500 || error.code == 408 || error.code == 429
+            is IOException -> true
+            else -> false
+        }
         const val CHANNEL_ID = "channel_media_downloads"
         const val CHANNEL_NAME = "Загрузки медиа"
 

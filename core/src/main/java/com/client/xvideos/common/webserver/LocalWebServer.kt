@@ -4,11 +4,14 @@ import android.content.Context
 import com.client.xvideos.common.io.normalizeRelativePath
 import com.client.xvideos.common.json.AppJson
 import io.ktor.http.ContentType
+import io.ktor.http.Cookie
+import io.ktor.http.CookieEncoding
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
@@ -16,7 +19,6 @@ import io.ktor.server.cio.CIOApplicationEngine
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.partialcontent.PartialContent
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -33,6 +35,8 @@ import java.util.concurrent.atomic.AtomicReference
 object LocalWebServer {
 
     private val HTML_UTF8 = ContentType.Text.Html.withCharset(Charsets.UTF_8)
+    private const val UNAUTHORIZED_HTML =
+        "<h3>Нет доступа</h3><p>Откройте ссылку или QR-код из настроек приложения.</p>"
     private val cachedIndexHtml = AtomicReference<ByteArray?>(null)
 
     private val serverRef = AtomicReference<EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>?>(null)
@@ -53,20 +57,20 @@ object LocalWebServer {
 
             Timber.i("LocalWebServer: запуск на $ip:$port...")
 
+            // Новый токен на каждый запуск: ссылка от прошлого запуска перестаёт работать.
+            // CORS не подключаем: веб-интерфейс отдаётся с того же origin, а чужим
+            // страницам читать библиотеку незачем.
+            val token = WebAccessToken.generate()
+
             val newServer = embeddedServer(CIO, port = port, host = "0.0.0.0") {
                 install(PartialContent)
                 install(ContentNegotiation) { json(AppJson) }
-                install(CORS) {
-                    anyHost()
-                    allowHeader(HttpHeaders.ContentType)
-                    allowHeader(HttpHeaders.Range)
-                    allowHeader(HttpHeaders.Authorization)
-                    exposeHeader(HttpHeaders.ContentRange)
-                    exposeHeader(HttpHeaders.AcceptRanges)
-                    exposeHeader(HttpHeaders.ContentLength)
-                    allowMethod(HttpMethod.Get)
-                    allowMethod(HttpMethod.Options)
-                    allowMethod(HttpMethod.Head)
+
+                intercept(ApplicationCallPipeline.Plugins) {
+                    if (!isAuthorized(call, token)) {
+                        call.respondText(UNAUTHORIZED_HTML, HTML_UTF8, HttpStatusCode.Unauthorized)
+                        finish()
+                    }
                 }
 
                 routing {
@@ -79,7 +83,7 @@ object LocalWebServer {
             newServer.start(wait = false)
             serverRef.set(newServer)
 
-            val serverUrl = NetworkIpHelper.buildServerUrl(ip, port)
+            val serverUrl = WebAccessToken.accessUrl(NetworkIpHelper.buildServerUrl(ip, port), token)
             WebServerState.updateRunning(
                 running = true,
                 url = serverUrl,
@@ -101,6 +105,29 @@ object LocalWebServer {
             WebServerState.setError(errorMessage)
             WebServerState.updateRunning(false)
         }
+    }
+
+    /**
+     * Пускает запрос с верным токеном в параметре [WebAccessToken.QUERY_PARAM]
+     * (и запоминает его в cookie) или с верной cookie [WebAccessToken.COOKIE_NAME].
+     */
+    private fun isAuthorized(call: ApplicationCall, token: String): Boolean {
+        val fromQuery = call.request.queryParameters[WebAccessToken.QUERY_PARAM]
+        if (WebAccessToken.matches(fromQuery, token)) {
+            call.response.cookies.append(
+                Cookie(
+                    name = WebAccessToken.COOKIE_NAME,
+                    value = token,
+                    encoding = CookieEncoding.RAW,
+                    path = "/",
+                    httpOnly = true,
+                    extensions = mapOf("SameSite" to "Strict"),
+                )
+            )
+            return true
+        }
+        val fromCookie = call.request.cookies[WebAccessToken.COOKIE_NAME, CookieEncoding.RAW]
+        return WebAccessToken.matches(fromCookie, token)
     }
 
     private fun Routing.configureWebRoutes(appContext: Context) {

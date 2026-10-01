@@ -153,13 +153,13 @@ object LocalMediaResolver {
             val json = AppJson.parseToJsonElement(metaFile.readText(Charsets.UTF_8)).jsonObject
             val previewFileName = json["previewFileName"]?.jsonPrimitive?.contentOrNull
             if (!previewFileName.isNullOrBlank()) {
-                val preview = File(folder, previewFileName)
-                if (preview.exists() && preview.length() > 0L) return@runCatching preview
+                val preview = safeChild(folder, previewFileName)
+                if (preview != null && preview.exists() && preview.length() > 0L) return@runCatching preview
             }
             val mediaFileName = json["mediaFileName"]?.jsonPrimitive?.contentOrNull
             if (!mediaFileName.isNullOrBlank() && !mediaFileName.endsWith(".mp4", ignoreCase = true)) {
-                val media = File(folder, mediaFileName)
-                if (media.exists() && media.length() > 0L) return@runCatching media
+                val media = safeChild(folder, mediaFileName)
+                if (media != null && media.exists() && media.length() > 0L) return@runCatching media
             }
             null
         }.getOrNull()
@@ -234,6 +234,17 @@ object LocalMediaResolver {
             val baseCanonical = baseDir.canonicalPath
             fileCanonical == baseCanonical || fileCanonical.startsWith(baseCanonical + File.separator)
         }.getOrDefault(false)
+    }
+
+    /**
+     * Файл [name] строго внутри [folder] или null. Для имён из `metadata.json`:
+     * метаданные приходят и через P2P-импорт или бэкап, им верить нельзя.
+     */
+    internal fun safeChild(folder: File, name: String): File? {
+        val child = File(folder, name)
+        return runCatching {
+            child.takeIf { it.canonicalPath.startsWith(folder.canonicalPath + File.separator) }
+        }.getOrNull()
     }
 
     private fun sanitizeId(raw: String): String? {

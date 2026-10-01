@@ -529,8 +529,8 @@ object LocalLibraryProvider {
             val previewFileName = json["previewFileName"]?.jsonPrimitive?.contentOrNull.orEmpty()
             val albumTitle = json["albumTitle"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() } ?: folder.name
 
-            val mediaFile = if (mediaFileName.isNotBlank()) File(folder, mediaFileName) else null
-            val previewFile = if (previewFileName.isNotBlank()) File(folder, previewFileName) else null
+            val mediaFile = if (mediaFileName.isNotBlank()) LocalMediaResolver.safeChild(folder, mediaFileName) else null
+            val previewFile = if (previewFileName.isNotBlank()) LocalMediaResolver.safeChild(folder, previewFileName) else null
 
             val isVideo = mediaFile?.extension?.equals("mp4", ignoreCase = true) == true
             val hasMedia = mediaFile != null && mediaFile.exists() && mediaFile.length() > 0L

@@ -199,10 +199,14 @@ class CalculatorState(
     private suspend fun attemptUnlock(
         candidatePin: String,
         codeToTest: String,
-        onUnlock: suspend (String) -> Boolean
+        onUnlock: suspend (String) -> Boolean,
+        onUnlockFailed: () -> Unit
     ): Boolean {
         val unlocked = onUnlock(candidatePin)
         if (!unlocked && candidatePin != codeToTest && isPinCandidate(codeToTest)) {
+            // Каждая проверка кода — отдельная попытка для backoff: иначе одно «=»
+            // давало бы две проверки за одну засчитанную ошибку.
+            onUnlockFailed()
             return onUnlock(codeToTest)
         }
         return unlocked
@@ -273,7 +277,7 @@ class CalculatorState(
         scope.launch {
             if (candidatePin != null) {
                 val success = try {
-                    attemptUnlock(candidatePin, codeToTest, onUnlock)
+                    attemptUnlock(candidatePin, codeToTest, onUnlock, onUnlockFailed)
                 } finally {
                     isVerifying = false
                 }

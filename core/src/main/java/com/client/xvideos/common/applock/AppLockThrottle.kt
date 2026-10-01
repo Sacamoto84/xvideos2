@@ -78,6 +78,17 @@ object AppLockThrottle {
     }
 
     /**
+     * Регистрирует неудачу с учётом текущего состояния: пока блокировка
+     * действует, код не проверяется, и такая попытка не засчитывается.
+     * Иначе калькулятор-маскировка (он не показывает блокировку) удваивал бы её
+     * на каждый ввод — и на верный код тоже.
+     */
+    fun registerFailure(state: State, wallNow: Long, elapsedNow: Long): State {
+        if (remainingMillis(state, wallNow, elapsedNow) > 0L) return state
+        return onFailedAttempt(state.attempts, wallNow, elapsedNow)
+    }
+
+    /**
      * Сколько миллисекунд осталось до конца блокировки (0 — ввод разрешён).
      *
      * Берётся максимум из двух остатков. Монотонный остаток отбрасывается,

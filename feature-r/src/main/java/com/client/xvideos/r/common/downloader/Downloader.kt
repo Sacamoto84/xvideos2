@@ -96,6 +96,32 @@ class Downloader @Inject constructor(
     fun hasDownloadError(): Boolean = percent.value == -3f
 
     /**
+     * Прогресс каждой активной загрузки видео по id. [percent] собирается из всех
+     * сразу: параллельные загрузки не перетирают друг друга, а окончание одной не
+     * выставляет «простой», пока идут остальные.
+     */
+    private val activeProgress = HashMap<String, Float>()
+
+    internal fun onVideoProgress(id: String, value: Float) = synchronized(activeProgress) {
+        activeProgress[id] = value
+        percent.value = activeProgress.values.average().toFloat()
+    }
+
+    internal fun onVideoFinished(id: String, failed: Boolean) = synchronized(activeProgress) {
+        activeProgress.remove(id)
+        percent.value = when {
+            activeProgress.isNotEmpty() -> activeProgress.values.average().toFloat()
+            failed -> -3f
+            else -> -2f
+        }
+    }
+
+    /** Состояние до постановки в очередь: меняем, только если ничего не качается. */
+    internal fun setIdleState(value: Float) = synchronized(activeProgress) {
+        if (activeProgress.isEmpty()) percent.value = value
+    }
+
+    /**
      * Скачивает медиафайл [item] (видео и превью), если он еще не присутствует на диске.
      * По завершении атомарно создает файл метаданных `<id>.info` и вызывает [onComplete].
      *
@@ -107,12 +133,12 @@ class Downloader @Inject constructor(
         val videoUrl = item.downloadVideoUrl()
         if (videoUrl == null || item.userName.isBlank() || item.id.isBlank()) {
             //Toast("Ошибка в названии файла или креатор")
-            percent.value = -3f
+            setIdleState(-3f)
             return
         }
 
         if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) {
-            percent.value = -3f
+            setIdleState(-3f)
             SnackBar.error("Недопустимое имя файла или креатора")
             return
         }
@@ -123,12 +149,12 @@ class Downloader @Inject constructor(
             requireInside(rootDir, creatorDir)
         } catch (e: Exception) {
             Timber.w(e, "Downloader: недопустимый путь к папке креатора: ${item.userName}")
-            percent.value = -3f
+            setIdleState(-3f)
             SnackBar.error("Недопустимый путь к папке креатора")
             return
         }
 
-        percent.value = -2f
+        setIdleState(-2f)
 
         //Проверка того что в кеше есть запись с этим именем и кретором
 
@@ -149,29 +175,29 @@ class Downloader @Inject constructor(
                 request,
                 onStart = {
                     Timber.i("Downloader: запуск закачки id=${item.id}")
-                    percent.value = 0f
+                    onVideoProgress(item.id, 0f)
                 },
 
                 onError = {
                     Timber.e("Downloader: ошибка закачки id=${item.id}: $it")
-                    percent.value = -3f
+                    onVideoFinished(item.id, failed = true)
                     SnackBar.error("Ошибка закачки: $it")
                 },
 
-                onProgress = { it1 -> percent.value = it1 / 100f },
+                onProgress = { it1 -> onVideoProgress(item.id, it1 / 100f) },
                 onCompleted = {
                     Timber.i("Downloader: завершено скачивание id=${item.id}")
                     scope.launch(Dispatchers.IO) {
                         val videoFile = File(creatorPath, "${item.id}.mp4")
                         if (!videoFile.exists() || videoFile.length() == 0L) {
                             videoFile.delete()
-                            percent.value = -3f
+                            onVideoFinished(item.id, failed = true)
                             withContext(Dispatchers.Main) {
                                 SnackBar.error("Ошибка: скачанный файл пуст")
                             }
                             return@launch
                         }
-                        percent.value = -2f
+                        onVideoFinished(item.id, failed = false)
                         withContext(Dispatchers.Main) {
                             SnackBar.success("Скачивание завершено")
                         }
@@ -347,20 +373,20 @@ class Downloader @Inject constructor(
         val request = kDownloader.newRequestBuilder(videoUrl, dirPath, "${item.id}.mp4").tag(item.id).build()
         kDownloader.enqueue(
             request,
-            onStart = { percent.value = 0f },
+            onStart = { onVideoProgress(item.id, 0f) },
             onError = {
-                percent.value = -3f
+                onVideoFinished(item.id, failed = true)
                 onEvent("R Download: video не скачан ${item.id}: $it")
                 if (showSnackBarErrors) {
                     SnackBar.error("Ошибка закачки: $it")
                 }
             },
-            onProgress = { progress -> percent.value = progress / 100f },
+            onProgress = { progress -> onVideoProgress(item.id, progress / 100f) },
             onCompleted = {
                 scope.launch(Dispatchers.IO) {
                     if (!videoFile.exists() || videoFile.length() == 0L) {
                         videoFile.delete()
-                        percent.value = -3f
+                        onVideoFinished(item.id, failed = true)
                         onEvent("R Download: video пустой или повреждён ${item.id}")
                         if (showSnackBarErrors) {
                             withContext(Dispatchers.Main) {
@@ -369,7 +395,7 @@ class Downloader @Inject constructor(
                         }
                         return@launch
                     }
-                    percent.value = -2f
+                    onVideoFinished(item.id, failed = false)
                     onEvent("R Download: video готов ${item.id}")
                     val infoFile = File(dirPath, "${item.id}.info")
                     if (!infoFile.exists() || infoFile.length() == 0L) {

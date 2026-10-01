@@ -104,8 +104,12 @@ object AppLockRepository {
      */
     fun registerFailedAttempt(context: Context): Long {
         val prefs = context.applicationContext.defaultSharedPreferences()
-        val state = AppLockThrottle.onFailedAttempt(
-            attempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0),
+        val state = AppLockThrottle.registerFailure(
+            state = AppLockThrottle.State(
+                attempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0),
+                lockoutUntilWall = prefs.getLong(KEY_LOCKOUT_UNTIL, 0L),
+                lockoutUntilElapsed = prefs.getLong(KEY_LOCKOUT_UNTIL_ELAPSED, 0L),
+            ),
             wallNow = System.currentTimeMillis(),
             elapsedNow = SystemClock.elapsedRealtime(),
         )

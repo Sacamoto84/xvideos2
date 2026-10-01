@@ -95,4 +95,29 @@ class AppLockThrottleTest {
         assertTrue(remaining > 0L)
         assertTrue("после перезагрузки срок ограничен настенными часами", remaining <= 30 * 60_000L)
     }
+
+    @Test
+    fun `попытка во время блокировки не засчитывается и срок не продлевает`() {
+        val locked = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS, 1_000L, 500L)
+        assertTrue(locked.isLocked)
+
+        val during = AppLockThrottle.registerFailure(locked, wallNow = 2_000L, elapsedNow = 1_500L)
+
+        assertEquals(locked, during)
+    }
+
+    @Test
+    fun `попытка после окончания блокировки засчитывается и удваивает срок`() {
+        val locked = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS, 1_000L, 500L)
+        val afterWall = locked.lockoutUntilWall + 1L
+        val afterElapsed = locked.lockoutUntilElapsed + 1L
+
+        val next = AppLockThrottle.registerFailure(locked, afterWall, afterElapsed)
+
+        assertEquals(locked.attempts + 1, next.attempts)
+        assertEquals(
+            AppLockThrottle.BASE_LOCKOUT_MS * 2,
+            next.lockoutUntilWall - afterWall
+        )
+    }
 }
