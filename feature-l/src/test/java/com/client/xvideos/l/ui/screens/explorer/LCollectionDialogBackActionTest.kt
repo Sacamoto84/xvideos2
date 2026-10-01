@@ -1,5 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer
 
+import com.client.xvideos.l.ui.screens.explorer.model.LCollectionDialogBackAction
+import com.client.xvideos.l.ui.screens.explorer.model.resolveLCollectionDialogBackAction
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

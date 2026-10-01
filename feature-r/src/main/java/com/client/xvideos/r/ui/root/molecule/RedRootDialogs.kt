@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.common.collectionDB.ui.DaialogNewCollection
+import com.client.xvideos.common.collectionDB.ui.DialogNewCollection
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.block.DialogBlock
@@ -36,7 +36,7 @@ fun RedRootDialogs(
     }
 
     if (savedRed().collections.visibleDialogCreateNew) {
-        DaialogNewCollection(
+        DialogNewCollection(
             visible = savedRed().collections.visibleDialogCreateNew,
             onDismiss = { savedRed().collections.visibleDialogCreateNew = false },
             onBlockConfirmed = { collection ->

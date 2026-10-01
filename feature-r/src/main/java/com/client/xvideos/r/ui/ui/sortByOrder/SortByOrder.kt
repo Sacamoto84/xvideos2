@@ -167,3 +167,13 @@ fun SortByOrder(
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun SortByOrderPreview() {
+    SortByOrder(
+        list = listOf(Order.TOP, Order.LATEST),
+        selected = Order.TOP,
+        onSelect = {}
+    )
+}

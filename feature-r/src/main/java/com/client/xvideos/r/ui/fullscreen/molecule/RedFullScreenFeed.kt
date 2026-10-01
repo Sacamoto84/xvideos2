@@ -112,7 +112,7 @@ fun RedFullScreenFeed(
             }
     }
 
-    RedFullScreenScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
+    RedFullScreenFeedScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
         VerticalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),

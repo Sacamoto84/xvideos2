@@ -50,24 +50,11 @@ fun TextAndLine(
 
 @Preview
 @Composable
-private fun TextAndLinePreviewSelected() {
-    Box(modifier = Modifier.background(Theme.background)) {
-        TextAndLine(
-            str = "Gifs",
-            select = true,
-            onClick = {}
-        )
-    }
+private fun TextAndLinePreview() {
+    TextAndLine(
+        str = "Gifs",
+        select = true,
+        onClick = {}
+    )
 }
 
-@Preview
-@Composable
-private fun TextAndLinePreviewUnselected() {
-    Box(modifier = Modifier.background(Theme.background)) {
-        TextAndLine(
-            str = "Images",
-            select = false,
-            onClick = {}
-        )
-    }
-}

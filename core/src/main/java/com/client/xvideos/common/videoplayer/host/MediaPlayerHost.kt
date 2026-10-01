@@ -31,6 +31,7 @@ class MediaPlayerHost(
     isFullScreen: Boolean = false,
     headers: Map<String, String>? = null,
     drmConfig: DrmConfig? = null,
+    coroutineScope: CoroutineScope? = null,
 ) : RememberObserver {
     var poster by mutableStateOf(true)
 
@@ -61,7 +62,7 @@ class MediaPlayerHost(
     private var lastVolumeLevel by mutableFloatStateOf(1f)
 
     private val m3u8Helper = M3U8Helper()
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val scope = coroutineScope ?: CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     var onEvent: ((MediaPlayerEvent) -> Unit)? = null
     var onError: ((MediaPlayerError) -> Unit)? = null

@@ -64,7 +64,7 @@ fun RedFullScreenSingle(
         onDispose { vm.resetSpeed() }
     }
 
-    RedFullScreenScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
+    RedFullScreenFeedScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
         RedFullScreenPage(
             item = item,
             vm = vm,

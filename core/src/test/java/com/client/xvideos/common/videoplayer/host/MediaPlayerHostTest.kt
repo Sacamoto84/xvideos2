@@ -1,7 +1,9 @@
 package com.client.xvideos.common.videoplayer.host
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -18,6 +20,17 @@ class MediaPlayerHostTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
+    private fun createHost(
+        mediaUrl: String = "http://test.mp4",
+        isPaused: Boolean = false,
+        isMuted: Boolean = false,
+    ): MediaPlayerHost = MediaPlayerHost(
+        mediaUrl = mediaUrl,
+        isPaused = isPaused,
+        isMuted = isMuted,
+        coroutineScope = CoroutineScope(testDispatcher + SupervisorJob()),
+    )
+
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -31,7 +44,7 @@ class MediaPlayerHostTest {
 
     @Test
     fun `seekTo with valid seconds updates seekToTime and currentTime`() {
-        val host = MediaPlayerHost(mediaUrl = "http://test.mp4")
+        val host = createHost(mediaUrl = "http://test.mp4")
         host.seekTo(15.5f)
 
         assertEquals(15.5f, host.seekToTime)
@@ -42,7 +55,7 @@ class MediaPlayerHostTest {
 
     @Test
     fun `seekTo with negative or NaN seconds ignores invalid input`() {
-        val host = MediaPlayerHost(mediaUrl = "http://test.mp4")
+        val host = createHost(mediaUrl = "http://test.mp4")
         host.seekTo(10f)
         assertEquals(10f, host.currentTime, 0.001f)
 
@@ -63,7 +76,7 @@ class MediaPlayerHostTest {
     @Suppress("DEPRECATION")
     @Test
     fun `seekTo Int with negative seconds ignores invalid input`() {
-        val host = MediaPlayerHost(mediaUrl = "http://test.mp4")
+        val host = createHost(mediaUrl = "http://test.mp4")
         host.seekTo(20)
         assertEquals(20f, host.currentTime, 0.001f)
 
@@ -75,7 +88,7 @@ class MediaPlayerHostTest {
 
     @Test
     fun `updateCurrentTime sanitizes negative and NaN values`() {
-        val host = MediaPlayerHost(mediaUrl = "http://test.mp4")
+        val host = createHost(mediaUrl = "http://test.mp4")
         host.updateCurrentTime(42f)
         assertEquals(42f, host.currentTime, 0.001f)
 
@@ -92,7 +105,7 @@ class MediaPlayerHostTest {
 
     @Test
     fun `updateTotalTime sanitizes negative values`() {
-        val host = MediaPlayerHost(mediaUrl = "http://test.mp4")
+        val host = createHost(mediaUrl = "http://test.mp4")
         host.updateTotalTime(120)
         assertEquals(120, host.totalTime)
 
@@ -103,7 +116,7 @@ class MediaPlayerHostTest {
 
     @Test
     fun `play pause and mute controls update state properly`() {
-        val host = MediaPlayerHost(mediaUrl = "http://test.mp4", isPaused = true, isMuted = false)
+        val host = createHost(mediaUrl = "http://test.mp4", isPaused = true, isMuted = false)
         assertTrue(host.isPaused)
         assertFalse(host.isMuted)
 

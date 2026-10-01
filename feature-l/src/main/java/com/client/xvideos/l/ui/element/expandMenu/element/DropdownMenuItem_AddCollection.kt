@@ -21,3 +21,10 @@ fun DropdownMenuItem_AddCollection(item: PicsDetails? = null, savedL: SavedL? = 
         onDismiss.invoke()
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun DropdownMenuItem_AddCollectionPreview() {
+    DropdownMenuItem_AddCollection(onDismiss = {})
+}
+

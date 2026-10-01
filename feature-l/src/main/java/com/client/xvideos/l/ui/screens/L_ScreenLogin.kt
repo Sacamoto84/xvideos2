@@ -61,7 +61,6 @@ import timber.log.Timber
 
 private const val URL_LUSCIOUS = "https://www.luscious.net"
 private val TEXT_COLOR_MUTED = Color(0xFFB8B7B7)
-private val BUTTON_SHAPE = RoundedCornerShape(8.dp)
 private val FIELD_TEXT_STYLE = TextStyle(fontSize = 24.sp)
 
 
@@ -229,11 +228,13 @@ fun LLoginContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        val buttonShape = RoundedCornerShape(8.dp)
+
         Button(
             onClick = onSaveCredentials,
             modifier = Modifier.fillMaxWidth().height(64.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
-            shape = BUTTON_SHAPE
+            shape = buttonShape
         ) {
             Text(
                 "Сохранить",
@@ -247,7 +248,7 @@ fun LLoginContent(
             onClick = onBack,
             modifier = Modifier.fillMaxWidth().height(64.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.b0),
-            shape = BUTTON_SHAPE
+            shape = buttonShape
         ) {
             Text(
                 "Назад",
@@ -259,7 +260,7 @@ fun LLoginContent(
         TextButton(
             onClick = onSkip,
             modifier = Modifier.padding(top = 24.dp).fillMaxWidth().height(64.dp),
-            shape = BUTTON_SHAPE
+            shape = buttonShape
         ) {
             Text(
                 text = "Пропустить",

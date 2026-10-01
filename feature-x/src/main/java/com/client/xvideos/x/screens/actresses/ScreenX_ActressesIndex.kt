@@ -66,7 +66,7 @@ class ScreenX_ActressesIndex(
             }
         }
 
-        ActressesIndexContent(
+        ScreenX_ActressesIndexContent(
             uiState = vm.uiState,
             onBack = onBack,
             onActressClick = onActressClick,
@@ -81,7 +81,7 @@ class ScreenX_ActressesIndex(
 }
 
 @Composable
-fun ActressesIndexContent(
+fun ScreenX_ActressesIndexContent(
     uiState: ActressesIndexUiState,
     onBack: () -> Unit,
     onActressClick: (ActressesIndexItem) -> Unit,
@@ -141,8 +141,8 @@ fun ActressesIndexContent(
 
 @Preview
 @Composable
-private fun ActressesIndexContentPreview() {
-    ActressesIndexContent(
+private fun ScreenX_ActressesIndexContentPreview() {
+    ScreenX_ActressesIndexContent(
         uiState = ActressesIndexUiState(),
         onBack = {},
         onActressClick = {},

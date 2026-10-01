@@ -41,8 +41,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val ICON_DNS = R.drawable.ic_dns_24
-private val SECTION_COLUMN_BASE_MODIFIER = Modifier.fillMaxWidth()
-
 
 @Composable
 internal fun NetworkSettingsSection(
@@ -99,7 +97,7 @@ internal fun NetworkSettingsSection(
         "Выключено (используется системный DNS)"
     }
 
-    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = modifier.fillMaxWidth()) {
         SettingsSectionTitle("DNS-over-HTTPS (DoH)")
         SettingsGroup {
             SettingsSwitchRow(
@@ -153,7 +151,7 @@ private fun DohProviderSelectionGroup(
         unselectedColor = Color(0xFF938F99)
     )
 
-    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = modifier.fillMaxWidth()) {
         SettingsSectionTitle("Провайдер DNS")
         SettingsGroup {
             DohProvider.entries.forEachIndexed { index, provider ->
@@ -247,7 +245,7 @@ private fun NetworkParamsGroup(
         "Разрешены IPv4 и IPv6 адреса"
     }
 
-    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = modifier.fillMaxWidth()) {
         SettingsSectionTitle("Параметры сети")
         SettingsGroup {
             SettingsSwitchRow(
@@ -300,7 +298,7 @@ private fun DohDiagnosticsGroup(
         }
     }
 
-    Column(modifier = if (modifier == Modifier) SECTION_COLUMN_BASE_MODIFIER else modifier.then(SECTION_COLUMN_BASE_MODIFIER)) {
+    Column(modifier = modifier.fillMaxWidth()) {
         SettingsSectionTitle("Диагностика")
         SettingsGroup {
             SettingsListItem(

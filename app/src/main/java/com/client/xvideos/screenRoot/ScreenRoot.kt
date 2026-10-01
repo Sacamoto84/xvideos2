@@ -29,7 +29,7 @@ import com.client.xvideos.common.snackbar.show
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.l.ui.screens.explorer.LCollectionDialogs
+import com.client.xvideos.l.ui.screens.explorer.molecule.LCollectionDialogs
 import kotlinx.coroutines.flow.filterIsInstance
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 

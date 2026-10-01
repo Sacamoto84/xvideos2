@@ -214,3 +214,23 @@ fun ScreenXHistoryContent(
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun ScreenXHistoryContentPreview() {
+    ScreenXHistoryContent(
+        history = emptyList(),
+        isFavorite = { false },
+        onToggleFavorite = {},
+        localUrlOf = { null },
+        posterUrlOf = { "" },
+        onDelete = {},
+        onClearAll = {},
+        onDownload = {},
+        onSaveToGallery = {},
+        onPlayLocal = { _, _ -> },
+        onOpenVideo = {},
+        onDeleteBatch = {}
+    )
+}
+

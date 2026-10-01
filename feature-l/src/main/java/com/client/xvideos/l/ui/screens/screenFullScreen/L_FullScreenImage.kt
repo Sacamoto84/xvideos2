@@ -37,6 +37,8 @@ import com.client.xvideos.common.noRippleClickable
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.ui.element.expandMenu.ExpandMenu
+import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuP2pHost
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
@@ -283,16 +285,17 @@ fun FullScreenImageContent(
             onShowInfoDialog = onShowInfo,
             modifier = Modifier.align(Alignment.TopStart),
             expandMenuContent = {
-                expandMenuViewModel.ExpandMenu(
+                ExpandMenu(
                     state.expandMenu,
                     state.filteredPic.getOrNull(pagerState.currentPage) ?: state.item,
                     state.idAlbum,
-                    state.isCollection
+                    expandMenuViewModel,
+                    isCollection = state.isCollection
                 )
             }
         )
 
-        expandMenuViewModel.P2pShareHost()
+        ExpandMenuP2pHost(expandMenuViewModel)
 
         val onThumbnailClick = remember(coroutineScope, pagerState, onCorruptCancel) {
             { index: Int ->

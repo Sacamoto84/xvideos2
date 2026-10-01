@@ -83,41 +83,14 @@ fun X_SubscriptionsContent(
             .fillMaxSize()
             .background(Color(0xFF040404))
     ) {
-        if (itemsList.isEmpty()) {
-            SubscriptionsEmptyState(
-                isModel = isModel,
-                topCutout = topCutout,
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = topCutout, bottom = 24.dp)
-            ) {
-                item(key = "header", contentType = "header") {
-                    SubscriptionsHeader(
-                        title = if (isModel) "Подписки на актрис" else "Подписки на каналы",
-                        count = itemsList.size,
-                        isModel = isModel,
-                    )
-                }
-
-                items(
-                    items = itemsList,
-                    key = { it.cleanSlug },
-                    contentType = { "subscription_item" }
-                ) { item ->
-                    SubscriptionListItem(
-                        item = item,
-                        isModel = isModel,
-                        onClick = { onOpenCreator(item) },
-                        onLongClick = { itemToDelete = item },
-                        onDeleteClick = { itemToDelete = item },
-                    )
-                }
-            }
-        }
+        X_SubscriptionsList(
+            itemsList = itemsList,
+            isModel = isModel,
+            topCutout = topCutout,
+            listState = listState,
+            onOpenCreator = onOpenCreator,
+            onDeleteRequest = { itemToDelete = it }
+        )
 
         // Диалог подтверждения удаления/отписки
         DialogXSubscriptionDelete(
@@ -127,3 +100,61 @@ fun X_SubscriptionsContent(
         )
     }
 }
+
+@Composable
+fun X_SubscriptionsList(
+    itemsList: List<XSubscriptionItem>,
+    isModel: Boolean,
+    topCutout: androidx.compose.ui.unit.Dp,
+    listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
+    onOpenCreator: (XSubscriptionItem) -> Unit = {},
+    onDeleteRequest: (XSubscriptionItem) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    if (itemsList.isEmpty()) {
+        SubscriptionsEmptyState(
+            isModel = isModel,
+            topCutout = topCutout,
+            modifier = modifier.fillMaxSize()
+        )
+    } else {
+        LazyColumn(
+            state = listState,
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = topCutout, bottom = 24.dp)
+        ) {
+            item(key = "header", contentType = "header") {
+                SubscriptionsHeader(
+                    title = if (isModel) "Подписки на актрис" else "Подписки на каналы",
+                    count = itemsList.size,
+                    isModel = isModel,
+                )
+            }
+
+            items(
+                items = itemsList,
+                key = { it.cleanSlug },
+                contentType = { "subscription_item" }
+            ) { item ->
+                SubscriptionListItem(
+                    item = item,
+                    isModel = isModel,
+                    onClick = { onOpenCreator(item) },
+                    onLongClick = { onDeleteRequest(item) },
+                    onDeleteClick = { onDeleteRequest(item) },
+                )
+            }
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun X_SubscriptionsListPreview() {
+    X_SubscriptionsList(
+        itemsList = emptyList(),
+        isModel = true,
+        topCutout = 0.dp
+    )
+}
+

@@ -10,20 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.DownloadIndicator
-import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
-import com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedPlaybackActions
-import com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedPlaybackState
 import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
 
 @Composable
@@ -78,53 +72,6 @@ fun RedFullScreenScaffold(
     ) { padding ->
         content(padding.calculateBottomPadding() / 2)
     }
-}
-
-@Composable
-fun RedFullScreenScaffold(
-    vm: ScreenRedFullScreenSM,
-    isVideoBuffering: Boolean,
-    content: @Composable (bottomPadding: Dp) -> Unit
-) {
-    val percentDownload by vm.downloadRed.downloader.percent.collectAsStateWithLifecycle()
-
-    RedFullScreenScaffold(
-        currentTime = vm.currentPlayerTime,
-        duration = vm.currentPlayerDuration,
-        timeA = vm.timeA,
-        timeB = vm.timeB,
-        timeABEnable = vm.enableAB,
-        play = vm.play,
-        onSeek = { vm.currentPlayerControls?.seekTo(it) },
-        isVideoBuffering = isVideoBuffering,
-        percentDownload = percentDownload,
-        controlsContent = {
-            val actions = remember(vm) {
-                FeedPlaybackActions(
-                    onSetTimeA = vm::setTimeA,
-                    onSetTimeB = vm::setTimeB,
-                    onToggleAB = vm::toggleAB,
-                    onTogglePlay = vm::togglePlay,
-                    onRewind = { vm.rewind() },
-                    onForward = { vm.forward() },
-                    onToggleMute = vm::toggleMute,
-                    onSpeedChange = { vm.speed = it },
-                )
-            }
-            FeedControls_Container_Line0(
-                state = FeedPlaybackState(
-                    timeA = vm.timeA,
-                    timeB = vm.timeB,
-                    enableAB = vm.enableAB,
-                    play = vm.play,
-                    mute = vm.mute,
-                    speed = vm.speed,
-                ),
-                actions = actions,
-            )
-        },
-        content = content
-    )
 }
 
 @Preview

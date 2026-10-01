@@ -164,9 +164,9 @@ class GlobalStateTest {
             "r/network/http/ApiClient.kt::bearerToken",
             // Выбранная страна: глобальна по смыслу, раньше была двумя
             // разрозненными top-level переменными.
-            "x/feature/country/country.kt::current",
+            "x/feature/country/CountryState.kt::current",
             // Счётчик явных переключений страны пользователем для инвалидации пагинации.
-            "x/feature/country/country.kt::userSelectionEpoch",
+            "x/feature/country/CountryState.kt::userSelectionEpoch",
         )
 
         /**

@@ -1,233 +1,30 @@
-package com.client.xvideos.x.feature.country
+package com.client.xvideos.x.feature.country.model
 
-import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.client.xvideos.common.AppContextHolder
-import com.client.xvideos.common.util.launchCatching
-import com.client.xvideos.feature.x.R
-import com.client.xvideos.ui.theme.PornHubOrange
-import com.client.xvideos.ui.theme.grayColor
 import com.client.xvideos.x.model.getFlagEmoji
-import com.client.xvideos.x.normalizeXUrl
-import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
-import com.client.xvideos.x.parcer.parseSiteCountryFlag
-import com.composables.core.Menu
-import com.composables.core.MenuButton
-import com.composables.core.MenuContent
-import com.composables.core.rememberMenuState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import timber.log.Timber
 
-
-// Data class для представления страны
-// Страна: Австралия, Ссылка: /change-country/au, Класс флага: flag-au
 @Immutable
-private data class Country(
+data class Country(
     val name: String,
     val url: String,
     val flagClass: String,
     val flagEmoji: String = getFlagEmoji(flagClass)
 )
 
-private val EMOJI_FONT = FontFamily(Font(R.font.flag))
-
-@Preview
-@Composable
-fun PreviewComposeCountry() {
-    ComposeCountry(modifier = Modifier)
-}
-
-private val countries: List<Country> by lazy { parserCountry() }
-
-/**
- * Глобальное состояние выбранной страны.
- * Раньше это были две разрозненные top-level переменные — собраны в один холдер.
- */
-@Stable
-object CountryState {
-    var current: String by mutableStateOf("❓")    // Текущая страна
-        private set
-    var userSelectionEpoch: Int by mutableIntStateOf(0)
-        private set
-
-    fun updateCurrent(flag: String) {
-        current = flag
-    }
-
-    fun onCountrySelected(flag: String) {
-        current = flag
-        userSelectionEpoch++
-    }
-}
-
-@Suppress("DEPRECATION")
-@Composable
-fun ComposeCountry(modifier: Modifier = Modifier) {
-    val state = rememberMenuState(expanded = false)
-    val stateLazyList = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-
-    val onCountryClick: (Country) -> Unit = remember(scope, state) {
-        { item ->
-            state.expanded = false
-            scope.launchCatching(message = "Смена страны не удалась: ${item.name}") {
-                val htmlContent = readHtmlFromURLWebView(normalizeXUrl(item.url))
-                val flag = parseSiteCountryFlag(htmlContent) ?: item.flagEmoji
-
-                withContext(Dispatchers.Main) {
-                    CountryState.onCountrySelected(flag)
-                    Toast.makeText(
-                        AppContextHolder.applicationContext,
-                        "${item.flagEmoji} ${item.name}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-    }
-
-    Box(modifier.size(48.dp)) {
-        Menu(modifier = Modifier, state = state) {
-            // Сама кнопка для вызова диалога
-            MenuButton(Modifier.fillMaxSize().background(Color(0xFF151515))) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    BasicText(
-                        CountryState.current,
-                        style = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White,
-                            fontSize = 24.sp
-                        )
-                    )
-                }
-            }
-
-            MenuContent(
-                modifier = Modifier
-                    .padding(bottom = 0.dp)
-                    .width(312.dp)
-                    .alpha(0.9f)
-                    .background(grayColor(0x35)),
-            ) {
-                LazyColumn(state = stateLazyList) {
-                    items(
-                        items = countries,
-                        key = { it.url },
-                        contentType = { "country_item" }
-                    ) { item ->
-                        CountryRowItem(
-                            item = item,
-                            isSelected = item.flagEmoji == CountryState.current,
-                            onClick = onCountryClick
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CountryRowItem(
-    item: Country,
-    isSelected: Boolean,
-    onClick: (Country) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val handleClick = remember(item, onClick) { { onClick(item) } }
-    val textStyle = TextStyle(
-        fontFamily = EMOJI_FONT,
-        fontSize = 28.sp,
-        color = if (isSelected) PornHubOrange else Color.LightGray
-    )
-    val label = remember(item.flagEmoji, item.name) { "${item.flagEmoji}  ${item.name} " }
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 3.dp, horizontal = 8.dp)
-            .clickable(onClick = handleClick)
-    ) {
-        BasicText(
-            text = label,
-            style = textStyle
-        )
-    }
-}
-
-
-/**
- * Страна: Австралия, Ссылка: /change-country/au, Класс флага: flag-au
- *
- * Страна: Австрия, Ссылка: /change-country/at, Класс флага: flag-at
- *
- * Страна: Азербайджан, Ссылка: /change-country/az, Класс флага: flag-az
- *
- * Страна: Аргентина, Ссылка: /change-country/ar, Класс флага: flag-ar
- *
- * Страна: Афганистан, Ссылка: /change-country/af, Класс флага: flag-af
- *
- * Страна: Бангладеш, Ссылка: /change-country/bd, Класс флага: flag-bd
- *
- * Страна: Бельгия, Ссылка: /change-country/be, Класс флага: flag-be
- *
- * Страна: Болгария, Ссылка: /change-country/bg, Класс флага: flag-bg
- *
- */
-
+internal val countries: List<Country> by lazy { parserCountry() }
 
 private fun parserCountry(): List<Country> {
-    // Парсинг HTML
     val document: Document = Jsoup.parse(html)
-
-    // Извлекаем все элементы <li> с классом "country-"
-    val countries = document.select("li[class^=country-]")
-
-    // Список стран
-    val countryList = countries.map { country ->
-        val countryName = country.select("a").text().trim() // Название страны
-        val countryHref = country.select("a").attr("href").trim() // Ссылка (href)
-        val flagClass = country.select("span").attr("class").replace("flag-small", "")
-            .trim() // Убираем "flag-small"
-
-        // Создаем объект Country
+    val countryElements = document.select("li[class^=country-]")
+    val countryList = countryElements.map { country ->
+        val countryName = country.select("a").text().trim()
+        val countryHref = country.select("a").attr("href").trim()
+        val flagClass = country.select("span").attr("class").replace("flag-small", "").trim()
         Country(countryName, countryHref, flagClass)
     }
-
-    // Выводим результат разбора
     Timber.d("parserCountry: parsed ${countryList.size} countries")
     return countryList
 }

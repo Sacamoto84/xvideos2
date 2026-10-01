@@ -22,6 +22,7 @@ import com.client.xvideos.ui.theme.XvideosTheme
 @Composable
 fun SavedLikesItemExpandMenu(
     item: PicsDetails? = null,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
     onClick: () -> Unit = {},
     onDelete: (PicsDetails) -> Unit = {},
     onServerLike: (PicsDetails) -> Unit = {},
@@ -33,6 +34,7 @@ fun SavedLikesItemExpandMenu(
     savedL: SavedL? = null
 ) {
     LazyExpandMenuAnchor(
+        modifier = modifier,
         menuWidth = IntrinsicSize.Min,
         onOpen = onClick
     ) { dismiss ->

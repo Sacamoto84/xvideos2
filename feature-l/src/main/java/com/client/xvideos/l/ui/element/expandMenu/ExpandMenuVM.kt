@@ -3,8 +3,6 @@ package com.client.xvideos.l.ui.element.expandMenu
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModel
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
@@ -21,8 +19,6 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.gallery.GallerySaver
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.export.LExporter
-import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
-import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.featured.saved.L_METADATA_FILE_NAME
 import com.client.xvideos.l.featured.saved.LSavedLikeMetadata
 import com.client.xvideos.l.featured.saved.lFindLikeFolder
@@ -65,6 +61,7 @@ class ExpandMenuViewModel @Inject constructor(
 ) : ViewModel() {
 
 
+    @Deprecated("Use top-level ExpandMenu composable")
     @Composable
     fun ExpandMenu(
         type: ExpandMenuType,
@@ -73,37 +70,24 @@ class ExpandMenuViewModel @Inject constructor(
         isCollection: Boolean = false,
         host: LazyRowPictureDetailsHost? = null
     ) {
-        when (type) {
-            ExpandMenuType.NONE -> {}
-            ExpandMenuType.ALBUM -> ExpandMenuAlbum(item, idAlbum, isCollection)
-            ExpandMenuType.LIKES -> ExpandMenuLikes(item, isCollection)
-            ExpandMenuType.SERVER_LIKES -> ExpandMenuServerLikes(item, idAlbum, host)
-        }
+        com.client.xvideos.l.ui.element.expandMenu.ExpandMenu(
+            type = type,
+            item = item,
+            idAlbum = idAlbum,
+            viewModel = this,
+            isCollection = isCollection,
+            host = host
+        )
     }
 
-    ////
-
-
+    @Deprecated("Use top-level ExpandMenuAlbum composable")
     @Composable
     fun ExpandMenuAlbum(item: PicsDetails, idAlbum: String, isCollection: Boolean = false) {
-
-        // Сюда прилетает и albumName (L_FullScreenImage), а он бывает нечисловым:
-        // "l_likes" у лайков, имя папки у коллекций. toLong() на таком падал бы
-        // прямо в композиции. Нечисловой источник = псевдоальбом, id 0.
-        val album = idAlbum.toLongOrNull() ?: 0L
-
-        AlbumItemExpandMenu(
+        com.client.xvideos.l.ui.element.expandMenu.ExpandMenuAlbum(
             item = item,
-            onDownload = { it1 -> downloadLike(it1, album) },
-            onServerLike = { it1 -> likeOnServer(it1) },
-            onShare = { it1 -> onShareClicked(it1) },
-            onSaveToGallery = { it1 -> saveToGallery(it1) },
-            isCollection = isCollection,
-            savedL = saved,
-            onRemoveFromCollection = { it ->
-                // Refresh will be handled by the collection screen
-            },
-            idAlbum = idAlbum
+            idAlbum = idAlbum,
+            viewModel = this,
+            isCollection = isCollection
         )
     }
 
@@ -232,48 +216,28 @@ class ExpandMenuViewModel @Inject constructor(
         }
     }
 
+    @Deprecated("Use top-level ExpandMenuLikes composable")
     @Composable
     fun ExpandMenuLikes(item: PicsDetails, isCollection: Boolean = false) {
-        val haptic = LocalHapticFeedback.current
-        SavedLikesItemExpandMenu(
-            item,
-            onDelete = {
-                val url = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl()
-                url?.let { saved.likes.remove(it) }
-                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-            },
-            onServerLike = { it1 -> likeOnServer(it1) },
-            onShare = { it -> onShareClicked(it) },
-            onSaveToGallery = { it -> saveToGallery(it) },
-            isCollection = isCollection,
-            savedL = saved,
-            onRemoveFromCollection = { it ->
-                // Refresh will be handled by the collection screen
-            }
+        com.client.xvideos.l.ui.element.expandMenu.ExpandMenuLikes(
+            item = item,
+            viewModel = this,
+            isCollection = isCollection
         )
     }
 
+    @Deprecated("Use top-level ExpandMenuServerLikes composable")
     @Composable
     fun ExpandMenuServerLikes(
         item: PicsDetails,
         idAlbum: String = "",
         host: LazyRowPictureDetailsHost? = null
     ) {
-        ServerLikesItemExpandMenu(
+        com.client.xvideos.l.ui.element.expandMenu.ExpandMenuServerLikes(
             item = item,
-            onDownload = { it1 ->
-                val album = idAlbum.toLongOrNull() ?: it1.album?.toLongOrNull() ?: 0L
-                downloadLike(it1, album)
-            },
-            onServerUnlike = { it1 ->
-                unlikeOnServer(it1) {
-                    host?.removePicture(it1)
-                }
-            },
-            onShare = { it1 -> onShareClicked(it1) },
-            onSaveToGallery = { it1 -> saveToGallery(it1) },
-            savedL = saved,
-            idAlbum = idAlbum
+            idAlbum = idAlbum,
+            viewModel = this,
+            host = host
         )
     }
 
@@ -373,24 +337,10 @@ class ExpandMenuViewModel @Inject constructor(
      * (список/экран), не внутри per-item элементов — state общий на ViewModel,
      * каждый экземпляр хоста показал бы свой диалог.
      */
+    @Deprecated("Use ExpandMenuP2pHost(viewModel)")
     @Composable
     fun P2pShareHost() {
-        val navigator = cafe.adriel.voyager.navigator.LocalNavigator.current
-        p2pChooserItem?.let { item ->
-            P2pSendChooserDialog(
-                onSystem = { share(item) },
-                onP2p = { startP2p(item) },
-                onDismiss = { dismissChooser() },
-            )
-        }
-        p2pSource?.let { source ->
-            // Навигация — side effect, нельзя звать прямо из композиции:
-            // рекомпозиции дублировали бы push.
-            androidx.compose.runtime.LaunchedEffect(source) {
-                navigator?.push(ScreenP2pSend(source))
-                dismissP2p()
-            }
-        }
+        ExpandMenuP2pHost(viewModel = this)
     }
 
 }

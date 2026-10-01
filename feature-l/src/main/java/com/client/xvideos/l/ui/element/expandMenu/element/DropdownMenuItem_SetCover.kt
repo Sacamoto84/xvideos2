@@ -27,3 +27,10 @@ fun DropdownMenuItem_SetCover(item: PicsDetails? = null, savedL: SavedL? = null,
         onDismiss()
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun DropdownMenuItem_SetCoverPreview() {
+    DropdownMenuItem_SetCover(onDismiss = {})
+}
+

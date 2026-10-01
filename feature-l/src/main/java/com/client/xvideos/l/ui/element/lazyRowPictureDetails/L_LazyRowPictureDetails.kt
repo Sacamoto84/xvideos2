@@ -1,51 +1,24 @@
 package com.client.xvideos.l.ui.element.lazyRowPictureDetails
 
-import com.client.xvideos.common.theme.Theme
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import com.client.xvideos.common.ui.atom.FloatingScrollButtons
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,40 +29,26 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.di.rememberApplicationScope
 import com.client.xvideos.common.navigation.LocalMainNavigator
-import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
-import com.client.xvideos.common.videoplayer.model.ScreenResize
-import com.client.xvideos.l.model.isLVideoFileUrl
-import com.client.xvideos.l.model.lAnimationVideoUrl
-import com.client.xvideos.l.model.lMediaRequestHeaders
-import com.client.xvideos.l.model.lPreviewImageUrl
-import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
-import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
-import com.client.xvideos.l.ui.screens.screenFullScreen.L_FullScreenImage
-import com.client.xvideos.l.ui.screens.screenFullScreen.model.LFullScreenPayload
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
-import com.client.xvideos.common.videoplayer.ui.VideoPlayerWithMenuContent
+import com.client.xvideos.l.ui.element.expandMenu.ExpandMenu
+import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuP2pHost
+import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
+import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.atom.InitialPictureItemsLoading
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.molecule.LPictureGridItem
+import com.client.xvideos.l.ui.screens.screenFullScreen.L_FullScreenImage
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.LFullScreenPayload
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-
-/**
- * Staggered grid для отображения миниатюр изображений/видео альбома.
- *
- * Поддерживает кликабельные превью, полноэкранный просмотр с возвратом на позицию,
- * контекстное меню, кастомные размеры миниатюр и индикатор прогресса прокрутки.
- *
- * @param host Контейнер состояния и данных альбома
- * @param itemBefore Header-контент перед списком (опционально)
- * @param expandMenu Тип меню дополнительных действий для элементов
- * @param tag Тег для UI-тестов
- */
-
-private val pictureCornerShape = RoundedCornerShape(4.dp)
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @OptIn(DelicateCoroutinesApi::class)
@@ -176,132 +135,49 @@ fun L_LazyRowPictureDetails(
                 key = { index, item -> "${item.url_to_original}#$index" },
                 contentType = { _, _ -> "picture_grid_item" }
             ) { index, item ->
-
-                //if (item.url_to_original != null)
-                //{
-                    Box( modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center )
-                    {
-                        val aspect = if (item.width > 0 && item.height > 0) {
-                            item.width.toFloat() / item.height
-                        } else {
-                            1f
-                        }
-
-                        val previewUrl = item.lPreviewImageUrl(thumbnailsSize)
-                        val videoUrl = item.lAnimationVideoUrl()
-                        var playInline by remember(item.url_to_original, item.url_to_video) { mutableStateOf(false) }
-
-                        fun openFullScreen() {
-                            // Ключ на каждое открытие: одна общая переменная давала
-                            // гонку при двух быстрых тапах подряд.
-                            val payloadKey = LFullScreenPayload.put(host.filteredPic.toList())
-                            (mainNavigator ?: navigator).push(
-                                L_FullScreenImage(
-                                    item = item,
-                                    payloadKey = payloadKey,
-                                    onClose = { position ->
-                                        Timber.d("scrollToItem $position")
-                                        val targetIndex = calculateGridScrollIndex(position, host.filteredPic.size, showInitialLoading)
-                                        if (targetIndex != null) {
-                                            appScope.launch {
-                                                withContext(Dispatchers.Main) {
-                                                    host.state.scrollToItem(targetIndex)
-                                                }
-                                            }
+                fun openFullScreen() {
+                    val payloadKey = LFullScreenPayload.put(host.filteredPic.toList())
+                    (mainNavigator ?: navigator).push(
+                        L_FullScreenImage(
+                            item = item,
+                            payloadKey = payloadKey,
+                            onClose = { position ->
+                                Timber.d("scrollToItem $position")
+                                val targetIndex = calculateGridScrollIndex(position, host.filteredPic.size, showInitialLoading)
+                                if (targetIndex != null) {
+                                    appScope.launch {
+                                        withContext(Dispatchers.Main) {
+                                            host.state.scrollToItem(targetIndex)
                                         }
-                                    },
-                                    albumName = host.albumName,
-                                    // Меню элемента ждёт числовой id, а не имя источника:
-                                    // раньше сюда уходил albumName и это работало только
-                                    // потому, что у экрана альбома оба поля совпадают.
-                                    idAlbum = host.idAlbum,
-                                    expandMenu = expandMenu,
-                                    isCollection = isCollection,
-                                    autoPlay = true,
-                                    isAnimated = item.is_animated,
-                                )
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .padding(1.dp)
-                                .aspectRatio(aspect)
-                                //.clipToBounds()
-                                .border( width = 0.5.dp, color = Theme.tabLevel4, shape = pictureCornerShape )
-                                .clip(pictureCornerShape)
-                                .background(Theme.tabLevel1)
+                                    }
+                                }
+                            },
+                            albumName = host.albumName,
+                            idAlbum = host.idAlbum,
+                            expandMenu = expandMenu,
+                            isCollection = isCollection,
+                            autoPlay = true,
+                            isAnimated = item.is_animated,
                         )
-                        {
-                            if (playInline && videoUrl != null) {
-                                LInlineAnimationVideo(
-                                    url = videoUrl,
-                                    previewUrl = previewUrl,
-                                    albumName = host.albumName,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else if (previewUrl.isNotBlank() && !previewUrl.isLVideoFileUrl()) {
-                                UrlImage(
-                                    url = previewUrl,
-                                    contentScale = ContentScale.FillHeight,
-                                    urlGif = item.url_to_original,
-                                    modifier = Modifier.fillMaxSize(),
-                                    albumName = host.albumName,
-                                    isAnimated = false,
-                                    backgroung = Theme.tabLevel1,
-                                    isVisible = index in activeItemRange
-                                )
-                            } else {
-                                AnimatedVideoPlaceholder(modifier = Modifier.fillMaxSize())
-                            }
+                    )
+                }
 
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .combinedClickable(
-                                        onClick = {
-                                            if (videoUrl != null) {
-                                                playInline = true
-                                            } else {
-                                                openFullScreen()
-                                            }
-                                        },
-                                        onLongClick = {
-                                            if (videoUrl != null) {
-                                                openFullScreen()
-                                            }
-                                        }
-                                    )
-                            )
-
-                            if (videoUrl != null && !playInline) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier
-                                        .align(Alignment.BottomStart)
-                                        .padding(6.dp)
-                                        .background(Color.Black.copy(alpha = 0.45f))
-                                )
-                            }
-                        }
-
-                        Text(
-                            index.toString(),
-                            modifier = Modifier.padding(start = 4.dp).align(Alignment.TopStart),
-                            color = Theme.L.textColor,
-                            style = Theme.L.Type.mediaIndex
-                        )
-
-                        Box(modifier = Modifier.align(Alignment.TopEnd)) { expandMenuViewModel.ExpandMenu( expandMenu, item, host.idAlbum, isCollection, host ) }
+                LPictureGridItem(
+                    item = item,
+                    index = index,
+                    thumbnailsSize = thumbnailsSize,
+                    isVisible = index in activeItemRange,
+                    albumName = host.albumName,
+                    onOpenFullScreen = ::openFullScreen,
+                    menuContent = {
+                        ExpandMenu(expandMenu, item, host.idAlbum, expandMenuViewModel, isCollection = isCollection, host = host)
                     }
-                //}
+                )
             }
         }
 
         /** Единственный экземпляр P2P-хоста на весь список (не в item'ах!) */
-        expandMenuViewModel.P2pShareHost()
+        ExpandMenuP2pHost(expandMenuViewModel)
 
         /** Вертикальный индикатор прокрутки */
         Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
@@ -346,138 +222,14 @@ fun L_LazyRowPictureDetails(
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF141414)
 @Composable
-private fun InitialPictureItemsLoading() {
+private fun L_LazyRowPictureDetailsPreview() {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 44.dp),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = Theme.L.g0)
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Загрузка элементов...",
-                color = Theme.L.textColor,
-                style = Theme.L.Type.rowSubtitle
-            )
-        }
-    }
-}
-
-@Composable
-private fun LInlineAnimationVideo(
-    url: String,
-    previewUrl: String,
-    albumName: String,
-    modifier: Modifier = Modifier
-) {
-    val isInspection = androidx.compose.ui.platform.LocalInspectionMode.current
-    val playerHost = remember(url) {
-        MediaPlayerHost(
-            mediaUrl = url,
-            isPaused = false,
-            isMuted = true,
-            headers = lMediaRequestHeaders()
-        )
-    }
-    var playbackError by remember(url) { mutableStateOf(false) }
-
-    LaunchedEffect(playerHost) {
-        if (!isInspection) {
-            playerHost.videoFitMode = ScreenResize.FILL
-            playerHost.onError = {
-                playbackError = true
-                Timber.e("L inline video error: ${it.message}")
-            }
-            playerHost.play()
-        }
-    }
-
-    Box(modifier = modifier) {
-        if (!isInspection) {
-            VideoPlayerWithMenuContent(
-                modifier = Modifier.fillMaxSize(),
-                playerHost = playerHost,
-                onClick = {},
-                autoRotate = false
-            )
-        }
-
-        AnimatedVisibility(
-            visible = playerHost.poster || playbackError || isInspection,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            if (previewUrl.isNotBlank() && !previewUrl.isLVideoFileUrl()) {
-                UrlImage(
-                    url = previewUrl,
-                    contentScale = ContentScale.FillHeight,
-                    modifier = Modifier.fillMaxSize(),
-                    albumName = albumName,
-                    isAnimated = false
-                )
-            } else {
-                AnimatedVideoPlaceholder(modifier = Modifier.fillMaxSize())
-            }
-        }
-
-        if (playerHost.poster && !playbackError && !isInspection) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = Color.LightGray
-            )
-        }
-    }
-}
-
-@Composable
-private fun AnimatedVideoPlaceholder(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(Theme.L.grey6),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.PlayArrow,
-            contentDescription = null,
-            tint = Color.White
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF262626)
-@Composable
-private fun AnimatedVideoPlaceholderPreview() {
-    com.client.xvideos.ui.theme.XvideosTheme {
-        AnimatedVideoPlaceholder(
-            modifier = Modifier
-                .width(200.dp)
-                .height(150.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF262626)
-@Composable
-private fun InitialPictureItemsLoadingPreview() {
-    com.client.xvideos.ui.theme.XvideosTheme {
         InitialPictureItemsLoading()
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF262626)
-@Composable
-private fun LInlineAnimationVideoPreview() {
-    com.client.xvideos.ui.theme.XvideosTheme {
-        LInlineAnimationVideo(
-            url = "https://sample.com/video.mp4",
-            previewUrl = "https://ah-img.luscious.net/Joking42/499900/sample_3941cb87cea03_01J9ZXQ9XTDKY6PQ01ZRWF1FFZ.1680x0.jpg",
-            albumName = "Sample Album",
-            modifier = Modifier
-                .width(200.dp)
-                .height(150.dp)
-        )
     }
 }
 

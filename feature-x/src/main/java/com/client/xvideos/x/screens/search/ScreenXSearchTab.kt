@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -38,7 +41,7 @@ class ScreenXSearchTab : Screen {
     override fun Content() {
         val vm: ScreenXSearchSM = getScreenModel()
         val navigator = LocalNavigator.currentOrThrow
-        X_SearchContent(
+        ScreenXSearchTabContent(
             vm = vm,
             onOpenVideoPlayer = { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) },
             onOpenChannel = { slug, isModel -> navigator.push(ScreenX_Channel(slug = slug, isModel = isModel)) }
@@ -57,7 +60,7 @@ class ScreenXSearchTab : Screen {
  * @param onOpenChannel Колбэк перехода на экран профиля автора или студии.
  */
 @Composable
-fun X_SearchContent(
+fun ScreenXSearchTabContent(
     vm: ScreenXSearchSM,
     onOpenVideoPlayer: (ItemsX) -> Unit,
     onOpenChannel: (slug: String, isModel: Boolean) -> Unit,
@@ -175,5 +178,31 @@ fun X_SearchContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun X_SearchContent(
+    vm: ScreenXSearchSM,
+    onOpenVideoPlayer: (ItemsX) -> Unit,
+    onOpenChannel: (slug: String, isModel: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ScreenXSearchTabContent(
+        vm = vm,
+        onOpenVideoPlayer = onOpenVideoPlayer,
+        onOpenChannel = onOpenChannel,
+        modifier = modifier
+    )
+}
+
+@Preview
+@Composable
+private fun ScreenXSearchTabContentPreview() {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Search Tab Preview", color = Color.White)
     }
 }

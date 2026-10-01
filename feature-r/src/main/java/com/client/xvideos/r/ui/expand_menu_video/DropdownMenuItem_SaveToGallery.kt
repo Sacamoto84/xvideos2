@@ -15,3 +15,13 @@ fun DropdownMenuItem_SaveToGallery(item: GifsInfo? = null, onClick: (GifsInfo) -
         onDismiss.invoke()
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun DropdownMenuItem_SaveToGalleryPreview() {
+    DropdownMenuItem_SaveToGallery(
+        item = null,
+        onClick = {},
+        onDismiss = {}
+    )
+}

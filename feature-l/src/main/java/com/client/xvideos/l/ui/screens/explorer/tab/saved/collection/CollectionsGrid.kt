@@ -30,8 +30,6 @@ import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.atom.CollectionGridCell
 
-private val PREVIEW_CORNER_SHAPE = RoundedCornerShape(8.dp)
-
 /**
  * Сетка коллекций: список + заголовок ([topBar]) + кнопка «+».
  *
@@ -50,6 +48,8 @@ fun CollectionsGrid(
     modifier: Modifier = Modifier,
     topBar: @Composable (() -> Unit)? = null
 ) {
+    val previewCornerShape = RoundedCornerShape(8.dp)
+
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -71,7 +71,7 @@ fun CollectionsGrid(
                 CollectionGridCell(
                     collection = collection,
                     style = style,
-                    shape = PREVIEW_CORNER_SHAPE,
+                    shape = previewCornerShape,
                     onClick = onCollectionClick,
                     onLongClick = onCollectionLongClick
                 )
@@ -83,7 +83,7 @@ fun CollectionsGrid(
                         modifier = Modifier
                             .padding(start = 8.dp, top = 4.dp)
                             .size(72.dp)
-                            .clip(PREVIEW_CORNER_SHAPE)
+                            .clip(previewCornerShape)
                             .background(style.addButtonBackground)
                             .clickable(onClick = onCreateNewCollectionClick),
                         contentAlignment = Alignment.Center

@@ -73,13 +73,6 @@ private val SETTINGS_ITEM_STANDALONE_BASE_MODIFIER = Modifier
     .clip(settingsCardShape)
     .then(SETTINGS_ITEM_CORE_MODIFIER)
 
-private val SETTINGS_SECTION_TITLE_BASE_MODIFIER = Modifier.padding(
-    start = 24.dp,
-    top = 20.dp,
-    bottom = 8.dp,
-    end = 24.dp
-)
-
 private val SETTINGS_GROUP_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .padding(horizontal = 16.dp)
@@ -101,11 +94,12 @@ fun SettingsSectionTitle(
             letterSpacing = 0.1.sp
         )
     }
-    val titleModifier = if (modifier == Modifier) {
-        SETTINGS_SECTION_TITLE_BASE_MODIFIER
-    } else {
-        modifier.then(SETTINGS_SECTION_TITLE_BASE_MODIFIER)
-    }
+    val titleModifier = modifier.padding(
+        start = 24.dp,
+        top = 20.dp,
+        bottom = 8.dp,
+        end = 24.dp
+    )
     Text(
         text = text,
         modifier = titleModifier,

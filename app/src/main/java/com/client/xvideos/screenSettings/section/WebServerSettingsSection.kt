@@ -335,3 +335,10 @@ private fun WebServerActionButtons(
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Composable
+private fun WebServerSettingsSectionPreview() = com.client.xvideos.screenSettings.components.SettingsPreview {
+    WebServerSettingsSection()
+}
+

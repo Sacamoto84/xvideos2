@@ -24,3 +24,10 @@ fun DropdownMenuItem_RemoveFromCollection(item: PicsDetails? = null, onRefresh: 
         onDismiss.invoke()
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun DropdownMenuItem_RemoveFromCollectionPreview() {
+    DropdownMenuItem_RemoveFromCollection(onDismiss = {})
+}
+

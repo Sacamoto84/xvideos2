@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -104,6 +105,31 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
 
     val topCutout = getTopInsetDp()
 
+    X_SavedList(
+        list = list,
+        topCutout = topCutout,
+        listState = listState,
+        onPlayItem = onPlayItem,
+        onDeleteItem = onDeleteItem,
+        onShareP2pItem = onShareP2pItem,
+        posterUrlProvider = { item ->
+            saved.downloads.localPosterPath(item.id) ?: item.previewImage
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun X_SavedList(
+    list: List<ItemsX>,
+    topCutout: androidx.compose.ui.unit.Dp,
+    listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
+    onPlayItem: (ItemsX) -> Unit = {},
+    onDeleteItem: (ItemsX) -> Unit = {},
+    onShareP2pItem: (ItemsX) -> Unit = {},
+    posterUrlProvider: (ItemsX) -> String = { it.previewImage },
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -129,12 +155,9 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
                     key = { it.id },
                     contentType = { "saved_row" }
                 ) { item ->
-                    val posterUrl = remember(item.id, item.previewImage, saved.downloads) {
-                        saved.downloads.localPosterPath(item.id) ?: item.previewImage
-                    }
                     SavedRow(
                         item = item,
-                        posterUrl = posterUrl,
+                        posterUrl = posterUrlProvider(item),
                         onPlay = onPlayItem,
                         onDelete = onDeleteItem,
                         onShareP2p = onShareP2pItem,
@@ -143,4 +166,13 @@ fun X_SavedContent(saved: SavedX, modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun X_SavedListPreview() {
+    X_SavedList(
+        list = emptyList(),
+        topCutout = 0.dp
+    )
 }
