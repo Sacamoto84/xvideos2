@@ -160,8 +160,8 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
         pagingJob = screenModelScope.launch {
             try {
                 val targetUrl = normalizeXUrl(nextPagePath)
-                // Сбой сети — исключение: список не помечается законченным, следующая
-                // прокрутка повторит запрос. 404 — каталог действительно кончился.
+                // Сбой сети — исключение: список не помечается законченным, внизу появляется
+                // «Повторить» (loadMoreError). 404 — каталог действительно кончился.
                 val html = withContext(Dispatchers.IO) {
                     notFoundAsEmpty { fetchHtml(targetUrl) }
                 }

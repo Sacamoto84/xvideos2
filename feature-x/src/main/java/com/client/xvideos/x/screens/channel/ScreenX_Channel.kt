@@ -313,7 +313,6 @@ private fun ScreenX_ChannelContentPreview() {
             videoCount = 36,
             profileType = ProfileType.CHANNEL,
         ),
-        isLoadingInitial = false,
         totalVideosCount = 36,
     )
     val gridState = rememberLazyGridState()

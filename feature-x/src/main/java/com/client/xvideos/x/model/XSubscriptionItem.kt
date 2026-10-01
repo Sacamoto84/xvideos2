@@ -2,6 +2,7 @@ package com.client.xvideos.x.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.client.xvideos.x.xProfileSlug
 import kotlinx.serialization.Serializable
 
 /**
@@ -32,16 +33,7 @@ data class XSubscriptionItem(
 ) : java.io.Serializable {
 
     val cleanSlug: String
-        get() = slug
-            .trim()
-            .removePrefix("/models/")
-            .removePrefix("models/")
-            .removePrefix("/channels/")
-            .removePrefix("channels/")
-            .removePrefix("/profiles/")
-            .removePrefix("profiles/")
-            .trim('/')
-            .trim()
+        get() = xProfileSlug(slug)
 
     val displayName: String
         get() = name.ifBlank { cleanSlug }
@@ -51,15 +43,7 @@ data class XSubscriptionItem(
  * Преобразует [ChannelHeaderModel] в [XSubscriptionItem] для сохранения в подписки.
  */
 fun ChannelHeaderModel.toSubscriptionItem(): XSubscriptionItem = XSubscriptionItem(
-    slug = slug.trim()
-        .removePrefix("/models/")
-        .removePrefix("models/")
-        .removePrefix("/channels/")
-        .removePrefix("channels/")
-        .removePrefix("/profiles/")
-        .removePrefix("profiles/")
-        .trim('/')
-        .trim(),
+    slug = xProfileSlug(slug),
     name = displayName,
     avatarUrl = avatarUrl,
     bannerUrl = bannerUrl,

@@ -2,6 +2,7 @@ package com.client.xvideos.x.model
 
 import androidx.compose.runtime.Immutable
 
+import com.client.xvideos.x.xProfileSlug
 import java.io.Serializable
 
 /**
@@ -53,20 +54,7 @@ data class ChannelCollaborator(
     val isModel: Boolean = false,
 ) : Serializable {
     /** Извлекает чистый slug без URL-префиксов и параметров. */
-    val cleanSlug: String get() = href
-        .removePrefix("/profiles/")
-        .removePrefix("profiles/")
-        .removePrefix("/channels/")
-        .removePrefix("channels/")
-        .removePrefix("/models/")
-        .removePrefix("models/")
-        .removePrefix("/pornstars/")
-        .removePrefix("pornstars/")
-        .removePrefix("/")
-        .substringBefore('/')
-        .substringBefore('?')
-        .substringBefore('#')
-        .trim()
+    val cleanSlug: String get() = xProfileSlug(href)
 }
 
 /**
@@ -215,10 +203,10 @@ enum class ChannelSortOrder(val apiKey: String, val title: String) : Serializabl
  * @property selectedModel Выбранная модель для фильтрации видео (null — показ всех видео).
  * @property modelFilterQuery Поисковый запрос в поле выбора модели.
  * @property isModelFilterExpanded Открыт ли выпадающий список выбора модели.
- * @property isLoadingInitial Флаг начальной загрузки (шапка + первая порция видео).
- * @property isLoadingMore Флаг догрузки следующей страницы при бесконечном скролле.
- * @property isEndReached Флаг окончания списка (следующих страниц больше нет).
- * @property error Текст ошибки в случае сетевого сбоя (null, если ошибки нет).
+ * @property currentPage Текущая страница пейджера; от неё считается [maxPages], когда число видео неизвестно.
+ * @property totalVideosCount Число видео по ответу ленты; 0 — неизвестно.
+ * @property error Текст ошибки первой загрузки (null, если ошибки нет). Загрузку и сбой
+ *   страниц показывает пейджер по `loadingPages` и `errorPages` ScreenModel канала.
  */
 @Immutable
 data class ChannelUiState(
@@ -230,9 +218,6 @@ data class ChannelUiState(
     val isModelFilterExpanded: Boolean = false,
     val currentPage: Int = 0,
     val totalVideosCount: Int = 0,
-    val isLoadingInitial: Boolean = true,
-    val isLoadingMore: Boolean = false,
-    val isEndReached: Boolean = false,
     val error: String? = null,
 ) : Serializable {
     val availableModels: List<ChannelModelFilterItem> get() = header.availableModels
@@ -259,7 +244,4 @@ data class ChannelUiState(
                 else -> maxOf(currentPage + 1, 1)
             }
         }
-
-    val isEmpty: Boolean get() = !isLoadingInitial && videos.isEmpty() && error == null
-    val isSuccess: Boolean get() = !isLoadingInitial && error == null
 }

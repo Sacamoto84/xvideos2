@@ -5,6 +5,7 @@ import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterGroup
 import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.ActressesIndexItem
+import com.client.xvideos.x.xProfileSlug
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -119,6 +120,11 @@ private fun parseFilterGroup(
     )
 }
 
+// Запасные источники аватара в скрипте карточки; собраны один раз, а не на каждую карточку.
+private val AVATAR_THUMB_REGEX = Regex("https?://[^'\"\\s]+_t\\.jpg")
+private val AVATAR_PROFILE_THUMB_REGEX = Regex("profile_thumb:\\s*['\"](https?://[^'\"]+)['\"]")
+private val AVATAR_ESCAPED_SRC_REGEX = Regex("src=\\\\['\"](https?://[^'\\s]+)\\\\['\"]")
+
 private fun parseCardAvatarUrl(card: Element): String {
     val imgEl = card.selectFirst(".thumb img") ?: card.selectFirst("img")
     var avatarUrl = imgEl?.attr("src")?.trim().orEmpty()
@@ -127,9 +133,9 @@ private fun parseCardAvatarUrl(card: Element): String {
     }
     if (avatarUrl.isBlank() || avatarUrl.contains("blank.gif") || avatarUrl.contains("lightbox-blank")) {
         val scriptHtml = card.select("script").html()
-        val match = Regex("https?://[^'\"\\s]+_t\\.jpg").find(scriptHtml)
-            ?: Regex("profile_thumb:\\s*['\"](https?://[^'\"]+)['\"]").find(scriptHtml)
-            ?: Regex("src=\\\\['\"](https?://[^'\\s]+)\\\\['\"]").find(scriptHtml)
+        val match = AVATAR_THUMB_REGEX.find(scriptHtml)
+            ?: AVATAR_PROFILE_THUMB_REGEX.find(scriptHtml)
+            ?: AVATAR_ESCAPED_SRC_REGEX.find(scriptHtml)
         avatarUrl = match?.groupValues?.getOrNull(1) ?: match?.value.orEmpty()
     }
     if (avatarUrl.startsWith("//")) avatarUrl = "https:$avatarUrl"
@@ -141,14 +147,7 @@ private fun parseActressesCard(card: Element): ActressesIndexItem? {
     val nameLink = card.selectFirst(".profile-name a")
     val href = nameLink?.attr("href")?.trim().orEmpty()
 
-    val slug = rawId.removePrefix("profile_").trim().ifBlank {
-        href.removePrefix("/pornstars/")
-            .removePrefix("/models/")
-            .removePrefix("/profiles/")
-            .removePrefix("/")
-            .substringBefore('/')
-            .trim()
-    }
+    val slug = rawId.removePrefix("profile_").trim().ifBlank { xProfileSlug(href) }
 
     val name = nameLink?.text()?.trim().orEmpty()
     val rankText = card.selectFirst(".profile-name strong")?.text()?.trim().orEmpty()

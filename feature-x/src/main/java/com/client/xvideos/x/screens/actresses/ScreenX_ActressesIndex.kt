@@ -59,7 +59,7 @@ class ScreenX_ActressesIndex(
                     navigator.push(
                         ScreenX_Channel(
                             slug = item.slug,
-                            isModel = true,
+                            isModel = item.isModel,
                         )
                     )
                 }

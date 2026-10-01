@@ -30,6 +30,7 @@ import com.client.xvideos.x.screens.search.molecule.SearchTopBar
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.search.model.Channel
 import com.client.xvideos.x.search.model.Pornstar
+import com.client.xvideos.x.xProfileSlug
 
 /**
  * Автономный Voyager-экран вкладки поиска.
@@ -98,7 +99,7 @@ fun ScreenXSearchTabContent(
 
     val onModelClick: (Pornstar) -> Unit = remember(onOpenChannel) {
         { star ->
-            val slug = star.profilePath.trim().removePrefix("/").removePrefix("profiles/").removePrefix("channels/")
+            val slug = xProfileSlug(star.profilePath)
             if (slug.isNotBlank()) {
                 onOpenChannel(slug, true)
             }
@@ -107,7 +108,7 @@ fun ScreenXSearchTabContent(
 
     val onChannelClick: (Channel) -> Unit = remember(onOpenChannel) {
         { channel ->
-            val slug = channel.profilePath.trim().removePrefix("/").removePrefix("profiles/").removePrefix("channels/")
+            val slug = xProfileSlug(channel.profilePath)
             if (slug.isNotBlank()) {
                 onOpenChannel(slug, false)
             }

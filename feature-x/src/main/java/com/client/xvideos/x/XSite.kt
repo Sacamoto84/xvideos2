@@ -32,6 +32,37 @@ fun normalizeXUrl(href: String): String {
  */
 fun String.toNormalizedXUrl(): String = normalizeXUrl(this)
 
+private val PROFILE_PATH_PREFIXES = setOf("profiles", "channels", "models", "pornstars")
+
+/**
+ * Slug профиля X (канала или модели) из slug или ссылки любого вида:
+ * `"/channels/<slug>"`, `"models/<slug>/"`, `"/pornstars/<slug>/videos"`, полный адрес
+ * с доменом, с запросом или якорем. Без известного префикса берётся первый сегмент
+ * пути: `"/model-channel/"` -> `"model-channel"`.
+ *
+ * Единое правило для экрана канала, подписок, тегов плеера, поиска и каталога
+ * моделей: копии расходились — одна не знала `pornstars/`, другая не отрезала
+ * хвост пути.
+ *
+ * @param hrefOrSlug Slug или ссылка на профиль.
+ * @return Slug без префиксов и хвостов либо пустая строка.
+ */
+fun xProfileSlug(hrefOrSlug: String): String {
+    val trimmed = hrefOrSlug.trim()
+    val schemeEnd = trimmed.indexOf("://")
+    val path = when {
+        schemeEnd >= 0 -> trimmed.substring(schemeEnd + 3).substringAfter('/', "")
+        trimmed.startsWith("//") -> trimmed.substring(2).substringAfter('/', "")
+        else -> trimmed
+    }
+    val segments = path.substringBefore('?').substringBefore('#')
+        .split('/')
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+    val hasPrefix = segments.size > 1 && segments.first().lowercase() in PROFILE_PATH_PREFIXES
+    return (if (hasPrefix) segments[1] else segments.firstOrNull()).orEmpty()
+}
+
 /**
  * Проверяет, является ли переданная строка валидным URL для ресурсов раздела X.
  *

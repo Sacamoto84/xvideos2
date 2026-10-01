@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.screens.channel.atom.ChannelModelDropdownItem
 
+/** Сколько моделей меню показывает без поиска. */
+private const val MAX_VISIBLE_MODELS = 60
+
 @Composable
 fun ChannelModelDropdownMenu(
     isExpanded: Boolean,
@@ -132,12 +135,23 @@ fun ChannelModelDropdownMenu(
                 Text("Ничего не найдено", color = Color.Gray, fontSize = 12.sp)
             }
         } else {
-            filteredModels.take(60).forEach { model ->
+            filteredModels.take(MAX_VISIBLE_MODELS).forEach { model ->
                 ChannelModelDropdownItem(
                     model = model,
                     isSelected = selectedModel?.idUser == model.idUser,
                     onSelectModel = onSelectModel,
                     onExpandedChange = onExpandedChange,
+                )
+            }
+            // Меню не ленивое, поэтому длинный список обрезается — но не молча.
+            if (filteredModels.size > MAX_VISIBLE_MODELS) {
+                Text(
+                    text = "Показано $MAX_VISIBLE_MODELS из ${filteredModels.size} — уточните поиск",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
         }

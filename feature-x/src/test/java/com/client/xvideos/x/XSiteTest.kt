@@ -93,6 +93,16 @@ class XSiteTest {
         assertEquals(false, isValidXUrl(""))
         assertEquals(false, isValidXUrl("   "))
     }
+
+    @Test
+    fun `xProfileSlug приводит любую ссылку профиля к slug`() {
+        assertEquals("joy-sky", xProfileSlug("/models/joy-sky"))
+        assertEquals("joy-sky", xProfileSlug("models/joy-sky/"))
+        assertEquals("model-star", xProfileSlug("/pornstars/model-star/videos"))
+        assertEquals("studio", xProfileSlug("https://www.example.com/channels/studio?sort=new#top"))
+        assertEquals("studio", xProfileSlug("//www.example.com/profiles/studio"))
+        assertEquals("model-channel", xProfileSlug("  /model-channel/  "))
+        assertEquals("dart_oficial", xProfileSlug("dart_oficial"))
+        assertEquals("", xProfileSlug("   "))
+    }
 }
-
-

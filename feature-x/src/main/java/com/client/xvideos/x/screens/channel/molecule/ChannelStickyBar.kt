@@ -101,7 +101,6 @@ private fun ChannelStickyBarPreview() {
     ChannelStickyBar(
         uiState = ChannelUiState(
             header = ChannelHeaderModel(slug = "sample", name = "Sample Channel"),
-            isLoadingInitial = false,
         ),
         showBackButton = true,
         onBack = {},

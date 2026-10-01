@@ -6,8 +6,10 @@ import com.client.xvideos.x.model.ChannelUiState
 import com.client.xvideos.x.model.ItemsX
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
 
 class ParserChannelTest {
 
@@ -269,6 +271,33 @@ class ParserChannelTest {
         assertEquals(0, parserChannelVideosJson("").size)
         assertEquals(0, parserChannelVideosJson("invalid json").size)
         assertEquals(0, parserChannelVideosJson("{\"videos\": []}").size)
+    }
+
+    /** Сбой разбора — ошибка с повтором на экране, а не страница «без видео». */
+    @Test
+    fun `parseChannelVideosResponse отличает сбой разбора от пустой ленты`() {
+        assertEquals(0, parseChannelVideosResponse("").videos.size)
+        assertEquals(0, parseChannelVideosResponse("{\"videos\": []}").videos.size)
+        assertThrows(IOException::class.java) { parseChannelVideosResponse("<html>страница</html>") }
+        assertThrows(IOException::class.java) { parseChannelVideosResponse("{\"videos\": 42}") }
+    }
+
+    /** Сетка канала ключуется по id: повтор или ролик без id роняли её. */
+    @Test
+    fun `parseChannelVideosResponse берёт id из ссылки и отбрасывает повторы`() {
+        val json = """
+            {"videos": [
+                {"id": 5, "u": "/video5/a", "t": "A"},
+                {"id": 5, "u": "/video5/a", "t": "A again"},
+                {"id": 0, "u": "/video77/b", "t": "B"},
+                {"t": "no id and no link"}
+            ]}
+        """.trimIndent()
+
+        val videos = parseChannelVideosResponse(json).videos
+
+        assertEquals(listOf(5L, 77L), videos.map { it.id })
+        assertEquals("A", videos[0].title)
     }
 
     @Test

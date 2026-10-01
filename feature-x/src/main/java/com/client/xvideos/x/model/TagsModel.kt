@@ -1,6 +1,7 @@
 package com.client.xvideos.x.model
 
 import androidx.compose.runtime.Immutable
+import com.client.xvideos.x.xProfileSlug
 import java.io.Serializable
 
 /**
@@ -21,21 +22,7 @@ data class TagsMainUploaderPornstar(
     val hasName: Boolean get() = name.isNotBlank()
     val hasCount: Boolean get() = count.isNotBlank()
     val normalizedName: String get() = name.trim().lowercase()
-    val cleanHref: String get() = href
-        .removePrefix("https://www.xvideos.com")
-        .removePrefix("http://www.xvideos.com")
-        .removePrefix("https://www.xv-ru.com")
-        .removePrefix("http://www.xv-ru.com")
-        .removePrefix("/models/")
-        .removePrefix("models/")
-        .removePrefix("/channels/")
-        .removePrefix("channels/")
-        .removePrefix("/profiles/")
-        .removePrefix("profiles/")
-        .removePrefix("/pornstars/")
-        .removePrefix("pornstars/")
-        .removePrefix("/")
-        .trim()
+    val cleanHref: String get() = xProfileSlug(href)
 
     fun matches(query: String?): Boolean {
         if (query.isNullOrBlank()) return true

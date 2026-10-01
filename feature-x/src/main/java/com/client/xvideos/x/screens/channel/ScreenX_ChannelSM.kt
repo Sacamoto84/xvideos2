@@ -17,9 +17,9 @@ import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.model.ChannelSortOrder
 import com.client.xvideos.x.model.ChannelUiState
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
+import com.client.xvideos.x.parcer.parseChannelVideosResponse
 import com.client.xvideos.x.parcer.parserChannelHeader
 import com.client.xvideos.x.parcer.parserChannelRanksJson
-import com.client.xvideos.x.parcer.parserChannelVideosResult
 import com.client.xvideos.x.urlStart
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.mutableStateMapOf
@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateSetOf
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.toSubscriptionItem
+import com.client.xvideos.x.xProfileSlug
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -65,18 +66,12 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     val isModel: Boolean = isModelParam ||
         slug.contains("/models/") ||
         slug.startsWith("models/") ||
+        slug.contains("/pornstars/") ||
+        slug.startsWith("pornstars/") ||
         initialModel?.href?.contains("/models/") == true
 
     /** Нормализованный slug канала/модели без ведущих слешей и префиксов. */
-    val cleanSlug: String = slug
-        .removePrefix("/models/")
-        .removePrefix("models/")
-        .removePrefix("/channels/")
-        .removePrefix("channels/")
-        .removePrefix("/profiles/")
-        .removePrefix("profiles/")
-        .removePrefix("/")
-        .trim()
+    val cleanSlug: String = xProfileSlug(slug)
 
     val pathPrefix: String get() = if (isModel) "models" else "channels"
     val effectivePathPrefix: String get() = if (uiState.header.isModel) "models" else pathPrefix
@@ -93,7 +88,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 subscribers = initialModel?.count.orEmpty(),
                 profileType = if (isModel) com.client.xvideos.x.model.ProfileType.MODEL else com.client.xvideos.x.model.ProfileType.CHANNEL,
             ),
-            isLoadingInitial = true,
         )
     )
         private set
@@ -262,10 +256,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
      */
     fun loadInitial() {
         if (cleanSlug.isBlank()) {
-            uiState = uiState.copy(
-                isLoadingInitial = false,
-                error = "Некорректный адрес профиля",
-            )
+            uiState = uiState.copy(error = "Некорректный адрес профиля")
             return
         }
 
@@ -279,9 +270,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         gridStates.clear()
 
         uiState = uiState.copy(
-            isLoadingInitial = true,
-            isLoadingMore = false,
-            isEndReached = false,
             error = null,
             videos = emptyList(),
         )
@@ -331,7 +319,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 val jsonVideos = fetchVideosJsonWithFallback(0, isModel = headerWithRanks.isModel)
 
                 val result = withContext(Dispatchers.Default) {
-                    parserChannelVideosResult(jsonVideos)
+                    parseChannelVideosResponse(jsonVideos)
                 }
 
                 pagesCache[0] = result.videos
@@ -339,8 +327,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     header = headerWithRanks,
                     videos = result.videos,
                     totalVideosCount = result.totalVideos ?: 0,
-                    isLoadingInitial = false,
-                    isEndReached = result.videos.isEmpty(),
                     error = null,
                 )
             } catch (e: CancellationException) {
@@ -349,10 +335,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 Timber.e(e, "ScreenX_ChannelSM: ошибка загрузки %s (%s)", cleanSlug, pathPrefix)
                 // Ошибку показывает страница 0; её «Повторить» перезапускает первую загрузку.
                 errorPages[0] = INITIAL_LOAD_ERROR
-                uiState = uiState.copy(
-                    isLoadingInitial = false,
-                    error = INITIAL_LOAD_ERROR,
-                )
+                uiState = uiState.copy(error = INITIAL_LOAD_ERROR)
             } finally {
                 if (initialJob === self) {
                     loadingPages.remove(0)
@@ -379,8 +362,9 @@ class ScreenX_ChannelSM @AssistedInject constructor(
             try {
                 val jsonVideos = fetchVideosJsonWithFallback(targetPage, isModel = uiState.header.isModel)
 
+                // Неразобранный ответ — ошибка страницы с повтором, а не страница «без видео».
                 val result = withContext(Dispatchers.Default) {
-                    parserChannelVideosResult(jsonVideos)
+                    parseChannelVideosResponse(jsonVideos)
                 }
 
                 pagesCache[targetPage] = result.videos

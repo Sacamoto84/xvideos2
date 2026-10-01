@@ -12,6 +12,7 @@ import com.client.xvideos.x.model.SelectedXCreator
 import com.client.xvideos.x.model.XSubscriptionItem
 import com.client.xvideos.x.parcer.parserChannelVideosJson
 import com.client.xvideos.x.urlStart
+import com.client.xvideos.x.xProfileSlug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -315,16 +316,7 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
         emptyList()
     }
 
-    private fun cleanSlug(slug: String): String = slug
-        .trim()
-        .removePrefix("/models/")
-        .removePrefix("models/")
-        .removePrefix("/channels/")
-        .removePrefix("channels/")
-        .removePrefix("/profiles/")
-        .removePrefix("profiles/")
-        .trim('/')
-        .trim()
+    private fun cleanSlug(slug: String): String = xProfileSlug(slug)
 }
 
 /** Сколько авторов ленты подписок запрашивается одновременно. */

@@ -30,6 +30,13 @@ data class ActressesIndexItem(
 
     val displayName: String get() = name.ifBlank { slug }
 
+    /**
+     * Профиль модели, а не канала. Каталог открывается и из рейтингов канала, поэтому
+     * тип берётся из ссылки карточки: `/channels/…` — канал, остальное — модель.
+     */
+    val isModel: Boolean
+        get() = !profileUrl.contains("/channels/", ignoreCase = true)
+
     /** Флаг страны по [countryCode] (общий [getFlagEmojiOrNull]); пустая строка, если код не распознан. */
     val flagEmoji: String
         get() = getFlagEmojiOrNull(countryCode.trim()).orEmpty()

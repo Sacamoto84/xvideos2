@@ -9,6 +9,22 @@ import java.io.File
 
 class ParserActressesIndexTest {
 
+    /** Каталог открывается и из рейтингов канала: тип и slug берутся из ссылки карточки. */
+    @Test
+    fun `карточка канала без id получает slug из ссылки и открывается как канал`() {
+        val html = """
+            <div class="thumb-block thumb-block-profile">
+                <p class="profile-name"><strong>#3</strong>&nbsp;<a href="/channels/studio-one">Studio One</a></p>
+            </div>
+        """.trimIndent()
+
+        val item = parseActressesIndexPage(html).items.single()
+
+        assertEquals("studio-one", item.slug)
+        assertFalse(item.isModel)
+        assertTrue(parseActressesIndexPage(SAMPLE_CATALOG_HTML).items.first().isModel)
+    }
+
     @Test
     fun `parseActressesIndexPage correctly parses catalog filters, items and pagination`() {
         val catalog = parseActressesIndexPage(SAMPLE_CATALOG_HTML)

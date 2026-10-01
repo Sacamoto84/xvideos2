@@ -1,5 +1,6 @@
 package com.client.xvideos.x.parcer
 
+import com.client.xvideos.x.extractXVideoIdOrDefault
 import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ChannelModelFilterItem
@@ -7,10 +8,12 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.urlStart
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Parser
+import java.io.IOException
 
 /**
  * Извлекает метаданные профиля канала (баннер, аватарку, имя, подписчиков, просмотры, описание, список моделей) из HTML разметки.
@@ -359,52 +362,76 @@ data class ChannelVideosResult(
 /**
  * Разбирает ответ JSON API канала (`/channels/{slug}/videos/{sort}/{page}`) в структуру [ChannelVideosResult].
  *
+ * Пустой ответ — пустой результат: у профиля нет ленты по этому адресу. Ответ не JSON
+ * или другой схемы — [IOException]: экран показывает ошибку с повтором, а не кэширует
+ * страницу «без видео».
+ *
+ * Ролик без id получает id из ссылки, без того и другого — пропускается; повтор
+ * одного ролика на странице отбрасывается: сетка канала ключуется по id.
+ *
  * @param jsonString Текст ответа в формате JSON.
  * @return [ChannelVideosResult] со списком роликов и метаинформацией пагинации.
  */
-fun parserChannelVideosResult(jsonString: String): ChannelVideosResult {
+fun parseChannelVideosResponse(jsonString: String): ChannelVideosResult {
     if (jsonString.isBlank()) return ChannelVideosResult()
     val trimmed = jsonString.trim()
-    if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return ChannelVideosResult()
-
-    return try {
-        val dto = channelJson.decodeFromString(ChannelVideosResponseDto.serializer(), trimmed)
-        val list = dto.videos
-        val result = ArrayList<ItemsX>(list.size)
-
-        for (item in list) {
-            val rawTitle = item.tf.ifBlank { item.t }.trim()
-            val cleanTitle = Parser.unescapeEntities(rawTitle, false)
-            val rawUrl = item.u.trim()
-            val fullHref = when {
-                rawUrl.startsWith("http") -> normalizeXUrl(rawUrl)
-                rawUrl.isNotBlank() -> normalizeXUrl("$urlStart$rawUrl")
-                else -> ""
-            }
-
-            result.add(
-                ItemsX(
-                    id = item.id,
-                    title = cleanTitle,
-                    href = fullHref,
-                    previewImage = item.i.trim(),
-                    previewVideo = item.ipu.trim(),
-                    duration = item.d.trim(),
-                    views = item.n.trim(),
-                    channel = item.pn.trim(),
-                    nameProfile = item.pn.trim(),
-                    linkProfile = item.pu.trim(),
-                )
-            )
-        }
-        ChannelVideosResult(
-            videos = result,
-            totalVideos = dto.nbVideos,
-            currentPage = dto.currentPage,
-        )
-    } catch (_: Exception) {
-        ChannelVideosResult()
+    if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+        throw IOException("Ответ ленты канала — не JSON")
     }
+    val dto = try {
+        channelJson.decodeFromString(ChannelVideosResponseDto.serializer(), trimmed)
+    } catch (e: SerializationException) {
+        throw IOException("Ответ ленты канала не разобран", e)
+    }
+
+    val result = ArrayList<ItemsX>(dto.videos.size)
+    val seenIds = HashSet<Long>(dto.videos.size)
+    for (item in dto.videos) {
+        val rawTitle = item.tf.ifBlank { item.t }.trim()
+        val cleanTitle = Parser.unescapeEntities(rawTitle, false)
+        val rawUrl = item.u.trim()
+        val fullHref = when {
+            rawUrl.startsWith("http") -> normalizeXUrl(rawUrl)
+            rawUrl.isNotBlank() -> normalizeXUrl("$urlStart$rawUrl")
+            else -> ""
+        }
+        val id = item.id.takeIf { it > 0L } ?: extractXVideoIdOrDefault(fullHref)
+        if (id <= 0L || !seenIds.add(id)) continue
+
+        result.add(
+            ItemsX(
+                id = id,
+                title = cleanTitle,
+                href = fullHref,
+                previewImage = item.i.trim(),
+                previewVideo = item.ipu.trim(),
+                duration = item.d.trim(),
+                views = item.n.trim(),
+                channel = item.pn.trim(),
+                nameProfile = item.pn.trim(),
+                linkProfile = item.pu.trim(),
+            )
+        )
+    }
+    return ChannelVideosResult(
+        videos = result,
+        totalVideos = dto.nbVideos,
+        currentPage = dto.currentPage,
+    )
+}
+
+/**
+ * [parseChannelVideosResponse] с пустым результатом вместо ошибки разбора — для ленты
+ * подписок, где автор с неразобранным ответом просто выпадает из ленты. Экран канала
+ * вызывает строгий вариант: там сбой надо отличать от пустой ленты.
+ *
+ * @param jsonString Текст ответа в формате JSON.
+ * @return [ChannelVideosResult] со списком роликов и метаинформацией пагинации.
+ */
+fun parserChannelVideosResult(jsonString: String): ChannelVideosResult = try {
+    parseChannelVideosResponse(jsonString)
+} catch (_: IOException) {
+    ChannelVideosResult()
 }
 
 /**
