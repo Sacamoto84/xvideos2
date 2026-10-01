@@ -37,10 +37,12 @@ import com.client.xvideos.l.model.isAnimatedMedia
 import com.client.xvideos.l.net.AlbumInfo
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.client.xvideos.l.ui.screens.albumLandingTag.ScreenLAlbumLandingTag
-import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbumSM
 import com.client.xvideos.l.ui.screens.screenAlbum.albumListFilterForAudience
 import com.client.xvideos.l.ui.screens.screenAlbum.albumListFilterForGenre
+import com.client.xvideos.l.ui.screens.screenAlbum.model.LAlbumActions
+import com.client.xvideos.l.ui.screens.screenAlbum.model.LAlbumHeaderState
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 import timber.log.Timber
 
@@ -49,7 +51,10 @@ import timber.log.Timber
 @Composable
 fun ScreenLAlbumBody(
     album: AlbumInfo,
-    vm: ScreenLAlbumSM,
+    host: LazyRowPictureDetailsHost,
+    savedAlbums: List<AlbumDetails>,
+    state: LAlbumHeaderState,
+    actions: LAlbumActions,
     navigator: Navigator,
     topInset: Dp,
     idAlbum: Long,
@@ -63,10 +68,10 @@ fun ScreenLAlbumBody(
     val pullToRefreshState = rememberPullToRefreshState()
     val haptic = LocalHapticFeedback.current
 
-    val saved by remember(parsed?.id) {
+    val saved by remember(parsed?.id, savedAlbums) {
         derivedStateOf {
             val currentParsed = parsed
-            currentParsed != null && currentParsed.id.isNotBlank() && vm.saved.albums.list.any { it.id == currentParsed.id }
+            currentParsed != null && currentParsed.id.isNotBlank() && savedAlbums.any { it.id == currentParsed.id }
         }
     }
 
@@ -77,24 +82,24 @@ fun ScreenLAlbumBody(
         }
     }
     val showInitialItemsLoading =
-        albumPicsDetails.isPageRequestInFlight && vm.host.filteredPic.isEmpty()
+        albumPicsDetails.isPageRequestInFlight && host.filteredPic.isEmpty()
 
-    LaunchedEffect(vm.showOnlyAnimated, parsed, albumPicsDetails.pics.size) {
-        Timber.d("ScreenLAlbum LaunchedEffect animated = ${vm.showOnlyAnimated} size:${albumPicsDetails.pics.size}")
+    LaunchedEffect(state.showOnlyAnimated, parsed, albumPicsDetails.pics.size) {
+        Timber.d("ScreenLAlbum LaunchedEffect animated = ${state.showOnlyAnimated} size:${albumPicsDetails.pics.size}")
         if (parsed == null) return@LaunchedEffect
 
         val allPics = albumPicsDetails.pics.toList()
         val newFilteredAnimatedPics = allPics.filter { it.isAnimatedMedia() }
 
-        if (vm.showOnlyAnimated) {
-            vm.host.replaceFilteredPictures(newFilteredAnimatedPics)
+        if (state.showOnlyAnimated) {
+            host.replaceFilteredPictures(newFilteredAnimatedPics)
         } else {
-            vm.host.replaceFilteredPictures(allPics)
+            host.replaceFilteredPictures(allPics)
         }
     }
 
     LaunchedEffect(parsed?.likeStatus) {
-        vm.syncServerFavoriteStatus(parsed?.likeStatus)
+        actions.onSyncServerFavoriteStatus(parsed?.likeStatus)
     }
 
     val onGenreClick = remember(navigator) {
@@ -116,13 +121,10 @@ fun ScreenLAlbumBody(
             navigator.push(ScreenLAlbumLandingTag(tag))
         }
     }
-    val onRetryFailedPages = remember(vm) {
-        { vm.retryFailedAlbumPages() }
-    }
-    val onRefresh = remember(haptic, vm) {
+    val onRefresh = remember(haptic, actions) {
         {
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-            vm.refresh()
+            actions.onRefresh()
         }
     }
 
@@ -161,7 +163,7 @@ fun ScreenLAlbumBody(
             }
         ) {
             L_LazyRowPictureDetails(
-                host = vm.host,
+                host = host,
                 expandMenu = ExpandMenuType.ALBUM,
                 showInitialLoading = showInitialItemsLoading,
                 itemBefore = {
@@ -177,14 +179,14 @@ fun ScreenLAlbumBody(
                                 parsed = currentParsed,
                                 idAlbum = idAlbum,
                                 saved = saved,
-                                vm = vm,
+                                state = state,
+                                actions = actions,
                                 hasAnimatedItems = hasAnimatedItems,
                                 albumPicsDetails = albumPicsDetails,
                                 onGenreClick = onGenreClick,
                                 onAudienceClick = onAudienceClick,
                                 onTagClick = onTagClick,
-                                onRequestDelete = onRequestDelete,
-                                onRetryFailedPages = onRetryFailedPages
+                                onRequestDelete = onRequestDelete
                             )
                         } else if (loadError != null) {
                             ScreenLAlbumErrorHeader(

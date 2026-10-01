@@ -29,6 +29,8 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.net.AlbumInfo
 import com.client.xvideos.l.ui.screens.screenAlbum.dialog.AlbumDialogDeleteAlbum
+import com.client.xvideos.l.ui.screens.screenAlbum.model.LAlbumActions
+import com.client.xvideos.l.ui.screens.screenAlbum.model.LAlbumHeaderState
 import com.client.xvideos.l.ui.screens.screenAlbum.molecule.ScreenLAlbumBody
 import com.client.xvideos.l.ui.screens.screenAlbum.molecule.ScreenLAlbumErrorHeader
 
@@ -108,9 +110,27 @@ fun ScreenLAlbumContent(
     modifier: Modifier = Modifier
 ) {
     if (album != null) {
+        val actions = remember(vm) {
+            LAlbumActions(
+                onSaveAlbum = vm::saveAlbum,
+                onToggleServerFavorite = vm::toggleServerFavorite,
+                onShareAlbum = vm::shareAlbumP2p,
+                onShowOnlyAnimatedChange = { vm.showOnlyAnimated = it },
+                onSyncServerFavoriteStatus = vm::syncServerFavoriteStatus,
+                onRetryFailedPages = vm::retryFailedAlbumPages,
+                onRefresh = vm::refresh,
+            )
+        }
         ScreenLAlbumBody(
             album = album,
-            vm = vm,
+            host = vm.host,
+            savedAlbums = vm.saved.albums.list,
+            state = LAlbumHeaderState(
+                isServerFavorite = vm.isServerFavorite,
+                isServerFavoriteLoading = vm.isServerFavoriteLoading,
+                showOnlyAnimated = vm.showOnlyAnimated,
+            ),
+            actions = actions,
             navigator = navigator,
             topInset = topInset,
             idAlbum = idAlbum,

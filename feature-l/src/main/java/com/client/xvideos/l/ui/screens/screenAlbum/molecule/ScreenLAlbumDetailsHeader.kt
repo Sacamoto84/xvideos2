@@ -26,7 +26,6 @@ import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
 import com.client.xvideos.l.net.AlbumPicsDetails
 import com.client.xvideos.l.ui.screens.screenAlbum.LAlbumNetworkIssuePanel
-import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbumSM
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonServerFavorite
@@ -35,20 +34,22 @@ import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoTags
 import com.client.xvideos.l.ui.screens.screenAlbum.formatEpochSeconds
+import com.client.xvideos.l.ui.screens.screenAlbum.model.LAlbumActions
+import com.client.xvideos.l.ui.screens.screenAlbum.model.LAlbumHeaderState
 
 @Composable
 fun ScreenLAlbumDetailsHeader(
     parsed: AlbumDetails,
     idAlbum: Long,
     saved: Boolean,
-    vm: ScreenLAlbumSM?,
+    state: LAlbumHeaderState,
+    actions: LAlbumActions,
     hasAnimatedItems: Boolean,
     albumPicsDetails: AlbumPicsDetails?,
     onGenreClick: (Genre) -> Unit,
     onAudienceClick: (Audience) -> Unit,
     onTagClick: (String) -> Unit,
-    onRequestDelete: (AlbumDetails) -> Unit,
-    onRetryFailedPages: () -> Unit
+    onRequestDelete: (AlbumDetails) -> Unit
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -113,28 +114,28 @@ fun ScreenLAlbumDetailsHeader(
         AlbumInfoTags({ activeTags }, onTagClick)
         AlbumInfoButtonSaveAlbum(saved, onClick = {
             if (!saved) {
-                vm?.saveAlbum()
+                actions.onSaveAlbum()
             } else {
                 onRequestDelete(parsed)
             }
         })
-        val isFavorite = vm?.isServerFavorite
+        val isFavorite = state.isServerFavorite
             ?: (parsed.likeStatus.orEmpty().isNotBlank() && parsed.likeStatus != "none" && parsed.likeStatus != "dislike")
         AlbumInfoButtonServerFavorite(
             isFavorite = isFavorite,
-            isLoading = vm?.isServerFavoriteLoading == true,
-            onClick = { vm?.toggleServerFavorite(parsed) }
+            isLoading = state.isServerFavoriteLoading,
+            onClick = { actions.onToggleServerFavorite(parsed) }
         )
-        AlbumInfoButtonShareAlbum(onClick = { vm?.shareAlbumP2p(parsed) })
+        AlbumInfoButtonShareAlbum(onClick = { actions.onShareAlbum(parsed) })
         AlbumInfoFilterButton(
             parsed = parsed,
-            checked = vm?.showOnlyAnimated == true,
+            checked = state.showOnlyAnimated,
             hasAnimatedItems = hasAnimatedItems,
-            onCheckedChange = { vm?.showOnlyAnimated = it }
+            onCheckedChange = actions.onShowOnlyAnimatedChange
         )
         LAlbumNetworkIssuePanel(
             albumPicsDetails = albumPicsDetails,
-            onRetryFailedPages = onRetryFailedPages
+            onRetryFailedPages = actions.onRetryFailedPages
         )
     }
 }
@@ -151,13 +152,13 @@ private fun ScreenLAlbumDetailsHeaderPreview() {
         ),
         idAlbum = 123L,
         saved = false,
-        vm = null,
+        state = LAlbumHeaderState(),
+        actions = LAlbumActions(),
         hasAnimatedItems = true,
         albumPicsDetails = null,
         onGenreClick = {},
         onAudienceClick = {},
         onTagClick = {},
-        onRequestDelete = {},
-        onRetryFailedPages = {}
+        onRequestDelete = {}
     )
 }

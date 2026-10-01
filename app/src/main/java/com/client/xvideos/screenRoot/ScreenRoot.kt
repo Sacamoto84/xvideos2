@@ -78,8 +78,14 @@ object ScreenRoot : Screen {
                 savedL = vm.savedL,
                 overlayContent = vm.overlayContent.value,
                 snackBarHostState = snackBarHostState,
-                onMainNavigatorChange = { nav ->
+                onMainNavigatorAttach = { nav ->
                     mainNavigator = nav
+                },
+                onMainNavigatorDetach = { nav ->
+                    // Сбрасываем только свой навигатор: новый мог успеть встать на его место.
+                    if (mainNavigator == nav) {
+                        mainNavigator = null
+                    }
                 }
             )
         }
@@ -91,7 +97,8 @@ fun ScreenRootContent(
     savedL: SavedL,
     overlayContent: (@Composable () -> Unit)?,
     snackBarHostState: SnackbarHostState,
-    onMainNavigatorChange: (Navigator?) -> Unit,
+    onMainNavigatorAttach: (Navigator) -> Unit,
+    onMainNavigatorDetach: (Navigator) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -110,9 +117,9 @@ fun ScreenRootContent(
         ) {
             Navigator(screen = MenuScreen) { nav ->
                 DisposableEffect(nav) {
-                    onMainNavigatorChange(nav)
+                    onMainNavigatorAttach(nav)
                     onDispose {
-                        onMainNavigatorChange(null)
+                        onMainNavigatorDetach(nav)
                     }
                 }
                 nav.lastItem.Content()

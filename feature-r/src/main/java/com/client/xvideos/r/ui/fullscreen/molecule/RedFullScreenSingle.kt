@@ -19,8 +19,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.videoplayer.feed.rememberFeedPlayerState
+import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
+import com.client.xvideos.r.ui.fullscreen.model.RedFullScreenPlayerState
 
 /**
  * Экран одного ролика — вход без ленты (`feedKey == null`).
@@ -28,13 +29,15 @@ import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
 @Composable
 fun RedFullScreenSingle(
     item: GifsInfo,
-    vm: ScreenRedFullScreenSM,
-    navigator: Navigator
+    player: RedFullScreenPlayerState,
+    downloadRed: DownloadRed,
+    navigator: Navigator,
+    pageOverlay: @Composable (item: GifsInfo, onBack: () -> Unit) -> Unit,
 ) {
     var isVideoBuffering by remember { mutableStateOf(false) }
     var isZoomed by remember { mutableStateOf(false) }
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
-    val downloadedKeys by vm.downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
+    val downloadedKeys by downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
 
     val handleBuffering: (Boolean) -> Unit = remember { { isVideoBuffering = it } }
     val handleZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
@@ -61,25 +64,24 @@ fun RedFullScreenSingle(
     LaunchedEffect(feedState) { feedState.updateCurrentPage(0) }
 
     DisposableEffect(item.id) {
-        onDispose { vm.resetSpeed() }
+        onDispose { player.resetSpeed() }
     }
 
-    RedFullScreenFeedScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
+    RedFullScreenFeedScaffold(player = player, downloadRed = downloadRed, isVideoBuffering = isVideoBuffering) { bottomPadding ->
         RedFullScreenPage(
             item = item,
-            vm = vm,
-            navigator = navigator,
+            player = player,
             feedState = feedState,
             downloadedKeys = downloadedKeys,
             index = 0,
             bottomPadding = bottomPadding,
-            play = vm.play,
+            play = player.play,
             isCurrentPage = true,
             showOverlay = true,
             onBuffering = handleBuffering,
             onZoomChanged = handleZoomChanged,
             resetZoomTrigger = resetZoomTrigger,
-            onBack = handleBack,
+            overlay = { pageOverlay(item, handleBack) },
         )
     }
 }

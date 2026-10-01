@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -68,8 +69,10 @@ class ScreenRedProfile(val profileName: String) : Screen {
                 }
             }
         }
-        val isFollow = remember(vm.creator?.username, vm.savedRed.creators.list) {
-            vm.savedRed.creators.list.any { it.username == vm.creator?.username }
+        // creators.list — SnapshotStateList: ключом remember не годится (сравнение по ссылке),
+        // подписку на изменения списка даёт только derivedStateOf.
+        val isFollow by remember(vm.creator?.username) {
+            derivedStateOf { vm.savedRed.creators.list.any { it.username == vm.creator?.username } }
         }
         val onFollowClick: () -> Unit = remember(isFollow, vm) {
             {

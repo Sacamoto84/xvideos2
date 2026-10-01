@@ -14,6 +14,7 @@ import com.client.xvideos.common.videoplayer.util.SubtitleTrack
 import com.client.xvideos.common.videoplayer.util.VideoQuality
 import com.client.xvideos.common.videoplayer.util.isHlsUrl
 import com.client.xvideos.common.util.launchCatching
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,7 +32,9 @@ class MediaPlayerHost(
     isFullScreen: Boolean = false,
     headers: Map<String, String>? = null,
     drmConfig: DrmConfig? = null,
-    coroutineScope: CoroutineScope? = null,
+    // Диспетчеры подменяются в тестах. Scope хост создаёт сам: dispose() отменяет только его.
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : RememberObserver {
     var poster by mutableStateOf(true)
 
@@ -62,7 +65,7 @@ class MediaPlayerHost(
     private var lastVolumeLevel by mutableFloatStateOf(1f)
 
     private val m3u8Helper = M3U8Helper()
-    private val scope = coroutineScope ?: CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val scope = CoroutineScope(mainDispatcher + SupervisorJob())
 
     var onEvent: ((MediaPlayerEvent) -> Unit)? = null
     var onError: ((MediaPlayerError) -> Unit)? = null
@@ -71,7 +74,7 @@ class MediaPlayerHost(
         // Список качеств — украшение: без него плеер играет дорожку по умолчанию.
         // Отказ сети здесь ронял приложение целиком (UnknownHostException на
         // хосте HLS уходил из launch без обработчика в обработчик потока).
-        scope.launchCatching(Dispatchers.IO, "Не удалось разобрать HLS: $url") {
+        scope.launchCatching(ioDispatcher, "Не удалось разобрать HLS: $url") {
             fetchAndUpdateMediaInfo(url)
         }
     }
@@ -82,7 +85,7 @@ class MediaPlayerHost(
         this.drmConfig = drmConfig
         if (url != mediaUrl) {
             url = mediaUrl
-            scope.launchCatching(Dispatchers.IO, "Не удалось разобрать HLS: $mediaUrl") {
+            scope.launchCatching(ioDispatcher, "Не удалось разобрать HLS: $mediaUrl") {
                 fetchAndUpdateMediaInfo(mediaUrl)
             }
         }
@@ -249,7 +252,7 @@ class MediaPlayerHost(
 
     private suspend fun fetchAndUpdateMediaInfo(videoUrl: String) {
         // P5: запись Compose-стейта выполняем только на главном потоке.
-        withContext(Dispatchers.Main) {
+        withContext(mainDispatcher) {
             setVideoQuality(null)
             setAudioTrack(null)
             setSubTitle(null)
@@ -257,13 +260,13 @@ class MediaPlayerHost(
         if (isHlsUrl(videoUrl)) {
             val m3u8Data = m3u8Helper.fetchM3U8Data(videoUrl, headers)
 
-            withContext(Dispatchers.Main) {
+            withContext(mainDispatcher) {
                 updateVideoQualityOptions(m3u8Data.videoQualities)
                 updateAudioTrackOptions(m3u8Data.audioTracks)
                 updateSubTitleOptions(m3u8Data.subtitleTracks)
             }
         } else {
-            withContext(Dispatchers.Main) {
+            withContext(mainDispatcher) {
                 updateVideoQualityOptions(emptyList())
                 updateAudioTrackOptions(emptyList())
                 updateSubTitleOptions(emptyList())

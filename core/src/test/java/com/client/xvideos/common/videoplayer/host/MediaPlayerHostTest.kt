@@ -1,9 +1,7 @@
 package com.client.xvideos.common.videoplayer.host
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -28,7 +26,8 @@ class MediaPlayerHostTest {
         mediaUrl = mediaUrl,
         isPaused = isPaused,
         isMuted = isMuted,
-        coroutineScope = CoroutineScope(testDispatcher + SupervisorJob()),
+        mainDispatcher = testDispatcher,
+        ioDispatcher = testDispatcher,
     )
 
     @Before

@@ -11,56 +11,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.LCollectionEntity
-import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.screens.explorer.atom.LCollectionRowItem
-
-private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекцию"
 
 @Composable
 fun L_DialogCollection(
-    savedL: SavedL,
-    modifier: Modifier = Modifier,
-) {
-    val haptic = LocalHapticFeedback.current
-    val onDismissDialog: () -> Unit = remember(savedL) { { savedL.collection.visibleDialog = false } }
-    val onConfirmCreate: () -> Unit = remember(savedL) {
-        {
-            savedL.collection.visibleDialog = false
-            savedL.collection.visibleDialogCreateNew = true
-        }
-    }
-    val title = remember(savedL.collection.collectionItemsPendingAdd.size) {
-        val pendingCount = savedL.collection.collectionItemsPendingAdd.size
-        if (pendingCount > 1) {
-            "$TEXT_ADD_TO_COLLECTION ($pendingCount)"
-        } else {
-            TEXT_ADD_TO_COLLECTION
-        }
-    }
-
-    L_DialogCollectionContent(
-        title = title,
-        collectionList = savedL.collection.collectionList,
-        onDismiss = onDismissDialog,
-        onConfirmCreate = onConfirmCreate,
-        onItemClick = { collectionName ->
-            savedL.collection.addPendingToCollection(collectionName)
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-        },
-        modifier = modifier,
-    )
-}
-
-@Composable
-fun L_DialogCollectionContent(
     title: String,
     collectionList: List<LCollectionEntity>,
     onDismiss: () -> Unit,
@@ -121,8 +81,8 @@ fun L_DialogCollectionContent(
 @Preview
 @Composable
 private fun L_DialogCollectionPreview() {
-    L_DialogCollectionContent(
-        title = TEXT_ADD_TO_COLLECTION,
+    L_DialogCollection(
+        title = "Добавить в коллекцию",
         collectionList = listOf(
             LCollectionEntity(
                 collection = "Favorites",

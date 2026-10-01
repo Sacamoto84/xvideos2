@@ -43,8 +43,8 @@ import com.client.xvideos.x.screens.dashboards.molecule.SavedTabContent
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.search.ScreenXSearchSM
+import com.client.xvideos.x.screens.search.ScreenXSearchTabContent
 import com.client.xvideos.x.screens.search.SearchUiMode
-import com.client.xvideos.x.screens.search.X_SearchContent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -203,7 +203,7 @@ fun ScreenXDashBoardsContent(
                     favoritesScreen = favoritesScreen,
                     saved = saved
                 )
-                MAIN_TAB_SEARCH -> X_SearchContent(
+                MAIN_TAB_SEARCH -> ScreenXSearchTabContent(
                     vm = searchVm,
                     onOpenVideoPlayer = onOpenVideoPlayer,
                     onOpenChannel = onOpenChannel

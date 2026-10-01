@@ -1,7 +1,6 @@
 package com.client.xvideos.l.ui.element.expandMenu
 
 import android.content.Context
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.client.xvideos.common.di.ApplicationScope
@@ -34,7 +33,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -59,37 +57,6 @@ class ExpandMenuViewModel @Inject constructor(
     @ApplicationScope val scope: CoroutineScope,
     @ApplicationContext val context: Context
 ) : ViewModel() {
-
-
-    @Deprecated("Use top-level ExpandMenu composable")
-    @Composable
-    fun ExpandMenu(
-        type: ExpandMenuType,
-        item: PicsDetails,
-        idAlbum: String,
-        isCollection: Boolean = false,
-        host: LazyRowPictureDetailsHost? = null
-    ) {
-        com.client.xvideos.l.ui.element.expandMenu.ExpandMenu(
-            type = type,
-            item = item,
-            idAlbum = idAlbum,
-            viewModel = this,
-            isCollection = isCollection,
-            host = host
-        )
-    }
-
-    @Deprecated("Use top-level ExpandMenuAlbum composable")
-    @Composable
-    fun ExpandMenuAlbum(item: PicsDetails, idAlbum: String, isCollection: Boolean = false) {
-        com.client.xvideos.l.ui.element.expandMenu.ExpandMenuAlbum(
-            item = item,
-            idAlbum = idAlbum,
-            viewModel = this,
-            isCollection = isCollection
-        )
-    }
 
     fun likeOnServer(item: PicsDetails) {
         val anchorId = item.extractAnchorId()
@@ -216,34 +183,6 @@ class ExpandMenuViewModel @Inject constructor(
         }
     }
 
-    @Deprecated("Use top-level ExpandMenuLikes composable")
-    @Composable
-    fun ExpandMenuLikes(item: PicsDetails, isCollection: Boolean = false) {
-        com.client.xvideos.l.ui.element.expandMenu.ExpandMenuLikes(
-            item = item,
-            viewModel = this,
-            isCollection = isCollection
-        )
-    }
-
-    @Deprecated("Use top-level ExpandMenuServerLikes composable")
-    @Composable
-    fun ExpandMenuServerLikes(
-        item: PicsDetails,
-        idAlbum: String = "",
-        host: LazyRowPictureDetailsHost? = null
-    ) {
-        com.client.xvideos.l.ui.element.expandMenu.ExpandMenuServerLikes(
-            item = item,
-            idAlbum = idAlbum,
-            viewModel = this,
-            host = host
-        )
-    }
-
-
-
-
     ///////
     fun downloadLike(item: PicsDetails, idAlbum: Long) {
         saved.likes.add(item.copy(album = idAlbum.toString()))
@@ -330,17 +269,6 @@ class ExpandMenuViewModel @Inject constructor(
                 p2pSource = source
             }
         }
-    }
-
-    /**
-     * Хост диалога P2P-шаринга. Должен компоноваться РОВНО ОДИН РАЗ на контейнер
-     * (список/экран), не внутри per-item элементов — state общий на ViewModel,
-     * каждый экземпляр хоста показал бы свой диалог.
-     */
-    @Deprecated("Use ExpandMenuP2pHost(viewModel)")
-    @Composable
-    fun P2pShareHost() {
-        ExpandMenuP2pHost(viewModel = this)
     }
 
 }

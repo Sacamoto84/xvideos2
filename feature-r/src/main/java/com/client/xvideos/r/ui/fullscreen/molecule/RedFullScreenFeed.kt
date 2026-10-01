@@ -27,8 +27,9 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.videoplayer.feed.rememberFeedPlayerState
+import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
+import com.client.xvideos.r.ui.fullscreen.model.RedFullScreenPlayerState
 import com.client.xvideos.r.ui.fullscreen.peekUrl
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -41,11 +42,13 @@ fun RedFullScreenFeed(
     host: LazyRow123Host,
     startIndex: Int,
     fallbackItem: GifsInfo,
-    vm: ScreenRedFullScreenSM,
-    navigator: Navigator
+    player: RedFullScreenPlayerState,
+    downloadRed: DownloadRed,
+    navigator: Navigator,
+    pageOverlay: @Composable (item: GifsInfo, onBack: () -> Unit) -> Unit,
 ) {
     val listGifs = host.pager.collectAsLazyPagingItems()
-    val downloadedKeys by vm.downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
+    val downloadedKeys by downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
     val appendExtra = if (listGifs.loadState.append is LoadState.Loading && listGifs.itemCount > 0) 1 else 0
     val pagerCount = max(startIndex + 1, listGifs.itemCount + appendExtra)
     val pagerState = rememberPagerState(initialPage = startIndex.coerceAtLeast(0)) { pagerCount.coerceAtLeast(1) }
@@ -104,15 +107,15 @@ fun RedFullScreenFeed(
                 feedState.retryPending { i -> listGifs.peekUrl(i, downloadedKeys) }
                 host.currentIndex = page
                 host.returnToIndex = page
-                vm.play = true
-                vm.currentPlayerTime = 0f
-                vm.currentPlayerDuration = 0
-                vm.enableAB = false
-                vm.resetSpeed()
+                player.play = true
+                player.currentPlayerTime = 0f
+                player.currentPlayerDuration = 0
+                player.enableAB = false
+                player.resetSpeed()
             }
     }
 
-    RedFullScreenFeedScaffold(vm = vm, isVideoBuffering = isVideoBuffering) { bottomPadding ->
+    RedFullScreenFeedScaffold(player = player, downloadRed = downloadRed, isVideoBuffering = isVideoBuffering) { bottomPadding ->
         VerticalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
@@ -125,13 +128,12 @@ fun RedFullScreenFeed(
             if (currentItem != null) {
                 RedFullScreenPage(
                     item = currentItem,
-                    vm = vm,
-                    navigator = navigator,
+                    player = player,
                     feedState = feedState,
                     downloadedKeys = downloadedKeys,
                     index = index,
                     bottomPadding = bottomPadding,
-                    play = vm.play && isCurrentPage,
+                    play = player.play && isCurrentPage,
                     isCurrentPage = isCurrentPage,
                     showOverlay = isCurrentPage,
                     onBuffering = { buffering ->
@@ -145,26 +147,25 @@ fun RedFullScreenFeed(
                         }
                     },
                     resetZoomTrigger = if (isCurrentPage) resetZoomTrigger else 0,
-                    onBack = handleBack
+                    overlay = { pageOverlay(currentItem, handleBack) }
                 )
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     if (index == startIndex) {
                         RedFullScreenPage(
                             item = fallbackItem,
-                            vm = vm,
-                            navigator = navigator,
+                            player = player,
                             feedState = feedState,
                             downloadedKeys = downloadedKeys,
                             index = index,
                             bottomPadding = bottomPadding,
-                            play = vm.play,
+                            play = player.play,
                             isCurrentPage = true,
                             showOverlay = true,
                             onBuffering = { isVideoBuffering = it },
                             onZoomChanged = { isCurrentPageZoomed = it },
                             resetZoomTrigger = resetZoomTrigger,
-                            onBack = handleBack
+                            overlay = { pageOverlay(fallbackItem, handleBack) }
                         )
                     } else {
                         CircularProgressIndicator(color = Color.White)

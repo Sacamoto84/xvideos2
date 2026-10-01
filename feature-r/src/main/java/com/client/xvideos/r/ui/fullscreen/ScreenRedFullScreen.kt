@@ -25,6 +25,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.transitions.ScreenTransition
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.fullscreen.molecule.RedFullScreenFeed
+import com.client.xvideos.r.ui.fullscreen.molecule.RedFullScreenPageOverlay
 import com.client.xvideos.r.ui.fullscreen.molecule.RedFullScreenSingle
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.RFeedSessionStore
@@ -71,20 +72,38 @@ fun ScreenRedFullScreenContent(
     navigator: Navigator,
     modifier: Modifier = Modifier,
 ) {
+    val pageOverlay: @Composable (GifsInfo, () -> Unit) -> Unit = { overlayItem, onBack ->
+        RedFullScreenPageOverlay(
+            item = overlayItem,
+            player = vm.player,
+            savedRed = vm.savedRed,
+            downloadRed = vm.downloadRed,
+            block = vm.block,
+            redApi = vm.redApi,
+            search = vm.search,
+            navigator = navigator,
+            onBack = onBack
+        )
+    }
+
     Box(modifier = modifier) {
         if (host != null) {
             RedFullScreenFeed(
                 host = host,
                 startIndex = startIndex,
                 fallbackItem = item,
-                vm = vm,
-                navigator = navigator
+                player = vm.player,
+                downloadRed = vm.downloadRed,
+                navigator = navigator,
+                pageOverlay = pageOverlay
             )
         } else {
             RedFullScreenSingle(
                 item = item,
-                vm = vm,
-                navigator = navigator
+                player = vm.player,
+                downloadRed = vm.downloadRed,
+                navigator = navigator,
+                pageOverlay = pageOverlay
             )
         }
     }

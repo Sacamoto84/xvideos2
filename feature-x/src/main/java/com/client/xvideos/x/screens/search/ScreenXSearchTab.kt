@@ -181,21 +181,6 @@ fun ScreenXSearchTabContent(
     }
 }
 
-@Composable
-fun X_SearchContent(
-    vm: ScreenXSearchSM,
-    onOpenVideoPlayer: (ItemsX) -> Unit,
-    onOpenChannel: (slug: String, isModel: Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    ScreenXSearchTabContent(
-        vm = vm,
-        onOpenVideoPlayer = onOpenVideoPlayer,
-        onOpenChannel = onOpenChannel,
-        modifier = modifier
-    )
-}
-
 @Preview
 @Composable
 private fun ScreenXSearchTabContentPreview() {
