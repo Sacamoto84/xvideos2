@@ -1,4 +1,7 @@
-package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
+package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter
+
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.SaveDialogActions
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.SaveDialogHeader
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,7 +34,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.filter.AlbumFilterPresetManager
 import com.client.xvideos.l.model.AlbumListFilter
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
 
 @Composable
 fun AlbumFilterSaveDialog(

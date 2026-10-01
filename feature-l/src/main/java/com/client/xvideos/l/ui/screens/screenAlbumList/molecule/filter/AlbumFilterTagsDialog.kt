@@ -1,4 +1,7 @@
-package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
+package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter
+
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.SelectableTagRow
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.TagsSelectedChipsBar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,7 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -33,30 +36,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.l.model.FilterGenre
-import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
 
 @Composable
-fun AlbumFilterGenresDialog(
-    genresPlus: List<FilterGenre>,
-    genresMinus: List<FilterGenre>,
-    selectableGenres: List<FilterGenre>,
-    genreCounts: List<AlbumListFilterGenreCountResponse>?,
-    onAddPlus: (FilterGenre) -> Unit,
-    onAddMinus: (FilterGenre) -> Unit,
-    onRemovePlus: (FilterGenre) -> Unit,
-    onRemoveMinus: (FilterGenre) -> Unit,
+fun AlbumFilterTagsDialog(
+    tagsPlus: List<String>,
+    tagsMinus: List<String>,
+    selectableTags: List<String>,
+    tagCountByTerm: Map<String, Int>,
+    onAddPlus: (String) -> Unit,
+    onAddMinus: (String) -> Unit,
+    onRemovePlus: (String) -> Unit,
+    onRemoveMinus: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val palette = StyleGenresTags.Palette
     val configuration = LocalConfiguration.current
     val maxListHeight = (configuration.screenHeightDp * 0.6f).dp.coerceIn(240.dp, 520.dp)
     val dialogShape = RoundedCornerShape(16.dp)
-
-    val genreCountByTitle = remember(genreCounts) {
-        genreCounts?.associate { it.term to it.count } ?: emptyMap()
-    }
     val headerStyle = remember(palette.textPrimary) {
         Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
     }
@@ -84,7 +81,7 @@ fun AlbumFilterGenresDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Genres",
+                        text = "Tags",
                         color = palette.textPrimary,
                         style = headerStyle,
                         maxLines = 1,
@@ -104,11 +101,11 @@ fun AlbumFilterGenresDialog(
                 }
 
                 // Active selections (chips bar)
-                if (genresPlus.isNotEmpty() || genresMinus.isNotEmpty()) {
+                if (tagsPlus.isNotEmpty() || tagsMinus.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    GenreSelectedChipsBar(
-                        genresPlus = genresPlus,
-                        genresMinus = genresMinus,
+                    TagsSelectedChipsBar(
+                        tagsPlus = tagsPlus,
+                        tagsMinus = tagsMinus,
                         onRemovePlus = onRemovePlus,
                         onRemoveMinus = onRemoveMinus
                     )
@@ -116,7 +113,7 @@ fun AlbumFilterGenresDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Available genres list
+                // Available tags list
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -126,7 +123,7 @@ fun AlbumFilterGenresDialog(
                         .background(palette.panelBlack)
                         .padding(vertical = 4.dp)
                 ) {
-                    if (selectableGenres.isEmpty()) {
+                    if (selectableTags.isEmpty()) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -135,7 +132,7 @@ fun AlbumFilterGenresDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "All genres selected",
+                                    text = "All tags selected",
                                     color = palette.textSecondary,
                                     style = Theme.L.Type.rowTitle
                                 )
@@ -143,12 +140,12 @@ fun AlbumFilterGenresDialog(
                         }
                     }
 
-                    items(selectableGenres, key = { it.id.ifBlank { it.title } }) { item ->
-                        SelectableGenreRow(
+                    itemsIndexed(selectableTags, key = { index, item -> "${item}#$index" }) { _, item ->
+                        SelectableTagRow(
                             item = item,
-                            count = genreCountByTitle[item.title],
-                            onAddPlus = onAddPlus,
-                            onAddMinus = onAddMinus
+                            count = tagCountByTerm[item],
+                            onAddPlus = { onAddPlus(item) },
+                            onAddMinus = { onAddMinus(item) }
                         )
                     }
                 }
@@ -159,12 +156,12 @@ fun AlbumFilterGenresDialog(
 
 @Preview
 @Composable
-private fun AlbumFilterGenresDialogPreview() {
-    AlbumFilterGenresDialog(
-        genresPlus = listOf(FilterGenre(id = "1", title = "Action")),
-        genresMinus = emptyList(),
-        selectableGenres = listOf(FilterGenre(id = "2", title = "Comedy")),
-        genreCounts = null,
+private fun AlbumFilterTagsDialogPreview() {
+    AlbumFilterTagsDialog(
+        tagsPlus = listOf("Cosplay"),
+        tagsMinus = emptyList(),
+        selectableTags = listOf("Anime", "Art"),
+        tagCountByTerm = mapOf("Anime" to 120, "Art" to 80),
         onAddPlus = {},
         onAddMinus = {},
         onRemovePlus = {},

@@ -40,9 +40,15 @@ import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
+import com.client.xvideos.l.ui.screens.screenFullScreen.atom.checkerboardBackground
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.FullScreenUiState
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.LFullScreenPayload
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveInitialIndex
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveScrollIndex
 import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenBottomThumbnails
 import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenTopControls
-import com.client.xvideos.l.ui.screens.screenFullScreen.model.FullScreenUiState
+import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.LFullScreenPage
+import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.LPictureInfoDialog
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.IgnoredOnParcel

@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenFullScreen
+package com.client.xvideos.l.ui.screens.screenFullScreen.atom
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind

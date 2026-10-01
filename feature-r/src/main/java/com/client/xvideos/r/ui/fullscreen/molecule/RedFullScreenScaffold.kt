@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +22,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.DownloadIndicator
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
+import com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedPlaybackActions
+import com.client.xvideos.r.ui.fullscreen.bottom_bar.FeedPlaybackState
 import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
 
 @Composable
@@ -95,7 +98,31 @@ fun RedFullScreenScaffold(
         onSeek = { vm.currentPlayerControls?.seekTo(it) },
         isVideoBuffering = isVideoBuffering,
         percentDownload = percentDownload,
-        controlsContent = { FeedControls_Container_Line0(vm = vm) },
+        controlsContent = {
+            val actions = remember(vm) {
+                FeedPlaybackActions(
+                    onSetTimeA = vm::setTimeA,
+                    onSetTimeB = vm::setTimeB,
+                    onToggleAB = vm::toggleAB,
+                    onTogglePlay = vm::togglePlay,
+                    onRewind = { vm.rewind() },
+                    onForward = { vm.forward() },
+                    onToggleMute = vm::toggleMute,
+                    onSpeedChange = { vm.speed = it },
+                )
+            }
+            FeedControls_Container_Line0(
+                state = FeedPlaybackState(
+                    timeA = vm.timeA,
+                    timeB = vm.timeB,
+                    enableAB = vm.enableAB,
+                    play = vm.play,
+                    mute = vm.mute,
+                    speed = vm.speed,
+                ),
+                actions = actions,
+            )
+        },
         content = content
     )
 }

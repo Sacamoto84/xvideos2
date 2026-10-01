@@ -14,7 +14,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.AlbumFilterGenresDialog
 
 @Composable
 fun AlbumListFilterGenres(

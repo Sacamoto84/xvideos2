@@ -5,6 +5,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
@@ -45,5 +46,22 @@ fun NichePreview2(
         onFollowClick = onFollowClick,
         onClick = onClick,
         modifier = modifier,
+    )
+}
+
+@Preview
+@Composable
+private fun NichePreview2Preview() {
+    NichePreview2Content(
+        niche = Niche(
+            id = "sample-niche",
+            name = "Sample Niche",
+            gifs = 245,
+            subscribers = 914,
+            thumbnail = ""
+        ),
+        isFollowed = false,
+        onFollowClick = {},
+        onClick = {}
     )
 }

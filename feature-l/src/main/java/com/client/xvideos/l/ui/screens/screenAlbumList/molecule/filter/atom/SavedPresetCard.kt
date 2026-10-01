@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.SavedAlbumFilter
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
 
 @Composable
 fun SavedPresetCard(

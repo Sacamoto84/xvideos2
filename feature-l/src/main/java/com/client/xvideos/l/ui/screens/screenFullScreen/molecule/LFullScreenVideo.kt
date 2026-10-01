@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenFullScreen
+package com.client.xvideos.l.ui.screens.screenFullScreen.molecule
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,16 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.noRippleClickable
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.VideoPlayerWithMenuContent
-import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lMediaRequestHeaders
+import com.client.xvideos.l.ui.screens.screenFullScreen.atom.LFullScreenVideoPoster
 
 /**
  * Видео на странице полноэкранного просмотра L.
@@ -150,27 +146,19 @@ internal fun LFullScreenVideo(
     }
 }
 
+@Preview
 @Composable
-private fun LFullScreenVideoPoster(
-    previewUrl: String,
-    albumName: String,
-    modifier: Modifier = Modifier
-) {
-    if (previewUrl.isNotBlank() && !previewUrl.isLVideoFileUrl()) {
-        UrlImage(
-            url = previewUrl,
-            contentScale = ContentScale.Fit,
-            modifier = modifier,
-            albumName = albumName,
-            autoPlay = false,
-            isAnimated = false
-        )
-    } else {
-        Box(
-            modifier = modifier.background(Color(0xFF202020)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
-        }
-    }
+private fun LFullScreenVideoPreview() {
+    LFullScreenVideo(
+        url = "",
+        previewUrl = "",
+        albumName = "Sample",
+        autoPlay = false,
+        isCurrentPage = true,
+        isPlayerActive = false,
+        isMuted = true,
+        seekDragEnabled = false,
+        rotate = false,
+        onTap = {}
+    )
 }

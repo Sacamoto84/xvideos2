@@ -2,6 +2,7 @@ package com.client.xvideos.common.ui.atom
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import com.client.xvideos.common.ui.composition.LocalScrollbarAlpha
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Text

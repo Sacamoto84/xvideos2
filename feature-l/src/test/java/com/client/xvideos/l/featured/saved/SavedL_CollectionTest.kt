@@ -7,8 +7,10 @@ import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.repository.Repository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -109,7 +111,7 @@ class SavedL_CollectionTest {
 
         val fileDb = AppFileDatabase()
         val repository = Repository(fileDb)
-        val luscious = Luscious(this, repository)
+        val luscious = Luscious(CoroutineScope(Job()), repository)
         val savedCollection = SavedL_Collection(this, luscious)
 
         val flowA1 = savedCollection.getCollectionItems("CollectionA")
@@ -134,7 +136,7 @@ class SavedL_CollectionTest {
 
         val fileDb = AppFileDatabase()
         val repository = Repository(fileDb)
-        val luscious = Luscious(this, repository)
+        val luscious = Luscious(CoroutineScope(Job()), repository)
         val savedCollection = SavedL_Collection(this, luscious)
 
         savedCollection.currentCollectionName = "TestCollection"

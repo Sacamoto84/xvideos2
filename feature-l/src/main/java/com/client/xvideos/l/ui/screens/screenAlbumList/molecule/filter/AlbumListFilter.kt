@@ -40,8 +40,6 @@ import com.client.xvideos.l.model.enum.PictureCountRank
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterDisplay
 import com.client.xvideos.l.featured.filter.AlbumFilterPresetManager
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSaveDialog
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSavedPresetsDialog
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterAlbumType
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterAudiences
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterContentType
@@ -50,7 +48,7 @@ import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.Albu
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterTags
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumFilterSearchHeader
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AlbumListFilterHeader
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
 
 /** Общий фон-«карточка» секции фильтра: отступ сверху, скругление, фон, опц. рамка. */
 private fun Modifier.filterCard(

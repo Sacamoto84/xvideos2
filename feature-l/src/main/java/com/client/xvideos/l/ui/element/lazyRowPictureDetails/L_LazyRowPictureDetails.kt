@@ -67,7 +67,7 @@ import com.client.xvideos.l.model.lPreviewImageUrl
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenFullScreen.L_FullScreenImage
-import com.client.xvideos.l.ui.screens.screenFullScreen.LFullScreenPayload
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.LFullScreenPayload
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
 import com.client.xvideos.common.videoplayer.ui.VideoPlayerWithMenuContent

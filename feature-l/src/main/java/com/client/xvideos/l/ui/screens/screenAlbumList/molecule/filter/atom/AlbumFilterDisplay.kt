@@ -15,7 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.DataAlbumFilterDisplay
 import com.client.xvideos.l.model.albumFilterDisplay
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.AlbumFilterSelectDialog
 
 private val UNIQUE_PRIMARY_LIST = albumFilterDisplay.map { it.primary }.distinct()
 

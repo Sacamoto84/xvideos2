@@ -17,7 +17,6 @@ import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,12 +24,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -85,7 +80,7 @@ import com.client.xvideos.x.screens.channel.molecule.ChannelCollapsingLayout
 import com.client.xvideos.x.screens.channel.molecule.ChannelHeader
 import com.client.xvideos.x.screens.channel.molecule.ChannelModelFilterBar
 import com.client.xvideos.x.screens.channel.molecule.ChannelSortBar
-import com.client.xvideos.x.screens.channel.molecule.ChannelVideoItem
+import com.client.xvideos.x.screens.channel.molecule.ChannelVideosPager
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.Job
@@ -160,7 +155,7 @@ class ScreenX_Channel(
             }
         }
 
-        ChannelScreenContent(
+        ScreenX_ChannelContent(
             uiState = vm.uiState,
             pagesCache = vm.pagesCache,
             loadingPages = vm.loadingPages,
@@ -193,7 +188,7 @@ class ScreenX_Channel(
 
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @Composable
-fun ChannelScreenContent(
+fun ScreenX_ChannelContent(
     uiState: com.client.xvideos.x.model.ChannelUiState,
     pagesCache: Map<Int, List<ItemsX>>,
     loadingPages: Set<Int>,
@@ -524,103 +519,26 @@ fun ChannelScreenContent(
                 }
             },
             pager = {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    beyondViewportPageCount = 1,
-                    key = { pageIndex -> pageIndex }
-                ) { page ->
-                    val pageVideos = pagesCache[page]
-                    val isPageLoading = page in loadingPages
-                    val pageError = errorPages[page]
-                    val gridState = getGridState(page)
-
-                    LaunchedEffect(page, uiState.currentSort, uiState.selectedModel) {
-                        if (pageVideos == null && !isPageLoading && pageError == null) {
-                            onLoadPage(page)
-                        }
-                    }
-
-                    if (isPageLoading && pageVideos == null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .then(headerScrollModifier),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                color = Color(0xFFDE2600),
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                    } else if (pageError != null && pageVideos == null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .then(headerScrollModifier)
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = pageError,
-                                    color = Color(0xFFCCCCCC),
-                                    fontSize = 14.sp,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Button(
-                                    onClick = { onRetryPage(page) },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
-                                ) {
-                                    Text("Повторить", color = Color.White)
-                                }
-                            }
-                        }
-                    } else if (pageVideos != null && pageVideos.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .then(headerScrollModifier)
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (uiState.header.isModel) {
-                                    "У этой модели пока нет опубликованных видео"
-                                } else {
-                                    "У этого канала пока нет опубликованных видео"
-                                },
-                                color = Color.Gray,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else if (pageVideos != null) {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            state = gridState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 16.dp)
-                        ) {
-                            items(
-                                items = pageVideos,
-                                key = { it.id }
-                            ) { video ->
-                                ChannelVideoItem(
-                                    item = video,
-                                    isFavorite = isFavorite(video.id),
-                                    isDownloaded = isDownloaded(video.id),
-                                    onOpenVideo = onOpenVideo,
-                                    onFavoriteAdd = onFavoriteAdd,
-                                    onFavoriteRemove = onFavoriteRemove,
-                                    onDownload = onDownload,
-                                    onSaveToGallery = onSaveToGallery,
-                                )
-                            }
-                        }
-                    }
-                }
+                ChannelVideosPager(
+                    pagerState = pagerState,
+                    pagesCache = pagesCache,
+                    loadingPages = loadingPages,
+                    errorPages = errorPages,
+                    currentSort = uiState.currentSort,
+                    selectedModel = uiState.selectedModel,
+                    isModel = uiState.header.isModel,
+                    getGridState = getGridState,
+                    onLoadPage = onLoadPage,
+                    onRetryPage = onRetryPage,
+                    onOpenVideo = onOpenVideo,
+                    isFavorite = isFavorite,
+                    isDownloaded = isDownloaded,
+                    onFavoriteAdd = onFavoriteAdd,
+                    onFavoriteRemove = onFavoriteRemove,
+                    onDownload = onDownload,
+                    onSaveToGallery = onSaveToGallery,
+                    headerScrollModifier = headerScrollModifier,
+                )
             },
             statusCover = {
                 Box(
@@ -642,7 +560,7 @@ fun ChannelScreenContent(
 
 @Preview(showBackground = true, backgroundColor = 0xFF040404)
 @Composable
-private fun ChannelScreenContentPreview() {
+private fun ScreenX_ChannelContentPreview() {
     val sampleVideos = List(6) { index ->
         ItemsX(
             id = index.toLong(),
@@ -671,7 +589,7 @@ private fun ChannelScreenContentPreview() {
     val gridState = rememberLazyGridState()
 
     XvideosTheme(darkTheme = true) {
-        ChannelScreenContent(
+        ScreenX_ChannelContent(
             uiState = sampleUiState,
             pagesCache = mapOf(0 to sampleVideos),
             loadingPages = emptySet(),
@@ -688,4 +606,5 @@ private fun ChannelScreenContentPreview() {
         )
     }
 }
+
 

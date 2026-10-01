@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.ui.screens.screenFullScreen.SwipeableBottomPanel
 import com.client.xvideos.l.ui.screens.screenFullScreen.atom.FullScreenThumbnailItem
 
 @Composable

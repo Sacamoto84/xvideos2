@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import com.client.xvideos.feature.r.R
-import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreenSM
 import com.client.xvideos.r.ui.fullscreen.atom.AbToggleButton
 import com.client.xvideos.r.ui.fullscreen.atom.FeedControlDivider
 import com.client.xvideos.r.ui.fullscreen.atom.MuteButton
@@ -112,38 +111,6 @@ fun FeedControls_Container_Line0(
             trigger = triggerContent
         )
     }
-}
-
-@Composable
-fun FeedControls_Container_Line0(
-    vm: ScreenRedFullScreenSM,
-    modifier: Modifier = Modifier,
-) {
-    val actions = remember(vm) {
-        FeedPlaybackActions(
-            onSetTimeA = vm::setTimeA,
-            onSetTimeB = vm::setTimeB,
-            onToggleAB = vm::toggleAB,
-            onTogglePlay = vm::togglePlay,
-            onRewind = { vm.rewind() },
-            onForward = { vm.forward() },
-            onToggleMute = vm::toggleMute,
-            onSpeedChange = { vm.speed = it },
-        )
-    }
-
-    FeedControls_Container_Line0(
-        state = FeedPlaybackState(
-            timeA = vm.timeA,
-            timeB = vm.timeB,
-            enableAB = vm.enableAB,
-            play = vm.play,
-            mute = vm.mute,
-            speed = vm.speed,
-        ),
-        actions = actions,
-        modifier = modifier,
-    )
 }
 
 @Preview

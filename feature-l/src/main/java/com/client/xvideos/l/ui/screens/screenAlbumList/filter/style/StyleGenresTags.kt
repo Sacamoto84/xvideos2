@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style
+package com.client.xvideos.l.ui.screens.screenAlbumList.filter.style
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,7 +32,6 @@ object StyleGenresTags {
         val panelBlack = Color(0xFF1D1D1D)
     }
 
-    //
     val modifierSelectTextItem = Modifier
         .padding(start = 4.dp, end = 4.dp, top = 4.dp)
         .fillMaxWidth()

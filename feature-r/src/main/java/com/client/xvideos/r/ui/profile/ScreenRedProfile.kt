@@ -68,7 +68,17 @@ class ScreenRedProfile(val profileName: String) : Screen {
                 }
             }
         }
-        val savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed = remember(vm) { { vm.savedRed } }
+        val isFollow = remember(vm.creator?.username, vm.savedRed.creators.list) {
+            vm.savedRed.creators.list.any { it.username == vm.creator?.username }
+        }
+        val onFollowClick: () -> Unit = remember(isFollow, vm) {
+            {
+                val c = vm.creator
+                if (c != null) {
+                    if (isFollow) vm.savedRed.creators.remove(c.username) else vm.savedRed.creators.add(c)
+                }
+            }
+        }
 
         ScreenRedProfileContent(
             creator = vm.creator,
@@ -78,7 +88,8 @@ class ScreenRedProfile(val profileName: String) : Screen {
             likedHost = vm.likedHost,
             onTagClick = onTagClick,
             onAppendLoaded = onAppendLoaded,
-            savedRedProvider = savedRedProvider
+            isFollow = isFollow,
+            onFollowClick = onFollowClick
         )
     }
 
@@ -93,7 +104,8 @@ fun ScreenRedProfileContent(
     likedHost: com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host,
     onTagClick: (String) -> Unit,
     onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit,
-    savedRedProvider: () -> com.client.xvideos.r.common.saved.SavedRed
+    isFollow: Boolean,
+    onFollowClick: () -> Unit
 ) {
     val topInset = getTopInsetDp()
 
@@ -103,14 +115,15 @@ fun ScreenRedProfileContent(
         tags,
         tagsSelect,
         onTagClick,
-        savedRedProvider
+        isFollow,
+        onFollowClick
     ) {
         {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.fillMaxWidth().height(topInset))
 
                 if (creator != null) {
-                    RedProfileCreaterInfo(creator, savedRed = savedRedProvider)
+                    RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick)
                 }
 
                 if ((creator != null) && (tags.isNotEmpty())) {

@@ -36,9 +36,6 @@ import com.client.xvideos.l.repository.LRepositoryProtectionUiState
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlin.math.ceil
-
-private val PANEL_CORNER_SHAPE = RoundedCornerShape(8.dp)
-
 @Composable
 internal fun LAlbumNetworkIssuePanel(
     albumPicsDetails: AlbumPicsDetails?,
@@ -94,9 +91,9 @@ private fun LAlbumNetworkIssuePanel(
             .border(
                 width = 1.dp,
                 color = warningColor,
-                shape = PANEL_CORNER_SHAPE
+                shape = RoundedCornerShape(8.dp)
             )
-            .background(Theme.L.grey5, PANEL_CORNER_SHAPE)
+            .background(Theme.L.grey5, RoundedCornerShape(8.dp))
             .padding(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -133,7 +130,7 @@ private fun LAlbumNetworkIssuePanel(
             onClick = onRetryFailedPages,
             enabled = failedPages.isNotEmpty() && !isRetryingFailedPages,
             colors = ButtonDefaults.buttonColors(containerColor = Theme.L.primaryColor),
-            shape = PANEL_CORNER_SHAPE,
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier.padding(top = 8.dp)
         ) {
             Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Black)

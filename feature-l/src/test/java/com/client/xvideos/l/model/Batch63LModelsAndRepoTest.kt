@@ -22,6 +22,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import java.io.File
 import java.nio.file.Files
 
@@ -203,7 +205,7 @@ class Batch63LModelsAndRepoTest {
 
         val fileDb = com.client.xvideos.common.fileDB.folder.AppFileDatabase()
         val repository = com.client.xvideos.l.repository.Repository(fileDb)
-        val albumInfo = AlbumInfo(12345, repository, this)
+        val albumInfo = AlbumInfo(12345, repository, CoroutineScope(Job()))
         val success: AlbumResult = AlbumResult.Albums(albumInfo)
         assertFalse(success.isEmpty)
         assertTrue(success.isNotEmpty)

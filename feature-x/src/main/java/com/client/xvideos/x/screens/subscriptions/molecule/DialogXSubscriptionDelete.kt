@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.core.R
-import com.client.xvideos.x.model.SelectedXCreator
 import com.client.xvideos.x.model.XSubscriptionItem
 
 /**
@@ -87,21 +86,6 @@ fun DialogXSubscriptionDelete(
             confirmText = "Удалить",
             onConfirm = handleConfirm,
             destructive = true,
-        )
-    }
-}
-
-@Composable
-fun DialogXSubscriptionDelete(
-    creator: SelectedXCreator?,
-    onDismiss: () -> Unit,
-    onConfirm: (SelectedXCreator) -> Unit,
-) {
-    creator?.let {
-        DialogXSubscriptionDelete(
-            item = it.item,
-            onDismiss = onDismiss,
-            onConfirm = { onConfirm(creator) }
         )
     }
 }

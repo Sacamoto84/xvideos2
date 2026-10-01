@@ -1,9 +1,9 @@
 package com.client.xvideos.l
 
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.ui.screens.screenFullScreen.LFullScreenPayload
-import com.client.xvideos.l.ui.screens.screenFullScreen.resolveInitialIndex
-import com.client.xvideos.l.ui.screens.screenFullScreen.resolveScrollIndex
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.LFullScreenPayload
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveInitialIndex
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveScrollIndex
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue

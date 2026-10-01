@@ -1,6 +1,7 @@
 package com.client.xvideos.common.ui.atom
 
 import androidx.compose.foundation.Canvas
+import com.client.xvideos.common.ui.composition.LocalScrollbarAlpha
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

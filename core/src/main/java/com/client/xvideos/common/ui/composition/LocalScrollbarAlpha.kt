@@ -1,4 +1,4 @@
-package com.client.xvideos.common.ui.atom
+package com.client.xvideos.common.ui.composition
 
 import androidx.compose.runtime.compositionLocalOf
 

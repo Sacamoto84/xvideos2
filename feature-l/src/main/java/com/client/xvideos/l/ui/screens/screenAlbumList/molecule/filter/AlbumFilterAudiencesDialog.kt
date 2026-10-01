@@ -1,4 +1,6 @@
-package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
+package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter
+
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom.AudienceDialogRow
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,7 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.net.graphQl.Audience
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
 
 @Composable
 fun AlbumFilterAudiencesDialog(

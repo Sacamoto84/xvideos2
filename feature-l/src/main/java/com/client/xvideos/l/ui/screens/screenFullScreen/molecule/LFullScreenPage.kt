@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenFullScreen
+package com.client.xvideos.l.ui.screens.screenFullScreen.molecule
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.videoplayer.ui.isZoomActive
 import com.client.xvideos.l.model.PicsDetails
@@ -36,7 +37,7 @@ import net.engawapg.lib.zoomable.zoomable
  * — перенос дословный.
  */
 @Composable
-internal fun LFullScreenPage(
+fun LFullScreenPage(
     pageItem: PicsDetails,
     page: Int,
     currentIndex: Int,
@@ -193,7 +194,7 @@ internal fun LFullScreenPage(
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+@Preview
 @Composable
 private fun LFullScreenPagePreview() {
     Box(

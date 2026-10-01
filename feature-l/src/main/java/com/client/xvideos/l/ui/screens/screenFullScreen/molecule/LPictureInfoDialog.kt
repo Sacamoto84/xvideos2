@@ -1,10 +1,9 @@
-package com.client.xvideos.l.ui.screens.screenFullScreen
+package com.client.xvideos.l.ui.screens.screenFullScreen.molecule
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -14,33 +13,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
-import timber.log.Timber
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lAnimationVideoUrl
 import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.model.lFullScreenImageUrls
 import com.client.xvideos.l.model.lImageMediaUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
-
-private const val TAG_URL = "url"
-
+import com.client.xvideos.l.ui.screens.screenFullScreen.atom.LPictureInfoText
+import timber.log.Timber
 
 /**
  * Диалог «Информация» о картинке и сборка его текста.
- *
- * Выделено из `L_FullScreenImage.kt` (было 800 строк). Тела функций не менялись
- * — перенос дословный.
  */
 @Composable
-internal fun LPictureInfoDialog(
+fun LPictureInfoDialog(
     item: PicsDetails,
     position: Int,
     total: Int,
@@ -104,73 +95,6 @@ internal fun LPictureInfoDialog(
     )
 }
 
-@Composable
-private fun LPictureInfoText(
-    text: String,
-    onUrlClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val annotatedText = remember(text) { text.withClickableHttpsLinks() }
-    val textStyle = remember(Theme.DialogLavande.bodyColor) {
-        TextStyle(
-            color = Theme.DialogLavande.bodyColor,
-            fontFamily = Theme.L.fontFamilyKarla
-        )
-    }
-
-    val onAnnotatedClick: (Int) -> Unit = remember(annotatedText, onUrlClick) {
-        { offset ->
-            annotatedText
-                .getStringAnnotations(TAG_URL, offset, offset)
-                .firstOrNull()
-                ?.item
-                ?.let(onUrlClick)
-        }
-    }
-
-    ClickableText(
-        text = annotatedText,
-        modifier = modifier,
-        style = textStyle,
-        onClick = onAnnotatedClick
-    )
-}
-
-private val HTTPS_URL_REGEX = Regex("""https://\S+""")
-
-private fun String.withClickableHttpsLinks() = buildAnnotatedString {
-    var lastIndex = 0
-
-    HTTPS_URL_REGEX.findAll(this@withClickableHttpsLinks).forEach { match ->
-        val rawUrl = match.value
-        val url = rawUrl.trimEnd('.', ',', ';', ')', ']', '}')
-        val start = match.range.first
-        val end = start + url.length
-
-        append(this@withClickableHttpsLinks.substring(lastIndex, start))
-
-        val annotatedStart = length
-        append(url)
-        addStringAnnotation(TAG_URL, url, annotatedStart, annotatedStart + url.length)
-        addStyle(
-            SpanStyle(
-                color = Color(0xFF8AB4F8),
-                textDecoration = TextDecoration.Underline
-            ),
-            annotatedStart,
-            annotatedStart + url.length
-        )
-
-        append(rawUrl.substring(url.length))
-        lastIndex = match.range.last + 1
-        if (end < start) lastIndex = match.range.last + 1
-    }
-
-    if (lastIndex < this@withClickableHttpsLinks.length) {
-        append(this@withClickableHttpsLinks.substring(lastIndex))
-    }
-}
-
 private fun lPictureInfoText(
     item: PicsDetails,
     position: Int,
@@ -225,4 +149,15 @@ private fun lPictureInfoText(
         appendLine("${index + 1}. size=${thumbnail.size ?: "-"} ${thumbnail.width}x${thumbnail.height}")
         appendLine(thumbnail.url ?: "-")
     }
+}
+
+@Preview
+@Composable
+private fun LPictureInfoDialogPreview() {
+    LPictureInfoDialog(
+        item = PicsDetails(),
+        position = 0,
+        total = 1,
+        onDismiss = {}
+    )
 }

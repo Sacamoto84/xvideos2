@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.toPrettyCount
-import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.atom.CreatorStatsRow
 import com.client.xvideos.r.ui.profile.atom.CreatorTopInfoRow
@@ -28,33 +25,6 @@ import com.client.xvideos.ui.theme.XvideosTheme
 /**
  * Блок полной информации о профиле креатора в шапке экрана профиля.
  */
-@Composable
-fun RedProfileCreaterInfo(
-    item: UserInfo,
-    savedRed: () -> SavedRed,
-    modifier: Modifier = Modifier,
-) {
-    val isFollow by remember(item.username) {
-        derivedStateOf {
-            savedRed().creators.list.any { it.username == item.username }
-        }
-    }
-    val onFollowClick = remember(isFollow, item, savedRed) {
-        {
-            if (isFollow) {
-                savedRed().creators.remove(item.username)
-            } else {
-                savedRed().creators.add(item)
-            }
-        }
-    }
-    RedProfileCreaterInfo(
-        item = item,
-        isFollow = isFollow,
-        onFollowClick = onFollowClick,
-        modifier = modifier,
-    )
-}
 
 @Composable
 fun RedProfileCreaterInfo(

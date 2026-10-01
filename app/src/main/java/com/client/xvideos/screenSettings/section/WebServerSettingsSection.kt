@@ -59,8 +59,6 @@ import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-private val ACTION_BUTTON_SHAPE = RoundedCornerShape(12.dp)
 private const val TEXT_COPY = "Скопировать"
 private const val TEXT_SHARE = "Поделиться"
 
@@ -319,7 +317,7 @@ private fun WebServerActionButtons(
             onClick = onCopy,
             modifier = Modifier.weight(1f),
             colors = copyButtonColors,
-            shape = ACTION_BUTTON_SHAPE
+            shape = RoundedCornerShape(12.dp)
         ) {
             Icon(Icons.Default.ContentCopy, contentDescription = TEXT_COPY, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
@@ -329,7 +327,7 @@ private fun WebServerActionButtons(
         OutlinedButton(
             onClick = onShare,
             modifier = Modifier.weight(1f),
-            shape = ACTION_BUTTON_SHAPE
+            shape = RoundedCornerShape(12.dp)
         ) {
             Icon(Icons.Default.Share, contentDescription = TEXT_SHARE, modifier = Modifier.size(16.dp), tint = SettingsRowTextPrimary)
             Spacer(Modifier.width(6.dp))

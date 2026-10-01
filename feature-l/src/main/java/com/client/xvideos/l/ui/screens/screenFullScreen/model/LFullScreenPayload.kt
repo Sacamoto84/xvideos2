@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenFullScreen
+package com.client.xvideos.l.ui.screens.screenFullScreen.model
 
 import com.client.xvideos.l.model.PicsDetails
 import java.util.LinkedHashMap

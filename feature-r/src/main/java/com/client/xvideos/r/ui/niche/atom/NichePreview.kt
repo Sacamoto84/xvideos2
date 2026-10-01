@@ -119,7 +119,7 @@ fun NichePreview(
 
 @Preview
 @Composable
-fun NichePreviewPreview() {
+private fun NichePreviewPreview() {
     XvideosTheme {
         NichePreview(
             niches = {

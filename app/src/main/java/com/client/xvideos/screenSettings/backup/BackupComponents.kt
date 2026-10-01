@@ -68,7 +68,6 @@ import com.client.xvideos.screenSettings.components.SettingsTopBarColor
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.util.formatBytes
 
-private val BACKUP_COMPONENT_SHAPE = RoundedCornerShape(8.dp)
 private val BACKUP_SELECTOR_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .height(56.dp)
@@ -107,7 +106,7 @@ internal fun BackupModeSelector(
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
                     count = BackupFlowScreen.entries.size,
-                    baseShape = BACKUP_COMPONENT_SHAPE
+                    baseShape = RoundedCornerShape(8.dp)
                 ),
                 colors = segmentedColors,
                 label = {
@@ -205,7 +204,7 @@ internal fun BackupConsole(
             .fillMaxWidth()
             .height(260.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(SettingsTopBarColor, BACKUP_COMPONENT_SHAPE)
+            .background(SettingsTopBarColor, RoundedCornerShape(8.dp))
             .padding(10.dp)
     ) {
         items(

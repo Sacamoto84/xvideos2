@@ -12,7 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.AlbumFilterTagsDialog
 
 @Composable
 fun AlbumListFilterTags(
@@ -24,8 +25,15 @@ fun AlbumListFilterTags(
     val tagCountItems = filterTagStateCount.orEmpty()
     val tagsPlus = remember(filter.tagPlus) { filter.tagPlus.distinct() }
     val tagsMinus = remember(filter.tagMinus) { filter.tagMinus.distinct() }
-    val tagsCorrect = rememberSelectableTags(tagCountItems, tagsPlus, tagsMinus)
-    val tagCountByTerm = rememberTagCountIndex(tagCountItems)
+    val tagsCorrect = remember(tagCountItems, tagsPlus, tagsMinus) {
+        tagCountItems.map { it.term }.toSet()
+            .minus(tagsPlus.toSet())
+            .minus(tagsMinus.toSet())
+            .toList()
+    }
+    val tagCountByTerm = remember(tagCountItems) {
+        tagCountItems.associate { it.term to it.count }
+    }
     val palette = StyleGenresTags.Palette
 
     var showDialog by remember { mutableStateOf(false) }
@@ -66,25 +74,6 @@ fun AlbumListFilterTags(
             onDismiss = { showDialog = false }
         )
     }
-}
-
-@Composable
-private fun rememberSelectableTags(
-    tagCountItems: List<AlbumListFilterGenreCountResponse>,
-    tagsPlus: List<String>,
-    tagsMinus: List<String>
-): List<String> = remember(tagCountItems, tagsPlus, tagsMinus) {
-    tagCountItems.map { it.term }.toSet()
-        .minus(tagsPlus.toSet())
-        .minus(tagsMinus.toSet())
-        .toList()
-}
-
-@Composable
-private fun rememberTagCountIndex(
-    tagCountItems: List<AlbumListFilterGenreCountResponse>
-): Map<String, Int> = remember(tagCountItems) {
-    tagCountItems.associate { it.term to it.count }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF141418)

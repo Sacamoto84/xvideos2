@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.atom
 
-import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.AlbumFilterSelectDialog
 
 import com.client.xvideos.common.theme.Theme
 
