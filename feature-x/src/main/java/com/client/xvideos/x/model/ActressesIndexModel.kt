@@ -30,19 +30,9 @@ data class ActressesIndexItem(
 
     val displayName: String get() = name.ifBlank { slug }
 
-    /** Возвращает флаг страны в виде юникод-эмодзи на основе [countryCode]. */
+    /** Флаг страны по [countryCode] (общий [getFlagEmojiOrNull]); пустая строка, если код не распознан. */
     val flagEmoji: String
-        get() {
-            val code = countryCode.trim().lowercase()
-            if (code.length != 2) return ""
-            return try {
-                val first = Character.toChars(code[0].code - 'a'.code + 0x1F1E6)
-                val second = Character.toChars(code[1].code - 'a'.code + 0x1F1E6)
-                String(first) + String(second)
-            } catch (_: Exception) {
-                ""
-            }
-        }
+        get() = getFlagEmojiOrNull(countryCode.trim()).orEmpty()
 }
 
 /**

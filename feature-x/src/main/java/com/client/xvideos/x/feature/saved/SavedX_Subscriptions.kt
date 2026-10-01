@@ -20,6 +20,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -261,29 +263,12 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
 
         val prefix = if (isModel) "models" else "channels"
         coroutineScope {
+            // Не больше MAX_PARALLEL_FEED_REQUESTS запросов разом: при десятках подписок
+            // залп запросов упирался в ограничение частоты сайта, и неудачные авторы
+            // молча выпадали из ленты.
+            val limiter = Semaphore(MAX_PARALLEL_FEED_REQUESTS)
             val deferredList = selectedCreators.map { creator ->
-                async {
-                    try {
-                        val targetUrl = "$urlStart/$prefix/${creator.slug}/videos/new/0"
-                        val json = readHtmlFromURLDirect(targetUrl)
-                        if (json.isBlank() || json.trim() == "{\"videos\":[]}") {
-                            val altPrefix = if (prefix == "models") "channels" else "models"
-                            val altJson = readHtmlFromURLDirect("$urlStart/$altPrefix/${creator.slug}/videos/new/0")
-                            if (altJson.isNotBlank() && altJson.trim() != "{\"videos\":[]}") {
-                                parserChannelVideosJson(altJson)
-                            } else {
-                                parserChannelVideosJson(json)
-                            }
-                        } else {
-                            parserChannelVideosJson(json)
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.w(e, "SavedX_Subscriptions: сбой загрузки роликов для %s", creator.slug)
-                        emptyList()
-                    }
-                }
+                async { limiter.withPermit { fetchCreatorVideos(creator.slug, prefix) } }
             }
 
             val results = deferredList.awaitAll()
@@ -306,6 +291,30 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
         }
     }
 
+    /**
+     * Свежие ролики автора [slug]: сначала по [prefix], при пустом ответе — по
+     * соседнему префиксу (models/channels). Сбой одного автора не роняет ленту.
+     */
+    private suspend fun fetchCreatorVideos(slug: String, prefix: String): List<ItemsX> = try {
+        val json = readHtmlFromURLDirect("$urlStart/$prefix/$slug/videos/new/0")
+        if (json.isBlank() || json.trim() == "{\"videos\":[]}") {
+            val altPrefix = if (prefix == "models") "channels" else "models"
+            val altJson = readHtmlFromURLDirect("$urlStart/$altPrefix/$slug/videos/new/0")
+            if (altJson.isNotBlank() && altJson.trim() != "{\"videos\":[]}") {
+                parserChannelVideosJson(altJson)
+            } else {
+                parserChannelVideosJson(json)
+            }
+        } else {
+            parserChannelVideosJson(json)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.w(e, "SavedX_Subscriptions: сбой загрузки роликов для %s", slug)
+        emptyList()
+    }
+
     private fun cleanSlug(slug: String): String = slug
         .trim()
         .removePrefix("/models/")
@@ -317,3 +326,6 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
         .trim('/')
         .trim()
 }
+
+/** Сколько авторов ленты подписок запрашивается одновременно. */
+private const val MAX_PARALLEL_FEED_REQUESTS = 4

@@ -9,7 +9,9 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.client.xvideos.common.AppContextHolder
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.builtins.serializer
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -140,17 +142,7 @@ private suspend fun loadHtmlInWebView(url: String): String =
 
                     Timber.d("readHtmlFromURL end %s", url)
 
-                    if (html.isNullOrEmpty() || html == "null") {
-                        if (continuation.isActive) continuation.resume("")
-                        destroyWebView()
-                        return@evaluateJavascript
-                    }
-
-                    val result = html.trim('"')
-                        .replace("\\u003C", "<")
-                        .replace("\\n", "\n")
-                        .replace("\\\"", "\"")
-
+                    val result = decodeJsStringResult(html)
                     if (continuation.isActive) continuation.resume(result)
                     destroyWebView()
                 }
@@ -159,3 +151,19 @@ private suspend fun loadHtmlInWebView(url: String): String =
         webView.loadUrl(url)
         continuation.invokeOnCancellation { destroyWebView() }
     }
+
+/**
+ * Результат `evaluateJavascript` — JSON-литерал строки. Разбираем его парсером
+ * JSON: ручные замены пропускали `\\`, `\t`, `\r`, `\/` и прочие `\uXXXX`, и
+ * ссылки и данные из скриптов страницы приходили испорченными.
+ *
+ * @return HTML страницы; пустая строка, если скрипт ничего не вернул или ответ не разобрался.
+ */
+internal fun decodeJsStringResult(raw: String?): String {
+    if (raw.isNullOrEmpty() || raw == "null") return ""
+    return runCatching { Json.decodeFromString(String.serializer(), raw) }
+        .getOrElse { e ->
+            Timber.w(e, "readHtmlFromURLWebView: результат JS не разобран как строка JSON")
+            ""
+        }
+}

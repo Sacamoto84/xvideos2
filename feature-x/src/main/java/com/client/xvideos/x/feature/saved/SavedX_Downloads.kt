@@ -16,6 +16,7 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
 import kotlinx.serialization.encodeToString
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -78,6 +79,41 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     fun contains(id: Long): Boolean = id > 0L && _downloadedVideoIds.value.contains(id)
     fun contains(item: ItemsX?): Boolean = item != null && contains(item.id)
 
+    /** id роликов, которые сейчас качаются: от нажатия «Скачать» до конца загрузки. */
+    private val inFlight = HashSet<Long>()
+
+    /**
+     * Прогресс каждой идущей загрузки по id. [percent] собирается из всех сразу:
+     * параллельные загрузки не перетирают друг друга, а окончание одной не
+     * выставляет «готово», пока идут остальные.
+     */
+    private val activeProgress = HashMap<Long, Float>()
+
+    /** Регистрирует загрузку ролика; false — он уже качается. */
+    internal fun markStarted(id: Long): Boolean = synchronized(inFlight) { inFlight.add(id) }
+
+    internal fun onVideoProgress(id: Long, value: Float) = synchronized(inFlight) {
+        if (id !in inFlight) return@synchronized
+        activeProgress[id] = value
+        _percent.value = activeProgress.values.average().toFloat()
+    }
+
+    /** Завершает учёт загрузки; поздние колбэки уже снятой загрузки игнорируются. */
+    internal fun onVideoFinished(id: Long, failed: Boolean) = synchronized(inFlight) {
+        if (!inFlight.remove(id)) return@synchronized
+        activeProgress.remove(id)
+        _percent.value = when {
+            activeProgress.isNotEmpty() -> activeProgress.values.average().toFloat()
+            failed -> -3f
+            else -> -2f
+        }
+    }
+
+    /** Состояние до постановки в очередь: меняем, только если ничего не качается. */
+    private fun setIdleState(value: Float) = synchronized(inFlight) {
+        if (activeProgress.isEmpty()) _percent.value = value
+    }
+
     /**
      * Возвращает `file://`-URI скачанного видеофайла (для передачи в ExoPlayer).
      *
@@ -111,63 +147,83 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             SnackBar.info("Уже сохранено")
             return
         }
+        // Прямая ссылка резолвится заново на каждое нажатие и каждый раз другая
+        // (токен), поэтому KDownloader дубль не узнает — отсекаем его здесь.
+        if (!markStarted(item.id)) {
+            SnackBar.info("Уже скачивается")
+            return
+        }
 
-        _percent.value = -2f
+        setIdleState(-2f)
         SnackBar.info("Получение ссылки на видео…")
 
         scope.launch(Dispatchers.IO) {
-            val videoUrl = resolveDirectVideoUrl(item)
-
-            if (videoUrl.isNullOrBlank()) {
-                _percent.value = -3f
-                SnackBar.error("Не удалось получить ссылку на видео")
-                return@launch
+            try {
+                enqueueVideo(item)
+            } catch (e: CancellationException) {
+                onVideoFinished(item.id, failed = true)
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "X download: не удалось поставить в очередь ${item.id}")
+                onVideoFinished(item.id, failed = true)
+                SnackBar.error("Ошибка скачивания: ${e.message}")
             }
-
-            File(dir).mkdirs()
-
-            // Превью-картинка (необязательно — ошибки не критичны).
-            if (item.previewImage.isNotBlank()) {
-                runCatching {
-                    val reqImg = kDownloader.newRequestBuilder(item.previewImage, dir, "${item.id}.jpg")
-                        .tag(item.id.toString())
-                        .build()
-                    kDownloader.enqueue(reqImg)
-                }
-            }
-
-            val req = kDownloader.newRequestBuilder(videoUrl, dir, "${item.id}.mp4")
-                .tag(item.id.toString())
-                .build()
-
-            kDownloader.enqueue(
-                req,
-                onStart = { _percent.value = 0f },
-                onProgress = { p -> _percent.value = p / 100f },
-                onError = {
-                    Timber.e("X download error ${item.id}: $it")
-                    _percent.value = -3f
-                    SnackBar.error("Ошибка скачивания: $it")
-                },
-                onCompleted = {
-                    scope.launch(Dispatchers.IO) {
-                        val file = File(dir, "${item.id}.mp4")
-                        if (!file.exists() || file.length() == 0L) {
-                            file.delete()
-                            _percent.value = -3f
-                            SnackBar.error("Ошибка: скачанный файл пуст")
-                            return@launch
-                        }
-                        _percent.value = -2f
-                        SnackBar.success("Скачано")
-                        runCatching {
-                            File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
-                        }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
-                        loadFromDisk()
-                    }
-                },
-            )
         }
+    }
+
+    /** Резолвит прямую ссылку и ставит видео (и превью) в очередь загрузчика. */
+    private suspend fun enqueueVideo(item: ItemsX) {
+        val videoUrl = resolveDirectVideoUrl(item)
+
+        if (videoUrl.isNullOrBlank()) {
+            onVideoFinished(item.id, failed = true)
+            SnackBar.error("Не удалось получить ссылку на видео")
+            return
+        }
+
+        File(dir).mkdirs()
+
+        // Превью-картинка (необязательно — ошибки не критичны).
+        if (item.previewImage.isNotBlank()) {
+            runCatching {
+                val reqImg = kDownloader.newRequestBuilder(item.previewImage, dir, "${item.id}.jpg")
+                    .tag(item.id.toString())
+                    .build()
+                kDownloader.enqueue(reqImg)
+            }
+        }
+
+        val req = kDownloader.newRequestBuilder(videoUrl, dir, "${item.id}.mp4")
+            .tag(item.id.toString())
+            .build()
+
+        kDownloader.enqueue(
+            req,
+            onStart = { onVideoProgress(item.id, 0f) },
+            onProgress = { p -> onVideoProgress(item.id, p / 100f) },
+            onError = {
+                Timber.e("X download error ${item.id}: $it")
+                onVideoFinished(item.id, failed = true)
+                SnackBar.error("Ошибка скачивания: $it")
+            },
+            onCompleted = {
+                scope.launch(Dispatchers.IO) {
+                    val file = File(dir, "${item.id}.mp4")
+                    if (!file.exists() || file.length() == 0L) {
+                        file.delete()
+                        onVideoFinished(item.id, failed = true)
+                        SnackBar.error("Ошибка: скачанный файл пуст")
+                        return@launch
+                    }
+                    onVideoFinished(item.id, failed = false)
+                    SnackBar.success("Скачано")
+                    runCatching {
+                        File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
+                    }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
+                    loadFromDisk()
+                }
+            },
+        )
     }
 
     /**
@@ -224,6 +280,8 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         if (item.id <= 0L) return
         scope.launch(Dispatchers.IO) {
             kDownloader.cancel(item.id.toString())
+            // Отменённая загрузка не должна держать id «качается» и общий прогресс.
+            onVideoFinished(item.id, failed = false)
             File(dir, "${item.id}.mp4").delete()
             File(dir, "${item.id}.jpg").delete()
             File(dir, "${item.id}.info").delete()

@@ -43,6 +43,13 @@ class SavedX_History(
     /** Быстрый in-memory доступ по id для плеера без лишнего дискового I/O. */
     private val historyMap = ConcurrentHashMap<Long, XHistoryItem>()
 
+    /**
+     * Все операции с файлами истории — по одной и в порядке вызова. Плеер сохраняет
+     * позицию раз в 3 секунды, при паузе и при закрытии; параллельные записи одного
+     * файла завершались вразнобой — позиция откатывалась, удалённая запись возвращалась.
+     */
+    private val writeDispatcher = ioDispatcher.limitedParallelism(1)
+
     private var refreshJob: Job? = null
 
     init {
@@ -107,7 +114,7 @@ class SavedX_History(
 
         historyMap[item.id] = entry
 
-        scope.launch(ioDispatcher) {
+        scope.launch(writeDispatcher) {
             historyDb.insert(item.id.toString(), entry)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
@@ -132,7 +139,7 @@ class SavedX_History(
      */
     fun delete(item: ItemsX) {
         if (item.id <= 0L) return
-        scope.launch(ioDispatcher) {
+        scope.launch(writeDispatcher) {
             historyDb.delete(item.id.toString())
                 .onSuccess {
                     withContext(Dispatchers.Main) {
@@ -157,7 +164,7 @@ class SavedX_History(
      */
     fun deleteBatchByIds(ids: Collection<Long>) {
         if (ids.isEmpty()) return
-        scope.launch(ioDispatcher) {
+        scope.launch(writeDispatcher) {
             val deletedIds = HashSet<Long>(ids.size)
             ids.forEach { id ->
                 if (id > 0L) {
@@ -192,7 +199,7 @@ class SavedX_History(
      * Полная очистка истории просмотров.
      */
     fun clearAll() {
-        scope.launch(ioDispatcher) {
+        scope.launch(writeDispatcher) {
             historyDb.clear()
                 .onSuccess {
                     withContext(Dispatchers.Main) {
@@ -213,7 +220,7 @@ class SavedX_History(
      */
     fun refresh() {
         refreshJob?.cancel()
-        refreshJob = scope.launch(ioDispatcher) {
+        refreshJob = scope.launch(writeDispatcher) {
             historyDb.refresh()
             withContext(Dispatchers.Main) {
                 if (list.isEmpty()) return@withContext
@@ -235,7 +242,7 @@ class SavedX_History(
         while (list.size > MAX_HISTORY_ITEMS) {
             list.removeAt(list.lastIndex)
         }
-        scope.launch(ioDispatcher) {
+        scope.launch(writeDispatcher) {
             excess.forEach { entry ->
                 historyMap.remove(entry.item.id)
                 historyDb.delete(entry.item.id.toString())

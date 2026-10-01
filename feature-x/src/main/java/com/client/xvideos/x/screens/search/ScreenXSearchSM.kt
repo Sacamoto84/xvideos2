@@ -210,7 +210,9 @@ class ScreenXSearchSM @Inject constructor(
         }
 
         if (html.isBlank()) {
-            return com.client.xvideos.x.search.SearchVideosResult(emptyList(), 1)
+            // Оба способа не дали страницы — это сбой, а не «ничего не найдено»:
+            // loadVideos покажет ошибку с кнопкой повтора.
+            throw java.io.IOException("Не удалось загрузить страницу поиска: $url")
         }
 
         return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {

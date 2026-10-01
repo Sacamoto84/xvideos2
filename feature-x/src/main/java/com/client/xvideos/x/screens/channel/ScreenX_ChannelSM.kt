@@ -8,7 +8,9 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
-import com.client.xvideos.x.feature.net.postFormDataFromURLDirect
+import com.client.xvideos.x.feature.net.fetchHtml
+import com.client.xvideos.x.feature.net.notFoundAsEmpty
+import com.client.xvideos.x.feature.net.postFormData
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ChannelModelFilterItem
@@ -34,6 +36,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -196,14 +199,18 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         val sortKey = uiState.currentSort.apiKey
         val targetUrl = "$urlStart/$prefix/$cleanSlug/videos/$sortKey/$page"
         val selected = uiState.selectedModel
+        // Сбой сети — исключение (экран покажет ошибку с повтором), а не пустая лента;
+        // 404 на «чужом» префиксе — пустой ответ, его разбирает перебор models/channels.
         return withContext(Dispatchers.IO) {
-            if (selected != null && selected.idUser > 0L) {
-                postFormDataFromURLDirect(
-                    url = targetUrl,
-                    formParameters = mapOf(modelFilterParamKey to selected.idUser.toString())
-                )
-            } else {
-                readHtmlFromURLDirect(targetUrl)
+            notFoundAsEmpty {
+                if (selected != null && selected.idUser > 0L) {
+                    postFormData(
+                        url = targetUrl,
+                        formParameters = mapOf(modelFilterParamKey to selected.idUser.toString())
+                    )
+                } else {
+                    fetchHtml(targetUrl)
+                }
             }
         }
     }
@@ -345,7 +352,9 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         loadingPages.add(targetPage)
         errorPages.remove(targetPage)
 
-        val job = screenModelScope.launch {
+        // LAZY: задача попадает в pageJobs до первого шага, и finally сверяется с ней.
+        val job = screenModelScope.launch(start = CoroutineStart.LAZY) {
+            val self = coroutineContext[Job]
             try {
                 val jsonVideos = fetchVideosJsonWithFallback(targetPage, isModel = uiState.header.isModel)
 
@@ -354,7 +363,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 }
 
                 pagesCache[targetPage] = result.videos
-                loadingPages.remove(targetPage)
                 if (result.totalVideos != null && result.totalVideos > 0) {
                     uiState = uiState.copy(totalVideosCount = result.totalVideos)
                 }
@@ -368,17 +376,21 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     }
                 }
             } catch (e: CancellationException) {
-                loadingPages.remove(targetPage)
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ScreenX_ChannelSM: сбой загрузки страницы %d для %s", targetPage, cleanSlug)
-                loadingPages.remove(targetPage)
                 errorPages[targetPage] = "Не удалось загрузить страницу ${targetPage + 1}"
             } finally {
-                pageJobs.remove(targetPage)
+                // Задачу могла сменить новая (loadInitial отменил эту и запустил ту же
+                // страницу заново) — её флаг загрузки и запись в pageJobs не трогаем.
+                if (pageJobs[targetPage] === self) {
+                    pageJobs.remove(targetPage)
+                    loadingPages.remove(targetPage)
+                }
             }
         }
         pageJobs[targetPage] = job
+        job.start()
     }
 
     /**

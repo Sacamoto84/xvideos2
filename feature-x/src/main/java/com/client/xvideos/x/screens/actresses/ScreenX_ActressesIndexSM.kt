@@ -8,6 +8,8 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.x.feature.net.fetchHtml
+import com.client.xvideos.x.feature.net.notFoundAsEmpty
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
@@ -163,8 +165,10 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
         pagingJob = screenModelScope.launch {
             try {
                 val targetUrl = buildAbsoluteUrl(nextPagePath)
+                // Сбой сети — исключение: список не помечается законченным, следующая
+                // прокрутка повторит запрос. 404 — каталог действительно кончился.
                 val html = withContext(Dispatchers.IO) {
-                    readHtmlFromURLDirect(targetUrl)
+                    notFoundAsEmpty { fetchHtml(targetUrl) }
                 }
 
                 val parsedCatalog = withContext(Dispatchers.Default) {
