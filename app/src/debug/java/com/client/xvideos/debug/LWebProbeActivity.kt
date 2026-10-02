@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -29,6 +30,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * logcat с тегом [TAG] пишутся операция, переменные, статус, `cf-cache-status`
  * и число альбомов, а ответ отдаётся странице. Сторонние хосты (реклама,
  * счётчики) режутся пустым ответом, уход со страницы на чужой домен запрещён.
+ *
+ * Полные запросы сайта (операция, текст, переменные, сырая строка параметров)
+ * дописываются в `l_site_queries.jsonl` во внешней папке приложения — по ним
+ * запросы приложения сверяются с сайтовыми байт в байт.
  *
  * Запуск: `adb shell am start -n com.client.xvideos/.debug.LWebProbeActivity`,
  * другая страница сайта — `--es path /albums/new/`.
@@ -75,6 +80,7 @@ class LWebProbeActivity : Activity() {
                 Timber.tag(TAG).i("%s method=%s пропущен без перехвата", description, request.method)
                 return null
             }
+            siteRequestDumpLine(request.url.toString())?.let(::appendDump)
             return fetchAndLog(request, description)
         }
 
@@ -84,6 +90,16 @@ class LWebProbeActivity : Activity() {
         override fun onPageFinished(view: WebView, url: String) {
             Timber.tag(TAG).i("page finished path=%s blocked=%d", Uri.parse(url).path, blocked.get())
         }
+    }
+
+    /**
+     * Дописывает запрос сайта в [DUMP_FILE_NAME] во внешней папке приложения:
+     * `adb pull /sdcard/Android/data/com.client.xvideos/files/l_site_queries.jsonl`.
+     */
+    @Synchronized
+    private fun appendDump(line: String) {
+        runCatching { File(getExternalFilesDir(null), DUMP_FILE_NAME).appendText(line + "\n") }
+            .onFailure { Timber.tag(TAG).w(it, "запись выгрузки не удалась") }
     }
 
     /** Выполняет запрос страницы тем же URL и заголовками (без cookies) и пишет итог в лог. */
@@ -125,5 +141,6 @@ class LWebProbeActivity : Activity() {
     private companion object {
         const val TAG = "LWebProbe"
         const val EXTRA_PATH = "path"
+        const val DUMP_FILE_NAME = "l_site_queries.jsonl"
     }
 }

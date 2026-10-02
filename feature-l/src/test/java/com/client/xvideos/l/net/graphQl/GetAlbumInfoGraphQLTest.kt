@@ -18,9 +18,11 @@ class GetAlbumInfoGraphQLTest {
         val jsonElement = Json.parseToJsonElement(jsonString)
         val jsonObject = jsonElement.jsonObject
 
+        // Сайтовый AlbumGet: при отказе сервера ответ может прийти из кэша (см. SiteQueriesTest).
+        assertEquals("AlbumGet", jsonObject["operationName"]?.jsonPrimitive?.content)
         val query = jsonObject["query"]?.jsonPrimitive?.content
         assertNotNull(query)
-        assertTrue(query!!.contains("query getAlbumInfo(\$id: ID!)"))
+        assertTrue(query!!.contains("query AlbumGet(\$id: ID!)"))
         assertTrue(query.contains("fragment AlbumStandard on Album"))
 
         val variables = jsonObject["variables"]?.jsonObject

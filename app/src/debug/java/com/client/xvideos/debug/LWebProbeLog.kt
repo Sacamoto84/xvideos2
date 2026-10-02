@@ -1,5 +1,7 @@
 package com.client.xvideos.debug
 
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.net.URI
 import java.net.URLDecoder
 
@@ -19,15 +21,45 @@ private val ALBUM_TYPENAME_REGEX = Regex("\"__typename\"\\s*:\\s*\"Album\"")
  * @return `null`, если URL — не запрос к GraphQL с параметрами.
  */
 internal fun describeGraphQlRequest(url: String): String? {
+    val request = parseGraphQlGet(url) ?: return null
+    return "op=${request.operation} vars=${request.variables}"
+}
+
+/**
+ * Строка выгрузки запроса сайта (JSON Lines): операция, текст запроса после
+ * обоих раскодирований (сайт кодирует его дважды), переменные и сырая строка
+ * параметров — по ней запрос приложения сверяется с сайтовым байт в байт.
+ *
+ * @return `null`, если URL — не запрос к GraphQL с параметрами.
+ */
+internal fun siteRequestDumpLine(url: String): String? {
+    val request = parseGraphQlGet(url) ?: return null
+    return buildJsonObject {
+        put("op", request.operation)
+        put("query", request.query)
+        put("variables", request.variables)
+        put("rawQuery", request.rawQuery)
+    }.toString()
+}
+
+private class GraphQlGet(val operation: String, val query: String, val variables: String, val rawQuery: String)
+
+private fun parseGraphQlGet(url: String): GraphQlGet? {
     val uri = runCatching { URI(url) }.getOrNull() ?: return null
     if (uri.rawPath?.endsWith(GRAPHQL_PATH_SUFFIX) != true) return null
-    val params = uri.rawQuery?.split('&').orEmpty().associate { pair ->
-        val name = pair.substringBefore('=')
-        name to URLDecoder.decode(pair.substringAfter('=', ""), Charsets.UTF_8.name())
+    val rawQuery = uri.rawQuery ?: return null
+    val params = rawQuery.split('&').associate { pair ->
+        pair.substringBefore('=') to formDecode(pair.substringAfter('=', ""))
     }
-    val operation = params["operationName"] ?: return null
-    return "op=$operation vars=${params["variables"].orEmpty()}"
+    return GraphQlGet(
+        operation = params["operationName"] ?: return null,
+        query = formDecode(params["query"].orEmpty()),
+        variables = params["variables"].orEmpty(),
+        rawQuery = rawQuery,
+    )
 }
+
+private fun formDecode(value: String): String = URLDecoder.decode(value, Charsets.UTF_8.name())
 
 /**
  * Хост сайта или его поддомен, либо проверка Cloudflare. Всё остальное —

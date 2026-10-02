@@ -33,6 +33,24 @@ class LWebProbeTest {
     }
 
     @Test
+    fun `строка выгрузки хранит операцию, раскодированный текст запроса, переменные и сырую строку параметров`() {
+        val rawQuery = "operationName=Q&query=%2520query%2520Q%2520%257B%2520a%28b%253A%2520%2522x%252B1%2522%29%2520%257D%2520" +
+            "&variables=%7B%22p%22%3A1%7D"
+
+        val line = siteRequestDumpLine("https://www.site.test/graphql/nobatch/?$rawQuery")
+
+        assertEquals(
+            """{"op":"Q","query":" query Q { a(b: \"x+1\") } ","variables":"{\"p\":1}","rawQuery":"$rawQuery"}""",
+            line
+        )
+    }
+
+    @Test
+    fun `не GraphQL — строки выгрузки нет`() {
+        assertNull(siteRequestDumpLine("https://www.site.test/manga/"))
+    }
+
+    @Test
     fun `альбомы считаются по typename`() {
         assertEquals(2, countAlbums("""{"a":{"__typename":"Album"},"b":{"__typename" : "Album"},"c":{"__typename":"AlbumTag"}}"""))
     }
