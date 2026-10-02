@@ -2,11 +2,13 @@ package com.client.xvideos.l.net
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.AlbumListTopHits
 import com.client.xvideos.l.net.graphQl.getAlbumListTopHitsQuery
 import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.repository.Repository
+import com.client.xvideos.l.repository.toLUserMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +42,11 @@ class AlbumTopHitsImpl(
                 Timber.d("getAlbumTopHits")
                 val query = getAlbumListTopHitsQuery()
                 val res = repository.openURI(query)
-                if (res.isFailure) return@launch
+                if (res.isFailure) {
+                    // Раньше отказ молча оставлял вкладку пустой.
+                    SnackBar.error(res.exceptionOrNull().toLUserMessage())
+                    return@launch
+                }
                 val raw = res.getOrNull().orEmpty()
                 if (raw.isBlank()) return@launch
                 val json = LJson.parseToJsonElement(raw).jsonObject
@@ -53,6 +59,7 @@ class AlbumTopHitsImpl(
                 throw t
             } catch (t: Throwable) {
                 Timber.w(t, "getAlbumTopHits error")
+                SnackBar.error(t.toLUserMessage())
                 return@launch
             }
 

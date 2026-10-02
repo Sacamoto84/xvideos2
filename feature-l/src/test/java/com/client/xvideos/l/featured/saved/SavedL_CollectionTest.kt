@@ -6,7 +6,7 @@ import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
-import com.client.xvideos.l.repository.Repository
+import com.client.xvideos.l.repository.offlineRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -110,7 +110,7 @@ class SavedL_CollectionTest {
         AppPath.init(context)
 
         val fileDb = AppFileDatabase()
-        val repository = Repository(fileDb)
+        val repository = offlineRepository(fileDb)
         val luscious = Luscious(CoroutineScope(Job()), repository)
         val savedCollection = SavedL_Collection(this, luscious)
 
@@ -135,7 +135,7 @@ class SavedL_CollectionTest {
         AppPath.init(context)
 
         val fileDb = AppFileDatabase()
-        val repository = Repository(fileDb)
+        val repository = offlineRepository(fileDb)
         val luscious = Luscious(CoroutineScope(Job()), repository)
         val savedCollection = SavedL_Collection(this, luscious)
 

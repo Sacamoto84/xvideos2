@@ -8,6 +8,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
+import com.client.xvideos.l.repository.toLUserMessage
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -105,6 +106,7 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
                 }
             }.onFailure { error ->
                 Timber.e(error, "Failed to load next page ($nextPage) of subscribed albums")
+                SnackBar.error(error.toLUserMessage())
             }
             _isLoading.value = false
         }

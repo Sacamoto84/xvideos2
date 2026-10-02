@@ -28,4 +28,6 @@ dependencies {
 
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test
+    // Подставной HTTP-движок: тесты отказа сервера L без сети.
+    testImplementation libs.ktor.client.mock
 }

@@ -4,8 +4,10 @@ import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
+import com.client.xvideos.l.repository.toLUserMessage
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import dagger.Binds
@@ -123,6 +125,7 @@ class ScreenLServerLikesSM @Inject constructor(
                 }
             }.onFailure { error ->
                 Timber.e(error, "Failed to load next page ($nextPage) of server likes")
+                SnackBar.error(error.toLUserMessage())
             }
             _isLoading.value = false
         }

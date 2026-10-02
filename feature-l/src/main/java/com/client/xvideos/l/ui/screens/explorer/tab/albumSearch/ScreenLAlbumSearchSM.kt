@@ -5,10 +5,12 @@ import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.model.Landing_page_albumType
 import com.client.xvideos.l.net.Luscious
+import com.client.xvideos.l.repository.toLUserMessage
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -60,6 +62,8 @@ class ScreenLAlbumSearchSM @Inject constructor(
                 _result.value = withContext(Dispatchers.IO) {
                     luscious.getLandingPageAlbumSearch(query).getOrElse {
                         Timber.e(it, "ScreenLAlbumSearchSM search")
+                        // Без сообщения отказ сети выглядел как «ничего не найдено».
+                        SnackBar.error(it.toLUserMessage())
                         null
                     }
                 }

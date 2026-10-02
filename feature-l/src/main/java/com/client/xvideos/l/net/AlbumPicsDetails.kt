@@ -15,6 +15,7 @@ import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lBestThumbnailImageUrl
 import com.client.xvideos.l.net.graphQl.GraphQlRequest
 import com.client.xvideos.l.net.json.LJson
+import com.client.xvideos.l.repository.HTML_INSTEAD_OF_JSON_PREFIX
 import com.client.xvideos.l.repository.LRepositoryProtectionUiState
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
@@ -170,7 +171,7 @@ class AlbumPicsDetails(
         recordPageIssue(page, pageError)
         if (pageError.isHtmlChallengeResponse()) {
             Timber.w(pageError, "AlbumPicsDetails $id page $page HTML challenge response")
-            return Result.failure(pageError ?: IllegalStateException("Server returned HTML instead of JSON"))
+            return Result.failure(pageError ?: IllegalStateException(HTML_INSTEAD_OF_JSON_PREFIX))
         }
 
         Timber.w(pageError, "AlbumPicsDetails $id page $page load error")
@@ -433,7 +434,7 @@ class AlbumPicsDetails(
 
     private fun Throwable?.isHtmlChallengeResponse(): Boolean {
         val message = this?.message ?: return false
-        return message.startsWith("Server returned HTML instead of JSON")
+        return message.startsWith(HTML_INSTEAD_OF_JSON_PREFIX)
     }
 }
 

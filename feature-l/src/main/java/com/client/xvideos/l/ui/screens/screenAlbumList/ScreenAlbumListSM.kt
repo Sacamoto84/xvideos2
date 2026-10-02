@@ -19,6 +19,7 @@ import com.client.xvideos.l.model.FacetCollectionInfo
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.net.AlbumListImplInfoAndList
 import com.client.xvideos.l.net.Luscious
+import com.client.xvideos.l.repository.toLUserMessage
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -41,12 +42,18 @@ import timber.log.Timber
  * Статус загрузки конкретной страницы в списке альбомов.
  */
 enum class StatusAlbumList {
-    /** Загрузка завершилась с ошибкой или простаивает. */
+    /** Страница простаивает: загрузка ещё не начиналась. */
     BUSY,
     /** В процессе сетевой загрузки. */
     DOWNLOADING,
     /** Страница успешно загружена и закэширована. */
-    DOWNLOADED
+    DOWNLOADED,
+    /**
+     * Загрузка не удалась; причина в [AlbumListImplInfoAndListAndStatus.errorMessage].
+     * Раньше отказ сбрасывал страницу в [BUSY], и экран показывал пустую сетку
+     * без единого слова — об ошибке можно было узнать только из logcat.
+     */
+    ERROR,
 }
 
 /**
@@ -54,10 +61,12 @@ enum class StatusAlbumList {
  *
  * @property albumListImplInfoAndList Загруженные данные альбомов и информация пагинации.
  * @property status Текущий статус загрузки [StatusAlbumList].
+ * @property errorMessage Текст ошибки для пользователя при [StatusAlbumList.ERROR].
  */
 data class AlbumListImplInfoAndListAndStatus(
     val albumListImplInfoAndList: AlbumListImplInfoAndList? = null,
-    val status: StatusAlbumList = StatusAlbumList.BUSY
+    val status: StatusAlbumList = StatusAlbumList.BUSY,
+    val errorMessage: String? = null,
 )
 
 /**
@@ -175,8 +184,8 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                     luscious.getAlbumList(1, filter.value)
                 }
                 if (albumListResult.isFailure) {
-                    bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
-                    val errorMsg = albumListResult.exceptionOrNull()?.message ?: "Error loading initial data"
+                    val errorMsg = albumListResult.exceptionOrNull().toLUserMessage()
+                    bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
                     Timber.w("loadInitialData failure: $errorMsg")
                     SnackBar.error(errorMsg)
                     return@launch
@@ -201,8 +210,9 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Error loading initial data")
-                SnackBar.error(e.message ?: "Error loading initial data")
-                bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
+                val errorMsg = e.toLUserMessage()
+                SnackBar.error(errorMsg)
+                bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
             } finally {
                 _isRequest.value = false
             }
@@ -243,7 +253,11 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                     luscious.getAlbumList(page + 1, filter.value)
                 }
                 if (albumListResult.isFailure) {
-                    bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
+                    // Без снекбара: экран грузит сразу до четырёх соседних
+                    // страниц, и одинаковых сообщений было бы четыре. Причину
+                    // показывает сама страница вместе с кнопкой повтора.
+                    val errorMsg = albumListResult.exceptionOrNull().toLUserMessage()
+                    bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
                     return@launch
                 }
 
@@ -257,8 +271,9 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Error loading page $page")
-                SnackBar.error(e.message ?: "Error loading page $page")
-                bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.BUSY)
+                val errorMsg = e.toLUserMessage()
+                SnackBar.error(errorMsg)
+                bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
             } finally {
                 _isRequest.value = false
             }

@@ -12,7 +12,7 @@ import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.model.enum.PictureCountRank
 import com.client.xvideos.l.model.enum.SelectIndex
 import com.client.xvideos.l.net.Luscious
-import com.client.xvideos.l.repository.Repository
+import com.client.xvideos.l.repository.offlineRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -272,7 +272,7 @@ class Batch62LSavedAndEnumsTest {
         AppPath.init(context)
 
         val fileDb = AppFileDatabase()
-        val repository = Repository(fileDb)
+        val repository = offlineRepository(fileDb)
         val luscious = Luscious(CoroutineScope(Job()), repository)
 
         val savedLikes = SavedL_Likes(luscious, this)

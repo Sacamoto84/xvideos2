@@ -7,12 +7,14 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.navigation.NavigationDepthState
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.model.Landing_page_albumType
 import com.client.xvideos.l.model.enum.AlbumType
 import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.net.Luscious
+import com.client.xvideos.l.repository.toLUserMessage
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -57,11 +59,13 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
                 _albumTopHits.value = res.getOrNull()
                 if (res.isFailure) {
                     Timber.w(res.exceptionOrNull(), "ScreenLAlbumLandingTagSM: failed to load tag $tag")
+                    SnackBar.error(res.exceptionOrNull().toLUserMessage())
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ScreenLAlbumLandingTagSM: exception loading tag $tag")
+                SnackBar.error(e.toLUserMessage())
             }
         }
 

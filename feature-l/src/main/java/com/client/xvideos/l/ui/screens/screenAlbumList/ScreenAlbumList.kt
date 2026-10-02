@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +40,7 @@ import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.bottomBar.AlbumListBottomBar
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.AlbumListFilterOverlay
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.AlbumListPageGrid
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.AlbumListPageWithStatus
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 
@@ -175,25 +175,24 @@ private fun Screen.ScreenAlbumListContent(
                 key = { page -> "${key}_page_$page" }
             ) { page ->
 
-                val pageItems = bigList[page]?.albumListImplInfoAndList?.items.orEmpty()
-                val stateGrid = vm.stateGrid.getOrPut(page) { LazyGridState() }
+                val pageState = bigList[page]
+                val pageItems = pageState?.albumListImplInfoAndList?.items.orEmpty()
 
-                AlbumListPageGrid(
-                    stateGrid = stateGrid,
-                    pageItems = pageItems,
-                    title = title,
-                    topInset = topInset,
-                    haptic = haptic,
-                    onAlbumClick = onAlbumClick
-                )
-
-                val status = vm.bigList[page]?.status
-                if ((status == StatusAlbumList.DOWNLOADING) && (pageItems.isEmpty())) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                AlbumListPageWithStatus(
+                    status = pageState?.status,
+                    isEmpty = pageItems.isEmpty(),
+                    errorMessage = pageState?.errorMessage,
+                    onRetry = remember(vm, page) { { vm.loadAlbumList(page) } },
+                ) {
+                    AlbumListPageGrid(
+                        stateGrid = vm.stateGrid.getOrPut(page) { LazyGridState() },
+                        pageItems = pageItems,
+                        title = title,
+                        topInset = topInset,
+                        haptic = haptic,
+                        onAlbumClick = onAlbumClick
+                    )
                 }
-
             }
 
         }

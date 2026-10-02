@@ -2,9 +2,12 @@ package com.client.xvideos.l.repository
 
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
+import com.client.xvideos.l.model.UserProfile
 import com.client.xvideos.l.net.json.LJson
+import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,15 +50,22 @@ data class LRepositoryProtectionUiState(
  *
  * Отвечает за:
  * - управление сессией пользователя и авторизацией в [KtorRequestHandler];
- * - отправку GraphQL POST-запросов на [LusciousEndpoints.API];
+ * - отправку GraphQL-запросов: вошедшего — POST на [LusciousEndpoints.API], анонима —
+ *   как у сайта, GET на [LusciousEndpoints.API_ANONYMOUS] без cookies;
  * - многоуровневое кэширование ответов (RAM LRU-кэш, постоянный ROM-кэш);
  * - обработку антибот-защиты (HTML challenge/Cloudflare) с экспоненциальным кулдауном;
  * - троттлинг сетевых запросов с минимальным интервалом.
  *
  * @param fileDb Локальная файловая база данных для доступа к ROM-кэшам.
+ * @param credentials Сохранённые логин и пароль; пустой профиль — анонимный режим.
+ * @param engineFactory Движок HTTP для тестов; `null` — боевой OkHttp.
+ * @param notifyAnonymousFallback Сообщение пользователю, что вход не удался и запросы идут анонимно.
  */
 open class Repository(
     fileDb: AppFileDatabase,
+    private val credentials: () -> UserProfile = ::savedCredentials,
+    private val engineFactory: (() -> HttpClientEngine)? = null,
+    private val notifyAnonymousFallback: (String) -> Unit = SnackBar::warning,
 ) {
 
     /** Точка входа для GraphQL API Luscious. */
@@ -65,6 +75,14 @@ open class Repository(
     private var handler = createHandler()
 
     private val authMutex = Mutex()
+
+    /**
+     * Профиль, вход по которому в этой сессии не удался. Пока сохранены те же
+     * логин и пароль, запросы идут анонимно без новых попыток входа.
+     * Читается и пишется только под [authMutex].
+     */
+    private var anonymousFallbackFor: UserProfile? = null
+
     private val requestMutex = Mutex()
     private val ramCacheMutex = Mutex()
     private val ramCache = object : LinkedHashMap<String, String>(RAM_CACHE_MAX_ENTRIES, 0.75f, true) {
@@ -100,7 +118,8 @@ open class Repository(
             timeoutMillis = 5000,
             maxRetries = 5,
             retryStatusCodes = RETRY_STATUS_CODES,
-            backoffFactor = 1000
+            backoffFactor = 1000,
+            engineOverride = engineFactory?.invoke(),
         )
     }
 
@@ -116,6 +135,7 @@ open class Repository(
             requestMutex.withLock {
                 Settings.l_login.setValue("")
                 Settings.l_pass.setValue("")
+                anonymousFallbackFor = null
                 val oldHandler = handler
                 handler = createHandler()
                 oldHandler.close()
@@ -126,21 +146,23 @@ open class Repository(
 
     /**
      * Проверяет и при необходимости выполняет авторизацию пользователя по сохраненным логину и паролю.
+     *
+     * Неудачный вход не закрывает раздел: до смены логина или пароля запросы
+     * идут анонимно, как после «Пропустить», а пользователь получает одно
+     * предупреждение. Раньше отказ входа возвращался ошибкой из каждого
+     * openURI и вход повторялся на каждом запросе — при сломанной авторизации
+     * на сервере L не открывался вовсе, хотя анонимные запросы проходили.
      */
     private suspend fun ensureAuthenticated(): Result<Unit> {
         return try {
             authMutex.withLock {
-                val username = Settings.l_login.field.value.trim()
-                val password = Settings.l_pass.field.value
+                val profile = credentials()
                 // Анонимный режим: без логина/пароля работаем без авторизации
                 // (Luscious отдаёт меньше альбомов). С кредами — авторизуемся.
-                if (username.isNotBlank() && password.isNotBlank()) {
-                    handler.setCredentials(username, password)
+                if (profile.isValid && profile != anonymousFallbackFor) {
+                    handler.setCredentials(profile.email, profile.password)
                     if (!handler.loggedIn) {
-                        val loggedIn = handler.login()
-                        if (!loggedIn) {
-                            return Result.failure(IllegalStateException("Luscious login failed"))
-                        }
+                        handler.login().onFailure { fallBackToAnonymous(profile, it) }
                     }
                 }
                 SUCCESS_UNIT
@@ -151,6 +173,14 @@ open class Repository(
             Timber.e(e, "openURI() login error")
             Result.failure(e)
         }
+    }
+
+    /** Запоминает неудачный вход и предупреждает пользователя. Вызывать под [authMutex]. */
+    private fun fallBackToAnonymous(profile: UserProfile, cause: Throwable) {
+        anonymousFallbackFor = profile
+        val reason = cause.message?.replaceFirstChar { it.lowercase() } ?: cause.javaClass.simpleName
+        Timber.w(cause, "L login failed, continuing anonymously")
+        notifyAnonymousFallback("Вход в L не удался: $reason. Работаем без авторизации")
     }
 
     /**
@@ -273,12 +303,12 @@ open class Repository(
             scheduleHtmlChallengeCooldown(
                 delayMs = delayMs,
                 requestHash = requestHash,
-                message = error?.message ?: "Server returned HTML instead of JSON"
+                message = error?.message ?: HTML_INSTEAD_OF_JSON_PREFIX
             )
             Timber.w("openURI() HTML challenge response, retry after ${delayMs}ms")
         }
 
-        return lastFailure ?: Result.failure(IllegalStateException("Server returned HTML instead of JSON"))
+        return lastFailure ?: Result.failure(IllegalStateException(HTML_INSTEAD_OF_JSON_PREFIX))
     }
 
     /**
@@ -293,7 +323,16 @@ open class Repository(
             if (waitMs > 0) delay(waitMs)
 
             try {
-                handler.postJson(apiUrl, data)
+                // Как у сайта: вошедший — POST на адрес участников с cookie
+                // сессии; аноним (нет логина или вход не удался) — GET на
+                // анонимный адрес без cookies. Раньше аноним тоже ходил на
+                // адрес участников и не попадал в кэш Cloudflare, на котором
+                // сайт продолжал работать при отказе сервера.
+                if (handler.loggedIn) {
+                    handler.postJson(apiUrl, data)
+                } else {
+                    handler.graphQlAnonymous(LusciousEndpoints.API_ANONYMOUS, data)
+                }
             } finally {
                 lastNetworkRequestAtMs = System.currentTimeMillis()
             }
@@ -346,7 +385,7 @@ open class Repository(
         val normalized = response.trim()
         if (!normalized.startsWith("{")) {
             val message = if (normalized.startsWith("<!DOCTYPE", ignoreCase = true) || normalized.startsWith("<html", ignoreCase = true)) {
-                "Server returned HTML instead of JSON: ${normalized.previewForLog()}"
+                "$HTML_INSTEAD_OF_JSON_PREFIX: ${normalized.previewForLog()}"
             } else {
                 "Server returned non-JSON response: ${normalized.previewForLog()}"
             }
@@ -427,13 +466,15 @@ open class Repository(
 
     private fun Throwable?.isHtmlChallengeResponse(): Boolean {
         val message = this?.message ?: return false
-        return message.startsWith("Server returned HTML instead of JSON")
+        return message.startsWith(HTML_INSTEAD_OF_JSON_PREFIX)
     }
 
 
     private companion object {
         val SUCCESS_UNIT = Result.success(Unit)
-        val RETRY_STATUS_CODES = setOf(413, 429, 500, 502, 503, 504)
+        // Без 500: это отказ приложения сервера, а не шлюза. Пять повторов с
+        // паузами на упавшем сервере только оттягивали ошибку на экране.
+        val RETRY_STATUS_CODES = setOf(413, 429, 502, 503, 504)
         val LOG_PREVIEW_WHITESPACE_REGEX = Regex("\\s+")
         const val MIN_NETWORK_REQUEST_INTERVAL_MS = 300L
         const val HTML_CHALLENGE_RETRY_ATTEMPTS = 3
@@ -457,3 +498,7 @@ enum class RepositoryUriConfig {
     /** Постоянный файловый кэш в локальной базе данных ROM. */
     CACHE_ROM
 }
+
+/** Логин и пароль L из настроек приложения. */
+private fun savedCredentials(): UserProfile =
+    UserProfile(email = Settings.l_login.field.value.trim(), password = Settings.l_pass.field.value)

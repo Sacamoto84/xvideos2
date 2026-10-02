@@ -9,8 +9,14 @@ package com.client.xvideos.l.repository
  * ссылались друг на друга по кругу из-за трёх строк.
  */
 object LusciousEndpoints {
-    /** Конечная точка единого GraphQL API (nobatch). */
+    /** Конечная точка единого GraphQL API (nobatch) для вошедших пользователей. */
     const val API = "https://members.luscious.net/graphql/nobatch/"
+    /**
+     * Конечная точка GraphQL для анонимов — та же, что у сайта
+     * (`CERES_GRAPHQL_ENDPOINT_ANONYMOUS`). Сайт ходит сюда GET-запросами без
+     * cookies, и Cloudflare кэширует ответы.
+     */
+    const val API_ANONYMOUS = "https://www.luscious.net/graphql/nobatch/"
     /** Базовый URL портала Luscious. */
     const val HOME = "https://members.luscious.net"
     /** Страница авторизации пользователя с формой логина. */
