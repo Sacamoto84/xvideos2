@@ -6,5 +6,10 @@
         <profileable
             android:shell="true"
             tools:targetApi="29" />
+
+        <!-- Эксперимент: данные L через сайт в WebView. Только debug, запуск через adb. -->
+        <activity
+            android:name=".debug.LWebProbeActivity"
+            android:exported="true" />
     </application>
 </manifest>
