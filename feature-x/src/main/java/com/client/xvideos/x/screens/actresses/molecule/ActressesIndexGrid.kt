@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.x.model.ActressesIndexItem
 import com.client.xvideos.x.model.ActressesIndexUiState
 import com.client.xvideos.x.screens.actresses.atom.LoadMoreErrorFooter
@@ -40,108 +41,113 @@ fun ActressesIndexGrid(
     modifier: Modifier = Modifier,
     onRetryLoadMore: () -> Unit = {},
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        state = gridState,
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
-    ) {
-        if (uiState.isLoadingInitial) {
-            item(span = { GridItemSpan(2) }) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFFDE2600))
-                }
-            }
-        } else if (uiState.error != null) {
-            item(span = { GridItemSpan(2) }) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = uiState.error,
-                        color = Color(0xFFCCCCCC),
-                        fontSize = 15.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = onRetry,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
-                    ) {
-                        Text("Повторить", color = Color.White)
-                    }
-                }
-            }
-        } else if (uiState.isEmpty) {
-            item(span = { GridItemSpan(2) }) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(48.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "По выбранным фильтрам ничего не найдено",
-                        color = Color.Gray,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        } else {
-            items(
-                items = uiState.items,
-                key = { "${it.slug}_${it.rankText}" }
-            ) { actress ->
-                ActressCard(
-                    item = actress,
-                    onClick = { onActressClick(actress) },
-                )
-            }
-
-            if (uiState.isLoadingMore) {
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            state = gridState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+        ) {
+            if (uiState.isLoadingInitial) {
                 item(span = { GridItemSpan(2) }) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .height(280.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(
-                            color = Color(0xFFDE2600),
-                            modifier = Modifier.size(28.dp)
+                        CircularProgressIndicator(color = Color(0xFFDE2600))
+                    }
+                }
+            } else if (uiState.error != null) {
+                item(span = { GridItemSpan(2) }) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = uiState.error,
+                            color = Color(0xFFCCCCCC),
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onRetry,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
+                        ) {
+                            Text("Повторить", color = Color.White)
+                        }
+                    }
+                }
+            } else if (uiState.isEmpty) {
+                item(span = { GridItemSpan(2) }) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "По выбранным фильтрам ничего не найдено",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                items(
+                    items = uiState.items,
+                    key = { "${it.slug}_${it.rankText}" }
+                ) { actress ->
+                    ActressCard(
+                        item = actress,
+                        onClick = { onActressClick(actress) },
+                    )
+                }
+
+                if (uiState.isLoadingMore) {
+                    item(span = { GridItemSpan(2) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = Color(0xFFDE2600),
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (uiState.loadMoreError != null) {
+                    item(span = { GridItemSpan(2) }) {
+                        LoadMoreErrorFooter(message = uiState.loadMoreError, onRetry = onRetryLoadMore)
+                    }
+                }
+
+                if (uiState.isEndReached && uiState.items.isNotEmpty()) {
+                    item(span = { GridItemSpan(2) }) {
+                        Text(
+                            text = "Все модели каталога загружены",
+                            color = Color(0xFF666666),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
                         )
                     }
                 }
             }
-
-            if (uiState.loadMoreError != null) {
-                item(span = { GridItemSpan(2) }) {
-                    LoadMoreErrorFooter(message = uiState.loadMoreError, onRetry = onRetryLoadMore)
-                }
-            }
-
-            if (uiState.isEndReached && uiState.items.isNotEmpty()) {
-                item(span = { GridItemSpan(2) }) {
-                    Text(
-                        text = "Все модели каталога загружены",
-                        color = Color(0xFF666666),
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    )
-                }
-            }
+        }
+        if (uiState.isLoadingInitial || uiState.isLoadingMore) {
+            TopLoadingBar(modifier = Modifier.align(Alignment.TopCenter))
         }
     }
 }

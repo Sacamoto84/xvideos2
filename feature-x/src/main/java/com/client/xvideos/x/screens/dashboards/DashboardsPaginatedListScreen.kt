@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.feature.country.CountryState
@@ -70,11 +71,13 @@ fun DashboardsPaginatedListScreen(
     // пейджера, выход из плеера) показывает её сразу, без новой загрузки.
     var videoItems by remember(pageIndex) { mutableStateOf<ImmutableList<ItemsX>>(cachedPage(pageIndex) ?: persistentListOf()) }
     var hasError by remember(pageIndex) { mutableStateOf(false) }
+    var isLoading by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
     val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
 
     LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch, key3 = retryTrigger) {
         hasError = false
+        isLoading = true
         try {
             val items = loadPage(pageIndex)
             if (items.isEmpty()) {
@@ -88,26 +91,28 @@ fun DashboardsPaginatedListScreen(
             Timber.e(e, "DashboardsPaginatedListScreen: ошибка загрузки pageIndex=$pageIndex")
             hasError = true
         }
+        // Не в finally: отменённая загрузка не должна гасить полосу перезапущенной.
+        isLoading = false
     }
 
     val onRetry: () -> Unit = remember(pageIndex) { { retryTrigger++ } }
 
-    if (videoItems.isEmpty()) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            if (hasError) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Не удалось загрузить страницу", color = Color.Gray)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = onRetry) {
-                        Text("Повторить")
+    Box(modifier = modifier.fillMaxSize()) {
+        if (videoItems.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                if (hasError) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Не удалось загрузить страницу", color = Color.Gray)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(onClick = onRetry) {
+                            Text("Повторить")
+                        }
                     }
+                } else {
+                    CircularProgressIndicator(modifier = Modifier.size(40.dp))
                 }
-            } else {
-                CircularProgressIndicator(modifier = Modifier.size(40.dp))
             }
-        }
-    } else {
-        Box(modifier = modifier.fillMaxSize()) {
+        } else {
             DashboardsPaginatedListContent(
                 items = videoItems,
                 isFavorite = isFavorite,
@@ -150,6 +155,9 @@ fun DashboardsPaginatedListScreen(
                     }
                 }
             }
+        }
+        if (isLoading) {
+            TopLoadingBar(modifier = Modifier.align(Alignment.TopCenter))
         }
     }
 }

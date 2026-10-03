@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.tags.molecule
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.tags.atom.TagGridCell
 import com.client.xvideos.x.screens.tags.atom.TagsStateMessage
@@ -50,12 +52,14 @@ fun TagsPaginatedListScreen(
     // Уже загруженная страница показывается сразу, без кадра с индикатором загрузки.
     var items by remember(pageIndex) { mutableStateOf(initialItems) }
     var failed by remember(pageIndex) { mutableStateOf(false) }
+    var isLoading by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
 
     val loaded = items
 
     LaunchedEffect(pageIndex, retryTrigger) {
         failed = false
+        isLoading = true
         try {
             items = loadPage(pageIndex)
         } catch (e: CancellationException) {
@@ -64,6 +68,8 @@ fun TagsPaginatedListScreen(
             Timber.w(e, "!!! Страница тега %d не загрузилась", pageIndex)
             failed = true
         }
+        // Не в finally: отменённая загрузка не должна гасить полосу перезапущенной.
+        isLoading = false
     }
 
     val onRetry: () -> Unit = remember(pageIndex) {
@@ -72,65 +78,67 @@ fun TagsPaginatedListScreen(
         }
     }
 
-    if (loaded == null) {
-        TagsStatusLayout(modifier = modifier, header = header) {
-            if (failed) {
-                TagsStateMessage(
-                    message = "Страница не загрузилась",
-                    onRetry = onRetry
-                )
-            } else {
-                CircularProgressIndicator(modifier = Modifier.size(40.dp))
-            }
-        }
-        return
-    }
-
-    if (loaded.isEmpty()) {
-        TagsStatusLayout(modifier = modifier, header = header) {
-            TagsStateMessage(
-                message = "Видео не найдены",
-                onRetry = onRetry
-            )
-        }
-        return
-    }
-
     val orientation = LocalConfiguration.current.orientation
     val itemsPerRow = if (orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
-    val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
-    LazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (header != null) {
-            item(key = "tag_header", contentType = "tag_header") {
-                header()
+    Box(modifier = modifier.fillMaxSize()) {
+        if (loaded == null) {
+            TagsStatusLayout(header = header) {
+                if (failed) {
+                    TagsStateMessage(
+                        message = "Страница не загрузилась",
+                        onRetry = onRetry
+                    )
+                } else {
+                    CircularProgressIndicator(modifier = Modifier.size(40.dp))
+                }
+            }
+        } else if (loaded.isEmpty()) {
+            TagsStatusLayout(header = header) {
+                TagsStateMessage(
+                    message = "Видео не найдены",
+                    onRetry = onRetry
+                )
+            }
+        } else {
+            val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
+
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (header != null) {
+                    item(key = "tag_header", contentType = "tag_header") {
+                        header()
+                    }
+                }
+                itemsIndexed(
+                    items = chunkedRows,
+                    key = { index, row -> "${index}_${row.first().id}" },
+                    contentType = { _, _ -> "tag_row" }
+                ) { _, row ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        row.forEach { cell ->
+                            key(cell.id) {
+                                TagGridCell(
+                                    cell = cell,
+                                    onOpenVideo = onOpenVideo,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                        if (row.size < itemsPerRow) {
+                            repeat(itemsPerRow - row.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
         }
-        itemsIndexed(
-            items = chunkedRows,
-            key = { index, row -> "${index}_${row.first().id}" },
-            contentType = { _, _ -> "tag_row" }
-        ) { _, row ->
-            Row(modifier = Modifier.fillMaxWidth()) {
-                row.forEach { cell ->
-                    key(cell.id) {
-                        TagGridCell(
-                            cell = cell,
-                            onOpenVideo = onOpenVideo,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-                if (row.size < itemsPerRow) {
-                    repeat(itemsPerRow - row.size) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
+        if (isLoading) {
+            TopLoadingBar(modifier = Modifier.align(Alignment.TopCenter))
         }
     }
 }

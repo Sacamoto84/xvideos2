@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.model.ChannelSortOrder
@@ -74,83 +75,88 @@ fun ChannelVideosPager(
             }
         }
 
-        if (isPageLoading && pageVideos == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(headerScrollModifier),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    color = Color(0xFFDE2600),
-                    modifier = Modifier.size(36.dp)
-                )
-            }
-        } else if (pageError != null && pageVideos == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(headerScrollModifier)
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isPageLoading && pageVideos == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(headerScrollModifier),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFFDE2600),
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            } else if (pageError != null && pageVideos == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(headerScrollModifier)
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = pageError,
+                            color = Color(0xFFCCCCCC),
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { onRetryPage(page) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
+                        ) {
+                            Text("Повторить", color = Color.White)
+                        }
+                    }
+                }
+            } else if (pageVideos != null && pageVideos.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(headerScrollModifier)
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = pageError,
-                        color = Color(0xFFCCCCCC),
+                        text = if (isModel) {
+                            "У этой модели пока нет опубликованных видео"
+                        } else {
+                            "У этого канала пока нет опубликованных видео"
+                        },
+                        color = Color.Gray,
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { onRetryPage(page) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDE2600))
-                    ) {
-                        Text("Повторить", color = Color.White)
+                }
+            } else if (pageVideos != null) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = gridState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(
+                        items = pageVideos,
+                        key = { it.id }
+                    ) { video ->
+                        ChannelVideoItem(
+                            item = video,
+                            isFavorite = isFavorite(video.id),
+                            isDownloaded = isDownloaded(video.id),
+                            onOpenVideo = onOpenVideo,
+                            onFavoriteAdd = onFavoriteAdd,
+                            onFavoriteRemove = onFavoriteRemove,
+                            onDownload = onDownload,
+                            onSaveToGallery = onSaveToGallery,
+                        )
                     }
                 }
             }
-        } else if (pageVideos != null && pageVideos.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(headerScrollModifier)
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = if (isModel) {
-                        "У этой модели пока нет опубликованных видео"
-                    } else {
-                        "У этого канала пока нет опубликованных видео"
-                    },
-                    color = Color.Gray,
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        } else if (pageVideos != null) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                state = gridState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(
-                    items = pageVideos,
-                    key = { it.id }
-                ) { video ->
-                    ChannelVideoItem(
-                        item = video,
-                        isFavorite = isFavorite(video.id),
-                        isDownloaded = isDownloaded(video.id),
-                        onOpenVideo = onOpenVideo,
-                        onFavoriteAdd = onFavoriteAdd,
-                        onFavoriteRemove = onFavoriteRemove,
-                        onDownload = onDownload,
-                        onSaveToGallery = onSaveToGallery,
-                    )
-                }
+            if (isPageLoading) {
+                TopLoadingBar(modifier = Modifier.align(Alignment.TopCenter))
             }
         }
     }
