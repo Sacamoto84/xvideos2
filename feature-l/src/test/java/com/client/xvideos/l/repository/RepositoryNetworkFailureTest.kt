@@ -12,6 +12,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
@@ -185,6 +186,40 @@ class RepositoryNetworkFailureTest {
         assertEquals(1, notices.size)
     }
 
+    // --- Выход ---
+
+    @Test
+    fun `после очистки логина и пароля запросы идут анонимно`() = runBlocking {
+        val server = FakeServer()
+        var credentials = CREDENTIALS
+        val repository = repository(server) { credentials }
+
+        repository.openURI(query("A"))
+        credentials = UserProfile()
+        repository.openURI(query("B"))
+
+        assertEquals("выход не должен обращаться ко входу", 1, server.loginCalls.get())
+        assertEquals("до выхода запрос идёт от вошедшего", HttpMethod.Post, server.apiCalls.first().method)
+        assertEquals("после выхода запрос идёт анонимно", HttpMethod.Get, server.apiCalls.last().method)
+    }
+
+    @Test
+    fun `после выхода и ввода тех же данных вход пробуют снова`() = runBlocking {
+        val server = FakeServer().apply {
+            login = { respond(WRONG_CREDENTIALS_PAGE, HttpStatusCode.OK, HTML) }
+        }
+        var credentials = CREDENTIALS
+        val repository = repository(server) { credentials }
+
+        repository.openURI(query("A"))
+        credentials = UserProfile()
+        repository.openURI(query("B"))
+        credentials = CREDENTIALS
+        repository.openURI(query("C"))
+
+        assertEquals(2, server.loginCalls.get())
+    }
+
     // --- Кэш в памяти ---
 
     @Test
@@ -220,7 +255,6 @@ class RepositoryNetworkFailureTest {
         val repository = repository(server) { credentials }
 
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
-        repository.logout()
         credentials = UserProfile()
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
 

@@ -147,30 +147,37 @@ open class Repository(
     }
 
     /**
-     * Выполняет выход из аккаунта Luscious: очищает сохраненные учетные данные,
-     * пересоздает сетевой обработчик [KtorRequestHandler] и сбрасывает статус защиты.
+     * Сохранённого профиля нет: забывает неудачный вход и, если клиент ещё
+     * вошедший, закрывает его сессию. Вызывать под [authMutex].
      *
-     * Под обоими мьютексами: без них close() старого клиента приходился
-     * на середину выполняющегося запроса.
+     * Так работает выход: настройки только стирают логин и пароль, а следующий
+     * запрос приходит сюда. Раньше сессию закрывал отдельный `logout()`, но
+     * настройки его не вызывали — после «Выйти» запросы до перезапуска шли от
+     * имени прежнего пользователя, и RAM-кэш отдавал его ответы.
+     *
+     * Память о неудачном входе сбрасывается всегда: иначе «выйти и ввести те
+     * же логин и пароль» после отказа сервера не давало новой попытки.
+     *
+     * Клиент меняется под [requestMutex]: без него close() старого клиента
+     * приходился на середину выполняющегося запроса.
      */
-    suspend fun logout() {
-        authMutex.withLock {
-            requestMutex.withLock {
-                Settings.l_login.setValue("")
-                Settings.l_pass.setValue("")
-                anonymousFallbackFor = null
-                loginRetryAtMs = Long.MAX_VALUE
-                val oldHandler = handler
-                handler = createHandler()
-                oldHandler.close()
-                clearRamCache()
-            }
+    private suspend fun dropSession() {
+        anonymousFallbackFor = null
+        loginRetryAtMs = Long.MAX_VALUE
+        if (!handler.loggedIn) return
+
+        requestMutex.withLock {
+            val oldHandler = handler
+            handler = createHandler()
+            oldHandler.close()
+            clearRamCache()
         }
         clearHtmlChallengeUiState()
     }
 
     /**
-     * Проверяет и при необходимости выполняет авторизацию пользователя по сохраненным логину и паролю.
+     * Приводит сессию в соответствие с сохранёнными логином и паролем: входит,
+     * если они заданы, и закрывает сессию, если их стёрли ([dropSession]).
      *
      * Неудачный вход не закрывает раздел: запросы идут анонимно, как после
      * «Пропустить», а пользователь получает одно предупреждение. Снова вход
@@ -185,9 +192,12 @@ open class Repository(
             authMutex.withLock {
                 val profile = credentials()
                 val loginAllowed = profile != anonymousFallbackFor || nowMs() >= loginRetryAtMs
-                // Анонимный режим: без логина/пароля работаем без авторизации
-                // (Luscious отдаёт меньше альбомов). С кредами — авторизуемся.
-                if (profile.isValid && loginAllowed) logInIfNeeded(profile)
+                // Без логина или пароля работаем анонимно (сервер отдаёт меньше
+                // альбомов), с ними — входим.
+                when {
+                    !profile.isValid -> dropSession()
+                    loginAllowed -> logInIfNeeded(profile)
+                }
                 SUCCESS_UNIT
             }
         } catch (e: CancellationException) {
