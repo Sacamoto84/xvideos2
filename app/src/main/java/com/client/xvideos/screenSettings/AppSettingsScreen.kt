@@ -31,6 +31,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.getFolderSize
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.l.ui.screens.molecule.LLoginForm
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.StorageStat
@@ -155,6 +156,11 @@ internal fun AppSettingsScreenContent(
     modifier: Modifier = Modifier
 ) {
     var currentPage by rememberSaveable { mutableStateOf(SettingsPage.Main) }
+    // Форма входа в L рисуется здесь же, вместо страницы настроек, а не отдельным
+    // экраном навигатора. Корневой навигатор не хранит rememberSaveable-состояние
+    // экрана, с которого ушли: возврат с отдельного экрана открывал главную
+    // страницу настроек вместо страницы L.
+    var lLoginVisible by rememberSaveable { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     LaunchedEffect(currentPage) {
@@ -162,8 +168,12 @@ internal fun AppSettingsScreenContent(
     }
 
     val onMainBack: () -> Unit = remember { { currentPage = SettingsPage.Main } }
+    val onOpenLLogin: () -> Unit = remember { { lLoginVisible = true } }
+    val onCloseLLogin: () -> Unit = remember { { lLoginVisible = false } }
     BackHandler(enabled = currentPage != SettingsPage.Main, onBack = onMainBack)
     BackHandler(enabled = currentPage == SettingsPage.Main, onBack = onBack)
+    // Объявлен последним: пока форма открыта, «назад» закрывает её, а не страницу.
+    BackHandler(enabled = lLoginVisible, onBack = onCloseLLogin)
 
     LaunchedEffect(currentPage) {
         if (currentPage == SettingsPage.Storage) {
@@ -184,7 +194,8 @@ internal fun AppSettingsScreenContent(
         onClearDownload,
         data,
         context,
-        onBackupDataChanged
+        onBackupDataChanged,
+        onOpenLLogin
     ) {
         SettingsDetailParams(
             currentPage = currentPage,
@@ -196,24 +207,39 @@ internal fun AppSettingsScreenContent(
             onClearDownload = onClearDownload,
             data = data,
             context = context,
-            onBackupDataChanged = onBackupDataChanged
+            onBackupDataChanged = onBackupDataChanged,
+            onOpenLLogin = onOpenLLogin
         )
     }
 
-    Scaffold(
-        modifier = modifier,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        containerColor = SettingsScreenBackground
-    ) { paddingValues ->
-        AppSettingsScreenBody(
-            params = detailParams,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-                .verticalScroll(scrollState),
-            topCutout = topCutout,
-            onOpenPage = onOpenPage
+    if (lLoginVisible) {
+        // Сохранённые логин и пароль читаем один раз: «Сохранить» меняет настройки,
+        // и подписка на них пересоздала бы поля формы перед самым её закрытием.
+        val initialLogin = remember { Settings.l_login.field.value }
+        val initialPassword = remember { Settings.l_pass.field.value }
+        LLoginForm(
+            initialLogin = initialLogin,
+            initialPassword = initialPassword,
+            onSaved = onCloseLLogin,
+            onBack = onCloseLLogin,
+            onSkip = null
         )
+    } else {
+        Scaffold(
+            modifier = modifier,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            containerColor = SettingsScreenBackground
+        ) { paddingValues ->
+            AppSettingsScreenBody(
+                params = detailParams,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = paddingValues.calculateBottomPadding())
+                    .verticalScroll(scrollState),
+                topCutout = topCutout,
+                onOpenPage = onOpenPage
+            )
+        }
     }
 }
 

@@ -10,7 +10,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.Config_G_0_4
-import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
@@ -18,10 +17,13 @@ import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.settings.ThumbnailsSize
 import com.client.xvideos.screenSettings.components.ThumbnailSizeSelector
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.screenSettings.molecule.LProfileRow
 
 @Composable
 internal fun LSettingsSection(
     lLogin: String,
+    hasLAccount: Boolean,
+    onLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val thumbnailSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
@@ -29,21 +31,13 @@ internal fun LSettingsSection(
         ThumbnailsSize.fromValue(thumbnailSize)?.displayName ?: "?"
     }
 
-    val isLoginBlank = lLogin.isBlank()
-    val loginValueText = if (isLoginBlank) "Нет" else "Выйти"
-    val logoutDialogBody = remember(lLogin) {
-        if (lLogin.isBlank()) {
-            "Вы не авторизованы в L."
-        } else {
-            "При следующем открытии L нужно будет снова ввести логин и пароль: $lLogin"
-        }
-    }
-
+    // Стираем только сохранённый профиль: сессию закрывает репозиторий L, когда
+    // на следующем запросе увидит, что профиля больше нет.
     val onLogoutL = remember {
         {
             Settings.l_login.setValue("")
             Settings.l_pass.setValue("")
-            SnackBar.success("Профиль L закрыт")
+            SnackBar.success("Вы вышли из профиля L")
         }
     }
     val onSelectThumbnailSize: (String) -> Unit = remember {
@@ -56,14 +50,11 @@ internal fun LSettingsSection(
     }
 
     SettingsGroup(modifier = modifier) {
-        SettingsButtonRowWithDialog(
-            icon = R.drawable.icon_luscious,
-            text = "Профиль L",
-            value = loginValueText,
-            textDialogTitle = "Выйти из профиля L",
-            textDialogBody = logoutDialogBody,
-            textDialogButton = "Выйти",
-            onClick = onLogoutL
+        LProfileRow(
+            login = lLogin,
+            hasAccount = hasLAccount,
+            onLogin = onLogin,
+            onLogout = onLogoutL
         )
         SettingsDivider()
         SettingsValueRow(
@@ -86,5 +77,5 @@ internal fun LSettingsSection(
 @Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
 @Composable
 private fun LSettingsSectionPreview() = SettingsPreview {
-    LSettingsSection(lLogin = "preview_user", modifier = Modifier)
+    LSettingsSection(lLogin = "preview_user", hasLAccount = true, onLogin = {}, modifier = Modifier)
 }

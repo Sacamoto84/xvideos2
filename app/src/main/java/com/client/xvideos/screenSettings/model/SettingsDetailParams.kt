@@ -17,5 +17,6 @@ internal data class SettingsDetailParams(
     val onClearDownload: () -> Unit,
     val data: SettingsDataHolders,
     val context: Context,
-    val onBackupDataChanged: () -> Unit
+    val onBackupDataChanged: () -> Unit,
+    val onOpenLLogin: () -> Unit = {}
 )

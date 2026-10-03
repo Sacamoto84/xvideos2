@@ -35,6 +35,9 @@ internal fun SettingsDetailPage(
     val diskCacheEnabled by Settings.image_cache_disk_enabled.field.collectAsStateWithLifecycle()
     val diskCacheSizeMb by Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle()
     val lLogin by Settings.l_login.field.collectAsStateWithLifecycle()
+    val lPass by Settings.l_pass.field.collectAsStateWithLifecycle()
+    // То же правило, что на входе в раздел L: аккаунт есть, когда заданы и логин, и пароль.
+    val hasLAccount = lLogin.isNotBlank() && lPass.isNotBlank()
 
     val isNichesCacheDownloading = params.data.savedRed?.nichesCache?.isDownloading ?: false
     val nichesCacheProgress = params.data.savedRed?.nichesCache?.progress ?: 0f
@@ -55,7 +58,12 @@ internal fun SettingsDetailPage(
             context = params.context,
             modifier = modifier
         )
-        SettingsPage.L -> LSettingsSection(lLogin = lLogin, modifier = modifier)
+        SettingsPage.L -> LSettingsSection(
+            lLogin = lLogin,
+            hasLAccount = hasLAccount,
+            onLogin = params.onOpenLLogin,
+            modifier = modifier
+        )
         SettingsPage.Red -> RSettingsSection(
             sizeRedTotal = params.sizeRedTotal,
             sizeRedDownload = params.sizeRedDownload,
