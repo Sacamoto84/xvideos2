@@ -22,11 +22,11 @@ import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.LSession
-import com.client.xvideos.l.ui.screens.LLoginContent
 import com.client.xvideos.l.ui.screens.explorer.molecule.L_ExplorerBottomBar
 import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.L_ScreenAlbumSearch
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.L_ScreenAlbumTopHits
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.L_SavedTab
+import com.client.xvideos.l.ui.screens.molecule.LLoginForm
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
 
 class L_ScreenExplorer : Screen {
@@ -57,7 +57,7 @@ class L_ScreenExplorer : Screen {
         val onSavedLogin = remember { {} }
 
         if ((savedLogin.isBlank() || savedPassword.isBlank()) && !LSession.loginSkipped) {
-            LLoginContent(
+            LLoginForm(
                 initialLogin = savedLogin,
                 initialPassword = savedPassword,
                 onSaved = onSavedLogin,

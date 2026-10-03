@@ -58,7 +58,6 @@
     <ID>LongMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
     <ID>LongMethod:KeyboardNumber.kt$@Composable fun KeyboardNumber( value: Int, max: Int, theme: KeyboardNumberTheme = KeyboardNumberTheme(), onClick: (Int) -&gt; Unit, )</ID>
     <ID>LongMethod:L_FullScreenImage.kt$L_FullScreenImage$@OptIn( ExperimentalFoundationApi::class, ExperimentalMaterialApi::class, DelicateCoroutinesApi::class ) @Composable override fun Content()</ID>
-    <ID>LongMethod:L_ScreenLogin.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LLoginContent( initialLogin: String = "", initialPassword: String = "", onSaved: () -&gt; Unit, onBack: () -&gt; Unit, onSkip: () -&gt; Unit )</ID>
     <ID>LongMethod:RedProfileUserImage.kt$@Composable fun RedProfileCreaterInfo( item: UserInfo, isFollow: Boolean, onFollowClick: () -&gt; Unit )</ID>
     <ID>LongMethod:ScreenP2pSend.kt$ScreenP2pSend$@OptIn(ExperimentalMaterial3Api::class) @Composable override fun Content()</ID>
     <ID>LongMethod:SortByOrder.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SortByOrder( list: List&lt;Order&gt;, selected: Order, onSelect: (Order) -&gt; Unit, containerColor: Color = Color.Transparent, circle : Boolean = false )</ID>

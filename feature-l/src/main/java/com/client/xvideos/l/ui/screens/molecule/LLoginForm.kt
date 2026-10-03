@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens
+package com.client.xvideos.l.ui.screens.molecule
 
 import com.client.xvideos.common.theme.Theme
 
@@ -64,16 +64,24 @@ private val TEXT_COLOR_MUTED = Color(0xFFB8B7B7)
 private val FIELD_TEXT_STYLE = TextStyle(fontSize = 24.sp)
 
 
+/**
+ * Форма входа в профиль L: логин, пароль, «Сохранить», «Назад».
+ *
+ * Показывается в двух местах: раздел L рисует её, пока профиль не задан, а
+ * настройки — вместо своей страницы L, по кнопке «Войти».
+ *
+ * @param onSkip «Пропустить» — работать без авторизации. `null` прячет кнопку:
+ * в настройках пользователь пришёл именно входить.
+ */
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LLoginContent(
+fun LLoginForm(
     initialLogin: String = "",
     initialPassword: String = "",
     onSaved: () -> Unit,
     onBack: () -> Unit,
-    onSkip: () -> Unit
-
+    onSkip: (() -> Unit)?
 ) {
     var login by remember(initialLogin) { mutableStateOf(initialLogin) }
     var password by remember(initialPassword) { mutableStateOf(initialPassword) }
@@ -107,7 +115,7 @@ fun LLoginContent(
             runCatching {
                 uriHandler.openUri(URL_LUSCIOUS)
             }.onFailure { e ->
-                Timber.w(e, "L_ScreenLogin: не удалось открыть ссылку Luscious")
+                Timber.w(e, "LLoginForm: не удалось открыть ссылку L")
                 SnackBar.error("Не удалось открыть ссылку")
             }.let {}
         }
@@ -257,27 +265,39 @@ fun LLoginContent(
             )
         }
 
-        TextButton(
-            onClick = onSkip,
-            modifier = Modifier.padding(top = 24.dp).fillMaxWidth().height(64.dp),
-            shape = buttonShape
-        ) {
-            Text(
-                text = "Пропустить",
-                fontSize = 22.sp,
-                fontFamily = Theme.L.fontFamilyKarla,
-                color = Theme.L.b0,
-            )
+        if (onSkip != null) {
+            TextButton(
+                onClick = onSkip,
+                modifier = Modifier.padding(top = 24.dp).fillMaxWidth().height(64.dp),
+                shape = buttonShape
+            ) {
+                Text(
+                    text = "Пропустить",
+                    fontSize = 22.sp,
+                    fontFamily = Theme.L.fontFamilyKarla,
+                    color = Theme.L.b0,
+                )
+            }
         }
     }
 }
 
 @Preview(showBackground = false)
 @Composable
-fun LLoginContentPreview() {
-    LLoginContent(
+private fun LLoginFormPreview() {
+    LLoginForm(
         onSaved = {},
         onBack = {},
         onSkip = {}
+    )
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun LLoginFormWithoutSkipPreview() {
+    LLoginForm(
+        onSaved = {},
+        onBack = {},
+        onSkip = null
     )
 }
