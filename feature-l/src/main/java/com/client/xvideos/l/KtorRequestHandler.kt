@@ -9,7 +9,6 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
@@ -38,7 +37,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import timber.log.Timber
-import java.io.IOException
 
 /**
  * Низкоуровневый HTTP-клиент на Ktor/OkHttp для взаимодействия с Luscious.
@@ -46,25 +44,21 @@ import java.io.IOException
  * Обеспечивает:
  * - Безопасный DNS-over-HTTPS резолвинг через [AppDns].
  * - Сохранение сессионных cookies между запросами ([AcceptAllCookiesStorage]).
- * - Автоматический повтор запросов при сетевых сбоях и ошибках 413, 429, 502-504 ([HttpRequestRetry]).
- * - Отделение отказа сервера (5xx, [LServerErrorException]) от проверки Cloudflare.
+ * - Отделение отказа сервера (5xx, [LServerErrorException]) от проверки Cloudflare ([LHttpResponse]).
  * - Аутентификацию пользователя через веб-форму логина ([login]) с детекцией Cloudflare challenge.
  *
+ * Повторов здесь нет: каждый метод — одна попытка. Повторяет
+ * [Repository][com.client.xvideos.l.repository.Repository], и пауза перед
+ * повтором идёт вне его очереди запросов. Раньше повторял плагин Ktor внутри
+ * запроса, и один неудачный запрос держал всю очередь раздела.
+ *
  * @property timeoutMillis Таймаут соединения и чтения в миллисекундах (по умолчанию 15 000).
- * @property maxRetries Максимальное число повторов при ошибках (по умолчанию 5).
- * @property retryStatusCodes Набор кодов ответа HTTP, требующих повтора запроса. 500 в нём нет:
- * это отказ самого приложения сервера, а не шлюза, и пять повторов с паузами только оттягивали
- * ошибку на экране.
- * @property backoffFactor Множитель экспоненциальной задержки между повторами (мс).
  * @param username Логин пользователя.
  * @param password Пароль пользователя.
  * @param engineOverride Движок HTTP для тестов; `null` — боевой OkHttp с DNS-over-HTTPS.
  */
 class KtorRequestHandler(
     private val timeoutMillis: Long = 15000,
-    private val maxRetries: Int = 5,
-    private val retryStatusCodes: Set<Int> = setOf(413, 429, 502, 503, 504),
-    private val backoffFactor: Long = 1000,
     username: String? = null,
     password: String? = null,
     engineOverride: HttpClientEngine? = null,
@@ -112,15 +106,6 @@ class KtorRequestHandler(
             }
         }
 
-        // Единый слой ретраев: и на retryable-статусы, и на сетевые ошибки.
-        // Использует параметры конструктора, чтобы не было расхождения настроек.
-        install(HttpRequestRetry) {
-            maxRetries = this@KtorRequestHandler.maxRetries
-            retryIf { _, response -> response.status.value in retryStatusCodes }
-            retryOnExceptionIf { _, cause -> cause is IOException }
-            delayMillis { attempt -> backoffFactor * attempt }  // backoff = backoffFactor * номер попытки
-        }
-
         install(HttpTimeout) {
             requestTimeoutMillis = timeoutMillis
             connectTimeoutMillis = timeoutMillis
@@ -157,14 +142,13 @@ class KtorRequestHandler(
      *
      * @param url Целевой URL GraphQL endpoint.
      * @param data Сырая строка JSON запроса.
-     * @throws LServerErrorException сервер ответил 5xx, и это не проверка Cloudflare.
      */
-    suspend fun postJson(url: String, data: String): String {
+    suspend fun postJson(url: String, data: String): LHttpResponse {
         return client.post {
             url(url)
             contentType(ContentType.Application.Json)
             setBody(TextContent(data, ContentType.Application.Json))
-        }.bodyOrServerError()
+        }.toLResponse()
     }
 
     /**
@@ -175,9 +159,8 @@ class KtorRequestHandler(
      *
      * @param endpoint Анонимный GraphQL endpoint.
      * @param data Сырая строка JSON запроса.
-     * @throws LServerErrorException сервер ответил 5xx, и это не проверка Cloudflare.
      */
-    suspend fun graphQlAnonymous(endpoint: String, data: String): String {
+    suspend fun graphQlAnonymous(endpoint: String, data: String): LHttpResponse {
         val getUrl = anonymousGraphQlGetUrl(endpoint, data)
         val response = if (getUrl != null) {
             anonymousClient.get(getUrl) {
@@ -190,14 +173,12 @@ class KtorRequestHandler(
                 setBody(TextContent(data, ContentType.Application.Json))
             }
         }
-        return response.bodyOrServerError()
+        return response.toLResponse()
     }
 
-    /** Тело ответа либо [LServerErrorException] для 5xx, который не проверка Cloudflare. */
-    private suspend fun HttpResponse.bodyOrServerError(): String {
+    private suspend fun HttpResponse.toLResponse(): LHttpResponse {
         val body = bodyAsText()
-        if (isServerError(body)) throw LServerErrorException(status.value)
-        return body
+        return LHttpResponse(status.value, body, isCloudflareChallenge(headers[CF_MITIGATED_HEADER], body))
     }
 
     /**
@@ -211,11 +192,6 @@ class KtorRequestHandler(
             }))
         }
     }
-
-    /** 5xx, который не является проверкой Cloudflare (та бывает и с кодом 503). */
-    private fun HttpResponse.isServerError(body: String): Boolean =
-        status.value in SERVER_ERROR_CODES && !isCloudflareChallenge(headers[CF_MITIGATED_HEADER], body)
-
 
     // --- Login ---
     /**
@@ -290,7 +266,7 @@ class KtorRequestHandler(
             isCloudflareChallenge(response.headers[CF_MITIGATED_HEADER], body) ->
                 IllegalStateException("защита Cloudflare")
             response.status.value in SERVER_ERROR_CODES -> LServerErrorException(response.status.value)
-            WRONG_CREDENTIALS_MARKER in body -> IllegalStateException("неверный логин или пароль")
+            WRONG_CREDENTIALS_MARKER in body -> LWrongCredentialsException()
             else -> null
         }
         loggedIn = failure == null
@@ -303,6 +279,28 @@ class KtorRequestHandler(
     }
     // ! --- Login --- !
 
+}
+
+/**
+ * Ответ на GraphQL-запрос как есть. Повторить его, счесть отказом сервера или
+ * отдать тело решает [Repository][com.client.xvideos.l.repository.Repository].
+ *
+ * @property statusCode HTTP-код ответа.
+ */
+class LHttpResponse(
+    val statusCode: Int,
+    private val body: String,
+    private val isCloudflareChallenge: Boolean,
+) {
+    /**
+     * Тело ответа.
+     *
+     * @throws LServerErrorException сервер ответил 5xx, и это не проверка Cloudflare (та бывает и с кодом 503).
+     */
+    fun bodyOrServerError(): String {
+        if (statusCode in SERVER_ERROR_CODES && !isCloudflareChallenge) throw LServerErrorException(statusCode)
+        return body
+    }
 }
 
 private const val CF_MITIGATED_HEADER = "cf-mitigated"

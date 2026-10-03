@@ -5,9 +5,13 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
+import com.client.xvideos.l.LHttpResponse
+import com.client.xvideos.l.LServerErrorException
+import com.client.xvideos.l.LWrongCredentialsException
 import com.client.xvideos.l.model.UserProfile
 import com.client.xvideos.l.net.json.LJson
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +20,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
+import java.io.IOException
+import java.io.InterruptedIOException
+import java.net.ConnectException
+import java.net.UnknownHostException
 import java.util.LinkedHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -54,18 +62,23 @@ data class LRepositoryProtectionUiState(
  *   как у сайта, GET на [LusciousEndpoints.API_ANONYMOUS] без cookies;
  * - многоуровневое кэширование ответов (RAM LRU-кэш, постоянный ROM-кэш);
  * - обработку антибот-защиты (HTML challenge/Cloudflare) с экспоненциальным кулдауном;
- * - троттлинг сетевых запросов с минимальным интервалом.
+ * - троттлинг сетевых запросов с минимальным интервалом;
+ * - повторы запроса при обрыве соединения и отказе шлюза, с паузой вне очереди запросов.
  *
  * @param fileDb Локальная файловая база данных для доступа к ROM-кэшам.
  * @param credentials Сохранённые логин и пароль; пустой профиль — анонимный режим.
  * @param engineFactory Движок HTTP для тестов; `null` — боевой OkHttp.
  * @param notifyAnonymousFallback Сообщение пользователю, что вход не удался и запросы идут анонимно.
+ * @param nowMs Текущее время в миллисекундах; подменяется в тестах.
+ * @param retryBackoffMs Шаг паузы между повторами запроса; подменяется в тестах.
  */
 open class Repository(
     fileDb: AppFileDatabase,
     private val credentials: () -> UserProfile = ::savedCredentials,
     private val engineFactory: (() -> HttpClientEngine)? = null,
     private val notifyAnonymousFallback: (String) -> Unit = SnackBar::warning,
+    private val nowMs: () -> Long = System::currentTimeMillis,
+    private val retryBackoffMs: Long = RETRY_BACKOFF_MS,
 ) {
 
     /** Точка входа для GraphQL API Luscious. */
@@ -77,11 +90,21 @@ open class Repository(
     private val authMutex = Mutex()
 
     /**
-     * Профиль, вход по которому в этой сессии не удался. Пока сохранены те же
-     * логин и пароль, запросы идут анонимно без новых попыток входа.
-     * Читается и пишется только под [authMutex].
+     * Профиль, вход по которому не удался. Пока сохранены те же логин и пароль
+     * и не наступило [loginRetryAtMs], запросы идут анонимно без новых попыток
+     * входа. Читается и пишется только под [authMutex].
      */
     private var anonymousFallbackFor: UserProfile? = null
+
+    /**
+     * Когда вход по [anonymousFallbackFor] пробуют снова. [Long.MAX_VALUE] —
+     * никогда: сервер отверг логин или пароль. После временного отказа (нет
+     * сети, сервер упал) это [L_LOGIN_RETRY_INTERVAL_MS] от попытки: раньше и
+     * такой отказ запоминался до перезапуска, и приложение, открытое без сети,
+     * оставалось анонимным, когда сеть уже вернулась.
+     * Читается и пишется только под [authMutex].
+     */
+    private var loginRetryAtMs = Long.MAX_VALUE
 
     private val requestMutex = Mutex()
     private val ramCacheMutex = Mutex()
@@ -116,9 +139,6 @@ open class Repository(
     private fun createHandler(): KtorRequestHandler {
         return KtorRequestHandler(
             timeoutMillis = 5000,
-            maxRetries = 5,
-            retryStatusCodes = RETRY_STATUS_CODES,
-            backoffFactor = 1000,
             engineOverride = engineFactory?.invoke(),
         )
     }
@@ -136,9 +156,11 @@ open class Repository(
                 Settings.l_login.setValue("")
                 Settings.l_pass.setValue("")
                 anonymousFallbackFor = null
+                loginRetryAtMs = Long.MAX_VALUE
                 val oldHandler = handler
                 handler = createHandler()
                 oldHandler.close()
+                clearRamCache()
             }
         }
         clearHtmlChallengeUiState()
@@ -147,24 +169,22 @@ open class Repository(
     /**
      * Проверяет и при необходимости выполняет авторизацию пользователя по сохраненным логину и паролю.
      *
-     * Неудачный вход не закрывает раздел: до смены логина или пароля запросы
-     * идут анонимно, как после «Пропустить», а пользователь получает одно
-     * предупреждение. Раньше отказ входа возвращался ошибкой из каждого
-     * openURI и вход повторялся на каждом запросе — при сломанной авторизации
-     * на сервере L не открывался вовсе, хотя анонимные запросы проходили.
+     * Неудачный вход не закрывает раздел: запросы идут анонимно, как после
+     * «Пропустить», а пользователь получает одно предупреждение. Снова вход
+     * пробуют после смены логина или пароля либо, если отказ был временным,
+     * когда наступит [loginRetryAtMs]. Раньше отказ входа возвращался ошибкой
+     * из каждого openURI и вход повторялся на каждом запросе — при сломанной
+     * авторизации на сервере L не открывался вовсе, хотя анонимные запросы
+     * проходили.
      */
     private suspend fun ensureAuthenticated(): Result<Unit> {
         return try {
             authMutex.withLock {
                 val profile = credentials()
+                val loginAllowed = profile != anonymousFallbackFor || nowMs() >= loginRetryAtMs
                 // Анонимный режим: без логина/пароля работаем без авторизации
                 // (Luscious отдаёт меньше альбомов). С кредами — авторизуемся.
-                if (profile.isValid && profile != anonymousFallbackFor) {
-                    handler.setCredentials(profile.email, profile.password)
-                    if (!handler.loggedIn) {
-                        handler.login().onFailure { fallBackToAnonymous(profile, it) }
-                    }
-                }
+                if (profile.isValid && loginAllowed) logInIfNeeded(profile)
                 SUCCESS_UNIT
             }
         } catch (e: CancellationException) {
@@ -175,11 +195,36 @@ open class Repository(
         }
     }
 
-    /** Запоминает неудачный вход и предупреждает пользователя. Вызывать под [authMutex]. */
+    /** Входит по [profile], если сессии с ним ещё нет. Вызывать под [authMutex]. */
+    private suspend fun logInIfNeeded(profile: UserProfile) {
+        val wasLoggedIn = handler.loggedIn
+        handler.setCredentials(profile.email, profile.password)
+        if (handler.loggedIn) return
+
+        val login = handler.login()
+        login.onSuccess { anonymousFallbackFor = null }
+            .onFailure { fallBackToAnonymous(profile, it) }
+        // Ключ RAM-кэша — только тело запроса, а вошедшему и анониму сервер
+        // отвечает по-разному: после смены режима старые ответы не годятся.
+        if (login.isSuccess || wasLoggedIn) clearRamCache()
+    }
+
+    /**
+     * Запоминает неудачный вход и предупреждает пользователя — один раз на
+     * профиль: повторная неудача после паузы предупреждение не дублирует.
+     * Вызывать под [authMutex].
+     */
     private fun fallBackToAnonymous(profile: UserProfile, cause: Throwable) {
+        val alreadyNotified = profile == anonymousFallbackFor
         anonymousFallbackFor = profile
-        val reason = cause.message?.replaceFirstChar { it.lowercase() } ?: cause.javaClass.simpleName
+        loginRetryAtMs = if (cause is LWrongCredentialsException) {
+            Long.MAX_VALUE
+        } else {
+            nowMs() + L_LOGIN_RETRY_INTERVAL_MS
+        }
         Timber.w(cause, "L login failed, continuing anonymously")
+        if (alreadyNotified) return
+        val reason = cause.message?.replaceFirstChar { it.lowercase() } ?: cause.javaClass.simpleName
         notifyAnonymousFallback("Вход в L не удался: $reason. Работаем без авторизации")
     }
 
@@ -312,31 +357,67 @@ open class Repository(
     }
 
     /**
-     * Выполняет сетевой запрос с троттлингом минимального интервала между запросами.
+     * Сетевой запрос с повторами при обрыве соединения и отказе шлюза.
+     *
+     * Пауза перед повтором идёт вне [requestMutex]. Раньше повторял плагин
+     * Ktor внутри замка: один неудачный запрос держал очередь раздела, и без
+     * сети три страницы пейджера получали ошибку через 15, 30 и 46 секунд.
+     *
+     * @throws LServerErrorException сервер ответил 5xx, и это не проверка Cloudflare.
      */
     private suspend fun postJsonThrottled(data: String): String {
-        return requestMutex.withLock {
-            val now = System.currentTimeMillis()
-            val intervalWaitMs = MIN_NETWORK_REQUEST_INTERVAL_MS - (now - lastNetworkRequestAtMs)
-            val challengeWaitMs = htmlChallengeCooldownUntilMs.get() - now
-            val waitMs = maxOf(intervalWaitMs, challengeWaitMs, 0L)
-            if (waitMs > 0) delay(waitMs)
-
-            try {
-                // Как у сайта: вошедший — POST на адрес участников с cookie
-                // сессии; аноним (нет логина или вход не удался) — GET на
-                // анонимный адрес без cookies. Раньше аноним тоже ходил на
-                // адрес участников и не попадал в кэш Cloudflare, на котором
-                // сайт продолжал работать при отказе сервера.
-                if (handler.loggedIn) {
-                    handler.postJson(apiUrl, data)
-                } else {
-                    handler.graphQlAnonymous(LusciousEndpoints.API_ANONYMOUS, data)
-                }
-            } finally {
-                lastNetworkRequestAtMs = System.currentTimeMillis()
+        var attempt = 0
+        while (true) {
+            val response = try {
+                requestMutex.withLock { sendThrottled(data) }
+            } catch (e: IOException) {
+                if (attempt >= MAX_RETRIES || !e.isWorthRetrying()) throw e
+                Timber.w(e, "openURI() network failure, retry #${attempt + 1}")
+                null
             }
+            if (response != null && (response.statusCode !in RETRY_STATUS_CODES || attempt >= MAX_RETRIES)) {
+                return response.bodyOrServerError()
+            }
+            attempt++
+            delay(retryBackoffMs * attempt)
         }
+    }
+
+    /** Одна попытка запроса с минимальным интервалом после предыдущей. Вызывать под [requestMutex]. */
+    private suspend fun sendThrottled(data: String): LHttpResponse {
+        val now = System.currentTimeMillis()
+        val intervalWaitMs = MIN_NETWORK_REQUEST_INTERVAL_MS - (now - lastNetworkRequestAtMs)
+        val challengeWaitMs = htmlChallengeCooldownUntilMs.get() - now
+        val waitMs = maxOf(intervalWaitMs, challengeWaitMs, 0L)
+        if (waitMs > 0) delay(waitMs)
+
+        return try {
+            // Как у сайта: вошедший — POST на адрес участников с cookie
+            // сессии; аноним (нет логина или вход не удался) — GET на
+            // анонимный адрес без cookies. Раньше аноним тоже ходил на
+            // адрес участников и не попадал в кэш Cloudflare, на котором
+            // сайт продолжал работать при отказе сервера.
+            if (handler.loggedIn) {
+                handler.postJson(apiUrl, data)
+            } else {
+                handler.graphQlAnonymous(LusciousEndpoints.API_ANONYMOUS, data)
+            }
+        } finally {
+            lastNetworkRequestAtMs = System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * Повтор имеет смысл только после обрыва уже работавшего соединения. Нет
+     * сети, сервер не принимает соединение или не ответил за таймаут —
+     * следующая попытка упрётся в то же самое, а пользователь ждёт ошибку.
+     */
+    private fun IOException.isWorthRetrying(): Boolean = when (this) {
+        is UnknownHostException,
+        is ConnectException,
+        is InterruptedIOException,
+        is HttpRequestTimeoutException -> false
+        else -> true
     }
 
     /**
@@ -460,6 +541,10 @@ open class Repository(
         ramCacheMutex.withLock { ramCache.remove(cacheKey) }
     }
 
+    private suspend fun clearRamCache() {
+        ramCacheMutex.withLock { ramCache.clear() }
+    }
+
     private fun String.previewForLog(): String {
         return replace(LOG_PREVIEW_WHITESPACE_REGEX, " ").take(200)
     }
@@ -475,6 +560,7 @@ open class Repository(
         // Без 500: это отказ приложения сервера, а не шлюза. Пять повторов с
         // паузами на упавшем сервере только оттягивали ошибку на экране.
         val RETRY_STATUS_CODES = setOf(413, 429, 502, 503, 504)
+        const val MAX_RETRIES = 5
         val LOG_PREVIEW_WHITESPACE_REGEX = Regex("\\s+")
         const val MIN_NETWORK_REQUEST_INTERVAL_MS = 300L
         const val HTML_CHALLENGE_RETRY_ATTEMPTS = 3
@@ -498,6 +584,12 @@ enum class RepositoryUriConfig {
     /** Постоянный файловый кэш в локальной базе данных ROM. */
     CACHE_ROM
 }
+
+/** Через сколько после временного отказа входа [Repository] пробует войти снова. */
+internal const val L_LOGIN_RETRY_INTERVAL_MS = 60_000L
+
+/** Шаг паузы между повторами запроса: перед повтором N ждём N таких шагов. */
+private const val RETRY_BACKOFF_MS = 1000L
 
 /** Логин и пароль L из настроек приложения. */
 private fun savedCredentials(): UserProfile =
