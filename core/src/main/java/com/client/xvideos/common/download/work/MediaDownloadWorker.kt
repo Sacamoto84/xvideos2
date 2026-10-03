@@ -14,9 +14,12 @@ import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.net.doh.AppDns
+import com.client.xvideos.common.util.invokeOnCancellation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -27,6 +30,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.abs
 
 /**
@@ -104,6 +108,14 @@ class MediaDownloadWorker(
             targets.tempFile.delete()
             throw e
         } catch (e: Exception) {
+            if (!isActive) {
+                // Отменённый вызов OkHttp бросает IOException, а не
+                // CancellationException: без этой проверки отмена выглядела
+                // временным сбоем сети и уходила в повтор с недокачанным .tmp.
+                Timber.i("MediaDownloadWorker: Загрузка отменена: $fileName")
+                targets.tempFile.delete()
+                throw CancellationException("Загрузка отменена", e)
+            }
             if (isRetryable(e) && runAttemptCount < MAX_RETRY_ATTEMPTS) {
                 // Временный сбой: .tmp оставляем — следующая попытка докачает его по Range.
                 Timber.w(e, "MediaDownloadWorker: сбой при скачивании $fileName, повтор #${runAttemptCount + 1}")
@@ -209,34 +221,34 @@ class MediaDownloadWorker(
         headers: Map<String, String>,
         tempFile: File,
         title: String
-    ) {
+    ) = coroutineScope {
         var resumeOffset = if (tempFile.exists()) tempFile.length() else 0L
         var request = buildDownloadRequest(urlString, headers, resumeOffset)
 
-        var call = downloadOkHttpClient.newCall(request)
-        var cancellationHandle = kotlin.coroutines.coroutineContext.job.invokeOnCompletion {
-            call.cancel()
-        }
+        // Текущий вызов читается из потока, который отменяет загрузку.
+        val call = AtomicReference(downloadOkHttpClient.newCall(request))
+        // Не Job.invokeOnCompletion: тот ждёт завершения job, а оно невозможно,
+        // пока поток заперт в execute() или чтении тела — «Отмена» в
+        // уведомлении ждала таймаута чтения.
+        val cancellationHandle = invokeOnCancellation { call.get().cancel() }
 
         try {
-            var response = call.execute()
+            var response = call.get().execute()
 
             // Если сервер вернул HTTP 416 (Range Not Satisfiable), значит существующий .tmp
             // повреждён или его размер больше/равен длине файла. Удаляем .tmp и качаем с нуля.
             if (response.code == 416 && resumeOffset > 0) {
                 response.close()
-                cancellationHandle.dispose()
                 Timber.w("MediaDownloadWorker: HTTP 416 для $urlString, удаляем невалидный $tempFile и качаем заново")
                 if (tempFile.exists()) {
                     tempFile.delete()
                 }
                 resumeOffset = 0L
                 request = buildDownloadRequest(urlString, headers, resumeOffset = 0L)
-                call = downloadOkHttpClient.newCall(request)
-                cancellationHandle = kotlin.coroutines.coroutineContext.job.invokeOnCompletion {
-                    call.cancel()
-                }
-                response = call.execute()
+                call.set(downloadOkHttpClient.newCall(request))
+                // Отмена могла прийти между вызовами и достаться уже закрытому.
+                ensureActive()
+                response = call.get().execute()
             }
 
             val responseCode = response.code

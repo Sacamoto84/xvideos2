@@ -1,5 +1,6 @@
 package com.client.xvideos.common.kdownloader.internal
 
+import com.client.xvideos.common.kdownloader.Constants
 import com.client.xvideos.common.kdownloader.database.DbHelper
 import com.client.xvideos.common.kdownloader.database.DownloadModel
 import com.client.xvideos.common.kdownloader.Status
@@ -117,7 +118,7 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
             if (listener != null) {
                 req.listener = null
                 executeOnMainThread {
-                    listener.onError("Cancelled")
+                    listener.onError(Constants.CANCELLED)
                 }
             }
         }
@@ -136,13 +137,15 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
     }
 
     /**
-     * Отменяет все активные корутины загрузок и очищает базу данных в [dbScope].
+     * Отменяет все активные корутины загрузок этого экземпляра.
+     *
+     * Базу целиком не очищает: файл базы один на все экземпляры загрузчика, и
+     * очистка стирала записи чужих загрузок — «удалить всё» в одном разделе
+     * лишало докачки загрузки другого. Записи своих запросов удаляет [cancel],
+     * который очередь зовёт для каждого из них.
      */
     fun cancelAll() {
         scope.coroutineContext.cancelChildren()
-        dbScope.launch {
-            dbHelper.empty()
-        }
     }
 
     /**

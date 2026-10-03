@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit
  * - Отмена текущего вызова [Call.cancel] при прерывании задачи.
  */
 class DefaultHttpClient : HttpClient {
+    // Отменяется из потока, который отменяет загрузку.
+    @Volatile
     private var call: Call? = null
     private var response: Response? = null
     private var bodyStream: InputStream? = null

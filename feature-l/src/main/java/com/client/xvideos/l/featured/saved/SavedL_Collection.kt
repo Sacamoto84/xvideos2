@@ -13,11 +13,15 @@ import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.net.Luscious
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -172,7 +176,10 @@ class SavedL_Collection(
             return
         }
         // deleteRecursively по всей коллекции — это тысячи файлов, только на IO.
-        scope.launch(Dispatchers.IO) {
+        // Добавление в удаляемую коллекцию продолжать незачем: без отмены оно
+        // досохраняло остаток и возвращало коллекцию обратно.
+        cancelMutationsOf(safeName)
+        launchMutation(safeName) {
             val deleted = File(AppPath.l_collection, safeName).deleteRecursively()
             withContext(Dispatchers.Main) {
                 if (deleted) {
@@ -213,20 +220,20 @@ class SavedL_Collection(
         }
 
         // Переименование и fallback copyRecursively — это IO-операции на файловой системе
-        scope.launch(Dispatchers.IO) {
+        launchMutation(safeOldName) {
             val oldRoot = File(AppPath.l_collection, safeOldName)
             val newRoot = File(AppPath.l_collection, trimmedNewName)
             if (!oldRoot.exists()) {
                 withContext(Dispatchers.Main) {
                     SnackBar.error("Коллекция не найдена")
                 }
-                return@launch
+                return@launchMutation
             }
             if (newRoot.exists()) {
                 withContext(Dispatchers.Main) {
                     SnackBar.error("Коллекция уже существует")
                 }
-                return@launch
+                return@launchMutation
             }
 
             val renamed = if (!oldRoot.renameTo(newRoot)) {
@@ -298,31 +305,80 @@ class SavedL_Collection(
         }
     }
 
+    /** Перечитывания идут по одному: см. [reloadCollectionItems]. */
+    private val reloadMutex = Mutex()
+
+    /** Коллекции, перечитывание которых поставлено, но ещё не начало читать диск. */
+    private val pendingReloads = ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * Перечитывает коллекцию с диска.
+     *
+     * Чтения идут по одному, и результат публикуется под тем же замком: раньше
+     * каждое шло своей корутиной, и начатое раньше могло опубликовать список
+     * позже свежего — только что добавленный элемент пропадал до следующего
+     * обновления. Запрос, пришедший, пока предыдущий ещё ждёт очереди, с ним
+     * сливается: тот прочитает диск позже и увидит то же самое. Так после
+     * мутации коллекция читается один раз, а не дважды.
+     */
     private fun reloadCollectionItems(
         safeName: String,
         flow: MutableStateFlow<List<PicsDetails>?>
     ) {
+        if (!pendingReloads.add(safeName)) return
         scope.launch(Dispatchers.IO) {
-            Timber.i("SavedL_Collection reloadCollectionItems() collection:$safeName")
-            val items = try {
-                lReadCollectionItems(File(AppPath.l_collection, safeName))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "SavedL_Collection reloadCollectionItems() Ошибка получения списка коллекции")
-                emptyList()
-            }
-            flow.value = items
-            withContext(Dispatchers.Main) {
-                if (currentCollectionName == safeName) {
-                    listUrl.replaceWith(items)
+            reloadMutex.withLock {
+                pendingReloads.remove(safeName)
+                Timber.i("SavedL_Collection reloadCollectionItems() collection:$safeName")
+                val items = try {
+                    lReadCollectionItems(File(AppPath.l_collection, safeName))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "SavedL_Collection reloadCollectionItems() Ошибка получения списка коллекции")
+                    emptyList()
+                }
+                // Поток берётся из кэша на момент публикации: у коллекции он один.
+                (collectionCache[safeName] ?: flow).value = items
+                withContext(Dispatchers.Main) {
+                    if (currentCollectionName == safeName) {
+                        listUrl.replaceWith(items)
+                    }
                 }
             }
         }
     }
 
     private var refreshDuplicatesJob: Job? = null
-    private var mutationJob: Job? = null
+
+    /**
+     * Мутации коллекций идут строго по одной, в порядке вызова.
+     *
+     * Раньше каждая новая мутация отменяла предыдущую: один `Job` на все
+     * действия со всеми коллекциями. Добавление качает файлы и длится долго —
+     * следующее действие обрывало его молча: добавил картинку и сразу вторую —
+     * первая не сохранена. Очередь защищает от гонок так же, но ничего не теряет.
+     */
+    private val mutationMutex = Mutex()
+
+    /** Идущие и ждущие очереди мутации и коллекция каждой: по ней удаление находит, что отменить. */
+    private val mutationJobs = ConcurrentHashMap<Job, String>()
+
+    /** Ставит мутацию коллекции [collectionName] в очередь. */
+    private fun launchMutation(collectionName: String, block: suspend CoroutineScope.() -> Unit): Job {
+        val job = scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
+            mutationMutex.withLock { block() }
+        }
+        mutationJobs[job] = collectionName
+        job.invokeOnCompletion { mutationJobs.remove(job) }
+        job.start()
+        return job
+    }
+
+    /** Отменяет мутации коллекции [collectionName]: и идущую, и ждущие очереди. */
+    private fun cancelMutationsOf(collectionName: String) {
+        mutationJobs.forEach { (job, name) -> if (name == collectionName) job.cancel() }
+    }
 
     /**
      * Устанавливает коллекцию [collectionName] в качестве текущей открытой.
@@ -436,12 +492,12 @@ class SavedL_Collection(
 
         Timber.i("SavedL_Collection addAll() count:${uniqueItems.size} collection:$safeName")
 
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        launchMutation(safeName) {
             var successCount = 0
             var errorCount = 0
 
             uniqueItems.forEach { item ->
+                ensureActive()
                 lPersistPicsDetailsToFolder(
                     item = item,
                     root = File(AppPath.l_collection, safeName),
@@ -512,8 +568,7 @@ class SavedL_Collection(
         val uniqueItems = if (items.size == 1) items else items.distinctBy { lPicsDetailsIdentityKey(it) }
         if (uniqueItems.isEmpty()) return
         // Обход папок коллекции на каждый элемент плюс рекурсивное удаление — на IO.
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        launchMutation(safeName) {
             val collectionRoot = File(AppPath.l_collection, safeName)
             val removedCount = uniqueItems.count { item ->
                 val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
@@ -544,14 +599,13 @@ class SavedL_Collection(
         }
         // Поиск папки элемента + чтение и запись config-файла — файловые операции.
         // Вызов идёт из onClick меню, с UI-потока это фриз (см. refreshCollectionList).
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        launchMutation(name) {
             val collectionRoot = File(AppPath.l_collection, name)
             try {
                 val folder = lFindCollectionItemFolder(collectionRoot, lCollectionItemIdentifiers(item))
                 if (folder == null) {
                     SnackBar.error("Не удалось найти файл для обложки")
-                    return@launch
+                    return@launchMutation
                 }
 
                 val config = lReadCollectionConfig(collectionRoot).copy(coverFolderName = folder.name)
@@ -561,7 +615,7 @@ class SavedL_Collection(
             } catch (e: Exception) {
                 Timber.e(e, "SavedL_Collection setManualCover() Ошибка установки обложки")
                 SnackBar.error("Ошибка установки обложки")
-                return@launch
+                return@launchMutation
             }
             SnackBar.success("Обложка коллекции обновлена")
             refreshCollectionList()
@@ -579,8 +633,7 @@ class SavedL_Collection(
         }
         // Обход всех папок коллекции с чтением metadata.json каждого элемента плюс
         // рекурсивное удаление дублей — только на IO, иначе ANR на большой коллекции.
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        launchMutation(name) {
             val collectionRoot = File(AppPath.l_collection, name)
             val removedCount = try {
                 val groups = lFindCollectionDuplicateFolders(collectionRoot)
@@ -589,7 +642,7 @@ class SavedL_Collection(
                 if (foldersToDelete.isEmpty()) {
                     SnackBar.info("Дубли не найдены")
                     refreshDuplicates(name)
-                    return@launch
+                    return@launchMutation
                 }
 
                 foldersToDelete.count { it.deleteRecursively() }
@@ -598,7 +651,7 @@ class SavedL_Collection(
             } catch (e: Exception) {
                 Timber.e(e, "SavedL_Collection removeDuplicateItems() Ошибка удаления дублей")
                 SnackBar.error("Ошибка удаления дублей")
-                return@launch
+                return@launchMutation
             }
 
             SnackBar.info("Удалено дублей: $removedCount")
@@ -619,7 +672,7 @@ class SavedL_Collection(
         }
         Timber.i("SavedL_Collection remove() identifiers:$identifiers collection:$safeName")
         // Поиск папки элемента обходит коллекцию, удаление рекурсивное — на IO.
-        scope.launch(Dispatchers.IO) {
+        launchMutation(safeName) {
             val collectionRoot = File(AppPath.l_collection, safeName)
             val folder = lFindCollectionItemFolder(collectionRoot, identifiers)
             val file = identifiers.firstOrNull()?.lToFilePath()?.let { File(it) }

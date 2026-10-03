@@ -98,7 +98,7 @@ fun parserChannelHeader(
         ?: ""
 
     val aboutMeText = parseChannelAboutMe(document)
-    val videoCount = document.selectFirst("#tab-videos .count")?.text()?.trim()?.toIntOrNull() ?: 0
+    val videoCount = parseVideoCount(document.selectFirst("#tab-videos .count")?.text())
 
     val isModelDetected = detectIsModelProfile(document, fallbackSlug, isModel)
     val profileType = if (isModelDetected) com.client.xvideos.x.model.ProfileType.MODEL else com.client.xvideos.x.model.ProfileType.CHANNEL
@@ -108,8 +108,7 @@ fun parserChannelHeader(
     val country = document.selectFirst("#pinfo-country span")?.text()?.trim().orEmpty()
     val countryCode = parseProfileCountryCode(document, country)
     val workedWith = document.selectFirst("#pinfo-workedfor span")?.text()?.trim().orEmpty()
-    val isCurrentPageChannel = profileType == com.client.xvideos.x.model.ProfileType.CHANNEL
-    val collaborators = parseChannelCollaborators(document, isCurrentPageChannel)
+    val collaborators = parseChannelCollaborators(document)
 
     return ChannelHeaderModel(
         slug = fallbackSlug,
@@ -128,6 +127,22 @@ fun parserChannelHeader(
         workedWith = workedWith,
         collaborators = collaborators,
     )
+}
+
+private val THOUSANDS_WITH_DOTS = Regex("""^\d{1,3}(\.\d{3})+$""")
+
+/**
+ * Число роликов из счётчика шапки.
+ *
+ * Сайт пишет большие числа с разделителем разрядов: пробелом (в том числе
+ * неразрывным), запятой или точкой. `toIntOrNull()` на таком тексте давал
+ * `null`, счётчик становился нулём, и число страниц канала считалось без него.
+ * Сокращённую запись («1.2k») не угадываем — для неё по-прежнему 0.
+ */
+internal fun parseVideoCount(text: String?): Int {
+    val compact = text.orEmpty().filterNot { it.isWhitespace() || it == ',' }
+    val digits = if (THOUSANDS_WITH_DOTS.matches(compact)) compact.replace(".", "") else compact
+    return digits.toIntOrNull() ?: 0
 }
 
 private fun parseChannelBannerUrl(document: Document): String {
@@ -172,20 +187,13 @@ private fun detectIsModelProfile(document: Document, fallbackSlug: String, isMod
         fallbackSlug.startsWith("model")
 }
 
-private fun parseChannelCollaborators(
-    document: Document,
-    isCurrentPageChannel: Boolean
-): List<ChannelCollaborator> {
+private fun parseChannelCollaborators(document: Document): List<ChannelCollaborator> {
     val collaboratorElements = document.select("#pinfo-workedfor span a[href]")
     return collaboratorElements.mapNotNull { a ->
         val href = a.attr("href").trim()
         val name = a.text().trim()
         if (name.isNotBlank()) {
-            val isCollaboratorModel = detectCollaboratorIsModel(
-                name = name,
-                href = href,
-                isCurrentPageChannel = isCurrentPageChannel,
-            )
+            val isCollaboratorModel = detectCollaboratorIsModel(name = name, href = href)
             ChannelCollaborator(name = name, href = href, isModel = isCollaboratorModel)
         } else null
     }
@@ -201,7 +209,6 @@ private val STUDIO_KEYWORDS = setOf(
 internal fun detectCollaboratorIsModel(
     name: String,
     href: String,
-    isCurrentPageChannel: Boolean,
     knownModelNames: Set<String> = emptySet(),
 ): Boolean {
     val lowerHref = href.lowercase().trim()
@@ -223,20 +230,16 @@ internal fun detectCollaboratorIsModel(
         }
     }
 
-    // 4. Студийные маркеры в названии или slug
-    val nameTokens = lowerName.split(' ', '_', '-', '.', '/')
-    val slugTokens = lowerHref.split('/', '_', '-', '.')
-    val hasStudioMarker = (nameTokens + slugTokens).any { it in STUDIO_KEYWORDS } ||
-        STUDIO_KEYWORDS.any { lowerName.contains(it) || lowerHref.contains(it) }
-
+    // 4. Студийные маркеры в названии или slug. Ищутся подстрокой: названия
+    // студий часто слитные («…studios», «…network»), по отдельным словам их не
+    // поймать. Отдельная проверка по словам была лишней — подстрока покрывает её.
+    val hasStudioMarker = STUDIO_KEYWORDS.any { it in lowerName || it in lowerHref }
     if (hasStudioMarker) return false
 
-    // 5. Контекст страницы: на странице канала список «Работал для/с» перечисляет моделей студии
-    if (isCurrentPageChannel) {
-        return true
-    }
-
-    // На странице модели, если нет маркеров студии, участник считается коллегой-моделью
+    // 5. Маркеров студии нет — это модель. На странице канала список
+    // «Работал для/с» перечисляет моделей студии, на странице модели участник
+    // без маркеров студии считается коллегой-моделью: исход один, от типа
+    // страницы не зависит.
     return true
 }
 

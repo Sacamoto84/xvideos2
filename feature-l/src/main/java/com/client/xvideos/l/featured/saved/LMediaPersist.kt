@@ -55,9 +55,17 @@ internal fun File.isPartialDownload(): Boolean = name.endsWith(L_PART_FILE_SUFFI
 private const val DEFAULT_BUFFER_SIZE = 8 * 1024
 
 /**
- * Создаёт настроенный [HttpClient] для скачивания media-файлов luscious с поддержкой DoH и таймаутов.
+ * Общий [HttpClient] для скачивания media-файлов L: DoH и таймауты.
+ *
+ * Один на процесс. Раньше клиент создавался на каждую сохраняемую картинку и
+ * закрывался после неё: новый пул соединений и потоков, нулевое
+ * переиспользование keep-alive — при сохранении альбома каждое соединение
+ * проходило TLS-рукопожатие заново. Клиент живёт столько же, сколько процесс,
+ * закрывать его не нужно.
  */
-internal fun lCreateMediaClient(): HttpClient = HttpClient(OkHttp) {
+internal val lMediaClient: HttpClient by lazy { lCreateMediaClient() }
+
+private fun lCreateMediaClient(): HttpClient = HttpClient(OkHttp) {
     engine {
         config {
             dns(AppDns)
@@ -383,106 +391,109 @@ internal suspend fun lPersistPicsDetailsToFolder(
     progress: LDownloadProgress
 ): Result<File> {
     var progressStarted = false
-    return runCatching {
-        val previewSources = item.lPreviewSources()
-        val mediaUrl = item.lDownloadUrl()
-            ?: previewSources.maxByOrNull { it.width * it.height }?.url
-            ?: error("Missing media url")
-        val expectedFileCount = if (item.is_animated) {
-            1 + if (previewSources.isNotEmpty()) 1 else 0
-        } else {
-            1 + previewSources.size
-        }
-        progress.begin(expectedFileCount)
-        progressStarted = true
-
-        val albumId = item.album?.takeIf { it.isNotBlank() && it != "null" }
-        val albumDetails = albumId?.toIntOrNull()?.let { lFetchAlbumDetails(luscious, it) }
-
-        root.mkdirs()
-        val folder = File(root, lBuildFolderName(item, mediaUrl))
-        folder.mkdirs()
-
-        val mediaExtension =
-            if (item.is_animated) mediaUrl.videoExtension() else mediaUrl.imageExtension()
-        val mediaFile = File(folder, "media.$mediaExtension")
-        val savedPreviews = mutableListOf<LSavedLikePreview>()
-
-        val client = lCreateMediaClient()
-        try {
-            val mediaSaved = if (item.is_animated) {
-                lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress)
-                true
+    // runCatchingCancellable, а не runCatching: отмена обязана дойти до
+    // вызывающего. Раньше она возвращалась как Result.failure, и отменённое
+    // сохранение выглядело ошибкой загрузки, а пакет перебирал остаток списка.
+    return try {
+        runCatchingCancellable {
+            val previewSources = item.lPreviewSources()
+            val mediaUrl = item.lDownloadUrl()
+                ?: previewSources.maxByOrNull { it.width * it.height }?.url
+                ?: error("Missing media url")
+            val expectedFileCount = if (item.is_animated) {
+                1 + if (previewSources.isNotEmpty()) 1 else 0
             } else {
-                runCatchingCancellable { lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress) }
-                    .onFailure { error ->
-                        mediaFile.delete()
-                        Timber.w(error, "L media original download failed, fallback to previews: $mediaUrl")
+                1 + previewSources.size
+            }
+            progress.begin(expectedFileCount)
+            progressStarted = true
+
+            val albumId = item.album?.takeIf { it.isNotBlank() && it != "null" }
+            val albumDetails = albumId?.toIntOrNull()?.let { lFetchAlbumDetails(luscious, it) }
+
+            root.mkdirs()
+            val folder = File(root, lBuildFolderName(item, mediaUrl))
+            folder.mkdirs()
+
+            val mediaExtension =
+                if (item.is_animated) mediaUrl.videoExtension() else mediaUrl.imageExtension()
+            val mediaFile = File(folder, "media.$mediaExtension")
+            val savedPreviews = mutableListOf<LSavedLikePreview>()
+
+            val client = lMediaClient
+            try {
+                val mediaSaved = if (item.is_animated) {
+                    lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress)
+                    true
+                } else {
+                    runCatchingCancellable { lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress) }
+                        .onFailure { error ->
+                            mediaFile.delete()
+                            Timber.w(error, "L media original download failed, fallback to previews: $mediaUrl")
+                        }
+                        .isSuccess
+                }
+
+                if (item.is_animated) {
+                    previewSources.minByOrNull { it.width * it.height }?.let { preview ->
+                        val previewFile = File(folder, "preview.${preview.extension}")
+                        runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
+                            .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
+                            .onFailure { Timber.w(it, "L video preview download failed: ${preview.url}") }
                     }
-                    .isSuccess
-            }
-
-            if (item.is_animated) {
-                previewSources.minByOrNull { it.width * it.height }?.let { preview ->
-                    val previewFile = File(folder, "preview.${preview.extension}")
-                    runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
-                        .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
-                        .onFailure { Timber.w(it, "L video preview download failed: ${preview.url}") }
+                } else {
+                    previewSources.forEach { preview ->
+                        val previewFile = File(folder, "preview.${preview.sizeMarker}.${preview.extension}")
+                        runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
+                            .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
+                            .onFailure { Timber.w(it, "L preview download failed: ${preview.url}") }
+                    }
                 }
-            } else {
-                previewSources.forEach { preview ->
-                    val previewFile = File(folder, "preview.${preview.sizeMarker}.${preview.extension}")
-                    runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
-                        .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
-                        .onFailure { Timber.w(it, "L preview download failed: ${preview.url}") }
+
+                if (!mediaSaved && savedPreviews.isEmpty()) {
+                    error("Missing downloaded media and previews")
                 }
-            }
 
-            if (!mediaSaved && savedPreviews.isEmpty()) {
-                error("Missing downloaded media and previews")
-            }
+                val pictureId = item.id?.takeIf { it.isNotBlank() } ?: item.extractAnchorId()
+                val metadata = LSavedLikeMetadata(
+                    folderName = folder.name,
+                    mediaFileName = mediaFile.name,
+                    previewFileName = savedPreviews.minByOrNull { it.width * it.height }?.fileName,
+                    previewFiles = savedPreviews,
+                    sourceMediaUrl = mediaUrl,
+                    sourcePreviewUrl = savedPreviews.minByOrNull { it.width * it.height }?.sourceUrl,
+                    sourceOriginalUrl = item.url_to_original,
+                    sourceVideoUrl = item.url_to_video,
+                    albumId = albumId,
+                    albumTitle = albumDetails?.title,
+                    albumDescription = albumDetails?.description,
+                    albumUrl = albumDetails?.url?.let { LusciousEndpoints.HOME + it },
+                    albumDownloadUrl = albumDetails?.download_url?.let { LusciousEndpoints.HOME + it },
+                    albumDetails = albumDetails,
+                    pictureId = pictureId,
+                    pictureUrl = item.url,
+                    picture = if (item.id.isNullOrBlank() && !pictureId.isNullOrBlank()) item.copy(id = pictureId) else item
+                )
+                writeLSavedLikeMetadata(File(folder, L_METADATA_FILE_NAME), metadata)
 
-            val pictureId = item.id?.takeIf { it.isNotBlank() } ?: item.extractAnchorId()
-            val metadata = LSavedLikeMetadata(
-                folderName = folder.name,
-                mediaFileName = mediaFile.name,
-                previewFileName = savedPreviews.minByOrNull { it.width * it.height }?.fileName,
-                previewFiles = savedPreviews,
-                sourceMediaUrl = mediaUrl,
-                sourcePreviewUrl = savedPreviews.minByOrNull { it.width * it.height }?.sourceUrl,
-                sourceOriginalUrl = item.url_to_original,
-                sourceVideoUrl = item.url_to_video,
-                albumId = albumId,
-                albumTitle = albumDetails?.title,
-                albumDescription = albumDetails?.description,
-                albumUrl = albumDetails?.url?.let { LusciousEndpoints.HOME + it },
-                albumDownloadUrl = albumDetails?.download_url?.let { LusciousEndpoints.HOME + it },
-                albumDetails = albumDetails,
-                pictureId = pictureId,
-                pictureUrl = item.url,
-                picture = if (item.id.isNullOrBlank() && !pictureId.isNullOrBlank()) item.copy(id = pictureId) else item
-            )
-            writeLSavedLikeMetadata(File(folder, L_METADATA_FILE_NAME), metadata)
-
-            // Подчищаем недокачанные хвосты: элемент собран, все загрузки в эту
-            // папку завершены, значит любой оставшийся .part — мусор от прошлой
-            // попытки, а не чужая активная загрузка.
-            folder.listFiles()
-                ?.filter { it.isFile && it.isPartialDownload() }
-                ?.forEach { stale ->
-                    Timber.i("L cleanup stale part file: ${stale.name}")
-                    stale.delete()
+                // Подчищаем недокачанные хвосты: элемент собран, все загрузки в эту
+                // папку завершены, значит любой оставшийся .part — мусор от прошлой
+                // попытки, а не чужая активная загрузка.
+                folder.listFiles()
+                    ?.filter { it.isFile && it.isPartialDownload() }
+                    ?.forEach { stale ->
+                        Timber.i("L cleanup stale part file: ${stale.name}")
+                        stale.delete()
+                    }
+            } catch (e: Exception) {
+                if (folder.listFiles().isNullOrEmpty() || !File(folder, L_METADATA_FILE_NAME).exists()) {
+                    folder.deleteRecursively()
                 }
-        } catch (e: Exception) {
-            if (folder.listFiles().isNullOrEmpty() || !File(folder, L_METADATA_FILE_NAME).exists()) {
-                folder.deleteRecursively()
+                throw e
             }
-            throw e
-        } finally {
-            client.close()
+            folder
         }
-        folder
-    }.also {
+    } finally {
         if (progressStarted) progress.finish()
     }
 }

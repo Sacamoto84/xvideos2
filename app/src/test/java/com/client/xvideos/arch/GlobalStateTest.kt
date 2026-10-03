@@ -159,9 +159,6 @@ class GlobalStateTest {
             // Сессионное состояние процесса: «пропустил логин» живёт до
             // перезапуска и не принадлежит ни одному экрану.
             "l/LSession.kt::loginSkipped",
-            // Анонимный токен redgifs. Запись закрыта (`private set`) и идёт
-            // под мьютексом; снаружи доступно только чтение.
-            "r/network/http/ApiClient.kt::bearerToken",
             // Выбранная страна: глобальна по смыслу, раньше была двумя
             // разрозненными top-level переменными.
             "x/feature/country/CountryState.kt::current",

@@ -30,4 +30,6 @@ dependencies {
 
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test
+    // Подставной движок Ktor: тест токена R получает настоящий ответ 401 без сети.
+    testImplementation libs.ktor.client.mock
 }

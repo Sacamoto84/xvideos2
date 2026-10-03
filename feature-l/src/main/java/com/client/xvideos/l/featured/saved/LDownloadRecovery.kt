@@ -64,50 +64,47 @@ internal suspend fun lRecoverIncompleteSavedMedia(
     val scan = scanLIncompleteSavedMedia()
     var report = scan.first
     onEvent("L: metadata ${report.totalMetadataFiles}, требуют докачки ${report.incompleteItems}")
-    val client = lCreateMediaClient()
+    // Общий клиент раздела: живёт столько же, сколько процесс, закрывать его нельзя.
+    val client = lMediaClient
 
-    try {
-        scan.second.forEach { candidate ->
-            candidate.media?.let { media ->
-                if (media.sourceUrl.isNullOrBlank()) {
-                    report = report.copy(skippedNoMediaUrl = report.skippedNoMediaUrl + 1)
-                    onEvent("L: нет URL для media ${media.target.name}")
-                } else {
-                    onEvent("L: скачиваю media ${media.target.name}")
-                    runCatchingCancellable { lRestoreSourceToFile(client, media.sourceUrl, media.target) }
-                        .onSuccess {
-                            report = report.copy(downloadedMedia = report.downloadedMedia + 1)
-                            onEvent("L: media готово ${media.target.name}")
-                        }
-                        .onFailure {
-                            report = report.copy(failedMedia = report.failedMedia + 1)
-                            onEvent("L: media не скачан ${media.target.name}: ${it.message ?: it::class.java.simpleName}")
-                            Timber.e(it, "L recovery media failed: ${media.target.absolutePath}")
-                        }
-                }
-            }
-
-            candidate.previews.forEach { preview ->
-                if (preview.sourceUrl.isNullOrBlank()) {
-                    report = report.copy(skippedNoPreviewUrl = report.skippedNoPreviewUrl + 1)
-                    onEvent("L: нет URL для preview ${preview.target.name}")
-                } else {
-                    onEvent("L: скачиваю preview ${preview.target.name}")
-                    runCatchingCancellable { lRestoreSourceToFile(client, preview.sourceUrl, preview.target) }
-                        .onSuccess {
-                            report = report.copy(downloadedPreview = report.downloadedPreview + 1)
-                            onEvent("L: preview готово ${preview.target.name}")
-                        }
-                        .onFailure {
-                            report = report.copy(failedPreview = report.failedPreview + 1)
-                            onEvent("L: preview не скачан ${preview.target.name}: ${it.message ?: it::class.java.simpleName}")
-                            Timber.e(it, "L recovery preview failed: ${preview.target.absolutePath}")
-                        }
-                }
+    scan.second.forEach { candidate ->
+        candidate.media?.let { media ->
+            if (media.sourceUrl.isNullOrBlank()) {
+                report = report.copy(skippedNoMediaUrl = report.skippedNoMediaUrl + 1)
+                onEvent("L: нет URL для media ${media.target.name}")
+            } else {
+                onEvent("L: скачиваю media ${media.target.name}")
+                runCatchingCancellable { lRestoreSourceToFile(client, media.sourceUrl, media.target) }
+                    .onSuccess {
+                        report = report.copy(downloadedMedia = report.downloadedMedia + 1)
+                        onEvent("L: media готово ${media.target.name}")
+                    }
+                    .onFailure {
+                        report = report.copy(failedMedia = report.failedMedia + 1)
+                        onEvent("L: media не скачан ${media.target.name}: ${it.message ?: it::class.java.simpleName}")
+                        Timber.e(it, "L recovery media failed: ${media.target.absolutePath}")
+                    }
             }
         }
-    } finally {
-        client.close()
+
+        candidate.previews.forEach { preview ->
+            if (preview.sourceUrl.isNullOrBlank()) {
+                report = report.copy(skippedNoPreviewUrl = report.skippedNoPreviewUrl + 1)
+                onEvent("L: нет URL для preview ${preview.target.name}")
+            } else {
+                onEvent("L: скачиваю preview ${preview.target.name}")
+                runCatchingCancellable { lRestoreSourceToFile(client, preview.sourceUrl, preview.target) }
+                    .onSuccess {
+                        report = report.copy(downloadedPreview = report.downloadedPreview + 1)
+                        onEvent("L: preview готово ${preview.target.name}")
+                    }
+                    .onFailure {
+                        report = report.copy(failedPreview = report.failedPreview + 1)
+                        onEvent("L: preview не скачан ${preview.target.name}: ${it.message ?: it::class.java.simpleName}")
+                        Timber.e(it, "L recovery preview failed: ${preview.target.absolutePath}")
+                    }
+            }
+        }
     }
 
     report

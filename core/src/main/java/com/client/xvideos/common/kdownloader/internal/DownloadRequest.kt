@@ -14,7 +14,7 @@ import kotlinx.coroutines.Job
 class DownloadRequest private constructor(
     internal var url: String,
     internal val tag: String?,
-    internal var listener: Listener?,
+    @Volatile internal var listener: Listener?,
     internal val headers: HashMap<String, List<String>>?,
     internal val dirPath: String,
     internal val downloadId: Int,
@@ -121,6 +121,34 @@ class DownloadRequest private constructor(
     /**
      * Сбрасывает счетчики байт и статус задачи в начальное состояние.
      */
+    /**
+     * Присоединяет ещё одного слушателя к уже идущей загрузке: оба получат её
+     * события. Нужен, когда тот же файл запросили повторно — вторая загрузка не
+     * запускается, но запросивший обязан узнать исход.
+     */
+    internal fun addListener(extra: Listener?) {
+        if (extra == null) return
+        val current = listener
+        listener = if (current == null) extra else ListenerPair(current, extra)
+    }
+
+    /** Передаёт каждое событие обоим слушателям; сбой первого не лишает события второго. */
+    private class ListenerPair(private val first: Listener, private val second: Listener) : Listener {
+        override fun onStart() = both { it.onStart() }
+        override fun onProgress(value: Int) = both { it.onProgress(value) }
+        override fun onPause() = both { it.onPause() }
+        override fun onCompleted() = both { it.onCompleted() }
+        override fun onError(error: String) = both { it.onError(error) }
+
+        private inline fun both(event: (Listener) -> Unit) {
+            try {
+                event(first)
+            } finally {
+                event(second)
+            }
+        }
+    }
+
     fun reset(){
         downloadedBytes = 0
         totalBytes = 0

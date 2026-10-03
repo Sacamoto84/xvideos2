@@ -206,24 +206,37 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 onVideoFinished(item.id, failed = true)
                 SnackBar.error("Ошибка скачивания: $it")
             },
-            onCompleted = {
-                scope.launch(Dispatchers.IO) {
-                    val file = File(dir, "${item.id}.mp4")
-                    if (!file.exists() || file.length() == 0L) {
-                        file.delete()
-                        onVideoFinished(item.id, failed = true)
-                        SnackBar.error("Ошибка: скачанный файл пуст")
-                        return@launch
-                    }
-                    onVideoFinished(item.id, failed = false)
-                    SnackBar.success("Скачано")
-                    runCatching {
-                        File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
-                    }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }
-                    loadFromDisk()
-                }
-            },
+            onCompleted = { scope.launch(Dispatchers.IO) { completeDownload(item) } },
+            // Отмена — не сбой: загрузку сняли удалением ролика.
+            onCancelled = { onVideoFinished(item.id, failed = false) },
         )
+    }
+
+    /** Завершает загрузку [item]: видео уже на диске, осталось записать `.info`. */
+    internal fun completeDownload(item: ItemsX) {
+        val file = File(dir, "${item.id}.mp4")
+        if (!file.exists() || file.length() == 0L) {
+            file.delete()
+            onVideoFinished(item.id, failed = true)
+            SnackBar.error("Ошибка: скачанный файл пуст")
+            return
+        }
+        // `.info` — до объявления успеха. Раньше «Скачано» показывалось первым,
+        // а сбой записи только логировался: видео оставалось на диске без
+        // `.info` — в списке его нет, удалить из приложения нельзя.
+        val infoWritten = runCatching {
+            File(dir, "${item.id}.info").writeTextAtomically(AppJson.encodeToString(item))
+        }.onFailure { Timber.e(it, "X download: ошибка записи .info ${item.id}") }.isSuccess
+        if (!infoWritten) {
+            file.delete()
+            File(dir, "${item.id}.jpg").delete()
+            onVideoFinished(item.id, failed = true)
+            SnackBar.error("Ошибка: не удалось сохранить данные ролика")
+            return
+        }
+        onVideoFinished(item.id, failed = false)
+        SnackBar.success("Скачано")
+        loadFromDisk()
     }
 
     /**
@@ -261,13 +274,33 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 return@launch
             }
 
+            // Сохранение идёт через тот же учёт, что и загрузки: раньше оно
+            // писало в percent напрямую, и при одновременной загрузке индикатор
+            // скакал между двумя источниками. Заодно тот же ролик не качается дважды.
+            if (!markStarted(item.id)) {
+                SnackBar.info("Уже скачивается")
+                return@launch
+            }
             SnackBar.info("Получение ссылки на видео…")
-            val videoUrl = resolveDirectVideoUrl(item)
+            val videoUrl = try {
+                resolveDirectVideoUrl(item)
+            } catch (e: CancellationException) {
+                onVideoFinished(item.id, failed = false)
+                throw e
+            }
             if (videoUrl.isNullOrBlank()) {
+                onVideoFinished(item.id, failed = true)
                 SnackBar.error("Не удалось получить ссылку на видео")
                 return@launch
             }
-            GallerySaver.saveFromUrl(context, kDownloader, videoUrl, fileName, progress = _percent)
+            GallerySaver.saveFromUrl(
+                context = context,
+                kDownloader = kDownloader,
+                url = videoUrl,
+                fileName = fileName,
+                onProgress = { onVideoProgress(item.id, it) },
+                onFinished = { failed -> onVideoFinished(item.id, failed) },
+            )
         }
     }
 
@@ -302,10 +335,20 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         }
     }
 
+    /** Сканы каталога идут по одному: см. [loadFromDisk]. */
+    private val scanLock = Any()
+
     /**
      * Сканирует директорию [dir], сопоставляет mp4, jpg и info файлы, формируя актуальный список загрузок.
+     *
+     * Скан и публикация результата — под одним замком. Метод зовут из разных
+     * корутин (обновление, удаление, конец каждой загрузки), и без замка скан,
+     * начатый раньше, мог опубликовать список позже свежего: только что
+     * скачанный ролик пропадал из списка до следующего обновления.
      */
-    private fun loadFromDisk() {
+    private fun loadFromDisk() = synchronized(scanLock) { scanAndPublish() }
+
+    private fun scanAndPublish() {
         val root = File(dir)
         val allFiles = if (root.exists() && root.isDirectory) {
             root.listFiles() ?: emptyArray()
@@ -345,7 +388,10 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 result.add(item)
             }
         }
-        _downloadedVideoIds.value = videoIds
+        // Сохранённым считается только ролик из списка: видео без `.info`
+        // в список не попадает, и числиться сохранённым не должно — иначе его
+        // не видно и нельзя ни удалить, ни скачать заново.
+        _downloadedVideoIds.value = result.mapTo(HashSet(result.size)) { it.id }
         _downloadedPosterIds.value = posterIds
         _list.value = result
     }

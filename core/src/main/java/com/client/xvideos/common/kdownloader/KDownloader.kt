@@ -114,11 +114,35 @@ class KDownloader private constructor(dbHelper: DbHelper, private val config: Do
         crossinline onPause: () -> Unit = {},
         crossinline onError: (error: String) -> Unit = { _ -> },
         crossinline onCompleted: () -> Unit = {}
+    ) = enqueue(
+        req = req,
+        onStart = onStart,
+        onProgress = onProgress,
+        onPause = onPause,
+        onError = onError,
+        onCompleted = onCompleted,
+        onCancelled = { onError(Constants.CANCELLED) },
+    )
+
+    /**
+     * То же, но отмена приходит в [onCancelled], а не в [onError]: загрузчик
+     * сообщает о ней как об ошибке с текстом [Constants.CANCELLED], и
+     * вызывающий, не отличавший одно от другого, показывал пользователю
+     * «ошибку загрузки» на ролике, который тот сам удалил.
+     */
+    inline fun enqueue(
+        req: DownloadRequest,
+        crossinline onStart: () -> Unit = {},
+        crossinline onProgress: (value: Int) -> Unit = { _ -> },
+        crossinline onPause: () -> Unit = {},
+        crossinline onError: (error: String) -> Unit = { _ -> },
+        crossinline onCompleted: () -> Unit = {},
+        crossinline onCancelled: () -> Unit,
     ) = enqueue(req, object : DownloadRequest.Listener {
         override fun onStart() = onStart()
         override fun onProgress(value: Int) = onProgress(value)
         override fun onPause() = onPause()
-        override fun onError(error: String) = onError(error)
+        override fun onError(error: String) = if (error == Constants.CANCELLED) onCancelled() else onError(error)
         override fun onCompleted() = onCompleted()
     })
 

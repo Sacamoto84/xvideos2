@@ -29,7 +29,8 @@ import timber.log.Timber
 /**
  * Хранилище и менеджер подписок раздела X (Каналы и Актрисы/Модели).
  *
- * Сохраняет данные в отдельных каталогах FileDB (`channels` и `models` внутри [AppPath.x_subscriptions]),
+ * Каналы и модели лежат в одном каталоге [AppPath.x_subscriptions] и различаются расширением файла
+ * (`channels` и `models`) — это два FileDB на одну папку, лок у них общий, по каталогу. Класс
  * предоставляет реактивные snapshot-наборы [channelSlugs] и [modelSlugs] для мгновенной O(1)-проверки [isSubscribed],
  * а также интерактивные списки [selectedListChannels] и [selectedListModels] для фильтрации объединённой ленты.
  *

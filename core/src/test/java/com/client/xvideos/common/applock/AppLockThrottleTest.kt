@@ -69,6 +69,21 @@ class AppLockThrottleTest {
     }
 
     @Test
+    fun `перевод часов назад дальше потолка не держит блокировку дольше монотонного срока`() {
+        val state = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS, 1_000L, 500L)
+
+        // Часы ушли назад на десять суток: по ним остаток больше любой
+        // блокировки, которую приложение вообще назначает. Такой срок не может
+        // быть настоящим, считать его нельзя — остаётся монотонный.
+        val remaining = AppLockThrottle.remainingMillis(
+            state = state,
+            wallNow = 1_000L - 10 * 86_400_000L,
+            elapsedNow = 500L + 10_000L,
+        )
+        assertEquals(20_000L, remaining)
+    }
+
+    @Test
     fun `после истечения обоих сроков блокировки нет`() {
         val state = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS, 1_000L, 500L)
 

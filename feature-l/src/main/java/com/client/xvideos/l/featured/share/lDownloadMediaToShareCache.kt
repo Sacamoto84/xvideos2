@@ -3,7 +3,7 @@ package com.client.xvideos.l.featured.share
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.requireInside
-import com.client.xvideos.l.featured.saved.lCreateMediaClient
+import com.client.xvideos.l.featured.saved.lMediaClient
 import com.client.xvideos.l.featured.saved.lDownloadToFile
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lDownloadUrl
@@ -35,11 +35,7 @@ suspend fun lDownloadMediaToShareCache(item: PicsDetails): File? {
     }
 
     val url = item.lDownloadUrl() ?: return null
-    val client = lCreateMediaClient()
-
-    client.use { client ->
-        lDownloadToFile(client, url, file)
-    }
+    lDownloadToFile(lMediaClient, url, file)
 
     return file.takeIf { it.exists() && it.length() > 0L }
 }

@@ -5,7 +5,6 @@ import com.client.xvideos.r.network.json.RJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -14,24 +13,17 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import timber.log.Timber
 import okhttp3.ConnectionSpec
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * HTTP-клиент модуля RedGifs на базе Ktor и движка OkHttp.
  *
  * Инкапсулирует:
- * - Управление временным анонимным Bearer-токеном (автоматическое получение, кэширование и обновление при 401 Unauthorized);
- * - Потокобезопасность доступа к токену через [Mutex] с double-checked паттерном;
+ * - Управление временным анонимным Bearer-токеном через [BearerAuth] (получение, кэширование, обновление при 401);
  * - DNS-over-HTTPS резолвинг через [AppDns];
  * - Настройку таймаутов, ретраев и стандартных HTTP-заголовков (Referer, Origin, UserAgent).
  */
@@ -40,6 +32,9 @@ object ApiClient {
     /** Заголовок User-Agent браузера для обхода Cloudflare и ограничений поставщика. */
     const val USER_AGENT: String =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+
+    /** Адрес выдачи временного анонимного токена. */
+    private const val AUTH_URL = "https://api.redgifs.com/v2/auth/temporary"
 
     /**
      * Сконфигурированный экземпляр [HttpClient] на базе OkHttp:
@@ -85,131 +80,21 @@ object ApiClient {
     }
 
     /**
-     * Анонимный bearer-токен redgifs. Пишется только из [loginLocked]/[refreshToken]
-     * под [tokenMutex], читается из любого потока — отсюда `@Volatile`.
-     */
-    @Volatile
-    var bearerToken: String? = null
-        private set
-
-    /** Атомарная ссылка на заголовок `Bearer <token>` для быстрой подстановки в запросы. */
-    @PublishedApi
-    internal val bearerHeaderRef = AtomicReference<String?>(null)
-
-    /** Кэшированный результат успешного Unit для предотвращения лишних аллокаций. */
-    private val SUCCESS_UNIT = Result.success(Unit)
-
-    /** Мьютекс синхронизации получения и обновления токена. */
-    private val tokenMutex = Mutex()
-
-    /**
-     * DTO ответа авторизационного эндпоинта RedGifs `/v2/auth/temporary`.
+     * DTO ответа авторизационного эндпоинта `/v2/auth/temporary`.
      *
      * @property token Временный токен доступа.
      */
     @Serializable
     data class TokenResponse(@SerialName("token") val token: String)
 
-    /**
-     * Гарантирует наличие токена. При параллельных запросах без токена
-     * логин выполняется ровно один раз (double-checked под [tokenMutex]).
-     */
-    @PublishedApi
-    internal suspend fun ensureToken(): Result<Unit> {
-        if (bearerToken != null) return SUCCESS_UNIT
-        return tokenMutex.withLock {
-            if (bearerToken != null) SUCCESS_UNIT
-            else loginLocked().map { }
-        }
-    }
+    /** Анонимный токен и выполнение запросов под ним, с обновлением после 401. */
+    val auth = BearerAuth { client.get(AUTH_URL).body<TokenResponse>().token }
 
-    /**
-     * Принудительно обновляет токен после 401, но только если другой корутин
-     * не успел его уже заменить (сравнение с [previousToken] под мьютексом),
-     * иначе несколько параллельных 401 устроили бы шторм логинов.
-     *
-     * @param previousToken Токен, на котором был получен HTTP 401 Unauthorized.
-     */
-    @PublishedApi
-    internal suspend fun refreshToken(previousToken: String?): Result<Unit> {
-        return tokenMutex.withLock {
-            if (bearerToken != previousToken) {
-                SUCCESS_UNIT
-            } else {
-                bearerToken = null
-                bearerHeaderRef.set(null)
-                loginLocked().map { }
-            }
-        }
-    }
+    /** Текущий анонимный bearer-токен. */
+    val bearerToken: String? get() = auth.token
 
-    /** Выполняет логин. Вызывать только удерживая [tokenMutex]. */
-    private suspend fun loginLocked(): Result<Boolean> {
-        return try {
-            Timber.d("Red ApiClient login()")
-            val tokenResponse =
-                client.get("https://api.redgifs.com/v2/auth/temporary").body<TokenResponse>()
-            val token = tokenResponse.token
-            bearerToken = token
-            bearerHeaderRef.set("Bearer $token")
-            Timber.d("Red ApiClient login() SUCCESS - token received")
-            Result.success(true)
-        } catch (e: CancellationException) {
-            // Отмена корутины — не ошибка сети. Без этого catch она превращалась
-            // в Result.failure и уезжала вызывающему как настоящий сбой логина.
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e, "Red ApiClient login() FAILED: ${e.localizedMessage}")
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Публичный метод принудительной авторизации (получения временного токена).
-     * Безопасен для многопоточного вызова (блокирует [tokenMutex]).
-     */
-    suspend fun login(): Result<Boolean> = tokenMutex.withLock { loginLocked() }
-
-    /**
-     * Общая обёртка авторизованного запроса: гарантирует токен, выполняет [perform],
-     * а при 401 один раз обновляет токен и повторяет. Единая точка обработки ошибок
-     * вместо четырёх копий retry-логики.
-     *
-     * @param perform Лямбда выполнения запроса с актуальным токеном.
-     * @return [Result] с результатом запроса либо с ошибкой.
-     */
-    @PublishedApi
-    internal suspend inline fun <T> withAuth(crossinline perform: suspend (token: String?) -> T): Result<T> {
-        ensureToken().onFailure { return Result.failure(it) }
-        return try {
-            Result.success(perform(bearerToken))
-        } catch (e: CancellationException) {
-            // Экран закрыли посреди запроса — это не сбой сети. Раньше отмена
-            // превращалась в Result.failure, и вызывающий показывал снекбар с
-            // текстом отмены корутины уже на предыдущем экране.
-            throw e
-        } catch (e: ClientRequestException) {
-            if (e.response.status == HttpStatusCode.Unauthorized) {
-                Timber.w("Red ApiClient 401 Unauthorized, retrying login...")
-                val previous = bearerToken
-                if (refreshToken(previous).isSuccess) {
-                    return try {
-                        Result.success(perform(bearerToken))
-                    } catch (e2: CancellationException) {
-                        throw e2
-                    } catch (e2: Exception) {
-                        Timber.e(e2, "Red ApiClient request FAILED after retry")
-                        Result.failure(e2)
-                    }
-                }
-            }
-            Timber.e(e, "Red ApiClient request FAILED")
-            Result.failure(e)
-        } catch (e: Exception) {
-            Timber.e(e, "Red ApiClient request FAILED")
-            Result.failure(e)
-        }
-    }
+    /** Принудительно получает новый токен. Безопасен для параллельных вызовов. */
+    suspend fun login(): Result<Boolean> = auth.login()
 
     /**
      * Выполняет типизированный GET-запрос по произвольному [url] с автоматической авторизацией.
@@ -221,8 +106,8 @@ object ApiClient {
     suspend inline fun <reified T> request(
         url: String,
         params: Map<String, String> = emptyMap(),
-    ): Result<T> = withAuth { token ->
-        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
+    ): Result<T> = auth.withAuth { token ->
+        val authHeader = token?.let { "Bearer $it" }
         client.get(url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
             if (params.isNotEmpty()) {
@@ -241,8 +126,8 @@ object ApiClient {
     suspend inline fun <reified T> request(
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
-    ): Result<T> = withAuth { token ->
-        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
+    ): Result<T> = auth.withAuth { token ->
+        val authHeader = token?.let { "Bearer $it" }
         client.get(route.url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
             if (params.isNotEmpty()) {
@@ -260,8 +145,8 @@ object ApiClient {
     suspend fun requestText(
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
-    ): Result<String> = withAuth { token ->
-        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
+    ): Result<String> = auth.withAuth { token ->
+        val authHeader = token?.let { "Bearer $it" }
         client.get(route.url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
             if (params.isNotEmpty()) {
@@ -279,8 +164,8 @@ object ApiClient {
     suspend fun requestText(
         url: String,
         vararg params: Pair<String, Any> = emptyArray(),
-    ): Result<String> = withAuth { token ->
-        val authHeader = bearerHeaderRef.get() ?: token?.let { "Bearer $it" }
+    ): Result<String> = auth.withAuth { token ->
+        val authHeader = token?.let { "Bearer $it" }
         client.get(url) {
             if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
             if (params.isNotEmpty()) {

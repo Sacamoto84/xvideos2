@@ -98,7 +98,11 @@ object AppLockThrottle {
      */
     fun remainingMillis(state: State, wallNow: Long, elapsedNow: Long): Long {
         if (state.lockoutUntilWall <= 0L && state.lockoutUntilElapsed <= 0L) return 0L
-        val byWall = (state.lockoutUntilWall - wallNow).coerceAtLeast(0L)
+        val byWallRaw = (state.lockoutUntilWall - wallNow).coerceAtLeast(0L)
+        // Остаток больше потолка возможен, только если настенные часы ушли назад:
+        // дольше MAX_LOCKOUT_MS блокировка не назначается. Такой срок держал бы ввод
+        // кода, пока часы не вернутся, поэтому он отбрасывается, как и монотонный.
+        val byWall = if (byWallRaw > MAX_LOCKOUT_MS) 0L else byWallRaw
         val byElapsedRaw = (state.lockoutUntilElapsed - elapsedNow).coerceAtLeast(0L)
         val byElapsed = if (byElapsedRaw > MAX_LOCKOUT_MS) 0L else byElapsedRaw
         return maxOf(byWall, byElapsed)

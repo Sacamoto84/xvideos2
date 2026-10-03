@@ -204,7 +204,18 @@ class DownloadRed @Inject constructor(
                 SnackBar.error("Нет ссылки на видео")
                 return@launch
             }
-            GallerySaver.saveFromUrl(appContext, downloader.kDownloader, url, fileName, progress = downloader.percent)
+            // Прогресс — через общий учёт загрузок, а не записью в percent мимо
+            // него: иначе индикатор скакал между загрузкой и сохранением.
+            // Ключ отдельный от id ролика: тот же ролик может качаться в кеш.
+            val progressKey = "gallery/${item.id}"
+            GallerySaver.saveFromUrl(
+                context = appContext,
+                kDownloader = downloader.kDownloader,
+                url = url,
+                fileName = fileName,
+                onProgress = { downloader.onVideoProgress(progressKey, it) },
+                onFinished = { failed -> downloader.onVideoFinished(progressKey, failed) },
+            )
         }
     }
 

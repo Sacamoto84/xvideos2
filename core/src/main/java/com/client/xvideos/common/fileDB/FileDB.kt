@@ -12,6 +12,7 @@ import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -38,6 +39,9 @@ class FileDB<T>(
 ) {
 
     companion object {
+        /** Локи по каталогам; каталогов у приложения единицы, записи не удаляются. */
+        private val dirLocks = ConcurrentHashMap<String, Any>()
+
         inline operator fun <reified T> invoke(
             dirPath: String,
             extension: String,
@@ -50,8 +54,15 @@ class FileDB<T>(
     private val dir = File(dirPath)
     private val dotExtension = ".$extension"
 
-    /** Сериализует операции с каталогом: два параллельных refresh() не переплетаются. */
-    private val lock = Any()
+    /**
+     * Сериализует операции с каталогом: два параллельных refresh() не переплетаются.
+     *
+     * Лок общий на каталог, а не на экземпляр. Два FileDB могут жить в одной
+     * папке и различаться только расширением; с отдельными локами [refresh] и
+     * [clear] одного удаляли `.tmp`, который в этот момент дописывал другой, и
+     * его запись падала.
+     */
+    private val lock: Any = dirLocks.computeIfAbsent(dir.absoluteFile.normalize().path) { Any() }
 
     /**
      * Номер загрузки и последний опубликованный номер.

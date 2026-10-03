@@ -74,9 +74,13 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
      * @param request Запрос на загрузку.
      * @return Идентификатор загрузки.
      */
+    @Synchronized
     fun enqueue(request: DownloadRequest): Int {
         val existing = idRequestMap[request.downloadId]
         if (existing != null && (existing.status == Status.QUEUED || existing.status == Status.RUNNING)) {
+            // Раньше слушатель повторного запроса отбрасывался: тот, кто его
+            // поставил, не узнавал ни об успехе, ни об ошибке.
+            existing.addListener(request.listener)
             return existing.downloadId
         }
         request.status = Status.QUEUED

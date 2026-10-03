@@ -183,6 +183,12 @@ class Downloader @Inject constructor(
                     onVideoFinished(item.id, failed = true)
                     SnackBar.error("Ошибка закачки: $it")
                 },
+                // Отмена — не сбой: ролик удалили, пока он качался. Раньше она
+                // приходила в onError и показывалась как «Ошибка закачки».
+                onCancelled = {
+                    Timber.i("Downloader: закачка отменена id=${item.id}")
+                    onVideoFinished(item.id, failed = false)
+                },
 
                 onProgress = { it1 -> onVideoProgress(item.id, it1 / 100f) },
                 onCompleted = {
@@ -354,7 +360,8 @@ class Downloader @Inject constructor(
                     SnackBar.error("Ошибка загрузки preview: $error")
                 }
             },
-            onCompleted = { onEvent("R Download: preview готов ${item.id}") }
+            onCompleted = { onEvent("R Download: preview готов ${item.id}") },
+            onCancelled = { onEvent("R Download: preview отменён ${item.id}") },
         )
     }
 
@@ -380,6 +387,10 @@ class Downloader @Inject constructor(
                 if (showSnackBarErrors) {
                     SnackBar.error("Ошибка закачки: $it")
                 }
+            },
+            onCancelled = {
+                onVideoFinished(item.id, failed = false)
+                onEvent("R Download: video отменён ${item.id}")
             },
             onProgress = { progress -> onVideoProgress(item.id, progress / 100f) },
             onCompleted = {

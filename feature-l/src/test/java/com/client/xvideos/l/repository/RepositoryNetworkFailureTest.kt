@@ -13,10 +13,12 @@ import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -59,6 +61,8 @@ class RepositoryNetworkFailureTest {
         /** Пауза перед повтором в тестах: больше интервала между запросами, но не секунды. */
         private const val TEST_BACKOFF_MS = 500L
 
+        private val OPERATION_IN_BODY = Regex("\"operationName\":\"([A-Za-z0-9_]+)\"")
+
         private fun query(name: String) = """{"operationName":"$name","query":"query $name { a }","variables":{}}"""
     }
 
@@ -89,6 +93,11 @@ class RepositoryNetworkFailureTest {
                 { respond("<html><body>welcome</body></html>", HttpStatusCode.OK, HTML) }
         }
     }
+
+    /** Имя операции запроса: у анонимного GET оно в адресе, у POST вошедшего — в теле. */
+    private fun HttpRequestData.operation(): String? =
+        url.parameters["operationName"]
+            ?: OPERATION_IN_BODY.find((body as? TextContent)?.text.orEmpty())?.groupValues?.get(1)
 
     /** Время для [Repository]: тест двигает его сам, чтобы не ждать паузу повторного входа. */
     private var now = 1_000_000L
@@ -227,6 +236,46 @@ class RepositoryNetworkFailureTest {
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
 
         assertEquals(1, server.apiCalls.size)
+    }
+
+    @Test
+    fun `ответ запроса, начатого до входа, после входа в кэш не попадает`() = runBlocking {
+        val anonymousSent = CompletableDeferred<Unit>()
+        val answerAnonymous = CompletableDeferred<Unit>()
+        val held = AtomicBoolean()
+        val server = FakeServer().apply {
+            login = { throw UnknownHostException("нет сети") }
+            api = { request ->
+                if (request.operation() == "A" && held.compareAndSet(false, true)) {
+                    anonymousSent.complete(Unit)
+                    answerAnonymous.await()
+                }
+                respond(API_OK, HttpStatusCode.OK, JSON)
+            }
+        }
+        val repository = repository(server) { CREDENTIALS }
+
+        // Анонимный запрос ушёл и ждёт ответа.
+        val inFlight = async(Dispatchers.Default) { repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM) }
+        anonymousSent.await()
+        // Соседний запрос тем временем выполняет вход — кэш при этом очищается.
+        server.login = FakeServer.LOGIN_OK
+        now += L_LOGIN_RETRY_INTERVAL_MS
+        val afterLogin = async(Dispatchers.Default) { repository.openURI(query("B")) }
+        while (server.loginCalls.get() < 2) delay(10)
+        delay(200)
+        // Анонимный ответ приходит уже после очистки.
+        answerAnonymous.complete(Unit)
+        inFlight.await()
+        afterLogin.await()
+
+        repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
+
+        assertEquals(
+            "анонимный ответ остался в кэше и отдан вошедшему",
+            2,
+            server.apiCalls.count { it.operation() == "A" },
+        )
     }
 
     // --- Повторы запроса ---

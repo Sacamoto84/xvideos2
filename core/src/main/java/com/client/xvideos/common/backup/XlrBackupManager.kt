@@ -2,9 +2,11 @@ package com.client.xvideos.common.backup
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.io.normalizeRelativePath
 import com.client.xvideos.common.io.requireInside
+import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -48,6 +50,16 @@ object XlrBackupManager {
      * если процесс убьют посреди переноса.
      */
     private const val RESTORE_ASIDE_PREFIX = ".xlr_old_"
+
+    /** Журнал восстановления в корне данных; имя с точкой — в бэкап не попадает. */
+    private const val RESTORE_JOURNAL_NAME = ".xlr_restore_journal"
+    private const val RESTORE_TEMP_DIR_NAME = ".xlr_restore_tmp"
+
+    private val FULL_OPTIONS = XlrBackupOptions(lMode = XlrBackupContentMode.FULL, rMode = XlrBackupContentMode.FULL)
+    private val MINI_OPTIONS = XlrBackupOptions(lMode = XlrBackupContentMode.MINI, rMode = XlrBackupContentMode.MINI)
+
+    /** Суффиксы временных файлов загрузчиков: KDownloader, сохранение L, WorkManager. */
+    private val PARTIAL_DOWNLOAD_SUFFIXES = listOf(".temp", ".part", ".tmp")
 
     private val sections = listOf("X", "L", "R")
 
@@ -200,6 +212,8 @@ object XlrBackupManager {
         options: XlrBackupOptions = XlrBackupOptions(),
         password: CharArray? = null
     ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
+        // После открытия файл по [uri] усечён и дописывается: при сбое в нём мусор.
+        var outputOpened = false
         runCatching {
             val safePaths = normalizeSelectedPaths(selectedPaths)
             if (safePaths.isEmpty()) error("Select at least one folder")
@@ -208,6 +222,7 @@ object XlrBackupManager {
             var bytes = 0L
             val rawOutput = context.contentResolver.openOutputStream(uri, "wt")
                 ?: error("Cannot open backup file")
+            outputOpened = true
 
             rawOutput.use { raw ->
                 val outputStream: OutputStream = if (password != null && password.isNotEmpty()) {
@@ -233,7 +248,24 @@ object XlrBackupManager {
             }
 
             XlrBackupReport(files = files, bytes = bytes)
+        }.onFailure { error ->
+            if (outputOpened) {
+                Timber.e(error, "XlrBackupManager: бэкап не создан, удаляем недописанный файл")
+                deletePartialBackup(context, uri)
+            }
         }
+    }
+
+    /**
+     * Удаляет файл бэкапа, запись которого оборвалась.
+     *
+     * Раньше он оставался на месте: правильное имя, обрезанное содержимое —
+     * позже его легко принять за рабочий бэкап. Удалить получается не у
+     * всякого провайдера документов; тогда файл остаётся, это только в лог.
+     */
+    private fun deletePartialBackup(context: Context, uri: Uri) {
+        runCatching { DocumentsContract.deleteDocument(context.contentResolver, uri) }
+            .onFailure { Timber.w(it, "XlrBackupManager: не удалось удалить недописанный файл бэкапа") }
     }
 
     /**
@@ -257,8 +289,13 @@ object XlrBackupManager {
         runCatching {
             val safePaths = normalizeSelectedPaths(selectedPaths)
             if (safePaths.isEmpty()) error("Select at least one folder")
+            // Прошлое восстановление могло оборваться: пока его след не убран,
+            // новое удалило бы отодвинутые копии — последние прежние данные.
+            check(recoverInterruptedRestore(File(AppPath.main))) {
+                "Не удалось завершить откат прошлого восстановления"
+            }
             validateBackup(context, uri, password)
-            val tempRoot = File(AppPath.main, ".xlr_restore_tmp").apply {
+            val tempRoot = File(AppPath.main, RESTORE_TEMP_DIR_NAME).apply {
                 deleteRecursively()
                 mkdirs()
             }
@@ -284,20 +321,30 @@ object XlrBackupManager {
      * именем. Ошибка на любом шаге возвращает всё, что успели тронуть, в
      * исходное состояние; отодвинутые копии удаляются только после того, как
      * перенесены все пути.
+     *
+     * Откат в `catch` не спасает, если процесс убит посреди переноса. На этот
+     * случай ведётся журнал: какие пути тронуты и перенесено ли уже всё. По
+     * нему [recoverInterruptedRestore] при следующем запуске либо возвращает
+     * прежние данные, либо доводит уборку до конца.
      */
     internal fun applyRestoredPaths(mainRoot: File, tempRoot: File, paths: List<String>) {
         val root = mainRoot.canonicalFile
         // target -> отодвинутая копия прежнего содержимого
         val movedAside = mutableListOf<Pair<File, File>>()
         val written = mutableListOf<File>()
+        val journal = mutableListOf<RestoreJournalEntry>()
 
         try {
             paths.forEach { path ->
                 val target = File(mainRoot, path)
                 requireInside(root, target.canonicalFile)
 
+                // Запись в журнал — до первого изменения на диске.
+                journal += RestoreJournalEntry(path = path, hadTarget = target.exists())
+                writeRestoreJournal(mainRoot, committed = false, entries = journal)
+
                 if (target.exists()) {
-                    val aside = File(target.parentFile, "$RESTORE_ASIDE_PREFIX${target.name}")
+                    val aside = asideFor(target)
                     aside.deleteRecursively()
                     if (!target.renameTo(aside)) {
                         error("Cannot move aside before restore: ${target.absolutePath}")
@@ -319,19 +366,167 @@ object XlrBackupManager {
                     target.mkdirs()
                 }
             }
+            // Все пути на месте: дальше только уборка отодвинутых копий.
+            writeRestoreJournal(mainRoot, committed = true, entries = journal)
         } catch (e: Throwable) {
             Timber.e(e, "XlrBackupManager restore failed, rolling back")
             written.forEach { it.deleteRecursively() }
+            var rolledBack = true
             movedAside.forEach { (target, aside) ->
                 target.deleteRecursively()
                 if (!aside.renameTo(target)) {
+                    rolledBack = false
                     Timber.e("Rollback incomplete, previous data left at ${aside.absolutePath}")
                 }
             }
+            // Если откат не удался, журнал остаётся: следующий запуск повторит.
+            if (rolledBack) restoreJournalFile(mainRoot).delete()
             throw e
         }
 
-        movedAside.forEach { (_, aside) -> aside.deleteRecursively() }
+        // Журнал уже говорит «всё перенесено»: если процесс умрёт здесь, уборку
+        // доведёт recoverInterruptedRestore. Поэтому скачанное забираем именно
+        // после этой точки — до неё откат обязан вернуть прежнюю копию целой.
+        movedAside.forEach { (target, aside) -> finishRestoredPath(root, target, aside) }
+        restoreJournalFile(mainRoot).delete()
+    }
+
+    /** Уборка одного пути после переноса: скачанное переезжает, прежняя копия удаляется. */
+    private fun finishRestoredPath(root: File, target: File, aside: File) {
+        if (!aside.exists()) return
+        val relativeRoot = target.canonicalFile.relativeTo(root).invariantSeparatorsPath
+        runCatching { carryOverDownloadedMedia(aside, target, relativeRoot) }
+            .onFailure { Timber.e(it, "XlrBackupManager: перенос скачанных файлов не удался") }
+        aside.deleteRecursively()
+    }
+
+    /**
+     * Переносит из прежней копии раздела [aside] в восстановленный [target]
+     * уже скачанные медиа.
+     *
+     * Бэкап в режиме MINI несёт только метаданные. Раздел заменялся целиком, и
+     * скачанные файлы удалялись вместе с прежней копией — после восстановления
+     * всё качалось заново. Переезжают только файлы, которых MINI-бэкап не несёт,
+     * и только для элементов, чьи метаданные есть в восстановленном разделе:
+     * элементы, которых в бэкапе нет, удаляются, как и раньше. Файл, пришедший
+     * из бэкапа, важнее скачанного и не заменяется.
+     *
+     * @param relativeRoot Путь [target] относительно корня данных, например `R`.
+     */
+    private fun carryOverDownloadedMedia(aside: File, target: File, relativeRoot: String) {
+        aside.walkTopDown().filter { it.isFile }.toList().forEach { old ->
+            val relative = old.relativeTo(aside).invariantSeparatorsPath
+            val entryName = "$relativeRoot/$relative"
+            if (!isMiniOmittedMedia(entryName) || isPartialDownloadName(old.name)) return@forEach
+            val restored = File(target, relative)
+            val restoredDir = restored.parentFile ?: return@forEach
+            if (restored.exists() || !hasRestoredItemMetadata(restoredDir, old, entryName)) return@forEach
+            if (!old.renameTo(restored)) old.copyTo(restored, overwrite = false)
+        }
+    }
+
+    /** Файл, который полный бэкап несёт, а MINI — нет: медиа элемента без его метаданных. */
+    private fun isMiniOmittedMedia(entryName: String): Boolean =
+        shouldIncludeBackupEntry(entryName, FULL_OPTIONS) && !shouldIncludeBackupEntry(entryName, MINI_OPTIONS)
+
+    /** Остаток прерванной загрузки: переносить его незачем. */
+    private fun isPartialDownloadName(name: String): Boolean =
+        PARTIAL_DOWNLOAD_SUFFIXES.any { name.endsWith(it, ignoreCase = true) }
+
+    /**
+     * Есть ли в восстановленной папке метаданные элемента, которому принадлежит
+     * [old]: в загрузках R это `<имя>.info` рядом, в L — `metadata.json` папки.
+     */
+    private fun hasRestoredItemMetadata(restoredDir: File, old: File, entryName: String): Boolean =
+        if (entryName.isInsideBackupPath(R_DOWNLOAD_PATH)) {
+            File(restoredDir, "${old.nameWithoutExtension}.info").isFile
+        } else {
+            File(restoredDir, L_METADATA_FILE_NAME).isFile
+        }
+
+    /** Запись журнала восстановления: путь и был ли он на диске до восстановления. */
+    @Serializable
+    internal data class RestoreJournalEntry(val path: String, val hadTarget: Boolean)
+
+    /**
+     * Журнал восстановления.
+     *
+     * @property committed `false` — пути ещё переносятся, при сбое нужен откат;
+     * `true` — всё перенесено, осталось удалить отодвинутые копии.
+     */
+    @Serializable
+    private data class RestoreJournal(val committed: Boolean, val entries: List<RestoreJournalEntry>)
+
+    private fun restoreJournalFile(mainRoot: File) = File(mainRoot, RESTORE_JOURNAL_NAME)
+
+    private fun asideFor(target: File) = File(target.parentFile, "$RESTORE_ASIDE_PREFIX${target.name}")
+
+    internal fun writeRestoreJournal(mainRoot: File, committed: Boolean, entries: List<RestoreJournalEntry>) {
+        val journal = RestoreJournal(committed = committed, entries = entries.toList())
+        restoreJournalFile(mainRoot).writeTextAtomically(AppJson.encodeToString(RestoreJournal.serializer(), journal))
+    }
+
+    /** Убирает след восстановления, оборванного гибелью процесса. Вызывать при запуске приложения. */
+    fun recoverInterruptedRestore(): Boolean = recoverInterruptedRestore(File(AppPath.main))
+
+    /**
+     * Убирает след восстановления, которое оборвала гибель процесса.
+     *
+     * Без этого прежние данные оставались в отодвинутой копии `.xlr_old_*`:
+     * раздела на месте нет или он недописан, а следующее восстановление
+     * удаляло копию как мусор. По журналу: если всё было перенесено — копии
+     * удаляются; если нет — тронутые пути возвращаются в прежнее состояние.
+     *
+     * @return `true`, если незавершённого восстановления не осталось.
+     */
+    internal fun recoverInterruptedRestore(mainRoot: File): Boolean {
+        val journalFile = restoreJournalFile(mainRoot)
+        if (!journalFile.exists()) return true
+        val journal = runCatching {
+            AppJson.decodeFromString(RestoreJournal.serializer(), journalFile.readText(Charsets.UTF_8))
+        }.getOrElse {
+            Timber.e(it, "XlrBackupManager: журнал восстановления не читается")
+            return false
+        }
+
+        Timber.w("XlrBackupManager: найдено оборванное восстановление, committed=${journal.committed}")
+        val root = mainRoot.canonicalFile
+        var clean = true
+        journal.entries.asReversed().forEach { entry ->
+            val target = File(mainRoot, entry.path)
+            if (runCatching { requireInside(root, target.canonicalFile) }.isFailure) {
+                Timber.w("XlrBackupManager: путь из журнала вне корня, пропущен")
+                return@forEach
+            }
+            val aside = asideFor(target)
+            if (journal.committed) {
+                finishRestoredPath(root, target, aside)
+            } else if (!rollBackEntry(target, aside, entry.hadTarget)) {
+                clean = false
+            }
+        }
+        if (clean) {
+            journalFile.delete()
+            File(mainRoot, RESTORE_TEMP_DIR_NAME).deleteRecursively()
+        }
+        return clean
+    }
+
+    /** Возвращает один путь в состояние до восстановления. */
+    private fun rollBackEntry(target: File, aside: File, hadTarget: Boolean): Boolean = when {
+        aside.exists() -> {
+            target.deleteRecursively()
+            aside.renameTo(target).also { renamed ->
+                if (!renamed) Timber.e("Rollback incomplete, previous data left at ${aside.absolutePath}")
+            }
+        }
+        // Пути до восстановления не было: то, что успели положить, убираем.
+        !hadTarget -> {
+            target.deleteRecursively()
+            true
+        }
+        // Отодвинуть не успели — прежние данные на месте.
+        else -> true
     }
 
     @Serializable

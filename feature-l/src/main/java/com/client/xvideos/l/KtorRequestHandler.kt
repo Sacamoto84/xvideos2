@@ -6,7 +6,6 @@ import com.client.xvideos.l.repository.LusciousEndpoints.LOGIN
 import com.client.xvideos.common.net.UserAgentProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -19,7 +18,6 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
@@ -120,21 +118,6 @@ class KtorRequestHandler(
         if (AppBuildInfo.debug) {
             install(Logging) { level = LogLevel.HEADERS }
         }
-    }
-
-    /**
-     * Выполняет HTTP GET-запрос и возвращает ответ в виде строки.
-     *
-     * @param url Целевой URL запроса.
-     * @param params Параметры строки запроса (query parameters).
-     */
-    suspend fun get(url: String, params: Map<String, String> = emptyMap()): String {
-        return client.get {
-            url(url)
-            if (params.isNotEmpty()) {
-                params.forEach { (k, v) -> parameter(k, v) }
-            }
-        }.body()
     }
 
     /**

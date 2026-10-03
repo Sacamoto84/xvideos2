@@ -9,6 +9,7 @@ import coil3.SingletonImageLoader
 import com.client.xvideos.common.AppBuildInfo
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pSendPreparers
@@ -89,7 +90,13 @@ class App : Application(), SingletonImageLoader.Factory {
         EntryPointAccessors
             .fromApplication(this, StorageCleanupEntryPoint::class.java)
             .storageCleanupGate()
-            .start(scope) { AppPath.cleanupTransientDirs() }
+            .start(scope) {
+                // Восстановление бэкапа могла оборвать гибель процесса: прежние
+                // данные тогда лежат в отодвинутой копии и должны вернуться.
+                runCatching { XlrBackupManager.recoverInterruptedRestore() }
+                    .onFailure { Timber.e(it, "App: откат оборванного восстановления не удался") }
+                AppPath.cleanupTransientDirs()
+            }
 
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())

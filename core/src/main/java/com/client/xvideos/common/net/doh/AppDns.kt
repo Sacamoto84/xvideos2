@@ -33,7 +33,17 @@ object AppDns : Dns {
     private const val TYPE_AAAA = 28
     private const val MIN_TTL_SECONDS = 30L
     private const val MAX_TTL_SECONDS = 3600L
-    private const val DOH_TIMEOUT_SECONDS = 5L
+    /**
+     * Предел на один адрес DoH: соединение, TLS и ответ вместе. Адресов два,
+     * поэтому поиск имени через DoH длится не дольше 4 с. Раньше было по 5 с
+     * на соединение и ещё 5 с на чтение для каждого адреса — при молчащих
+     * адресах поиск шёл дольше таймаута запроса L (5 с), и до отката на
+     * системный DNS запрос не доживал.
+     */
+    private const val DOH_TIMEOUT_MS = 2_000L
+
+    /** Сколько отказавший адрес DoH не опрашивается. */
+    private const val DOH_RETRY_AFTER_MS = 30_000L
     private const val DNS_JSON_MIME = "application/dns-json"
     private const val MAX_CACHE_SIZE = 256
 
@@ -51,8 +61,9 @@ object AppDns : Dns {
     private val dohHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .dns(Dns.SYSTEM)
-            .connectTimeout(DOH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(DOH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .connectTimeout(DOH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .readTimeout(DOH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .callTimeout(DOH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .followRedirects(true)
             .followSslRedirects(true)
             .build()
@@ -64,6 +75,9 @@ object AppDns : Dns {
     )
 
     private val cache = ConcurrentHashMap<String, CacheEntry>()
+
+    /** Отказавшие адреса DoH: пока пауза не истекла, поиск идёт мимо них. */
+    private val dohHealth = DohEndpointHealth(retryAfterMs = DOH_RETRY_AFTER_MS)
 
     override fun lookup(hostname: String): List<InetAddress> {
         val trimmed = hostname.trim().trimEnd('.')
@@ -117,19 +131,18 @@ object AppDns : Dns {
 
         val endpoints = getActiveEndpoints()
 
-        var lastException: Exception? = null
-
-        for (endpoint in endpoints) {
-            try {
-                val addresses = queryDoh(endpoint, cleanHost, ipv4Only, now)
-                if (addresses.isNotEmpty()) {
-                    return addresses
-                }
-            } catch (e: Exception) {
-                lastException = e
+        // Без отката на системный DNS другого способа найти имя нет — тогда
+        // опрашиваются и отказавшие адреса.
+        val doh = queryDohEndpoints(
+            endpoints = endpoints,
+            health = dohHealth,
+            skipDown = fallbackToSystem,
+            onFailure = { endpoint, e ->
                 Timber.w(e, "AppDns: DoH запрос к $endpoint для $cleanHost завершился ошибкой")
-            }
-        }
+            },
+        ) { endpoint -> queryDoh(endpoint, cleanHost, ipv4Only, now) }
+        if (doh.addresses.isNotEmpty()) return doh.addresses
+        val lastException = doh.error
 
         if (fallbackToSystem) {
             Timber.i("AppDns: DoH не ответил для $cleanHost, переключаемся на системный DNS (fallback)")
@@ -151,6 +164,9 @@ object AppDns : Dns {
 
         try {
             validAnswers.addAll(fetchDohAnswers(endpoint, hostname, "A", TYPE_A))
+        } catch (e: IOException) {
+            // Адрес не ответил: второй запрос к нему только удвоил бы ожидание.
+            throw e
         } catch (e: Exception) {
             primaryException = e
         }
@@ -287,6 +303,7 @@ object AppDns : Dns {
      */
     fun clearCache() {
         cache.clear()
+        dohHealth.clear()
         Timber.i("AppDns: DNS-кэш успешно очищен")
     }
 

@@ -13,6 +13,7 @@ import com.client.xvideos.common.kdownloader.utils.getPath
 import com.client.xvideos.common.kdownloader.utils.getRedirectedConnectionIfAny
 import com.client.xvideos.common.kdownloader.utils.getTempPath
 import com.client.xvideos.common.kdownloader.utils.renameFileName
+import com.client.xvideos.common.util.invokeOnCancellation
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -49,6 +50,8 @@ class DownloadTask(
     private var outputStream: FileDownloadOutputStream? = null
 
     private var tempPath: String = ""
+    // Закрывается из потока, который отменяет загрузку.
+    @Volatile
     private var httpClient: HttpClient? = null
     private var isResumeSupported = true
 
@@ -173,7 +176,9 @@ class DownloadTask(
                     // Инициализация HTTP-клиента и регистрация хука отмены
                     val client = DefaultHttpClient().clone()
                     httpClient = client
-                    cancelHandler = req.job?.invokeOnCompletion {
+                    // Не invokeOnCompletion: тот ждёт завершения job, а оно невозможно,
+                    // пока чтение заблокировано — отмена висела до таймаута чтения.
+                    cancelHandler = invokeOnCancellation {
                         runCatching { httpClient?.close() }
                     }
 
@@ -219,7 +224,7 @@ class DownloadTask(
                         req.reset()
                         if (wasCancelled) {
                             req.status = Status.CANCELLED
-                            listener.onError("Cancelled")
+                            listener.onError(Constants.CANCELLED)
                         } else {
                             req.status = Status.FAILED
                             listener.onError("Wrong link")
@@ -254,7 +259,7 @@ class DownloadTask(
                         req.reset()
                         if (wasCancelled) {
                             req.status = Status.CANCELLED
-                            listener.onError("Cancelled")
+                            listener.onError(Constants.CANCELLED)
                         } else {
                             req.status = Status.FAILED
                             listener.onError("Failed to obtain input stream")
@@ -284,7 +289,7 @@ class DownloadTask(
                         deleteTempFile()
                         removeNoMoreNeededModelFromDatabase()
                         req.reset()
-                        listener.onError("Cancelled")
+                        listener.onError(Constants.CANCELLED)
                         return@withContext
                     } else if (req.status === Status.PAUSED) {
                         sync(outStream)
@@ -318,7 +323,7 @@ class DownloadTask(
                             deleteTempFile()
                             removeNoMoreNeededModelFromDatabase()
                             req.reset()
-                            listener.onError("Cancelled")
+                            listener.onError(Constants.CANCELLED)
                             return@withContext
                         } else if (req.status === Status.PAUSED) {
                             sync(outStream)
@@ -333,7 +338,7 @@ class DownloadTask(
                             removeNoMoreNeededModelFromDatabase()
                             req.reset()
                             req.status = Status.CANCELLED
-                            listener.onError("Cancelled")
+                            listener.onError(Constants.CANCELLED)
                             return@withContext
                         }
                         outStream.write(buff, 0, byteCount)
@@ -357,7 +362,7 @@ class DownloadTask(
                         removeNoMoreNeededModelFromDatabase()
                         req.reset()
                         req.status = Status.CANCELLED
-                        listener.onError("Cancelled")
+                        listener.onError(Constants.CANCELLED)
                         return@withContext
                     } else if (req.status === Status.PAUSED) {
                         sync(outStream)
@@ -407,7 +412,7 @@ class DownloadTask(
                     removeNoMoreNeededModelFromDatabase()
                     req.reset()
                     req.status = Status.CANCELLED
-                    listener.onError("Cancelled")
+                    listener.onError(Constants.CANCELLED)
                     throw e
                 } catch (e: Exception) {
                     closeAllSafely(this@DownloadTask.outputStream)
@@ -425,7 +430,7 @@ class DownloadTask(
                     }
                     if (wasCancelled) {
                         req.status = Status.CANCELLED
-                        listener.onError("Cancelled")
+                        listener.onError(Constants.CANCELLED)
                     } else {
                         req.status = Status.FAILED
                         listener.onError(e.toString())

@@ -5,6 +5,9 @@ package com.client.xvideos.common.kdownloader
  */
 object Constants {
     /** HTTP-заголовок диапазона байт для докачки файлов. */
+    /** Текст ошибки, которым загрузчик сообщает об отмене. */
+    const val CANCELLED = "Cancelled"
+
     const val RANGE = "Range"
 
     /** HTTP-заголовок сущности (ETag) для проверки неизменности файла при возобновлении загрузки. */

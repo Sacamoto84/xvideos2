@@ -108,6 +108,9 @@ open class Repository(
 
     private val requestMutex = Mutex()
     private val ramCacheMutex = Mutex()
+
+    /** Растёт при каждой очистке RAM-кэша. Читается и пишется только под [ramCacheMutex]. */
+    private var ramCacheGeneration = 0
     private val ramCache = object : LinkedHashMap<String, String>(RAM_CACHE_MAX_ENTRIES, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
             return size > RAM_CACHE_MAX_ENTRIES
@@ -267,7 +270,8 @@ open class Repository(
     private suspend fun getFromCacheRam(data: String): Result<String> {
         return try {
             val cacheKey = data.toMD5()
-            val res = getRamCache(cacheKey)
+            val lookup = lookupRamCache(cacheKey)
+            val res = lookup.content
             if (res != null) {
                 val cached = validateJsonResponse(res)
                 if (cached.isSuccess) {
@@ -279,7 +283,7 @@ open class Repository(
             val checkedResponse = postJsonValidated(data, cacheKey)
             if (checkedResponse.isFailure) return checkedResponse
 
-            putRamCache(cacheKey, checkedResponse.getOrThrow())
+            putRamCache(cacheKey, checkedResponse.getOrThrow(), lookup.generation)
             checkedResponse
         } catch (e: CancellationException) {
             throw e
@@ -529,12 +533,24 @@ open class Repository(
         lAlbumBundleCacheDao.delete(albumId.toString())
     }
 
-    private suspend fun getRamCache(cacheKey: String): String? {
-        return ramCacheMutex.withLock { ramCache[cacheKey] }
+    /** Запись кэша и поколение кэша на момент чтения. */
+    private class RamCacheLookup(val content: String?, val generation: Int)
+
+    private suspend fun lookupRamCache(cacheKey: String): RamCacheLookup {
+        return ramCacheMutex.withLock { RamCacheLookup(ramCache[cacheKey], ramCacheGeneration) }
     }
 
-    private suspend fun putRamCache(cacheKey: String, content: String) {
-        ramCacheMutex.withLock { ramCache[cacheKey] = content }
+    /**
+     * Кладёт ответ в кэш, если кэш с момента [generation] не очищался.
+     *
+     * Очистка означает смену режима входа. Запрос, отправленный до неё, приносит
+     * ответ прежнего режима: без этой проверки он ложился в только что очищенный
+     * кэш и отдавался уже вошедшему (или вышедшему) пользователю.
+     */
+    private suspend fun putRamCache(cacheKey: String, content: String, generation: Int) {
+        ramCacheMutex.withLock {
+            if (generation == ramCacheGeneration) ramCache[cacheKey] = content
+        }
     }
 
     private suspend fun deleteRamCache(cacheKey: String) {
@@ -542,7 +558,10 @@ open class Repository(
     }
 
     private suspend fun clearRamCache() {
-        ramCacheMutex.withLock { ramCache.clear() }
+        ramCacheMutex.withLock {
+            ramCache.clear()
+            ramCacheGeneration++
+        }
     }
 
     private fun String.previewForLog(): String {

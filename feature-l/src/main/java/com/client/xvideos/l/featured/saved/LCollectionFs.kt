@@ -92,13 +92,14 @@ internal fun lReadCollections(
     val collections = collectionsRoot.listFiles()
         ?.filter { it.isDirectory }
         ?.map { folder ->
+            val config = lReadCollectionConfig(folder)
             LCollectionEntity(
                 collection = folder.name,
-                previewUrl = lResolveCollectionPreviewUrl(folder),
+                previewUrl = lResolveCollectionPreviewUrl(folder, config),
                 itemsCount = lResolveCollectionItemsCount(folder),
                 lastModifiedAt = lResolveCollectionLastModified(folder),
-                duplicateCount = lFindCollectionDuplicateFolders(folder).sumOf { it.size - 1 },
-                hasManualCover = lReadCollectionConfig(folder).coverFolderName != null
+                duplicateCount = lCountCollectionDuplicates(folder),
+                hasManualCover = config.coverFolderName != null
             )
         }
         ?: emptyList()
@@ -134,7 +135,8 @@ internal fun lReadCollectionItems(collectionFolder: File): List<PicsDetails> {
  * @return Список пар [LSavedLikeMetadata] и [File] подпапки элемента.
  */
 internal fun lReadStoredCollectionItems(collectionFolder: File): List<Pair<LSavedLikeMetadata, File>> {
-    collectionFolder.mkdirs()
+    // Папку здесь не создаём: чтение коллекции, которую уже удалили или
+    // переименовали, оставляло бы пустую коллекцию-призрак.
     return collectionFolder.listFiles()
         ?.filter { it.isDirectory }
         ?.mapNotNull { folder ->
@@ -151,8 +153,7 @@ internal fun lReadStoredCollectionItems(collectionFolder: File): List<Pair<LSave
  * @param collectionFolder Папка коллекции.
  * @return Абсолютный путь к файлу изображения превью или `null`.
  */
-private fun lResolveCollectionPreviewUrl(collectionFolder: File): String? {
-    val config = lReadCollectionConfig(collectionFolder)
+private fun lResolveCollectionPreviewUrl(collectionFolder: File, config: LCollectionConfig): String? {
     config.coverFolderName
         ?.takeIf { it.isNotBlank() && !isUnsafeItemName(it) }
         ?.let { File(collectionFolder, it) }
@@ -318,6 +319,52 @@ internal fun lReadCollectionDuplicateGroups(collectionFolder: File): List<LColle
             if (pics.size > 1) LCollectionDuplicateGroup(key, pics) else null
         }
         .sortedByDescending { it.items.size }
+}
+
+/** Отпечаток файла метаданных и ключ элемента, вычисленный по нему. */
+private class LIdentityStamp(val lastModified: Long, val length: Long, val key: String?)
+
+/** Предел кэша ключей: при переполнении уходят давно не читанные записи. */
+private const val L_IDENTITY_CACHE_MAX = 20_000
+
+/**
+ * Ключи элементов по пути файла метаданных.
+ *
+ * Список коллекций показывает число дублей, а ключ элемента лежит внутри
+ * `metadata.json`. Раньше ради этого числа на каждое обновление списка
+ * разбирались метаданные всех элементов всех коллекций — коллекция на 500
+ * картинок стоила 500 разборов JSON после каждой мутации. Файл, у которого не
+ * изменились размер и время записи, второй раз не читается.
+ */
+private val lIdentityCache = object : LinkedHashMap<String, LIdentityStamp>(256, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, LIdentityStamp>?): Boolean =
+        size > L_IDENTITY_CACHE_MAX
+}
+
+/** Ключ дедупликации элемента по его файлу метаданных; `null` — метаданных нет или они не читаются. */
+private fun lCachedIdentityKey(metadataFile: File): String? {
+    val length = metadataFile.length()
+    if (length == 0L) return null
+    val lastModified = metadataFile.lastModified()
+    val path = metadataFile.path
+    synchronized(lIdentityCache) {
+        val cached = lIdentityCache[path]
+        if (cached != null && cached.lastModified == lastModified && cached.length == length) return cached.key
+    }
+    val key = readCollectionMetadata(metadataFile)?.let(::lMetadataIdentityKey)
+    synchronized(lIdentityCache) { lIdentityCache[path] = LIdentityStamp(lastModified, length, key) }
+    return key
+}
+
+/** Число лишних копий в коллекции: для каждой группы одинаковых элементов — все, кроме одного. */
+private fun lCountCollectionDuplicates(collectionFolder: File): Int {
+    val counts = HashMap<String, Int>()
+    collectionFolder.listFiles()?.forEach { folder ->
+        if (!folder.isDirectory) return@forEach
+        val key = lCachedIdentityKey(File(folder, L_METADATA_FILE_NAME)) ?: return@forEach
+        counts[key] = (counts[key] ?: 0) + 1
+    }
+    return counts.values.sumOf { it - 1 }
 }
 
 /**
