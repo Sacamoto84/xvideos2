@@ -11,11 +11,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
+import com.client.xvideos.x.screens.channel.model.channelCollapsingGeometry
 
 /**
  * Кастомный макет для схлопывающейся шапки профиля канала, липкой панели сортировок/фильтров
  * и горизонтального пейджера страниц с видеороликами.
+ *
+ * Шапка начинается от верха экрана и заходит под вырез камеры [topInsetPx]; липкая
+ * панель при схлопывании упирается в низ выреза. Раскладку считает [channelCollapsingGeometry].
  */
 @Composable
 fun ChannelCollapsingLayout(
@@ -57,20 +60,25 @@ fun ChannelCollapsingLayout(
         )
 
         layout(constraints.maxWidth, constraints.maxHeight) {
-            val offset = headerOffsetPx.roundToInt()
-            val headerY = topInsetPx + offset
-            val stickyY = (topInsetPx + headerHeight + offset).coerceAtLeast(topInsetPx)
-            val pagerY = stickyY + stickyBarHeight
+            val geometry = channelCollapsingGeometry(
+                headerOffsetPx = headerOffsetPx,
+                headerHeight = headerHeight,
+                stickyBarHeight = stickyBarHeight,
+                topInsetPx = topInsetPx,
+            )
 
             // Порядок отрисовки слоёв:
             // 1. Пейджер снизу
-            pagerPlaceable?.placeWithLayer(0, pagerY)
+            pagerPlaceable?.placeWithLayer(0, geometry.pagerY)
             // 2. Шапка профиля
-            headerPlaceable?.placeWithLayer(0, headerY)
+            headerPlaceable?.placeWithLayer(0, geometry.headerY)
             // 3. Липкая панель сортировок (перекрывает шапку при схлопывании)
-            stickyBarPlaceable?.placeWithLayer(0, stickyY)
-            // 4. Плашка выреза под строку состояния в самом верху
-            statusCoverPlaceable?.placeWithLayer(0, 0)
+            stickyBarPlaceable?.placeWithLayer(0, geometry.stickyY)
+            // 4. Плашка выреза в самом верху. Прозрачную не ставим: она перехватывала
+            // бы касания шапки под вырезом.
+            if (geometry.coverAlpha > 0f) {
+                statusCoverPlaceable?.placeWithLayer(0, 0) { alpha = geometry.coverAlpha }
+            }
         }
     }
 }

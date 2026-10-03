@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelHeaderModel
@@ -23,22 +24,22 @@ import com.client.xvideos.x.model.ProfileType
  * Шапка профиля канала или актрисы/модели X с баннером, аватаром, статистикой и информацией.
  *
  * @param header Метаданные канала [ChannelHeaderModel].
- * @param onBack Колбэк нажатия кнопки «Назад».
  * @param isSubscribed Флаг, подписан ли пользователь на этот профиль.
  * @param onToggleSubscription Колбэк переключения подписки (подписаться / отписаться).
  * @param onCollaboratorClick Колбэк нажатия на автора/студию/модель из списка «Сотрудничество».
  * @param onRankingClick Колбэк нажатия на элемент рейтинга актрисы/канала.
  * @param modifier Модификатор макета.
+ * @param topInset Вырез камеры: баннер заходит под него.
  */
 @Composable
 fun ChannelHeader(
     header: ChannelHeaderModel,
-    onBack: () -> Unit,
     isSubscribed: Boolean = false,
     onToggleSubscription: () -> Unit = {},
     onCollaboratorClick: (ChannelCollaborator) -> Unit = {},
     onRankingClick: (targetUrl: String, title: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
+    topInset: Dp = 0.dp,
 ) {
     var isAboutExpanded by remember { mutableStateOf(false) }
 
@@ -47,7 +48,7 @@ fun ChannelHeader(
             .fillMaxWidth()
             .background(Color(0xFF040404))
     ) {
-        ChannelHeaderBanner(header = header, onBack = onBack)
+        ChannelHeaderBanner(header = header, topInset = topInset)
 
         Column(
             modifier = Modifier
@@ -90,6 +91,5 @@ private fun ChannelHeaderPreview() {
             videoCount = 42,
             profileType = ProfileType.MODEL,
         ),
-        onBack = {}
     )
 }

@@ -19,26 +19,24 @@ import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.screens.channel.atom.ChannelModelTriggerButton
 
 /**
- * Строка фильтрации и поиска по моделям/актрисам канала (или каналам модели).
+ * Строка фильтра по моделям/актрисам канала (или каналам модели).
  *
- * Отображает счётчик доступных видеороликов слева и компактное поле поиска с выпадающим
- * списком моделей, иконками пола и счётчиками справа.
+ * Отображает счётчик доступных видеороликов слева и кнопку выбора справа: она
+ * открывает список моделей с иконками пола и счётчиками.
  */
 @Composable
 fun ChannelModelFilterBar(
     header: ChannelHeaderModel,
     selectedModel: ChannelModelFilterItem?,
-    filteredModels: List<ChannelModelFilterItem>,
-    searchQuery: String,
+    models: List<ChannelModelFilterItem>,
     isExpanded: Boolean,
-    onQueryChange: (String) -> Unit,
     onExpandedChange: (Boolean) -> Unit,
     onSelectModel: (ChannelModelFilterItem?) -> Unit,
     totalVideos: Int,
     modifier: Modifier = Modifier,
 ) {
     val isModelProfile = header.isModel
-    val placeholderText = if (isModelProfile) "Поиск канала..." else "Поиск модели..."
+    val placeholderText = if (isModelProfile) "Выбрать канал" else "Выбрать модель"
 
     val summaryText = if (selectedModel != null) {
         val count = selectedModel.countText.ifBlank { totalVideos.toString() }
@@ -67,7 +65,7 @@ fun ChannelModelFilterBar(
                 .padding(end = 8.dp)
         )
 
-        // Поле-триггер выпадающего поиска модели
+        // Кнопка выбора модели и её выпадающий список
         Box {
             ChannelModelTriggerButton(
                 selectedModel = selectedModel,
@@ -79,11 +77,8 @@ fun ChannelModelFilterBar(
 
             ChannelModelDropdownMenu(
                 isExpanded = isExpanded,
-                searchQuery = searchQuery,
-                placeholderText = placeholderText,
                 selectedModel = selectedModel,
-                filteredModels = filteredModels,
-                onQueryChange = onQueryChange,
+                models = models,
                 onExpandedChange = onExpandedChange,
                 onSelectModel = onSelectModel
             )
@@ -97,10 +92,8 @@ private fun ChannelModelFilterBarPreview() {
     ChannelModelFilterBar(
         header = ChannelHeaderModel(name = "Sample", videoCount = 42),
         selectedModel = null,
-        filteredModels = emptyList(),
-        searchQuery = "",
+        models = emptyList(),
         isExpanded = false,
-        onQueryChange = {},
         onExpandedChange = {},
         onSelectModel = {},
         totalVideos = 42

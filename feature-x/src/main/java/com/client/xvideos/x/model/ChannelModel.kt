@@ -35,9 +35,6 @@ data class ChannelModelFilterItem(
     val isMan: Boolean get() = gender.equals("Man", ignoreCase = true)
     val countText: String get() = fNbVideos.ifBlank { nbVideos.takeIf { it > 0 }?.toString().orEmpty() }
     val formattedTitle: String get() = if (countText.isNotBlank()) "$displayName ($countText)" else displayName
-
-    fun matches(query: String): Boolean =
-        query.isBlank() || displayName.contains(query.trim(), ignoreCase = true)
 }
 
 /**
@@ -201,7 +198,6 @@ enum class ChannelSortOrder(val apiKey: String, val title: String) : Serializabl
  * @property videos Загруженный список видеороликов.
  * @property currentSort Текущий выбранный режим сортировки.
  * @property selectedModel Выбранная модель для фильтрации видео (null — показ всех видео).
- * @property modelFilterQuery Поисковый запрос в поле выбора модели.
  * @property isModelFilterExpanded Открыт ли выпадающий список выбора модели.
  * @property currentPage Текущая страница пейджера; от неё считается [maxPages], когда число видео неизвестно.
  * @property totalVideosCount Число видео по ответу ленты; 0 — неизвестно.
@@ -214,7 +210,6 @@ data class ChannelUiState(
     val videos: List<ItemsX> = emptyList(),
     val currentSort: ChannelSortOrder = ChannelSortOrder.BEST,
     val selectedModel: ChannelModelFilterItem? = null,
-    val modelFilterQuery: String = "",
     val isModelFilterExpanded: Boolean = false,
     val currentPage: Int = 0,
     val totalVideosCount: Int = 0,
@@ -222,12 +217,6 @@ data class ChannelUiState(
 ) : Serializable {
     val availableModels: List<ChannelModelFilterItem> get() = header.availableModels
     val hasModelFilters: Boolean get() = availableModels.isNotEmpty()
-
-    val filteredModels: List<ChannelModelFilterItem> get() = if (modelFilterQuery.isBlank()) {
-        availableModels
-    } else {
-        availableModels.filter { it.matches(modelFilterQuery) }
-    }
 
     val maxPages: Int
         get() {

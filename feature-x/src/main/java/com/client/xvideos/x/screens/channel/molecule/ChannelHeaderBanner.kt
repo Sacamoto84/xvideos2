@@ -5,36 +5,34 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ProfileType
 
+/**
+ * Баннер шапки канала.
+ *
+ * @param topInset Вырез камеры: баннер выше на него и заходит под вырез.
+ */
 @Composable
 fun ChannelHeaderBanner(
     header: ChannelHeaderModel,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    topInset: Dp = 0.dp,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(150.dp)
+            .height(16.dp + topInset)
     ) {
         if (header.hasBanner) {
             UrlImage(
@@ -69,23 +67,6 @@ fun ChannelHeaderBanner(
                     )
                 )
         )
-
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .padding(8.dp)
-                .size(36.dp)
-                .align(Alignment.TopStart)
-                .clip(CircleShape)
-                .background(Color(0x80000000))
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Назад",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-        }
     }
 }
 
@@ -94,6 +75,6 @@ fun ChannelHeaderBanner(
 private fun ChannelHeaderBannerPreview() {
     ChannelHeaderBanner(
         header = ChannelHeaderModel(name = "Sample Model", profileType = ProfileType.MODEL),
-        onBack = {}
+        topInset = 24.dp,
     )
 }

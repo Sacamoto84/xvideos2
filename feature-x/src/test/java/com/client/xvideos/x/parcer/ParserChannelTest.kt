@@ -332,9 +332,6 @@ class ParserChannelTest {
         assertFalse(m1.isMan)
         assertEquals("413", m1.countText)
         assertEquals("Cory Chase (413)", m1.formattedTitle)
-        assertTrue(m1.matches("cory"))
-        assertTrue(m1.matches("CHASE"))
-        assertFalse(m1.matches("Melanie"))
 
         val m3 = models[2]
         assertEquals("Dart", m3.displayName)

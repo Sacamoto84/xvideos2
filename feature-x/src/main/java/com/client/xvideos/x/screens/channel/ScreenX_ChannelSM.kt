@@ -457,17 +457,9 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         }
         uiState = uiState.copy(
             selectedModel = model,
-            modelFilterQuery = "",
             isModelFilterExpanded = false,
         )
         loadInitial()
-    }
-
-    /**
-     * Обновляет поисковый запрос внутри выпадающего списка моделей.
-     */
-    fun onModelFilterQueryChange(query: String) {
-        uiState = uiState.copy(modelFilterQuery = query)
     }
 
     /**

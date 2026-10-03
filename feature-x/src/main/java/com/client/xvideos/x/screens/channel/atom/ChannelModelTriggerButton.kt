@@ -14,7 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,7 +52,7 @@ fun ChannelModelTriggerButton(
             .padding(horizontal = 8.dp, vertical = 6.dp)
     ) {
         Icon(
-            imageVector = Icons.Default.Search,
+            imageVector = Icons.Default.FilterList,
             contentDescription = null,
             tint = if (selectedModel != null) Color(0xFFDE2600) else Color(0xFF888888),
             modifier = Modifier.size(16.dp)
@@ -98,7 +98,7 @@ private fun ChannelModelTriggerButtonPreview() {
     ChannelModelTriggerButton(
         selectedModel = null,
         isExpanded = false,
-        placeholderText = "Поиск модели...",
+        placeholderText = "Выбрать модель",
         onExpandedChange = {},
         onSelectModel = {}
     )

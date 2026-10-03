@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.channel
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -51,7 +52,7 @@ import kotlinx.coroutines.launch
  * Экран канала автора/студии X (`ScreenX_Channel`).
  *
  * Отображает обложку-баннер, аватарку, статистику, блок описания «Обо мне»,
- * переключатель сортировок («Свежие», «Новые», «Топ»), фильтр поиска по моделям
+ * переключатель сортировок («Свежие», «Новые», «Топ»), фильтр по моделям
  * и горизонтальный пейджер страниц видео с плавно схлопывающейся шапкой при скролле.
  *
  * @param slug Идентификатор канала (например, `"dart_oficial"`).
@@ -141,7 +142,6 @@ class ScreenX_Channel(
             onCollaboratorClick = onCollaboratorClick,
             onRankingClick = onRankingClick,
             onSelectModel = vm::selectModel,
-            onModelQueryChange = vm::onModelFilterQueryChange,
             onModelExpandedChange = vm::setModelFilterExpanded,
         )
     }
@@ -174,7 +174,6 @@ fun ScreenX_ChannelContent(
     onCollaboratorClick: (ChannelCollaborator) -> Unit = {},
     onRankingClick: (targetUrl: String, title: String) -> Unit = { _, _ -> },
     onSelectModel: (ChannelModelFilterItem?) -> Unit = {},
-    onModelQueryChange: (String) -> Unit = {},
     onModelExpandedChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -220,6 +219,9 @@ fun ScreenX_ChannelContent(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        // Без отступа под вырез: по умолчанию Scaffold отдаёт его контенту, и над баннером
+        // остаётся пустая полоса. Вырез учитывают шапка и раскладка (topCutout).
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Color(0xFF040404),
         bottomBar = {
             if (uiState.maxPages > 1) {
@@ -233,22 +235,21 @@ fun ScreenX_ChannelContent(
             header = {
                 ChannelHeader(
                     header = uiState.header,
-                    onBack = handleBack,
                     isSubscribed = isSubscribed,
                     onToggleSubscription = onToggleSubscription,
                     onCollaboratorClick = onCollaboratorClick,
                     onRankingClick = onRankingClick,
                     modifier = collapse.scrollModifier
-                        .onSizeChanged { size -> collapse.onHeaderHeightChanged(size.height.toFloat()) },
+                        .onSizeChanged { size ->
+                            collapse.onCollapseRangeChanged((size.height - topCutoutPx).coerceAtLeast(0).toFloat())
+                        },
+                    topInset = topCutout,
                 )
             },
             stickyBar = {
                 ChannelStickyBar(
                     uiState = uiState,
-                    showBackButton = collapse.isBackInStickyBar,
-                    onBack = handleBack,
                     onSortChange = onSortChange,
-                    onModelQueryChange = onModelQueryChange,
                     onModelExpandedChange = onModelExpandedChange,
                     onSelectModel = onSelectModel,
                     modifier = collapse.scrollModifier,

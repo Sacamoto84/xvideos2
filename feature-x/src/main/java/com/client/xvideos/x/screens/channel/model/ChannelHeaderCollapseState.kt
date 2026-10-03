@@ -31,7 +31,8 @@ import kotlinx.coroutines.launch
  * сетки ([nestedScrollConnection]) только схлопывает шапку: возврат к верху сетки
  * и её инерция шапку не раскрывают.
  *
- * @param offsetState Смещение шапки в пикселях: 0 — раскрыта, минус высота — схлопнута.
+ * @param offsetState Смещение шапки в пикселях: 0 — раскрыта, минус путь схлопывания —
+ *   схлопнута (см. [onCollapseRangeChanged]).
  * @param scope Область для анимации доводки шапки.
  * @param currentGrid Сетка текущей страницы пейджера.
  */
@@ -42,14 +43,11 @@ class ChannelHeaderCollapseState(
     private val currentGrid: () -> LazyGridState,
 ) {
     private var headerOffsetPxState by offsetState
-    private var headerHeightPx by mutableFloatStateOf(0f)
+    private var collapseRangePx by mutableFloatStateOf(0f)
     private var flingAnimationJob: Job? = null
 
-    /** Смещение шапки в пикселях: 0 — раскрыта, минус высота — схлопнута. */
+    /** Смещение шапки в пикселях: 0 — раскрыта, минус путь схлопывания — схлопнута. */
     val headerOffsetPx: Float get() = headerOffsetPxState
-
-    /** Шапка ушла вверх: кнопка «Назад» показывается в липкой панели. */
-    val isBackInStickyBar: Boolean get() = headerOffsetPxState < -80f
 
     /** Скролл сетки видео: схлопывает шапку, но не раскрывает её. */
     val nestedScrollConnection: NestedScrollConnection = object : NestedScrollConnection {
@@ -59,8 +57,8 @@ class ChannelHeaderCollapseState(
                 flingAnimationJob = null
             }
             val delta = available.y
-            if (delta < 0f && headerHeightPx > 0f) {
-                val newOffset = (headerOffsetPxState + delta).coerceIn(-headerHeightPx, 0f)
+            if (delta < 0f && collapseRangePx > 0f) {
+                val newOffset = (headerOffsetPxState + delta).coerceIn(-collapseRangePx, 0f)
                 val consumed = newOffset - headerOffsetPxState
                 headerOffsetPxState = newOffset
                 return Offset(0f, consumed)
@@ -74,8 +72,8 @@ class ChannelHeaderCollapseState(
         }
 
         override suspend fun onPreFling(available: Velocity): Velocity {
-            if (available.y < 0f && headerOffsetPxState > -headerHeightPx && headerHeightPx > 0f) {
-                animateHeaderTo(target = -headerHeightPx, initialVelocity = available.y)
+            if (available.y < 0f && headerOffsetPxState > -collapseRangePx && collapseRangePx > 0f) {
+                animateHeaderTo(target = -collapseRangePx, initialVelocity = available.y)
             }
             return Velocity.Zero
         }
@@ -92,8 +90,8 @@ class ChannelHeaderCollapseState(
         var consumed = 0f
         if (delta < 0f) {
             // Палец вверх: схлопываем шапку
-            if (headerHeightPx > 0f && headerOffsetPxState > -headerHeightPx) {
-                val newOffset = (headerOffsetPxState + delta).coerceIn(-headerHeightPx, 0f)
+            if (collapseRangePx > 0f && headerOffsetPxState > -collapseRangePx) {
+                val newOffset = (headerOffsetPxState + delta).coerceIn(-collapseRangePx, 0f)
                 val headerConsumed = newOffset - headerOffsetPxState
                 headerOffsetPxState = newOffset
                 consumed += headerConsumed
@@ -106,8 +104,8 @@ class ChannelHeaderCollapseState(
             }
         } else if (delta > 0f) {
             // Палец вниз: разворачиваем шапку
-            if (headerHeightPx > 0f && headerOffsetPxState < 0f) {
-                val newOffset = (headerOffsetPxState + delta).coerceIn(-headerHeightPx, 0f)
+            if (collapseRangePx > 0f && headerOffsetPxState < 0f) {
+                val newOffset = (headerOffsetPxState + delta).coerceIn(-collapseRangePx, 0f)
                 val headerConsumed = newOffset - headerOffsetPxState
                 headerOffsetPxState = newOffset
                 consumed += headerConsumed
@@ -118,11 +116,11 @@ class ChannelHeaderCollapseState(
 
     private val headerFlingBehavior = object : FlingBehavior {
         override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
-            if (headerHeightPx <= 0f) return 0f
-            val target = if (initialVelocity > 300f || (initialVelocity >= -300f && headerOffsetPxState > -headerHeightPx * 0.5f)) {
+            if (collapseRangePx <= 0f) return 0f
+            val target = if (initialVelocity > 300f || (initialVelocity >= -300f && headerOffsetPxState > -collapseRangePx * 0.5f)) {
                 0f
             } else {
-                -headerHeightPx
+                -collapseRangePx
             }
             animateHeaderTo(target = target, initialVelocity = initialVelocity)
             return initialVelocity
@@ -137,17 +135,18 @@ class ChannelHeaderCollapseState(
     )
 
     /**
-     * Новая высота шапки: схлопнутая шапка остаётся схлопнутой, смещение не выходит
-     * за высоту.
+     * Новый путь схлопывания — высота шапки без полосы выреза: шапка заходит под вырез,
+     * а липкая панель встаёт под ним ровно в конце пути. Схлопнутая шапка остаётся
+     * схлопнутой, смещение не выходит за путь.
      */
-    fun onHeaderHeightChanged(height: Float) {
-        if (headerHeightPx != height) {
-            val wasFullyCollapsed = headerHeightPx > 0f && headerOffsetPxState <= -headerHeightPx + 1f
-            headerHeightPx = height
+    fun onCollapseRangeChanged(range: Float) {
+        if (collapseRangePx != range) {
+            val wasFullyCollapsed = collapseRangePx > 0f && headerOffsetPxState <= -collapseRangePx + 1f
+            collapseRangePx = range
             if (wasFullyCollapsed) {
-                headerOffsetPxState = -height
-            } else if (headerOffsetPxState < -height) {
-                headerOffsetPxState = -height
+                headerOffsetPxState = -range
+            } else if (headerOffsetPxState < -range) {
+                headerOffsetPxState = -range
             }
         }
     }
