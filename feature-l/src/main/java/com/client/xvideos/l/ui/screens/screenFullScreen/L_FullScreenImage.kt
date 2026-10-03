@@ -36,6 +36,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.noRippleClickable
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.statusbar.HideStatusBarEffect
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenu
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuP2pHost
@@ -78,6 +79,7 @@ class L_FullScreenImage(
     )
     @Composable
     override fun Content() {
+        HideStatusBarEffect()
 
         val filteredPic = remember(payloadKey, item) {
             LFullScreenPayload.get(payloadKey).ifEmpty { listOf(item) }

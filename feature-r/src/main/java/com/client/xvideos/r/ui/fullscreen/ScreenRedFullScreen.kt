@@ -23,6 +23,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.transitions.ScreenTransition
+import com.client.xvideos.common.ui.statusbar.HideStatusBarEffect
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.fullscreen.molecule.RedFullScreenFeed
 import com.client.xvideos.r.ui.fullscreen.molecule.RedFullScreenPageOverlay
@@ -41,6 +42,7 @@ class ScreenRedFullScreen(
 
     @Composable
     override fun Content() {
+        HideStatusBarEffect()
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenRedFullScreenSM>()
         val host = remember(feedKey) { feedKey?.let { RFeedSessionStore.get(it) } }

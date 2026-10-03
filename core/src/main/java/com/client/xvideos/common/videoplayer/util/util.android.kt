@@ -61,8 +61,6 @@ fun LandscapeOrientation(
             }
         }
         windowInsetsController?.show(WindowInsetsCompat.Type.navigationBars())
-        // Страховка: статус-бар обязан остаться скрытым
-        windowInsetsController?.hide(WindowInsetsCompat.Type.statusBars())
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 

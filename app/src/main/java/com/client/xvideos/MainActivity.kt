@@ -27,9 +27,11 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -54,10 +56,13 @@ import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
+import com.client.xvideos.common.ui.statusbar.LocalStatusBarRequests
+import com.client.xvideos.common.ui.statusbar.StatusBarRequests
 import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.screenRoot.ScreenRoot
+import com.client.xvideos.screenRoot.molecule.StatusBarHost
 import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -91,6 +96,34 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     private var isAppMinimized by mutableStateOf(false)
 
+    /** Последнее решение `StatusBarHost`: переприменяется в `onResume`. */
+    private var statusBarVisible = false
+
+    private fun applyStatusBarVisibility(visible: Boolean) {
+        statusBarVisible = visible
+        val currentWindow = window ?: return
+        val controller = WindowCompat.getInsetsController(currentWindow, currentWindow.decorView)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (visible) {
+            controller.show(WindowInsetsCompat.Type.statusBars())
+        } else {
+            controller.hide(WindowInsetsCompat.Type.statusBars())
+        }
+    }
+
+    /**
+     * Есть ли вырез сверху — до первой композиции, чтобы бар не мигал при запуске.
+     */
+    @Suppress("DEPRECATION")
+    private fun hasTopCutoutAtStart(): Boolean {
+        val cutout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            display?.cutout
+        } else {
+            windowManager.defaultDisplay.cutout
+        }
+        return (cutout?.safeInsetTop ?: 0) > 0
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         isAppMinimized = true
@@ -113,11 +146,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         if (!AppLockRepository.shouldShowLock(this)) {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
-        window?.let {
-            val controller = WindowCompat.getInsetsController(it, it.decorView)
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsetsCompat.Type.statusBars())
-        }
+        applyStatusBarVisibility(statusBarVisible)
     }
 
     /**
@@ -143,6 +172,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
         setContent {
             var isAppLocked by rememberSaveable { mutableStateOf(shouldShowAppLock) }
+            val statusBarRequests = remember { StatusBarRequests() }
 
             val lifecycleOwner = LocalLifecycleOwner.current
             LaunchedEffect(lifecycleOwner) {
@@ -191,8 +221,14 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                         }
                                     )
                             ) {
-                                ScreenRoot.Content()
+                                CompositionLocalProvider(LocalStatusBarRequests provides statusBarRequests) {
+                                    ScreenRoot.Content()
+                                }
                                 P2pBackgroundOverlay()
+                                StatusBarHost(
+                                    hideRequests = statusBarRequests.hideRequests,
+                                    onVisibleChange = ::applyStatusBarVisibility,
+                                )
                             }
 
                             if (isAppMinimized && blurRecentTasks) {
@@ -215,9 +251,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             currentWindow.isNavigationBarContrastEnforced = false
         }
 
-        val windowInsetsController = WindowCompat.getInsetsController(currentWindow, currentWindow.decorView)
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+        applyStatusBarVisibility(hasTopCutoutAtStart())
 
         currentWindow.attributes = currentWindow.attributes?.apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
