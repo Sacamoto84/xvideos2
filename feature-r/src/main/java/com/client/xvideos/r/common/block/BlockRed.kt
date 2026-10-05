@@ -15,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -32,9 +34,13 @@ import javax.inject.Singleton
  * @param scope Корутин-скоп уровня приложения.
  */
 @Singleton
-class BlockRed @Inject constructor(
-    @ApplicationScope private val scope: CoroutineScope
+class BlockRed internal constructor(
+    private val scope: CoroutineScope,
+    private val readAllBlocked: () -> List<GifsInfo>,
 ) {
+    @Inject
+    constructor(@ApplicationScope scope: CoroutineScope) : this(scope, ::blockGetAllBlockedGifsInfo)
+
     /** Текущий элемент [GifsInfo], выбранный для блокировки через диалог. */
     var blockItem: GifsInfo? = null
 
@@ -49,6 +55,13 @@ class BlockRed @Inject constructor(
     val blockedIds: StateFlow<Set<String>>
         field = MutableStateFlow<Set<String>>(emptySet())
 
+    /**
+     * Чтение каталога, блокировка и разблокировка идут по одной: каждая меняет
+     * диск и публикует набор, не пересекаясь с соседней. Раньше чтения
+     * публиковались по мере готовности, и раннее ложилось поверх позднего.
+     */
+    private val stateMutex = Mutex()
+
     init {
         refresh()
     }
@@ -57,9 +70,12 @@ class BlockRed @Inject constructor(
      * Асинхронно перечитывает все файлы блокировок с диска и обновляет [blockList] и [blockedIds].
      */
     fun refresh(): kotlinx.coroutines.Job = scope.launch {
-        val blocked = withContext(Dispatchers.IO) {
-            blockGetAllBlockedGifsInfo()
+        stateMutex.withLock {
+            publish(withContext(Dispatchers.IO) { readAllBlocked() })
         }
+    }
+
+    private fun publish(blocked: List<GifsInfo>) {
         blockList.value = blocked
         blockedIds.value = blocked.mapTo(HashSet(blocked.size)) { it.id }
     }
@@ -123,15 +139,19 @@ class BlockRed @Inject constructor(
 
     /**
      * Блокирует переданный элемент [item]:
-     * записывает файл `.block` на диск и обновляет состояние [refresh].
+     * записывает файл `.block` на диск и добавляет элемент в набор.
      */
     fun blockItem(item: GifsInfo) {
         scope.launch {
             runCatchingCancellable {
-                withContext(Dispatchers.IO) {
-                    writeBlockedGif(item).getOrThrow()
+                stateMutex.withLock {
+                    withContext(Dispatchers.IO) {
+                        writeBlockedGif(item).getOrThrow()
+                    }
+                    // Изменённый элемент известен: набор правим сами, без обхода
+                    // всех папок авторов с разбором каждого файла.
+                    publish(blockList.value.filterNot { it.id == item.id } + item)
                 }
-                refresh()
             }.onSuccess {
                 SnackBar.success("GIFs заблокирован")
             }.onFailure { error ->
@@ -143,15 +163,17 @@ class BlockRed @Inject constructor(
 
     /**
      * Разблокирует переданный элемент [item]:
-     * удаляет файл `.block` с диска и обновляет состояние [refresh].
+     * удаляет файл `.block` с диска и убирает элемент из набора.
      */
     fun unblockItem(item: GifsInfo) {
         scope.launch {
             runCatchingCancellable {
-                withContext(Dispatchers.IO) {
-                    removeBlockedGif(item).getOrThrow()
+                stateMutex.withLock {
+                    withContext(Dispatchers.IO) {
+                        removeBlockedGif(item).getOrThrow()
+                    }
+                    publish(blockList.value.filterNot { it.id == item.id })
                 }
-                refresh()
             }.onSuccess {
                 SnackBar.success("GIF разблокирован")
             }.onFailure { error ->

@@ -183,11 +183,6 @@ object Settings {
 
     val r_current_count_niches by lazy { SettingElementInt(pref, "current_count_niches", 2) }
 
-    /**
-     * Селектор режима отображения профиля RedGifs.
-     */
-    val red_profile_selector by lazy { SettingElementInt(pref, "red_profile_selector", 1) }
-
 
     //-- luscious ---
 

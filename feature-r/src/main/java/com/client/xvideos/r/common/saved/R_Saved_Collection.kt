@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.collectionDB.CollectionName
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
 import com.client.xvideos.common.collectionDB.model.LinkCollectionStore
 import com.client.xvideos.common.snackbar.SnackBar
@@ -63,7 +64,7 @@ class R_Saved_Collection(
         Timber.i("R_Saved_Collection addCollection() item:${safeItem.id} collectionName:$collectionName")
         scope.launch(Dispatchers.IO) {
             collectionDb.insert(safeItem.id, collectionName, safeItem)
-                .onSuccess { refreshCollectionList() }
+                .onSuccess { refreshCollection(collectionName) }
                 .onFailure { e ->
                     SnackBar.error("Ошибка добавления GIF в коллекцию $collectionName ${e.message}")
                 }
@@ -80,7 +81,7 @@ class R_Saved_Collection(
             collectionDb.deleteItem(itemId, collectionName)
                 .onSuccess {
                     SnackBar.success("GIF удален из коллекции $collectionName")
-                    refreshCollectionList()
+                    refreshCollection(collectionName)
                 }
                 .onFailure { e -> SnackBar.error("Ошибка удаления GIF из коллекции $collectionName ${e.message}") }
         }
@@ -95,7 +96,7 @@ class R_Saved_Collection(
             collectionDb.deleteCollection(collectionName)
                 .onSuccess {
                     SnackBar.success("Коллекция $collectionName удалена")
-                    refreshCollectionList()
+                    refreshCollection(collectionName)
                 }
                 .onFailure { e -> SnackBar.error("Ошибка удаления коллекции $collectionName ${e.message}") }
         }
@@ -111,11 +112,39 @@ class R_Saved_Collection(
             collectionDb.create(collectionName)
                 .onSuccess {
                     SnackBar.success("Коллекция $collectionName создана")
-                    refreshCollectionList()
+                    refreshCollection(collectionName)
                 }
                 .onFailure { e ->
                     SnackBar.error("Ошибка создания коллекции $collectionName ${e.message}")
                 }
+        }
+    }
+
+    /**
+     * Перечитывает с диска одну коллекцию [collectionName] и ставит её на место
+     * в списке; коллекция, которой на диске больше нет, из списка уходит.
+     *
+     * Раньше любая правка — элемент добавлен или удалён, коллекция создана или
+     * удалена — заканчивалась чтением всех коллекций со всеми элементами.
+     */
+    private suspend fun refreshCollection(collectionName: String) {
+        val name = CollectionName.normalizeOrNull(collectionName)
+        val read = collectionDb.readCollection(collectionName).getOrNull()
+        if (name == null) {
+            refreshCollectionList()
+            return
+        }
+        val entity = read?.let { it.copy(items = it.items.sanitizeGifsInfoList()) }
+        withContext(Dispatchers.Main) {
+            // Полное чтение ещё идёт: оно началось до этой правки, а список в
+            // памяти до его публикации неполон. Пусть перечитает всё заново.
+            if (refreshJob?.isActive == true) {
+                refreshCollectionList()
+                return@withContext
+            }
+            val others = collectionList.filter { it.collection != name }
+            val merged = if (entity == null) others else (others + entity).sortedBy { it.collection }
+            publish(nextLoadSeq(), merged)
         }
     }
 

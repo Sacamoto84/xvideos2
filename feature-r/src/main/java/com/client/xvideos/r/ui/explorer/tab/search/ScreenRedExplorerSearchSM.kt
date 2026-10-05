@@ -5,12 +5,12 @@ import androidx.compose.runtime.mutableStateListOf
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
-import com.client.xvideos.r.model.search.SearchItemNichesResponse
-import com.client.xvideos.r.model.search.SearchItemTagsResponse
 import com.client.xvideos.r.network.api.RedApi
+import com.client.xvideos.r.network.toRUserMessage
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,9 +27,16 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Stable
-class ScreenRedExplorerSearchSM @Inject constructor(
-    val redApi: RedApi
+class ScreenRedExplorerSearchSM internal constructor(
+    private val searchCreators: suspend (query: String) -> Result<List<SearchItemCreatorsResponse>>,
+    private val notifyFailure: (String) -> Unit,
 ) : ScreenModel {
+
+    @Inject
+    constructor(redApi: RedApi) : this(
+        searchCreators = { query -> redApi.search.searchCreatorsShort(query).map { it.items } },
+        notifyFailure = SnackBar::error,
+    )
 
     private val _searchText = MutableStateFlow<String>("")
     val searchText: StateFlow<String> = _searchText.asStateFlow()
@@ -38,8 +45,6 @@ class ScreenRedExplorerSearchSM @Inject constructor(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     val creatorsList = mutableStateListOf<SearchItemCreatorsResponse>()
-    val nichesList = mutableStateListOf<SearchItemNichesResponse>()
-    val tagsList = mutableStateListOf<SearchItemTagsResponse>()
 
     fun updateSearchText(query: String) {
         _searchText.value = query
@@ -60,9 +65,15 @@ class ScreenRedExplorerSearchSM @Inject constructor(
 
                     _isLoading.value = true
                     try {
-                        runCatchingCancellable { redApi.search.searchCreatorsShort(text).getOrThrow() }
-                            .onSuccess { creatorsList.replaceWith(it.items) }
-                            .onFailure { Timber.w(it, "Поиск авторов не удался: %s", text) }
+                        runCatchingCancellable { searchCreators(text).getOrThrow() }
+                            .onSuccess { creatorsList.replaceWith(it) }
+                            .onFailure { error ->
+                                Timber.w(error, "Поиск авторов не удался")
+                                // Иначе под новым текстом остаются авторы
+                                // прежнего запроса, а о сбое знает только лог.
+                                creatorsList.clear()
+                                notifyFailure("Поиск авторов не удался: ${error.toRUserMessage()}")
+                            }
                     } finally {
                         _isLoading.value = false
                     }

@@ -84,10 +84,12 @@ class ItemProfilePagingSource (val profileName : String, val sort : Order, val b
     }
 
     // G3: при refresh сохраняем позицию вокруг anchorPosition вместо рестарта с 1-й страницы.
-    override fun getRefreshKey(state: PagingState<Int, GifsInfo>): Int? {
-        return state.anchorPosition?.let { anchor ->
-            val closest = state.closestPageToPosition(anchor)
-            closest?.prevKey?.plus(1) ?: closest?.nextKey?.minus(1)
-        }
-    }
+    /**
+     * Обновление всегда начинается с первой страницы.
+     *
+     * Источник отдаёт `prevKey = null`: страниц выше текущей для него нет.
+     * Раньше отсюда возвращалась страница у якоря, и обновление не с верха
+     * списка начало бы его со страницы N — всё, что выше, пропало бы.
+     */
+    override fun getRefreshKey(state: PagingState<Int, GifsInfo>): Int? = null
 }

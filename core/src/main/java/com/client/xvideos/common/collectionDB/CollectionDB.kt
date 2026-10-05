@@ -225,6 +225,24 @@ class CollectionDB<T>(
         Result.failure(e)
     }
 
+    /**
+     * Читает одну коллекцию [collectionName]; `null` в результате — такой
+     * коллекции на диске нет. После правки в одной коллекции незачем
+     * перечитывать все остальные.
+     */
+    fun readCollection(collectionName: String): Result<CollectionEntity<T>?> = try {
+        val safeName = CollectionName.normalizeOrNull(collectionName)
+            ?: throw IOException("Недопустимое имя коллекции: $collectionName")
+        val entity = synchronized(lock) {
+            val dir = File(rootDir, safeName)
+            if (dir.isDirectory) loadCollectionDir(dir) else null
+        }
+        Result.success(entity)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to read collection from $path")
+        Result.failure(e)
+    }
+
     private fun loadCollectionDir(dir: File): CollectionEntity<T> {
         val rawFiles = dir.listFiles() ?: return CollectionEntity(dir.name, emptyList())
         if (rawFiles.isEmpty()) return CollectionEntity(dir.name, emptyList())

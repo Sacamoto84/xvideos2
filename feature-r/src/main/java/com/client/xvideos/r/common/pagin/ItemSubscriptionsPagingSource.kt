@@ -28,6 +28,8 @@ class ItemSubscriptionsPagingSource (val savedRed: SavedRed): PagingSource<Int, 
         } catch (e: CancellationException) {
             throw e // G1
         } catch (e: Exception) {
+            // Сюда приходит отказ, когда не загрузился ни один автор. Ошибку с
+            // кнопкой повтора рисует список по состоянию загрузки.
             Timber.e(e, "!!! >>>ItemSubscriptionsPagingSource load()")
             LoadResult.Error(e)
         }

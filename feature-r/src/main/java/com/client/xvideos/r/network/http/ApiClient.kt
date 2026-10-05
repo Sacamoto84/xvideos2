@@ -1,16 +1,17 @@
 package com.client.xvideos.r.network.http
 
+import com.client.xvideos.common.net.UserAgentProvider
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.r.network.json.RJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
@@ -29,9 +30,12 @@ import java.util.concurrent.TimeUnit
  */
 object ApiClient {
 
-    /** Заголовок User-Agent браузера для обхода Cloudflare и ограничений поставщика. */
-    const val USER_AGENT: String =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+    /**
+     * Заголовок User-Agent браузера для обхода Cloudflare и ограничений
+     * поставщика. Берётся из общего [UserAgentProvider], как у клиента L: своя
+     * зашитая строка устаревала вместе с версией браузера.
+     */
+    val USER_AGENT: String get() = UserAgentProvider.defaultUserAgent
 
     /** Адрес выдачи временного анонимного токена. */
     private const val AUTH_URL = "https://api.redgifs.com/v2/auth/temporary"
@@ -41,7 +45,7 @@ object ApiClient {
      * - DNS через [AppDns];
      * - Modern TLS и Compatible TLS;
      * - 30 секунд таймауты (connect, read, write);
-     * - Автоматический retry до 3 раз с экспоненциальной задержкой;
+     * - Повторы только там, где следующая попытка может пройти ([installRRetry]);
      * - JSON ContentNegotiation через [RJson].
      */
     val client = HttpClient(OkHttp) {
@@ -58,11 +62,7 @@ object ApiClient {
         install(ContentNegotiation) {
             json(RJson)
         }
-        install(HttpRequestRetry) {
-            retryOnExceptionOrServerErrors(maxRetries = 3)
-            exponentialDelay()
-            modifyRequest { if (it.url.pathSegments.contains("auth")) it.headers.remove(HttpHeaders.Authorization) }
-        }
+        installRRetry()
         defaultRequest {
             headers.append("Referer", "https://www.redgifs.com/")
             headers.append("Origin", "https://www.redgifs.com")
@@ -97,6 +97,23 @@ object ApiClient {
     suspend fun login(): Result<Boolean> = auth.login()
 
     /**
+     * GET-запрос под анонимным токеном: [read] разбирает ответ. Одна на все
+     * четыре публичные функции ниже — раньше каждая повторяла её целиком.
+     */
+    @PublishedApi
+    internal suspend fun <T> get(
+        url: String,
+        params: List<Pair<String, Any>>,
+        read: suspend (HttpResponse) -> T,
+    ): Result<T> = auth.withAuth { token ->
+        val response = client.get(url) {
+            if (token != null) headers.append(HttpHeaders.Authorization, "Bearer $token")
+            for ((key, value) in params) parameter(key, value)
+        }
+        read(response)
+    }
+
+    /**
      * Выполняет типизированный GET-запрос по произвольному [url] с автоматической авторизацией.
      *
      * @param T Тип десериализуемого тела ответа.
@@ -106,15 +123,7 @@ object ApiClient {
     suspend inline fun <reified T> request(
         url: String,
         params: Map<String, String> = emptyMap(),
-    ): Result<T> = auth.withAuth { token ->
-        val authHeader = token?.let { "Bearer $it" }
-        client.get(url) {
-            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            if (params.isNotEmpty()) {
-                params.forEach { (key, value) -> parameter(key, value) }
-            }
-        }.body()
-    }
+    ): Result<T> = get(url, params.toList()) { it.body() }
 
     /**
      * Выполняет типизированный GET-запрос по объекту [route] с автоматической авторизацией.
@@ -126,15 +135,7 @@ object ApiClient {
     suspend inline fun <reified T> request(
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
-    ): Result<T> = auth.withAuth { token ->
-        val authHeader = token?.let { "Bearer $it" }
-        client.get(route.url) {
-            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            if (params.isNotEmpty()) {
-                for ((key, value) in params) parameter(key, value)
-            }
-        }.body()
-    }
+    ): Result<T> = get(route.url, params.toList()) { it.body() }
 
     /**
      * Выполняет запрос по объекту [route] и возвращает сырой текст ответа [String].
@@ -145,15 +146,7 @@ object ApiClient {
     suspend fun requestText(
         route: Route,
         vararg params: Pair<String, Any> = emptyArray(),
-    ): Result<String> = auth.withAuth { token ->
-        val authHeader = token?.let { "Bearer $it" }
-        client.get(route.url) {
-            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            if (params.isNotEmpty()) {
-                for ((key, value) in params) parameter(key, value)
-            }
-        }.bodyAsText()
-    }
+    ): Result<String> = get(route.url, params.toList()) { it.bodyAsText() }
 
     /**
      * Выполняет запрос по произвольному [url] и возвращает сырой текст ответа [String].
@@ -164,13 +157,5 @@ object ApiClient {
     suspend fun requestText(
         url: String,
         vararg params: Pair<String, Any> = emptyArray(),
-    ): Result<String> = auth.withAuth { token ->
-        val authHeader = token?.let { "Bearer $it" }
-        client.get(url) {
-            if (authHeader != null) headers.append(HttpHeaders.Authorization, authHeader)
-            if (params.isNotEmpty()) {
-                for ((key, value) in params) parameter(key, value)
-            }
-        }.bodyAsText()
-    }
+    ): Result<String> = get(url, params.toList()) { it.bodyAsText() }
 }

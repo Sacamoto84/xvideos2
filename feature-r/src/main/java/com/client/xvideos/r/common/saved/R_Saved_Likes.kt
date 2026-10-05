@@ -41,10 +41,7 @@ class R_Saved_Likes(
             SnackBar.error("Like add error: empty id")
             return
         }
-        Timber.i(
-            "R_Saved_Likes add() id:${safeItem.id} userName:${safeItem.userName} " +
-                "url:${safeItem.urls.hd} -> ${likesDb.dirPath}/${safeItem.id}.likes"
-        )
+        Timber.i("R_Saved_Likes add() id:${safeItem.id} userName:${safeItem.userName}")
         scope.launch(Dispatchers.IO) {
             likesDb.insert(safeItem.id, safeItem)
                 .onSuccess {
@@ -71,7 +68,7 @@ class R_Saved_Likes(
      */
     fun remove(item: GifsInfo) {
         if (item.id.isBlank()) return
-        Timber.i("R_Saved_Likes remove() id:${item.id} userName:${item.userName} url:${item.urls.hd}")
+        Timber.i("R_Saved_Likes remove() id:${item.id} userName:${item.userName}")
         scope.launch(Dispatchers.IO) {
             likesDb.delete(item.id)
                 .onSuccess {
@@ -115,13 +112,15 @@ class R_Saved_Likes(
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {
             likesDb.refresh()
-            val current = withContext(Dispatchers.Main) { list.toList() }
-            if (current.isEmpty()) return@launch
-            val sanitized = current.sanitizeGifsInfoList()
-            // Переписываем список только если санитизация реально что-то изменила,
-            // иначе получаем лишнюю перезапись и мигание списка.
-            if (sanitized != current) {
-                withContext(Dispatchers.Main) {
+            // Снимок, очистка и замена — одним заходом на главный поток. Раньше
+            // очистка шла в фоне между снимком и заменой, и лайк, добавленный в
+            // этот промежуток, из списка пропадал: файл записан, в памяти его нет.
+            withContext(Dispatchers.Main) {
+                val current = list.toList()
+                val sanitized = current.sanitizeGifsInfoList()
+                // Переписываем список только если санитизация реально что-то изменила,
+                // иначе получаем лишнюю перезапись и мигание списка.
+                if (sanitized != current) {
                     list.replaceWith(sanitized)
                 }
             }

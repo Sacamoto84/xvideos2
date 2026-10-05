@@ -22,6 +22,9 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
 import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import com.client.xvideos.common.ui.atom.TopLoadingBar
+import com.client.xvideos.r.network.toRUserMessage
+import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.r.ui.ui.lazyrow123.molecule.RListLoadError
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import androidx.compose.material3.Text
@@ -61,7 +64,6 @@ import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -83,7 +85,20 @@ fun LazyRow123(
     val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
     val haptic = LocalHapticFeedback.current
+    // Индикатор жеста обновления держится, пока идёт загрузка. Раньше это был
+    // таймер на полсекунды: на медленной сети он гас раньше данных, а при сбое
+    // показывал «готово».
     var isRefreshing by remember { mutableStateOf(false) }
+    val refreshState = listGifs.loadState.refresh
+    LaunchedEffect(refreshState) {
+        if (refreshState !is LoadState.Loading) isRefreshing = false
+        // Старые ролики остаются на экране, строка ошибки — в конце списка:
+        // без сообщения погасший индикатор читался бы как «готово».
+        refreshFailureToAnnounce(refreshState, listGifs.itemCount, host.announcedRefreshFailure)?.let { failure ->
+            host.announcedRefreshFailure = failure
+            SnackBar.error(failure.toRUserMessage())
+        }
+    }
     val pullToRefreshState = rememberPullToRefreshState()
 
     // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
@@ -117,12 +132,8 @@ fun LazyRow123(
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = {
-            scope.launch {
-                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                isRefreshing = true
-                delay(500)
-                isRefreshing = false
-            }
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            isRefreshing = true
             listGifs.refresh()
         },
         state = pullToRefreshState,
@@ -249,6 +260,7 @@ fun LazyRow123Content(
         modifier = modifier,
         contentPadding = contentPadding,
         contentBeforeList = contentBeforeList,
+        onRetry = { listGifs.retry() },
     ) { index ->
         // Та же защита границы, что и для itemKey (см. выше).
         if (index >= listGifs.itemCount) return@LazyRow123ContentStateless
@@ -302,6 +314,7 @@ private fun LazyRow123ContentStateless(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     contentBeforeList: (@Composable () -> Unit)? = null,
+    onRetry: () -> Unit = {},
     itemContent: @Composable (Int) -> Unit
 ) {
     val isAnyLoading = loadState.refresh is LoadState.Loading ||
@@ -337,6 +350,13 @@ private fun LazyRow123ContentStateless(
                     ) {
                         CircularProgressIndicator()
                     }
+                }
+            }
+
+            val loadError = listLoadError(loadState)
+            if (loadError != null) {
+                item(key = "load_error", span = { GridItemSpan(maxLineSpan) }) {
+                    RListLoadError(message = loadError.toRUserMessage(), onRetry = onRetry)
                 }
             }
         }

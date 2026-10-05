@@ -1,7 +1,6 @@
 package com.client.xvideos.r.common
 
 import com.client.xvideos.r.model.UserInfo
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Глобальный потокобезопасный in-memory кэш авторов (пользователей) для раздела RedGifs.
@@ -11,26 +10,39 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object UsersRed {
 
-    /** Внутренняя хэш-таблица сопоставления username -> [UserInfo]. */
-    private val usersMap = ConcurrentHashMap<String, UserInfo>()
+    /**
+     * Предел записей. Кэш наполняется каждой загруженной страницей лент и
+     * раньше не вытеснял ничего — рос, пока жив процесс.
+     */
+    internal const val MAX_USERS = 2_000
+
+    /**
+     * Сопоставление username -> [UserInfo] в порядке обращения: при переполнении
+     * уходит тот, кого дольше всех не спрашивали. Доступ — под замком на самой
+     * таблице: `LinkedHashMap` с порядком обращения меняется и при чтении.
+     */
+    private val usersMap = object : LinkedHashMap<String, UserInfo>(256, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, UserInfo>?): Boolean =
+            size > MAX_USERS
+    }
 
     /** Получить снимок всех кэшированных пользователей в виде списка. */
     val listAllUsers: List<UserInfo>
-        get() = if (usersMap.isEmpty()) emptyList() else ArrayList(usersMap.values)
+        get() = synchronized(usersMap) { ArrayList(usersMap.values) }
 
     /** Текущее количество пользователей в кэше. */
-    val count: Int get() = usersMap.size
+    val count: Int get() = synchronized(usersMap) { usersMap.size }
 
     /** Проверяет, пуст ли кэш пользователей. */
-    val isEmpty: Boolean get() = usersMap.isEmpty()
+    val isEmpty: Boolean get() = count == 0
 
     /** Проверяет, содержит ли кэш хотя бы одного пользователя. */
-    val isNotEmpty: Boolean get() = !usersMap.isEmpty()
+    val isNotEmpty: Boolean get() = count > 0
 
     /** Добавить пользователя в кэш, обновляя запись по username (если username не пуст). */
     fun addUser(user: UserInfo) {
         if (user.username.isNotBlank()) {
-            usersMap[user.username] = user
+            synchronized(usersMap) { usersMap[user.username] = user }
         }
     }
 
@@ -44,33 +56,33 @@ object UsersRed {
     /** Проверить наличие пользователя в кэше по его никнейму. */
     fun containsUser(username: String): Boolean {
         if (username.isBlank()) return false
-        return usersMap.containsKey(username)
+        return synchronized(usersMap) { usersMap.containsKey(username) }
     }
 
     /** Найти пользователя в кэше по никнейму или вернуть null. */
     fun findUser(username: String): UserInfo? {
         if (username.isBlank()) return null
-        return usersMap[username]
+        return synchronized(usersMap) { usersMap[username] }
     }
 
     /** Возвращает множество всех закэшированных никнеймов. */
-    fun getAllUsernames(): Set<String> = usersMap.keys.toSet()
+    fun getAllUsernames(): Set<String> = synchronized(usersMap) { usersMap.keys.toSet() }
 
     /** Находит всех пользователей, соответствующих поисковому запросу. */
     fun findUsersMatching(query: String?): List<UserInfo> {
         if (query.isNullOrBlank()) return emptyList()
-        return usersMap.values.filter { it.matches(query) }
+        return listAllUsers.filter { it.matches(query) }
     }
 
     /** Удалить пользователя из кэша. */
     fun removeUser(username: String) {
         if (username.isNotBlank()) {
-            usersMap.remove(username)
+            synchronized(usersMap) { usersMap.remove(username) }
         }
     }
 
     /** Очистить весь кэш пользователей. */
     fun clear() {
-        usersMap.clear()
+        synchronized(usersMap) { usersMap.clear() }
     }
 }

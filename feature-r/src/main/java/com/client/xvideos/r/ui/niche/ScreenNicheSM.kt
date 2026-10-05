@@ -8,7 +8,8 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
-import com.client.xvideos.common.util.launchCatching
+import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.NichesResponse
 import com.client.xvideos.r.model.TopCreatorsResponse
@@ -19,6 +20,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
+import com.client.xvideos.r.network.toRUserMessage
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import dagger.Binds
 import dagger.Module
@@ -29,6 +31,9 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -88,12 +93,20 @@ class ScreenNicheSM @AssistedInject constructor(
         lazyHost.columns = 2
 
         if (cleanNicheName.isNotBlank()) {
-            // getOrThrow бросает при любом отказе сети, и раньше это закрывало
-            // приложение. Экран остаётся пустым, но остаётся.
-            screenModelScope.launchCatching(message = "Ниша $cleanNicheName не загрузилась") {
-                niche = redApi.getNiche(cleanNicheName).getOrThrow().niche            // Нужно кешировать
-                related = redApi.getNichesRelated(cleanNicheName).getOrThrow()      // Нужно кешировать
-                topCreator = redApi.getNichesTopCreators(cleanNicheName).getOrThrow()  // Нужно кешировать
+            // Три независимых запроса идут разом, и сбой одного не отменяет
+            // остальные. Раньше они шли подряд в одном блоке: первый упал —
+            // второй и третий не выполнялись, а о сбое не узнавал никто.
+            screenModelScope.launch {
+                val failures = listOf(
+                    async { runCatchingCancellable { niche = redApi.getNiche(cleanNicheName).getOrThrow().niche } },
+                    async { runCatchingCancellable { related = redApi.getNichesRelated(cleanNicheName).getOrThrow() } },
+                    async { runCatchingCancellable { topCreator = redApi.getNichesTopCreators(cleanNicheName).getOrThrow() } },
+                ).awaitAll().mapNotNull { it.exceptionOrNull() }
+
+                failures.forEach { Timber.w(it, "ScreenNicheSM: часть данных ниши не загрузилась") }
+                failures.firstOrNull()?.let {
+                    SnackBar.error("Ниша загрузилась не полностью: ${it.toRUserMessage()}")
+                }
             }
         } else {
             Timber.w("ScreenNicheSM init: пустое имя ниши")

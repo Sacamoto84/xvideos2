@@ -4,10 +4,17 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -122,9 +129,33 @@ abstract class ISearchTemplate(
     /** Текущий введенный текст поисковой строки. */
     val currentSearchText: String get() = searchText.value.text
 
-    /** Обновляет отображаемый текст в поле ввода. */
-    fun updateSearchText(text: String) {
-        searchText.value = TextFieldValue(text)
+    /**
+     * Запускает подсказки по вводу: ждёт паузу [pauseMs] и отменяет
+     * незаконченный запрос при новом вводе — за это отвечает `mapLatest`.
+     *
+     * Раньше у каждого наследника висел голый `searchText.collect { … сетевой
+     * запрос … }`: запрос на каждое изменение текста, без паузы и без отмены
+     * предыдущего. Цепочка одна на оба поиска; различаются они только тем, как
+     * читают текст, сколько ждут и откуда берут подсказки.
+     *
+     * @param query Текст запроса из поля ввода.
+     * @param pauseMs Пауза перед запросом для данного текста.
+     * @param load Источник подсказок.
+     */
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    protected fun launchSuggestions(
+        query: (TextFieldValue) -> String,
+        pauseMs: (String) -> Long = { SUGGESTIONS_DEBOUNCE_MS },
+        load: suspend (query: String) -> List<SuggestionItem>,
+    ) {
+        scope.launch {
+            searchText
+                .map(query)
+                .distinctUntilChanged()
+                .debounce(pauseMs)
+                .mapLatest(load)
+                .collect { searchTextSuggestions.value = it }
+        }
     }
 
     /** Очищает строку ввода. */

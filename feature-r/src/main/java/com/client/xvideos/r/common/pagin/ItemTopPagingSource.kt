@@ -37,7 +37,7 @@ class ItemTopPagingSource(
         val page = params.key ?: 1
 
         return try {
-            Timber.i("!!! ItemTopPagingSource::load() page = $page sortTop:$sort searchText:$searchText")
+            Timber.i("!!! ItemTopPagingSource::load() page = $page sortTop:$sort search:${searchText.isNotBlank()}")
 
             // getOrThrow один на все ветки: отказ сети обязан дойти сюда и стать
             // LoadResult.Error. Раньше кешируемые ленты возвращали голый
@@ -48,7 +48,6 @@ class ItemTopPagingSource(
             // выбранной сортировки.
             val query = searchText.trim()
             val response = if (query.isNotBlank()) {
-                Timber.i("!!! ItemTopPagingSource::load()  RedGifs.searchGifs($query)")
                 redApi.search.searchGifs(query, sort, 100, page)
             } else {
                 when (sort) {
@@ -96,11 +95,12 @@ class ItemTopPagingSource(
         }
     }
 
-    // G3
-    override fun getRefreshKey(state: PagingState<Int, GifsInfo>): Int? {
-        return state.anchorPosition?.let { anchor ->
-            val closest = state.closestPageToPosition(anchor)
-            closest?.prevKey?.plus(1) ?: closest?.nextKey?.minus(1)
-        }
-    }
+    /**
+     * Обновление всегда начинается с первой страницы.
+     *
+     * Источник отдаёт `prevKey = null`: страниц выше текущей для него нет.
+     * Раньше отсюда возвращалась страница у якоря, и обновление не с верха
+     * списка начало бы его со страницы N — всё, что выше, пропало бы.
+     */
+    override fun getRefreshKey(state: PagingState<Int, GifsInfo>): Int? = null
 }

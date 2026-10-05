@@ -9,7 +9,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
-import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
@@ -19,6 +18,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
+import com.client.xvideos.r.network.toRUserMessage
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -38,27 +38,12 @@ import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 
 /**
- * Варианты фильтрации контента на экране профиля автора.
- *
- * @property value Текстовая подпись в UI.
- */
-enum class TypeGifs(val value: String) {
-    /** Весь контент. */
-    ALL("All"),
-    /** Только видео/GIF. */
-    GIFS("GIFs"),
-    /** Только статичные изображения. */
-    IMAGES("Images"),
-}
-
-/**
  * [ScreenModel] экрана профиля автора (создателя контента) в RedGifs.
  *
  * Управляет:
  * - Загрузкой информации о профиле автора [creator];
  * - Мультивыбором тегов автора для фильтрации его ленты ([tags], [tagsSelect]);
  * - Порядком сортировки [order];
- * - Переключением между гифками и изображениями [typeGifs];
  * - Состоянием хоста сетки контента [likedHost].
  *
  * @param profileName Никнейм автора.
@@ -117,22 +102,9 @@ class ScreenRedProfileSM @AssistedInject constructor(
     /** Текущий порядок сортировки. */
     var order by mutableStateOf(Order.LATEST)
 
-    /** Доступные фильтры типа контента. */
-    val typeGifsList = listOf(TypeGifs.GIFS, TypeGifs.IMAGES)
-    /** Выбранный фильтр контента. */
-    var typeGifs by mutableStateOf(TypeGifs.GIFS)
-
     private val _isLoading = MutableStateFlow(false)
     /** Флаг выполнения сетевой загрузки данных профиля. */
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    /** Селектор вида сетки из настроек. */
-    val selector: StateFlow<Int> = Settings.red_profile_selector.field
-
-    /** Сохраняет выбранный вид сетки. */
-    fun setSelector(value: Int) {
-        Settings.red_profile_selector.setValue(value)
-    }
 
     /** Хост сетки видеороликов автора. */
     val likedHost = LazyRow123Host(
@@ -153,20 +125,21 @@ class ScreenRedProfileSM @AssistedInject constructor(
     init {
         screenModelScope.launch {
             clear()
-            setSelector(2)
 
             if (cleanProfileName.isNotBlank()) {
                 _isLoading.value = true
                 try {
-                    val loadedCreator = redApi.readCreator(cleanProfileName).getOrNull()
+                    // getOrThrow, а не getOrNull: отказ сети приходит отказом в
+                    // Result, и раньше он молча становился пустой шапкой автора.
+                    val loadedCreator = redApi.readCreator(cleanProfileName).getOrThrow()
                     creator = loadedCreator
-                    loadedCreator?.let { savedRed.creators.updateIfSaved(it) }
+                    savedRed.creators.updateIfSaved(loadedCreator)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     creator = null
-                    Timber.e(e)
-                    SnackBar.error(e.message.toString())
+                    Timber.e(e, "ScreenRedProfileSM: профиль автора не загрузился")
+                    SnackBar.error("Профиль автора не загрузился: ${e.toRUserMessage()}")
                 } finally {
                     _isLoading.value = false
                 }

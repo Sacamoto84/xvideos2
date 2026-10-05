@@ -6,11 +6,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Provider
@@ -44,21 +40,8 @@ class R_SearchExplorer @Inject constructor(
      */
     private val redApi: RedApi by lazy { redApiIn.get() }
 
-    /**
-     * Раньше здесь висел голый `searchText.collect { … сетевой запрос … }`:
-     * запрос на каждое изменение текста, без паузы и без отмены предыдущего.
-     * Сейчас цепочка ждёт [SUGGESTIONS_DEBOUNCE_MS] и отменяет незаконченный
-     * запрос при новом вводе — за это отвечает `mapLatest`.
-     */
     init {
-        scope.launch {
-            searchText
-                .map { it.text.trim() }
-                .distinctUntilChanged()
-                .debounce(SUGGESTIONS_DEBOUNCE_MS)
-                .mapLatest { text -> suggestionsFor(text) }
-                .collect { searchTextSuggestions.value = it }
-        }
+        launchSuggestions(query = { it.text.trim() }, load = ::suggestionsFor)
     }
 
     /**

@@ -7,11 +7,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,24 +32,14 @@ class R_SearchNiches @Inject constructor(
     @ApplicationScope scope: CoroutineScope
 ) : ISearchTemplate(scope, dao) {
 
-    /**
-     * Раньше здесь висел голый `searchText.collect { … сетевой запрос … }`:
-     * запрос на каждое изменение текста, без паузы и без отмены предыдущего.
-     * Сейчас цепочка ждёт [SUGGESTIONS_DEBOUNCE_MS] и отменяет незаконченный
-     * запрос при новом вводе — за это отвечает `mapLatest`.
-     *
-     * Пустой запрос проходит без паузы: список подсказок должен исчезать сразу,
-     * а не через треть секунды после того, как строку очистили.
-     */
     init {
-        scope.launch {
-            searchText
-                .map { it.text }
-                .distinctUntilChanged()
-                .debounce { query -> if (query.isEmpty()) 0L else SUGGESTIONS_DEBOUNCE_MS }
-                .mapLatest { query -> suggestionsFor(query) }
-                .collect { searchTextSuggestions.value = it }
-        }
+        // Пустой запрос проходит без паузы: список подсказок должен исчезать
+        // сразу, а не через треть секунды после того, как строку очистили.
+        launchSuggestions(
+            query = { it.text },
+            pauseMs = { query -> if (query.isEmpty()) 0L else SUGGESTIONS_DEBOUNCE_MS },
+            load = ::suggestionsFor,
+        )
     }
 
     /**

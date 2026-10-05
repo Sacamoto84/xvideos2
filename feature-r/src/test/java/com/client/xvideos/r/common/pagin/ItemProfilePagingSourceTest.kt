@@ -89,4 +89,24 @@ class ItemProfilePagingSourceTest {
 
         assertNull(source.getRefreshKey(state))
     }
+
+    @Test
+    fun `обновление всегда начинается с первой страницы`() {
+        val block = BlockRed(CoroutineScope(Dispatchers.Unconfined))
+        val redApi = RedApi(AppFileDatabase())
+        val source = ItemProfilePagingSource("test_user", Order.LATEST, block, redApi)
+
+        // Пользователь на четвёртой странице; источник отдаёт prevKey = null,
+        // поэтому страницы выше якоря обновление вернуть не сможет.
+        val state = PagingState(
+            pages = listOf(
+                PagingSource.LoadResult.Page(data = listOf(GifsInfo(id = "a")), prevKey = null, nextKey = 5)
+            ),
+            anchorPosition = 0,
+            config = PagingConfig(pageSize = 20),
+            leadingPlaceholderCount = 0
+        )
+
+        assertNull(source.getRefreshKey(state))
+    }
 }

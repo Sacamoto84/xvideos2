@@ -4,16 +4,21 @@ import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.MediaType
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.model.sanitizeGifsInfoList
 import com.client.xvideos.r.network.api.RedApi
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import androidx.compose.runtime.Stable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -25,7 +30,7 @@ import timber.log.Timber
  * @property urlProfile URL аватара автора для круглого бейджа в UI.
  */
 @Stable
-data class SelectedCreator(val name: String, var select: Boolean, val urlProfile : String?)
+data class SelectedCreator(val name: String, val select: Boolean, val urlProfile : String?)
 
 /**
  * Менеджер подписок на авторов RedGifs.
@@ -41,6 +46,8 @@ data class SelectedCreator(val name: String, var select: Boolean, val urlProfile
 class R_Saved_Subscriptions(
     val scope: CoroutineScope,
     val redApi: RedApi,
+    private val loadCreatorGifs: suspend (name: String) -> List<GifsInfo> = { name -> redApi.lastGifsOf(name) },
+    private val notifyPartialFailure: (String) -> Unit = SnackBar::warning,
 ) {
 
     private val creatorDb = FileDB(AppPath.r_subscriptions, "subscriptions", UserInfo.serializer())
@@ -160,10 +167,6 @@ class R_Saved_Subscriptions(
     fun findByUsernameOrNull(username: String?): UserInfo? =
         if (username.isNullOrBlank()) null else listCreators.firstOrNull { it.username == username }
 
-    /** Загружает последние 50 гифок автора по его никнейму. */
-    private suspend fun read50LastItem(name: String): List<GifsInfo> {
-        return redApi.searchCreator(userName = name, count = 50, type = MediaType.ALL).getOrThrow().gifs.sanitizeGifsInfoList()
-    }
 
     /**
      * Загружает и объединяет последние гифки от всех авторов, у которых стоит флаг [SelectedCreator.select].
@@ -181,27 +184,47 @@ class R_Saved_Subscriptions(
             }
             names
         }
+        return loadSubscriptionFeed(selectedNames)
+    }
+
+    /**
+     * Загружает ролики авторов [selectedNames] и объединяет их без повторов.
+     *
+     * Авторы запрашиваются по [SUBSCRIPTIONS_PARALLEL_REQUESTS] сразу: раньше —
+     * строго по одному, и лента появлялась после последнего ответа.
+     *
+     * @throws Exception если не загрузился ни один автор. Раньше сбой каждого
+     * автора проглатывался, и без сети лента выглядела как «у авторов нет
+     * роликов» — без сообщения и кнопки повтора.
+     */
+    internal suspend fun loadSubscriptionFeed(selectedNames: List<String>): List<GifsInfo> {
         if (selectedNames.isEmpty()) return emptyList()
 
-        val res = ArrayList<GifsInfo>(selectedNames.size * 25)
-        val seenIds = HashSet<String>(selectedNames.size * 25)
-        for (name in selectedNames) {
-            try {
-                val items = read50LastItem(name)
-                for (item in items) {
-                    if (seenIds.add(item.id)) {
-                        res.add(item)
-                    }
-                }
-            } catch (e: CancellationException) {
-                // Иначе отмена гасилась и цикл продолжал дёргать сеть по всем
-                // оставшимся авторам уже на отменённой корутине.
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e)
-            }
+        val permits = Semaphore(SUBSCRIPTIONS_PARALLEL_REQUESTS)
+        // runCatchingCancellable: отмена обязана оборвать загрузку, а не
+        // записаться в сбои и продолжить дёргать сеть по остальным авторам.
+        val loaded = coroutineScope {
+            selectedNames.map { name ->
+                async { permits.withPermit { runCatchingCancellable { loadCreatorGifs(name) } } }
+            }.awaitAll()
         }
-        return res
+
+        val failures = loaded.mapNotNull { it.exceptionOrNull() }
+        failures.forEach { Timber.e(it, "R_Saved_Subscriptions: автор не загрузился") }
+        if (failures.size == loaded.size) throw failures.first()
+        if (failures.isNotEmpty()) {
+            notifyPartialFailure("Лента подписок: не загрузились ролики ${failures.size} из ${loaded.size} авторов")
+        }
+
+        val seenIds = HashSet<String>(selectedNames.size * 25)
+        return loaded.flatMap { it.getOrNull().orEmpty() }.filter { seenIds.add(it.id) }
     }
 
 }
+
+/** Сколько авторов лента подписок запрашивает одновременно. */
+internal const val SUBSCRIPTIONS_PARALLEL_REQUESTS = 4
+
+/** Последние 50 роликов автора [name]. */
+private suspend fun RedApi.lastGifsOf(name: String): List<GifsInfo> =
+    searchCreator(userName = name, count = 50, type = MediaType.ALL).getOrThrow().gifs.sanitizeGifsInfoList()

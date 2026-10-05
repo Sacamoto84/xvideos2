@@ -26,7 +26,7 @@ fun blockItem(item: GifsInfo): Result<Boolean> {
             return Result.failure(IllegalArgumentException("Недопустимое имя пользователя или id для блокировки"))
         }
 
-        Timber.i("!!! Блокировка GIFS -> useCaseBlockItem() id:${item.id} userName:${item.userName} url:${item.urls.hd}")
+        Timber.i("!!! Блокировка GIFS -> useCaseBlockItem() id:${item.id} userName:${item.userName}")
 
         val rootDir = File(AppPath.r_block)
         val blockDir = File(rootDir, item.userName)
@@ -75,8 +75,10 @@ fun unblockItem(item: GifsInfo): Result<Boolean> {
         val blockFile = File(blockDir, "${item.id}.block")
         requireInside(blockDir, blockFile)
 
-        if (blockFile.exists()) {
-            blockFile.delete()
+        // Без проверки результата пользователь видел «разблокирован», а ролик
+        // оставался заблокированным.
+        if (blockFile.exists() && !blockFile.delete()) {
+            return Result.failure(IOException("Не удалось удалить файл блокировки ${item.id}"))
         }
 
         if (blockDir.exists() && blockDir.isDirectory) {

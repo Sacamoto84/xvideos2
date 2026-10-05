@@ -193,6 +193,8 @@ class LazyRow123Host(
     var currentIndexGoto by mutableIntStateOf(0)
     /** Индекс возврата при выходе из полноэкранного режима. */
     var returnToIndex by mutableIntStateOf(-1)
+    /** Сбой обновления, о котором уже сообщили: по одному сообщению на сбой. */
+    var announcedRefreshFailure: Throwable? = null
     private var lastPagerParams: SearchParams? = null
 
     /** Прокрутить сетку в самый верх. */

@@ -14,11 +14,14 @@ import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.r.model.Niche
+import com.client.xvideos.r.model.NichesResponse
 import kotlinx.serialization.encodeToString
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,6 +47,9 @@ import java.io.File
 class R_Saved_NichesCaches(
     val scope: CoroutineScope,
     val redApi: RedApi,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val loadPage: suspend (page: Int) -> Result<NichesResponse> =
+        { page -> redApi.explorer.getExplorerNiches(page = page, count = 100) },
 ) {
 
     private companion object {
@@ -80,9 +86,8 @@ class R_Saved_NichesCaches(
     /** Время с момента последнего обновления файла кэша (в минутах). */
     var lastModifiedMinute by mutableLongStateOf(-1)
 
-    init {
-        readFromDisk()
-    }
+    /** Идущее или последнее чтение кэша с диска: проверка свежести ждёт его. */
+    private var readJob: Job = readFromDisk()
 
     /**
      * Загружает все страницы каталога ниш из сети, атомарно сохраняет JSON в файл
@@ -95,13 +100,13 @@ class R_Saved_NichesCaches(
         isDownloading = true
         progress = 0f
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             try {
                 val niches = mutableListOf<Niche>()
                 // Раньше здесь стояло getOrNull()!!: при любой сетевой ошибке
                 // это был NPE, и пользователь видел снекбар с текстом
                 // "Ошибка обновления java.lang.NullPointerException".
-                val res = redApi.explorer.getExplorerNiches(page = 1, count = 100)
+                val res = loadPage(1)
                     .getOrElse { error("не удалось загрузить ниши: ${it.message ?: "нет сети"}") }
                 val pages = res.pages.coerceAtLeast(1)
                 val step = if (pages > 1) 1f / (pages - 1) else 1f
@@ -110,7 +115,7 @@ class R_Saved_NichesCaches(
                     delay(200)
                     // Обрываем обновление целиком: записать на диск неполный
                     // список как полный хуже, чем не обновиться вообще.
-                    val res2 = redApi.explorer.getExplorerNiches(page = i, count = 100)
+                    val res2 = loadPage(i)
                         .getOrElse { error("страница $i из $pages не загрузилась: ${it.message ?: "нет сети"}") }
                     niches.addAll(res2.niches)
                     withContext(Dispatchers.Main) {
@@ -135,7 +140,9 @@ class R_Saved_NichesCaches(
                 Timber.e(e, "R niches cache refresh error")
                 withContext(Dispatchers.Main) {
                     if (showSnackBar) {
-                        SnackBar.error("Ошибка обновления ${e}")
+                        // Текст причины, а не e.toString(): тот начинается с
+                        // имени класса исключения.
+                        SnackBar.error("Ошибка обновления: ${e.message ?: "неизвестная ошибка"}")
                     }
                     isDownloading = false
                 }
@@ -147,26 +154,30 @@ class R_Saved_NichesCaches(
 
     /**
      * Проверяет возраст файла кэша ниш на диске и запускает тихое обновление,
-     * если файл отсутствует, пуст или старше [maxAgeHours] часов.
+     * если файл отсутствует, пуст, не читается или старше [maxAgeHours] часов.
+     *
+     * Сначала дожидается чтения кэша с диска. Раньше проверка шла сразу за его
+     * запуском: список в памяти ещё пуст, кэш считался устаревшим, и каждый
+     * холодный старт заново качал весь каталог — при свежем файле на диске.
      */
     fun refreshIfStale(maxAgeHours: Long = AUTO_REFRESH_MAX_AGE_HOURS) {
-        if (isDownloading) return
-        timeRefresh()
-        val shouldRefresh = !cacheFile.exists() || list.isEmpty() || lastModifiedHour >= maxAgeHours
+        scope.launch(ioDispatcher) {
+            readJob.join()
+            if (isDownloading) return@launch
+            timeRefresh()
+            val shouldRefresh = !cacheFile.exists() || list.isEmpty() || lastModifiedHour >= maxAgeHours
+            if (!shouldRefresh) return@launch
 
-        if (!shouldRefresh) {
-            return
+            Timber.i("R niches cache auto refresh: exists=${cacheFile.exists()} size=${list.size} ageHours=$lastModifiedHour")
+            refresh(showSnackBar = false)
         }
-
-        Timber.i("R niches cache auto refresh: exists=${cacheFile.exists()} size=${list.size} ageHours=$lastModifiedHour")
-        refresh(showSnackBar = false)
     }
 
     /**
      * Считывает ранее сохраненный кэш ниш с диска.
      */
-    fun readFromDisk() {
-        scope.launch(Dispatchers.IO) {
+    fun readFromDisk(): Job {
+        val job = scope.launch(ioDispatcher) {
             if (!cacheFile.exists() || cacheFile.length() == 0L) {
                 return@launch
             }
@@ -188,6 +199,8 @@ class R_Saved_NichesCaches(
                 }
             }
         }
+        readJob = job
+        return job
     }
 
     /** Пересчитывает прошедшее время с момента последнего сохранения файла кэша. */

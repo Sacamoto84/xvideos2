@@ -45,4 +45,18 @@ class UsersRedTest {
         assertEquals(0, UsersRed.count)
         assertFalse(UsersRed.containsUser("alice"))
     }
+
+    @Test
+    fun `кэш авторов не растёт сверх предела и вытесняет тех, кого давно не спрашивали`() {
+        UsersRed.addUser(UserInfo(username = "first"))
+        UsersRed.addUser(UserInfo(username = "second"))
+        // К «first» обращались — он свежее «second».
+        UsersRed.findUser("first")
+
+        repeat(UsersRed.MAX_USERS - 1) { UsersRed.addUser(UserInfo(username = "user$it")) }
+
+        assertEquals(UsersRed.MAX_USERS, UsersRed.count)
+        assertTrue(UsersRed.containsUser("first"))
+        assertFalse(UsersRed.containsUser("second"))
+    }
 }
