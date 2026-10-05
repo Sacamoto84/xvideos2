@@ -81,8 +81,7 @@ internal fun SettingsDetailPage(
         SettingsPage.Appearance -> AppearanceSettingsSection(modifier = modifier)
         SettingsPage.Storage -> StorageStatisticsSection(params.storageStats, modifier = modifier)
         SettingsPage.Backup -> BackupSettingsSection(
-            context = params.context,
-            data = params.data,
+            controller = params.data.backup,
             onDataChanged = params.onBackupDataChanged,
             modifier = modifier
         )

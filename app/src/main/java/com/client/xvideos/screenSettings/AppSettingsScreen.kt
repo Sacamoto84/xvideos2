@@ -121,7 +121,8 @@ object AppSettingsScreen : Screen {
                 savedRed = vm.savedRed,
                 blockRed = vm.blockRed,
                 downloadRed = vm.downloadRed,
-                savedL = vm.savedL
+                savedL = vm.savedL,
+                backup = vm.backup
             )
         }
 
@@ -194,6 +195,10 @@ internal fun AppSettingsScreenContent(
     LaunchedEffect(currentPage) {
         if (currentPage == SettingsPage.Storage) {
             onRefreshFileStats()
+        }
+        // Со страницы бэкапа ушли: открытый архив закрывается, его пароль стирается.
+        if (currentPage != SettingsPage.Backup) {
+            data.backup?.closeArchive()
         }
     }
 

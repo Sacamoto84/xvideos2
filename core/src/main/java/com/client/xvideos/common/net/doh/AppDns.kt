@@ -236,10 +236,11 @@ object AppDns : Dns {
         val provider = DohProvider.fromNameOrDefault(providerName)
 
         if (provider == DohProvider.CUSTOM) {
-            val customUrl = runCatching { Settings.doh_custom_url.field.value }.getOrDefault("").trim()
-            if (customUrl.startsWith("http://") || customUrl.startsWith("https://")) {
-                return listOf(customUrl)
-            }
+            val customUrl = runCatching { Settings.doh_custom_url.field.value }.getOrDefault("")
+            // Только проверенный https-адрес: раньше принимался и http:// —
+            // DNS «по HTTPS» открытым текстом. Настройки такой адрес уже не
+            // сохраняют; здесь — защита от значения из прежних версий.
+            parseDohUrl(customUrl).getOrNull()?.let { return listOf(it) }
             return listOf(DohProvider.CLOUDFLARE.primaryEndpoint, DohProvider.CLOUDFLARE.secondaryEndpoint)
         }
 
@@ -310,7 +311,7 @@ object AppDns : Dns {
     /**
      * Диагностический тест резолвинга хоста с замером времени отклика.
      */
-    fun diagnose(hostname: String = "api.redgifs.com"): Result<DohDiagnosticResult> {
+    fun diagnose(hostname: String): Result<DohDiagnosticResult> {
         val startNs = System.nanoTime()
         return try {
             val isDohEnabled = runCatching {

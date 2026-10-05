@@ -30,6 +30,8 @@ import androidx.compose.material3.TriStateCheckbox
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -160,17 +162,28 @@ internal fun backupContentModeTitle(mode: XlrBackupContentMode): String {
     }
 }
 
+/**
+ * Строки консоли для показа: у пустой — заглушка, многострочная запись — по
+ * строке на элемент.
+ *
+ * Производное состояние, а не значение, запомненное по списку: консоль —
+ * изменяемый список, он сравнивается по ссылке, и запомненное по такому ключу
+ * не пересчитывалось при добавлении строк. Счётчик показывал «1 строк», а
+ * список — «Пока пусто».
+ */
+internal fun backupConsoleLines(lines: List<String>): State<List<String>> = derivedStateOf {
+    lines
+        .ifEmpty { listOf("Пока пусто") }
+        .flatMap { entry -> entry.lineSequence().toList() }
+}
+
 @Composable
 internal fun BackupConsole(
     lines: List<String>,
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val visibleLines = remember(lines) {
-        lines
-            .ifEmpty { listOf("Пока пусто") }
-            .flatMap { entry -> entry.lineSequence().toList() }
-    }
+    val visibleLines by remember(lines) { backupConsoleLines(lines) }
 
     // LazyColumn, а не Column в verticalScroll: буфер поднят до
     // BACKUP_CONSOLE_MAX_LINES, и рисовать столько строк разом незачем —

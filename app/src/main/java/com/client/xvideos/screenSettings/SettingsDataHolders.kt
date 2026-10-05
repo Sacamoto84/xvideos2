@@ -5,6 +5,7 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
+import com.client.xvideos.screenSettings.backup.BackupController
 
 /**
  * Синглтоны разделов, которые нужны экрану настроек.
@@ -26,4 +27,5 @@ internal data class SettingsDataHolders(
     val blockRed: BlockRed? = null,
     val downloadRed: DownloadRed? = null,
     val savedL: SavedL? = null,
+    val backup: BackupController? = null,
 )
