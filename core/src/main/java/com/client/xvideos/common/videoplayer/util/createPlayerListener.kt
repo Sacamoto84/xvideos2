@@ -13,7 +13,6 @@ internal fun createPlayerListener(
     didEndVideo: () -> Unit,
     onError: (MediaPlayerError) -> Unit,
     poster: (Boolean) -> Unit,
-    sourceUrl: String? = null
 ): Player.Listener {
 
     return object : Player.Listener {
@@ -63,23 +62,3 @@ internal fun createPlayerListener(
 
     }
 }
-
-internal fun createPlayerListener(
-    isSliding: Boolean,
-    totalTime: (Int) -> Unit,
-    currentTime: (Float) -> Unit,
-    loadingState: (Boolean) -> Unit,
-    didEndVideo: () -> Unit,
-    onError: (MediaPlayerError) -> Unit,
-    poster: (Boolean) -> Unit,
-    sourceUrl: String? = null
-): Player.Listener = createPlayerListener(
-    isSliding = { isSliding },
-    totalTime = totalTime,
-    currentTime = currentTime,
-    loadingState = loadingState,
-    didEndVideo = didEndVideo,
-    onError = onError,
-    poster = poster,
-    sourceUrl = sourceUrl
-)

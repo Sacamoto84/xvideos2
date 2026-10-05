@@ -98,11 +98,13 @@ fun rememberExoPlayerWithLifecycle(
         }
     }
 
-    LaunchedEffect(selectedQuality) {
+    LaunchedEffect(trackSelector, selectedQuality) {
         applyQualitySelection(trackSelector, selectedQuality)
     }
 
-    LaunchedEffect(url) {
+    // Все входы загрузки — в ключах: раньше источник пересобирался только по
+    // смене адреса, хотя читает и заголовки, и DRM, и признак прямого эфира.
+    LaunchedEffect(exoPlayer, url, headers, drmConfig, isLiveStream) {
         if (url.isBlank()) {
             exoPlayer.stop()
             exoPlayer.clearMediaItems()

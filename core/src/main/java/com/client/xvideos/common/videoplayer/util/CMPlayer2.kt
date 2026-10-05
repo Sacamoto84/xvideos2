@@ -59,7 +59,6 @@ fun CMPPlayer2(
     )
 
     val currentCallbacks by rememberUpdatedState(callbacks)
-    val currentConfig by rememberUpdatedState(config)
     var isBuffering by remember { mutableStateOf(false) }
 
     LaunchedEffect(isBuffering) {
@@ -82,10 +81,15 @@ fun CMPPlayer2(
         }
     }
 
-    LaunchedEffect(config.autoRotate) {
-        val rotateEffect = ScaleAndRotateTransformation.Builder()
-            .setRotationDegrees(if (config.autoRotate) -90f else 0f).build()
+    // Эффекты ставим, только когда поворот понадобился: непустой список
+    // включает конвейер обработки кадров, а раньше он включался у каждого
+    // плеера — и у мини-плееров в списках — ради поворота на ноль градусов.
+    var rotationEffectsApplied by remember(exoPlayer) { mutableStateOf(false) }
+    LaunchedEffect(exoPlayer, config.autoRotate) {
+        val degrees = rotationToApply(config.autoRotate, rotationEffectsApplied) ?: return@LaunchedEffect
+        val rotateEffect = ScaleAndRotateTransformation.Builder().setRotationDegrees(degrees).build()
         exoPlayer.setVideoEffects(listOf(rotateEffect))
+        rotationEffectsApplied = true
     }
 
     // Раньше эти четыре строки жили в `update` у AndroidView. Теперь это обычные
@@ -117,11 +121,13 @@ fun CMPPlayer2(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    // modifier — корню: раньше он уходил рамке видео, а чёрная подложка всегда
+    // занимала всё доступное место, каким бы ни был заданный размер.
+    Box(modifier = modifier.background(Color.Black)) {
 
         ContentFrame(
             player = exoPlayer,
-            modifier = modifier,
+            modifier = Modifier.fillMaxSize(),
             contentScale = when (config.size) {
                 ScreenResize.FIT -> ContentScale.Fit
                 ScreenResize.FILL -> ContentScale.Crop
@@ -142,7 +148,6 @@ fun CMPPlayer2(
                 didEndVideo = { currentCallbacks.didEndVideo() },
                 onError = { currentCallbacks.error(it) },
                 poster = { currentCallbacks.poster(it) },
-                sourceUrl = currentConfig.url
             )
 
             exoPlayer.addListener(listener)
@@ -188,3 +193,18 @@ private object KeepScreenOnCounter {
 }
 
 private fun PlayerSpeed.toFloat(): Float = this.speed
+
+/**
+ * На сколько градусов повернуть кадр; `null` — эффекты не трогать.
+ *
+ * Пока автоповорот ни разу не включали, эффектов у плеера нет вовсе. После
+ * выключения поворот сбрасывается в ноль: убрать уже включённый конвейер
+ * обработки кадров на ходу нельзя, но кадр возвращается в исходное положение.
+ *
+ * @param effectsApplied эффекты этому плееру уже ставили.
+ */
+fun rotationToApply(autoRotate: Boolean, effectsApplied: Boolean): Float? = when {
+    autoRotate -> -90f
+    effectsApplied -> 0f
+    else -> null
+}

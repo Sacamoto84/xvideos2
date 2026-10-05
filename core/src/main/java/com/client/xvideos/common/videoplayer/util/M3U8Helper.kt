@@ -1,6 +1,7 @@
 package com.client.xvideos.common.videoplayer.util
 
 import com.client.xvideos.common.net.doh.AppDns
+import com.client.xvideos.common.videoplayer.net.VideoHttpDataSource
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -32,20 +33,28 @@ data class M3U8Data(
 
 private val BANDWIDTH_REGEX = Regex("BANDWIDTH=(\\d+)")
 private val RESOLUTION_REGEX = Regex("RESOLUTION=(\\d+x\\d+)")
-private val LANGUAGE_REGEX = Regex("LANGUAGE=\"(\\w+)\"")
+// Не `\w+`: тег языка бывает с дефисом (`pt-BR`, `zh-Hans`), и дорожки с таким
+// тегом в список выбора не попадали.
+private val LANGUAGE_REGEX = Regex("LANGUAGE=\"([^\"]+)\"")
 private val NAME_REGEX = Regex("NAME=\"(.*?)\"")
 private val GROUP_ID_REGEX = Regex("GROUP-ID=\"(.*?)\"")
 private val URI_REGEX = Regex("URI=\"(.*?)\"")
 private val DEFAULT_REGEX = Regex("DEFAULT=(YES|NO)")
 
-private val REDGIFS_REQUEST_HEADERS = mapOf(
-    "Referer" to "https://www.redgifs.com/",
-    "Origin" to "https://www.redgifs.com",
-    HttpHeaders.UserAgent to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 YaBrowser/25.6.0.0 Safari/537.36",
-    HttpHeaders.Accept to "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    HttpHeaders.AcceptEncoding to "identity",
-    HttpHeaders.AcceptLanguage to "ru,en;q=0.9"
-)
+/**
+ * Заголовки запроса плейлиста: те, что дал вызывающий, плюс `User-Agent`, если
+ * своего он не назвал.
+ *
+ * Раньше при отсутствии заголовков подставлялся набор с `Referer` и `Origin`
+ * сайта R. Плейлист ролика любого раздела запрашивался с заголовками другого
+ * сайта: один сайт узнавал о другом, а сервер, проверяющий `Referer`, отвечал
+ * отказом — и список качеств оставался пустым.
+ */
+internal fun playlistRequestHeaders(requestHeaders: Map<String, String>?): Map<String, String> {
+    val own = requestHeaders.orEmpty()
+    if (own.keys.any { it.equals(HttpHeaders.UserAgent, ignoreCase = true) }) return own
+    return own + (HttpHeaders.UserAgent to VideoHttpDataSource.USER_AGENT)
+}
 
 private val sharedM3U8Client: HttpClient by lazy {
     HttpClient(OkHttp) {
@@ -67,12 +76,13 @@ class M3U8Helper {
         val m3u8Content = withContext(Dispatchers.IO) {
             try {
                 val response = sharedM3U8Client.get(url) {
-                    (requestHeaders ?: REDGIFS_REQUEST_HEADERS).forEach { (name, value) ->
+                    playlistRequestHeaders(requestHeaders).forEach { (name, value) ->
                         headers.append(name, value)
                     }
                 }
+                // Адрес потока в лог не пишем: в нём имя сайта.
                 if (!response.status.isSuccess()) {
-                    Timber.w("fetchM3U8Data: HTTP error ${response.status.value} for $url")
+                    Timber.w("fetchM3U8Data: HTTP error ${response.status.value}")
                     ""
                 } else {
                     response.bodyAsText()
@@ -80,7 +90,7 @@ class M3U8Helper {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "fetchM3U8Data failed for $url")
+                Timber.e("fetchM3U8Data failed: ${e.javaClass.simpleName}")
                 ""
             }
         }

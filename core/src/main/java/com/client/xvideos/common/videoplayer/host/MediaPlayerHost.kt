@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.util.AudioTrack
+import com.client.xvideos.common.videoplayer.util.M3U8Data
 import com.client.xvideos.common.videoplayer.util.M3U8Helper
 import com.client.xvideos.common.videoplayer.util.SubtitleTrack
 import com.client.xvideos.common.videoplayer.util.VideoQuality
@@ -17,6 +18,7 @@ import com.client.xvideos.common.util.launchCatching
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
@@ -35,6 +37,7 @@ class MediaPlayerHost(
     // Диспетчеры подменяются в тестах. Scope хост создаёт сам: dispose() отменяет только его.
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val fetchPlaylist: suspend (url: String, headers: Map<String, String>?) -> M3U8Data = M3U8Helper()::fetchM3U8Data,
 ) : RememberObserver {
     var poster by mutableStateOf(true)
 
@@ -64,8 +67,10 @@ class MediaPlayerHost(
 
     private var lastVolumeLevel by mutableFloatStateOf(1f)
 
-    private val m3u8Helper = M3U8Helper()
     private val scope = CoroutineScope(mainDispatcher + SupervisorJob())
+
+    /** Идущий разбор плейлиста: новый адрес его отменяет. */
+    private var mediaInfoJob: Job? = null
 
     var onEvent: ((MediaPlayerEvent) -> Unit)? = null
     var onError: ((MediaPlayerError) -> Unit)? = null
@@ -74,8 +79,18 @@ class MediaPlayerHost(
         // Список качеств — украшение: без него плеер играет дорожку по умолчанию.
         // Отказ сети здесь ронял приложение целиком (UnknownHostException на
         // хосте HLS уходил из launch без обработчика в обработчик потока).
-        scope.launchCatching(ioDispatcher, "Не удалось разобрать HLS: $url") {
-            fetchAndUpdateMediaInfo(url)
+        loadMediaInfo(url)
+    }
+
+    /**
+     * Разбирает плейлист нового адреса вместо прежнего. Раньше прежний разбор
+     * никто не отменял: его ответ, придя позже, подменял список качеств уже
+     * другого ролика.
+     */
+    private fun loadMediaInfo(mediaUrl: String) {
+        mediaInfoJob?.cancel()
+        mediaInfoJob = scope.launchCatching(ioDispatcher, "Не удалось разобрать HLS") {
+            fetchAndUpdateMediaInfo(mediaUrl)
         }
     }
 
@@ -85,9 +100,7 @@ class MediaPlayerHost(
         this.drmConfig = drmConfig
         if (url != mediaUrl) {
             url = mediaUrl
-            scope.launchCatching(ioDispatcher, "Не удалось разобрать HLS: $mediaUrl") {
-                fetchAndUpdateMediaInfo(mediaUrl)
-            }
+            loadMediaInfo(mediaUrl)
         }
     }
 
@@ -131,18 +144,6 @@ class MediaPlayerHost(
         }
     }
 
-
-    @Deprecated(
-        message = "Use seekTo(seconds: Float?) instead for better precision.",
-        replaceWith = ReplaceWith("seekTo(seconds.toFloat())")
-    )
-    fun seekTo(seconds: Int?) {
-        val validSeconds = seconds?.takeIf { it >= 0 }?.toFloat()
-        isSliding = true
-        seekToTime = validSeconds
-        validSeconds?.let { currentTime = it }
-        isSliding = false
-    }
 
     fun seekTo(seconds: Float?) {
         val validSeconds = seconds?.takeIf { it.isFinite() && it >= 0f }
@@ -258,7 +259,7 @@ class MediaPlayerHost(
             setSubTitle(null)
         }
         if (isHlsUrl(videoUrl)) {
-            val m3u8Data = m3u8Helper.fetchM3U8Data(videoUrl, headers)
+            val m3u8Data = fetchPlaylist(videoUrl, headers)
 
             withContext(mainDispatcher) {
                 updateVideoQualityOptions(m3u8Data.videoQualities)

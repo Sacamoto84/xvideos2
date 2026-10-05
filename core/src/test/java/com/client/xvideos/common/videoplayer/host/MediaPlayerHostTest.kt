@@ -1,5 +1,8 @@
 package com.client.xvideos.common.videoplayer.host
 
+import com.client.xvideos.common.videoplayer.util.M3U8Data
+import com.client.xvideos.common.videoplayer.util.VideoQuality
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -72,19 +75,6 @@ class MediaPlayerHostTest {
         host.dispose()
     }
 
-    @Suppress("DEPRECATION")
-    @Test
-    fun `seekTo Int with negative seconds ignores invalid input`() {
-        val host = createHost(mediaUrl = "http://test.mp4")
-        host.seekTo(20)
-        assertEquals(20f, host.currentTime, 0.001f)
-
-        host.seekTo(-1)
-        assertNull(host.seekToTime)
-        assertEquals(20f, host.currentTime, 0.001f)
-        host.dispose()
-    }
-
     @Test
     fun `updateCurrentTime sanitizes negative and NaN values`() {
         val host = createHost(mediaUrl = "http://test.mp4")
@@ -138,6 +128,31 @@ class MediaPlayerHostTest {
 
         host.toggleMuteUnmute()
         assertTrue(host.isMuted)
+        host.dispose()
+    }
+
+    @Test
+    fun `ответ плейлиста прежнего адреса не подменяет качества нового ролика`() {
+        val firstAnswer = CompletableDeferred<Unit>()
+        val host = MediaPlayerHost(
+            mediaUrl = "https://example.com/first.m3u8",
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            fetchPlaylist = { url, _ ->
+                if (url.contains("first")) firstAnswer.await()
+                val name = if (url.contains("first")) "first" else "second"
+                M3U8Data(listOf(VideoQuality(1.0, name, url)), emptyList(), emptyList())
+            },
+        )
+
+        host.loadUrl("https://example.com/second.m3u8")
+        assertEquals(listOf("second"), host.qualityOptions.map { it.resolution })
+
+        // Ответ первого ролика пришёл уже после смены адреса.
+        firstAnswer.complete(Unit)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf("second"), host.qualityOptions.map { it.resolution })
         host.dispose()
     }
 }

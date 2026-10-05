@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import kotlin.math.absoluteValue
+import com.client.xvideos.common.videoplayer.util.rotationToApply
 
 /**
  * Прежний плеер клампил перемотку длительностью (`coerceAtMost(duration)`).
@@ -150,11 +151,16 @@ fun RedPooledVideoPlayer(
         player?.setPlaybackSpeed(speed.speed)
     }
 
+    // Эффекты ставим, только когда поворот понадобился: непустой список
+    // включает конвейер обработки кадров, а раньше он включался у каждого
+    // плеера ленты ради поворота на ноль градусов. Плеер из пула мог получить
+    // эффекты на прежней странице — это помнит пул.
     LaunchedEffect(player, autoRotate) {
-        val rotate = ScaleAndRotateTransformation.Builder()
-            .setRotationDegrees(if (autoRotate) -90f else 0f)
-            .build()
-        player?.setVideoEffects(listOf(rotate))
+        val exo = player ?: return@LaunchedEffect
+        val degrees = rotationToApply(autoRotate, feedState.hasVideoEffects(exo)) ?: return@LaunchedEffect
+        val rotate = ScaleAndRotateTransformation.Builder().setRotationDegrees(degrees).build()
+        exo.setVideoEffects(listOf(rotate))
+        feedState.markVideoEffects(exo)
     }
 
     DisposableEffect(player) {

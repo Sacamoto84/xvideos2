@@ -25,6 +25,8 @@ import androidx.media3.exoplayer.source.preload.DefaultPreloadManager
 import androidx.media3.exoplayer.source.preload.TargetPreloadStatusControl
 import com.client.xvideos.common.videoplayer.net.VideoHttpDataSource
 import timber.log.Timber
+import java.util.Collections
+import java.util.WeakHashMap
 
 /**
  * Пул плееров + менеджер предзагрузки для вертикальной ленты.
@@ -212,6 +214,21 @@ class FeedPlayerState(
      * поэтому на уходе приложения в фон режим нужно снимать явно — иначе плееры
      * пула держат аппаратные декодеры всё время, пока приложение свёрнуто.
      */
+    /**
+     * Плееры пула, которым уже ставили видеоэффекты. Плеер переходит от
+     * страницы к странице, поэтому помнит это пул, а не страница. Ключи слабые:
+     * запись уходит вместе с плеером. Только с главного потока.
+     */
+    private val playersWithVideoEffects = Collections.newSetFromMap(WeakHashMap<ExoPlayer, Boolean>())
+
+    /** Ставили ли [player] видеоэффекты — см. `rotationToApply`. */
+    fun hasVideoEffects(player: ExoPlayer): Boolean = player in playersWithVideoEffects
+
+    /** Запоминает, что [player] получил видеоэффекты. */
+    fun markVideoEffects(player: ExoPlayer) {
+        playersWithVideoEffects += player
+    }
+
     fun setForegroundMode(foreground: Boolean) {
         verifyMainThread()
         playerPool.executeForAll { setForegroundMode(foreground) }
@@ -301,10 +318,13 @@ fun rememberFeedPlayerState(
 ): FeedPlayerState {
     val context = LocalContext.current
     val state = remember(context, poolCapacity) { FeedPlayerState(context, poolCapacity) }
+    // Освобождение объявлено первым: эффекты снимаются в обратном порядке, и
+    // foreground-режим выключается у ещё живого пула. Раньше пул освобождался
+    // раньше, а режим выключался уже на освобождённом.
+    DisposableEffect(state) { onDispose { state.release() } }
     LifecycleStartEffect(state) {
         state.setForegroundMode(true)
         onStopOrDispose { state.setForegroundMode(false) }
     }
-    DisposableEffect(state) { onDispose { state.release() } }
     return state
 }
