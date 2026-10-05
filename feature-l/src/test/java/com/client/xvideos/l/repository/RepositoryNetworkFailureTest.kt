@@ -20,7 +20,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -302,7 +305,59 @@ class RepositoryNetworkFailureTest {
         )
     }
 
+    @Test
+    fun `выход во время паузы антибот-защиты не гасит её признак`() = runBlocking {
+        val server = FakeServer().apply {
+            api = { respond("<html><body>Just a moment...</body></html>", HttpStatusCode.OK, HTML) }
+        }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
+
+        // Сервер ответил HTML-проверкой: признак поднят, запрос ждёт паузу перед повтором.
+        val challenged = async(Dispatchers.Default) { repository.openURI(query("A")) }
+        repository.protectionUiState.first { it.active }
+        challenged.cancel()
+        challenged.join()
+
+        saved.save(UserProfile())
+        val afterLogout = async(Dispatchers.Default) { repository.openURI(query("B")) }
+        val cleared = withTimeoutOrNull(1_000) { repository.protectionUiState.first { !it.active } }
+        afterLogout.cancel()
+        afterLogout.join()
+
+        assertNull("выход погасил признак защиты, хотя пауза запросов ещё идёт", cleared)
+    }
+
     // --- Кэш в памяти ---
+
+    @Test
+    fun `отмена запроса во время выхода не оставляет в кэше ответ вошедшего`() = runBlocking {
+        val server = FakeServer()
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
+        repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
+
+        // Кэш занят соседним запросом ровно тогда, когда выход дошёл до его
+        // очистки. Иначе это ожидание не поймать: кэш держат микросекунды.
+        val ramCacheMutex = Repository::class.java.getDeclaredField("ramCacheMutex")
+            .apply { isAccessible = true }
+            .get(repository) as Mutex
+        ramCacheMutex.lock()
+        saved.save(UserProfile())
+        val interrupted = async(Dispatchers.Default) { repository.openURI(query("B")) }
+        delay(500)
+        interrupted.cancel()
+        ramCacheMutex.unlock()
+        interrupted.join()
+
+        repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
+
+        assertEquals(
+            "ответ вошедшего остался в кэше и отдан после выхода",
+            2,
+            server.apiCalls.count { it.operation() == "A" },
+        )
+    }
 
     @Test
     fun `после входа ответ, закэшированный анонимно, запрашивается заново`() = runBlocking {

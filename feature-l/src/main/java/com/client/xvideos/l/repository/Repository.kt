@@ -13,12 +13,14 @@ import com.client.xvideos.l.net.json.LJson
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.IOException
 import java.io.InterruptedIOException
@@ -168,6 +170,11 @@ open class Repository(
      *
      * Клиент меняется под [requestMutex]: без него close() старого клиента
      * приходился на середину выполняющегося запроса.
+     *
+     * Признак антибот-защиты здесь не трогаем: пауза запросов от выхода не
+     * проходит, и следующий запрос её ждёт. Раньше выход гасил признак, экран
+     * альбома переставал показывать ожидание, а список молча висел до конца
+     * паузы. Признак снимет первый успешный ответ.
      */
     private suspend fun dropSession() {
         anonymousFallbackFor = null
@@ -180,7 +187,6 @@ open class Repository(
             oldHandler.close()
             clearRamCache()
         }
-        clearHtmlChallengeUiState()
     }
 
     /**
@@ -586,10 +592,18 @@ open class Repository(
         ramCacheMutex.withLock { ramCache.remove(cacheKey) }
     }
 
+    /**
+     * Очищает кэш при смене режима входа. Отмена вызывающего очистку не
+     * прерывает: к этому моменту клиент уже сменил режим, и повторить её некому.
+     * Раньше запрос, отменённый в ожидании [ramCacheMutex], оставлял в кэше
+     * ответы прежнего режима — после выхода их получал аноним.
+     */
     private suspend fun clearRamCache() {
-        ramCacheMutex.withLock {
-            ramCache.clear()
-            ramCacheGeneration++
+        withContext(NonCancellable) {
+            ramCacheMutex.withLock {
+                ramCache.clear()
+                ramCacheGeneration++
+            }
         }
     }
 

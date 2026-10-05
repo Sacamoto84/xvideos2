@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +73,7 @@ private val FIELD_TEXT_STYLE = TextStyle(fontSize = 24.sp)
  *
  * @param onSkip «Пропустить» — работать без авторизации. `null` прячет кнопку:
  * в настройках пользователь пришёл именно входить.
+ * @param modifier применяется к корню формы, до её фона и отступов.
  */
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,9 +83,13 @@ fun LLoginForm(
     initialPassword: String = "",
     onSaved: () -> Unit,
     onBack: () -> Unit,
-    onSkip: (() -> Unit)?
+    onSkip: (() -> Unit)?,
+    modifier: Modifier = Modifier
 ) {
-    var login by remember(initialLogin) { mutableStateOf(initialLogin) }
+    // Логин переживает пересоздание активности: настройки хранят признак
+    // открытой формы так же, и без этого форма возвращалась пустой. Пароль в
+    // сохранённое состояние не кладём — оно может попасть на диск.
+    var login by rememberSaveable(initialLogin) { mutableStateOf(initialLogin) }
     var password by remember(initialPassword) { mutableStateOf(initialPassword) }
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -148,7 +154,7 @@ fun LLoginForm(
     val scrollState = rememberScrollState()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .background(Color(0xFF212121))
             .fillMaxSize()
             .imePadding()
