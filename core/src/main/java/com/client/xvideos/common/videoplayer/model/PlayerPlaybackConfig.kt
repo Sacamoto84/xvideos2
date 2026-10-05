@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerError
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
-import com.client.xvideos.common.videoplayer.util.VideoQuality
 
 /**
  * Конфигурация воспроизведения для [com.client.xvideos.common.videoplayer.util.CMPPlayer2].
@@ -24,7 +23,6 @@ data class PlayerPlaybackConfig(
     val isLiveStream: Boolean = false,
     val headers: Map<String, String>? = null,
     val drmConfig: DrmConfig? = null,
-    val selectedQuality: VideoQuality? = null,
     val autoRotate: Boolean = false,
     val playFromTime: Float? = null,
 ) {
@@ -112,6 +110,5 @@ fun MediaPlayerHost.toPlaybackConfig(autoRotate: Boolean = false): PlayerPlaybac
         isLiveStream = false,
         headers = headers,
         drmConfig = drmConfig,
-        selectedQuality = selectedQuality,
         autoRotate = autoRotate
     )

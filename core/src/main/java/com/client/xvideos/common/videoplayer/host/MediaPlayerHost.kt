@@ -8,21 +8,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
-import com.client.xvideos.common.videoplayer.util.AudioTrack
-import com.client.xvideos.common.videoplayer.util.M3U8Data
-import com.client.xvideos.common.videoplayer.util.M3U8Helper
-import com.client.xvideos.common.videoplayer.util.SubtitleTrack
-import com.client.xvideos.common.videoplayer.util.VideoQuality
-import com.client.xvideos.common.videoplayer.util.isHlsUrl
-import com.client.xvideos.common.util.launchCatching
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.withContext
 
+/**
+ * Состояние плеера, которым управляет экран.
+ *
+ * Плейлист хост не запрашивает: его качает и разбирает сам плеер. Раньше хост
+ * делал второй запрос того же плейлиста ради списков качества и дорожек,
+ * которые не читал ни один экран.
+ */
 class MediaPlayerHost(
     mediaUrl: String = "",
     isPaused: Boolean = false,
@@ -34,10 +27,6 @@ class MediaPlayerHost(
     isFullScreen: Boolean = false,
     headers: Map<String, String>? = null,
     drmConfig: DrmConfig? = null,
-    // Диспетчеры подменяются в тестах. Scope хост создаёт сам: dispose() отменяет только его.
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val fetchPlaylist: suspend (url: String, headers: Map<String, String>?) -> M3U8Data = M3U8Helper()::fetchM3U8Data,
 ) : RememberObserver {
     var poster by mutableStateOf(true)
 
@@ -58,50 +47,17 @@ class MediaPlayerHost(
     internal var isFullScreen by mutableStateOf(isFullScreen)
     var headers by mutableStateOf(headers)
     var drmConfig by mutableStateOf(drmConfig)
-    var qualityOptions by mutableStateOf(emptyList<VideoQuality>())
-    var selectedQuality by mutableStateOf<VideoQuality?>(null)
-    var audioTrackOptions by mutableStateOf(emptyList<AudioTrack>())
-    var selectedAudioTrack by mutableStateOf<AudioTrack?>(null)
-    var subTitlesOptions by mutableStateOf(emptyList<SubtitleTrack>())
-    var selectedsubTitle by mutableStateOf<SubtitleTrack?>(null)
 
     private var lastVolumeLevel by mutableFloatStateOf(1f)
 
-    private val scope = CoroutineScope(mainDispatcher + SupervisorJob())
-
-    /** Идущий разбор плейлиста: новый адрес его отменяет. */
-    private var mediaInfoJob: Job? = null
-
     var onEvent: ((MediaPlayerEvent) -> Unit)? = null
     var onError: ((MediaPlayerError) -> Unit)? = null
-
-    init {
-        // Список качеств — украшение: без него плеер играет дорожку по умолчанию.
-        // Отказ сети здесь ронял приложение целиком (UnknownHostException на
-        // хосте HLS уходил из launch без обработчика в обработчик потока).
-        loadMediaInfo(url)
-    }
-
-    /**
-     * Разбирает плейлист нового адреса вместо прежнего. Раньше прежний разбор
-     * никто не отменял: его ответ, придя позже, подменял список качеств уже
-     * другого ролика.
-     */
-    private fun loadMediaInfo(mediaUrl: String) {
-        mediaInfoJob?.cancel()
-        mediaInfoJob = scope.launchCatching(ioDispatcher, "Не удалось разобрать HLS") {
-            fetchAndUpdateMediaInfo(mediaUrl)
-        }
-    }
 
     // Public actions
     fun loadUrl(mediaUrl: String, headers: Map<String, String>? = null, drmConfig: DrmConfig? = null) {
         this.headers = headers
         this.drmConfig = drmConfig
-        if (url != mediaUrl) {
-            url = mediaUrl
-            loadMediaInfo(mediaUrl)
-        }
+        url = mediaUrl
     }
 
     fun play() {
@@ -181,29 +137,6 @@ class MediaPlayerHost(
         this.isFullScreen = !this.isFullScreen
         onEvent?.invoke(MediaPlayerEvent.FullScreenChange(this.isFullScreen))
     }
-    fun setVideoQuality(quality: VideoQuality?) {
-        this.selectedQuality = quality
-    }
-
-    fun updateVideoQualityOptions(options: List<VideoQuality>) {
-        this.qualityOptions = options
-    }
-
-    fun setAudioTrack(track: AudioTrack?) {
-        this.selectedAudioTrack = track
-    }
-
-    fun updateAudioTrackOptions(options: List<AudioTrack>) {
-        this.audioTrackOptions = options
-    }
-
-    fun setSubTitle(subTitle: SubtitleTrack?) {
-        this.selectedsubTitle = subTitle
-    }
-
-    fun updateSubTitleOptions(options: List<SubtitleTrack>) {
-        this.subTitlesOptions = options
-    }
 
     fun setBufferingStatus(isBuffering: Boolean) {
         this.isBuffering = isBuffering
@@ -235,14 +168,10 @@ class MediaPlayerHost(
         onError?.invoke(error)
     }
 
-    /**
-     * P2: освобождает ресурсы хоста — отменяет его [scope], чтобы незавершённые
-     * `fetchAndUpdateMediaInfo`/корутины не утекали. Идемпотентно.
-     */
+    /** Отвязывает колбэки экрана. Идемпотентно. */
     fun dispose() {
         onEvent = null
         onError = null
-        scope.cancel()
     }
 
     // RememberObserver: Compose сам зовёт onForgotten()/onAbandoned() при выходе
@@ -250,28 +179,4 @@ class MediaPlayerHost(
     override fun onRemembered() { /* no-op */ }
     override fun onForgotten() { dispose() }
     override fun onAbandoned() { dispose() }
-
-    private suspend fun fetchAndUpdateMediaInfo(videoUrl: String) {
-        // P5: запись Compose-стейта выполняем только на главном потоке.
-        withContext(mainDispatcher) {
-            setVideoQuality(null)
-            setAudioTrack(null)
-            setSubTitle(null)
-        }
-        if (isHlsUrl(videoUrl)) {
-            val m3u8Data = fetchPlaylist(videoUrl, headers)
-
-            withContext(mainDispatcher) {
-                updateVideoQualityOptions(m3u8Data.videoQualities)
-                updateAudioTrackOptions(m3u8Data.audioTracks)
-                updateSubTitleOptions(m3u8Data.subtitleTracks)
-            }
-        } else {
-            withContext(mainDispatcher) {
-                updateVideoQualityOptions(emptyList())
-                updateAudioTrackOptions(emptyList())
-                updateSubTitleOptions(emptyList())
-            }
-        }
-    }
 }

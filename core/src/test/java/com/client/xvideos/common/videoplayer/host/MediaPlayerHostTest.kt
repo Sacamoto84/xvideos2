@@ -1,25 +1,12 @@
 package com.client.xvideos.common.videoplayer.host
 
-import com.client.xvideos.common.videoplayer.util.M3U8Data
-import com.client.xvideos.common.videoplayer.util.VideoQuality
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class MediaPlayerHostTest {
-
-    private val testDispatcher = UnconfinedTestDispatcher()
 
     private fun createHost(
         mediaUrl: String = "http://test.mp4",
@@ -29,20 +16,7 @@ class MediaPlayerHostTest {
         mediaUrl = mediaUrl,
         isPaused = isPaused,
         isMuted = isMuted,
-        mainDispatcher = testDispatcher,
-        ioDispatcher = testDispatcher,
     )
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun tearDown() {
-        testDispatcher.scheduler.advanceUntilIdle()
-        Dispatchers.resetMain()
-    }
 
     @Test
     fun `seekTo with valid seconds updates seekToTime and currentTime`() {
@@ -132,27 +106,15 @@ class MediaPlayerHostTest {
     }
 
     @Test
-    fun `ответ плейлиста прежнего адреса не подменяет качества нового ролика`() {
-        val firstAnswer = CompletableDeferred<Unit>()
-        val host = MediaPlayerHost(
-            mediaUrl = "https://example.com/first.m3u8",
-            mainDispatcher = testDispatcher,
-            ioDispatcher = testDispatcher,
-            fetchPlaylist = { url, _ ->
-                if (url.contains("first")) firstAnswer.await()
-                val name = if (url.contains("first")) "first" else "second"
-                M3U8Data(listOf(VideoQuality(1.0, name, url)), emptyList(), emptyList())
-            },
-        )
+    fun `loadUrl меняет адрес, заголовки и настройку DRM`() {
+        val host = createHost(mediaUrl = "https://example.com/first.m3u8")
+        val headers = mapOf("Referer" to "https://example.com/")
 
-        host.loadUrl("https://example.com/second.m3u8")
-        assertEquals(listOf("second"), host.qualityOptions.map { it.resolution })
+        host.loadUrl("https://example.com/second.m3u8", headers = headers)
 
-        // Ответ первого ролика пришёл уже после смены адреса.
-        firstAnswer.complete(Unit)
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertEquals(listOf("second"), host.qualityOptions.map { it.resolution })
+        assertEquals("https://example.com/second.m3u8", host.url)
+        assertEquals(headers, host.headers)
+        assertNull(host.drmConfig)
         host.dispose()
     }
 }

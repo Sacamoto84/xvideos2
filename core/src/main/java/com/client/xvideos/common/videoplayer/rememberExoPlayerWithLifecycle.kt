@@ -17,11 +17,8 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerError
-import com.client.xvideos.common.videoplayer.util.VideoQuality
-import com.client.xvideos.common.videoplayer.util.applyQualitySelection
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSource
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSourceWithDrm
 import com.client.xvideos.common.videoplayer.util.createProgressiveMediaSource
@@ -40,7 +37,6 @@ fun rememberExoPlayerWithLifecycle(
     headers: Map<String, String>?,
     drmConfig: DrmConfig?,
     error: (MediaPlayerError) -> Unit,
-    selectedQuality: VideoQuality?,
     minBufferMs: Int = 2500,
     maxBufferMs: Int = 30000,
     bufferForPlaybackMs: Int = 500,
@@ -50,7 +46,6 @@ fun rememberExoPlayerWithLifecycle(
     playFromTime: Float? = null,
 ): ExoPlayer {
     val lifecycleOwner = LocalLifecycleOwner.current
-    val trackSelector = remember { DefaultTrackSelector(context) }
 
     // P4: не пересоздаём LoadControl на каждой рекомпозиции.
     val loadControl = remember(minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferM) {
@@ -62,9 +57,6 @@ fun rememberExoPlayerWithLifecycle(
     val exoPlayer = remember(context) {
         ExoPlayer.Builder(context)
             .setLoadControl(loadControl)
-            // P1: плеер должен использовать ТОТ ЖЕ trackSelector, на который применяется
-            // applyQualitySelection(...), иначе выбор качества — no-op.
-            .setTrackSelector(trackSelector)
             .setSeekForwardIncrementMs(seekForwardIncrementMs) // Приращение перемотки вперёд (по умолчанию 1 сек)
             .setSeekBackIncrementMs(seekBackIncrementMs)       // Приращение перемотки назад (по умолчанию 1 сек)
             .build().apply {
@@ -96,10 +88,6 @@ fun rememberExoPlayerWithLifecycle(
         } else {
             Player.REPEAT_MODE_OFF
         }
-    }
-
-    LaunchedEffect(trackSelector, selectedQuality) {
-        applyQualitySelection(trackSelector, selectedQuality)
     }
 
     // Все входы загрузки — в ключах: раньше источник пересобирался только по

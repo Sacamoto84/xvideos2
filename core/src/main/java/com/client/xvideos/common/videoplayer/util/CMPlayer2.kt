@@ -50,7 +50,6 @@ fun CMPPlayer2(
         config.headers,
         config.drmConfig,
         callbacks.error,
-        config.selectedQuality,
         minBufferMs = minBufferMs,
         maxBufferMs = maxBufferMs,
         bufferForPlaybackMs = 50,

@@ -15,54 +15,8 @@ import androidx.media3.exoplayer.drm.UnsupportedDrmException
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.net.VideoHttpDataSource
-
-@OptIn(UnstableApi::class)
-fun applyQualitySelection(
-    trackSelector: DefaultTrackSelector,
-    selectedQuality: VideoQuality?
-) {
-    trackSelector.setParameters(
-        trackSelector.buildUponParameters().apply {
-            selectedQuality?.let {
-                setMaxVideoBitrate(it.bitrate.toInt())
-                setMinVideoBitrate(it.bitrate.toInt())
-            } ?: setMaxVideoBitrate(Int.MAX_VALUE)
-        }
-    )
-}
-
-@OptIn(UnstableApi::class)
-fun applyAudioTrackSelection(trackSelector: DefaultTrackSelector, audioTrack: AudioTrack?) {
-    trackSelector.setParameters(
-        trackSelector.buildUponParameters()
-            .setPreferredAudioLanguage(audioTrack?.language)
-    )
-}
-
-@OptIn(UnstableApi::class)
-fun applySubTitleTrackSelection(
-    trackSelector: DefaultTrackSelector,
-    subtitleTrack: SubtitleTrack?
-) {
-    trackSelector.setParameters(
-        trackSelector.buildUponParameters().apply {
-            if (subtitleTrack != null) {
-                setPreferredTextLanguage(subtitleTrack.language)
-                setRendererDisabled(C.TRACK_TYPE_TEXT, false)
-                setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
-            } else {
-                setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-                setRendererDisabled(C.TRACK_TYPE_TEXT, true)
-                setPreferredTextLanguage(null)
-                setSelectUndeterminedTextLanguage(false)
-            }
-        }
-    )
-}
-
 
 /**
  * Проверяет, указывает ли URL на HLS-поток (.m3u8).
