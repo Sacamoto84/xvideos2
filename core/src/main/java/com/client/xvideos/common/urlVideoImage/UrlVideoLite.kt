@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.util.fileNameForLog
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.VideoPlayerWithMenuContent
@@ -55,14 +56,7 @@ fun UrlVideoLite(
     }
 
     LaunchedEffect(urlCandidates, posterUrl) {
-        Timber.i(
-            """
-            !!! X preview video candidates
-            poster: $posterUrl
-            candidates:
-            ${urlCandidates.joinToString(separator = "\n")}
-            """.trimIndent()
-        )
+        Timber.i("!!! X preview video candidates: ${urlCandidates.size}, poster: ${posterUrl.isNotBlank()}")
     }
 
     LaunchedEffect(playerHost, mediaUrl) {
@@ -74,8 +68,7 @@ fun UrlVideoLite(
                     !!! X preview video fallback
                     failed index: ${currentUrlIndex + 1}/${urlCandidates.size}
                     error: ${it.message}
-                    failed url: $mediaUrl
-                    next url: ${urlCandidates.getOrNull(currentUrlIndex + 1)}
+                    failed file: ${mediaUrl?.fileNameForLog()}
                     """.trimIndent()
                 )
                 currentUrlIndex += 1
@@ -85,9 +78,8 @@ fun UrlVideoLite(
                     """
                     !!! X preview video error
                     error: ${it.message}
-                    failed url: $mediaUrl
-                    all candidates:
-                    ${urlCandidates.joinToString(separator = "\n")}
+                    failed file: ${mediaUrl?.fileNameForLog()}
+                    candidates: ${urlCandidates.size}
                     """.trimIndent()
                 )
             }
@@ -97,14 +89,14 @@ fun UrlVideoLite(
             Timber.w(
                 """
                 !!! X preview video url missing
-                source url: $url
-                fallback urls: ${fallbackUrls.joinToString()}
-                poster: $posterUrl
+                source url blank: ${url.isBlank()}
+                fallback urls: ${fallbackUrls.size}
+                poster: ${posterUrl.isNotBlank()}
                 """.trimIndent()
             )
             playerHost.pause()
         } else {
-            Timber.i("!!! X preview video load ${currentUrlIndex + 1}/${urlCandidates.size}: $mediaUrl")
+            Timber.i("!!! X preview video load ${currentUrlIndex + 1}/${urlCandidates.size}: ${mediaUrl.fileNameForLog()}")
             playerHost.play()
         }
     }

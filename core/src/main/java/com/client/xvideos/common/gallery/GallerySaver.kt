@@ -121,7 +121,7 @@ object GallerySaver {
         }
 
         if (url.isBlank() || (!url.startsWith("http://", ignoreCase = true) && !url.startsWith("https://", ignoreCase = true))) {
-            Timber.w("GallerySaver: отклонён некорректный url: $url")
+            Timber.w("GallerySaver: отклонён некорректный url для $cleanFileName, длина ${url.length}")
             SnackBar.error("Недопустимая ссылка")
             onFinished(true)
             return
@@ -207,7 +207,8 @@ object GallerySaver {
             },
             onError = { error ->
                 tmpFile.delete()
-                Timber.e("GallerySaver: ошибка скачивания $cleanFileName: $error")
+                // При сбое сети текст — toString() исключения: после двоеточия в нём хост.
+                Timber.e("GallerySaver: ошибка скачивания $cleanFileName: ${error.substringBefore(':')}")
                 SnackBar.error("Ошибка сохранения: $error")
                 finish(true)
             },

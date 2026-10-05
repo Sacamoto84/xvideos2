@@ -37,7 +37,7 @@ fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi: () -> RedApi, savedR
                         redApi.invoke().readCreator(item.userName)
                             .onSuccess { savedRed.invoke().creators.add(it) }
                             .onFailure { e ->
-                                Timber.e(e, "Follow: не удалось получить профиль ${item.userName}")
+                                Timber.e("Follow: не удалось получить профиль ${item.userName}: ${e.javaClass.simpleName}")
                                 SnackBar.error("Не удалось подписаться: ${e.message ?: "нет сети"}")
                             }
                     } else {

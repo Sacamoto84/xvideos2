@@ -199,11 +199,11 @@ class AlbumPicsDetails(
         val pageError = pageResponse.exceptionOrNull()
         recordPageIssue(page, pageError)
         if (pageError.isHtmlChallengeResponse()) {
-            Timber.w(pageError, "AlbumPicsDetails $id page $page HTML challenge response")
+            Timber.w("AlbumPicsDetails $id page $page HTML challenge response")
             return Result.failure(pageError ?: IllegalStateException(HTML_INSTEAD_OF_JSON_PREFIX))
         }
 
-        Timber.w(pageError, "AlbumPicsDetails $id page $page load error")
+        Timber.w("AlbumPicsDetails $id page $page load error: ${pageError?.javaClass?.simpleName}")
         return pageResponse
     }
 
@@ -242,11 +242,11 @@ class AlbumPicsDetails(
                     list.add(pic)
                 } else {
                     skippedNoMediaCount++
-                    Timber.w("AlbumPicsDetails $id page $page item $index has no media urls: $element")
+                    Timber.w("AlbumPicsDetails $id page $page item $index has no media urls: id=${pic.id}")
                 }
             }.onFailure {
                 parseErrorCount++
-                Timber.w(it, "AlbumPicsDetails $id page $page item $index parse error: $element")
+                Timber.w("AlbumPicsDetails $id page $page item $index parse error: ${it.javaClass.simpleName}")
             }
         }
 

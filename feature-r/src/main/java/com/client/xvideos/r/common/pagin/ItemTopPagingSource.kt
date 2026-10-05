@@ -90,7 +90,7 @@ class ItemTopPagingSource(
             throw e // G1
         } catch (e: Exception) {
             // G2: ошибку показывает UI через LoadState, без SnackBar из data-слоя.
-            Timber.e(e, "!!! ItemTopPagingSource load() page = $page")
+            Timber.e("!!! ItemTopPagingSource load() page = $page: ${e.javaClass.simpleName}")
             LoadResult.Error(e)
         }
     }

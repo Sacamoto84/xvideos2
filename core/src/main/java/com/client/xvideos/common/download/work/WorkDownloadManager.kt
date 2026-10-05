@@ -30,7 +30,7 @@ class WorkDownloadManager @Inject constructor(
         request: DownloadWorkRequest,
         existingWorkPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
     ): UUID {
-        Timber.i("WorkDownloadManager: Постановка задачи в очередь: id=${request.id}, url=${request.url}")
+        Timber.i("WorkDownloadManager: Постановка задачи в очередь: id=${request.id}")
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(request.networkType)

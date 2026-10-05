@@ -70,7 +70,7 @@ class ScreenLAlbumSearchSM @Inject constructor(
             try {
                 _result.value = withContext(Dispatchers.IO) {
                     luscious.getLandingPageAlbumSearch(query).getOrElse {
-                        Timber.e(it, "ScreenLAlbumSearchSM search")
+                        Timber.e("ScreenLAlbumSearchSM search: ${it.javaClass.simpleName}")
                         // Без сообщения отказ сети выглядел как «ничего не найдено».
                         SnackBar.error(it.toLUserMessage())
                         null

@@ -128,7 +128,7 @@ class AlbumInfo(
                 .mapCatching { parseAlbumDetails(it).getOrThrow() }
             if (parsed.isFailure) {
                 val error = parsed.exceptionOrNull()
-                Timber.w(error, "getAlbumInfo $id error")
+                Timber.w("getAlbumInfo $id error: ${error?.javaClass?.simpleName}")
                 reportLoadFailure(error, isRefresh = forceNetwork)
                 _isLoading.value = false
                 return@launch

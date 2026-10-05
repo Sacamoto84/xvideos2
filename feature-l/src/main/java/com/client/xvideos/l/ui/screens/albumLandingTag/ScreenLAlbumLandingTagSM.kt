@@ -73,13 +73,13 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
                 withContext(Dispatchers.IO) { luscious.getLandingPageAlbumTag(tag) }
                     .onSuccess { _albumTopHits.value = it }
                     .onFailure { error ->
-                        Timber.w(error, "ScreenLAlbumLandingTagSM: failed to load tag $tag")
+                        Timber.w("ScreenLAlbumLandingTagSM: failed to load tag $tag: ${error.javaClass.simpleName}")
                         _loadError.value = error.toLUserMessage()
                     }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "ScreenLAlbumLandingTagSM: exception loading tag $tag")
+                Timber.e("ScreenLAlbumLandingTagSM: exception loading tag $tag: ${e.javaClass.simpleName}")
                 _loadError.value = e.toLUserMessage()
             }
         }

@@ -179,7 +179,8 @@ class Downloader @Inject constructor(
                 },
 
                 onError = {
-                    Timber.e("Downloader: ошибка закачки id=${item.id}: $it")
+                    // При сбое сети текст — toString() исключения: после двоеточия в нём хост.
+                    Timber.e("Downloader: ошибка закачки id=${item.id}: ${it.substringBefore(':')}")
                     onVideoFinished(item.id, failed = true)
                     SnackBar.error("Ошибка закачки: $it")
                 },

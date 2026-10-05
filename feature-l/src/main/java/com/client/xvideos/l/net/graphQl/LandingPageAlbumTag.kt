@@ -33,7 +33,7 @@ suspend fun LandingPageAlbumTag(
         val res = repository.openURI(query)
         if (res.isFailure) {
             val error = res.exceptionOrNull() ?: IllegalStateException("Failed to load tag: $cleanTag")
-            Timber.w("LandingPageAlbumTag request failed: ${error.message}")
+            Timber.w("LandingPageAlbumTag request failed: ${error.javaClass.simpleName}")
             return Result.failure(error)
         }
         val rawJson = res.getOrThrow()
@@ -54,7 +54,7 @@ suspend fun LandingPageAlbumTag(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.w(e, "LandingPageAlbumTag failed for tag: $cleanTag")
+        Timber.w("LandingPageAlbumTag failed for tag: $cleanTag: ${e.javaClass.simpleName}")
         return Result.failure(e)
     }
 }

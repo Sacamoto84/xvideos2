@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.fileNameForLog
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.Luscious
@@ -70,7 +71,7 @@ class SavedL_Likes(
             SnackBar.error("Недопустимый URL для сохранения")
             return
         }
-        Timber.i("SavedL_Likes addLikes() item:${item.url_to_original}")
+        Timber.i("SavedL_Likes addLikes() id:${item.id}")
 
         mutations.launch {
             val result = lPersistPicsDetailsToFolder(
@@ -90,7 +91,7 @@ class SavedL_Likes(
                         if (folder != null && saved != null) showSaved(folder, saved) else refresh()
                     }
                     .onFailure {
-                        Timber.e(it, "SavedL_Likes add() download error")
+                        Timber.e("SavedL_Likes add() download error: ${it.javaClass.simpleName}")
                         SnackBar.error("Ошибка добавления лайка")
                     }
             }
@@ -116,7 +117,7 @@ class SavedL_Likes(
      */
     fun remove(url: String) {
         if (url.isBlank()) return
-        Timber.i("SavedL_Likes removeLikes() url:$url")
+        Timber.i("SavedL_Likes removeLikes() file:${url.fileNameForLog()}")
 
         // Вызов приходит из onDelete в composable, то есть с main-потока, а
         // deleteRecursively() по папке с медиа — это полноценный обход каталога.

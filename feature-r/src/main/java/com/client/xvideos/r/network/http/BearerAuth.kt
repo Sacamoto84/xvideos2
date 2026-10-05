@@ -54,10 +54,10 @@ class BearerAuth(private val fetchToken: suspend () -> String) {
                     return retryAfterRefresh(perform)
                 }
             }
-            Timber.e(e, "Red ApiClient request FAILED")
+            Timber.e("Red ApiClient request FAILED: HTTP ${e.response.status.value}")
             Result.failure(e)
         } catch (e: Exception) {
-            Timber.e(e, "Red ApiClient request FAILED")
+            Timber.e("Red ApiClient request FAILED: ${e.javaClass.simpleName}")
             Result.failure(e)
         }
     }
@@ -67,7 +67,7 @@ class BearerAuth(private val fetchToken: suspend () -> String) {
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "Red ApiClient request FAILED after retry")
+        Timber.e("Red ApiClient request FAILED after retry: ${e.javaClass.simpleName}")
         Result.failure(e)
     }
 
@@ -111,7 +111,7 @@ class BearerAuth(private val fetchToken: suspend () -> String) {
             // в Result.failure и уезжала вызывающему как настоящий сбой входа.
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "Red ApiClient login() FAILED: ${e.localizedMessage}")
+            Timber.e("Red ApiClient login() FAILED: ${e.javaClass.simpleName}")
             Result.failure(e)
         }
     }

@@ -24,15 +24,15 @@ suspend fun FavoritesByDatePicture(
         val query = getFavoritesByDatePicture(userId = userId, page = page, showLikes = showLikes)
         val res = repository.openURI(query)
         res.onSuccess { raw ->
-            Timber.d("FavoritesByDatePicture response (${raw.length} chars): %s", raw.take(500))
+            Timber.d("FavoritesByDatePicture response (${raw.length} chars)")
         }.onFailure { err ->
-            Timber.w(err, "FavoritesByDatePicture request failed")
+            Timber.w("FavoritesByDatePicture request failed: ${err.javaClass.simpleName}")
         }
         return res
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "FavoritesByDatePicture failed")
+        Timber.e("FavoritesByDatePicture failed: ${e.javaClass.simpleName}")
         return Result.failure(e)
     }
 }

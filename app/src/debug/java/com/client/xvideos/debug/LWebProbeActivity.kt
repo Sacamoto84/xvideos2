@@ -133,7 +133,7 @@ class LWebProbeActivity : Activity() {
                 )
             }
         } catch (e: IOException) {
-            Timber.tag(TAG).w("%s -> %s: %s", description, e.javaClass.simpleName, e.message)
+            Timber.tag(TAG).w("%s -> %s", description, e.javaClass.simpleName)
             null
         }
     }

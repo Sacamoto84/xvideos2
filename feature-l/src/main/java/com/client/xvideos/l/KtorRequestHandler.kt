@@ -240,7 +240,7 @@ class KtorRequestHandler(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "L login request failed")
+            Timber.w("L login request failed: ${e.javaClass.simpleName}")
             loggedIn = false
             return Result.failure(e)
         }

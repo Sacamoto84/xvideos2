@@ -81,7 +81,7 @@ object Settings {
             remove(KEY_L_LOGIN)
             remove(KEY_L_PASS)
         }
-        Timber.i("Settings: учётные данные Luscious перенесены в зашифрованное хранилище")
+        Timber.i("Settings: учётные данные L перенесены в зашифрованное хранилище")
     }
 
     private const val KEY_L_LOGIN = "l_login"

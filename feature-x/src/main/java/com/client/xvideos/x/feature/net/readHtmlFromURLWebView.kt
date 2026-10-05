@@ -3,6 +3,7 @@ package com.client.xvideos.x.feature.net
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
+import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -15,6 +16,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import com.client.xvideos.common.util.pathForLog
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -39,14 +41,14 @@ suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): Str
     val trimmed = url.trim()
     if (trimmed.isEmpty()) return ""
     if (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true)) {
-        Timber.w("readHtmlFromURLWebView: invalid scheme for url: $trimmed")
+        Timber.w("readHtmlFromURLWebView: invalid scheme, url length ${trimmed.length}")
         return ""
     }
     return withContext(Dispatchers.Main) {
         withTimeoutOrNull(WEB_VIEW_LOAD_TIMEOUT_MS) {
             loadHtmlInWebView(trimmed)
         } ?: run {
-            Timber.w("!!!..readHtmlFromURL timeout $trimmed")
+            Timber.w("!!!..readHtmlFromURL timeout ${trimmed.pathForLog()}")
             ""
         }
     }
@@ -55,7 +57,7 @@ suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): Str
 private suspend fun loadHtmlInWebView(url: String): String =
     suspendCancellableCoroutine { continuation ->
 
-        Timber.d("readHtmlFromURL %s", url)
+        Timber.d("readHtmlFromURL %s", url.pathForLog())
 
         val context = AppContextHolder.applicationContext
 
@@ -101,14 +103,18 @@ private suspend fun loadHtmlInWebView(url: String): String =
             cacheMode = WebSettings.LOAD_DEFAULT
         }
 
-        webView.webChromeClient = WebChromeClient()
+        // Консоль страницы в журнал не идёт: по умолчанию WebView печатает её
+        // в logcat вместе с адресом страницы.
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean = true
+        }
 
         webView.webViewClient = object : WebViewClient() {
 
             @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
             override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
                 super.onReceivedError(view, errorCode, description, failingUrl)
-                Timber.w("readHtmlFromURLWebView: onReceivedError $errorCode: $description for $failingUrl")
+                Timber.w("readHtmlFromURLWebView: onReceivedError $errorCode: $description for ${failingUrl?.pathForLog()}")
                 if (continuation.isActive) continuation.resume("")
                 destroyWebView()
             }
@@ -120,7 +126,7 @@ private suspend fun loadHtmlInWebView(url: String): String =
             ) {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) {
-                    Timber.w("readHtmlFromURLWebView: main frame error for ${request.url}")
+                    Timber.w("readHtmlFromURLWebView: main frame error for ${request.url.path}")
                     if (continuation.isActive) continuation.resume("")
                     destroyWebView()
                 }
@@ -140,7 +146,7 @@ private suspend fun loadHtmlInWebView(url: String): String =
                     "(function() { return document.documentElement.outerHTML; })();"
                 ) { html ->
 
-                    Timber.d("readHtmlFromURL end %s", url)
+                    Timber.d("readHtmlFromURL end %s", url.pathForLog())
 
                     val result = decodeJsStringResult(html)
                     if (continuation.isActive) continuation.resume(result)
@@ -163,7 +169,7 @@ internal fun decodeJsStringResult(raw: String?): String {
     if (raw.isNullOrEmpty() || raw == "null") return ""
     return runCatching { Json.decodeFromString(String.serializer(), raw) }
         .getOrElse { e ->
-            Timber.w(e, "readHtmlFromURLWebView: результат JS не разобран как строка JSON")
+            Timber.w("readHtmlFromURLWebView: результат JS не разобран как строка JSON: ${e.javaClass.simpleName}")
             ""
         }
 }

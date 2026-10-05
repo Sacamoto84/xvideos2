@@ -453,7 +453,7 @@ internal suspend fun lPersistPicsDetailsToFolder(
                     runCatchingCancellable { lSaveMediaSourceTracked(client, mediaUrl, mediaFile, progress) }
                         .onFailure { error ->
                             mediaFile.delete()
-                            Timber.w(error, "L media original download failed, fallback to previews: $mediaUrl")
+                            Timber.w("L media original download failed, fallback to previews: id=${item.id}, ${error.javaClass.simpleName}")
                         }
                         .isSuccess
                 }
@@ -463,14 +463,14 @@ internal suspend fun lPersistPicsDetailsToFolder(
                         val previewFile = File(folder, "preview.${preview.extension}")
                         runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
                             .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
-                            .onFailure { Timber.w(it, "L video preview download failed: ${preview.url}") }
+                            .onFailure { Timber.w("L video preview download failed: ${previewFile.name}, ${it.javaClass.simpleName}") }
                     }
                 } else {
                     previewSources.forEach { preview ->
                         val previewFile = File(folder, "preview.${preview.sizeMarker}.${preview.extension}")
                         runCatchingCancellable { lSaveMediaSourceTracked(client, preview.url, previewFile, progress) }
                             .onSuccess { savedPreviews.add(preview.toSavedPreview(previewFile.name)) }
-                            .onFailure { Timber.w(it, "L preview download failed: ${preview.url}") }
+                            .onFailure { Timber.w("L preview download failed: ${previewFile.name}, ${it.javaClass.simpleName}") }
                     }
                 }
 

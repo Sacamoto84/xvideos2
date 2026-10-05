@@ -58,7 +58,7 @@ fun LPictureInfoDialog(
             try {
                 uriHandler.openUri(url)
             } catch (e: Exception) {
-                Timber.w(e, "LPictureInfoDialog: не удалось открыть ссылку: $url")
+                Timber.w("LPictureInfoDialog: не удалось открыть ссылку: ${e.javaClass.simpleName}")
                 SnackBar.error("Не удалось открыть ссылку")
             }
         }

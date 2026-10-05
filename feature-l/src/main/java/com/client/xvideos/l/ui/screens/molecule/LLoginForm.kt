@@ -118,7 +118,7 @@ fun LLoginForm(
             runCatching {
                 uriHandler.openUri(URL_LUSCIOUS)
             }.onFailure { e ->
-                Timber.w(e, "LLoginForm: не удалось открыть ссылку L")
+                Timber.w("LLoginForm: не удалось открыть ссылку L: ${e.javaClass.simpleName}")
                 SnackBar.error("Не удалось открыть ссылку")
             }.let {}
         }

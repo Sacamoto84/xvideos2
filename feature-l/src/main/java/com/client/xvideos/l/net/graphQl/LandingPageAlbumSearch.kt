@@ -36,7 +36,7 @@ suspend fun LandingPageAlbumSearch(
         val res = repository.openURI(query)
         if (res.isFailure) {
             val error = res.exceptionOrNull() ?: IllegalStateException("Failed to search albums: $cleanQuery")
-            Timber.w("LandingPageAlbumSearch request failed: ${error.message}")
+            Timber.w("LandingPageAlbumSearch request failed: ${error.javaClass.simpleName}")
             return Result.failure(error)
         }
         val rawJson = res.getOrThrow()
@@ -57,7 +57,7 @@ suspend fun LandingPageAlbumSearch(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.w(e, "LandingPageAlbumSearch failed for search: $cleanQuery")
+        Timber.w("LandingPageAlbumSearch failed for search: $cleanQuery: ${e.javaClass.simpleName}")
         return Result.failure(e)
     }
 }

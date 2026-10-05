@@ -103,7 +103,7 @@ class ScreenNicheSM @AssistedInject constructor(
                     async { runCatchingCancellable { topCreator = redApi.getNichesTopCreators(cleanNicheName).getOrThrow() } },
                 ).awaitAll().mapNotNull { it.exceptionOrNull() }
 
-                failures.forEach { Timber.w(it, "ScreenNicheSM: часть данных ниши не загрузилась") }
+                failures.forEach { Timber.w("ScreenNicheSM: часть данных ниши не загрузилась: ${it.javaClass.simpleName}") }
                 failures.firstOrNull()?.let {
                     SnackBar.error("Ниша загрузилась не полностью: ${it.toRUserMessage()}")
                 }

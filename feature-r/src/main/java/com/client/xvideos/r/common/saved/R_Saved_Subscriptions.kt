@@ -93,7 +93,7 @@ class R_Saved_Subscriptions(
      */
     fun add(item: UserInfo) {
         if (item.username.isBlank()) return
-        Timber.i("R_Saved_Subscriptions add() id:$item")
+        Timber.i("R_Saved_Subscriptions add() id:${item.username}")
         scope.launch(Dispatchers.IO) {
             creatorDb.insert(item.username, item)
                 .onSuccess {
@@ -210,7 +210,7 @@ class R_Saved_Subscriptions(
         }
 
         val failures = loaded.mapNotNull { it.exceptionOrNull() }
-        failures.forEach { Timber.e(it, "R_Saved_Subscriptions: автор не загрузился") }
+        failures.forEach { Timber.e("R_Saved_Subscriptions: автор не загрузился: ${it.javaClass.simpleName}") }
         if (failures.size == loaded.size) throw failures.first()
         if (failures.isNotEmpty()) {
             notifyPartialFailure("Лента подписок: не загрузились ролики ${failures.size} из ${loaded.size} авторов")

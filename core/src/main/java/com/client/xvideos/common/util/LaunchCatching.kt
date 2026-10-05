@@ -33,7 +33,8 @@ import kotlin.coroutines.EmptyCoroutineContext
  * `Throwable`, здесь `Exception`, потому что глушить `OutOfMemoryError` и
  * прочие `Error` на границе корутины нельзя.
  *
- * @param message что именно не удалось — попадёт в журнал рядом с исключением.
+ * @param message что именно не удалось — попадёт в журнал рядом с классом
+ * исключения. Само исключение в журнал не идёт: в тексте сетевой ошибки хост.
  */
 fun CoroutineScope.launchCatching(
     context: CoroutineContext = EmptyCoroutineContext,
@@ -46,7 +47,7 @@ fun CoroutineScope.launchCatching(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.w(e, "!!! %s", message)
+        Timber.w("!!! %s: %s", message, e.javaClass.simpleName)
         onError?.invoke(e)
     }
 }

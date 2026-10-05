@@ -72,13 +72,13 @@ class AlbumTopHitsImpl(
                     json["data"]?.jsonObject?.get("album")?.jsonObject?.get("list_top_hits")?.jsonArray
                 get?.mapNotNull { element ->
                     runCatching { LJson.decodeFromJsonElement<AlbumListTopHits>(element) }
-                        .onFailure { Timber.w(it, "getAlbumTopHits: раздел не разобран и пропущен") }
+                        .onFailure { Timber.w("getAlbumTopHits: раздел не разобран и пропущен: ${it.javaClass.simpleName}") }
                         .getOrNull()
                 }.orEmpty()
             } catch (t: CancellationException) {
                 throw t
             } catch (t: Throwable) {
-                Timber.w(t, "getAlbumTopHits error")
+                Timber.w("getAlbumTopHits error: ${t.javaClass.simpleName}")
                 _loadError.value = t.toLUserMessage()
                 return@launch
             }

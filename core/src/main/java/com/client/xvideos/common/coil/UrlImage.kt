@@ -52,6 +52,7 @@ import coil3.size.Precision
 import coil3.size.Scale
 import com.client.xvideos.common.AppPath
 import androidx.compose.material3.Text
+import com.client.xvideos.common.util.fileNameForLog
 import com.client.xvideos.common.util.formatBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -100,7 +101,7 @@ fun UrlImage(
     //if (isAnimated) return
 
 //    SideEffect {
-//        Timber.i("!!! UrlImageGifsCoil url:{$url}")
+//        Timber.i("!!! UrlImageGifsCoil")
 //    }
 
     val context = LocalContext.current
@@ -346,9 +347,12 @@ fun UrlImage(
                 is AsyncImagePainter.State.Error -> {
                     // Текст исключения был виден пользователю прямо в карточке
                     // («Ошибка загрузки: filePath == null»). Подробность нужна в
-                    // журнале, на экране достаточно значка.
+                    // журнале, на экране достаточно значка. В журнал идут имя файла
+                    // и класс ошибки: в адресе и в тексте сетевой ошибки — имя сайта.
                     val error = (state as AsyncImagePainter.State.Error).result.throwable
-                    LaunchedEffect(url, error) { Timber.w(error, "!!! UrlImage load failed url:%s", url) }
+                    LaunchedEffect(url, error) {
+                        Timber.w("!!! UrlImage load failed %s: %s", url.fileNameForLog(), error.javaClass.simpleName)
+                    }
                     Box( modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center ) {
                         Icon(
                             imageVector = Icons.Default.BrokenImage,

@@ -82,7 +82,7 @@ internal suspend fun lRecoverIncompleteSavedMedia(
                     .onFailure {
                         report = report.copy(failedMedia = report.failedMedia + 1)
                         onEvent("L: media не скачан ${media.target.name}: ${it.message ?: it::class.java.simpleName}")
-                        Timber.e(it, "L recovery media failed: ${media.target.absolutePath}")
+                        Timber.e("L recovery media failed: ${media.target.absolutePath}, ${it.javaClass.simpleName}")
                     }
             }
         }
@@ -101,7 +101,7 @@ internal suspend fun lRecoverIncompleteSavedMedia(
                     .onFailure {
                         report = report.copy(failedPreview = report.failedPreview + 1)
                         onEvent("L: preview не скачан ${preview.target.name}: ${it.message ?: it::class.java.simpleName}")
-                        Timber.e(it, "L recovery preview failed: ${preview.target.absolutePath}")
+                        Timber.e("L recovery preview failed: ${preview.target.absolutePath}, ${it.javaClass.simpleName}")
                     }
             }
         }

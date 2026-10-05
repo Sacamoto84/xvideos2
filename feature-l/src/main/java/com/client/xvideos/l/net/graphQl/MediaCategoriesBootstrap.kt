@@ -35,7 +35,7 @@ suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean
     val categories = repository.openURI(mediaCategoriesBootstrap, config = config).mapCatching { raw ->
         LJson.decodeFromString<MediaCategoriesBootstrapResponse>(raw).data.mediaCategories
     }.getOrElse { e ->
-        Timber.w(e, "refreshMediaCategories failed")
+        Timber.w("refreshMediaCategories failed: ${e.javaClass.simpleName}")
         return Result.failure(e)
     }
 

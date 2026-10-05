@@ -71,7 +71,7 @@ class ScreenTagsViewModel @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w(e, "!!! Заголовок тега %s не загрузился", tag)
+                Timber.w("!!! Заголовок тега %s не загрузился: %s", tag, e.javaClass.simpleName)
             }
         }
     }

@@ -228,7 +228,7 @@ class ScreenLAlbumListSM @AssistedInject constructor(
                 }
                 .onFailure { error ->
                     val errorMsg = error.toLUserMessage()
-                    Timber.w("loadAlbumList page:$page failure: $errorMsg")
+                    Timber.w("loadAlbumList page:$page failure: ${error.javaClass.simpleName}")
                     bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
                     if (notifyFailure) SnackBar.error(errorMsg)
                 }
@@ -246,13 +246,13 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "ScreenLAlbumListSM request failed")
+        Timber.e("ScreenLAlbumListSM request failed: ${e.javaClass.simpleName}")
         Result.failure(e)
     }
 
     private suspend fun loadAggregations(filter: AlbumListFilter) {
         val aggregations = onIo { luscious.getAlbumListAggregations(1, filter) }.getOrElse { error ->
-            Timber.w(error, "loadAggregations failure")
+            Timber.w("loadAggregations failure: ${error.javaClass.simpleName}")
             return
         }
         filterGenreStateCount.value = aggregations.filterGenreStateCount

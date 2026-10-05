@@ -10,6 +10,7 @@ import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.util.pathForLog
 import com.client.xvideos.x.extractXVideoId
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.HTML5PlayerConfig
@@ -304,7 +305,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w(e, "Страница видео не загрузилась: %s", url)
+                Timber.w("Страница видео не загрузилась: %s: %s", url.pathForLog(), e.javaClass.simpleName)
                 isError = true
                 isFullScreen = false
                 withContext(Dispatchers.IO) {
@@ -322,7 +323,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
      * Обрабатывает ошибку воспроизведения потока, сбрасывая состояние и очищая RAM-кэш URL.
      */
     fun onPlaybackError() {
-        Timber.w("ScreenX_VideoPlayerSM: ошибка воспроизведения для %s, очистка RAM-кэша", url)
+        Timber.w("ScreenX_VideoPlayerSM: ошибка воспроизведения для %s, очистка RAM-кэша", url.pathForLog())
         isError = true
         isFullScreen = false
         screenModelScope.launch(Dispatchers.IO) {

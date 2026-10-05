@@ -125,7 +125,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
                                 SnackBar.info("Альбом удалён с сервера")
                             }
                             .onFailure { e ->
-                                Timber.e(e, "Failed to unlike album on server")
+                                Timber.e("Failed to unlike album on server: ${e.javaClass.simpleName}")
                                 SnackBar.error("Не удалось удалить альбом с сервера: ${e.toLUserMessage()}")
                             }
                     }
@@ -138,7 +138,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
                                 SnackBar.success("Альбом добавлен на сервер")
                             }
                             .onFailure { e ->
-                                Timber.e(e, "Failed to like album on server")
+                                Timber.e("Failed to like album on server: ${e.javaClass.simpleName}")
                                 SnackBar.error("Не удалось добавить альбом на сервер: ${e.toLUserMessage()}")
                             }
                     }
@@ -219,7 +219,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
     fun share(item: PicsDetails) {
         // Скачивание/запись файла — на IO (потоково), системный share — на Main.
         scope.launch(Dispatchers.IO) {
-            Timber.d("share item = ${item.url_to_original} isAnimated: ${item.is_animated}")
+            Timber.d("share item = ${item.id} isAnimated: ${item.is_animated}")
             try {
                 val file = lDownloadMediaToShareCache(item)
                 if (file == null) {
@@ -232,7 +232,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "L share -> ошибка при работе с файлом")
+                Timber.e("L share -> ошибка при работе с файлом: ${e.javaClass.simpleName}")
                 SnackBar.error("Ошибка при попытке поделиться файлом")
             }
         }

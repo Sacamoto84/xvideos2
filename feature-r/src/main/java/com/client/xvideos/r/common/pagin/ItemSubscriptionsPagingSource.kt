@@ -30,7 +30,7 @@ class ItemSubscriptionsPagingSource (val savedRed: SavedRed): PagingSource<Int, 
         } catch (e: Exception) {
             // Сюда приходит отказ, когда не загрузился ни один автор. Ошибку с
             // кнопкой повтора рисует список по состоянию загрузки.
-            Timber.e(e, "!!! >>>ItemSubscriptionsPagingSource load()")
+            Timber.e("!!! >>>ItemSubscriptionsPagingSource load(): ${e.javaClass.simpleName}")
             LoadResult.Error(e)
         }
     }

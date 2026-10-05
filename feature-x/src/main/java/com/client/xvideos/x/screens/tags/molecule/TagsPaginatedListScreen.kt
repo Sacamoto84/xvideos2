@@ -65,7 +65,7 @@ fun TagsPaginatedListScreen(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "!!! Страница тега %d не загрузилась", pageIndex)
+            Timber.w("!!! Страница тега %d не загрузилась: %s", pageIndex, e.javaClass.simpleName)
             failed = true
         }
         // Не в finally: отменённая загрузка не должна гасить полосу перезапущенной.

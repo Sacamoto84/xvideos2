@@ -88,7 +88,7 @@ fun DashboardsPaginatedListScreen(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "DashboardsPaginatedListScreen: ошибка загрузки pageIndex=$pageIndex")
+            Timber.e("DashboardsPaginatedListScreen: ошибка загрузки pageIndex=$pageIndex: ${e.javaClass.simpleName}")
             hasError = true
         }
         // Не в finally: отменённая загрузка не должна гасить полосу перезапущенной.

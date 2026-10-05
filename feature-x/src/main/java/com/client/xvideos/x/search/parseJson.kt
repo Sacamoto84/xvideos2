@@ -22,7 +22,7 @@ fun parseJson(json: String?): SearchResult? {
     return try {
         searchJson.decodeFromString(SearchResult.serializer(), trimmed)
     } catch (e: Exception) {
-        Timber.e(e, "parseJson: не удалось разобрать ответ поиска")
+        Timber.e("parseJson: не удалось разобрать ответ поиска: ${e.javaClass.simpleName}")
         null
     }
 }

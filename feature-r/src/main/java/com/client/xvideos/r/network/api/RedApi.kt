@@ -206,7 +206,7 @@ class RedApi @Inject constructor(
             "type" to type.value
         )
 
-        Timber.d("getTopLatest ${route.url}")
+        Timber.d("getTopLatest count=$count page=$page type=${type.value}")
         return api.request<MediaResponse>(route)
     }
 
@@ -466,7 +466,7 @@ private suspend fun cacheMediaResponse(
     val cached = cache.get(route.url)?.let { entry ->
         runCatching { RJson.decodeFromString<MediaResponse>(entry.content) }
             .getOrElse { e ->
-                Timber.w(e, "Corrupted cache entry for ${route.url}")
+                Timber.w("Corrupted cache entry for ${route.path}: ${e.javaClass.simpleName}")
                 null
             }
             ?: run {
@@ -476,18 +476,18 @@ private suspend fun cacheMediaResponse(
     }
 
     if (cached != null) {
-        Timber.d("Loading from cache: ${route.url}")
+        Timber.d("Loading from cache: ${route.path}")
         return Result.success(cached)
     }
 
-    Timber.d("Fetching from network: ${route.url}")
+    Timber.d("Fetching from network: ${route.path}")
     return redApi.api.request<MediaResponse>(route)
         .onSuccess {
             runCatching {
                 cache.put(route.url, RJson.encodeToString(it))
             }.onFailure { e ->
-                Timber.w(e, "Не удалось сохранить ответ в кэш: ${route.url}")
+                Timber.w(e, "Не удалось сохранить ответ в кэш: ${route.path}")
             }
         }
-        .onFailure { Timber.w(it, "Network error during request: ${route.url}") }
+        .onFailure { Timber.w("Network error during request: ${route.path}: ${it.javaClass.simpleName}") }
 }

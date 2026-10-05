@@ -41,7 +41,7 @@ fun DropdownMenuItem_Subscription(item: GifsInfo? = null, redApi: () -> RedApi, 
                     redApi.invoke().readCreator(item.userName)
                         .onSuccess { savedRed.invoke().subscriptions.add(it) }
                         .onFailure { e ->
-                            Timber.e(e, "Subscribe: не удалось получить профиль ${item.userName}")
+                            Timber.e("Subscribe: не удалось получить профиль ${item.userName}: ${e.javaClass.simpleName}")
                             SnackBar.error("Не удалось оформить подписку: ${e.message ?: "нет сети"}")
                         }
                 } else {

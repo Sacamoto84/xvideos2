@@ -275,7 +275,7 @@ open class Repository(
         } else {
             nowMs() + L_LOGIN_RETRY_INTERVAL_MS
         }
-        Timber.w(cause, "L login failed, continuing anonymously")
+        Timber.w("L login failed, continuing anonymously: ${cause.javaClass.simpleName}")
         if (alreadyNotified) return
         val reason = cause.message?.replaceFirstChar { it.lowercase() } ?: cause.javaClass.simpleName
         notifyAnonymousFallback("Вход в L не удался: $reason. Работаем без авторизации")
@@ -327,7 +327,7 @@ open class Repository(
                 if (cached.isSuccess) {
                     return cached
                 }
-                Timber.w("openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.message}")
+                Timber.w("openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.javaClass?.simpleName}")
                 deleteRamCache(cacheKey)
             }
             val checkedResponse = postJsonValidated(data, cacheKey)
@@ -426,7 +426,7 @@ open class Repository(
                 requestMutex.withLock { sendThrottled(data) }
             } catch (e: IOException) {
                 if (attempt >= MAX_RETRIES || !e.isWorthRetrying()) throw e
-                Timber.w(e, "openURI() network failure, retry #${attempt + 1}")
+                Timber.w("openURI() network failure, retry #${attempt + 1}: ${e.javaClass.simpleName}")
                 null
             }
             if (response != null && (response.statusCode !in RETRY_STATUS_CODES || attempt >= MAX_RETRIES)) {
@@ -524,7 +524,8 @@ open class Repository(
             } else {
                 "Server returned non-JSON response: ${normalized.previewForLog()}"
             }
-            Timber.w("openURI() $message")
+            // Превью ответа в журнал не идёт: в разметке и данных сервера есть адреса.
+            Timber.w("openURI() ${message.substringBefore(':')} (${normalized.length} chars)")
             return Result.failure(IllegalStateException(message))
         }
 
@@ -538,7 +539,7 @@ open class Repository(
             }
             normalized
         }.onFailure {
-            Timber.w("openURI() malformed JSON response: ${normalized.previewForLog()} (${it.message})")
+            Timber.w("openURI() malformed JSON response: ${normalized.length} chars (${it.message?.substringBefore(':')})")
         }
     }
 

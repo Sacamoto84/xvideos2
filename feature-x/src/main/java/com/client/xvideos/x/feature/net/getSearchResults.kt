@@ -36,10 +36,10 @@ suspend fun getSearchResults(query: String): String? {
         // Иначе отмена возвращалась как null и трактовалась как «ничего не найдено».
         throw e
     } catch (e: HttpStatusException) {
-        Timber.w("getSearchResults: HTTP ${e.code} for $url")
+        Timber.w("getSearchResults: HTTP ${e.code}")
         null
     } catch (e: Exception) {
-        Timber.e(e, "Ошибка getSearchResults: ${e.message}")
+        Timber.e("Ошибка getSearchResults: ${e.javaClass.simpleName}")
         null
     }
 }

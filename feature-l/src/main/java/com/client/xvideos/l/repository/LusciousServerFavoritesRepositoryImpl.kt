@@ -113,7 +113,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
                 emptyList()
             }
         }.onFailure { e ->
-            Timber.e(e, "Failed to parse subscribed albums response")
+            Timber.e("Failed to parse subscribed albums response: ${e.javaClass.simpleName}")
         }
     }
 
@@ -187,7 +187,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
                 emptyList()
             }
         }.onFailure { e ->
-            Timber.e(e, "Failed to parse server liked pictures response")
+            Timber.e("Failed to parse server liked pictures response: ${e.javaClass.simpleName}")
         }
     }
 
@@ -227,7 +227,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "resolvePictureId failed")
+        Timber.e("resolvePictureId failed: ${e.javaClass.simpleName}")
         Result.failure(e)
     }
 
@@ -322,7 +322,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
                 ?.let { throw IllegalStateException(it) }
             Unit
         }.onFailure { e ->
-            Timber.e(e, "Failed to parse $operationLabel response")
+            Timber.e("Failed to parse $operationLabel response: ${e.javaClass.simpleName}")
         }
     }
 }

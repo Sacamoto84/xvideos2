@@ -114,7 +114,7 @@ class ScreenXSearchSM @Inject constructor(
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
-                        Timber.w(e, "Ошибка запроса подсказок для: %s", text)
+                        Timber.w("Ошибка запроса подсказок для: %s: %s", text, e.javaClass.simpleName)
                         _suggestions.value = SearchResult.EMPTY
                     } finally {
                         _isSuggestLoading.value = false
@@ -185,7 +185,7 @@ class ScreenXSearchSM @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "Ошибка загрузки видео по запросу: %s (page=%d)", query, page)
+                Timber.e("Ошибка загрузки видео по запросу: %s (page=%d): %s", query, page, e.javaClass.simpleName)
                 _isSearchError.value = true
                 _videoItems.value = emptyList()
             } finally {
@@ -199,13 +199,13 @@ class ScreenXSearchSM @Inject constructor(
         if (trimmed.isEmpty()) return com.client.xvideos.x.search.SearchVideosResult(emptyList(), 1)
 
         val url = com.client.xvideos.x.search.buildSearchVideosUrl(trimmed, page)
-        Timber.d("ScreenXSearchSM.fetchVideosPage: url=%s", url)
+        Timber.d("ScreenXSearchSM.fetchVideosPage: page=%d", page)
 
         var html = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             com.client.xvideos.x.feature.net.readHtmlFromURLDirect(url)
         }
         if (html.isBlank()) {
-            Timber.w("ScreenXSearchSM: direct HTTP empty, trying WebView: %s", url)
+            Timber.w("ScreenXSearchSM: direct HTTP empty, trying WebView: page=%d", page)
             html = com.client.xvideos.x.feature.net.readHtmlFromURLWebView(url)
         }
 

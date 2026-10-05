@@ -8,7 +8,9 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.common.util.pathForLog
 import com.client.xvideos.x.feature.net.fetchHtml
+import com.client.xvideos.x.feature.net.logLabel
 import com.client.xvideos.x.feature.net.notFoundAsEmpty
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.ActressesIndexDropdownType
@@ -128,7 +130,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "ScreenX_ActressesIndexSM: ошибка загрузки каталога %s", currentUrlPath)
+                Timber.e("ScreenX_ActressesIndexSM: ошибка загрузки каталога %s: %s", currentUrlPath.pathForLog(), e.logLabel())
                 uiState = uiState.copy(
                     isLoadingInitial = false,
                     error = "Не удалось загрузить каталог актрис",
@@ -190,7 +192,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w(e, "ScreenX_ActressesIndexSM: сбой подгрузки следующей страницы %s", nextPagePath)
+                Timber.w("ScreenX_ActressesIndexSM: сбой подгрузки следующей страницы %s: %s", nextPagePath.pathForLog(), e.logLabel())
                 uiState = uiState.copy(
                     isLoadingMore = false,
                     loadMoreError = "Не удалось загрузить следующую страницу",

@@ -17,6 +17,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.isSuccess
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.coroutines.CancellationException
+import com.client.xvideos.common.util.pathForLog
 import timber.log.Timber
 import java.io.IOException
 
@@ -52,6 +53,10 @@ private val htmlClient: HttpClient by lazy {
 /** Ответ сервера с кодом ошибки: адрес не тот или сервер отказал. */
 class HttpStatusException(val code: Int, url: String) : IOException("HTTP $code для $url")
 
+/** Ошибка запроса для журнала: код ответа или класс. Текст исключения не годится — в нём адрес запроса. */
+internal fun Throwable.logLabel(): String =
+    if (this is HttpStatusException) "HTTP $code" else javaClass.simpleName
+
 /**
  * HTML страницы по [url].
  *
@@ -63,7 +68,7 @@ class HttpStatusException(val code: Int, url: String) : IOException("HTTP $code 
  */
 suspend fun fetchHtml(url: String, extraHeaders: Map<String, String> = emptyMap()): String {
     val target = requireHttpUrl(url)
-    Timber.d("fetchHtml %s", target)
+    Timber.d("fetchHtml %s", target.pathForLog())
     val response = htmlClient.get(target) {
         extraHeaders.forEach { (name, value) -> header(name, value) }
     }
@@ -130,7 +135,7 @@ suspend fun readHtmlFromURLDirect(url: String = "https://www.xvideos.com"): Stri
         // продолжит обрабатывать «успешный» пустой ответ.
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "!!! readHtmlFromURLDirect: Ошибка ${e.message}")
+        Timber.e("!!! readHtmlFromURLDirect: Ошибка ${e.logLabel()}")
         ""
     }
 }
@@ -153,7 +158,7 @@ suspend fun postFormDataFromURLDirect(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "!!! postFormDataFromURLDirect: Ошибка ${e.message}")
+        Timber.e("!!! postFormDataFromURLDirect: Ошибка ${e.logLabel()}")
         ""
     }
 }

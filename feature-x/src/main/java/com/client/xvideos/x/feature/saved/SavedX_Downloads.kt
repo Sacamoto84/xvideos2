@@ -164,7 +164,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
                 onVideoFinished(item.id, failed = true)
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "X download: не удалось поставить в очередь ${item.id}")
+                Timber.e("X download: не удалось поставить в очередь ${item.id}: ${e.javaClass.simpleName}")
                 onVideoFinished(item.id, failed = true)
                 SnackBar.error("Ошибка скачивания: ${e.message}")
             }
@@ -202,7 +202,8 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             onStart = { onVideoProgress(item.id, 0f) },
             onProgress = { p -> onVideoProgress(item.id, p / 100f) },
             onError = {
-                Timber.e("X download error ${item.id}: $it")
+                // При сбое сети текст — toString() исключения: после двоеточия в нём хост.
+                Timber.e("X download error ${item.id}: ${it.substringBefore(':')}")
                 onVideoFinished(item.id, failed = true)
                 SnackBar.error("Ошибка скачивания: $it")
             },

@@ -91,7 +91,7 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
                     list.removeIf { it.id == album.id }
                     SnackBar.info("Альбом удалён из подписок")
                 }.onFailure { error ->
-                    Timber.e(error, "Failed to unsubscribe album ${album.id} on server")
+                    Timber.e("Failed to unsubscribe album ${album.id} on server: ${error.javaClass.simpleName}")
                     SnackBar.error("Не удалось удалить альбом из подписок: ${error.toLUserMessage()}")
                 }
             } finally {

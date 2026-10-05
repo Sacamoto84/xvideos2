@@ -94,7 +94,7 @@ internal class LServerPagedList<T>(
                     }
                 }
                 .onFailure { error ->
-                    Timber.e(error, "LServerPagedList: next page $nextPage failed")
+                    Timber.e("LServerPagedList: next page $nextPage failed: ${error.javaClass.simpleName}")
                     _nextPageFailed.value = true
                     notifyNextPageFailed(error.toLUserMessage())
                 }
@@ -121,7 +121,7 @@ internal class LServerPagedList<T>(
                 publish(list)
             }
             .onFailure { error ->
-                Timber.e(error, "LServerPagedList: first page failed")
+                Timber.e("LServerPagedList: first page failed: ${error.javaClass.simpleName}")
                 _errorMessage.value = error.toLUserMessage()
             }
     }

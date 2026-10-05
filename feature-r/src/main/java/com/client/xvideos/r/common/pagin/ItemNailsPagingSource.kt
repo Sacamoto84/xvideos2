@@ -84,7 +84,7 @@ class ItemNailsPagingSource (val order : Order, val nichesName : String, val blo
         } catch (e: CancellationException) {
             throw e // G1
         } catch (e: Exception) {
-            Timber.e(e, "!!! ItemNailsPagingSource load() page = $page nichesName:$nichesName")
+            Timber.e("!!! ItemNailsPagingSource load() page = $page nichesName:$nichesName: ${e.javaClass.simpleName}")
             LoadResult.Error(e)
         }
     }

@@ -54,7 +54,7 @@ class R_SearchExplorer @Inject constructor(
             val request = text.ifEmpty { " " }
 
             redApi.getTagSuggestions(request)
-                .onFailure { Timber.w(it, "R_SearchExplorer: подсказки тегов не пришли") }
+                .onFailure { Timber.w("R_SearchExplorer: подсказки тегов не пришли: ${it.javaClass.simpleName}") }
                 .map { list ->
                     if (list.isEmpty()) {
                         emptyList()
@@ -71,7 +71,7 @@ class R_SearchExplorer @Inject constructor(
             // Ввод продолжился — mapLatest отменил эту ветку штатно, ошибки нет.
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "SearchRed searchText error")
+            Timber.e("SearchRed searchText error: ${e.javaClass.simpleName}")
             emptyList()
         }
     }

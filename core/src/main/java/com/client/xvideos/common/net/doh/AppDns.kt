@@ -138,14 +138,14 @@ object AppDns : Dns {
             health = dohHealth,
             skipDown = fallbackToSystem,
             onFailure = { endpoint, e ->
-                Timber.w(e, "AppDns: DoH запрос к $endpoint для $cleanHost завершился ошибкой")
+                Timber.w("AppDns: DoH запрос к $endpoint завершился ошибкой: ${e.javaClass.simpleName}")
             },
         ) { endpoint -> queryDoh(endpoint, cleanHost, ipv4Only, now) }
         if (doh.addresses.isNotEmpty()) return doh.addresses
         val lastException = doh.error
 
         if (fallbackToSystem) {
-            Timber.i("AppDns: DoH не ответил для $cleanHost, переключаемся на системный DNS (fallback)")
+            Timber.i("AppDns: DoH не ответил, переключаемся на системный DNS (fallback)")
             return Dns.SYSTEM.lookup(cleanHost)
         }
 
@@ -178,7 +178,7 @@ object AppDns : Dns {
                 if (validAnswers.isEmpty() && primaryException == null) {
                     primaryException = e
                 } else {
-                    Timber.d(e, "AppDns: AAAA DoH запрос к %s для %s не удался", endpoint, hostname)
+                    Timber.d("AppDns: AAAA DoH запрос к %s не удался: %s", endpoint, e.javaClass.simpleName)
                 }
             }
         }

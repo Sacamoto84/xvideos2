@@ -68,7 +68,7 @@ class ScreenRedExplorerSearchSM internal constructor(
                         runCatchingCancellable { searchCreators(text).getOrThrow() }
                             .onSuccess { creatorsList.replaceWith(it) }
                             .onFailure { error ->
-                                Timber.w(error, "Поиск авторов не удался")
+                                Timber.w("Поиск авторов не удался: ${error.javaClass.simpleName}")
                                 // Иначе под новым текстом остаются авторы
                                 // прежнего запроса, а о сбое знает только лог.
                                 creatorsList.clear()

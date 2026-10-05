@@ -171,7 +171,7 @@ fun LFullScreenPage(
                         onFailure = {
                             if (imageUrlIndex < imageUrls.lastIndex) {
                                 imageUrlIndex += 1
-                                timber.log.Timber.w("L fullscreen image fallback ${imageUrlIndex}/${imageUrls.lastIndex}: ${imageUrls[imageUrlIndex]}")
+                                timber.log.Timber.w("L fullscreen image fallback ${imageUrlIndex}/${imageUrls.lastIndex}")
                             }
                         },
                         albumName = albumName,

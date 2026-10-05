@@ -507,7 +507,7 @@ class SavedL_Collection(
                     successCount++
                 }.onFailure {
                     errorCount++
-                    Timber.e(it, "SavedL_Collection addAll() error")
+                    Timber.e("SavedL_Collection addAll() error: ${it.javaClass.simpleName}")
                 }
             }
 
@@ -670,7 +670,7 @@ class SavedL_Collection(
             SnackBar.error("Недопустимое название коллекции")
             return
         }
-        Timber.i("SavedL_Collection remove() identifiers:$identifiers collection:$safeName")
+        Timber.i("SavedL_Collection remove() identifiers:${identifiers.size} collection:$safeName")
         // Поиск папки элемента обходит коллекцию, удаление рекурсивное — на IO.
         launchMutation(safeName) {
             val collectionRoot = File(AppPath.l_collection, safeName)

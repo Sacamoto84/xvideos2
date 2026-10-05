@@ -76,7 +76,7 @@ class ExpandMenuViewModel @Inject constructor(
                 SnackBar.success("Лайк добавлен на сервере")
             }
             .onFailure { e ->
-                Timber.e(e, "Failed to like picture on server")
+                Timber.e("Failed to like picture on server: ${e.javaClass.simpleName}")
                 SnackBar.error("Не удалось поставить лайк: ${e.toLUserMessage()}")
             }
     }
@@ -90,7 +90,7 @@ class ExpandMenuViewModel @Inject constructor(
                 }
             }
             .onFailure { e ->
-                Timber.e(e, "Failed to unlike picture on server")
+                Timber.e("Failed to unlike picture on server: ${e.javaClass.simpleName}")
                 SnackBar.error("Не удалось удалить лайк: ${e.toLUserMessage()}")
             }
     }
@@ -187,7 +187,7 @@ class ExpandMenuViewModel @Inject constructor(
         // Скачиваем и пишем файл на IO (потоково, без буферизации всего файла
         // в RAM), а системный share показываем на Main.
         scope.launch(Dispatchers.IO) {
-            Timber.d("share item = ${item.url_to_original} isAnimated: ${item.is_animated}")
+            Timber.d("share item = ${item.id} isAnimated: ${item.is_animated}")
             try {
                 val file = lDownloadMediaToShareCache(item)
                 if (file == null) {
@@ -200,7 +200,7 @@ class ExpandMenuViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "L share -> ошибка при работе с файлом")
+                Timber.e("L share -> ошибка при работе с файлом: ${e.javaClass.simpleName}")
                 SnackBar.error("Ошибка при попытке поделиться файлом")
             }
         }
@@ -236,7 +236,7 @@ class ExpandMenuViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "L saveToGallery -> ошибка")
+                Timber.e("L saveToGallery -> ошибка: ${e.javaClass.simpleName}")
                 SnackBar.error("Ошибка сохранения в галерею")
             }
         }

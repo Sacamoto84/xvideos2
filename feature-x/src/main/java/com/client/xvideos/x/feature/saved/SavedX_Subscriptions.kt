@@ -313,7 +313,7 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.w(e, "SavedX_Subscriptions: сбой загрузки роликов для %s", slug)
+        Timber.w("SavedX_Subscriptions: сбой загрузки роликов для %s: %s", slug, e.javaClass.simpleName)
         emptyList()
     }
 

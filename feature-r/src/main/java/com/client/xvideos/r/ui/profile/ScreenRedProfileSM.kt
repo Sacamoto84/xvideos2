@@ -138,7 +138,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
                     throw e
                 } catch (e: Exception) {
                     creator = null
-                    Timber.e(e, "ScreenRedProfileSM: профиль автора не загрузился")
+                    Timber.e("ScreenRedProfileSM: профиль автора не загрузился: ${e.javaClass.simpleName}")
                     SnackBar.error("Профиль автора не загрузился: ${e.toRUserMessage()}")
                 } finally {
                     _isLoading.value = false

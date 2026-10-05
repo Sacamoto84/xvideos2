@@ -32,15 +32,15 @@ suspend fun FavoriteAdd(
         // Мутации выполняются с RepositoryUriConfig.DIRECT (без ROM/RAM кеширования)
         val res = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
         res.onSuccess { raw ->
-            Timber.d("FavoriteAdd response (%d chars): %s", raw.length, raw.take(500))
+            Timber.d("FavoriteAdd response (%d chars)", raw.length)
         }.onFailure { err ->
-            Timber.w(err, "FavoriteAdd request failed")
+            Timber.w("FavoriteAdd request failed: ${err.javaClass.simpleName}")
         }
         return res
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "FavoriteAdd failed")
+        Timber.e("FavoriteAdd failed: ${e.javaClass.simpleName}")
         return Result.failure(e)
     }
 }

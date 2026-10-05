@@ -64,7 +64,7 @@ class MediaDownloadWorker(
         val metaFileName = inputData.getString(DownloadWorkRequest.KEY_META_FILE_NAME)
         val headers = DownloadWorkRequest.parseHeaders(inputData.getString(DownloadWorkRequest.KEY_HEADERS))
 
-        Timber.i("MediaDownloadWorker: Старт загрузки $fileName из $urlString")
+        Timber.i("MediaDownloadWorker: Старт загрузки $fileName")
 
         val filesResult = prepareFiles(destDir, fileName, metaFileName)
         val targets = filesResult.getOrElse { err ->
@@ -118,10 +118,10 @@ class MediaDownloadWorker(
             }
             if (isRetryable(e) && runAttemptCount < MAX_RETRY_ATTEMPTS) {
                 // Временный сбой: .tmp оставляем — следующая попытка докачает его по Range.
-                Timber.w(e, "MediaDownloadWorker: сбой при скачивании $fileName, повтор #${runAttemptCount + 1}")
+                Timber.w("MediaDownloadWorker: сбой при скачивании $fileName, повтор #${runAttemptCount + 1}: ${e.logLabel()}")
                 return@withContext Result.retry()
             }
-            Timber.e(e, "MediaDownloadWorker: Ошибка при скачивании $fileName")
+            Timber.e("MediaDownloadWorker: Ошибка при скачивании $fileName: ${e.logLabel()}")
             targets.tempFile.delete()
             showFailedNotification(title, e.message ?: "Ошибка сети")
             Result.failure(
@@ -239,7 +239,7 @@ class MediaDownloadWorker(
             // повреждён или его размер больше/равен длине файла. Удаляем .tmp и качаем с нуля.
             if (response.code == 416 && resumeOffset > 0) {
                 response.close()
-                Timber.w("MediaDownloadWorker: HTTP 416 для $urlString, удаляем невалидный $tempFile и качаем заново")
+                Timber.w("MediaDownloadWorker: HTTP 416, удаляем невалидный $tempFile и качаем заново")
                 if (tempFile.exists()) {
                     tempFile.delete()
                 }
@@ -425,6 +425,10 @@ class MediaDownloadWorker(
             is IOException -> true
             else -> false
         }
+
+        /** Ошибка для журнала: код ответа или класс. Текст сетевой ошибки не годится — в нём хост. */
+        private fun Throwable.logLabel(): String =
+            if (this is HttpStatusException) "HTTP $code" else javaClass.simpleName
         const val CHANNEL_ID = "channel_media_downloads"
         const val CHANNEL_NAME = "Загрузки медиа"
 

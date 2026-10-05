@@ -78,7 +78,7 @@ class ItemProfilePagingSource (val profileName : String, val sort : Order, val b
             throw e // G1: отмена корутины не должна превращаться в LoadResult.Error
         } catch (e: Exception) {
             // G2: показ ошибки — ответственность UI (LoadState), а не data-слоя.
-            Timber.e(e, "!!! ItemProfilePagingSource load() profileName:$profileName page = $page")
+            Timber.e("!!! ItemProfilePagingSource load() profileName:$profileName page = $page: ${e.javaClass.simpleName}")
             LoadResult.Error(e)
         }
     }

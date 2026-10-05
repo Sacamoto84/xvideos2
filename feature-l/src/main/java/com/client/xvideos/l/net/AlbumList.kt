@@ -111,7 +111,7 @@ suspend fun getAlbumListAggregationsImpl(page: Int, filterIn: AlbumListFilter?, 
 
         val result = repository.openURI(query)
         if (result.isFailure) {
-            Timber.w("getAlbumListAggregations error ${result.exceptionOrNull()}")
+            Timber.w("getAlbumListAggregations error ${result.exceptionOrNull()?.javaClass?.simpleName}")
             return Result.failure(result.exceptionOrNull() ?: IllegalStateException("Failed to load album aggregations"))
         }
 
@@ -144,7 +144,7 @@ suspend fun getAlbumListAggregationsImpl(page: Int, filterIn: AlbumListFilter?, 
         // показывает такой failure снекбаром уже на другом экране.
         throw e
     } catch (e: Exception) {
-        Timber.w("getAlbumListAggregations Exception ${e.localizedMessage}")
+        Timber.w("getAlbumListAggregations Exception ${e.javaClass.simpleName}")
         return Result.failure(e)
     }
 
@@ -198,12 +198,12 @@ suspend fun getAlbumListImpl(
         val result = repository.openURI(query, config = RepositoryUriConfig.CACHE_RAM )
 
         if (result.isFailure) {
-            Timber.w("getAlbumList error: ${result.exceptionOrNull()?.message}")
+            Timber.w("getAlbumList error: ${result.exceptionOrNull()?.javaClass?.simpleName}")
             return Result.failure(result.exceptionOrNull() ?: IllegalStateException("getAlbumList unknown error"))
         }
         val parsed = parseAlbumListResponse(result.getOrThrow(), filter, page)
         if (parsed.isFailure) {
-            Timber.w("getAlbumList parse error: ${parsed.exceptionOrNull()?.message}")
+            Timber.w("getAlbumList parse error: ${parsed.exceptionOrNull()?.javaClass?.simpleName}")
             repository.deleteCache(query, RepositoryUriConfig.CACHE_RAM)
             repository.deleteCache(query, RepositoryUriConfig.CACHE_ROM)
             return Result.failure(parsed.exceptionOrNull() ?: IllegalStateException("getAlbumList parse error"))
@@ -213,7 +213,7 @@ suspend fun getAlbumListImpl(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.w("getAlbumList Exception ${e.localizedMessage}")
+        Timber.w("getAlbumList Exception ${e.javaClass.simpleName}")
         return Result.failure(e)
     }
 }
@@ -257,7 +257,7 @@ private fun parseAlbumListResponse(
         val list = ArrayList<Album>(itemsJson.size)
         for (itemJson in itemsJson) {
             runCatching { LJson.decodeFromJsonElement<Album>(itemJson) }
-                .onFailure { Timber.w(it, "getAlbumList page $page: альбом не разобран и пропущен") }
+                .onFailure { Timber.w("getAlbumList page $page: альбом не разобран и пропущен: ${it.javaClass.simpleName}") }
                 .getOrNull()
                 ?.let { list.add(it) }
         }

@@ -9,6 +9,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.x.feature.net.fetchHtml
+import com.client.xvideos.x.feature.net.logLabel
 import com.client.xvideos.x.feature.net.notFoundAsEmpty
 import com.client.xvideos.x.feature.net.postFormData
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
@@ -332,7 +333,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "ScreenX_ChannelSM: ошибка загрузки %s (%s)", cleanSlug, pathPrefix)
+                Timber.e("ScreenX_ChannelSM: ошибка загрузки %s (%s): %s", cleanSlug, pathPrefix, e.logLabel())
                 // Ошибку показывает страница 0; её «Повторить» перезапускает первую загрузку.
                 errorPages[0] = INITIAL_LOAD_ERROR
                 uiState = uiState.copy(error = INITIAL_LOAD_ERROR)
@@ -383,7 +384,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "ScreenX_ChannelSM: сбой загрузки страницы %d для %s", targetPage, cleanSlug)
+                Timber.e("ScreenX_ChannelSM: сбой загрузки страницы %d для %s: %s", targetPage, cleanSlug, e.logLabel())
                 errorPages[targetPage] = "Не удалось загрузить страницу ${targetPage + 1}"
             } finally {
                 // Задачу могла сменить новая (loadInitial отменил эту и запустил ту же

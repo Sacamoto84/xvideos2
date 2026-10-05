@@ -46,10 +46,14 @@ object EventBus {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 
     fun postEvent(event: Event) {
-        Timber.i("!!! ~~~ EventBus.postEvent $event")
+        Timber.i("!!! ~~~ EventBus.postEvent ${event.forLog()}")
         if (!_events.tryEmit(event)) {
             scope.launch { _events.emit(event) }
         }
     }
+
+    /** Текст снекбара в журнал не идёт: в нём бывает сообщение сетевой ошибки вместе с хостом. */
+    private fun Event.forLog(): String =
+        if (this is Event.ShowSnackBar) "ShowSnackBar(${message.javaClass.simpleName})" else toString()
 
 }

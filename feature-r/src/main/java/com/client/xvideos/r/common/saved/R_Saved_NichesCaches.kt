@@ -137,7 +137,7 @@ class R_Saved_NichesCaches(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "R niches cache refresh error")
+                Timber.e("R niches cache refresh error: ${e.javaClass.simpleName}")
                 withContext(Dispatchers.Main) {
                     if (showSnackBar) {
                         // Текст причины, а не e.toString(): тот начинается с
