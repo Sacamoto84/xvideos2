@@ -29,14 +29,17 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Статус загрузки конкретной страницы в списке альбомов.
@@ -92,7 +95,12 @@ class ScreenLAlbumListSM @AssistedInject constructor(
         fun create(filter: AlbumListFilter?): ScreenLAlbumListSM
     }
 
-    private var loadJob: Job? = null
+    /**
+     * Загрузки текущего фильтра: страницы и счётчики. Смена фильтра отменяет их
+     * все разом — раньше отменялась только предыдущая первая загрузка, и ответы
+     * страниц прежнего фильтра дописывались в список уже под новым.
+     */
+    private val filterLoads: MutableSet<Job> = ConcurrentHashMap.newKeySet()
 
     //Глобальный фильтр
     private val _filter = MutableStateFlow(inFilter ?: AlbumListFilter())
@@ -112,11 +120,11 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     val info = MutableStateFlow<FacetCollectionInfo?>(null)
 
     /** Поток счетчиков доступных жанров для боковой панели фильтров. */
-    var filterGenreStateCount = MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
+    val filterGenreStateCount = MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
     /** Поток счетчиков тегов для боковой панели фильтров. */
-    var filterTaggedStateCount = MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
+    val filterTaggedStateCount = MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
     /** Поток счетчиков диапазонов количества картинок. */
-    var filterPictureCountStateCount =
+    val filterPictureCountStateCount =
         MutableStateFlow(emptyList<AlbumListFilterGenreCountResponse>())
 
     /** Карта загруженных страниц каталога: номер страницы -> данные и статус. */
@@ -135,94 +143,51 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     /** Состояние горизонтального пейджера страниц каталога. */
     val statePager = DefaultPagerState1(0, 0f) { 1 }
 
-    //var albumList = MutableStateFlow<AlbumListImpl?>(null)
-
-
-    private val _isRequest = MutableStateFlow(false)
-    /** Поток флага выполнения сетевого запроса. */
-    val isRequest = _isRequest.asStateFlow()
+    private val _requestsInFlight = MutableStateFlow(0)
+    /**
+     * Сколько страниц сейчас загружается. Счётчик, а не флаг: экран грузит до
+     * четырёх страниц сразу, и первая завершившаяся гасила индикатор остальных.
+     */
+    val requestsInFlight: StateFlow<Int> = _requestsInFlight.asStateFlow()
 
     /** Карта состояний скролла для каждой страницы альбомов: номер страницы -> [LazyGridState]. */
     val stateGrid = mutableStateMapOf<Int, LazyGridState>()
 
     init {
         Timber.d("ScreenLAlbumListSM init")
+        val filter = filter.value
+        launchForFilter { loadAggregations(filter) }
+    }
 
-        screenModelScope.launch {
-            try {
-                val agr = withContext(Dispatchers.IO) {
-                    luscious.getAlbumListAggregations(1, filter.value)
-                }
-                if (agr.isFailure) {
-                    return@launch
-                }
-
-                val agrRes = agr.getOrThrow()
-                filterGenreStateCount.value = agrRes.filterGenreStateCount
-                filterTaggedStateCount.value = agrRes.filterTaggedStateCount
-                filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Error loading initial data")
-            }
-        }
+    /** Запускает загрузку, которую отменит смена фильтра. */
+    private fun launchForFilter(block: suspend () -> Unit) {
+        val job = screenModelScope.launch(start = CoroutineStart.LAZY) { block() }
+        filterLoads += job
+        job.invokeOnCompletion { filterLoads -= job }
+        job.start()
     }
 
     /**
-     * Выполняет первичную загрузку первой страницы альбомов и агрегаций фильтров.
+     * Загружает список заново под текущий фильтр: первую страницу и счётчики.
+     * Всё, что относилось к прежнему фильтру, отменяется и стирается.
      */
     fun loadInitialData() {
-        loadJob?.cancel()
-        loadJob = screenModelScope.launch {
-            try {
-                _isRequest.value = true
-                bigList.clear()
-                bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING)
+        filterLoads.toList().forEach { it.cancel() }
+        // Число страниц и счётчики прежнего фильтра к новому не относятся: если
+        // новые не придут, старые показывать нельзя.
+        info.value = null
+        filterGenreStateCount.value = emptyList()
+        filterTaggedStateCount.value = emptyList()
+        filterPictureCountStateCount.value = emptyList()
+        bigList.clear()
 
-                val albumListResult = withContext(Dispatchers.IO) {
-                    luscious.getAlbumList(1, filter.value)
-                }
-                if (albumListResult.isFailure) {
-                    val errorMsg = albumListResult.exceptionOrNull().toLUserMessage()
-                    bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
-                    Timber.w("loadInitialData failure: $errorMsg")
-                    SnackBar.error(errorMsg)
-                    return@launch
-                }
-
-                val res = albumListResult.getOrThrow()
-                info.value = res.info
-                bigList[0] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
-
-                val agr = withContext(Dispatchers.IO) {
-                    luscious.getAlbumListAggregations(1, filter.value)
-                }
-                if (agr.isFailure) {
-                    return@launch
-                }
-
-                val agrRes = agr.getOrThrow()
-                filterGenreStateCount.value = agrRes.filterGenreStateCount
-                filterTaggedStateCount.value = agrRes.filterTaggedStateCount
-                filterPictureCountStateCount.value = agrRes.filterPictureCountStateCount
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Error loading initial data")
-                val errorMsg = e.toLUserMessage()
-                SnackBar.error(errorMsg)
-                bigList[0] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
-            } finally {
-                _isRequest.value = false
-            }
-        }
+        val filter = filter.value
+        launchForFilter { loadPage(page = 0, filter = filter, notifyFailure = true) }
+        launchForFilter { loadAggregations(filter) }
     }
 
     override fun onDispose() {
         super.onDispose()
-        loadJob?.cancel()
-        loadJob = null
         Timber.d("ScreenLAlbumListSM onDispose")
     }
 
@@ -233,51 +198,66 @@ class ScreenLAlbumListSM @AssistedInject constructor(
      */
     fun loadAlbumList(page: Int) {
         if (page < 0) return
-        screenModelScope.launch {
-            val status = bigList[page]?.status
-            if (status == StatusAlbumList.DOWNLOADED) {
-                Timber.d("loadAlbumList DOWNLOADED page:$page")
-                return@launch
-            }
-            if (status == StatusAlbumList.DOWNLOADING) {
-                Timber.d("loadAlbumList DOWNLOADING page:$page")
-                return@launch
-            }
+        val filter = filter.value
+        launchForFilter { loadPage(page, filter, notifyFailure = false) }
+    }
 
-            try {
-                _isRequest.value = true
-                Timber.d("loadAlbumList page:$page")
-                bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING)
-
-                val albumListResult = withContext(Dispatchers.IO) {
-                    luscious.getAlbumList(page + 1, filter.value)
-                }
-                if (albumListResult.isFailure) {
-                    // Без снекбара: экран грузит сразу до четырёх соседних
-                    // страниц, и одинаковых сообщений было бы четыре. Причину
-                    // показывает сама страница вместе с кнопкой повтора.
-                    val errorMsg = albumListResult.exceptionOrNull().toLUserMessage()
-                    bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
-                    return@launch
-                }
-
-                val res = albumListResult.getOrThrow()
-                info.value = res.info
-                bigList[page] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
-            } catch (e: CancellationException) {
-                // Уход с экрана посреди подгрузки страницы отменяет screenModelScope.
-                // Без этого catch отмена попадала в общий блок ниже и показывала
-                // снекбар с текстом отмены корутины уже на предыдущем экране.
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Error loading page $page")
-                val errorMsg = e.toLUserMessage()
-                SnackBar.error(errorMsg)
-                bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
-            } finally {
-                _isRequest.value = false
-            }
+    /**
+     * @param notifyFailure показать отказ снекбаром. Для первой страницы после
+     * смены фильтра — да. Для подгрузки при листании — нет: экран грузит сразу
+     * до четырёх соседних страниц, и одинаковых сообщений было бы четыре;
+     * причину показывает сама страница вместе с кнопкой повтора.
+     */
+    private suspend fun loadPage(page: Int, filter: AlbumListFilter, notifyFailure: Boolean) {
+        val status = bigList[page]?.status
+        if (status == StatusAlbumList.DOWNLOADED || status == StatusAlbumList.DOWNLOADING) {
+            Timber.d("loadAlbumList $status page:$page")
+            return
         }
+
+        _requestsInFlight.update { it + 1 }
+        try {
+            Timber.d("loadAlbumList page:$page")
+            bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.DOWNLOADING)
+
+            val albumListResult = onIo { luscious.getAlbumList(page + 1, filter) }
+            albumListResult
+                .onSuccess { res ->
+                    info.value = res.info
+                    bigList[page] = AlbumListImplInfoAndListAndStatus(res, StatusAlbumList.DOWNLOADED)
+                }
+                .onFailure { error ->
+                    val errorMsg = error.toLUserMessage()
+                    Timber.w("loadAlbumList page:$page failure: $errorMsg")
+                    bigList[page] = AlbumListImplInfoAndListAndStatus(null, StatusAlbumList.ERROR, errorMsg)
+                    if (notifyFailure) SnackBar.error(errorMsg)
+                }
+        } finally {
+            _requestsInFlight.update { it - 1 }
+        }
+    }
+
+    /**
+     * Запрос на IO. Непредвиденное исключение превращается в отказ, как и
+     * обычная ошибка сети: иначе оно уронило бы область экрана.
+     */
+    private suspend fun <T> onIo(request: suspend () -> Result<T>): Result<T> = try {
+        withContext(Dispatchers.IO) { request() }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "ScreenLAlbumListSM request failed")
+        Result.failure(e)
+    }
+
+    private suspend fun loadAggregations(filter: AlbumListFilter) {
+        val aggregations = onIo { luscious.getAlbumListAggregations(1, filter) }.getOrElse { error ->
+            Timber.w(error, "loadAggregations failure")
+            return
+        }
+        filterGenreStateCount.value = aggregations.filterGenreStateCount
+        filterTaggedStateCount.value = aggregations.filterTaggedStateCount
+        filterPictureCountStateCount.value = aggregations.filterPictureCountStateCount
     }
 
 }

@@ -2,6 +2,7 @@ package com.client.xvideos.l.repository
 
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.settings.element.SavedCredentials
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.toMD5
 import com.client.xvideos.l.KtorRequestHandler
@@ -13,14 +14,12 @@ import com.client.xvideos.l.net.json.LJson
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.IOException
 import java.io.InterruptedIOException
@@ -68,8 +67,8 @@ data class LRepositoryProtectionUiState(
  * - повторы запроса при обрыве соединения и отказе шлюза, с паузой вне очереди запросов.
  *
  * @param fileDb Локальная файловая база данных для доступа к ROM-кэшам.
- * @param credentials Сохранённые логин и пароль; пустой профиль — анонимный режим.
- * @param credentialsRevision Номер записи профиля: растёт при каждом сохранении логина или пароля.
+ * @param credentials Сохранённые логин и пароль с номером записи, одним снимком;
+ * пустой профиль — анонимный режим.
  * @param engineFactory Движок HTTP для тестов; `null` — боевой OkHttp.
  * @param notifyAnonymousFallback Сообщение пользователю, что вход не удался и запросы идут анонимно.
  * @param nowMs Текущее время в миллисекундах; подменяется в тестах.
@@ -77,8 +76,7 @@ data class LRepositoryProtectionUiState(
  */
 open class Repository(
     fileDb: AppFileDatabase,
-    private val credentials: () -> UserProfile = ::savedCredentials,
-    private val credentialsRevision: () -> Int = ::savedCredentialsRevision,
+    private val credentials: () -> SavedCredentials = ::savedCredentials,
     private val engineFactory: (() -> HttpClientEngine)? = null,
     private val notifyAnonymousFallback: (String) -> Unit = SnackBar::warning,
     private val nowMs: () -> Long = System::currentTimeMillis,
@@ -117,10 +115,17 @@ open class Repository(
     private var seenCredentialsRevision: Int? = null
 
     private val requestMutex = Mutex()
-    private val ramCacheMutex = Mutex()
 
-    /** Растёт при каждой очистке RAM-кэша. Читается и пишется только под [ramCacheMutex]. */
+    /** Растёт при каждой очистке RAM-кэша. Читается и пишется только под замком [ramCache]. */
     private var ramCacheGeneration = 0
+
+    /**
+     * Ответы запросов в памяти. Читается и пишется только под `synchronized`
+     * на самом себе: операции с ним не приостанавливаются, и отмена корутины
+     * не может застать очистку на полпути. Раньше кэш охранял `Mutex`, и
+     * запрос, отменённый в его ожидании, оставлял в кэше ответы прежнего
+     * режима входа — после выхода их получал аноним.
+     */
     private val ramCache = object : LinkedHashMap<String, String>(RAM_CACHE_MAX_ENTRIES, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
             return size > RAM_CACHE_MAX_ENTRIES
@@ -149,6 +154,12 @@ open class Repository(
     private val cacheUrlStringRomDao = fileDb.cacheUrlStringRom
     private val lAlbumBundleCacheDao = fileDb.lAlbumBundleCache
 
+    /**
+     * Номер записи сохранённого профиля. По нему зависимые от аккаунта данные
+     * узнают, что профиль перезаписан и они больше не годятся.
+     */
+    open fun profileRevision(): Int = credentials().revision
+
     private fun createHandler(): KtorRequestHandler {
         return KtorRequestHandler(
             timeoutMillis = 5000,
@@ -169,7 +180,9 @@ open class Repository(
      * же логин и пароль» после отказа сервера не давало новой попытки.
      *
      * Клиент меняется под [requestMutex]: без него close() старого клиента
-     * приходился на середину выполняющегося запроса.
+     * приходился на середину выполняющегося запроса. От смены клиента до
+     * очистки кэша нет точек приостановки: отмена вызывающего не оставит новый
+     * клиент со старым кэшем.
      *
      * Признак антибот-защиты здесь не трогаем: пауза запросов от выхода не
      * проходит, и следующий запрос её ждёт. Раньше выход гасил признак, экран
@@ -205,20 +218,21 @@ open class Repository(
     private suspend fun ensureAuthenticated(): Result<Unit> {
         return try {
             authMutex.withLock {
-                // Номер читаем раньше профиля: настройка сначала меняет значение,
-                // потом номер. При таком порядке гонка с записью даёт лишний
-                // сброс на следующем запросе, а не пропущенный.
-                val revision = credentialsRevision()
-                val profile = credentials()
+                // Значения и номер записи приходят одним снимком: между ними
+                // нет окна, в котором запись дала бы новый профиль со старым
+                // номером и лишний сброс сессии на следующем запросе.
+                val saved = credentials()
+                val profile = UserProfile(email = saved.login.trim(), password = saved.password)
                 // Профиль перезаписали — прежняя сессия и память о неудачном
                 // входе к нему не относятся, даже если логин и пароль те же.
                 // Раньше сброс шёл только по пустому профилю, а «Выйти» и
                 // «Войти» в настройках идут подряд, без запроса между ними:
                 // пустого профиля репозиторий не видел, новый вход уходил с
                 // cookie прежнего пользователя, а отвергнутые данные не
-                // пробовались снова.
-                if (revision != seenCredentialsRevision || !profile.isValid) dropSession()
-                seenCredentialsRevision = revision
+                // пробовались снова. Номер — единственный признак: стереть
+                // профиль, не записав его, в приложении нельзя.
+                if (saved.revision != seenCredentialsRevision) dropSession()
+                seenCredentialsRevision = saved.revision
                 val loginAllowed = profile != anonymousFallbackFor || nowMs() >= loginRetryAtMs
                 // Без логина или пароля работаем анонимно (сервер отдаёт меньше
                 // альбомов), с ними — входим.
@@ -235,7 +249,6 @@ open class Repository(
 
     /** Входит по [profile], если сессии с ним ещё нет. Вызывать под [authMutex]. */
     private suspend fun logInIfNeeded(profile: UserProfile) {
-        val wasLoggedIn = handler.loggedIn
         handler.setCredentials(profile.email, profile.password)
         if (handler.loggedIn) return
 
@@ -243,8 +256,10 @@ open class Repository(
         login.onSuccess { anonymousFallbackFor = null }
             .onFailure { fallBackToAnonymous(profile, it) }
         // Ключ RAM-кэша — только тело запроса, а вошедшему и анониму сервер
-        // отвечает по-разному: после смены режима старые ответы не годятся.
-        if (login.isSuccess || wasLoggedIn) clearRamCache()
+        // отвечает по-разному: после входа анонимные ответы не годятся. Ответы
+        // прежнего аккаунта к этому моменту уже убрал [dropSession]: смена
+        // логина или пароля — это запись профиля.
+        if (login.isSuccess) clearRamCache()
     }
 
     /**
@@ -571,8 +586,8 @@ open class Repository(
     /** Запись кэша и поколение кэша на момент чтения. */
     private class RamCacheLookup(val content: String?, val generation: Int)
 
-    private suspend fun lookupRamCache(cacheKey: String): RamCacheLookup {
-        return ramCacheMutex.withLock { RamCacheLookup(ramCache[cacheKey], ramCacheGeneration) }
+    private fun lookupRamCache(cacheKey: String): RamCacheLookup {
+        return synchronized(ramCache) { RamCacheLookup(ramCache[cacheKey], ramCacheGeneration) }
     }
 
     /**
@@ -582,28 +597,21 @@ open class Repository(
      * ответ прежнего режима: без этой проверки он ложился в только что очищенный
      * кэш и отдавался уже вошедшему (или вышедшему) пользователю.
      */
-    private suspend fun putRamCache(cacheKey: String, content: String, generation: Int) {
-        ramCacheMutex.withLock {
+    private fun putRamCache(cacheKey: String, content: String, generation: Int) {
+        synchronized(ramCache) {
             if (generation == ramCacheGeneration) ramCache[cacheKey] = content
         }
     }
 
-    private suspend fun deleteRamCache(cacheKey: String) {
-        ramCacheMutex.withLock { ramCache.remove(cacheKey) }
+    private fun deleteRamCache(cacheKey: String) {
+        synchronized(ramCache) { ramCache.remove(cacheKey) }
     }
 
-    /**
-     * Очищает кэш при смене режима входа. Отмена вызывающего очистку не
-     * прерывает: к этому моменту клиент уже сменил режим, и повторить её некому.
-     * Раньше запрос, отменённый в ожидании [ramCacheMutex], оставлял в кэше
-     * ответы прежнего режима — после выхода их получал аноним.
-     */
-    private suspend fun clearRamCache() {
-        withContext(NonCancellable) {
-            ramCacheMutex.withLock {
-                ramCache.clear()
-                ramCacheGeneration++
-            }
+    /** Очищает кэш при смене режима входа. Не приостанавливается — см. [ramCache]. */
+    private fun clearRamCache() {
+        synchronized(ramCache) {
+            ramCache.clear()
+            ramCacheGeneration++
         }
     }
 
@@ -654,8 +662,4 @@ internal const val L_LOGIN_RETRY_INTERVAL_MS = 60_000L
 private const val RETRY_BACKOFF_MS = 1000L
 
 /** Логин и пароль L из настроек приложения. */
-private fun savedCredentials(): UserProfile =
-    UserProfile(email = Settings.l_login.field.value.trim(), password = Settings.l_pass.field.value)
-
-/** Номер записи профиля L: растёт при каждом сохранении логина или пароля. */
-private fun savedCredentialsRevision(): Int = Settings.l_login.revision + Settings.l_pass.revision
+private fun savedCredentials(): SavedCredentials = Settings.l_profile.field.value

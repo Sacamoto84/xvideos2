@@ -81,7 +81,7 @@ private fun Screen.ScreenAlbumListContent(
     val bigList = vm.bigList
     val info by vm.info.collectAsStateWithLifecycle()
     val currentFilter by vm.filter.collectAsStateWithLifecycle()
-    val isRequest by vm.isRequest.collectAsStateWithLifecycle()
+    val requestsInFlight by vm.requestsInFlight.collectAsStateWithLifecycle()
     val filterGCount by vm.filterGenreStateCount.collectAsStateWithLifecycle()
     val filterTagsCount by vm.filterTaggedStateCount.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
@@ -97,7 +97,11 @@ private fun Screen.ScreenAlbumListContent(
 
     LaunchedEffect(info) { totalPages = info?.totalPages ?: 1 }
 
-    LaunchedEffect(vm.statePager.currentPage) {
+    // Ключ — и число страниц: оно приходит с первым ответом и сбрасывается при
+    // смене фильтра. По одной смене страницы соседние не подгружались, пока
+    // пользователь не листнёт: и при открытии, и после фильтра пейджер стоит на
+    // нулевой странице.
+    LaunchedEffect(vm.statePager.currentPage, totalPages) {
         vm.statePager.pageCountState.value = { totalPages }
         vm.savedPagerPage = vm.statePager.currentPage
         val currentPage = vm.statePager.currentPage
@@ -142,7 +146,7 @@ private fun Screen.ScreenAlbumListContent(
             modifier = Modifier.fillMaxSize(),
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
-                if (isRequest) {
+                if (requestsInFlight > 0) {
                     TopLoadingBar()
                 }
             },

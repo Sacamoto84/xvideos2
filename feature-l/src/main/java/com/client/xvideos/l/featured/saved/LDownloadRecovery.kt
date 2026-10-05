@@ -219,8 +219,7 @@ private suspend fun lRestoreSourceToFile(client: io.ktor.client.HttpClient, sour
     if (!isRemote) {
         val localFile = source.lToLocalFileOrNull()
             ?: throw IOException("исходный файл не найден: $source")
-        target.parentFile?.mkdirs()
-        localFile.copyTo(target, overwrite = true)
+        lCopyFileAtomically(localFile, target)
         return
     }
 

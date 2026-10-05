@@ -78,11 +78,17 @@ object L_ScreenServerLikesTab : Screen {
             }
         }
 
-        val canLoadMore = vm.hasMore && !isLoading && errorMessage == null
+        // После сбоя подгрузка сама не повторяется: её пробуют снова, когда
+        // пользователь ушёл от конца списка и вернулся.
+        val nextPageFailed by vm.nextPageFailed.collectAsStateWithLifecycle()
+        val canLoadMore = vm.hasMore && !isLoading && errorMessage == null && !nextPageFailed
         LaunchedEffect(shouldLoadMore, canLoadMore) {
             if (shouldLoadMore && canLoadMore) {
                 vm.loadNextPage()
             }
+        }
+        LaunchedEffect(shouldLoadMore) {
+            if (!shouldLoadMore) vm.onListEndLeft()
         }
 
         val onRetry = remember(vm) { { vm.loadInitial() } }

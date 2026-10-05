@@ -17,12 +17,16 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -111,53 +115,34 @@ class RepositoryNetworkFailureTest {
         url.parameters["operationName"]
             ?: OPERATION_IN_BODY.find((body as? TextContent)?.text.orEmpty())?.groupValues?.get(1)
 
-    /**
-     * Сохранённый профиль, как его видит [Repository]: значение и номер записи.
-     * Номер растёт при каждом сохранении, как у настроек приложения, поэтому
-     * по нему видна и запись прежнего значения.
-     */
-    private class SavedProfile(initial: UserProfile) {
-        @Volatile
-        var profile = initial
-            private set
-
-        private val writes = AtomicInteger()
-        val revision: Int get() = writes.get()
-
-        fun save(value: UserProfile) {
-            profile = value
-            writes.incrementAndGet()
-        }
-    }
-
     /** Время для [Repository]: тест двигает его сам, чтобы не ждать паузу повторного входа. */
     private var now = 1_000_000L
 
+    /** @param onClientCreated зовётся, когда репозиторий создаёт HTTP-клиент: первый раз и при смене сессии. */
     private fun repository(
         server: FakeServer,
+        saved: SavedProfile = SavedProfile(),
         notices: MutableList<String> = mutableListOf(),
         backoffMs: Long = TEST_BACKOFF_MS,
-        credentialsRevision: () -> Int = { 0 },
-        credentials: () -> UserProfile = { UserProfile() },
+        onClientCreated: () -> Unit = {},
     ) = Repository(
         fileDb = AppFileDatabase(),
-        credentials = credentials,
-        credentialsRevision = credentialsRevision,
-        engineFactory = { server.engine },
+        credentials = { saved.snapshot },
+        engineFactory = {
+            onClientCreated()
+            server.engine
+        },
         notifyAnonymousFallback = { notices += it },
         nowMs = { now },
         retryBackoffMs = backoffMs,
     )
-
-    private fun repository(server: FakeServer, saved: SavedProfile) =
-        repository(server, credentialsRevision = saved::revision) { saved.profile }
 
     // --- Вход ---
 
     @Test
     fun `после сбоя сети при входе вход повторяется, когда пауза прошла`() = runBlocking {
         val server = FakeServer().apply { login = { throw UnknownHostException("нет сети") } }
-        val repository = repository(server) { CREDENTIALS }
+        val repository = repository(server, SavedProfile(CREDENTIALS))
 
         repository.openURI(query("A"))
         server.login = FakeServer.LOGIN_OK
@@ -171,7 +156,7 @@ class RepositoryNetworkFailureTest {
     @Test
     fun `до конца паузы вход после сбоя сети не повторяется`() = runBlocking {
         val server = FakeServer().apply { login = { throw UnknownHostException("нет сети") } }
-        val repository = repository(server) { CREDENTIALS }
+        val repository = repository(server, SavedProfile(CREDENTIALS))
 
         repository.openURI(query("A"))
         now += L_LOGIN_RETRY_INTERVAL_MS - 1
@@ -185,7 +170,7 @@ class RepositoryNetworkFailureTest {
         val server = FakeServer().apply {
             login = { respond(SERVER_ERROR_PAGE, HttpStatusCode.InternalServerError, HTML) }
         }
-        val repository = repository(server) { CREDENTIALS }
+        val repository = repository(server, SavedProfile(CREDENTIALS))
 
         repository.openURI(query("A"))
         now += L_LOGIN_RETRY_INTERVAL_MS
@@ -199,7 +184,7 @@ class RepositoryNetworkFailureTest {
         val server = FakeServer().apply {
             login = { respond(WRONG_CREDENTIALS_PAGE, HttpStatusCode.OK, HTML) }
         }
-        val repository = repository(server) { CREDENTIALS }
+        val repository = repository(server, SavedProfile(CREDENTIALS))
 
         repository.openURI(query("A"))
         now += L_LOGIN_RETRY_INTERVAL_MS
@@ -212,7 +197,7 @@ class RepositoryNetworkFailureTest {
     fun `повторный сбой входа не показывает второе предупреждение`() = runBlocking {
         val server = FakeServer().apply { login = { throw UnknownHostException("нет сети") } }
         val notices = mutableListOf<String>()
-        val repository = repository(server, notices) { CREDENTIALS }
+        val repository = repository(server, SavedProfile(CREDENTIALS), notices)
 
         repository.openURI(query("A"))
         now += L_LOGIN_RETRY_INTERVAL_MS
@@ -226,11 +211,11 @@ class RepositoryNetworkFailureTest {
     @Test
     fun `после очистки логина и пароля запросы идут анонимно`() = runBlocking {
         val server = FakeServer()
-        var credentials = CREDENTIALS
-        val repository = repository(server) { credentials }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
 
         repository.openURI(query("A"))
-        credentials = UserProfile()
+        saved.save(UserProfile())
         repository.openURI(query("B"))
 
         assertEquals("выход не должен обращаться ко входу", 1, server.loginCalls.get())
@@ -311,7 +296,8 @@ class RepositoryNetworkFailureTest {
             api = { respond("<html><body>Just a moment...</body></html>", HttpStatusCode.OK, HTML) }
         }
         val saved = SavedProfile(CREDENTIALS)
-        val repository = repository(server, saved)
+        val clientsCreated = MutableStateFlow(0)
+        val repository = repository(server, saved, onClientCreated = { clientsCreated.update { it + 1 } })
 
         // Сервер ответил HTML-проверкой: признак поднят, запрос ждёт паузу перед повтором.
         val challenged = async(Dispatchers.Default) { repository.openURI(query("A")) }
@@ -321,7 +307,10 @@ class RepositoryNetworkFailureTest {
 
         saved.save(UserProfile())
         val afterLogout = async(Dispatchers.Default) { repository.openURI(query("B")) }
-        val cleared = withTimeoutOrNull(1_000) { repository.protectionUiState.first { !it.active } }
+        // Второй клиент создаёт выход: с этой точки сброс сессии заведомо идёт,
+        // и признаку хватает короткого ожидания, чтобы погаснуть, если его гасят.
+        clientsCreated.first { it == 2 }
+        val cleared = withTimeoutOrNull(300) { repository.protectionUiState.first { !it.active } }
         afterLogout.cancel()
         afterLogout.join()
 
@@ -331,24 +320,22 @@ class RepositoryNetworkFailureTest {
     // --- Кэш в памяти ---
 
     @Test
-    fun `отмена запроса во время выхода не оставляет в кэше ответ вошедшего`() = runBlocking {
+    fun `отмена запроса при смене клиента не оставляет в кэше ответ вошедшего`() = runBlocking {
         val server = FakeServer()
         val saved = SavedProfile(CREDENTIALS)
-        val repository = repository(server, saved)
+        var interrupted: Job? = null
+        val repository = repository(server, saved, onClientCreated = { interrupted?.cancel() })
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
 
-        // Кэш занят соседним запросом ровно тогда, когда выход дошёл до его
-        // очистки. Иначе это ожидание не поймать: кэш держат микросекунды.
-        val ramCacheMutex = Repository::class.java.getDeclaredField("ramCacheMutex")
-            .apply { isAccessible = true }
-            .get(repository) as Mutex
-        ramCacheMutex.lock()
+        // Запрос отменяется в тот момент, когда выход уже сменил клиент, но кэш
+        // ещё не очищен. Смена клиента и очистка кэша — одно неделимое
+        // действие: между ними нет точки, где отмена остановила бы выход.
         saved.save(UserProfile())
-        val interrupted = async(Dispatchers.Default) { repository.openURI(query("B")) }
-        delay(500)
-        interrupted.cancel()
-        ramCacheMutex.unlock()
-        interrupted.join()
+        val request = launch(Dispatchers.Default, start = CoroutineStart.LAZY) { repository.openURI(query("B")) }
+        interrupted = request
+        request.join()
+        interrupted = null
+        assertTrue("запрос должен быть отменён при смене клиента", request.isCancelled)
 
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
 
@@ -362,7 +349,7 @@ class RepositoryNetworkFailureTest {
     @Test
     fun `после входа ответ, закэшированный анонимно, запрашивается заново`() = runBlocking {
         val server = FakeServer().apply { login = { throw UnknownHostException("нет сети") } }
-        val repository = repository(server) { CREDENTIALS }
+        val repository = repository(server, SavedProfile(CREDENTIALS))
 
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
         server.login = FakeServer.LOGIN_OK
@@ -375,24 +362,41 @@ class RepositoryNetworkFailureTest {
     @Test
     fun `после смены логина ответ прежнего аккаунта запрашивается заново`() = runBlocking {
         val server = FakeServer()
-        var credentials = CREDENTIALS
-        val repository = repository(server) { credentials }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
 
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
-        credentials = CREDENTIALS.copy(email = "other@example.com")
+        saved.save(CREDENTIALS.copy(email = "other@example.com"))
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
 
         assertEquals(2, server.apiCalls.size)
     }
 
     @Test
-    fun `после выхода ответ вошедшего пользователя запрашивается заново`() = runBlocking {
+    fun `после смены аккаунта с сорванным входом ответ прежнего аккаунта не отдаётся`() = runBlocking {
         val server = FakeServer()
-        var credentials = CREDENTIALS
-        val repository = repository(server) { credentials }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
 
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
-        credentials = UserProfile()
+        // Вход нового аккаунта срывается: кэш после входа не чистится, и ответ
+        // прежнего аккаунта убирает только сброс сессии по номеру записи.
+        server.login = { throw UnknownHostException("нет сети") }
+        saved.save(CREDENTIALS.copy(email = "other@example.com"))
+        repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
+
+        assertEquals(2, server.apiCalls.size)
+        assertEquals("второй запрос идёт анонимно", HttpMethod.Get, server.apiCalls.last().method)
+    }
+
+    @Test
+    fun `после выхода ответ вошедшего пользователя запрашивается заново`() = runBlocking {
+        val server = FakeServer()
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
+
+        repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
+        saved.save(UserProfile())
         repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM)
 
         assertEquals(2, server.apiCalls.size)
@@ -424,7 +428,7 @@ class RepositoryNetworkFailureTest {
                 respond(API_OK, HttpStatusCode.OK, JSON)
             }
         }
-        val repository = repository(server) { CREDENTIALS }
+        val repository = repository(server, SavedProfile(CREDENTIALS))
 
         // Анонимный запрос ушёл и ждёт ответа.
         val inFlight = async(Dispatchers.Default) { repository.openURI(query("A"), RepositoryUriConfig.CACHE_RAM) }

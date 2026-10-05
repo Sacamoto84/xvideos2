@@ -15,7 +15,6 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -26,14 +25,21 @@ class ScreenLAlbumTopHitsSM @Inject constructor(
 
     val state = LazyListState()
 
-    private val _albumTopHits = MutableStateFlow<AlbumTopHitsImpl?>(null)
+    // Запрос идёт в области экрана: раньше он жил в области приложения, и
+    // сообщение о сбое появлялось уже на другом экране.
+    private val topHits = luscious.getAlbumTopHits(requestScope = screenModelScope)
+
+    private val _albumTopHits = MutableStateFlow<AlbumTopHitsImpl?>(topHits)
     val albumTopHits: StateFlow<AlbumTopHitsImpl?> = _albumTopHits.asStateFlow()
+
+    /** Текст сбоя загрузки топа; `null`, пока она идёт или удалась. */
+    val loadError: StateFlow<String?> = topHits.loadError
+
+    /** Повторяет загрузку топа. */
+    fun retry() = topHits.reload()
 
     init {
         Timber.d("iii ScreenLAlbumTopHitsSM init")
-        screenModelScope.launch {
-            _albumTopHits.value = luscious.getAlbumTopHits()
-        }
     }
 
     override fun onDispose() {

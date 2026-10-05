@@ -32,6 +32,7 @@ import com.client.xvideos.l.ui.screens.albumLandingTag.molecule.LandingTagSectio
 import com.client.xvideos.l.ui.screens.albumLandingTag.molecule.LandingTagTopBar
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.AlbumListPageError
 
 class ScreenLAlbumLandingTag(val tag: String) : Screen {
 
@@ -42,6 +43,8 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenLAlbumLandingTagSM, ScreenLAlbumLandingTagSM.Factory> { factory -> factory.create(tag) }
         val albumTopHits by vm.albumTopHits.collectAsStateWithLifecycle()
+        val loadError by vm.loadError.collectAsStateWithLifecycle()
+        val onRetry: () -> Unit = remember(vm) { { vm.retry() } }
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -67,11 +70,13 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         ScreenLAlbumLandingTagContent(
             title = topBarTitle,
             sections = items.orEmpty(),
+            loadError = loadError,
             state = vm.state,
             screenWidth = screenWidth,
             onBack = onBack,
             onAlbumClick = onAlbumClick,
-            onSeeAllClick = onSeeAllClick
+            onSeeAllClick = onSeeAllClick,
+            onRetry = onRetry
         )
     }
 }
@@ -80,11 +85,13 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
 fun ScreenLAlbumLandingTagContent(
     title: String,
     sections: List<Landing_page_albumSection>,
+    loadError: String?,
     state: LazyListState,
     screenWidth: Dp,
     onBack: () -> Unit,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (Landing_page_albumSection) -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -103,6 +110,10 @@ fun ScreenLAlbumLandingTagContent(
                 .padding(padding)
                 .background(Theme.background)
         ) {
+            if (sections.isEmpty() && loadError != null) {
+                AlbumListPageError(message = loadError, onRetry = onRetry)
+                return@Box
+            }
             LazyColumn(state = state, modifier = Modifier.fillMaxSize()) {
                 items(
                     items = sections,
@@ -130,10 +141,12 @@ private fun ScreenLAlbumLandingTagContentPreview() {
     ScreenLAlbumLandingTagContent(
         title = "Tag: Sample",
         sections = emptyList(),
+        loadError = null,
         state = rememberLazyListState(),
         screenWidth = 360.dp,
         onBack = {},
         onAlbumClick = {},
-        onSeeAllClick = {}
+        onSeeAllClick = {},
+        onRetry = {}
     )
 }

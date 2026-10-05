@@ -19,6 +19,8 @@ import com.client.xvideos.l.repository.HTML_INSTEAD_OF_JSON_PREFIX
 import com.client.xvideos.l.repository.LRepositoryProtectionUiState
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
+import com.client.xvideos.l.repository.toLUserMessage
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +37,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Описание проблемы/сбоя при загрузке конкретной страницы картинок альбома.
@@ -79,13 +82,18 @@ data class LAlbumPicsBundleSnapshot(
  * - Управлением сбойными страницами [failedPages] и их повторной попыткой ([retryFailedPages]).
  * - Восстановлением из дискового кэша бандлов ([restoreFromBundleCache]).
  *
+ * Загрузка, повтор и восстановление идут строго по очереди: альбом полон,
+ * только когда получена каждая его страница, и решает это одна процедура за раз.
+ *
  * @property id Идентификатор альбома.
  * @property repository Репозиторий сетевых запросов.
+ * @param dispatcher Поток разбора и сборки списка; подменяется в тестах.
  */
 @Stable
 class AlbumPicsDetails(
     val id: Int,
-    val repository: Repository
+    val repository: Repository,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
 
     private companion object {
@@ -116,7 +124,27 @@ class AlbumPicsDetails(
     val protectionUiState: StateFlow<LRepositoryProtectionUiState>
         get() = repository.protectionUiState
 
+    /** Успешно полученные страницы. Сбойных здесь нет — они в [failedPages]. */
     private val loadedPages = mutableMapOf<Int, List<PicsDetails>>()
+
+    /**
+     * Получена каждая страница альбома. Читается и пишется только под [stateMutex].
+     *
+     * Раньше полноту определяли по `percentLoad == 1f`, а единицу ставил и повтор
+     * сбойных страниц — в том числе после сбоя первой страницы, когда остальные
+     * никто не запрашивал, и посреди идущей загрузки.
+     */
+    private var loadComplete = false
+
+    /**
+     * Очередь процедур: [contentUrls], [retryFailedPages], [restoreFromBundleCache].
+     * Повтор, нажатый во время загрузки, ждёт её конца и затем добирает всё,
+     * чего не хватает.
+     */
+    private val loadMutex = Mutex()
+
+    /** Растёт с каждой новой загрузкой: повтор прежней загрузки по нему узнаёт, что устарел. */
+    private val loadGeneration = AtomicInteger()
 
     /**
      * Раньше роль этого мьютекса играл `withContext(Dispatchers.Main)`: он и
@@ -136,6 +164,7 @@ class AlbumPicsDetails(
         val items: List<PicsDetails>
     )
 
+    /** Запрашивает страницу. Сбой сам попадает в [failedPages], успех убирает прежнюю запись о нём. */
     private suspend fun loadPage(
         page: Int,
         config: RepositoryUriConfig = RepositoryUriConfig.CACHE_RAM
@@ -238,49 +267,63 @@ class AlbumPicsDetails(
      */
     suspend fun contentUrls(
         pageCacheConfig: RepositoryUriConfig = RepositoryUriConfig.CACHE_RAM
-    ) = withContext(Dispatchers.Default) {
+    ) = withContext(dispatcher) {
+        val generation = loadGeneration.incrementAndGet()
+        loadMutex.withLock {
+            stateMutex.withLock {
+                Snapshot.withMutableSnapshot {
+                    pics.clear()
+                    failedPages.clear()
+                    loadedPages.clear()
+                    loadComplete = false
+                    totalPages = null
+                    percentLoad = 0f
+                    isPageRequestInFlight = false
+                }
+            }
+
+            Timber.d("AlbumPicsDetails [$id] Starting chunked load (config=$pageCacheConfig)")
+            loadMissingPages(pageCacheConfig, generation)
+            Timber.d("AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
+        }
+    }
+
+    /**
+     * Загружает страницы, которых ещё нет: сбойные и те, до которых загрузка не
+     * дошла. Вызывать под [loadMutex].
+     *
+     * Число страниц сообщает первая: без неё остальные не запросить. Поэтому
+     * повтор после сбоя первой страницы — это загрузка альбома с начала, а не
+     * одной страницы.
+     */
+    private suspend fun loadMissingPages(config: RepositoryUriConfig, generation: Int) {
+        requestMissingPages(config, generation)
+        // Отменённая загрузка сюда не доходит и полной не становится.
         stateMutex.withLock {
-            Snapshot.withMutableSnapshot {
-                pics.clear()
-                failedPages.clear()
-                loadedPages.clear()
-                totalPages = null
-                percentLoad = 0f
-                isPageRequestInFlight = false
-                isRetryingFailedPages = false
-            }
+            val pages = totalPages
+            loadComplete = pages != null && failedPages.isEmpty() && loadedPages.size == pages
+            // Без первой страницы показывать нечего: полосу прячем, сбой виден в панели.
+            if (loadComplete || pages == null) percentLoad = 1f
+        }
+    }
+
+    private suspend fun requestMissingPages(config: RepositoryUriConfig, generation: Int) {
+        if (!isPageLoaded(1)) {
+            val firstPage = loadPage(1, config).getOrElse { return }
+            appendPage(firstPage, firstPage.totalPages)
         }
 
-        Timber.d("AlbumPicsDetails [$id] Starting chunked load (config=$pageCacheConfig)")
-        val firstPage = loadPage(1, pageCacheConfig).getOrElse {
-            Timber.w(it, "AlbumPicsDetails $id page 1 error")
-            recordPageIssue(1, it)
-            percentLoad = 1f
-            return@withContext
-        }
-
-        val pages = firstPage.totalPages
-        appendPage(firstPage, pages)
-        Timber.d("AlbumPicsDetails [$id] Page 1 loaded: +${firstPage.items.size} items. Total pages: $pages, loaded pics so far: ${pics.size}")
-
+        val pages = totalPages ?: return
         for (page in 2..pages) {
-            val pageResult = loadPage(page, pageCacheConfig).getOrElse {
-                Timber.w(it, "AlbumPicsDetails $id page $page error")
-                recordPageIssue(page, it)
-                PageLoadResult(page, pages, emptyList())
-            }
-            appendPage(pageResult, pages)
-            Timber.d("AlbumPicsDetails [$id] Page $page/$pages loaded: +${pageResult.items.size} items. Loaded pics so far: ${pics.size}")
+            // Началась новая загрузка: эта работает со списком, который та сейчас очистит.
+            if (generation != loadGeneration.get()) return
+            if (isPageLoaded(page)) continue
+            loadPage(page, config).onSuccess { appendPage(it, pages) }
             delay(PAGE_REQUEST_DELAY_MS)
         }
-
-        stateMutex.withLock {
-            if (failedPages.isEmpty()) {
-                percentLoad = 1f
-            }
-        }
-        Timber.d("AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
     }
+
+    private suspend fun isPageLoaded(page: Int): Boolean = stateMutex.withLock { loadedPages.containsKey(page) }
 
     /**
      * Восстанавливает список картинок из закэшированного бандла без выполнения сетевых запросов.
@@ -288,20 +331,24 @@ class AlbumPicsDetails(
     suspend fun restoreFromBundleCache(
         items: List<PicsDetails>,
         cachedTotalPages: Int?
-    ) = withContext(Dispatchers.Default) {
+    ) = withContext(dispatcher) {
         val corrected = normalizePictureUrls(items)
-        stateMutex.withLock {
-            Snapshot.withMutableSnapshot {
-                pics.clear()
-                failedPages.clear()
-                loadedPages.clear()
-                val pages = cachedTotalPages?.coerceAtLeast(1) ?: 1
-                totalPages = pages
-                percentLoad = 1f
-                isPageRequestInFlight = false
-                isRetryingFailedPages = false
-                loadedPages[1] = corrected
-                pics.addAll(corrected)
+        loadGeneration.incrementAndGet()
+        loadMutex.withLock {
+            stateMutex.withLock {
+                Snapshot.withMutableSnapshot {
+                    pics.clear()
+                    failedPages.clear()
+                    loadedPages.clear()
+                    val pages = cachedTotalPages?.coerceAtLeast(1) ?: 1
+                    totalPages = pages
+                    percentLoad = 1f
+                    isPageRequestInFlight = false
+                    loadedPages[1] = corrected
+                    // В кэш попадает только полный альбом.
+                    loadComplete = true
+                    pics.addAll(corrected)
+                }
             }
         }
     }
@@ -310,7 +357,7 @@ class AlbumPicsDetails(
      * Формирует снимок полностью загруженного набора картинок, если все страницы получены без ошибок.
      */
     suspend fun bundleSnapshotOrNull(): LAlbumPicsBundleSnapshot? = stateMutex.withLock {
-        if (failedPages.isNotEmpty() || percentLoad < 1f || pics.isEmpty()) {
+        if (!loadComplete || pics.isEmpty()) {
             return@withLock null
         }
         LAlbumPicsBundleSnapshot(
@@ -324,16 +371,15 @@ class AlbumPicsDetails(
         stateMutex.withLock {
             // Быстрый путь для последовательной загрузки (стр. 1,2,3,...): дописываем
             // только новую страницу в хвост вместо полной пересборки всего списка
-            // (иначе это O(n²) и полная рекомпозиция на каждой странице).
-            val isContiguousTail = !loadedPages.containsKey(page.page) &&
-                    page.page == loadedPages.size + 1 &&
-                    (1..loadedPages.size).all { loadedPages.containsKey(it) }
+            // (иначе это O(n²) и полная рекомпозиция на каждой странице). Пропуск
+            // на месте сбойной страницы хвосту не мешает: порядок задают номера.
+            val isTail = loadedPages.keys.all { it < page.page }
             loadedPages[page.page] = corrected
 
             // Заполнение пропуска / ретрай страницы — пересобираем по порядку.
             // Собираем результат до входа в снапшот, чтобы под ним осталась
             // только публикация.
-            val merged = if (isContiguousTail) null else {
+            val merged = if (isTail) null else {
                 val totalLoaded = loadedPages.values.sumOf { it.size }
                 val mergedList = ArrayList<PicsDetails>(totalLoaded)
                 for (i in 1..pages) {
@@ -345,8 +391,7 @@ class AlbumPicsDetails(
                 mergedList
             }
 
-            val successfulPages = loadedPages.count { it.value.isNotEmpty() }
-            val progress = (successfulPages.toFloat() / pages.coerceAtLeast(1)).coerceIn(0f, 1f)
+            val progress = (loadedPages.size.toFloat() / pages.coerceAtLeast(1)).coerceIn(0f, 1f)
 
             Snapshot.withMutableSnapshot {
                 totalPages = pages
@@ -362,43 +407,31 @@ class AlbumPicsDetails(
     }
 
     /**
-     * Повторяет загрузку всех зафиксированных в [failedPages] страниц картинок.
+     * Повторяет загрузку страниц из [failedPages] и добирает те, до которых
+     * загрузка не дошла. Если загрузка ещё идёт, ждёт её конца.
      */
-    suspend fun retryFailedPages() = withContext(Dispatchers.Default) {
-        val pagesToRetry = stateMutex.withLock {
-            if (failedPages.isEmpty()) emptyList() else failedPages.mapTo(java.util.TreeSet<Int>()) { it.page }.toList()
-        }
-        if (pagesToRetry.isEmpty()) return@withContext
+    suspend fun retryFailedPages() = withContext(dispatcher) {
+        if (stateMutex.withLock { failedPages.isEmpty() }) return@withContext
 
+        val generation = loadGeneration.get()
         isRetryingFailedPages = true
-
         try {
-            val knownTotalPages = totalPages ?: pagesToRetry.maxOrNull() ?: 1
-            pagesToRetry.forEach { page ->
-                val pageResult = loadPage(page).getOrElse {
-                    Timber.w(it, "AlbumPicsDetails $id page $page retry error")
-                    recordPageIssue(page, it)
-                    delay(PAGE_REQUEST_DELAY_MS)
-                    return@forEach
+            loadMutex.withLock {
+                // Пока ждали, началась новая загрузка: она всё запросит сама.
+                if (generation == loadGeneration.get()) {
+                    loadMissingPages(RepositoryUriConfig.CACHE_RAM, generation)
                 }
-                appendPage(pageResult, pageResult.totalPages.coerceAtLeast(knownTotalPages))
-                delay(PAGE_REQUEST_DELAY_MS)
             }
         } finally {
-            stateMutex.withLock {
-                if (failedPages.isEmpty()) {
-                    percentLoad = 1f
-                }
-            }
             isRetryingFailedPages = false
         }
     }
 
     private suspend fun recordPageIssue(page: Int, error: Throwable?) {
-        val message = error?.message ?: "Unknown L album page error"
+        // Текст для экрана: сырое сообщение при странице защиты несёт HTML-разметку.
         val issue = LAlbumPageLoadIssue(
             page = page,
-            message = message,
+            message = error.toLUserMessage(),
             htmlChallenge = error.isHtmlChallengeResponse()
         )
         stateMutex.withLock {

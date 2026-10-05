@@ -3,7 +3,6 @@ package com.client.xvideos.screenSettings.molecule
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.SettingsPage
-import com.client.xvideos.screenSettings.components.SettingsButtonRow
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview

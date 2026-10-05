@@ -129,6 +129,13 @@ internal fun lReadCollectionItems(collectionFolder: File): List<PicsDetails> {
 }
 
 /**
+ * Читает один сохранённый элемент из его папки [itemFolder]; `null`, если в
+ * папке нет метаданных или медиафайла.
+ */
+internal fun lReadCollectionItem(itemFolder: File): PicsDetails? =
+    readCollectionMetadata(File(itemFolder, L_METADATA_FILE_NAME))?.toPicsDetails(itemFolder)
+
+/**
  * Читает пары (метаданные, директория) для всех сохраненных элементов коллекции.
  *
  * @param collectionFolder Папка коллекции.
@@ -471,3 +478,10 @@ internal fun lFindLikeFolder(root: File, url: String): File? {
                     metadata.previewFiles?.any { it.sourceUrl == trimmed } == true
         }
 }
+
+/**
+ * Находит папку сохранённого элемента по его локальному пути или сетевому
+ * адресу [url]: сначала в лайках [likesRoot], затем в коллекциях [collectionsRoot].
+ */
+internal fun lFindSavedItemFolder(likesRoot: File, collectionsRoot: File, url: String): File? =
+    lFindLikeFolder(likesRoot, url) ?: lFindLikeFolder(collectionsRoot, url)

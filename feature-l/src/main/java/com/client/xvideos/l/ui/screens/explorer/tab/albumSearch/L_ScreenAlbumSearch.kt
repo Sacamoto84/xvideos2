@@ -68,7 +68,7 @@ object L_ScreenAlbumSearch : Screen {
                 navigator.push(
                     L_ScreenAlbumList.create(
                         filter = vm.createFilter(section),
-                        title = "Search: ${vm.searchText.value}"
+                        title = "Search: ${vm.searchedQuery}"
                     )
                 )
             }

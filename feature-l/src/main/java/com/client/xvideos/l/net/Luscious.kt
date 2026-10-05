@@ -41,13 +41,11 @@ class Luscious(
      * Возвращает объект [AlbumInfo] для работы с альбомом по ID или URL ссылки.
      *
      * @param albumInput Числовой идентификатор (Int, Long) или строка URL/ID.
-     * @param download Флаг предварительной загрузки (исторический параметр).
      * @param requestScope Специфичный CoroutineScope для сетевых задач альбома.
      * @return Экземпляр [AlbumInfo].
      */
     fun getAlbum(
         albumInput: Any,
-        download: Boolean = false,
         requestScope: CoroutineScope = scope
     ): AlbumInfo {
         val id = when (albumInput) {
@@ -61,7 +59,7 @@ class Luscious(
             else -> throw IllegalArgumentException("albumInput must be Int, Long or String: $albumInput")
         } ?: throw IllegalArgumentException("Invalid album ID: $albumInput")
 
-        return AlbumInfo(id, download, repository, requestScope)
+        return AlbumInfo(id, repository, requestScope)
     }
 
     /**
@@ -81,8 +79,8 @@ class Luscious(
     /**
      * Создает экземпляр [AlbumTopHitsImpl] для наблюдения за топовыми альбомами.
      */
-    fun getAlbumTopHits(): AlbumTopHitsImpl {
-        return AlbumTopHitsImpl(repository, scope)
+    fun getAlbumTopHits(requestScope: CoroutineScope = scope): AlbumTopHitsImpl {
+        return AlbumTopHitsImpl(repository, requestScope)
     }
 
     /**

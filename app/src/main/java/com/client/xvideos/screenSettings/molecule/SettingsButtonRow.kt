@@ -1,4 +1,4 @@
-package com.client.xvideos.screenSettings.components
+package com.client.xvideos.screenSettings.molecule
 
 import androidx.annotation.DrawableRes
 import androidx.compose.material3.Text
@@ -8,6 +8,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.R
+import com.client.xvideos.screenSettings.components.SettingsAccentColor
+import com.client.xvideos.screenSettings.components.SettingsListItem
+import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
  * Строка настроек с текстовой кнопкой справа.

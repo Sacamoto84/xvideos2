@@ -21,9 +21,11 @@ import java.io.File
 import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
 import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.isLFavoriteLikeStatus
 import com.client.xvideos.l.net.AlbumInfo
 import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
+import com.client.xvideos.l.repository.toLUserMessage
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import dagger.Binds
 import dagger.Module
@@ -99,7 +101,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
      */
     fun syncServerFavoriteStatus(likeStatus: String?) {
         if (isServerFavorite == null && likeStatus != null) {
-            isServerFavorite = likeStatus.isNotBlank() && likeStatus != "none" && likeStatus != "dislike"
+            isServerFavorite = likeStatus.isLFavoriteLikeStatus()
         }
     }
 
@@ -109,8 +111,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
     fun toggleServerFavorite(album: AlbumDetails) {
         if (isServerFavoriteLoading) return
         val albumId = album.id.ifBlank { idAlbum.toString() }
-        val currentlyFavorite = isServerFavorite
-            ?: (album.likeStatus.orEmpty().isNotBlank() && album.likeStatus != "none" && album.likeStatus != "dislike")
+        val currentlyFavorite = isServerFavorite ?: album.likeStatus.isLFavoriteLikeStatus()
 
         isServerFavoriteLoading = true
         scope.launch {
@@ -125,7 +126,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
                             }
                             .onFailure { e ->
                                 Timber.e(e, "Failed to unlike album on server")
-                                SnackBar.error(e.message ?: "Не удалось удалить альбом с сервера")
+                                SnackBar.error("Не удалось удалить альбом с сервера: ${e.toLUserMessage()}")
                             }
                     }
                 } else {
@@ -138,7 +139,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
                             }
                             .onFailure { e ->
                                 Timber.e(e, "Failed to like album on server")
-                                SnackBar.error(e.message ?: "Не удалось добавить альбом на сервер")
+                                SnackBar.error("Не удалось добавить альбом на сервер: ${e.toLUserMessage()}")
                             }
                     }
                 }
@@ -154,18 +155,14 @@ class ScreenLAlbumSM @AssistedInject constructor(
      * Сохраняет альбом в локальную файловую базу данных FileDB.
      */
     fun saveAlbum() {
-        scope.launch {
-            val details = albumInfo.value?.albumInfo?.value
-            if (details != null && details.id.isNotBlank()) {
-                saved.albums.add(details)
-                withContext(Dispatchers.Main) {
-                    SnackBar.success("Альбом сохранён")
-                }
-            } else {
-                withContext(Dispatchers.Main) {
-                    SnackBar.error("Информация об альбоме ещё не загружена")
-                }
-            }
+        val details = albumInfo.value?.albumInfo?.value
+        if (details != null && details.id.isNotBlank()) {
+            // Об итоге сообщает само хранилище, когда запись завершится. Раньше
+            // здесь же, не дожидаясь её, показывалось «Альбом сохранён»: при
+            // успехе сообщений было два, при сбое записи — успех и следом ошибка.
+            saved.albums.add(details)
+        } else {
+            SnackBar.error("Информация об альбоме ещё не загружена")
         }
     }
 
@@ -245,12 +242,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
      * Перезагружает информацию об альбоме и его картинках.
      */
     fun refresh() {
-        val current = albumInfo.value
-        if (current != null) {
-            current.refresh()
-        } else {
-            albumInfo.value = luscious.getAlbum(idAlbum, requestScope = screenModelScope)
-        }
+        albumInfo.value?.refresh()
     }
 
     /**

@@ -6,7 +6,7 @@ import androidx.core.content.edit
 import com.client.xvideos.common.settings.element.SettingElementBoolean
 import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
-import com.client.xvideos.common.settings.element.SettingElementSecureString
+import com.client.xvideos.common.settings.element.SettingElementSecureCredentials
 import com.client.xvideos.common.settings.element.SettingElementString
 import com.client.xvideos.common.applock.AppLockTimeout
 import com.client.xvideos.common.net.doh.DohProvider
@@ -46,7 +46,7 @@ object Settings {
      * @param prefs общий файл настроек.
      * @param context нужен, чтобы открыть зашифрованное хранилище для учётных
      *   данных. Без него секреты не сохраняются на диск — см.
-     *   [SettingElementSecureString].
+     *   [SettingElementSecureCredentials].
      */
     fun init(prefs: SharedPreferences, context: Context? = null) {
         pref = prefs
@@ -68,8 +68,14 @@ object Settings {
         val legacyPass = pref.getString(KEY_L_PASS, null)
         if (legacyLogin == null && legacyPass == null) return
 
-        if (!legacyLogin.isNullOrEmpty()) l_login.setValue(legacyLogin)
-        if (!legacyPass.isNullOrEmpty()) l_pass.setValue(legacyPass)
+        // Пустое старое значение уже сохранённое не затирает.
+        if (!legacyLogin.isNullOrEmpty() || !legacyPass.isNullOrEmpty()) {
+            val saved = l_profile.field.value
+            l_profile.save(
+                login = legacyLogin?.takeIf { it.isNotEmpty() } ?: saved.login,
+                password = legacyPass?.takeIf { it.isNotEmpty() } ?: saved.password,
+            )
+        }
 
         pref.edit {
             remove(KEY_L_LOGIN)
@@ -186,11 +192,10 @@ object Settings {
 
     //-- luscious ---
 
-    // Логин. Лежит в зашифрованном хранилище, а не в общем файле настроек:
-    // раньше пароль от стороннего сервиса хранился открытым текстом рядом с
-    // остальными настройками. Миграция старых значений — в [init].
-    val l_login by lazy { SettingElementSecureString(securePref, KEY_L_LOGIN, "") }
-    val l_pass by lazy { SettingElementSecureString(securePref, KEY_L_PASS, "") }
+    // Логин и пароль. Лежат в зашифрованном хранилище, а не в общем файле
+    // настроек: раньше пароль от стороннего сервиса хранился открытым текстом
+    // рядом с остальными настройками. Миграция старых значений — в [init].
+    val l_profile by lazy { SettingElementSecureCredentials(securePref, KEY_L_LOGIN, KEY_L_PASS) }
 
     /**
      * Размер миниатюры в галерее

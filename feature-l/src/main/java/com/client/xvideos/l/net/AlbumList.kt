@@ -168,6 +168,7 @@ private fun decodeAggregationValues(obj: JsonObject): List<AlbumListFilterGenreC
     val result = ArrayList<AlbumListFilterGenreCountResponse>(values.size)
     for (element in values) {
         runCatching { LJson.decodeFromJsonElement<AlbumListFilterGenreCountResponse>(element) }
+            .onFailure { Timber.w(it, "getAlbumListAggregations: счётчик не разобран и пропущен") }
             .getOrNull()
             ?.let { result.add(it) }
     }
@@ -256,8 +257,14 @@ private fun parseAlbumListResponse(
         val list = ArrayList<Album>(itemsJson.size)
         for (itemJson in itemsJson) {
             runCatching { LJson.decodeFromJsonElement<Album>(itemJson) }
+                .onFailure { Timber.w(it, "getAlbumList page $page: альбом не разобран и пропущен") }
                 .getOrNull()
                 ?.let { list.add(it) }
+        }
+        // Смена типа одного поля на сервере иначе давала бы короткие или пустые
+        // страницы со статусом «загружено» и без единой строки в логе.
+        if (list.size != itemsJson.size) {
+            Timber.w("getAlbumList page $page: разобрано ${list.size} из ${itemsJson.size} альбомов")
         }
         list
     }

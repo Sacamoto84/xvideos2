@@ -7,12 +7,9 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.navigation.NavigationDepthState
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.model.Landing_page_albumType
-import com.client.xvideos.l.model.enum.AlbumType
-import com.client.xvideos.l.model.enum.ContentId
 import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.repository.toLUserMessage
 import dagger.Binds
@@ -25,6 +22,7 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,27 +47,42 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
     private val _albumTopHits = MutableStateFlow<Landing_page_albumType?>(null)
     val albumTopHits: StateFlow<Landing_page_albumType?> = _albumTopHits.asStateFlow()
 
+    private val _loadError = MutableStateFlow<String?>(null)
+    /** Текст сбоя загрузки страницы тега; `null`, пока она идёт или удалась. */
+    val loadError: StateFlow<String?> = _loadError.asStateFlow()
+
+    private var loadJob: Job? = null
+
     init {
         Timber.d("ScreenLAlbumLandingTagSM init")
-        screenModelScope.launch {
+        load()
+        depthState.depth = 100
+    }
+
+    /**
+     * Повторяет загрузку страницы тега. Раньше она шла один раз при создании:
+     * после сбоя экран оставался пустым, пока его не откроют заново.
+     */
+    fun retry() = load()
+
+    private fun load() {
+        loadJob?.cancel()
+        _loadError.value = null
+        loadJob = screenModelScope.launch {
             try {
-                val res = withContext(Dispatchers.IO) {
-                    luscious.getLandingPageAlbumTag(tag)
-                }
-                _albumTopHits.value = res.getOrNull()
-                if (res.isFailure) {
-                    Timber.w(res.exceptionOrNull(), "ScreenLAlbumLandingTagSM: failed to load tag $tag")
-                    SnackBar.error(res.exceptionOrNull().toLUserMessage())
-                }
+                withContext(Dispatchers.IO) { luscious.getLandingPageAlbumTag(tag) }
+                    .onSuccess { _albumTopHits.value = it }
+                    .onFailure { error ->
+                        Timber.w(error, "ScreenLAlbumLandingTagSM: failed to load tag $tag")
+                        _loadError.value = error.toLUserMessage()
+                    }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ScreenLAlbumLandingTagSM: exception loading tag $tag")
-                SnackBar.error(e.toLUserMessage())
+                _loadError.value = e.toLUserMessage()
             }
         }
-
-        depthState.depth = 100
     }
 
     override fun onDispose() {
@@ -77,30 +90,7 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
         Timber.d("ScreenLAlbumLandingTagSM onDispose")
     }
 
-    fun createFilter(item: Landing_page_albumSection): AlbumListFilter {
-        val title = item.title
-
-        val albumType = when (title) {
-            "Hentai Manga" -> AlbumType.Manga
-            "Hentai Pictures" -> AlbumType.Pictures
-            "Porn Pictures" -> AlbumType.Pictures
-            else -> AlbumType.Pictures
-        }
-
-        val contentId = when (title) {
-            "Hentai Manga" -> ContentId.All
-            "Hentai Pictures" -> ContentId.Hentai
-            "Porn Pictures" -> ContentId.RealPeople
-            else -> ContentId.All
-        }
-
-        return AlbumListFilter(
-            display = "date_trending",
-            album_type = albumType,
-            content_id = contentId,
-            tagPlus = listOf(tag)
-        )
-    }
+    fun createFilter(item: Landing_page_albumSection): AlbumListFilter = createAlbumTagFilter(item, tag)
 }
 
 @Module

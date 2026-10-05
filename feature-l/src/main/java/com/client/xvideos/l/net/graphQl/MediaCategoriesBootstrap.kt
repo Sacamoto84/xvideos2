@@ -24,31 +24,27 @@ val mediaCategoriesFlow = MutableStateFlow<MediaCategories?>(null)
  *
  * @param repository Репозиторий сетевых запросов.
  * @param forceRefresh Если `true`, игнорирует ROM-кэш и запрашивает свежие данные по сети.
+ * @return Полученный справочник либо причина, по которой его нет. Вызывающему,
+ * которому нужны данные именно этой сессии, читать [mediaCategoriesFlow] нельзя:
+ * после сбоя там остаётся прежнее значение.
  */
-suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean = false) {
+suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean = false): Result<MediaCategories> {
     Timber.d("refreshMediaCategories (forceRefresh=$forceRefresh)")
 
     val config = if (forceRefresh) RepositoryUriConfig.DIRECT else RepositoryUriConfig.CACHE_ROM
-    val res = repository.openURI(mediaCategoriesBootstrap, config = config)
-
-    if (res.isFailure) return
-
-    val raw = res.getOrNull().orEmpty()
-    if (raw.isBlank()) return
-
-    val response = runCatching {
-        LJson.decodeFromString<MediaCategoriesBootstrapResponse>(raw)
+    val categories = repository.openURI(mediaCategoriesBootstrap, config = config).mapCatching { raw ->
+        LJson.decodeFromString<MediaCategoriesBootstrapResponse>(raw).data.mediaCategories
     }.getOrElse { e ->
-        Timber.w(e, "Failed to decode MediaCategoriesBootstrapResponse")
-        return
+        Timber.w(e, "refreshMediaCategories failed")
+        return Result.failure(e)
     }
 
-    val newCategories = response.data.mediaCategories
-    if (mediaCategoriesFlow.value == newCategories) return
-
-    withContext(Dispatchers.Main) {
-        mediaCategoriesFlow.value = newCategories
+    if (mediaCategoriesFlow.value != categories) {
+        withContext(Dispatchers.Main) {
+            mediaCategoriesFlow.value = categories
+        }
     }
+    return Result.success(categories)
 }
 
 /**

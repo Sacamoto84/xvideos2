@@ -7,7 +7,6 @@ import com.client.xvideos.l.net.graphQl.FavoriteRemove
 import com.client.xvideos.l.net.graphQl.FavoritesByDatePicture
 import com.client.xvideos.l.net.graphQl.FavoritesByDatePictureSet
 import com.client.xvideos.l.net.graphQl.GraphQlRequest
-import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 import com.client.xvideos.l.net.graphQl.refreshMediaCategories
 import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.net.normalizePictureUrls
@@ -15,14 +14,16 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
@@ -43,26 +44,32 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
     private val repository: Repository
 ) : LusciousServerFavoritesRepository {
 
+    /** id пользователя и номер записи профиля, под которым сервер его назвал. */
+    private class SessionUser(val id: String, val profileRevision: Int)
+
+    @Volatile
+    private var sessionUser: SessionUser? = null
+
+    /**
+     * id пользователя текущей сессии. Запоминается до перезаписи профиля.
+     *
+     * Раньше id брался из общего справочника категорий. Тот не сбрасывался при
+     * выходе и восстанавливался из кэша на диске, ключ которого от сессии не
+     * зависит: после выхода или входа под другим аккаунтом списки лайков и
+     * подписок запрашивались по id прежнего пользователя, и после перезапуска
+     * тоже. Здесь id всегда получен свежим запросом под нынешним профилем.
+     */
     override suspend fun getSessionUserId(): Result<String> {
-        // 1. Проверяем текущее значение в mediaCategoriesFlow
-        val cachedId = mediaCategoriesFlow.value?.filterSettings?.userId?.takeIf { it > 0 }
-        if (cachedId != null) {
-            Timber.d("getSessionUserId: found in memory cache: $cachedId")
-            return Result.success(cachedId.toString())
-        }
+        val revision = repository.profileRevision()
+        sessionUser?.takeIf { it.profileRevision == revision }?.let { return Result.success(it.id) }
 
-        // 2. Принудительно запрашиваем MediaCategoriesBootstrap с сервера без ROM-кеша (DIRECT)
-        Timber.d("getSessionUserId: fetching fresh MediaCategoriesBootstrap from server...")
-        refreshMediaCategories(repository, forceRefresh = true)
-        val freshId = mediaCategoriesFlow.value?.filterSettings?.userId?.takeIf { it > 0 }
-        if (freshId != null) {
-            Timber.i("getSessionUserId: successfully extracted from session: $freshId")
-            return Result.success(freshId.toString())
-        }
+        val categories = refreshMediaCategories(repository, forceRefresh = true)
+            .getOrElse { return Result.failure(it) }
+        val userId = categories.filterSettings.userId.takeIf { it > 0 }?.toString()
+            ?: return Result.failure(IllegalStateException("Вход в L не выполнен: сервер не назвал пользователя сессии"))
 
-        return Result.failure(
-            IllegalStateException("Пользователь не авторизован в Luscious (user_id не найден в сессии)")
-        )
+        sessionUser = SessionUser(userId, revision)
+        return Result.success(userId)
     }
 
     override suspend fun getSubscribedAlbumsRaw(userId: String?, page: Int): Result<String> {
@@ -92,21 +99,15 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
         return runCatching {
             val raw = rawResult.getOrThrow()
             val json = LJson.parseToJsonElement(raw).jsonObject
-            val listByDate = json["data"]?.jsonObject
-                ?.get("favorite")?.jsonObject
-                ?.get("list_by_date")?.jsonObject
+            val listByDate = json.objectAt("data", "favorite", "list_by_date")
 
-            val errors = listByDate?.get("errors")?.jsonArray
-            if (!errors.isNullOrEmpty()) {
-                val msg = errors.joinToString { it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "Unknown error" }
+            listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
                 throw IllegalStateException("Server error: $msg")
             }
 
-            val items = listByDate
-                ?.get("picture_sets")?.jsonObject
-                ?.get("items")
+            val items = listByDate.objectAt("picture_sets")?.get("items")
 
-            if (items != null) {
+            if (items is JsonArray) {
                 LJson.decodeFromJsonElement<List<AlbumDetails>>(items)
             } else {
                 emptyList()
@@ -143,19 +144,13 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
         return runCatching {
             val raw = rawResult.getOrThrow()
             val json = LJson.parseToJsonElement(raw).jsonObject
-            val listByDate = json["data"]?.jsonObject
-                ?.get("favorite")?.jsonObject
-                ?.get("list_by_date")?.jsonObject
+            val listByDate = json.objectAt("data", "favorite", "list_by_date")
 
-            val errors = listByDate?.get("errors")?.jsonArray
-            if (!errors.isNullOrEmpty()) {
-                val msg = errors.joinToString { it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "Unknown error" }
+            listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
                 throw IllegalStateException("Server error: $msg")
             }
 
-            val itemsElement = listByDate
-                ?.get("pictures")?.jsonObject
-                ?.get("items")
+            val itemsElement = listByDate.objectAt("pictures")?.get("items")
 
             if (itemsElement is JsonArray) {
                 val sanitized = buildJsonArray {
@@ -172,7 +167,10 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
                             add(buildJsonObject {
                                 elem.forEach { (k, v) ->
                                     if (k == "album") {
-                                        put("album", JsonPrimitive(albumId ?: "null"))
+                                        // Нет альбома — null. Раньше сюда писалась
+                                        // строка "null", и она уходила в метаданные
+                                        // сохранённого лайка.
+                                        put("album", albumId?.let(::JsonPrimitive) ?: JsonNull)
                                     } else {
                                         put(k, v)
                                     }
@@ -212,47 +210,55 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
         return parseFavoriteMutationResult(rawResult, "add_favorite", "FavoriteAdd")
     }
 
+    /**
+     * Ищет id картинки на сервере по фрагменту её адреса: листает страницы
+     * альбома, пока не найдёт совпадение.
+     *
+     * Любой сбой возвращается отказом: вызывают отсюда без `try`, из области
+     * приложения, и исключение уронило бы приложение. Раньше разбор шёл через
+     * `.jsonObject` и `.jsonArray`, которые бросают на `null` — хватало
+     * `"thumbnails": null` у одной картинки альбома.
+     */
     override suspend fun resolvePictureId(
         albumId: String,
         mediaUrlOrFileName: String
-    ): Result<String> {
+    ): Result<String> = try {
+        findPictureId(albumId, mediaUrlOrFileName)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "resolvePictureId failed")
+        Result.failure(e)
+    }
+
+    private suspend fun findPictureId(albumId: String, mediaUrlOrFileName: String): Result<String> {
         val cleanAlbumId = albumId.trim()
         val albumInt = cleanAlbumId.toIntOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid album id: $albumId"))
 
         val targetSlug = extractSlugCandidate(mediaUrlOrFileName)
-        Timber.d("resolvePictureId: albumId=$cleanAlbumId, targetSlug='$targetSlug' from '$mediaUrlOrFileName'")
+        Timber.d("resolvePictureId: albumId=$cleanAlbumId, targetSlug='$targetSlug'")
         if (targetSlug.isBlank()) {
-            return Result.failure(IllegalStateException("Picture ID not found in album $albumId"))
+            return Result.failure(IllegalStateException("Картинка не найдена в альбоме"))
         }
 
         var page = 1
         var totalPages = 1
-        while (page <= totalPages && page <= 10) {
+        while (page <= totalPages && page <= PICTURE_LOOKUP_MAX_PAGES) {
             val query = GraphQlRequest.pictureListInsideAlbum(albumInt, page)
-            val responseResult = repository.openURI(query, config = RepositoryUriConfig.CACHE_RAM)
-            if (responseResult.isFailure) {
-                return Result.failure(
-                    responseResult.exceptionOrNull() ?: IllegalStateException("Failed to load album page $page")
-                )
-            }
+            val raw = repository.openURI(query, config = RepositoryUriConfig.CACHE_RAM)
+                .getOrElse { return Result.failure(it) }
 
-            val raw = responseResult.getOrThrow()
-            val json = runCatching { LJson.parseToJsonElement(raw).jsonObject }.getOrNull()
+            val json = runCatching { LJson.parseToJsonElement(raw) as? JsonObject }.getOrNull()
                 ?: return Result.failure(IllegalStateException("Malformed album JSON"))
-
-            val pictureList = json["data"]?.jsonObject
-                ?.get("picture")?.jsonObject
-                ?.get("list")?.jsonObject
+            val pictureList = json.objectAt("data", "picture", "list")
                 ?: return Result.failure(IllegalStateException("Missing picture list"))
 
-            val info = pictureList["info"]?.jsonObject
-            totalPages = info?.get("total_pages")?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: totalPages
+            totalPages = pictureList.objectAt("info")?.get("total_pages").contentOrNull()?.toIntOrNull() ?: totalPages
 
-            val items = pictureList["items"]?.jsonArray.orEmpty()
-            for (element in items) {
-                val picObj = element.jsonObject
-                val picId = picObj["id"]?.jsonPrimitive?.contentOrNull?.trim()
+            for (element in pictureList["items"] as? JsonArray ?: JsonArray(emptyList())) {
+                val picObj = element as? JsonObject ?: continue
+                val picId = picObj["id"].contentOrNull()?.trim()
                 if (picId.isNullOrBlank()) continue
 
                 if (pictureMatchesSlug(picObj, targetSlug)) {
@@ -262,7 +268,16 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             }
             page++
         }
-        return Result.failure(IllegalStateException("Picture ID not found in album $albumId"))
+
+        // Альбом длиннее предела: поиск остановлен, а не исчерпан — говорим об этом прямо.
+        if (totalPages > PICTURE_LOOKUP_MAX_PAGES) {
+            return Result.failure(
+                IllegalStateException(
+                    "Картинка не найдена на первых $PICTURE_LOOKUP_MAX_PAGES страницах альбома из $totalPages"
+                )
+            )
+        }
+        return Result.failure(IllegalStateException("Картинка не найдена в альбоме"))
     }
 
     override suspend fun removeFavorite(
@@ -299,25 +314,12 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             val raw = rawResult.getOrThrow()
             val json = LJson.parseToJsonElement(raw).jsonObject
 
-            val rootErrors = json["errors"]?.jsonArray
-            if (!rootErrors.isNullOrEmpty()) {
-                val msg = rootErrors.joinToString {
-                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "GraphQL error"
-                }
-                throw IllegalStateException(msg)
-            }
+            json["errors"].errorMessagesOrNull("GraphQL error")?.let { throw IllegalStateException(it) }
 
-            val mutationObj = json["data"]?.jsonObject
-                ?.get("favorite")?.jsonObject
-                ?.get(mutationField)?.jsonObject
-
-            val mutationErrors = mutationObj?.get("errors")?.jsonArray
-            if (!mutationErrors.isNullOrEmpty()) {
-                val msg = mutationErrors.joinToString {
-                    it.jsonObject["message"]?.jsonPrimitive?.contentOrNull ?: "Mutation error"
-                }
-                throw IllegalStateException(msg)
-            }
+            json.objectAt("data", "favorite", mutationField)
+                ?.get("errors")
+                .errorMessagesOrNull("Mutation error")
+                ?.let { throw IllegalStateException(it) }
             Unit
         }.onFailure { e ->
             Timber.e(e, "Failed to parse $operationLabel response")
@@ -329,18 +331,42 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
  * Проверяет соответствие объекта картинки в GraphQL-ответе [picObj] искомому фрагменту слага [targetSlug].
  */
 private fun pictureMatchesSlug(picObj: JsonObject, targetSlug: String): Boolean {
-    if (picObj["url"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
-    if (picObj["url_to_original"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
-    if (picObj["url_to_video"]?.jsonPrimitive?.contentOrNull?.contains(targetSlug, ignoreCase = true) == true) return true
-    val thumbnails = picObj["thumbnails"]?.jsonArray ?: return false
-    for (thumb in thumbnails) {
-        val url = thumb.jsonObject["url"]?.jsonPrimitive?.contentOrNull
-        if (url != null && url.contains(targetSlug, ignoreCase = true)) {
-            return true
-        }
-    }
-    return false
+    fun JsonElement?.mentionsSlug() = contentOrNull()?.contains(targetSlug, ignoreCase = true) == true
+
+    if (picObj["url"].mentionsSlug()) return true
+    if (picObj["url_to_original"].mentionsSlug()) return true
+    if (picObj["url_to_video"].mentionsSlug()) return true
+    val thumbnails = picObj["thumbnails"] as? JsonArray ?: return false
+    return thumbnails.any { (it as? JsonObject)?.get("url").mentionsSlug() }
 }
+
+/**
+ * Вложенный объект по цепочке ключей. `null` на любом шаге, где значения нет
+ * или оно не объект: сервер отдаёт `null` там, где обычно объект, а `.jsonObject`
+ * на таком значении бросает исключение.
+ */
+private fun JsonObject?.objectAt(vararg path: String): JsonObject? =
+    path.fold(this) { node, key -> node?.get(key) as? JsonObject }
+
+/** Строковое значение примитива; `null`, если значения нет, оно `null` или это не примитив. */
+private fun JsonElement?.contentOrNull(): String? = (this as? JsonPrimitive)?.contentOrNull
+
+/**
+ * Тексты ошибок из поля `errors`, склеенные в одну строку. `null`, если ошибок
+ * нет: поле отсутствует, равно `null` или пустому списку. Раньше `null` читался
+ * как список и превращал успешный ответ в ошибку разбора.
+ */
+private fun JsonElement?.errorMessagesOrNull(fallback: String): String? {
+    val errors = (this as? JsonArray)?.takeIf { it.isNotEmpty() } ?: return null
+    return errors.joinToString { (it as? JsonObject)?.get("message").contentOrNull() ?: fallback }
+}
+
+/**
+ * Сколько страниц альбома просматривает поиск id картинки. Запросы идут по
+ * одному с паузой, поэтому предел есть, но он выше прежних десяти страниц:
+ * картинка с одиннадцатой уже не находилась.
+ */
+internal const val PICTURE_LOOKUP_MAX_PAGES = 100
 
 private val ULID_REGEX = Regex("""[0-9A-HJKMNP-TV-Z]{26}""")
 private val DIMENSIONS_EXT_REGEX = Regex("""\.\d+x\d+\.[a-zA-Z0-9]+$""")

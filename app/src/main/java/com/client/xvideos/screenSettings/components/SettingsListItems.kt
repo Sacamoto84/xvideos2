@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
 import com.client.xvideos.screenSettings.DialogButton
+import com.client.xvideos.screenSettings.molecule.SettingsButtonRow
 import kotlin.math.roundToInt
 
 // Google Material 3 Dark Theme tokens (matching Chrome & Android 14+ Settings)
@@ -382,7 +383,6 @@ fun SettingsButtonRowWithDialog(
     textDialogBody: String,
     textDialogButton: String,
     subtitle: String? = null,
-    composable: @Composable () -> Unit = {},
     onClick: () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
@@ -395,8 +395,7 @@ fun SettingsButtonRowWithDialog(
         body = textDialogBody,
         buttonText = textDialogButton,
         onDismiss = onDismiss,
-        onBlockConfirmed = onClick,
-        composable = composable
+        onBlockConfirmed = onClick
     )
 
     SettingsButtonRow(

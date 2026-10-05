@@ -90,7 +90,7 @@ class RepositoryAnonymousModeTest {
 
     private fun repository(server: Server, credentials: UserProfile = UserProfile()) = Repository(
         fileDb = AppFileDatabase(),
-        credentials = { credentials },
+        credentials = { SavedProfile(credentials).snapshot },
         engineFactory = { server.engine },
         notifyAnonymousFallback = {},
     )

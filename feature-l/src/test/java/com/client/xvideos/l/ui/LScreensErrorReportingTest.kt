@@ -11,6 +11,7 @@ import com.client.xvideos.common.navigation.NavigationDepthState
 import com.client.xvideos.common.snackbar.UiMessage
 import com.client.xvideos.l.LServerErrorException
 import com.client.xvideos.l.model.AlbumDetails
+import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.AlbumTopHitsImpl
 import com.client.xvideos.l.net.Luscious
@@ -72,6 +73,15 @@ class LScreensErrorReportingTest {
     private class DownRepository : Repository(AppFileDatabase()) {
         override suspend fun openURI(data: String, config: RepositoryUriConfig): Result<String> =
             Result.failure(LServerErrorException(500))
+    }
+
+    /** Сервер L лежит, пока тест его не поднимет; после этого отдаёт [body]. */
+    private class RecoveringRepository(private val body: String) : Repository(AppFileDatabase()) {
+        @Volatile
+        var up = false
+
+        override suspend fun openURI(data: String, config: RepositoryUriConfig): Result<String> =
+            if (up) Result.success(body) else Result.failure(LServerErrorException(500))
     }
 
     /** Первая страница есть, следующая падает с 500. */
@@ -156,9 +166,22 @@ class LScreensErrorReportingTest {
 
     @Test
     fun `топ сообщает об отказе`() = runBlocking {
-        AlbumTopHitsImpl(repository = DownRepository(), scope = scope)
+        val top = AlbumTopHitsImpl(repository = DownRepository(), scope = scope)
 
-        awaitUntil { SERVER_DOWN in snackbarErrors }
+        awaitUntil { top.loadError.value == SERVER_DOWN }
+    }
+
+    @Test
+    fun `топ загружается повтором после отказа`() = runBlocking {
+        val repository = RecoveringRepository("""{"data":{"album":{"list_top_hits":[{"title":"Top 1"}]}}}""")
+        val top = AlbumTopHitsImpl(repository = repository, scope = scope)
+        awaitUntil { top.loadError.value == SERVER_DOWN }
+
+        repository.up = true
+        top.reload()
+
+        awaitUntil { top.items.map { it.title } == listOf("Top 1") }
+        assertEquals(null, top.loadError.value)
     }
 
     @Test
@@ -173,9 +196,42 @@ class LScreensErrorReportingTest {
 
     @Test
     fun `тег сообщает об отказе`() = runBlocking {
-        ScreenLAlbumLandingTagSM(tag = "x", luscious = luscious(), depthState = NavigationDepthState())
+        val sm = ScreenLAlbumLandingTagSM(tag = "x", luscious = luscious(), depthState = NavigationDepthState())
 
+        awaitUntil { sm.loadError.value == SERVER_DOWN }
+    }
+
+    @Test
+    fun `страница тега загружается повтором после отказа`() = runBlocking {
+        val repository = RecoveringRepository(
+            """{"data":{"landing_page_album":{"tag":{"title":"Tag X","sections":[{"title":"S1","items":[]}]}}}}"""
+        )
+        val sm = ScreenLAlbumLandingTagSM(
+            tag = "x",
+            luscious = Luscious(scope, repository),
+            depthState = NavigationDepthState(),
+        )
+        awaitUntil { sm.loadError.value == SERVER_DOWN }
+
+        repository.up = true
+        sm.retry()
+
+        awaitUntil { sm.albumTopHits.value?.title == "Tag X" }
+        assertEquals(null, sm.loadError.value)
+    }
+
+    @Test
+    fun `показать все в поиске строит фильтр по запросу, по которому искали`() = runBlocking {
+        val sm = ScreenLAlbumSearchSM(luscious())
+        sm.updateSearchText("abc")
+        sm.search()
         awaitUntil { SERVER_DOWN in snackbarErrors }
+
+        // Поле уже правят под следующий запрос, а на экране — результаты прежнего.
+        sm.updateSearchText("xyz")
+
+        assertEquals("abc", sm.searchedQuery)
+        assertEquals("abc", sm.createFilter(Landing_page_albumSection(title = "Manga")).searchQuery)
     }
 
     @Test

@@ -3,7 +3,9 @@ package com.client.xvideos.l.ui.screens.explorer
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.featured.saved.SavedL
+import com.client.xvideos.l.ui.screens.LLoginFormState
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,6 +29,9 @@ class L_ScreenExplorerSM @Inject constructor(
         set(value) {
             navigationState.rootTab = value
         }
+
+    /** Форма входа, которую раздел показывает, пока профиль не задан. */
+    val loginForm = LLoginFormState(Settings.l_profile.field.value)
 }
 
 @Module

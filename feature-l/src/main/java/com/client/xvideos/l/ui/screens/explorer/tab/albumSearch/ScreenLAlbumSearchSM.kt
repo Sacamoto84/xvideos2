@@ -44,6 +44,14 @@ class ScreenLAlbumSearchSM @Inject constructor(
 
     private var searchJob: Job? = null
 
+    /**
+     * Запрос, по которому запущен последний поиск и показаны результаты.
+     * «Показать все» у раздела строится по нему, а не по тексту поля: поле к
+     * этому моменту уже могли править под следующий запрос.
+     */
+    var searchedQuery: String = ""
+        private set
+
     fun updateSearchText(text: String) {
         _searchText.value = text
     }
@@ -55,6 +63,7 @@ class ScreenLAlbumSearchSM @Inject constructor(
     fun search() {
         val query = _searchText.value.trim()
         if (query.isBlank()) return
+        searchedQuery = query
         searchJob?.cancel()
         searchJob = screenModelScope.launch {
             _isLoading.value = true
@@ -76,7 +85,7 @@ class ScreenLAlbumSearchSM @Inject constructor(
     }
 
     fun createFilter(section: Landing_page_albumSection): AlbumListFilter =
-        createAlbumSearchFilter(section, _searchText.value)
+        createAlbumSearchFilter(section, searchedQuery)
 
     override fun onDispose() {
         super.onDispose()

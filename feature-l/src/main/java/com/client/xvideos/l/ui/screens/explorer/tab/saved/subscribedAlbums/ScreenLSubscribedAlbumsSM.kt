@@ -9,16 +9,15 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
 import com.client.xvideos.l.repository.toLUserMessage
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.LServerPagedList
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /**
@@ -37,103 +36,44 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
     /** Состояние прокрутки сетки подписанных альбомов. */
     val state = LazyGridState()
 
-    private val _albums = MutableStateFlow<List<AlbumDetails>>(emptyList())
+    private val list = LServerPagedList(
+        scope = screenModelScope,
+        loadPage = repository::getSubscribedAlbums,
+    )
+
     /** Поток списка подписанных альбомов пользователя. */
-    val albums = _albums.asStateFlow()
+    val albums = list.items
 
-    private val _isLoading = MutableStateFlow(false)
     /** Поток индикатора первичной загрузки или пагинации. */
-    val isLoading = _isLoading.asStateFlow()
+    val isLoading = list.isLoading
 
-    private val _isRefreshing = MutableStateFlow(false)
     /** Поток индикатора обновления списка (pull-to-refresh). */
-    val isRefreshing = _isRefreshing.asStateFlow()
+    val isRefreshing = list.isRefreshing
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
     /** Поток текста ошибки загрузки. */
-    val errorMessage = _errorMessage.asStateFlow()
+    val errorMessage = list.errorMessage
+
+    /** Подгрузка следующей страницы не удалась — см. [LServerPagedList.nextPageFailed]. */
+    val nextPageFailed = list.nextPageFailed
 
     /** Флаг наличия последующих страниц для загрузки. */
-    var hasMore: Boolean = true
-        private set
-
-    private var currentPage: Int = 1
-    private var loadJob: Job? = null
+    val hasMore: Boolean get() = list.hasMore
 
     init {
         loadInitial()
     }
 
-    /**
-     * Загружает начальную первую страницу подписанных альбомов.
-     */
-    fun loadInitial() {
-        if (_isLoading.value) return
-        loadJob?.cancel()
-        loadJob = screenModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-            currentPage = 1
+    /** Загружает начальную первую страницу подписанных альбомов. */
+    fun loadInitial() = list.loadInitial()
 
-            val result = repository.getSubscribedAlbums(currentPage)
-            result.onSuccess { list ->
-                _albums.value = list
-                hasMore = list.isNotEmpty()
-                _errorMessage.value = null
-            }.onFailure { error ->
-                Timber.e(error, "Failed to load subscribed albums from session")
-                _errorMessage.value = error.message ?: "Ошибка загрузки подписок"
-            }
-            _isLoading.value = false
-        }
-    }
+    /** Загружает следующую страницу альбомов для бесконечной ленты. */
+    fun loadNextPage() = list.loadNextPage()
 
-    /**
-     * Загружает следующую страницу альбомов для бесконечной ленты.
-     */
-    fun loadNextPage() {
-        if (_isLoading.value || !hasMore || _errorMessage.value != null) return
-        loadJob = screenModelScope.launch {
-            _isLoading.value = true
-            val nextPage = currentPage + 1
-            val result = repository.getSubscribedAlbums(nextPage)
-            result.onSuccess { list ->
-                if (list.isNotEmpty()) {
-                    currentPage = nextPage
-                    _albums.value = _albums.value + list
-                } else {
-                    hasMore = false
-                }
-            }.onFailure { error ->
-                Timber.e(error, "Failed to load next page ($nextPage) of subscribed albums")
-                SnackBar.error(error.toLUserMessage())
-            }
-            _isLoading.value = false
-        }
-    }
+    /** Пользователь ушёл от конца списка — см. [LServerPagedList.onListEndLeft]. */
+    fun onListEndLeft() = list.onListEndLeft()
 
-    /**
-     * Обновляет список подписок с первой страницы.
-     */
-    fun refresh() {
-        if (_isRefreshing.value) return
-        loadJob?.cancel()
-        _isLoading.value = false
-        screenModelScope.launch {
-            _isRefreshing.value = true
-            currentPage = 1
-            val result = repository.getSubscribedAlbums(currentPage)
-            result.onSuccess { list ->
-                _albums.value = list
-                hasMore = list.isNotEmpty()
-                _errorMessage.value = null
-            }.onFailure { error ->
-                Timber.e(error, "Failed to refresh subscribed albums")
-                _errorMessage.value = error.message ?: "Ошибка обновления подписок"
-            }
-            _isRefreshing.value = false
-        }
-    }
+    /** Обновляет список подписок с первой страницы. */
+    fun refresh() = list.refresh()
 
     /**
      * Отменяет подписку на альбом [album] на сервере и удаляет его из локального списка.
@@ -141,17 +81,27 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
      * @param album Альбом, подписку на который необходимо удалить.
      */
     fun unlikeAlbum(album: AlbumDetails) {
+        // Повторное нажатие до ответа ничего не шлёт: второй запрос отвечал
+        // ошибкой, и за «удалён из подписок» следом шло «не удалось удалить».
+        if (!unlikesInFlight.add(album.id)) return
         screenModelScope.launch {
-            val result = repository.unlikeAlbum(album.id)
-            result.onSuccess {
-                _albums.value = _albums.value.filter { it.id != album.id }
-                SnackBar.info("Альбом удалён из подписок")
-            }.onFailure { error ->
-                Timber.e(error, "Failed to unsubscribe album ${album.id} on server")
-                SnackBar.error(error.message ?: "Не удалось удалить альбом из подписок")
+            try {
+                val result = repository.unlikeAlbum(album.id)
+                result.onSuccess {
+                    list.removeIf { it.id == album.id }
+                    SnackBar.info("Альбом удалён из подписок")
+                }.onFailure { error ->
+                    Timber.e(error, "Failed to unsubscribe album ${album.id} on server")
+                    SnackBar.error("Не удалось удалить альбом из подписок: ${error.toLUserMessage()}")
+                }
+            } finally {
+                unlikesInFlight.remove(album.id)
             }
         }
     }
+
+    /** Альбомы, отписка от которых уже в пути. */
+    private val unlikesInFlight: MutableSet<String> = ConcurrentHashMap.newKeySet()
 }
 
 /**

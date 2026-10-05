@@ -2,6 +2,7 @@ package com.client.xvideos.l.featured.saved
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.Snapshot
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
@@ -38,7 +39,7 @@ class SavedL_Likes(
     private val progress = LDownloadProgress(scope)
     /** Поток совокупного процента скачивания новых лайков. */
     val percentDownload: StateFlow<Float> = progress.percentDownload
-    private var mutationJob: Job? = null
+    private val mutations = LMutationQueue(scope)
 
     val isEmpty: Boolean get() = listUrl.isEmpty()
     val isNotEmpty: Boolean get() = listUrl.isNotEmpty()
@@ -71,19 +72,22 @@ class SavedL_Likes(
         }
         Timber.i("SavedL_Likes addLikes() item:${item.url_to_original}")
 
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        mutations.launch {
             val result = lPersistPicsDetailsToFolder(
                 item = item,
                 root = File(AppPath.l_likes),
                 luscious = luscious,
                 progress = progress
             )
+            val folder = result.getOrNull()
+            val saved = folder?.let { lReadCollectionItem(it) }
             withContext(Dispatchers.Main) {
                 result
                     .onSuccess {
                         SnackBar.success("Добавлено в лайки")
-                        refresh()
+                        // Новый лайк известен — дописываем его, а не перечитываем
+                        // каталог с разбором метаданных каждого элемента.
+                        if (folder != null && saved != null) showSaved(folder, saved) else refresh()
                     }
                     .onFailure {
                         Timber.e(it, "SavedL_Likes add() download error")
@@ -92,6 +96,18 @@ class SavedL_Likes(
             }
         }
     }
+
+    /** Ставит сохранённый лайк в начало списка — новые идут первыми; прежняя запись той же папки уходит. */
+    private fun showSaved(folder: File, saved: PicsDetails) {
+        Snapshot.withMutableSnapshot {
+            listUrl.removeAll { it.isStoredIn(folder) }
+            listUrl.add(0, saved)
+        }
+    }
+
+    /** Элемент списка лежит в папке [folder]: его медиафайл — оттуда. */
+    private fun PicsDetails.isStoredIn(folder: File): Boolean =
+        url_to_original?.let { File(it).parentFile } == folder
 
     /**
      * Удаляет сохраненный лайк по его локальному пути или сетевому URL [url].
@@ -105,8 +121,7 @@ class SavedL_Likes(
         // Вызов приходит из onDelete в composable, то есть с main-потока, а
         // deleteRecursively() по папке с медиа — это полноценный обход каталога.
         // Уносим на IO, как это уже сделано в add() и refresh().
-        mutationJob?.cancel()
-        mutationJob = scope.launch(Dispatchers.IO) {
+        mutations.launch {
             val root = File(AppPath.l_likes)
             val folder = lFindLikeFolder(root, url)
             val file = File(url)
@@ -122,7 +137,12 @@ class SavedL_Likes(
             } else {
                 SnackBar.error("Файл не найден: $url")
             }
-            refresh()
+            if (removed && folder != null) {
+                withContext(Dispatchers.Main) { listUrl.removeAll { it.isStoredIn(folder) } }
+            } else {
+                // Что именно исчезло с диска, неизвестно — сверяем список целиком.
+                refresh()
+            }
         }
     }
 
@@ -136,8 +156,11 @@ class SavedL_Likes(
         // обновление Compose-state — на Main, чтобы не блокировать UI (ANR).
         // Отменяем предыдущий незавершённый скан при повторном вызове,
         // исключая гонки устаревших результатов.
+        //
+        // Скан стоит в одной очереди с добавлением и удалением: те правят
+        // список точечно, и скан, начатый раньше правки, вернул бы список без неё.
         refreshJob?.cancel()
-        refreshJob = scope.launch(Dispatchers.IO) {
+        refreshJob = mutations.launch {
             Timber.i("SavedL_Likes refresh()")
             val items = try {
                 lReadCollectionItems(File(AppPath.l_likes))

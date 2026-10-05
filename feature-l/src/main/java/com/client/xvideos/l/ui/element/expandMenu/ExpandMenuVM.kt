@@ -9,6 +9,8 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
 import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.albumIdOrNull
+import com.client.xvideos.l.model.asLAlbumIdOrNull
 import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.net.Luscious
 import androidx.compose.runtime.getValue
@@ -21,12 +23,14 @@ import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.l.featured.saved.L_METADATA_FILE_NAME
 import com.client.xvideos.l.featured.saved.LSavedLikeMetadata
 import com.client.xvideos.l.featured.saved.lFindLikeFolder
+import com.client.xvideos.l.featured.saved.lFindSavedItemFolder
 import com.client.xvideos.l.featured.saved.lP2pSendSource
 import com.client.xvideos.l.featured.saved.readLSavedLikeMetadata
 import com.client.xvideos.l.featured.saved.writeLSavedLikeMetadata
 import java.io.File
 import com.client.xvideos.l.model.extractAnchorId
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
+import com.client.xvideos.l.repository.toLUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -35,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @Immutable
@@ -58,83 +63,102 @@ class ExpandMenuViewModel @Inject constructor(
     @ApplicationContext val context: Context
 ) : ViewModel() {
 
-    fun likeOnServer(item: PicsDetails) {
-        val anchorId = item.extractAnchorId()
-        if (!anchorId.isNullOrBlank()) {
-            sendServerLike(anchorId)
-            return
-        }
+    /**
+     * Картинки, для которых лайк или снятие лайка уже в пути. Повторное нажатие
+     * до ответа ничего не шлёт: раньше второй запрос на снятие отвечал ошибкой,
+     * и за «Лайк удалён» следом шло «Не удалось удалить лайк».
+     */
+    private val serverActionsInFlight: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-        resolveAndPerformServerAction(item) { resolvedId ->
-            sendServerLike(resolvedId)
-        }
+    fun likeOnServer(item: PicsDetails) = launchServerAction(item) { pictureId ->
+        serverFavorites.likePicture(pictureId)
+            .onSuccess {
+                SnackBar.success("Лайк добавлен на сервере")
+            }
+            .onFailure { e ->
+                Timber.e(e, "Failed to like picture on server")
+                SnackBar.error("Не удалось поставить лайк: ${e.toLUserMessage()}")
+            }
     }
 
-    fun unlikeOnServer(item: PicsDetails, onSuccess: (() -> Unit)? = null) {
-        val anchorId = item.extractAnchorId()
-        if (!anchorId.isNullOrBlank()) {
-            sendServerUnlike(anchorId, onSuccess)
-            return
-        }
-
-        resolveAndPerformServerAction(item) { resolvedId ->
-            sendServerUnlike(resolvedId, onSuccess)
-        }
+    fun unlikeOnServer(item: PicsDetails, onSuccess: (() -> Unit)? = null) = launchServerAction(item) { pictureId ->
+        serverFavorites.unlikePicture(pictureId)
+            .onSuccess {
+                SnackBar.info("Лайк удалён на сервере")
+                withContext(Dispatchers.Main) {
+                    onSuccess?.invoke()
+                }
+            }
+            .onFailure { e ->
+                Timber.e(e, "Failed to unlike picture on server")
+                SnackBar.error("Не удалось удалить лайк: ${e.toLUserMessage()}")
+            }
     }
 
-    private fun resolveAndPerformServerAction(
-        item: PicsDetails,
-        onResolved: (String) -> Unit
-    ) {
-        // Если ID не найден в объекте (например, старый локальный лайк),
-        // пробуем найти его в папке сохранённого элемента или разрешить через сервер
+    /** Выполняет [action] с id картинки на сервере, если для неё ещё нет запроса в пути. */
+    private fun launchServerAction(item: PicsDetails, action: suspend (pictureId: String) -> Unit) {
+        val knownId = item.extractAnchorId()?.takeIf { it.isNotBlank() }
+        val key = knownId ?: item.sourceUrl()
+        if (!serverActionsInFlight.add(key)) return
+
         scope.launch(Dispatchers.IO) {
-            val (folder, localPictureId) = findLocalFolderAndPictureId(item)
-            if (!localPictureId.isNullOrBlank()) {
-                onResolved(localPictureId)
-                return@launch
+            try {
+                val pictureId = knownId ?: resolvePictureId(item) ?: return@launch
+                action(pictureId)
+            } finally {
+                serverActionsInFlight.remove(key)
             }
-
-            val metadata = folder?.let { readLSavedLikeMetadata(File(it, L_METADATA_FILE_NAME)) }
-            val albumId = metadata?.albumId?.takeIf { it.isNotBlank() && it != "null" }
-                ?: item.album?.takeIf { it.isNotBlank() && it != "null" }
-
-            val targetUrl = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl().orEmpty()
-            val slugCandidate = metadata?.sourceMediaUrl?.takeIf { it.isNotBlank() }
-                ?: metadata?.sourcePreviewUrl?.takeIf { it.isNotBlank() }
-                ?: folder?.name
-                ?: targetUrl
-
-            if (albumId.isNullOrBlank() || slugCandidate.isBlank()) {
-                withContext(Dispatchers.Main) {
-                    SnackBar.error("ID картинки не найден")
-                }
-                return@launch
-            }
-
-            withContext(Dispatchers.Main) {
-                SnackBar.info("Поиск ID на сервере…")
-            }
-
-            val resolvedId = serverFavorites.resolvePictureId(albumId, slugCandidate).getOrNull()
-            if (resolvedId.isNullOrBlank()) {
-                withContext(Dispatchers.Main) {
-                    SnackBar.error("ID картинки не найден на сервере")
-                }
-                return@launch
-            }
-
-            cacheResolvedPictureId(folder, metadata, resolvedId)
-            onResolved(resolvedId)
         }
     }
+
+    private fun PicsDetails.sourceUrl(): String = url_to_original ?: url_to_video ?: lDownloadUrl().orEmpty()
+
+    /**
+     * id картинки, которого нет в самом объекте (старый локальный лайк): ищет
+     * его в папке сохранённого элемента, затем на сервере. `null` — не нашёлся,
+     * причина пользователю уже показана.
+     */
+    private suspend fun resolvePictureId(item: PicsDetails): String? {
+        val (folder, localPictureId) = findLocalFolderAndPictureId(item)
+        if (!localPictureId.isNullOrBlank()) return localPictureId
+
+        val metadata = folder?.let { readLSavedLikeMetadata(File(it, L_METADATA_FILE_NAME)) }
+        val albumId = metadata?.albumId.asLAlbumIdOrNull() ?: item.albumIdOrNull
+
+        val slugCandidate = metadata?.sourceMediaUrl?.takeIf { it.isNotBlank() }
+            ?: metadata?.sourcePreviewUrl?.takeIf { it.isNotBlank() }
+            ?: folder?.name
+            ?: item.sourceUrl()
+
+        if (albumId.isNullOrBlank() || slugCandidate.isBlank()) {
+            SnackBar.error("ID картинки не найден")
+            return null
+        }
+
+        SnackBar.info("Поиск ID на сервере…")
+
+        val resolvedId = serverFavorites.resolvePictureId(albumId, slugCandidate).getOrElse { error ->
+            // С причиной: обрыв сети и поиск, остановленный на пределе страниц,
+            // раньше выглядели одинаково — «не найден».
+            SnackBar.error("ID картинки не найден на сервере: ${error.toLUserMessage()}")
+            return null
+        }
+        if (resolvedId.isBlank()) {
+            SnackBar.error("ID картинки не найден на сервере")
+            return null
+        }
+
+        cacheResolvedPictureId(folder, metadata, resolvedId)
+        return resolvedId
+    }
+
+    private fun findLocalFolder(url: String?): File? =
+        url?.takeIf { it.isNotBlank() }?.let {
+            lFindSavedItemFolder(File(AppPath.l_likes), File(AppPath.l_collection), it)
+        }
 
     private fun findLocalFolderAndPictureId(item: PicsDetails): Pair<File?, String?> {
-        val targetUrl = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl().orEmpty()
-        val folder = targetUrl.takeIf { it.isNotBlank() }?.let {
-            lFindLikeFolder(File(AppPath.l_likes), it)
-                ?: lFindLikeFolder(File(AppPath.l_collection), it)
-        }
+        val folder = findLocalFolder(item.sourceUrl())
         val metadata = folder?.let { readLSavedLikeMetadata(File(it, L_METADATA_FILE_NAME)) }
         val metaPictureId = metadata?.pictureId?.takeIf { it.isNotBlank() }
             ?: metadata?.picture?.id?.takeIf { it.isNotBlank() }
@@ -151,35 +175,6 @@ class ExpandMenuViewModel @Inject constructor(
                 )
                 writeLSavedLikeMetadata(File(folder, L_METADATA_FILE_NAME), updated)
             }
-        }
-    }
-
-    private fun sendServerLike(anchorId: String) {
-        scope.launch {
-            serverFavorites.likePicture(anchorId)
-                .onSuccess {
-                    SnackBar.success("Лайк добавлен на сервере")
-                }
-                .onFailure { e ->
-                    Timber.e(e, "Failed to like picture on server")
-                    SnackBar.error(e.message ?: "Не удалось поставить лайк")
-                }
-        }
-    }
-
-    private fun sendServerUnlike(anchorId: String, onSuccess: (() -> Unit)? = null) {
-        scope.launch {
-            serverFavorites.unlikePicture(anchorId)
-                .onSuccess {
-                    SnackBar.info("Лайк удалён на сервере")
-                    withContext(Dispatchers.Main) {
-                        onSuccess?.invoke()
-                    }
-                }
-                .onFailure { e ->
-                    Timber.e(e, "Failed to unlike picture on server")
-                    SnackBar.error(e.message ?: "Не удалось удалить лайк")
-                }
         }
     }
 
@@ -219,8 +214,9 @@ class ExpandMenuViewModel @Inject constructor(
     fun saveToGallery(item: PicsDetails) {
         scope.launch(Dispatchers.IO) {
             try {
-                val targetUrl = item.url_to_original ?: item.url_to_video ?: item.lDownloadUrl()
-                val folder = targetUrl?.let { lFindLikeFolder(File(AppPath.l_likes), it) }
+                // И в лайках, и в коллекциях: раньше картинка из коллекции
+                // качалась заново, хотя файл лежит на устройстве.
+                val folder = findLocalFolder(item.sourceUrl())
                 val localBig = folder
                     ?.let { f ->
                         readLSavedLikeMetadata(File(f, L_METADATA_FILE_NAME))

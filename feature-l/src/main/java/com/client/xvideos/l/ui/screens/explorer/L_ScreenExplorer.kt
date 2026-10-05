@@ -47,19 +47,30 @@ class L_ScreenExplorer : Screen {
 
         LaunchedEffect(Unit) { navigationDepth.depth = 0 }
 
-        val savedLogin by Settings.l_login.field.collectAsStateWithLifecycle()
-        val savedPassword by Settings.l_pass.field.collectAsStateWithLifecycle()
+        val savedProfile by Settings.l_profile.field.collectAsStateWithLifecycle()
         val percentDownload by savedL.likes.percentDownload.collectAsStateWithLifecycle()
         val columnGifsTab by Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle()
 
         val onPop: () -> Unit = remember(navigator) { { navigator.pop() } }
-        val onSkipLogin = remember { { LSession.loginSkipped = true } }
-        val onSavedLogin = remember { {} }
+        // Набранное стираем, как только форма больше не нужна: пароль незачем
+        // держать в памяти, пока раздел открыт.
+        val loginForm = vm.loginForm
+        val onSkipLogin = remember(loginForm) {
+            {
+                LSession.loginSkipped = true
+                loginForm.clear()
+            }
+        }
+        val onSavedLogin = remember(loginForm) { { loginForm.clear() } }
+        val onLoginChange = remember(loginForm) { loginForm::updateLogin }
+        val onPasswordChange = remember(loginForm) { loginForm::updatePassword }
 
-        if ((savedLogin.isBlank() || savedPassword.isBlank()) && !LSession.loginSkipped) {
+        if (!savedProfile.isComplete && !LSession.loginSkipped) {
             LLoginForm(
-                initialLogin = savedLogin,
-                initialPassword = savedPassword,
+                login = loginForm.login,
+                password = loginForm.password,
+                onLoginChange = onLoginChange,
+                onPasswordChange = onPasswordChange,
                 onSaved = onSavedLogin,
                 onBack = onPop,
                 onSkip = onSkipLogin

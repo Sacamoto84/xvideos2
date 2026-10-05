@@ -4,22 +4,16 @@ import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
-import com.client.xvideos.l.repository.toLUserMessage
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.LServerPagedList
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -38,33 +32,34 @@ class ScreenLServerLikesSM @Inject constructor(
     /** Хост состояния сетки и выбора картинок. */
     val host = LazyRowPictureDetailsHost("l_server_likes")
 
-    private val _pictures = MutableStateFlow<List<PicsDetails>>(emptyList())
+    private val list = LServerPagedList(
+        scope = screenModelScope,
+        loadPage = repository::getServerLikedPictures,
+        onReplaced = { host.replaceFilteredPictures(it) },
+    )
+
     /** Поток списка картинок, понравившихся пользователю на сервере. */
-    val pictures = _pictures.asStateFlow()
+    val pictures = list.items
 
-    private val _isLoading = MutableStateFlow(false)
     /** Поток флага фоновой загрузки (первой или следующей страницы). */
-    val isLoading = _isLoading.asStateFlow()
+    val isLoading = list.isLoading
 
-    private val _isRefreshing = MutableStateFlow(false)
     /** Поток флага обновления списка с первой страницы (pull-to-refresh). */
-    val isRefreshing = _isRefreshing.asStateFlow()
+    val isRefreshing = list.isRefreshing
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
     /** Поток текста ошибки загрузки либо null при успешной работе. */
-    val errorMessage = _errorMessage.asStateFlow()
+    val errorMessage = list.errorMessage
+
+    /** Подгрузка следующей страницы не удалась — см. [LServerPagedList.nextPageFailed]. */
+    val nextPageFailed = list.nextPageFailed
 
     /** Флаг наличия доступных следующих страниц для пагинации. */
-    var hasMore: Boolean = true
-        private set
-
-    private var currentPage: Int = 1
-    private var loadJob: Job? = null
+    val hasMore: Boolean get() = list.hasMore
 
     init {
         host.onItemRemoved = { removedPic ->
             val targetKey = removedPic.selectionKey()
-            _pictures.value = _pictures.value.filterNot {
+            list.removeIf {
                 (!it.id.isNullOrBlank() && it.id == removedPic.id) ||
                     it.selectionKey() == targetKey
             }
@@ -81,79 +76,17 @@ class ScreenLServerLikesSM @Inject constructor(
         host.removePicture(pic)
     }
 
-    /**
-     * Загружает начальную первую страницу серверных лайков.
-     */
-    fun loadInitial() {
-        if (_isLoading.value) return
-        loadJob?.cancel()
-        loadJob = screenModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-            currentPage = 1
-            val result = repository.getServerLikedPictures(currentPage)
-            result.onSuccess { list ->
-                _pictures.value = list
-                host.replaceFilteredPictures(list)
-                hasMore = list.isNotEmpty()
-                _errorMessage.value = null
-            }.onFailure { error ->
-                Timber.e(error, "Failed to load server liked pictures")
-                _errorMessage.value = error.message ?: "Ошибка загрузки лайков с сервера"
-            }
-            _isLoading.value = false
-        }
-    }
+    /** Загружает начальную первую страницу серверных лайков. */
+    fun loadInitial() = list.loadInitial()
 
-    /**
-     * Загружает следующую страницу серверных лайков для бесконечного скролла.
-     */
-    fun loadNextPage() {
-        if (_isLoading.value || !hasMore || _errorMessage.value != null) return
-        loadJob = screenModelScope.launch {
-            _isLoading.value = true
-            val nextPage = currentPage + 1
-            val result = repository.getServerLikedPictures(nextPage)
-            result.onSuccess { list ->
-                if (list.isNotEmpty()) {
-                    currentPage = nextPage
-                    val combined = _pictures.value + list
-                    _pictures.value = combined
-                    host.replaceFilteredPictures(combined)
-                } else {
-                    hasMore = false
-                }
-            }.onFailure { error ->
-                Timber.e(error, "Failed to load next page ($nextPage) of server likes")
-                SnackBar.error(error.toLUserMessage())
-            }
-            _isLoading.value = false
-        }
-    }
+    /** Загружает следующую страницу серверных лайков для бесконечного скролла. */
+    fun loadNextPage() = list.loadNextPage()
 
-    /**
-     * Принудительно перезагружает список лайков с первой страницы.
-     */
-    fun refresh() {
-        if (_isRefreshing.value) return
-        loadJob?.cancel()
-        _isLoading.value = false
-        screenModelScope.launch {
-            _isRefreshing.value = true
-            currentPage = 1
-            val result = repository.getServerLikedPictures(currentPage)
-            result.onSuccess { list ->
-                _pictures.value = list
-                host.replaceFilteredPictures(list)
-                hasMore = list.isNotEmpty()
-                _errorMessage.value = null
-            }.onFailure { error ->
-                Timber.e(error, "Failed to refresh server likes")
-                _errorMessage.value = error.message ?: "Ошибка обновления лайков с сервера"
-            }
-            _isRefreshing.value = false
-        }
-    }
+    /** Пользователь ушёл от конца списка — см. [LServerPagedList.onListEndLeft]. */
+    fun onListEndLeft() = list.onListEndLeft()
+
+    /** Принудительно перезагружает список лайков с первой страницы. */
+    fun refresh() = list.refresh()
 }
 
 /**

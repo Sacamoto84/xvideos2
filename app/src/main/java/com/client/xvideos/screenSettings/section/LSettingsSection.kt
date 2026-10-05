@@ -35,8 +35,7 @@ internal fun LSettingsSection(
     // на следующем запросе увидит, что профиля больше нет.
     val onLogoutL = remember {
         {
-            Settings.l_login.setValue("")
-            Settings.l_pass.setValue("")
+            Settings.l_profile.clear()
             SnackBar.success("Вы вышли из профиля L")
         }
     }

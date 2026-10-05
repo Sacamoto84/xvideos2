@@ -10,10 +10,12 @@ import com.client.xvideos.l.model.enum.PictureCountRank
 import com.client.xvideos.l.net.json.LJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -59,7 +61,12 @@ object AlbumFilterPresetManager {
         _presets.value.any { it.name.equals(name.trim(), ignoreCase = true) }
 
     private val isInitialized = AtomicBoolean(false)
-    private val scope = CoroutineScope(Dispatchers.IO)
+
+    // SupervisorJob: без него первое же исключение в корутине записи отменило
+    // бы область целиком, и следующие сохранения молча не писались бы.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Чтение и записи файла настроек идут по одной. */
     private val persistMutex = Mutex()
 
     /**
@@ -68,10 +75,28 @@ object AlbumFilterPresetManager {
      *
      * @param context Контекст Android приложения.
      */
-    fun init(context: Context) {
+    fun init(context: Context) = init(prefsOf(context))
+
+    /**
+     * Читает пресеты на IO: первое обращение к файлу настроек — это диск, а
+     * зовут отсюда из композиции, с главного потока.
+     */
+    internal fun init(prefs: () -> SharedPreferences) {
         if (!isInitialized.compareAndSet(false, true)) return
-        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        loadFromPrefs(prefs)
+        scope.launch {
+            persistMutex.withLock { loadFromPrefs(prefs()) }
+        }
+    }
+
+    private fun prefsOf(context: Context): () -> SharedPreferences {
+        val appContext = context.applicationContext
+        return { appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+    }
+
+    /** Ждёт, пока завершатся начатые чтение и записи. */
+    @androidx.annotation.VisibleForTesting
+    internal suspend fun awaitIdle() {
+        scope.coroutineContext.job.children.forEach { it.join() }
     }
 
     private fun loadFromPrefs(prefs: SharedPreferences) {
@@ -79,8 +104,10 @@ object AlbumFilterPresetManager {
         if (!raw.isNullOrBlank()) {
             runCatching {
                 LJson.decodeFromString<List<SavedAlbumFilter>>(raw)
-            }.onSuccess {
-                _presets.value = it
+            }.onSuccess { saved ->
+                // Не заменой: пресет, сохранённый раньше, чем дочиталось, уже в
+                // списке и остаётся главнее одноимённого с диска.
+                _presets.update { current -> current + saved.filter { !current.hasName(it.name) } }
             }.onFailure {
                 Timber.e(it, "Failed to load saved filter presets")
             }
@@ -94,17 +121,27 @@ object AlbumFilterPresetManager {
      * @param name Название пресета (если пустое, генерируется автоматически).
      * @param filter Сохраняемая конфигурация [AlbumListFilter].
      */
-    fun savePreset(context: Context, name: String, filter: AlbumListFilter) {
-        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val cleanName = name.trim().ifBlank { generateDefaultName(filter) }
-        val newPreset = SavedAlbumFilter(name = cleanName, filter = filter)
-        val snapshot = _presets.updateAndGet { current ->
-            listOf(newPreset) + current.filter { it.name != cleanName }
+    fun savePreset(context: Context, name: String, filter: AlbumListFilter) = savePreset(prefsOf(context), name, filter)
+
+    internal fun savePreset(prefs: () -> SharedPreferences, name: String, filter: AlbumListFilter) {
+        _presets.update { current ->
+            val cleanName = name.trim().ifBlank { defaultName(filter, current) }
+            // Без учёта регистра, как и поиск по имени: иначе «Abc» и «abc»
+            // сохранялись оба, а находился только первый.
+            listOf(SavedAlbumFilter(name = cleanName, filter = filter)) + current.filter { !it.name.equals(cleanName, ignoreCase = true) }
         }
+        persistLater(prefs)
+    }
+
+    /**
+     * Пишет на диск список, каким он будет к моменту записи, а не снимок на
+     * момент вызова. Корутины записи доходят до замка в произвольном порядке:
+     * со снимками поздний мог лечь на диск раньше раннего, и после перезапуска
+     * возвращался удалённый пресет.
+     */
+    private fun persistLater(prefs: () -> SharedPreferences) {
         scope.launch {
-            persistMutex.withLock {
-                persist(prefs, snapshot)
-            }
+            persistMutex.withLock { persist(prefs(), _presets.value) }
         }
     }
 
@@ -114,16 +151,11 @@ object AlbumFilterPresetManager {
      * @param context Контекст Android приложения.
      * @param id Идентификатор удаляемого пресета.
      */
-    fun deletePreset(context: Context, id: String) {
-        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val snapshot = _presets.updateAndGet { current ->
-            current.filter { it.id != id }
-        }
-        scope.launch {
-            persistMutex.withLock {
-                persist(prefs, snapshot)
-            }
-        }
+    fun deletePreset(context: Context, id: String) = deletePreset(prefsOf(context), id)
+
+    internal fun deletePreset(prefs: () -> SharedPreferences, id: String) {
+        _presets.update { current -> current.filter { it.id != id } }
+        persistLater(prefs)
     }
 
     /**
@@ -158,13 +190,22 @@ object AlbumFilterPresetManager {
         PictureCountRank.C3200_12800 -> "3200..12800"
     }
 
+    private fun List<SavedAlbumFilter>.hasName(name: String): Boolean =
+        any { it.name.equals(name, ignoreCase = true) }
+
     /**
      * Генерирует читаемое имя пресета по умолчанию на основе активных параметров фильтра.
+     *
+     * Имя не совпадает ни с одним сохранённым: сохранение под занятым именем
+     * заменяет пресет, а в имя попадает лишь часть полей фильтра — два разных
+     * фильтра получали одно имя, и второй молча затирал первый.
      *
      * @param filter Объект фильтра [AlbumListFilter].
      * @return Сгенерированная строка названия.
      */
-    fun generateDefaultName(filter: AlbumListFilter): String {
+    fun generateDefaultName(filter: AlbumListFilter): String = defaultName(filter, _presets.value)
+
+    private fun defaultName(filter: AlbumListFilter, existing: List<SavedAlbumFilter>): String {
         val parts = ArrayList<String>(6)
         if (filter.searchQuery.isNotBlank()) {
             parts.add(filter.searchQuery.take(20))
@@ -184,7 +225,14 @@ object AlbumFilterPresetManager {
         if (filter.selection == "animated") {
             parts.add("Animated")
         }
-        return if (parts.isEmpty()) "Preset ${_presets.value.size + 1}" else parts.joinToString(DEFAULT_NAME_SEPARATOR)
+        // Номер — первый свободный, а не число пресетов плюс один: после
+        // удаления одного из них такой номер совпадал с уже занятым.
+        if (parts.isEmpty()) {
+            return generateSequence(1) { it + 1 }.map { "Preset $it" }.first { !existing.hasName(it) }
+        }
+        val base = parts.joinToString(DEFAULT_NAME_SEPARATOR)
+        if (!existing.hasName(base)) return base
+        return generateSequence(2) { it + 1 }.map { "$base ($it)" }.first { !existing.hasName(it) }
     }
 
     /**

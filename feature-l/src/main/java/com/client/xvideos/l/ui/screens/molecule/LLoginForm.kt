@@ -36,7 +36,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,6 +70,10 @@ private val FIELD_TEXT_STYLE = TextStyle(fontSize = 24.sp)
  * Показывается в двух местах: раздел L рисует её, пока профиль не задан, а
  * настройки — вместо своей страницы L, по кнопке «Войти».
  *
+ * Набранные логин и пароль форма не хранит: их держит экран
+ * (`LLoginFormState` в его ScreenModel), иначе они терялись бы при
+ * пересоздании активности или уходили в её сохранённое состояние.
+ *
  * @param onSkip «Пропустить» — работать без авторизации. `null` прячет кнопку:
  * в настройках пользователь пришёл именно входить.
  * @param modifier применяется к корню формы, до её фона и отступов.
@@ -79,26 +82,21 @@ private val FIELD_TEXT_STYLE = TextStyle(fontSize = 24.sp)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LLoginForm(
-    initialLogin: String = "",
-    initialPassword: String = "",
+    login: String,
+    password: String,
+    onLoginChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
     onSaved: () -> Unit,
     onBack: () -> Unit,
     onSkip: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    // Логин переживает пересоздание активности: настройки хранят признак
-    // открытой формы так же, и без этого форма возвращалась пустой. Пароль в
-    // сохранённое состояние не кладём — оно может попасть на диск.
-    var login by rememberSaveable(initialLogin) { mutableStateOf(initialLogin) }
-    var password by remember(initialPassword) { mutableStateOf(initialPassword) }
     var passwordVisible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val autofillManager = remember(context) { context.getSystemService(AutofillManager::class.java) }
     val uriHandler = LocalUriHandler.current
 
-    val onLoginChange = remember { { newLogin: String -> login = newLogin } }
-    val onPasswordChange = remember { { newPassword: String -> password = newPassword } }
     val onTogglePasswordVisible = remember { { passwordVisible = !passwordVisible } }
 
     val onSaveCredentials = remember(login, password, autofillManager, onSaved) {
@@ -107,8 +105,7 @@ fun LLoginForm(
             if (normalizedLogin.isBlank() || password.isBlank()) {
                 SnackBar.warning("Введите логин и пароль L")
             } else {
-                Settings.l_login.setValue(normalizedLogin)
-                Settings.l_pass.setValue(password)
+                Settings.l_profile.save(normalizedLogin, password)
                 autofillManager?.commit()
                 SnackBar.success("Авторизация L сохранена")
                 onSaved()
@@ -292,6 +289,10 @@ fun LLoginForm(
 @Composable
 private fun LLoginFormPreview() {
     LLoginForm(
+        login = "preview_user",
+        password = "",
+        onLoginChange = {},
+        onPasswordChange = {},
         onSaved = {},
         onBack = {},
         onSkip = {}
@@ -302,6 +303,10 @@ private fun LLoginFormPreview() {
 @Composable
 private fun LLoginFormWithoutSkipPreview() {
     LLoginForm(
+        login = "",
+        password = "",
+        onLoginChange = {},
+        onPasswordChange = {},
         onSaved = {},
         onBack = {},
         onSkip = null

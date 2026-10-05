@@ -31,6 +31,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.getFolderSize
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.l.ui.screens.LLoginFormState
 import com.client.xvideos.l.ui.screens.molecule.LLoginForm
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
@@ -134,7 +135,7 @@ object AppSettingsScreen : Screen {
             onClearDownload = onClearDownload,
             data = data,
             context = context,
-            onBackupDataChanged = refreshFileStats,
+            lLoginForm = vm.lLoginForm,
             onRefreshFileStats = refreshFileStats
         )
     }
@@ -151,7 +152,7 @@ internal fun AppSettingsScreenContent(
     onClearDownload: () -> Unit,
     data: SettingsDataHolders,
     context: Context,
-    onBackupDataChanged: () -> Unit,
+    lLoginForm: LLoginFormState,
     onRefreshFileStats: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -168,8 +169,23 @@ internal fun AppSettingsScreenContent(
     }
 
     val onMainBack: () -> Unit = remember { { currentPage = SettingsPage.Main } }
-    val onOpenLLogin: () -> Unit = remember { { lLoginVisible = true } }
-    val onCloseLLogin: () -> Unit = remember { { lLoginVisible = false } }
+    // Поля формы заполняются при открытии, а не подпиской на настройки:
+    // «Сохранить» меняет профиль, и подписка пересоздала бы поля перед самым
+    // закрытием формы. При закрытии набранное стирается.
+    val onOpenLLogin: () -> Unit = remember(lLoginForm) {
+        {
+            lLoginForm.prefill(Settings.l_profile.field.value)
+            lLoginVisible = true
+        }
+    }
+    val onCloseLLogin: () -> Unit = remember(lLoginForm) {
+        {
+            lLoginVisible = false
+            lLoginForm.clear()
+        }
+    }
+    val onLLoginChange = remember(lLoginForm) { lLoginForm::updateLogin }
+    val onLPasswordChange = remember(lLoginForm) { lLoginForm::updatePassword }
     BackHandler(enabled = currentPage != SettingsPage.Main, onBack = onMainBack)
     BackHandler(enabled = currentPage == SettingsPage.Main, onBack = onBack)
     // Объявлен последним: пока форма открыта, «назад» закрывает её, а не страницу.
@@ -194,7 +210,7 @@ internal fun AppSettingsScreenContent(
         onClearDownload,
         data,
         context,
-        onBackupDataChanged,
+        onRefreshFileStats,
         onOpenLLogin
     ) {
         SettingsDetailParams(
@@ -207,19 +223,17 @@ internal fun AppSettingsScreenContent(
             onClearDownload = onClearDownload,
             data = data,
             context = context,
-            onBackupDataChanged = onBackupDataChanged,
+            onBackupDataChanged = onRefreshFileStats,
             onOpenLLogin = onOpenLLogin
         )
     }
 
     if (lLoginVisible) {
-        // Сохранённые логин и пароль читаем один раз: «Сохранить» меняет настройки,
-        // и подписка на них пересоздала бы поля формы перед самым её закрытием.
-        val initialLogin = remember { Settings.l_login.field.value }
-        val initialPassword = remember { Settings.l_pass.field.value }
         LLoginForm(
-            initialLogin = initialLogin,
-            initialPassword = initialPassword,
+            login = lLoginForm.login,
+            password = lLoginForm.password,
+            onLoginChange = onLLoginChange,
+            onPasswordChange = onLPasswordChange,
             onSaved = onCloseLLogin,
             onBack = onCloseLLogin,
             onSkip = null,

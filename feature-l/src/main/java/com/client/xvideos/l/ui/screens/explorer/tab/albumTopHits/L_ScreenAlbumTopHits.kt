@@ -26,6 +26,7 @@ import com.client.xvideos.l.model.AlbumListTopHits
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.molecule.TopHitsSectionItem
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
+import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.AlbumListPageError
 
 object L_ScreenAlbumTopHits : Screen {
 
@@ -38,7 +39,9 @@ object L_ScreenAlbumTopHits : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLAlbumTopHitsSM = getScreenModel()
         val albumTopHits by vm.albumTopHits.collectAsStateWithLifecycle()
+        val loadError by vm.loadError.collectAsStateWithLifecycle()
         val items = albumTopHits?.items
+        val onRetry: () -> Unit = remember(vm) { { vm.retry() } }
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
 
@@ -58,10 +61,12 @@ object L_ScreenAlbumTopHits : Screen {
 
         L_ScreenAlbumTopHitsContent(
             items = items.orEmpty(),
+            loadError = loadError,
             state = vm.state,
             itemWidth = itemWidth,
             onAlbumClick = onAlbumClick,
-            onSeeAllClick = onSeeAllClick
+            onSeeAllClick = onSeeAllClick,
+            onRetry = onRetry
         )
     }
 }
@@ -69,10 +74,12 @@ object L_ScreenAlbumTopHits : Screen {
 @Composable
 fun L_ScreenAlbumTopHitsContent(
     items: List<AlbumListTopHits>,
+    loadError: String?,
     state: LazyListState,
     itemWidth: Dp,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (String, String) -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -80,6 +87,10 @@ fun L_ScreenAlbumTopHitsContent(
             .fillMaxSize()
             .background(Theme.background)
     ) {
+        if (items.isEmpty() && loadError != null) {
+            AlbumListPageError(message = loadError, onRetry = onRetry)
+            return@Box
+        }
         LazyColumn(state = state) {
             items(
                 items = items,
@@ -102,9 +113,11 @@ fun L_ScreenAlbumTopHitsContent(
 private fun L_ScreenAlbumTopHitsContentPreview() {
     L_ScreenAlbumTopHitsContent(
         items = emptyList(),
+        loadError = null,
         state = rememberLazyListState(),
         itemWidth = 120.dp,
         onAlbumClick = {},
-        onSeeAllClick = { _, _ -> }
+        onSeeAllClick = { _, _ -> },
+        onRetry = {}
     )
 }

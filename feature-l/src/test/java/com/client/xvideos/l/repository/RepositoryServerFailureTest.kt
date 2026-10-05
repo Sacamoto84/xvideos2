@@ -74,10 +74,10 @@ class RepositoryServerFailureTest {
     private fun repository(
         server: FakeServer,
         notices: MutableList<String> = mutableListOf(),
-        credentials: () -> UserProfile = { UserProfile() },
+        saved: SavedProfile = SavedProfile(),
     ) = Repository(
         fileDb = AppFileDatabase(),
-        credentials = credentials,
+        credentials = { saved.snapshot },
         engineFactory = { server.engine },
         notifyAnonymousFallback = { notices += it },
     )
@@ -99,7 +99,7 @@ class RepositoryServerFailureTest {
     fun `неудачный вход из-за 500 переводит в анонимный режим, запрос проходит`() = runBlocking {
         val server = FakeServer(loginStatus = HttpStatusCode.InternalServerError, loginBody = SERVER_ERROR_PAGE)
         val notices = mutableListOf<String>()
-        val repository = repository(server, notices) { CREDENTIALS }
+        val repository = repository(server, notices, SavedProfile(CREDENTIALS))
 
         val result = repository.openURI("{}")
 
@@ -112,7 +112,7 @@ class RepositoryServerFailureTest {
     fun `после неудачного входа вход не повторяется на каждом запросе`() = runBlocking {
         val server = FakeServer(loginStatus = HttpStatusCode.InternalServerError, loginBody = SERVER_ERROR_PAGE)
         val notices = mutableListOf<String>()
-        val repository = repository(server, notices) { CREDENTIALS }
+        val repository = repository(server, notices, SavedProfile(CREDENTIALS))
 
         repository.openURI("{}")
         repository.openURI("{\"q\":2}")
@@ -126,11 +126,11 @@ class RepositoryServerFailureTest {
     fun `новые логин и пароль снова пробуют войти`() = runBlocking {
         val server = FakeServer(loginStatus = HttpStatusCode.InternalServerError, loginBody = SERVER_ERROR_PAGE)
         val notices = mutableListOf<String>()
-        var credentials = CREDENTIALS
-        val repository = repository(server, notices) { credentials }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, notices, saved)
 
         repository.openURI("{}")
-        credentials = CREDENTIALS.withPassword("another")
+        saved.save(CREDENTIALS.withPassword("another"))
         repository.openURI("{\"q\":2}")
 
         assertEquals(2, server.loginCalls.get())
@@ -141,7 +141,7 @@ class RepositoryServerFailureTest {
     fun `неверный пароль тоже переводит в анонимный режим с понятной причиной`() = runBlocking {
         val server = FakeServer(loginBody = WRONG_CREDENTIALS_PAGE)
         val notices = mutableListOf<String>()
-        val repository = repository(server, notices) { CREDENTIALS }
+        val repository = repository(server, notices, SavedProfile(CREDENTIALS))
 
         val result = repository.openURI("{}")
 
@@ -153,7 +153,7 @@ class RepositoryServerFailureTest {
     fun `успешный вход не показывает предупреждений`() = runBlocking {
         val server = FakeServer()
         val notices = mutableListOf<String>()
-        val repository = repository(server, notices) { CREDENTIALS }
+        val repository = repository(server, notices, SavedProfile(CREDENTIALS))
 
         val result = repository.openURI("{}")
 

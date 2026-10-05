@@ -1,12 +1,15 @@
 package com.client.xvideos.l.net
 
 import androidx.compose.runtime.Stable
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.LusciousEndpoints
 import com.client.xvideos.l.repository.RepositoryUriConfig
+import com.client.xvideos.l.repository.toLUserMessage
 import com.client.xvideos.l.net.json.LJson
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,20 +38,17 @@ import timber.log.Timber
  * @property id Уникальный числовой ID альбома.
  * @property repository Репозиторий сетевых запросов и кэша.
  * @property scope CoroutineScope для выполнения сетевых задач.
+ * @param notifyRefreshFailed Сообщение пользователю, что обновление не удалось, а альбом на экране прежний.
+ * @param dispatcher Поток загрузки; подменяется в тестах.
  */
 @Stable
 class AlbumInfo(
     val id: Int,
     private val repository: Repository,
     private val scope: CoroutineScope,
+    private val notifyRefreshFailed: (String) -> Unit = SnackBar::error,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-
-    constructor(
-        id: Int,
-        @Suppress("UNUSED_PARAMETER") download: Boolean,
-        repository: Repository,
-        scope: CoroutineScope,
-    ) : this(id, repository, scope)
 
     /** Менеджер пагинированной загрузки списка картинок альбома. */
     val albumPicsDetails = AlbumPicsDetails(id, repository)
@@ -59,7 +59,7 @@ class AlbumInfo(
     val albumInfo: StateFlow<AlbumDetails?> = _albumInfo.asStateFlow()
 
     private val _loadError = MutableStateFlow<String?>(null)
-    /** Текст последней ошибки загрузки метаданных (если есть). */
+    /** Текст ошибки загрузки для экрана без альбома: показывается вместо шапки. */
     val loadError: StateFlow<String?> = _loadError.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
@@ -81,9 +81,15 @@ class AlbumInfo(
         loadAlbum()
     }
 
-    /** Принудительно обновить данные альбома из сети в обход локального кэша. */
+    /**
+     * Принудительно обновить данные альбома из сети в обход локального кэша.
+     *
+     * Признак поднимается здесь же, а не в запущенной корутине: иначе второй
+     * жест подряд проходил проверку, отменял первую загрузку, а её завершение
+     * гасило индикатор второй.
+     */
     fun refresh() {
-        if (_isRefreshing.value) return
+        if (!_isRefreshing.compareAndSet(expect = false, update = true)) return
         loadAlbum(forceNetwork = true)
     }
 
@@ -103,56 +109,65 @@ class AlbumInfo(
      */
     private fun loadAlbum(forceNetwork: Boolean = false) {
         loadJob?.cancel()
-        loadJob = scope.launch(Dispatchers.IO) {
-            if (forceNetwork) {
-                _isRefreshing.value = true
-                repository.deleteAlbumBundleCache(id)
-            } else {
+        val job = scope.launch(dispatcher) {
+            // Кэш перед обновлением не стираем: его заменит свежий, когда альбом
+            // загрузится целиком. Раньше он удалялся до запроса, и обновление
+            // без сети оставляло пользователя без альбома вовсе.
+            if (!forceNetwork) {
                 _isLoading.value = true
             }
             _loadError.value = null
 
-            try {
-                if (!forceNetwork && restoreBundleIfFresh(repository)) {
-                    _isLoading.value = false
-                    return@launch
-                }
-
-                val query = getAlbumInfo(id)
-                val result = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
-                if (result.isFailure) {
-                    val err = result.exceptionOrNull()?.message ?: "Network error"
-                    Timber.w("getAlbumInfo $id error: $err")
-                    _loadError.value = err
-                    _isLoading.value = false
-                    return@launch
-                }
-                val parsed = parseAlbumDetails(result.getOrThrow())
-
-                if (parsed.isFailure) {
-                    val err = parsed.exceptionOrNull()?.message ?: "Parse error"
-                    Timber.w("getAlbumInfo $id parse error: $err")
-                    _loadError.value = err
-                    _isLoading.value = false
-                    return@launch
-                }
-
-                val albumDetails = parsed.getOrThrow()
-                _albumInfo.value = albumDetails
+            if (!forceNetwork && restoreBundleIfFresh(repository)) {
                 _isLoading.value = false
-                Timber.d(
-                    "AlbumInfo [$id] Loaded metadata: title='${albumDetails.title}', " +
-                    "pictures=${albumDetails.number_of_pictures}, " +
-                    "animated=${albumDetails.number_of_animated_pictures}, " +
-                    "description='${albumDetails.description}'"
-                )
-                albumPicsDetails.contentUrls(pageCacheConfig = RepositoryUriConfig.DIRECT)
-                cacheBundleIfComplete(repository, albumDetails)
-            } finally {
-                if (forceNetwork) {
-                    _isRefreshing.value = false
-                }
+                return@launch
             }
+
+            val query = getAlbumInfo(id)
+            val parsed = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
+                .mapCatching { parseAlbumDetails(it).getOrThrow() }
+            if (parsed.isFailure) {
+                val error = parsed.exceptionOrNull()
+                Timber.w(error, "getAlbumInfo $id error")
+                reportLoadFailure(error, isRefresh = forceNetwork)
+                _isLoading.value = false
+                return@launch
+            }
+
+            val albumDetails = parsed.getOrThrow()
+            _albumInfo.value = albumDetails
+            _isLoading.value = false
+            Timber.d(
+                "AlbumInfo [$id] Loaded metadata: title='${albumDetails.title}', " +
+                "pictures=${albumDetails.number_of_pictures}, " +
+                "animated=${albumDetails.number_of_animated_pictures}, " +
+                "description='${albumDetails.description}'"
+            )
+            albumPicsDetails.contentUrls(pageCacheConfig = RepositoryUriConfig.DIRECT)
+            cacheBundleIfComplete(repository, albumDetails)
+        }
+        // Не finally в теле: обновление, отменённое до старта, тела не выполняет,
+        // и признак оставался бы поднятым навсегда.
+        if (forceNetwork) {
+            job.invokeOnCompletion { _isRefreshing.value = false }
+        }
+        loadJob = job
+    }
+
+    /**
+     * Доносит сбой загрузки до пользователя текстом для экрана, а не сырым
+     * сообщением исключения.
+     *
+     * Экран ошибки занимает место шапки альбома, поэтому после неудачного
+     * обновления, когда альбом на экране есть, он не показывается — раньше такой
+     * сбой не был виден вовсе. Здесь об этом сообщает [notifyRefreshFailed].
+     */
+    private fun reportLoadFailure(error: Throwable?, isRefresh: Boolean) {
+        val message = error.toLUserMessage()
+        if (isRefresh && _albumInfo.value != null) {
+            notifyRefreshFailed(message)
+        } else {
+            _loadError.value = message
         }
     }
 

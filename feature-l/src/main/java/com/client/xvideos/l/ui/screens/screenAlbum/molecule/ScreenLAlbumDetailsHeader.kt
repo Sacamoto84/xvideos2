@@ -24,6 +24,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
+import com.client.xvideos.l.model.isLFavoriteLikeStatus
 import com.client.xvideos.l.net.AlbumPicsDetails
 import com.client.xvideos.l.ui.screens.screenAlbum.LAlbumNetworkIssuePanel
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
@@ -119,8 +120,7 @@ fun ScreenLAlbumDetailsHeader(
                 onRequestDelete(parsed)
             }
         })
-        val isFavorite = state.isServerFavorite
-            ?: (parsed.likeStatus.orEmpty().isNotBlank() && parsed.likeStatus != "none" && parsed.likeStatus != "dislike")
+        val isFavorite = state.isServerFavorite ?: parsed.likeStatus.isLFavoriteLikeStatus()
         AlbumInfoButtonServerFavorite(
             isFavorite = isFavorite,
             isLoading = state.isServerFavoriteLoading,

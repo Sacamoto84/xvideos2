@@ -4,6 +4,7 @@ import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.albumIdOrNull
 import com.client.xvideos.l.model.extractAnchorId
 import com.client.xvideos.l.model.Thumbnails
 import com.client.xvideos.l.model.isLVideoFileUrl
@@ -141,7 +142,7 @@ private fun Thumbnails.toPreviewSource(): LPreviewSource? {
  * Формирует детерминированное имя директории для сохранения элемента на основе альбома, SHA-256 URL и имени файла.
  */
 internal fun lBuildFolderName(item: PicsDetails, mediaUrl: String): String {
-    val album = item.album?.takeIf { it.isNotBlank() && it != "null" } ?: "no_album"
+    val album = item.albumIdOrNull ?: "no_album"
     val baseName = mediaUrl.lUrlFileName()
         .substringBeforeLast('.', missingDelimiterValue = mediaUrl.lUrlFileName())
         .sanitizeFilePart()
@@ -285,6 +286,30 @@ internal suspend fun lDownloadToFileTracked(
 }
 
 /**
+ * Копирует [source] в [target] через временный `.part`-файл.
+ *
+ * Признак «файл на месте» — ненулевая длина. Копирование прямо в целевой файл,
+ * оборванное на середине, оставляло усечённый файл, и следующий проход докачки
+ * считал его целым. Оставшийся `.part` докачка подчищает сама.
+ */
+internal fun lCopyFileAtomically(source: File, target: File) {
+    target.parentFile?.mkdirs()
+    val tempFile = File(target.parentFile, "${target.name}$L_PART_FILE_SUFFIX")
+    try {
+        source.copyTo(tempFile, overwrite = true)
+        if (target.exists() && !target.delete()) {
+            throw IOException("Cannot replace file: ${target.absolutePath}")
+        }
+        if (!tempFile.renameTo(target)) {
+            throw IOException("Cannot move file into place: ${target.absolutePath}")
+        }
+    } catch (e: Exception) {
+        tempFile.delete()
+        throw e
+    }
+}
+
+/**
  * Копирует локальный файл [source] в [file] с регистрацией прогресса в [progress].
  */
 internal fun lCopyToFileTracked(
@@ -294,8 +319,7 @@ internal fun lCopyToFileTracked(
 ) {
     val progressId = progress.startFile()
     try {
-        file.parentFile?.mkdirs()
-        source.copyTo(file, overwrite = true)
+        lCopyFileAtomically(source, file)
         progress.updateFile(progressId, 1f)
     } finally {
         progress.finishFile(progressId)
@@ -408,7 +432,7 @@ internal suspend fun lPersistPicsDetailsToFolder(
             progress.begin(expectedFileCount)
             progressStarted = true
 
-            val albumId = item.album?.takeIf { it.isNotBlank() && it != "null" }
+            val albumId = item.albumIdOrNull
             val albumDetails = albumId?.toIntOrNull()?.let { lFetchAlbumDetails(luscious, it) }
 
             root.mkdirs()

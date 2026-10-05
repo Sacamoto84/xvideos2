@@ -57,13 +57,10 @@ internal fun SettingsDetailPage(
         SettingsPage.L -> {
             // Подписка только на странице L: остальным страницам логин и пароль
             // не нужны, а пароль незачем держать в состоянии композиции.
-            val lLogin by Settings.l_login.field.collectAsStateWithLifecycle()
-            val lPass by Settings.l_pass.field.collectAsStateWithLifecycle()
+            val lProfile by Settings.l_profile.field.collectAsStateWithLifecycle()
             LSettingsSection(
-                lLogin = lLogin,
-                // То же правило, что на входе в раздел L: аккаунт есть, когда
-                // заданы и логин, и пароль.
-                hasLAccount = lLogin.isNotBlank() && lPass.isNotBlank(),
+                lLogin = lProfile.login,
+                hasLAccount = lProfile.isComplete,
                 onLogin = params.onOpenLLogin,
                 modifier = modifier
             )
