@@ -34,10 +34,6 @@ internal fun SettingsDetailPage(
     val ramCachePercent by Settings.image_cache_ram_percent.field.collectAsStateWithLifecycle()
     val diskCacheEnabled by Settings.image_cache_disk_enabled.field.collectAsStateWithLifecycle()
     val diskCacheSizeMb by Settings.image_cache_disk_size_mb.field.collectAsStateWithLifecycle()
-    val lLogin by Settings.l_login.field.collectAsStateWithLifecycle()
-    val lPass by Settings.l_pass.field.collectAsStateWithLifecycle()
-    // То же правило, что на входе в раздел L: аккаунт есть, когда заданы и логин, и пароль.
-    val hasLAccount = lLogin.isNotBlank() && lPass.isNotBlank()
 
     val isNichesCacheDownloading = params.data.savedRed?.nichesCache?.isDownloading ?: false
     val nichesCacheProgress = params.data.savedRed?.nichesCache?.progress ?: 0f
@@ -58,12 +54,20 @@ internal fun SettingsDetailPage(
             context = params.context,
             modifier = modifier
         )
-        SettingsPage.L -> LSettingsSection(
-            lLogin = lLogin,
-            hasLAccount = hasLAccount,
-            onLogin = params.onOpenLLogin,
-            modifier = modifier
-        )
+        SettingsPage.L -> {
+            // Подписка только на странице L: остальным страницам логин и пароль
+            // не нужны, а пароль незачем держать в состоянии композиции.
+            val lLogin by Settings.l_login.field.collectAsStateWithLifecycle()
+            val lPass by Settings.l_pass.field.collectAsStateWithLifecycle()
+            LSettingsSection(
+                lLogin = lLogin,
+                // То же правило, что на входе в раздел L: аккаунт есть, когда
+                // заданы и логин, и пароль.
+                hasLAccount = lLogin.isNotBlank() && lPass.isNotBlank(),
+                onLogin = params.onOpenLLogin,
+                modifier = modifier
+            )
+        }
         SettingsPage.Red -> RSettingsSection(
             sizeRedTotal = params.sizeRedTotal,
             sizeRedDownload = params.sizeRedDownload,
@@ -105,7 +109,8 @@ private fun SettingsDetailPagePreview() {
             onClearDownload = {},
             data = SettingsDataHolders(),
             context = context,
-            onBackupDataChanged = {}
+            onBackupDataChanged = {},
+            onOpenLLogin = {}
         )
     )
 }

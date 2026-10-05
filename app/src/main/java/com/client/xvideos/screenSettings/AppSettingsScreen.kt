@@ -222,7 +222,8 @@ internal fun AppSettingsScreenContent(
             initialPassword = initialPassword,
             onSaved = onCloseLLogin,
             onBack = onCloseLLogin,
-            onSkip = null
+            onSkip = null,
+            modifier = modifier
         )
     } else {
         Scaffold(
@@ -264,7 +265,8 @@ private fun AppSettingsScreenPreview() {
                 onClearDownload = {},
                 data = SettingsDataHolders(),
                 context = context.applicationContext,
-                onBackupDataChanged = {}
+                onBackupDataChanged = {},
+                onOpenLLogin = {}
             ),
             modifier = Modifier.verticalScroll(rememberScrollState())
         )
