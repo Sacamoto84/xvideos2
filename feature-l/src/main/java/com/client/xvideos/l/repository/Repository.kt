@@ -67,6 +67,7 @@ data class LRepositoryProtectionUiState(
  *
  * @param fileDb Локальная файловая база данных для доступа к ROM-кэшам.
  * @param credentials Сохранённые логин и пароль; пустой профиль — анонимный режим.
+ * @param credentialsRevision Номер записи профиля: растёт при каждом сохранении логина или пароля.
  * @param engineFactory Движок HTTP для тестов; `null` — боевой OkHttp.
  * @param notifyAnonymousFallback Сообщение пользователю, что вход не удался и запросы идут анонимно.
  * @param nowMs Текущее время в миллисекундах; подменяется в тестах.
@@ -75,6 +76,7 @@ data class LRepositoryProtectionUiState(
 open class Repository(
     fileDb: AppFileDatabase,
     private val credentials: () -> UserProfile = ::savedCredentials,
+    private val credentialsRevision: () -> Int = ::savedCredentialsRevision,
     private val engineFactory: (() -> HttpClientEngine)? = null,
     private val notifyAnonymousFallback: (String) -> Unit = SnackBar::warning,
     private val nowMs: () -> Long = System::currentTimeMillis,
@@ -105,6 +107,12 @@ open class Repository(
      * Читается и пишется только под [authMutex].
      */
     private var loginRetryAtMs = Long.MAX_VALUE
+
+    /**
+     * Номер записи профиля, под который приведена сессия; `null` — запросов
+     * ещё не было. Читается и пишется только под [authMutex].
+     */
+    private var seenCredentialsRevision: Int? = null
 
     private val requestMutex = Mutex()
     private val ramCacheMutex = Mutex()
@@ -147,8 +155,8 @@ open class Repository(
     }
 
     /**
-     * Сохранённого профиля нет: забывает неудачный вход и, если клиент ещё
-     * вошедший, закрывает его сессию. Вызывать под [authMutex].
+     * Сохранённый профиль перезаписан или пуст: забывает неудачный вход и,
+     * если клиент ещё вошедший, закрывает его сессию. Вызывать под [authMutex].
      *
      * Так работает выход: настройки только стирают логин и пароль, а следующий
      * запрос приходит сюда. Раньше сессию закрывал отдельный `logout()`, но
@@ -177,7 +185,8 @@ open class Repository(
 
     /**
      * Приводит сессию в соответствие с сохранёнными логином и паролем: входит,
-     * если они заданы, и закрывает сессию, если их стёрли ([dropSession]).
+     * если они заданы, и закрывает сессию, если их стёрли или перезаписали
+     * ([dropSession]).
      *
      * Неудачный вход не закрывает раздел: запросы идут анонимно, как после
      * «Пропустить», а пользователь получает одно предупреждение. Снова вход
@@ -190,14 +199,24 @@ open class Repository(
     private suspend fun ensureAuthenticated(): Result<Unit> {
         return try {
             authMutex.withLock {
+                // Номер читаем раньше профиля: настройка сначала меняет значение,
+                // потом номер. При таком порядке гонка с записью даёт лишний
+                // сброс на следующем запросе, а не пропущенный.
+                val revision = credentialsRevision()
                 val profile = credentials()
+                // Профиль перезаписали — прежняя сессия и память о неудачном
+                // входе к нему не относятся, даже если логин и пароль те же.
+                // Раньше сброс шёл только по пустому профилю, а «Выйти» и
+                // «Войти» в настройках идут подряд, без запроса между ними:
+                // пустого профиля репозиторий не видел, новый вход уходил с
+                // cookie прежнего пользователя, а отвергнутые данные не
+                // пробовались снова.
+                if (revision != seenCredentialsRevision || !profile.isValid) dropSession()
+                seenCredentialsRevision = revision
                 val loginAllowed = profile != anonymousFallbackFor || nowMs() >= loginRetryAtMs
                 // Без логина или пароля работаем анонимно (сервер отдаёт меньше
                 // альбомов), с ними — входим.
-                when {
-                    !profile.isValid -> dropSession()
-                    loginAllowed -> logInIfNeeded(profile)
-                }
+                if (profile.isValid && loginAllowed) logInIfNeeded(profile)
                 SUCCESS_UNIT
             }
         } catch (e: CancellationException) {
@@ -623,3 +642,6 @@ private const val RETRY_BACKOFF_MS = 1000L
 /** Логин и пароль L из настроек приложения. */
 private fun savedCredentials(): UserProfile =
     UserProfile(email = Settings.l_login.field.value.trim(), password = Settings.l_pass.field.value)
+
+/** Номер записи профиля L: растёт при каждом сохранении логина или пароля. */
+private fun savedCredentialsRevision(): Int = Settings.l_login.revision + Settings.l_pass.revision

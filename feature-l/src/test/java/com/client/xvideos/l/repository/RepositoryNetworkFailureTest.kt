@@ -22,6 +22,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
@@ -58,6 +59,11 @@ class RepositoryNetworkFailureTest {
         private val CREDENTIALS = UserProfile(email = "user@example.com", password = "secret")
         private val JSON = headersOf(HttpHeaders.ContentType, "application/json")
         private val HTML = headersOf(HttpHeaders.ContentType, "text/html; charset=utf-8")
+        private const val SESSION_COOKIE = "sessionid=first"
+        private val HTML_WITH_SESSION_COOKIE = headersOf(
+            HttpHeaders.ContentType to listOf("text/html; charset=utf-8"),
+            HttpHeaders.SetCookie to listOf("$SESSION_COOKIE; Path=/"),
+        )
 
         /** Пауза перед повтором в тестах: больше интервала между запросами, но не секунды. */
         private const val TEST_BACKOFF_MS = 500L
@@ -77,11 +83,13 @@ class RepositoryNetworkFailureTest {
             { respond(API_OK, HttpStatusCode.OK, JSON) }
 
         val loginCalls = AtomicInteger()
+        val loginRequests: MutableList<HttpRequestData> = Collections.synchronizedList(mutableListOf())
         val apiCalls: MutableList<HttpRequestData> = Collections.synchronizedList(mutableListOf())
 
         val engine = MockEngine { request ->
             if (request.url.encodedPath.endsWith("/accounts/login/")) {
                 loginCalls.incrementAndGet()
+                loginRequests += request
                 login()
             } else {
                 apiCalls += request
@@ -100,6 +108,25 @@ class RepositoryNetworkFailureTest {
         url.parameters["operationName"]
             ?: OPERATION_IN_BODY.find((body as? TextContent)?.text.orEmpty())?.groupValues?.get(1)
 
+    /**
+     * Сохранённый профиль, как его видит [Repository]: значение и номер записи.
+     * Номер растёт при каждом сохранении, как у настроек приложения, поэтому
+     * по нему видна и запись прежнего значения.
+     */
+    private class SavedProfile(initial: UserProfile) {
+        @Volatile
+        var profile = initial
+            private set
+
+        private val writes = AtomicInteger()
+        val revision: Int get() = writes.get()
+
+        fun save(value: UserProfile) {
+            profile = value
+            writes.incrementAndGet()
+        }
+    }
+
     /** Время для [Repository]: тест двигает его сам, чтобы не ждать паузу повторного входа. */
     private var now = 1_000_000L
 
@@ -107,15 +134,20 @@ class RepositoryNetworkFailureTest {
         server: FakeServer,
         notices: MutableList<String> = mutableListOf(),
         backoffMs: Long = TEST_BACKOFF_MS,
+        credentialsRevision: () -> Int = { 0 },
         credentials: () -> UserProfile = { UserProfile() },
     ) = Repository(
         fileDb = AppFileDatabase(),
         credentials = credentials,
+        credentialsRevision = credentialsRevision,
         engineFactory = { server.engine },
         notifyAnonymousFallback = { notices += it },
         nowMs = { now },
         retryBackoffMs = backoffMs,
     )
+
+    private fun repository(server: FakeServer, saved: SavedProfile) =
+        repository(server, credentialsRevision = saved::revision) { saved.profile }
 
     // --- Вход ---
 
@@ -208,16 +240,66 @@ class RepositoryNetworkFailureTest {
         val server = FakeServer().apply {
             login = { respond(WRONG_CREDENTIALS_PAGE, HttpStatusCode.OK, HTML) }
         }
-        var credentials = CREDENTIALS
-        val repository = repository(server) { credentials }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
 
         repository.openURI(query("A"))
-        credentials = UserProfile()
+        // Как в настройках: «Выйти» и «Войти» идут подряд, запросов между ними нет.
+        saved.save(UserProfile())
+        saved.save(CREDENTIALS)
         repository.openURI(query("B"))
-        credentials = CREDENTIALS
-        repository.openURI(query("C"))
 
         assertEquals(2, server.loginCalls.get())
+    }
+
+    @Test
+    fun `вход под другим аккаунтом сразу после выхода идёт без cookie прежней сессии`() = runBlocking {
+        val server = FakeServer().apply {
+            login = { respond("<html><body>welcome</body></html>", HttpStatusCode.OK, HTML_WITH_SESSION_COOKIE) }
+        }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
+
+        repository.openURI(query("A"))
+        saved.save(UserProfile())
+        saved.save(CREDENTIALS.copy(email = "other@example.com"))
+        repository.openURI(query("B"))
+
+        assertEquals("cookie сессии не дошла до запроса вошедшего", SESSION_COOKIE, server.apiCalls.first().headers[HttpHeaders.Cookie])
+        assertEquals(2, server.loginRequests.size)
+        assertNull(
+            "вход нового аккаунта ушёл с cookie прежней сессии",
+            server.loginRequests.last().headers[HttpHeaders.Cookie],
+        )
+    }
+
+    @Test
+    fun `после сорванного входа другим аккаунтом cookie первой сессии не остаётся`() = runBlocking {
+        val server = FakeServer().apply {
+            login = { respond("<html><body>welcome</body></html>", HttpStatusCode.OK, HTML_WITH_SESSION_COOKIE) }
+        }
+        val saved = SavedProfile(CREDENTIALS)
+        val repository = repository(server, saved)
+
+        repository.openURI(query("A"))
+        // «Выйти» и «Войти» другим аккаунтом подряд; его вход срывается по сети,
+        // и клиент остаётся не вошедшим.
+        saved.save(UserProfile())
+        saved.save(CREDENTIALS.copy(email = "other@example.com"))
+        server.login = { throw UnknownHostException("нет сети") }
+        repository.openURI(query("B"))
+        // Снова «Выйти», запрос видит пустой профиль, затем входит третий аккаунт.
+        saved.save(UserProfile())
+        repository.openURI(query("C"))
+        saved.save(CREDENTIALS.copy(email = "third@example.com"))
+        server.login = FakeServer.LOGIN_OK
+        repository.openURI(query("D"))
+
+        assertEquals(3, server.loginRequests.size)
+        assertNull(
+            "вход третьего аккаунта ушёл с cookie первой сессии",
+            server.loginRequests.last().headers[HttpHeaders.Cookie],
+        )
     }
 
     // --- Кэш в памяти ---

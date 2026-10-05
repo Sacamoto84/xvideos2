@@ -5,6 +5,7 @@ import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Строковая настройка для секретов: значение лежит в зашифрованном хранилище
@@ -29,8 +30,21 @@ class SettingElementSecureString(
     private val _field = MutableStateFlow(securePrefs?.getString(name, default) ?: default)
     val field: StateFlow<String> = _field.asStateFlow()
 
+    private val writes = AtomicInteger()
+
+    /**
+     * Номер записи: растёт при каждом [setValue], даже когда значение прежнее.
+     * [field] одинаковые значения не различает, поэтому «стёрли и ввели то же
+     * самое» по нему не видно.
+     */
+    val revision: Int get() = writes.get()
+
     fun setValue(value: String) {
         securePrefs?.edit { putString(name, value) }
         _field.value = value
+        // После значения: кто читает номер раньше значения, при гонке с записью
+        // увидит новое значение со старым номером и заметит запись на следующем
+        // чтении. При обратном порядке он принял бы прежнее значение за новое.
+        writes.incrementAndGet()
     }
 }
