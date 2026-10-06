@@ -10,10 +10,12 @@ import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -135,5 +137,52 @@ class RSavedNichesCacheTest {
 
         assertEquals(listOf("cached1"), cache.list.map { it.name })
         assertEquals(false, cache.isDownloading)
+    }
+
+    @Test
+    fun `ниша, пришедшая на двух страницах, попадает в каталог один раз`() = runTest(dispatcher) {
+        // Порядок на сервере сдвинулся между запросами страниц: «b» пришла дважды.
+        respond = { page ->
+            val ids = if (page == 1) listOf("a", "b") else listOf("b", "c")
+            Result.success(NichesResponse(niches = ids.map { Niche(id = it, name = it) }, page = page, pages = 2))
+        }
+        val cache = cache()
+
+        cache.refreshIfStale()
+        advanceUntilIdle()
+
+        assertEquals(listOf("a", "b", "c"), cache.list.map { it.id })
+        val onDisk = AppJson.decodeFromString<List<Niche>>(cacheFile().readText())
+        assertEquals(listOf("a", "b", "c"), onDisk.map { it.id })
+    }
+
+    @Test
+    fun `повторы из прежнего кэша на диске в список не попадают`() = runTest(dispatcher) {
+        writeCache("a", "b", "b", "c")
+        val cache = cache()
+
+        cache.refreshIfStale()
+        advanceUntilIdle()
+
+        assertEquals(listOf("a", "b", "c"), cache.list.map { it.id })
+    }
+
+    @Test
+    fun `чтение кэша, начатое ещё в конструкторе, находит файл`() = runTest(dispatcher) {
+        writeCache("cached1")
+
+        // Диспетчер без очереди: чтение выполняется сразу, до конца конструктора.
+        val cache = R_Saved_NichesCaches(
+            scope = this,
+            redApi = RedApi(AppFileDatabase()),
+            ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            loadPage = { page ->
+                pageRequests += page
+                respond(page)
+            },
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf("cached1"), cache.list.map { it.name })
     }
 }

@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,11 +77,12 @@ fun AlbumListPageGrid(
                 }
             }
 
-            items(
+            // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
+            itemsIndexed(
                 items = pageItems,
-                key = { it.id },
-                contentType = { "album_item" }
-            ) { item ->
+                key = { index, item -> "${item.id}#$index" },
+                contentType = { _, _ -> "album_item" }
+            ) { _, item ->
                 AlbumGridItem(
                     item = item,
                     haptic = haptic,

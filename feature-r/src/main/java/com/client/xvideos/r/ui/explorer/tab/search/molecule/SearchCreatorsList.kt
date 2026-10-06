@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +43,11 @@ fun SearchCreatorsList(
             modifier = modifier.fillMaxSize(),
             contentPadding = PaddingValues(vertical = 4.dp)
         ) {
-            items(creatorsList, key = { it.text.ifBlank { it.name } }) { item ->
+            // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
+            itemsIndexed(
+                items = creatorsList,
+                key = { index, item -> "${item.text.ifBlank { item.name }}#$index" }
+            ) { _, item ->
                 val handle = item.text.removePrefix("@").ifBlank { item.name }
                 SearchCreatorItem(
                     item = item,

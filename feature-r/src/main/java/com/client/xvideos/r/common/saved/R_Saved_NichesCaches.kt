@@ -86,6 +86,12 @@ class R_Saved_NichesCaches(
     /** Время с момента последнего обновления файла кэша (в минутах). */
     var lastModifiedMinute by mutableLongStateOf(-1)
 
+    /**
+     * Объявлен выше [readJob]: тот запускает чтение прямо из инициализатора, и
+     * корутина могла обратиться к файлу раньше, чем поле получало значение.
+     */
+    private val cacheFile = File(AppPath.r_nichesCache, CACHE_FILE_NAME)
+
     /** Идущее или последнее чтение кэша с диска: проверка свежести ждёт его. */
     private var readJob: Job = readFromDisk()
 
@@ -122,10 +128,14 @@ class R_Saved_NichesCaches(
                         progress += step
                     }
                 }
-                val json = AppJson.encodeToString(niches)
+                // Страницы запрашиваются по очереди, а порядок на сервере за это
+                // время может сдвинуться: ниша с границы страниц приходит дважды.
+                // Список ключует строки по id — повтор уронил бы его.
+                val catalog = niches.distinctBy { it.id }
+                val json = AppJson.encodeToString(catalog)
                 cacheFile.writeTextAtomically(json)
                 withContext(Dispatchers.Main) {
-                    list.replaceWith(niches)
+                    list.replaceWith(catalog)
                     version++
                     timeRefresh()
                     if (showSnackBar) {
@@ -149,8 +159,6 @@ class R_Saved_NichesCaches(
             }
         }
     }
-
-    private val cacheFile = File(AppPath.r_nichesCache, CACHE_FILE_NAME)
 
     /**
      * Проверяет возраст файла кэша ниш на диске и запускает тихое обновление,
@@ -183,7 +191,8 @@ class R_Saved_NichesCaches(
             }
             runCatching {
                 val json = cacheFile.readText()
-                val niches = AppJson.decodeFromString<List<Niche>>(json)
+                // distinctBy — для кэша, записанного до того, как повторы стали убирать.
+                val niches = AppJson.decodeFromString<List<Niche>>(json).distinctBy { it.id }
                 withContext(Dispatchers.Main) {
                     list.replaceWith(niches)
                     version++

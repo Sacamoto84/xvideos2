@@ -25,6 +25,7 @@ import com.client.xvideos.l.model.lFullScreenImageUrls
 import com.client.xvideos.l.model.lImageMediaUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
 import com.client.xvideos.l.ui.screens.screenFullScreen.atom.LPictureInfoText
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.lPicturePositionLabel
 import timber.log.Timber
 
 /**
@@ -100,7 +101,7 @@ private fun lPictureInfoText(
     position: Int,
     total: Int
 ): String = buildString {
-    appendLine("Позиция: ${position + 1} / $total")
+    appendLine("Позиция: ${lPicturePositionLabel(position, total)}")
     appendLine("Размер: ${item.width} x ${item.height}")
     appendLine("Анимация: ${item.is_animated}")
     appendLine()

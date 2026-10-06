@@ -39,6 +39,8 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
     private val list = LServerPagedList(
         scope = screenModelScope,
         loadPage = repository::getSubscribedAlbums,
+        // Сетка ключует элементы тем же id: повтор в списке уронил бы её.
+        keyOf = { it.id },
     )
 
     /** Поток списка подписанных альбомов пользователя. */

@@ -3,6 +3,8 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,13 +27,19 @@ fun L_SavedCollectionTabContent(
     onCollectionLongClick: (String) -> Unit,
     onCreateNewCollectionClick: () -> Unit
 ) {
-    val gridItems = remember(collectionList) {
-        collectionList.map {
-            CollectionGridItem(
-                name = it.collection,
-                previewUrl = it.previewUrl,
-                itemsCount = it.itemsCount
-            )
+    // Сюда приходит SnapshotStateList хранилища: ссылка у него одна на все
+    // изменения, и как ключ remember он их не видит — сетка не замечала ни
+    // новой, ни переименованной, ни удалённой коллекции. Содержимое
+    // отслеживает derivedStateOf.
+    val gridItems by remember(collectionList) {
+        derivedStateOf {
+            collectionList.map {
+                CollectionGridItem(
+                    name = it.collection,
+                    previewUrl = it.previewUrl,
+                    itemsCount = it.itemsCount
+                )
+            }
         }
     }
     val gridStyle = remember {

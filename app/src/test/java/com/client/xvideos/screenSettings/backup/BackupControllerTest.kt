@@ -34,6 +34,7 @@ class BackupControllerTest {
             XlrBackupItem(path = "L", title = "L", section = "L", files = 2, bytes = 20),
         )
         var archiveType = XlrBackupType.ENCRYPTED_XLR
+        var inspectError: Throwable? = null
         var createGate: CompletableDeferred<Unit>? = null
         var afterRestoreGate: CompletableDeferred<Unit>? = null
 
@@ -58,6 +59,7 @@ class BackupControllerTest {
 
         override suspend fun inspect(uri: String, password: CharArray?): Result<List<XlrBackupItem>> {
             inspectedWith += password?.concatToString()
+            inspectError?.let { return Result.failure(it) }
             return Result.success(items)
         }
 
@@ -209,6 +211,43 @@ class BackupControllerTest {
         assertNull(backup.restoreUri)
         assertTrue(backup.restoreItems.isEmpty())
         assertTrue("восстановление без открытого архива дошло до движка", engine.restoredWith.isEmpty())
+    }
+
+    @Test
+    fun `файл неподдерживаемого формата закрывает открытый прежде архив`() = runTest(dispatcher) {
+        engine.archiveType = XlrBackupType.LEGACY_ZIP
+        val backup = controller()
+        advanceUntilIdle()
+        backup.openArchive("content://backup.zip")
+        advanceUntilIdle()
+        assertEquals("content://backup.zip", backup.restoreUri)
+
+        engine.archiveType = XlrBackupType.UNSUPPORTED
+        backup.openArchive("content://photo.jpg")
+        advanceUntilIdle()
+
+        assertNull("прежний архив остался открытым", backup.restoreUri)
+        assertTrue(backup.restoreItems.isEmpty())
+        assertTrue(backup.selectedRestorePaths.isEmpty())
+        assertFalse(backup.isWorking)
+    }
+
+    @Test
+    fun `архив, который не удалось прочитать, закрывает открытый прежде`() = runTest(dispatcher) {
+        engine.archiveType = XlrBackupType.LEGACY_ZIP
+        val backup = controller()
+        advanceUntilIdle()
+        backup.openArchive("content://backup.zip")
+        advanceUntilIdle()
+        assertEquals("content://backup.zip", backup.restoreUri)
+
+        engine.inspectError = IllegalStateException("архив повреждён")
+        backup.openArchive("content://broken.zip")
+        advanceUntilIdle()
+
+        assertNull("прежний архив остался открытым", backup.restoreUri)
+        assertTrue(backup.restoreItems.isEmpty())
+        assertFalse(backup.isWorking)
     }
 
     @Test

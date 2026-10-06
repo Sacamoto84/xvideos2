@@ -169,4 +169,138 @@ class LServerPagedListTest {
         assertTrue(replacements.isEmpty())
         assertNull(list.errorMessage.value)
     }
+
+    /** Сервер отдаёт страницы по [pageSize] из того, что [server] вернёт на момент запроса. */
+    private fun serveFrom(pageSize: Int, server: () -> List<String>) {
+        pages.respond = { page -> Result.success(server().drop((page - 1) * pageSize).take(pageSize)) }
+    }
+
+    @Test
+    fun `элемент, сдвинутый на следующую страницу, в списке не повторяется`() = runTest {
+        var server = listOf("a", "b", "c", "d")
+        serveFrom(pageSize = 2) { server }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+
+        // На сервере появился новый элемент: вся выдача сдвинулась на одну позицию,
+        // и вторая страница начинается с уже показанного «b».
+        server = listOf("z") + server
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(listOf("a", "b", "c"), list.items.value)
+    }
+
+    @Test
+    fun `повтор узнаётся по ключу, а не по полному равенству`() = runTest {
+        // Тот же элемент пришёл второй раз уже с другими полями: ключ у него прежний.
+        pages.respond = { page -> Result.success(if (page == 1) listOf("a:1", "b:1") else listOf("b:2", "c:1")) }
+        val list = LServerPagedList(
+            scope = this,
+            loadPage = pages::load,
+            keyOf = { it.substringBefore(':') },
+        )
+        list.loadInitial()
+        advanceUntilIdle()
+
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(listOf("a:1", "b:1", "c:1"), list.items.value)
+    }
+
+    @Test
+    fun `за страницей из одних повторов сразу идёт следующая`() = runTest {
+        var server = listOf("a", "b", "c", "d", "e")
+        serveFrom(pageSize = 2) { server }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+
+        // На сервере прибавилась целая страница: вторая страница теперь — уже показанные «a» и «b».
+        server = listOf("y", "z") + server
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(listOf("a", "b", "c", "d"), list.items.value)
+        assertTrue(list.hasMore)
+    }
+
+    @Test
+    fun `короткая страница посреди выдачи не обрывает подгрузку`() = runTest {
+        // Страницы сервера не обязаны быть ровными: конец выдачи — только пустая.
+        val served = mapOf(1 to listOf("a", "b", "c"), 2 to listOf("d"), 3 to listOf("e", "f"))
+        pages.respond = { page -> Result.success(served[page].orEmpty()) }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+
+        repeat(3) {
+            list.loadNextPage()
+            advanceUntilIdle()
+        }
+
+        assertEquals(listOf("a", "b", "c", "d", "e", "f"), list.items.value)
+        assertFalse(list.hasMore)
+    }
+
+    @Test
+    fun `удаление больше страницы возвращает подгрузку на столько же страниц`() = runTest {
+        var server = listOf("a", "b", "c", "d", "e", "f", "g", "h")
+        serveFrom(pageSize = 2) { server }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+        repeat(2) {
+            list.loadNextPage()
+            advanceUntilIdle()
+        }
+
+        // Убрано три элемента при странице в два: выдача сдвинулась на две страницы.
+        server = server - setOf("a", "b", "c")
+        list.removeIf { it in setOf("a", "b", "c") }
+        repeat(2) {
+            list.loadNextPage()
+            advanceUntilIdle()
+        }
+
+        assertEquals(listOf("d", "e", "f", "g", "h"), list.items.value)
+    }
+
+    @Test
+    fun `удалённый элемент не возвращается, даже если сервер ещё отдаёт его`() = runTest {
+        // Сервер отстал: «a» в выдаче осталась и после удаления.
+        serveFrom(pageSize = 2) { listOf("a", "b", "c") }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+
+        list.removeIf { it == "a" }
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(listOf("b", "c"), list.items.value)
+    }
+
+    @Test
+    fun `после удаления элемента следующая страница ничего не пропускает`() = runTest {
+        var server = listOf("a", "b", "c", "d", "e", "f")
+        serveFrom(pageSize = 2) { server }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        // Лайк снят: список на сервере стал короче, «e» переехал на вторую страницу.
+        server = server - "b"
+        list.removeIf { it == "b" }
+        list.loadNextPage()
+        advanceUntilIdle()
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        assertEquals(listOf("a", "c", "d", "e", "f"), list.items.value)
+    }
 }

@@ -12,6 +12,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.r.model.GifsInfo
@@ -53,8 +54,23 @@ private data class SearchParams(
     val query: String,
     val sort: Order,
     val tags: String,
-    val queryNiches: String
 )
+
+/**
+ * Текст поиска раздела, от которого зависит лента [typePager]: по нему ищет
+ * только TOP, остальным он не нужен.
+ */
+internal fun pagerSearchQuery(typePager: TypePager, searchText: String): String =
+    if (typePager == TypePager.TOP) searchText.trim() else ""
+
+/**
+ * Скрывает ли лента заблокированные ролики: сетевые — да; лайки и коллекции
+ * пользователь собрал сам, и блок-лист их не трогает.
+ */
+internal fun TypePager.appliesBlockList(): Boolean = when (this) {
+    TypePager.TOP, TypePager.NICHES, TypePager.PROFILE, TypePager.SUBSCRIPTIONS -> true
+    TypePager.R_SAVED_LIKES, TypePager.SAVED_COLLECTION, TypePager.EMPTY -> false
+}
 
 /**
  * Центральный стейт-холдер сетки медиаконтента RedGifs.
@@ -142,14 +158,19 @@ class LazyRow123Host(
     }
 
     /**
-     * Поток пагинированных данных [PagingData] элементов [GifsInfo].
-     * Пересоздает Pager при смене поискового текста, сортировки или тегов.
+     * Страницы ленты как пришли из источника. Pager пересоздаётся при смене
+     * сортировки, тегов и — только у ленты TOP — текста поиска.
+     *
+     * Раньше в параметры каждой ленты входил текст обоих поисков раздела, хотя
+     * ищет по нему одна TOP, а текст поиска ниш не читает ни один источник.
+     * Подтверждение поиска пересоздавало все живые ленты: лайки, коллекции и
+     * подписки открывались с начала.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val pager: Flow<PagingData<GifsInfo>> =
-        combine( search.searchTextDone, sortType, tags, searchNiches.searchTextDone )
-        { text, sort, tags, textNiches ->
-            SearchParams(text.trim(), sort, tags.joinToString(","), textNiches)
+    private val cachedPager: Flow<PagingData<GifsInfo>> =
+        combine( search.searchTextDone, sortType, tags )
+        { text, sort, tags ->
+            SearchParams(pagerSearchQuery(typePager, text), sort, tags.joinToString(","))
         }
             //.debounce(2000)                                       // ② ждём паузу ввода
             .distinctUntilChanged()                                 // ③ игнорируем дубли
@@ -170,13 +191,30 @@ class LazyRow123Host(
                             typePager = typePager,  sort = params.sort,
                             extraString = extraString, searchText = params.query,
                             tags = tags.value.toList(),
-                            block = block, redApi = redApi, savedRed = savedRed, searchNiches = searchNiches,
-                            textNiches = params.queryNiches
+                            block = block, redApi = redApi, savedRed = savedRed,
                         )
                     }
                 ).flow
             }
             .cachedIn(scope)
+
+    /**
+     * Поток пагинированных данных [PagingData] элементов [GifsInfo] без
+     * заблокированных роликов.
+     *
+     * Источники сверяются с блок-листом только при загрузке страницы, поэтому
+     * ролик, заблокированный позже, оставался в открытой ленте до ручного
+     * обновления, а лента подписок блок-лист не применяла вовсе. Фильтр стоит
+     * после [cachedIn]: загруженные страницы и позиция прокрутки остаются.
+     */
+    val pager: Flow<PagingData<GifsInfo>> =
+        if (typePager.appliesBlockList()) {
+            cachedPager.combine(block.blockedIds) { page, blocked ->
+                if (blocked.isEmpty()) page else page.filter { it.id !in blocked }
+            }
+        } else {
+            cachedPager
+        }
 
 
     private var _columns by mutableIntStateOf(normalizeColumns(startColumns))
@@ -221,8 +259,6 @@ fun createPager(
     block: BlockRed,
     redApi: RedApi,
     savedRed: SavedRed,
-    searchNiches: R_SearchNiches,
-    textNiches: String,
 ): PagingSource<Int, GifsInfo> {
     val pagingSourceFactory = when (typePager) {
 

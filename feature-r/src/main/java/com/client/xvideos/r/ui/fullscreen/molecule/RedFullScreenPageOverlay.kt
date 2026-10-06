@@ -72,7 +72,9 @@ fun RedFullScreenPageOverlay(
             search.searchText.value = TextFieldValue(text = tag, selection = TextRange(tag.length))
             search.searchTextDone.value = tag
             navigationState.rootTab = 0
-            navigator.pop()
+            // popAll, как в сетке: просмотр открывают и из профиля, ниши, коллекции —
+            // pop() возвращал на них, а выдача по тегу оставалась под ними.
+            navigator.popAll()
         },
         actionsMenu = {
             ExpandMenuVideo(

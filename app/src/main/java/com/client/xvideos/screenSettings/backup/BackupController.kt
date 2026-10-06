@@ -230,12 +230,12 @@ class BackupController(
                                 SnackBar.success("Backup открыт: ${items.size} папок")
                             }
                             .onFailure { error ->
-                                closeArchive()
+                                resetArchive()
                                 SnackBar.error(error.message ?: "Ошибка чтения backup")
                             }
                     }
                     XlrBackupType.UNSUPPORTED -> {
-                        closeArchive()
+                        resetArchive()
                         SnackBar.error("Неподдерживаемый формат файла: не является бэкапом XLR или ZIP")
                     }
                 }
@@ -301,6 +301,16 @@ class BackupController(
      */
     fun closeArchive() {
         if (isWorking) return
+        resetArchive()
+    }
+
+    /**
+     * Убирает открытый архив с экрана и стирает пароли. Без оглядки на
+     * [isWorking]: зовётся и изнутри операции. Раньше неудачное открытие нового
+     * файла звало [closeArchive], а тот под поднятым признаком ничего не делал —
+     * прежний архив оставался на экране.
+     */
+    private fun resetArchive() {
         restorePassword?.fill(WIPED)
         restorePassword = null
         restoreUri = null

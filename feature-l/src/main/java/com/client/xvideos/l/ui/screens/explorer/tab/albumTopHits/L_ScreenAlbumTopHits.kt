@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -92,11 +92,12 @@ fun L_ScreenAlbumTopHitsContent(
             return@Box
         }
         LazyColumn(state = state) {
-            items(
+            // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
+            itemsIndexed(
                 items = items,
-                key = { it.title },
-                contentType = { "top_hits_section" }
-            ) { item ->
+                key = { index, item -> "${item.title}#$index" },
+                contentType = { _, _ -> "top_hits_section" }
+            ) { _, item ->
                 TopHitsSectionItem(
                     item = item,
                     itemWidth = itemWidth,

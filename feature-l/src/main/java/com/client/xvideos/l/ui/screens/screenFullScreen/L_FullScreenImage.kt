@@ -46,6 +46,7 @@ import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.l.ui.screens.screenFullScreen.atom.checkerboardBackground
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.FullScreenUiState
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.LFullScreenPayload
+import com.client.xvideos.l.ui.screens.screenFullScreen.model.lPicturePositionLabel
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveInitialIndex
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveScrollIndex
 import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenBottomThumbnails
@@ -262,7 +263,7 @@ fun FullScreenImageContent(
 
         Box(modifier = Modifier.align(Alignment.TopStart)) {
             Text(
-                text = state.currentIndex.toString(),
+                text = lPicturePositionLabel(state.currentIndex, state.filteredPic.size),
                 color = Color.Gray,
                 modifier = Modifier.padding(start = 8.dp),
                 fontFamily = Theme.L.fontFamilyKarla

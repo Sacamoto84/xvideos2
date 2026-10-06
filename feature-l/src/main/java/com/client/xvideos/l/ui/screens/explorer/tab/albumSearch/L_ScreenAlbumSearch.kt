@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -160,11 +160,12 @@ fun L_ScreenAlbumSearchContent(
                 }
             }
 
-            items(
+            // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
+            itemsIndexed(
                 items = sections.orEmpty(),
-                key = { section -> section.title },
-                contentType = { "search_section" }
-            ) { section ->
+                key = { index, section -> "${section.title}#$index" },
+                contentType = { _, _ -> "search_section" }
+            ) { _, section ->
                 AlbumSearchSectionBlock(
                     section = section,
                     screenWidth = screenWidth,

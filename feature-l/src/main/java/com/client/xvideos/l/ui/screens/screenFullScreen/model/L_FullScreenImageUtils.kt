@@ -15,3 +15,9 @@ internal fun resolveInitialIndex(items: List<PicsDetails>, target: PicsDetails):
 
 internal fun resolveScrollIndex(currentIndex: Int, maxIndex: Int): Int =
     (currentIndex - 2).coerceIn(0, maxIndex.coerceAtLeast(0))
+
+/**
+ * Номер картинки для пользователя: с единицы и с общим числом. Один на метку
+ * в углу экрана и на окно сведений — раньше метка показывала индекс с нуля.
+ */
+internal fun lPicturePositionLabel(position: Int, total: Int): String = "${position + 1} / $total"

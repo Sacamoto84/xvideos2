@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -165,13 +166,19 @@ fun R_SavedCollectionTabContent(
     navigationContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val gridItems = remember(collectionList) {
-        collectionList.map {
-            CollectionGridItem(
-                name = it.collection,
-                previewUrl = it.items.lastOrNull()?.urls?.thumbnail,
-                itemsCount = null
-            )
+    // Сюда приходит SnapshotStateList хранилища: ссылка у него одна на все
+    // изменения, и как ключ remember он их не видит — сетка не замечала ни
+    // новой, ни переименованной, ни удалённой коллекции. Содержимое
+    // отслеживает derivedStateOf.
+    val gridItems by remember(collectionList) {
+        derivedStateOf {
+            collectionList.map {
+                CollectionGridItem(
+                    name = it.collection,
+                    previewUrl = it.items.lastOrNull()?.urls?.thumbnail,
+                    itemsCount = null
+                )
+            }
         }
     }
     val gridStyle = remember {

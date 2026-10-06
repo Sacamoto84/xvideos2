@@ -21,14 +21,24 @@ import timber.log.Timber
  * признака себе, поэтому обновление не гоняется с подгрузкой, а оборванная
  * загрузка не оставляет признак поднятым.
  *
+ * Страницы сервер считает по номеру, а выдача под ними движется: лайк, снятый
+ * здесь, сдвигает её к началу, поставленный в другом месте — к концу. Поэтому
+ * после удаления подгрузка возвращается к уже запрошенным страницам, а
+ * пришедшее сверяется с показанным по ключу. Раньше страницы шли подряд и
+ * дописывались как есть: после удаления элемент на границе страниц
+ * пропускался, после добавления — приходил второй раз, и сетка с ключом по id
+ * падала на повторе.
+ *
  * @param scope Область экрана: в ней идут загрузки.
  * @param loadPage Запрос страницы с номером от единицы.
+ * @param keyOf Ключ элемента: по нему узнаётся уже показанный.
  * @param notifyNextPageFailed Сообщение о сбое подгрузки следующей страницы.
  * @param onReplaced Список заменён загрузкой: экран пересобирает то, что от него зависит.
  */
 internal class LServerPagedList<T>(
     private val scope: CoroutineScope,
     private val loadPage: suspend (page: Int) -> Result<List<T>>,
+    private val keyOf: (T) -> Any? = { it },
     private val notifyNextPageFailed: (String) -> Unit = SnackBar::error,
     private val onReplaced: (List<T>) -> Unit = {},
 ) {
@@ -61,7 +71,21 @@ internal class LServerPagedList<T>(
     var hasMore: Boolean = true
         private set
 
-    private var currentPage = 1
+    /** Номер страницы, которую запросит следующая подгрузка. */
+    private var nextPage = FIRST_PAGE + 1
+
+    /** Размер первой страницы: по нему считается, на сколько страниц удаления сдвинули выдачу. */
+    private var firstPageSize = 0
+
+    /** Сколько элементов убрано через [removeIf] с прошлой подгрузки. */
+    private var removedSinceLoad = 0
+
+    /**
+     * Ключи убранных через [removeIf] до следующей полной загрузки. Страница,
+     * запрошенная повторно, может ещё содержать убранное — сервер отстал, — и в
+     * список оно возвращаться не должно.
+     */
+    private val removedKeys = HashSet<Any?>()
     private var loadJob: Job? = null
 
     /** Первая загрузка или повтор после её сбоя. */
@@ -83,21 +107,20 @@ internal class LServerPagedList<T>(
         val failed = _errorMessage.value != null || _nextPageFailed.value
         if (busy || failed || !hasMore) return
         launchLoad(refreshing = false) {
-            val nextPage = currentPage + 1
-            request(nextPage)
-                .onSuccess { list ->
-                    if (list.isNotEmpty()) {
-                        currentPage = nextPage
-                        publish(_items.value + list)
-                    } else {
-                        hasMore = false
-                    }
-                }
-                .onFailure { error ->
-                    Timber.e("LServerPagedList: next page $nextPage failed: ${error.javaClass.simpleName}")
+            // Страница из одних повторов на экране ничего не меняет, поэтому за ней
+            // сразу запрашивается следующая. Предел — чтобы один заход не перебирал
+            // выдачу без конца, если сервер отвечает одним и тем же.
+            rewindForRemoved()
+            repeat(MAX_PAGES_PER_LOAD) {
+                val page = nextPage
+                val list = request(page).getOrElse { error ->
+                    Timber.e("LServerPagedList: next page $page failed: ${error.javaClass.simpleName}")
                     _nextPageFailed.value = true
                     notifyNextPageFailed(error.toLUserMessage())
+                    return@launchLoad
                 }
+                if (appendPage(page, list)) return@launchLoad
+            }
         }
     }
 
@@ -106,19 +129,64 @@ internal class LServerPagedList<T>(
         _nextPageFailed.value = false
     }
 
-    /** Убирает элементы из списка без [onReplaced]: экран уже убрал их у себя сам. */
+    /**
+     * Убирает элементы из списка без [onReplaced]: экран уже убрал их у себя сам.
+     *
+     * Зовётся после того, как элемент убран и на сервере: выдача стала короче,
+     * и всё, что шло за ним, сдвинулось к началу.
+     */
     fun removeIf(predicate: (T) -> Boolean) {
-        _items.value = _items.value.filterNot(predicate)
+        val (removed, kept) = _items.value.partition(predicate)
+        removed.mapTo(removedKeys) { keyOf(it) }
+        removedSinceLoad += removed.size
+        _items.value = kept
+    }
+
+    /**
+     * Убранное сдвинуло выдачу к началу: первые ещё не показанные элементы лежат
+     * теперь на уже запрошенных страницах — с них подгрузка и продолжается.
+     */
+    private fun rewindForRemoved() {
+        if (removedSinceLoad == 0) return
+        val pageSize = firstPageSize.coerceAtLeast(1)
+        val shiftedPages = (removedSinceLoad + pageSize - 1) / pageSize
+        nextPage = (nextPage - shiftedPages).coerceAtLeast(FIRST_PAGE)
+        removedSinceLoad = 0
+    }
+
+    /**
+     * Дописывает страницу [page] к списку.
+     *
+     * @return `false` — нового на странице нет: оно лежит дальше. Конец выдачи —
+     * только пустая страница, как и раньше.
+     */
+    private fun appendPage(page: Int, list: List<T>): Boolean {
+        if (list.isEmpty()) {
+            hasMore = false
+            return true
+        }
+        nextPage = page + 1
+        val knownKeys = _items.value.mapTo(HashSet()) { keyOf(it) }
+        val fresh = list.filter { item ->
+            val key = keyOf(item)
+            key !in removedKeys && knownKeys.add(key)
+        }
+        if (fresh.isEmpty()) return false
+        publish(_items.value + fresh)
+        return true
     }
 
     private suspend fun reload() {
-        request(1)
+        request(FIRST_PAGE)
             .onSuccess { list ->
-                currentPage = 1
+                nextPage = FIRST_PAGE + 1
+                firstPageSize = list.size
+                removedSinceLoad = 0
+                removedKeys.clear()
                 hasMore = list.isNotEmpty()
                 _errorMessage.value = null
                 _nextPageFailed.value = false
-                publish(list)
+                publish(list.distinctBy(keyOf))
             }
             .onFailure { error ->
                 Timber.e("LServerPagedList: first page failed: ${error.javaClass.simpleName}")
@@ -161,3 +229,8 @@ internal class LServerPagedList<T>(
         job.start()
     }
 }
+
+private const val FIRST_PAGE = 1
+
+/** Сколько страниц подряд один заход подгрузки запрашивает, пока не найдёт новое. */
+private const val MAX_PAGES_PER_LOAD = 3

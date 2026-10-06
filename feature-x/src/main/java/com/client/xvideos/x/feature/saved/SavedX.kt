@@ -36,6 +36,21 @@ class SavedX @Inject constructor(
     /** Подписки на каналы и актрис/моделей с сохранением в FileDB. */
     val subscriptions = SavedX_Subscriptions(scope)
 
+    /**
+     * Перечитывает с диска всё сохранённое раздела X.
+     *
+     * Хранилища читают диск один раз, при создании, а экраны X их не
+     * перечитывают. Восстановление бэкапа меняет файлы мимо них: без этого
+     * вызова избранное, загрузки, история и подписки оставались прежними до
+     * перезапуска приложения.
+     */
+    fun refreshAll() {
+        favorites.refresh()
+        downloads.refresh()
+        history.refresh()
+        subscriptions.refresh()
+    }
+
     //val collection = SavedL_Collection(snackBarEvent)
 
     //val albums = SavedL_Albums(snackBarEvent, db, scope)

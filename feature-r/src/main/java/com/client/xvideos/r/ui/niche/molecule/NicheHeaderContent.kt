@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -74,11 +74,12 @@ fun NicheHeaderContent(
                     .fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                items(
+                // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
+                itemsIndexed(
                     items = related,
-                    key = { item -> item.id },
-                    contentType = { "niche_preview" }
-                ) { item ->
+                    key = { index, item -> "${item.id}#$index" },
+                    contentType = { _, _ -> "niche_preview" }
+                ) { _, item ->
                     NichePreviewItem(item = item, onClick = onNicheClick)
                 }
             }
@@ -96,11 +97,11 @@ fun NicheHeaderContent(
                 modifier = Modifier.padding(vertical = 4.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                items(
+                itemsIndexed(
                     items = creators,
-                    key = { creator -> creator.username },
-                    contentType = { "top_creator" }
-                ) { creator ->
+                    key = { index, creator -> "${creator.username}#$index" },
+                    contentType = { _, _ -> "top_creator" }
+                ) { _, creator ->
                     NicheCreatorItem(creator = creator, onClick = onCreatorClick)
                 }
             }

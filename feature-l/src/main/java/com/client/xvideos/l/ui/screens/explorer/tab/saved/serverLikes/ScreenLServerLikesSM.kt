@@ -35,6 +35,7 @@ class ScreenLServerLikesSM @Inject constructor(
     private val list = LServerPagedList(
         scope = screenModelScope,
         loadPage = repository::getServerLikedPictures,
+        keyOf = { it.id?.takeIf(String::isNotBlank) ?: it.selectionKey() },
         onReplaced = { host.replaceFilteredPictures(it) },
     )
 

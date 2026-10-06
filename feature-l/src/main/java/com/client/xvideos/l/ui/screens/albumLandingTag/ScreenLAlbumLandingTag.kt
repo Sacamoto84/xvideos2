@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -115,10 +115,11 @@ fun ScreenLAlbumLandingTagContent(
                 return@Box
             }
             LazyColumn(state = state, modifier = Modifier.fillMaxSize()) {
-                items(
+                // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
+                itemsIndexed(
                     items = sections,
-                    key = { it.title }
-                ) { item ->
+                    key = { index, item -> "${item.title}#$index" }
+                ) { _, item ->
                     LandingTagSectionItem(
                         item = item,
                         screenWidth = screenWidth,

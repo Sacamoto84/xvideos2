@@ -15,6 +15,8 @@ import com.client.xvideos.screenSettings.lDownloadRecoveryConsoleText
 import com.client.xvideos.screenSettings.redDownloadRecoveryConsoleText
 import com.client.xvideos.screenSettings.shouldAutoRecoverL
 import com.client.xvideos.screenSettings.shouldAutoRecoverRedDownload
+import com.client.xvideos.x.feature.saved.SavedX
+import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +57,9 @@ class XlrBackupEngine @Inject constructor(
     private val blockRed: BlockRed,
     private val downloadRed: DownloadRed,
     private val savedL: SavedL,
+    // Lazy: раздел X создаёт свои хранилища при первом входе, и страница
+    // бэкапа не должна поднимать их раньше, чем они понадобятся.
+    private val savedX: Lazy<SavedX>,
 ) : BackupEngine {
 
     override suspend fun currentItems(options: XlrBackupOptions): List<XlrBackupItem> =
@@ -80,14 +85,17 @@ class XlrBackupEngine @Inject constructor(
         withContext(Dispatchers.IO) { XlrBackupManager.restoreBackup(context, Uri.parse(uri), paths, password) }
 
     override suspend fun afterRestore(paths: Set<String>, log: (String) -> Unit) {
-        // Восстановление меняет файлы мимо приложения, а SavedRed и BlockRed —
-        // синглтоны со списками в памяти: их читают один раз на старте. Без
-        // этого раздел R оставался пустым до перезапуска, тогда как X и L
-        // перечитывают свои экраны при входе.
+        // Восстановление меняет файлы мимо приложения, а хранилища сохранённого —
+        // синглтоны со списками в памяти: диск они читают один раз, при создании.
+        // Раньше перечитывался только R. Экраны X свои хранилища не перечитывают,
+        // и раздел показывал прежнее до перезапуска; L обновлялся лишь в конце
+        // докачки, и то если восстанавливались лайки или коллекции.
         withContext(Dispatchers.IO) {
             savedRed.refreshAll()
             blockRed.refresh()
             downloadRed.refreshDownloadList()
+            savedX.get().refreshAll()
+            savedL.refreshAll()
         }
         coroutineScope {
             if (shouldAutoRecoverL(paths)) {
