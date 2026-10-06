@@ -1,7 +1,6 @@
 package com.client.xvideos.x.model
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import com.client.xvideos.x.xProfileSlug
 import kotlinx.serialization.Serializable
 
@@ -52,20 +51,3 @@ fun ChannelHeaderModel.toSubscriptionItem(): XSubscriptionItem = XSubscriptionIt
     totalViews = totalViews,
     videoCount = videoCount,
 )
-
-/**
- * Состояние элемента в фильтре авторов ленты подписок.
- *
- * @property item Данные подписки [XSubscriptionItem].
- * @property isSelected Включен ли данный автор в выборку ленты.
- */
-@Stable
-data class SelectedXCreator(
-    val item: XSubscriptionItem,
-    val isSelected: Boolean = true,
-) {
-    val slug: String get() = item.cleanSlug
-    val name: String get() = item.displayName
-    val avatarUrl: String get() = item.avatarUrl
-    val isModel: Boolean get() = item.isModel
-}

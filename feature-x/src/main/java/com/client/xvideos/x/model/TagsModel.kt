@@ -30,9 +30,6 @@ data class TagsMainUploaderPornstar(
         return name.contains(q, ignoreCase = true)
     }
 
-    fun isSame(other: TagsMainUploaderPornstar?): Boolean =
-        other != null && href.isNotBlank() && href == other.href
-
     companion object {
         val EMPTY = TagsMainUploaderPornstar()
     }
@@ -62,25 +59,6 @@ data class TagsModel(
     val mainUploaderCount: Int get() = mainUploader.size
     val pornstarsCount: Int get() = pornstars.size
     val allNames: List<String> get() = mainUploader.map { it.name } + pornstars.map { it.name }
-
-    fun containsTag(tag: String?): Boolean =
-        if (tag.isNullOrBlank()) false else tags.any { it.equals(tag, ignoreCase = true) }
-
-    fun filterTags(query: String?): List<String> {
-        if (query.isNullOrBlank()) return tags
-        val q = query.trim()
-        return tags.filter { it.contains(q, ignoreCase = true) }
-    }
-
-    fun findPornstarByName(name: String?): TagsMainUploaderPornstar? {
-        if (name.isNullOrBlank()) return null
-        return pornstars.firstOrNull { it.name.equals(name, ignoreCase = true) }
-    }
-
-    fun findUploaderByName(name: String?): TagsMainUploaderPornstar? {
-        if (name.isNullOrBlank()) return null
-        return mainUploader.firstOrNull { it.name.equals(name, ignoreCase = true) }
-    }
 
     /** Проверяет соответствие тегов, авторов или моделей поисковому запросу. */
     fun matches(query: String?): Boolean {

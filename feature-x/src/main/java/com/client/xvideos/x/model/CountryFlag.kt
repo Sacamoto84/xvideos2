@@ -13,11 +13,6 @@ package com.client.xvideos.x.model
 const val UNKNOWN_FLAG = "❓"
 
 /**
- * Проверяет, поддерживается ли двухбуквенный код страны и формирует ли он валидный флаг-эмодзи.
- */
-fun isValidCountryCode(countryCode: String): Boolean = getFlagEmoji(countryCode) != UNKNOWN_FLAG
-
-/**
  * Преобразует двухбуквенный код страны (или CSS-класс вида `flag-xx`) в соответствующий флаг-эмодзи Юникода.
  *
  * @param countryCode Двухбуквенный код страны (например, `"us"`, `"ru"`, `"flag-fr"`).
@@ -48,12 +43,6 @@ fun getFlagEmojiOrNull(countryCode: String?): String? {
 }
 
 /**
- * Преобразует код страны в эмодзи флага либо возвращает [default], если код не распознан.
- */
-fun getFlagEmojiOrDefault(countryCode: String?, default: String = UNKNOWN_FLAG): String =
-    getFlagEmojiOrNull(countryCode) ?: default
-
-/**
  * Нормализует код страны: убирает префикс `"flag-"`, пробелы и приводит к нижнему регистру.
  */
 fun normalizeCountryCode(countryCode: String?): String {
@@ -68,29 +57,4 @@ fun normalizeCountryCode(countryCode: String?): String {
  */
 fun isIsoCountryCode(code: String?): Boolean =
     normalizeCountryCode(code).isNotEmpty()
-
-/**
- * Извлекает двухбуквенный код из CSS-класса флага (например `"flag-us"` -> `"us"`).
- */
-fun getCountryCodeFromFlagClass(cssClass: String?): String? =
-    normalizeCountryCode(cssClass).takeIf { it.isNotEmpty() }
-
-/**
- * Extension-свойство/функция для преобразования nullable строки в флаг-эмодзи.
- */
-fun String?.toCountryFlagEmoji(): String =
-    if (this == null) UNKNOWN_FLAG else getFlagEmoji(this)
-
-/**
- * Extension-свойство для преобразования nullable строки в флаг-эмодзи или null при отсутствии.
- */
-fun String?.toCountryFlagEmojiOrNull(): String? =
-    getFlagEmojiOrNull(this)
-
-/**
- * Проверяет, является ли CSS-класс валидным классом флага страны (например "flag-us").
- */
-fun isValidFlagClass(className: String?): Boolean =
-    !getCountryCodeFromFlagClass(className).isNullOrBlank()
-
 

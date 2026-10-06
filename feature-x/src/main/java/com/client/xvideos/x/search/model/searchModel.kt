@@ -20,8 +20,6 @@ data class Keyword(val N: String, val R: String) { //N группа R-рейти
     val isValidRating: Boolean get() = (ratingDoubleOrNull ?: -1.0) >= 0.0
     val normalizedName: String get() = N.trim().lowercase()
 
-    fun withRating(newRating: String): Keyword = copy(R = newRating)
-
     fun matches(query: String?): Boolean {
         if (query.isNullOrBlank()) return true
         return N.contains(query.trim(), ignoreCase = true)
@@ -197,30 +195,6 @@ data class SearchResult(
         resolvedKeywords.map { it.name } +
             resolvedPornstars.map { it.name } +
             resolvedChannels.map { it.name }
-
-    /** Фильтрует ключевые слова, порнозвезд и каналы по поисковому запросу. */
-    fun filterByQuery(query: String?): SearchResult {
-        if (query.isNullOrBlank()) return this
-        val filteredKw = resolvedKeywords.filter { it.matches(query) }
-        val filteredPs = resolvedPornstars.filter { it.matches(query) }
-        val filteredCh = resolvedChannels.filter { it.matches(query) }
-        return copy(
-            data = SearchSuggestData(keywords = filteredKw, pornstar = filteredPs, channel = filteredCh),
-            keywords = filteredKw,
-            pornstar = filteredPs,
-            channel = filteredCh
-        )
-    }
-
-    fun findPornstarByName(name: String?): Pornstar? {
-        if (name.isNullOrBlank()) return null
-        return resolvedPornstars.firstOrNull { it.name.equals(name, ignoreCase = true) }
-    }
-
-    fun findChannelByName(name: String?): Channel? {
-        if (name.isNullOrBlank()) return null
-        return resolvedChannels.firstOrNull { it.name.equals(name, ignoreCase = true) }
-    }
 
     companion object {
         val EMPTY = SearchResult(result = false, code = 0, keywords = emptyList())

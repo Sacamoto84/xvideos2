@@ -221,17 +221,6 @@ class ParseJsonTest {
         assertEquals(1, parsed?.resolvedChannels?.size)
         assertEquals("Amateur Lapdancer", parsed?.resolvedChannels?.first()?.name)
         assertEquals(4, parsed?.totalSuggestionsCount)
-
-        val kwList = parseJsonKeywords(json)
-        assertEquals(listOf("lap dance", "strip dance"), kwList)
-
-        val psList = parseJsonPornstars(json)
-        assertEquals(1, psList.size)
-        assertEquals("Tessa Taylor", psList.first().name)
-
-        val chList = parseJsonChannels(json)
-        assertEquals(1, chList.size)
-        assertEquals("Amateur Lapdancer", chList.first().name)
     }
 }
 

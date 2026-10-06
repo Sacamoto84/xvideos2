@@ -212,7 +212,7 @@ class ParserChannelTest {
     }
 
     @Test
-    fun `parserChannelVideosJson extracts video cards and unescapes titles`() {
+    fun `parseChannelVideosResponse extracts video cards and unescapes titles`() {
         val json = """
             {
                 "nb_videos": 72,
@@ -247,7 +247,7 @@ class ParserChannelTest {
             }
         """.trimIndent()
 
-        val videos = parserChannelVideosJson(json)
+        val videos = parseChannelVideosResponse(json).videos
 
         assertEquals(2, videos.size)
 
@@ -264,13 +264,6 @@ class ParserChannelTest {
         val v2 = videos[1]
         assertEquals(83072541L, v2.id)
         assertEquals("Second Video", v2.title)
-    }
-
-    @Test
-    fun `parserChannelVideosJson handles empty or malformed json safely`() {
-        assertEquals(0, parserChannelVideosJson("").size)
-        assertEquals(0, parserChannelVideosJson("invalid json").size)
-        assertEquals(0, parserChannelVideosJson("{\"videos\": []}").size)
     }
 
     /** Сбой разбора — ошибка с повтором на экране, а не страница «без видео». */
@@ -421,7 +414,7 @@ class ParserChannelTest {
     }
 
     @Test
-    fun `parserChannelVideosResult extracts videos, totalVideos and currentPage`() {
+    fun `parseChannelVideosResponse extracts videos, totalVideos and currentPage`() {
         val json = """
             {
                 "videos": [
@@ -432,7 +425,7 @@ class ParserChannelTest {
             }
         """.trimIndent()
 
-        val result = parserChannelVideosResult(json)
+        val result = parseChannelVideosResponse(json)
 
         assertEquals(1, result.videos.size)
         assertEquals("Video 1", result.videos[0].title)

@@ -69,10 +69,12 @@ fun ChannelVideosPager(
         val pageError = errorPages[page]
         val gridState = getGridState(page)
 
-        LaunchedEffect(page, currentSort, selectedModel) {
-            if (pageVideos == null && !isPageLoading && pageError == null) {
-                onLoadPage(page)
-            }
+        // Ключ — сама потребность в загрузке: повтор первой загрузки очищает кэш и
+        // ошибки, не меняя сортировку и фильтр, и страница, уже стоящая в композиции,
+        // иначе оставалась пустой.
+        val needsLoad = pageVideos == null && !isPageLoading && pageError == null
+        LaunchedEffect(page, currentSort, selectedModel, needsLoad) {
+            if (needsLoad) onLoadPage(page)
         }
 
         Box(modifier = Modifier.fillMaxSize()) {

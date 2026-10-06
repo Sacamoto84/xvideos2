@@ -21,13 +21,3 @@ fun buildSuggestUrl(query: String): String {
     return "$urlStart/search-suggest/$encoded"
 }
 
-/**
- * Проверяет валидность поискового запроса для подсказок.
- */
-fun isValidSuggestQuery(query: String?): Boolean = !query.isNullOrBlank()
-
-/**
- * Проверяет, является ли переданный URL ссылкой на эндпоинт поисковых подсказок.
- */
-fun isSuggestUrl(url: String?): Boolean =
-    !url.isNullOrBlank() && url.contains("/search-suggest/")

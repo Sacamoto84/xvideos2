@@ -3,12 +3,10 @@ package com.client.xvideos.x.feature.saved
 import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ProfileType
-import com.client.xvideos.x.model.SelectedXCreator
 import com.client.xvideos.x.model.XSubscriptionItem
 import com.client.xvideos.x.model.toSubscriptionItem
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -78,26 +76,6 @@ class SavedX_SubscriptionsTest {
         val decoded = json.decodeFromString(XSubscriptionItem.serializer(), encoded)
 
         assertEquals(item, decoded)
-    }
-
-    @Test
-    fun `SelectedXCreator свойства делегируются корректно`() {
-        val item = XSubscriptionItem(
-            slug = "/models/eva-elfie",
-            name = "Eva Elfie",
-            avatarUrl = "https://img.com/eva.jpg",
-            isModel = true,
-        )
-        val selected = SelectedXCreator(item = item, isSelected = true)
-
-        assertEquals("eva-elfie", selected.slug)
-        assertEquals("Eva Elfie", selected.name)
-        assertEquals("https://img.com/eva.jpg", selected.avatarUrl)
-        assertTrue(selected.isModel)
-        assertTrue(selected.isSelected)
-
-        val toggled = selected.copy(isSelected = false)
-        assertFalse(toggled.isSelected)
     }
 
     @Test

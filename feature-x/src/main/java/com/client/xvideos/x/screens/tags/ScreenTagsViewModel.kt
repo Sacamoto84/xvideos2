@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.tags
 
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,12 @@ class ScreenTagsViewModel @AssistedInject constructor(
      */
     private val pages = PageCache<ModelScreenTag>(maxPages = MAX_CACHED_PAGES)
 
+    /**
+     * Прокрутка страниц пейджера. Живёт здесь, а не в композиции: экран уходит из
+     * неё при переходе в плеер, и список после возврата вставал в начало.
+     */
+    val listStates: MutableMap<Int, LazyListState> = HashMap()
+
     init {
         // Раньше здесь был runBlocking { readHtmlFromURLDirect(...) } — сетевой запрос
         // блокировал поток создания ScreenModel (UI-поток) → ANR на медленной сети.
@@ -71,7 +78,7 @@ class ScreenTagsViewModel @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w("!!! Заголовок тега %s не загрузился: %s", tag, e.javaClass.simpleName)
+                Timber.w("!!! Заголовок тега не загрузился: %s", e.javaClass.simpleName)
             }
         }
     }
@@ -106,7 +113,9 @@ class ScreenTagsViewModel @AssistedInject constructor(
         if (index == 0 && (screen.lastPage <= 1 || screen.title0.isEmpty())) {
             screen = result
         }
-        pages[index] = result
+        // Страница без роликов в кэш не идёт: это может быть заглушка сайта, и
+        // «Повторить» получал бы её же, без запроса.
+        if (result.items.isNotEmpty()) pages[index] = result
         return result
     }
 

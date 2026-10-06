@@ -42,45 +42,6 @@ fun parserListVideo(html: String): List<ItemsX> =
     if (html.isBlank()) emptyList() else parserListVideo(Jsoup.parse(html))
 
 /**
- * Безопасная перегрузка парсинга карточек видео для nullable HTML-строки.
- */
-fun parserListVideoOrEmpty(html: String?): List<ItemsX> =
-    if (html.isNullOrBlank()) emptyList() else parserListVideo(html)
-
-/**
- * Быстро извлекает только список числовых ID видеороликов из разметки страницы.
- */
-fun parseVideoIds(html: String): List<Long> {
-    if (html.isBlank()) return emptyList()
-    val doc = Jsoup.parse(html)
-    return doc.select("div.frame-block[data-id]")
-        .mapNotNull { it.attr("data-id").toLongOrNull() }
-        .filter { it > 0L }
-}
-
-/**
- * Быстро извлекает первый числовой ID видеоролика из разметки страницы или null.
- */
-fun parseFirstVideoIdOrNull(html: String): Long? =
-    parseVideoIds(html).firstOrNull()
-
-/**
- * Возвращает количество карточек видеороликов в переданной HTML-разметке.
- */
-fun parseVideoCount(html: String): Int {
-    if (html.isBlank()) return 0
-    return Jsoup.parse(html).select("div.frame-block").size
-}
-
-/**
- * Проверяет наличие карточек видео в переданной HTML-разметке.
- */
-fun hasVideosInList(html: String?): Boolean {
-    if (html.isNullOrBlank()) return false
-    return html.contains("frame-block") && parseVideoCount(html) > 0
-}
-
-/**
  * Парсит список карточек видеороликов из DOM-документа страницы раздела X.
  *
  * Ищет блоки карточек `div.frame-block`, извлекает ID из `data-id`, название,

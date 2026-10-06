@@ -424,29 +424,6 @@ fun parseChannelVideosResponse(jsonString: String): ChannelVideosResult {
 }
 
 /**
- * [parseChannelVideosResponse] с пустым результатом вместо ошибки разбора — для ленты
- * подписок, где автор с неразобранным ответом просто выпадает из ленты. Экран канала
- * вызывает строгий вариант: там сбой надо отличать от пустой ленты.
- *
- * @param jsonString Текст ответа в формате JSON.
- * @return [ChannelVideosResult] со списком роликов и метаинформацией пагинации.
- */
-fun parserChannelVideosResult(jsonString: String): ChannelVideosResult = try {
-    parseChannelVideosResponse(jsonString)
-} catch (_: IOException) {
-    ChannelVideosResult()
-}
-
-/**
- * Разбирает ответ JSON API канала (`/channels/{slug}/videos/{sort}/{page}`) в список моделей [ItemsX].
- *
- * @param jsonString Текст ответа в формате JSON.
- * @return Список видеороликов [ItemsX].
- */
-fun parserChannelVideosJson(jsonString: String): List<ItemsX> =
-    parserChannelVideosResult(jsonString).videos
-
-/**
  * Извлекает список доступных для фильтрации моделей/партнёров из JSON-конфигурации страницы канала.
  *
  * @param html Текст HTML-страницы канала.

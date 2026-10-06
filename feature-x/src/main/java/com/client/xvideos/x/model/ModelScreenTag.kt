@@ -28,14 +28,6 @@ data class ModelScreenTag(
     val hasTitle1: Boolean get() = title1.isNotBlank()
     val displayTitle: String get() = title0.ifBlank { title1 }
 
-    fun findByIdOrNull(id: Long): ItemsX? = if (id <= 0L) null else items.firstOrNull { it.id == id }
-    fun hasItemWithId(id: Long): Boolean = findByIdOrNull(id) != null
-
-    fun filterByQuery(query: String?): List<ItemsX> {
-        if (query.isNullOrBlank()) return items
-        return items.filter { it.matches(query) }
-    }
-
     val normalizedTitle: String get() = displayTitle.trim()
 
     /** Проверяет соответствие заголовков или вложенных видео поисковому запросу. */

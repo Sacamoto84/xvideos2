@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.AppContextHolder
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.launchCatching
 import com.client.xvideos.ui.theme.grayColor
 import com.client.xvideos.x.feature.country.CountryState
@@ -39,6 +40,7 @@ import com.composables.core.MenuContent
 import com.composables.core.rememberMenuState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
 
 @Suppress("DEPRECATION")
 @Composable
@@ -50,8 +52,13 @@ fun ComposeCountry(modifier: Modifier = Modifier) {
     val onCountryClick: (Country) -> Unit = remember(scope, state) {
         { item ->
             state.expanded = false
-            scope.launchCatching(message = "Смена страны не удалась: ${item.name}") {
+            scope.launchCatching(
+                message = "Смена страны не удалась: ${item.name}",
+                onError = { SnackBar.error("Не удалось сменить страну") },
+            ) {
                 val htmlContent = readHtmlFromURLWebView(normalizeXUrl(item.url))
+                // Пустой ответ — страница не загрузилась, страну сайт не сменил.
+                if (htmlContent.isBlank()) throw IOException("Страница смены страны не загрузилась")
                 val flag = parseSiteCountryFlag(htmlContent) ?: item.flagEmoji
 
                 withContext(Dispatchers.Main) {

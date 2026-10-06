@@ -3,7 +3,9 @@ package com.client.xvideos.x
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayerSM
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -13,6 +15,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
@@ -44,15 +47,34 @@ class ScreenX_VideoPlayerSMTest {
         }
     }
 
+    private fun newSm(url: String) = ScreenX_VideoPlayerSM(
+        url = url,
+        initialItem = null,
+        db = AppFileDatabase(),
+        saved = SavedX(CoroutineScope(Dispatchers.Unconfined)),
+    )
+
+    /** Планировщик главного потока не запускается: сама загрузка стоит в очереди и в сеть не идёт. */
+    @Test
+    fun `новая загрузка сбрасывает позицию старта, чтобы она перечиталась из истории`() {
+        val sm = newSm("/video55555")
+        sm.restartFromBeginning()
+        assertEquals(0f, sm.resumePositionSeconds)
+
+        sm.loadVideo(forceReload = true)
+
+        assertNull(sm.resumePositionSeconds)
+    }
+
     @Test
     fun `isFullScreen изначально false`() {
-        val sm = ScreenX_VideoPlayerSM("https://example.com/video1", AppFileDatabase())
+        val sm = newSm("https://example.com/video1")
         assertFalse(sm.isFullScreen)
     }
 
     @Test
     fun `toggleFullScreen переключает режим полного экрана`() {
-        val sm = ScreenX_VideoPlayerSM("https://example.com/video1", AppFileDatabase())
+        val sm = newSm("https://example.com/video1")
         assertFalse(sm.isFullScreen)
 
         sm.toggleFullScreen()
@@ -63,9 +85,9 @@ class ScreenX_VideoPlayerSMTest {
     }
 
     @Test
-    fun `enterFullScreen и exitFullScreen корректно меняют состояние`() {
-        val sm = ScreenX_VideoPlayerSM("https://example.com/video1", AppFileDatabase())
-        sm.enterFullScreen()
+    fun `exitFullScreen выходит из полноэкранного режима`() {
+        val sm = newSm("https://example.com/video1")
+        sm.toggleFullScreen()
         assertTrue(sm.isFullScreen)
 
         sm.exitFullScreen()
@@ -74,8 +96,8 @@ class ScreenX_VideoPlayerSMTest {
 
     @Test
     fun `onPlaybackError сбрасывает полноэкранный режим`() {
-        val sm = ScreenX_VideoPlayerSM("https://example.com/video1", AppFileDatabase())
-        sm.enterFullScreen()
+        val sm = newSm("https://example.com/video1")
+        sm.toggleFullScreen()
         assertTrue(sm.isFullScreen)
 
         sm.onPlaybackError()
@@ -85,19 +107,19 @@ class ScreenX_VideoPlayerSMTest {
 
     @Test
     fun `url нормализуется автоматически при создании SM`() {
-        val sm1 = ScreenX_VideoPlayerSM("video123", AppFileDatabase())
+        val sm1 = newSm("video123")
         assertEquals("$urlStart/video123", sm1.url)
 
-        val sm2 = ScreenX_VideoPlayerSM("/video123", AppFileDatabase())
+        val sm2 = newSm("/video123")
         assertEquals("$urlStart/video123", sm2.url)
 
-        val sm3 = ScreenX_VideoPlayerSM("https://example.com/stream", AppFileDatabase())
+        val sm3 = newSm("https://example.com/stream")
         assertEquals("https://example.com/stream", sm3.url)
     }
 
     @Test
     fun `saveProgress устойчив к нечисловым и отрицательным значениям времени`() {
-        val sm = ScreenX_VideoPlayerSM("/video99999", AppFileDatabase())
+        val sm = newSm("/video99999")
         // Проверяем, что вызов с NaN, Infinity, отрицательными секундами не приводит к крашу
         sm.saveProgress(Float.NaN, -10)
         sm.saveProgress(Float.POSITIVE_INFINITY, 300)
@@ -112,7 +134,7 @@ class ScreenX_VideoPlayerSMTest {
 
     @Test
     fun `dismissResumeNotice сбрасывает текст уведомления`() {
-        val sm = ScreenX_VideoPlayerSM("/video123", AppFileDatabase())
+        val sm = newSm("/video123")
         sm.dismissResumeNotice()
         assertEquals(null, sm.resumeNoticeText)
     }

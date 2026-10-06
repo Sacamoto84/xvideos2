@@ -1,25 +1,11 @@
 package com.client.xvideos.x
 
-import com.client.xvideos.x.model.TagsMainUploaderPornstar
-import com.client.xvideos.x.model.TagsModel
-import com.client.xvideos.x.parcer.countTotalParsedTags
-import com.client.xvideos.x.parcer.extractPrimaryStreamUrl
-import com.client.xvideos.x.parcer.hasModelsOrPornstars
-import com.client.xvideos.x.parcer.hasMp4Extension
-import com.client.xvideos.x.parcer.isHighQualityPreview
-import com.client.xvideos.x.parcer.parseFirstVideoIdOrNull
-import com.client.xvideos.x.search.isSuggestUrl
-import com.client.xvideos.x.search.isValidSuggestQuery
 import com.client.xvideos.x.search.model.Channel
 import com.client.xvideos.x.search.model.Keyword
 import com.client.xvideos.x.search.model.Pornstar
 import com.client.xvideos.x.search.model.SearchResult
-import com.client.xvideos.x.search.parseJsonChannels
-import com.client.xvideos.x.search.parseJsonPornstars
-import com.client.xvideos.x.search.parseJsonTotalCount
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -35,10 +21,6 @@ class Batch75XSearchAndParsersTest {
         val keywordInvalid = Keyword(N = "brunette", R = "abc")
         assertFalse(keywordInvalid.isValidRating)
         assertNull(keywordInvalid.ratingDoubleOrNull)
-
-        val mutated = keywordInvalid.withRating("5.0")
-        assertTrue(mutated.isValidRating)
-        assertEquals("5.0", mutated.rating)
     }
 
     @Test
@@ -89,78 +71,6 @@ class Batch75XSearchAndParsersTest {
         )
 
         assertEquals(listOf("cosplay", "anime", "Sweetie Fox", "Sweetie Studio"), result.allSuggestions)
-
-        val filtered = result.filterByQuery("sweetie")
-        assertEquals(0, filtered.keywords.size)
-        assertEquals(1, filtered.pornstar?.size)
-        assertEquals(1, filtered.channel?.size)
-        assertEquals("Sweetie Fox", filtered.pornstar?.first()?.name)
     }
 
-    @Test
-    fun `parseJson helper extractions`() {
-        val json = """
-            {
-               "result": true,
-               "code": 200,
-               "keywords": [{"N": "asian", "R": "9"}],
-               "pornstar": [{"N": "Rae Lil Black", "F": "/profiles/rae", "T": "pornstar", "MV": 200, "M": 0, "L": 0, "P": "", "RF": "100k"}],
-               "channel": [{"N": "Asian Street", "F": "/profiles/street", "T": "channel", "CPV": true, "M": 0, "L": 0, "P": "", "RF": "50k"}]
-            }
-        """.trimIndent()
-
-        val stars = parseJsonPornstars(json)
-        assertEquals(1, stars.size)
-        assertEquals("Rae Lil Black", stars.first().name)
-
-        val channels = parseJsonChannels(json)
-        assertEquals(1, channels.size)
-        assertEquals("Asian Street", channels.first().name)
-
-        assertEquals(3, parseJsonTotalCount(json))
-    }
-
-    @Test
-    fun `Search URL and query predicates`() {
-        assertTrue(isValidSuggestQuery("milf"))
-        assertFalse(isValidSuggestQuery("   "))
-        assertFalse(isValidSuggestQuery(null))
-
-        assertTrue(isSuggestUrl("https://www.xvideos.com/search-suggest/teen"))
-        assertFalse(isSuggestUrl("https://www.xvideos.com/video123"))
-        assertFalse(isSuggestUrl(null))
-    }
-
-    @Test
-    fun `Video preview and extension helpers`() {
-        assertTrue(isHighQualityPreview("https://cdn.example.com/video_169.mp4"))
-        assertFalse(isHighQualityPreview("https://cdn.example.com/video.mp4"))
-
-        assertTrue(hasMp4Extension("https://cdn.example.com/file.mp4?token=123"))
-        assertFalse(hasMp4Extension("https://cdn.example.com/file.jpg"))
-    }
-
-    @Test
-    fun `Tags and stream extraction helpers`() {
-        val model = TagsModel(
-            mainUploader = listOf(TagsMainUploaderPornstar(href = "/uploader", name = "Channel", count = "1")),
-            pornstars = listOf(TagsMainUploaderPornstar(href = "/model", name = "Star", count = "2")),
-            tags = listOf("tag1", "tag2")
-        )
-        assertEquals(4, countTotalParsedTags(model))
-
-        assertTrue(hasModelsOrPornstars("""<li class="main-uploader"><span>Uploader</span></li>"""))
-        assertFalse(hasModelsOrPornstars("""<div class="regular-block">Text</div>"""))
-
-        val html = """<div class="frame-block" data-id="987654"></div>"""
-        assertEquals(987654L, parseFirstVideoIdOrNull(html))
-
-        val script = """
-            html5player.setVideoUrlHigh('https:\/\/cdn.example.com\/high.mp4');
-            html5player.setVideoUrlLow('https:\/\/cdn.example.com\/low.mp4');
-        """.trimIndent()
-        val primary = extractPrimaryStreamUrl(script)
-        assertNotNull(primary)
-        assertTrue(primary.contains("high.mp4"))
-    }
 }

@@ -81,7 +81,8 @@ private suspend fun loadHtmlInWebView(url: String): String =
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
-        cookieManager.setAcceptThirdPartyCookies(webView, true)
+        // Сторонние cookie разбору страницы не нужны: страну и сессию сайт держит в своих.
+        cookieManager.setAcceptThirdPartyCookies(webView, false)
 
         // JavaScript включён намеренно и отключить его нельзя: смысл этого
         // WebView — получить HTML *после* выполнения скриптов страницы, обычным
@@ -101,6 +102,11 @@ private suspend fun loadHtmlInWebView(url: String): String =
             // чтобы смена умолчания в новой версии не прошла незамеченной.
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             cacheMode = WebSettings.LOAD_DEFAULT
+            // Нужна только разметка: адреса превью парсер берёт из атрибутов, а сами
+            // картинки потом грузит Coil. С картинками WebView качал их все вторым
+            // потоком, и onPageFinished ждал их.
+            loadsImagesAutomatically = false
+            blockNetworkImage = true
         }
 
         // Консоль страницы в журнал не идёт: по умолчанию WebView печатает её

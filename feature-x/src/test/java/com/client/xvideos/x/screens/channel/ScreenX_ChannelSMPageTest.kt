@@ -48,11 +48,11 @@ class ScreenX_ChannelSMPageTest {
     }
 
     @Test
-    fun `переход на страницу попадает в uiState, и предел страниц растёт вместе с ней`() {
+    fun `предел страниц растёт вместе с текущей страницей`() {
         val sm = ScreenX_ChannelSM(SavedX(CoroutineScope(Dispatchers.Unconfined)), slug = "sample")
         assertEquals(1, sm.uiState.maxPages)
 
-        sm.goToPage(9)
+        sm.currentPage = 9
 
         // Число видео неизвестно: предел считается от текущей страницы, а не застывает.
         assertEquals(9, sm.uiState.currentPage)

@@ -44,9 +44,6 @@ class ScreenTags(val tag: String) : Screen {
         // держит одну. pageCount читается лениво, поэтому рост с 1 до 149
         // пейджер подхватывает без пересоздания состояния.
         val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
-        // Обычная карта: страница достаёт своё состояние прокрутки прямо в композиции,
-        // и снапшот-карта перекомпоновывала бы её из-за записи при первом обращении.
-        val listStates = remember { HashMap<Int, LazyListState>() }
 
         val onBack: () -> Unit = remember(navigator) { { navigator.pop().let {} } }
         BackHandler(onBack = onBack)
@@ -70,7 +67,7 @@ class ScreenTags(val tag: String) : Screen {
             lastPage = vm.screen.lastPage,
             topCutout = topCutout,
             pagerState = pagerState,
-            listStates = listStates,
+            listStates = vm.listStates,
             loadPage = loadPage,
             cachedItems = vm::cachedItems,
             onOpenVideo = onOpenVideo,
@@ -145,10 +142,3 @@ fun ScreenTagsContent(
     }
 }
 
-internal enum class TagsBackAction {
-    POP
-}
-
-internal fun resolveTagsBackAction(): TagsBackAction {
-    return TagsBackAction.POP
-}

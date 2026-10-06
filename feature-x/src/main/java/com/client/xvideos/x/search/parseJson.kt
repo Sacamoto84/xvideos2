@@ -27,39 +27,3 @@ fun parseJson(json: String?): SearchResult? {
     }
 }
 
-/**
- * Десериализует JSON-ответ поиска с возможностью возврата значения по умолчанию [default].
- */
-fun parseJsonOrDefault(json: String?, default: SearchResult = SearchResult.EMPTY): SearchResult =
-    parseJson(json) ?: default
-
-/**
- * Проверяет, является ли строка синтаксически корректным JSON-ответом поиска.
- */
-fun isValidSearchJson(json: String?): Boolean =
-    parseJson(json) != null
-
-/**
- * Быстро извлекает только список подсказок-ключевых слов из JSON-ответа.
- */
-fun parseJsonKeywords(json: String?): List<String> =
-    parseJson(json)?.resolvedKeywords?.map { it.name } ?: emptyList()
-
-/**
- * Быстро извлекает список найденных порнозвезд из JSON-ответа.
- */
-fun parseJsonPornstars(json: String?): List<com.client.xvideos.x.search.model.Pornstar> =
-    parseJson(json)?.resolvedPornstars.orEmpty()
-
-/**
- * Быстро извлекает список найденных каналов из JSON-ответа.
- */
-fun parseJsonChannels(json: String?): List<com.client.xvideos.x.search.model.Channel> =
-    parseJson(json)?.resolvedChannels.orEmpty()
-
-/**
- * Возвращает суммарное количество подсказок (ключевые слова + модели + каналы) из ответа.
- */
-fun parseJsonTotalCount(json: String?): Int =
-    parseJson(json)?.totalSuggestionsCount ?: 0
-

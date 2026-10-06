@@ -94,9 +94,6 @@ data class HTML5PlayerConfig(
             uploaderName.contains(q, ignoreCase = true)
     }
 
-    fun withVideoUrls(high: String, low: String, hls: String = ""): HTML5PlayerConfig =
-        copy(videoUrlHigh = high, videoUrlLow = low, videoHLS = hls)
-
     companion object {
         val EMPTY = HTML5PlayerConfig()
     }

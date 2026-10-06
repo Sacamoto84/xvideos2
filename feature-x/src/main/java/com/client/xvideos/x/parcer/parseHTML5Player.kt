@@ -97,48 +97,6 @@ fun parseHTML5Player(script: String): HTML5PlayerConfig? {
     )
 }
 
-/**
- * Безопасная перегрузка для nullable-строки скрипта.
- */
-fun parseHTML5PlayerOrNull(script: String?): HTML5PlayerConfig? =
-    if (script != null) parseHTML5Player(script) else null
-
-/**
- * Быстро извлекает только название видеоролика из скрипта плеера.
- */
-fun extractVideoTitle(script: String): String? {
-    if (script.isBlank()) return null
-    return extractValue(script, PATTERN_VIDEO_TITLE)
-}
-
-/**
- * Быстро извлекает тройку доступных URL видеопотоков (High, Low, HLS).
- */
-fun extractVideoUrls(script: String): Triple<String, String, String> {
-    if (script.isBlank()) return Triple("", "", "")
-    val high = extractValue(script, PATTERN_URL_HIGH).unescapeUrl()
-    val low = extractValue(script, PATTERN_URL_LOW).unescapeUrl()
-    val hls = extractValue(script, PATTERN_URL_HLS).unescapeUrl()
-    return Triple(high, low, hls)
-}
-
-/**
- * Проверяет, содержит ли скрипт хотя бы один пригодный к воспроизведению видеопоток.
- */
-fun hasPlayableStream(script: String?): Boolean {
-    if (script.isNullOrBlank()) return false
-    val (high, low, hls) = extractVideoUrls(script)
-    return high.isNotEmpty() || low.isNotEmpty() || hls.isNotEmpty()
-}
-
-/**
- * Извлекает наиболее приоритетный доступный URL потока воспроизведения (High -> Low -> HLS).
- */
-fun extractPrimaryStreamUrl(script: String): String {
-    val (high, low, hls) = extractVideoUrls(script)
-    return high.ifEmpty { low.ifEmpty { hls } }
-}
-
 /** Извлекает значение первого вызова сеттера плеера с раскодированными JS-escape. */
 private fun extractValue(script: String, pattern: Pattern): String? {
     val matcher = pattern.matcher(script)

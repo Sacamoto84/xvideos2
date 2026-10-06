@@ -14,6 +14,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
@@ -46,6 +48,7 @@ import com.client.xvideos.x.screens.channel.molecule.ChannelPagerBottomBar
 import com.client.xvideos.x.screens.channel.molecule.ChannelStickyBar
 import com.client.xvideos.x.screens.channel.molecule.ChannelVideosPager
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /**
@@ -212,9 +215,14 @@ fun ScreenX_ChannelContent(
     val density = LocalDensity.current
     val topCutoutPx = with(density) { topCutout.roundToPx() }
 
-    // Сброс на страницу 0 при смене сортировки или фильтра (шапка сохраняет позицию)
-    LaunchedEffect(uiState.currentSort, uiState.selectedModel) {
-        pagerState.scrollToPage(0)
+    // Сброс на страницу 0 при смене сортировки или фильтра (шапка сохраняет позицию).
+    // Первое значение пропускается: эффект запускается и при возврате экрана в
+    // композицию (выход из плеера), и пейджер терял только что восстановленную страницу.
+    val pagerResetKey by rememberUpdatedState(uiState.currentSort to uiState.selectedModel)
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerResetKey }
+            .drop(1)
+            .collect { pagerState.scrollToPage(0) }
     }
 
     Scaffold(

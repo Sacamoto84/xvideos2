@@ -168,6 +168,14 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     private val pageJobs = mutableMapOf<Int, Job>()
 
     /**
+     * Шапка и рейтинги уже получены. Признаки отдельные от содержимого: у профиля без
+     * баннера, описания, моделей и рейтингов «загружено» по содержимому не отличить
+     * от «не загружалось», и каждая смена сортировки запрашивала их заново.
+     */
+    private var isHeaderLoaded = false
+    private var areRanksLoaded = false
+
+    /**
      * Текущая страница пейджера. Живёт в [uiState]: от неё считается
      * [ChannelUiState.maxPages], когда сайт не сообщил число видео.
      */
@@ -283,11 +291,13 @@ class ScreenX_ChannelSM @AssistedInject constructor(
             val self = coroutineContext[Job]
             try {
                 // 1. Загрузка шапки профиля из HTML страницы канала / модели (только при первом открытии)
-                val currentHeader = uiState.header
-                val parsedHeader = if (currentHeader.availableModels.isNotEmpty() || currentHeader.bannerUrl.isNotBlank() || currentHeader.hasAboutMe) {
-                    currentHeader
+                var headerFetched = isHeaderLoaded
+                val parsedHeader = if (isHeaderLoaded) {
+                    uiState.header
                 } else {
                     val headerHtml = fetchChannelHtml(cleanSlug, pathPrefix, isModel)
+                    // Пустой ответ — запрос не удался: шапку запросит следующая загрузка.
+                    headerFetched = headerHtml.isNotBlank()
                     withContext(Dispatchers.Default) {
                         parserChannelHeader(
                             html = headerHtml,
@@ -300,20 +310,20 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 }
 
                 // 1.5. Загрузка рейтингов автора / модели из JSON API сайта (/profiles/{slug}/ranks/straight)
-                val headerWithRanks = if (parsedHeader.rankings.isNotEmpty()) {
+                var ranksFetched = areRanksLoaded
+                val headerWithRanks = if (areRanksLoaded) {
                     parsedHeader
                 } else {
-                    try {
-                        val ranksJson = withContext(Dispatchers.IO) {
-                            readHtmlFromURLDirect("$urlStart/profiles/$cleanSlug/ranks/straight")
-                        }
-                        val ranks = withContext(Dispatchers.Default) {
-                            parserChannelRanksJson(ranksJson)
-                        }
-                        if (ranks.isNotEmpty()) parsedHeader.copy(rankings = ranks) else parsedHeader
-                    } catch (_: Exception) {
-                        parsedHeader
+                    // Сбой запроса — пустая строка, сбой разбора — пустой список: исключений,
+                    // кроме отмены, отсюда нет, и перехватывать их незачем.
+                    val ranksJson = withContext(Dispatchers.IO) {
+                        readHtmlFromURLDirect("$urlStart/profiles/$cleanSlug/ranks/straight")
                     }
+                    ranksFetched = ranksJson.isNotBlank()
+                    val ranks = withContext(Dispatchers.Default) {
+                        parserChannelRanksJson(ranksJson)
+                    }
+                    if (ranks.isNotEmpty()) parsedHeader.copy(rankings = ranks) else parsedHeader
                 }
 
                 // 2. Загрузка 0-й страницы видео из JSON API
@@ -330,10 +340,13 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     totalVideosCount = result.totalVideos ?: 0,
                     error = null,
                 )
+                // Вместе с шапкой: при сбое ленты она в uiState не попала и нужна снова.
+                isHeaderLoaded = headerFetched
+                areRanksLoaded = ranksFetched
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e("ScreenX_ChannelSM: ошибка загрузки %s (%s): %s", cleanSlug, pathPrefix, e.logLabel())
+                Timber.e("ScreenX_ChannelSM: ошибка загрузки профиля (%s): %s", pathPrefix, e.logLabel())
                 // Ошибку показывает страница 0; её «Повторить» перезапускает первую загрузку.
                 errorPages[0] = INITIAL_LOAD_ERROR
                 uiState = uiState.copy(error = INITIAL_LOAD_ERROR)
@@ -384,7 +397,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e("ScreenX_ChannelSM: сбой загрузки страницы %d для %s: %s", targetPage, cleanSlug, e.logLabel())
+                Timber.e("ScreenX_ChannelSM: сбой загрузки страницы %d: %s", targetPage, e.logLabel())
                 errorPages[targetPage] = "Не удалось загрузить страницу ${targetPage + 1}"
             } finally {
                 // Задачу могла сменить новая (loadInitial отменил эту и запустил ту же
@@ -410,33 +423,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         }
         errorPages.remove(page)
         loadPage(page)
-    }
-
-    /**
-     * Переход на конкретную страницу видеороликов автора ([page], 0-based).
-     */
-    fun goToPage(page: Int) {
-        val targetPage = page.coerceAtLeast(0)
-        currentPage = targetPage
-        loadPage(targetPage)
-    }
-
-    /**
-     * Переход на следующую страницу.
-     */
-    fun loadNextPage() {
-        if (currentPage < uiState.maxPages - 1) {
-            goToPage(currentPage + 1)
-        }
-    }
-
-    /**
-     * Переход на предыдущую страницу.
-     */
-    fun loadPrevPage() {
-        if (currentPage > 0) {
-            goToPage(currentPage - 1)
-        }
     }
 
     /**
@@ -468,13 +454,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
      */
     fun setModelFilterExpanded(expanded: Boolean) {
         uiState = uiState.copy(isModelFilterExpanded = expanded)
-    }
-
-    /**
-     * Сбрасывает выбранную модель и возвращает общий список видеороликов.
-     */
-    fun clearModelFilter() {
-        selectModel(null)
     }
 
     private companion object {

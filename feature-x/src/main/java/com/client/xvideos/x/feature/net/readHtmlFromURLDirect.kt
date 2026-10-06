@@ -140,25 +140,3 @@ suspend fun readHtmlFromURLDirect(url: String = "https://www.xvideos.com"): Stri
     }
 }
 
-/**
- * HTTP POST с form-urlencoded параметрами; пустая строка при любой ошибке.
- * Где сбой нужно отличать от пустого ответа, вызывать [postFormData].
- *
- * @param url Целевой URL.
- * @param formParameters Словарь параметров формы.
- * @return Ответ сервера в виде строки либо пустая строка при сетевой ошибке.
- */
-suspend fun postFormDataFromURLDirect(
-    url: String,
-    formParameters: Map<String, String>,
-): String {
-    if (url.isBlank()) return ""
-    return try {
-        postFormData(url, formParameters)
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Exception) {
-        Timber.e("!!! postFormDataFromURLDirect: Ошибка ${e.logLabel()}")
-        ""
-    }
-}

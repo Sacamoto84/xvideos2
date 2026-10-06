@@ -59,6 +59,13 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
 
     private val _downloadedPosterIds = MutableStateFlow<Set<Long>>(emptySet())
 
+    // Объявлены до init: он сразу запускает refresh() на другом потоке, и скан
+    // мог войти в synchronized раньше, чем замок получил значение.
+    private var refreshJob: Job? = null
+
+    /** Сканы каталога идут по одному: см. [loadFromDisk]. */
+    private val scanLock = Any()
+
     init {
         refresh()
     }
@@ -324,8 +331,6 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         }
     }
 
-    private var refreshJob: Job? = null
-
     /**
      * Перечитать список сохранённого по `.info`-файлам на диске.
      */
@@ -335,9 +340,6 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             loadFromDisk()
         }
     }
-
-    /** Сканы каталога идут по одному: см. [loadFromDisk]. */
-    private val scanLock = Any()
 
     /**
      * Сканирует директорию [dir], сопоставляет mp4, jpg и info файлы, формируя актуальный список загрузок.

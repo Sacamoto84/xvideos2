@@ -7,7 +7,6 @@ import com.client.xvideos.x.model.Sponsor
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.model.XHistoryItem
-import com.client.xvideos.x.model.getCountryCodeFromFlagClass
 import com.client.xvideos.x.model.isIsoCountryCode
 import com.client.xvideos.x.model.normalizeCountryCode
 import com.client.xvideos.x.search.model.Channel
@@ -16,34 +15,10 @@ import com.client.xvideos.x.search.model.Pornstar
 import com.client.xvideos.x.search.model.SearchResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class Batch66XModelsAndHelpersTest {
-
-    @Test
-    fun `XSite helpers format duration and parse slugs`() {
-        assertEquals("00:00", formatDurationMs(0L))
-        assertEquals("00:05", formatDurationMs(5_000L))
-        assertEquals("01:08", formatDurationMs(68_000L))
-        assertEquals("1:00:00", formatDurationMs(3600_000L))
-        assertEquals("1:15:30", formatDurationMs(4530_000L))
-
-        assertEquals(68L, parseDurationToSeconds("1:08"))
-        assertEquals(600L, parseDurationToSeconds("10 min"))
-
-        assertEquals("uicfdab07bd", extractXVideoSlug("/video.uicfdab07bd/_"))
-        assertEquals("12345", extractXVideoSlug("/video12345/test"))
-        assertNull(extractXVideoSlug("https://example.com/other"))
-
-        assertTrue(isCanonicalXUrl("https://www.xv-ru.com/video123"))
-        assertFalse(isCanonicalXUrl("https://another.com/video123"))
-
-        assertTrue("https://www.xv-ru.com/video123".isXVideoLink())
-        assertFalse("https://www.xv-ru.com/tags/".isXVideoLink())
-    }
 
     @Test
     fun `ItemsX model extensions and mutations`() {
@@ -67,11 +42,6 @@ class Batch66XModelsAndHelpersTest {
         assertTrue(item.matches("profilename"))
         assertFalse(item.matches("nonexistent"))
         assertTrue(item.matches(null))
-
-        val mutated = item.withDuration("12:30").withViews("2.0M").withHref("/video.42/new")
-        assertEquals("12:30", mutated.duration)
-        assertEquals("2.0M", mutated.views)
-        assertEquals("/video.42/new", mutated.href)
     }
 
     @Test
@@ -83,16 +53,6 @@ class Batch66XModelsAndHelpersTest {
 
         assertTrue(config.hasValidTitle)
         assertTrue(config.hasAnyMedia)
-
-        val withStreams = config.withVideoUrls(
-            high = "https://example.com/high.mp4",
-            low = "https://example.com/low.mp4",
-            hls = "https://example.com/hls.m3u8"
-        )
-        assertTrue(withStreams.hasHighQuality)
-        assertTrue(withStreams.hasLowQuality)
-        assertTrue(withStreams.hasHls)
-        assertEquals("https://example.com/high.mp4", withStreams.bestVideoUrl)
 
         val sponsor = Sponsor(name = "SponsorBrand", desc = "Best sponsor ever")
         assertEquals("SponsorBrand", sponsor.displayName)
@@ -116,9 +76,6 @@ class Batch66XModelsAndHelpersTest {
         assertTrue(isIsoCountryCode("flag-it"))
         assertFalse(isIsoCountryCode("12"))
         assertFalse(isIsoCountryCode(""))
-
-        assertEquals("jp", getCountryCodeFromFlagClass("flag-jp"))
-        assertNull(getCountryCodeFromFlagClass("nonflag"))
     }
 
     @Test
@@ -133,12 +90,6 @@ class Batch66XModelsAndHelpersTest {
         )
 
         assertTrue(screenTag.hasPagination)
-        assertTrue(screenTag.hasItemWithId(1L))
-        assertFalse(screenTag.hasItemWithId(99L))
-
-        val filtered = screenTag.filterByQuery("alpha")
-        assertEquals(1, filtered.size)
-        assertEquals(1L, filtered.first().id)
 
         val star = TagsMainUploaderPornstar(
             name = "Model Star",
@@ -156,9 +107,6 @@ class Batch66XModelsAndHelpersTest {
         )
 
         assertEquals(listOf("Uploader", "Model Star"), tagsModel.allNames)
-        assertEquals(listOf("Amateur"), tagsModel.filterTags("amat"))
-        assertNotNull(tagsModel.findPornstarByName("Model Star"))
-        assertNull(tagsModel.findPornstarByName("NonExistent"))
     }
 
     @Test
@@ -172,15 +120,6 @@ class Batch66XModelsAndHelpersTest {
 
         assertEquals(50, history.progressPercent)
         assertTrue(history.matches("History"))
-
-        val updated = history.withPosition(90_000L, 123456L)
-        assertEquals(90_000L, updated.lastPositionMs)
-        assertEquals(123456L, updated.updatedAt)
-
-        val completed = history.asCompleted(999999L)
-        assertTrue(completed.isCompleted)
-        assertEquals(120_000L, completed.lastPositionMs)
-        assertEquals(999999L, completed.updatedAt)
     }
 
     @Test
@@ -224,9 +163,5 @@ class Batch66XModelsAndHelpersTest {
         )
 
         assertEquals(listOf(" Brunette ", "Star Name", "Best Channel"), searchResult.allSuggestionNames())
-        assertNotNull(searchResult.findPornstarByName("Star Name"))
-        assertNull(searchResult.findPornstarByName("Random"))
-        assertNotNull(searchResult.findChannelByName("Best Channel"))
-        assertNull(searchResult.findChannelByName("Random"))
     }
 }

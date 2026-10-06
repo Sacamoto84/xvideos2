@@ -62,22 +62,7 @@ data class XHistoryItem(
     val hasPreview: Boolean get() = item.hasImagePreview
     val hasUpdatedAt: Boolean get() = updatedAt > 0L
 
-    fun withPosition(positionMs: Long, updated: Long = System.currentTimeMillis()): XHistoryItem =
-        copy(lastPositionMs = positionMs.coerceAtLeast(0L), updatedAt = updated)
-
-    fun withTotalDuration(durationMs: Long): XHistoryItem =
-        copy(totalDurationMs = durationMs.coerceAtLeast(0L))
-
-    fun asCompleted(updated: Long = System.currentTimeMillis()): XHistoryItem =
-        copy(isCompleted = true, lastPositionMs = totalDurationMs, updatedAt = updated)
-
-    fun asReset(updated: Long = System.currentTimeMillis()): XHistoryItem =
-        copy(isCompleted = false, lastPositionMs = 0L, updatedAt = updated)
-
     fun matches(query: String?): Boolean = item.matches(query)
-
-    fun isSameItem(other: XHistoryItem?): Boolean = other != null && id > 0L && id == other.id
-
 
     companion object {
         val EMPTY = XHistoryItem()

@@ -7,6 +7,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.x.feature.net.getSearchResults
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.screens.common.LatestTask
 import com.client.xvideos.x.search.XSearchHistoryFileStore
 import com.client.xvideos.x.search.model.SearchResult
 import com.client.xvideos.x.search.parseJson
@@ -17,7 +18,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -83,7 +83,7 @@ class ScreenXSearchSM @Inject constructor(
     val history: StateFlow<List<String>> = historyStore.observeAllTexts()
         .stateIn(screenModelScope, SharingStarted.Eagerly, emptyList())
 
-    private var videoSearchJob: Job? = null
+    private val videoSearch = LatestTask(screenModelScope) { _isVideoLoading.value = false }
 
     init {
         screenModelScope.launch {
@@ -114,7 +114,7 @@ class ScreenXSearchSM @Inject constructor(
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
-                        Timber.w("Ошибка запроса подсказок для: %s: %s", text, e.javaClass.simpleName)
+                        Timber.w("Ошибка запроса подсказок: %s", e.javaClass.simpleName)
                         _suggestions.value = SearchResult.EMPTY
                     } finally {
                         _isSuggestLoading.value = false
@@ -174,8 +174,7 @@ class ScreenXSearchSM @Inject constructor(
     }
 
     private fun loadVideos(query: String, page: Int) {
-        videoSearchJob?.cancel()
-        videoSearchJob = screenModelScope.launch {
+        videoSearch.launch {
             _isVideoLoading.value = true
             _isSearchError.value = false
             try {
@@ -185,11 +184,9 @@ class ScreenXSearchSM @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e("Ошибка загрузки видео по запросу: %s (page=%d): %s", query, page, e.javaClass.simpleName)
+                Timber.e("Ошибка загрузки выдачи поиска (page=%d): %s", page, e.javaClass.simpleName)
                 _isSearchError.value = true
                 _videoItems.value = emptyList()
-            } finally {
-                _isVideoLoading.value = false
             }
         }
     }

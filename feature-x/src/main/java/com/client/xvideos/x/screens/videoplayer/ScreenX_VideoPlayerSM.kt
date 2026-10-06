@@ -34,7 +34,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,14 +59,6 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     val db: AppFileDatabase,
     val saved: SavedX,
 ) : ScreenModel {
-
-    constructor(url: String, db: AppFileDatabase) : this(
-        url = url,
-        initialItem = null,
-        db = db,
-        saved = SavedX(CoroutineScope(Dispatchers.Unconfined))
-    )
-
     /** Нормализованный URL страницы видео. */
     val url: String = normalizeXUrl(url)
 
@@ -114,11 +105,6 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
     /** Переключает полноэкранный режим. */
     fun toggleFullScreen() {
         isFullScreen = !isFullScreen
-    }
-
-    /** Входит в полноэкранный режим. */
-    fun enterFullScreen() {
-        isFullScreen = true
     }
 
     /** Выходит из полноэкранного режима. */
@@ -237,6 +223,12 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         loadJob?.cancel()
         isLoading = true
         isError = false
+        // Каждая загрузка берёт позицию из истории заново. Повтор после сбоя создаёт
+        // плеер ещё раз, а позиция, с которой ролик открыли, к этому времени устарела:
+        // история знает, где просмотр оборвался.
+        historyItem = null
+        resumePositionSeconds = null
+        resumeNoticeText = null
         loadJob = screenModelScope.launch {
             try {
                 Timber.d("!!! ScreenVideoPlayerSM loadVideo(forceReload=$forceReload)")
