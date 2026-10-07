@@ -33,7 +33,7 @@ import javax.inject.Singleton
 data class ItemsRedDownload(
     val name: String = "",     //Название креатора соответствует папке
     val id: String,            //Имя файла уникально
-    val url: String = "",      //Создается на этапе закачки, и после успешной закачки не используется url mp4  //https://media.R.com/VictoriousGlamorousStud.m4s
+    val url: String = "",      //Создается на этапе закачки, и после успешной закачки не используется url mp4  //https://media.redgifs.com/VictoriousGlamorousStud.m4s
 )
 
 /**

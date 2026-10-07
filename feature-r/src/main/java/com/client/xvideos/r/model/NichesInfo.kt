@@ -31,14 +31,14 @@ data class NicheResponse(
  * Пример JSON из API:
  * ```json
  * {
- *   "cover": "https://userpic.R.com/niches/covers/big-areolas.jpg",
+ *   "cover": "https://userpic.redgifs.com/niches/covers/big-areolas.jpg",
  *   "description": "NSFW GIFs and images featuring women with large areolas.",
  *   "gifs": 29209,
  *   "id": "big-areolas",
  *   "name": "Big Areolas",
  *   "owner": "phpunit",
  *   "subscribers": 77917,
- *   "thumbnail": "https://userpic.R.com/niches/thumbnails/big-areolas.jpg",
+ *   "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/big-areolas.jpg",
  *   "rules": "1. Big Areolas 2. Porn featuring females with large areolas..."
  * }
  * ```

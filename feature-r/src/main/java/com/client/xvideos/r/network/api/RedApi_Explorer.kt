@@ -19,7 +19,7 @@ class RedApi_Explorer(val api: ApiClient) {
      *
      * URL запроса:
      * ```
-     * https://api.R.com/v2/niches?order=subscribers&previews=yes&sort=desc&page=1&count=100
+     * https://api.redgifs.com/v2/niches?order=subscribers&previews=yes&sort=desc&page=1&count=100
      * ```
      *
      * Порядок сортировки зашит на уровне запроса (`order=subscribers`, `sort=desc`):
