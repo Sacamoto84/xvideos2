@@ -37,14 +37,7 @@ class R_Saved_Niches(
             nichesDb.insert(item.id, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        val existingIndex = list.indexOfFirst { it.id == item.id }
-                        if (existingIndex == list.lastIndex && list[existingIndex] == item) {
-                            return@withContext
-                        }
-                        if (existingIndex >= 0) {
-                            list.removeAt(existingIndex)
-                        }
-                        list.add(item)
+                        list.putLast(item) { it.id == item.id }
                     }
                     SnackBar.info("Группа добавлена")
                 }

@@ -38,14 +38,7 @@ class R_Saved_Creator(
             creatorDb.insert(item.username, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        val existingIndex = list.indexOfFirst { it.username == item.username }
-                        if (existingIndex == list.lastIndex && list[existingIndex] == item) {
-                            return@withContext
-                        }
-                        if (existingIndex >= 0) {
-                            list.removeAt(existingIndex)
-                        }
-                        list.add(item)
+                        list.putLast(item) { it.username == item.username }
                     }
                     SnackBar.success("Автор добавлен")
                 }

@@ -46,14 +46,7 @@ class R_Saved_Likes(
             likesDb.insert(safeItem.id, safeItem)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        val existingIndex = list.indexOfFirst { it.id == safeItem.id }
-                        if (existingIndex == list.lastIndex && list[existingIndex] == safeItem) {
-                            return@withContext
-                        }
-                        if (existingIndex >= 0) {
-                            list.removeAt(existingIndex)
-                        }
-                        list.add(safeItem)
+                        list.putLast(safeItem) { it.id == safeItem.id }
                     }
                     SnackBar.success("Like")
                 }

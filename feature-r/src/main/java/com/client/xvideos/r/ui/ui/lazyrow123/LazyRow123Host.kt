@@ -73,6 +73,25 @@ internal fun TypePager.appliesBlockList(): Boolean = when (this) {
 }
 
 /**
+ * Лента без роликов из [blockedIds]. Получатель — уже кэшированный поток: смена
+ * блок-листа перефильтровывает загруженные страницы, источник заново не
+ * запрашивается.
+ *
+ * Второй [cachedIn] после фильтра обязателен. `collectAsLazyPagingItems`
+ * показывает загруженные страницы в первом кадре, только если поток — это
+ * `SharedFlow` с кэшем страниц; `combine` и `filter` теряют и то и другое.
+ * Без него сетка при каждом возврате на ленту собиралась с пустым списком и
+ * сбрасывала прокрутку на начало.
+ */
+internal fun Flow<PagingData<GifsInfo>>.withoutBlocked(
+    blockedIds: Flow<Set<String>>,
+    scope: CoroutineScope,
+): Flow<PagingData<GifsInfo>> =
+    combine(blockedIds) { page, blocked ->
+        if (blocked.isEmpty()) page else page.filter { it.id !in blocked }
+    }.cachedIn(scope)
+
+/**
  * Центральный стейт-холдер сетки медиаконтента RedGifs.
  *
  * Управляет:
@@ -205,16 +224,10 @@ class LazyRow123Host(
      * Источники сверяются с блок-листом только при загрузке страницы, поэтому
      * ролик, заблокированный позже, оставался в открытой ленте до ручного
      * обновления, а лента подписок блок-лист не применяла вовсе. Фильтр стоит
-     * после [cachedIn]: загруженные страницы и позиция прокрутки остаются.
+     * после [cachedIn]: блокировка не перезагружает ленту, см. [withoutBlocked].
      */
     val pager: Flow<PagingData<GifsInfo>> =
-        if (typePager.appliesBlockList()) {
-            cachedPager.combine(block.blockedIds) { page, blocked ->
-                if (blocked.isEmpty()) page else page.filter { it.id !in blocked }
-            }
-        } else {
-            cachedPager
-        }
+        if (typePager.appliesBlockList()) cachedPager.withoutBlocked(block.blockedIds, scope) else cachedPager
 
 
     private var _columns by mutableIntStateOf(normalizeColumns(startColumns))

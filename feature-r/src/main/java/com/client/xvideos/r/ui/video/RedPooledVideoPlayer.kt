@@ -138,7 +138,12 @@ fun RedPooledVideoPlayer(
     // `LifecycleEventObserver` (см. `ExoPlayerLifecycle.rememberExoPlayerWithLifecycle`)
     // и снимал playWhenReady на ON_PAUSE/ON_STOP. Без этого свёрнутое приложение
     // продолжает играть звук ленты, а setForegroundMode(true) ещё и удерживает декодеры.
-    LifecycleStartEffect(player, play, isCurrentPage) {
+    //
+    // mediaItem в ключах: ролик под страницей может смениться, пока она на экране
+    // (заблокированный уходит из ленты). Пул при этом возвращает тот же экземпляр
+    // плеера, а `PlayerPool.yield()` перед тем снимает с него playWhenReady. С
+    // ключом только по `player` эффект не перезапускался, и новый ролик не стартовал.
+    LifecycleStartEffect(player, mediaItem, play, isCurrentPage) {
         player?.playWhenReady = play && isCurrentPage
         onStopOrDispose { player?.playWhenReady = false }
     }
@@ -190,7 +195,10 @@ fun RedPooledVideoPlayer(
 
     // Время/длительность и петля A-B. Шаг 50 мс — как в прежнем CMPPlayer2,
     // чтобы поведение полосы времени и A-B не изменилось.
-    LaunchedEffect(player, isCurrentPage, enableAB, timeA, timeB, play) {
+    // mediaItem в ключах — по той же причине, что у эффекта playWhenReady выше:
+    // цикл выходит, увидев снятый playWhenReady, и на том же экземпляре плеера
+    // сам уже не начался бы.
+    LaunchedEffect(player, mediaItem, isCurrentPage, enableAB, timeA, timeB, play) {
         val exo = player ?: return@LaunchedEffect
         // Нетекущие страницы не играют (playWhenReady = play && isCurrentPage), время на них
         // не движется — крутить на них опрос смысла нет. Без этого выхода при трёх живых
