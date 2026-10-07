@@ -18,7 +18,6 @@ import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
-import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.network.toRUserMessage
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
@@ -37,7 +36,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * [ScreenModel] экрана отдельной ниши (категории) в RedGifs.
+ * [ScreenModel] экрана отдельной ниши (категории) в R.
  *
  * Инкапсулирует:
  * - Загрузку метаданных ниши [niche], похожих ниш [related] и топовых авторов [topCreator];
@@ -54,7 +53,6 @@ class ScreenNicheSM @AssistedInject constructor(
     val savedRed: SavedRed,
     val downloadRed: DownloadRed,
     val search: R_SearchExplorer,
-    val searchNiches: R_SearchNiches,
 ) : ScreenModel {
 
     /** Фабрика Assisted Injection для создания [ScreenNicheSM] с параметром [nicheName]. */
@@ -83,8 +81,7 @@ class ScreenNicheSM @AssistedInject constructor(
             redApi = redApi,
             savedRed = savedRed,
             downloadRed = downloadRed,
-            search = search,
-            searchNiches = searchNiches
+            search = search
         )
 
     init {

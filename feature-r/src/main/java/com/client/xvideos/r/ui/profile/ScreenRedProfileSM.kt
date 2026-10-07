@@ -16,7 +16,6 @@ import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
-import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.network.toRUserMessage
 import dagger.Binds
@@ -38,7 +37,7 @@ import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 
 /**
- * [ScreenModel] экрана профиля автора (создателя контента) в RedGifs.
+ * [ScreenModel] экрана профиля автора (создателя контента) в R.
  *
  * Управляет:
  * - Загрузкой информации о профиле автора [creator];
@@ -57,7 +56,6 @@ class ScreenRedProfileSM @AssistedInject constructor(
     val savedRed: SavedRed,
     val downloadRed: DownloadRed,
     val search: R_SearchExplorer,
-    val searchNiches: R_SearchNiches,
 ) : ScreenModel {
 
     /** Фабрика Assisted Injection для профиля. */
@@ -118,7 +116,6 @@ class ScreenRedProfileSM @AssistedInject constructor(
         savedRed = savedRed,
         downloadRed = downloadRed,
         search = search,
-        searchNiches = searchNiches,
         tags = tagsSelect,
     )
 

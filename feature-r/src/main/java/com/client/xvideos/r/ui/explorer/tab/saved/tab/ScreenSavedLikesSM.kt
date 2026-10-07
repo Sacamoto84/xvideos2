@@ -9,7 +9,6 @@ import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
-import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
@@ -28,7 +27,6 @@ class ScreenSavedLikesSM @Inject constructor(
     val savedRed: SavedRed,
     val downloadRed: DownloadRed,
     val search: R_SearchExplorer,
-    val searchNiches: R_SearchNiches,
 ) : ScreenModel {
 
     val likedHost = LazyRow123Host(
@@ -39,8 +37,7 @@ class ScreenSavedLikesSM @Inject constructor(
         redApi = redApi,
         savedRed = savedRed,
         downloadRed = downloadRed,
-        search = search,
-        searchNiches = searchNiches
+        search = search
     )
 }
 

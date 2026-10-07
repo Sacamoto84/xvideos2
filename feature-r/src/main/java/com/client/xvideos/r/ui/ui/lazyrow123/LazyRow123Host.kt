@@ -21,7 +21,6 @@ import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
-import com.client.xvideos.r.common.search.R_SearchNiches
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.common.pagin.ItemCollectionPagingSource
 import com.client.xvideos.r.common.pagin.ItemEmptyPagingSource
@@ -48,7 +47,7 @@ import timber.log.Timber
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Внутренний контейнер параметров фильтрации и пагинации ленты RedGifs.
+ * Внутренний контейнер параметров фильтрации и пагинации ленты R.
  */
 private data class SearchParams(
     val query: String,
@@ -92,7 +91,7 @@ internal fun Flow<PagingData<GifsInfo>>.withoutBlocked(
     }.cachedIn(scope)
 
 /**
- * Центральный стейт-холдер сетки медиаконтента RedGifs.
+ * Центральный стейт-холдер сетки медиаконтента R.
  *
  * Управляет:
  * - Потоком пагинации [pager] на базе AndroidX Paging 3;
@@ -127,7 +126,6 @@ class LazyRow123Host(
     val savedRed: SavedRed,
     val downloadRed: DownloadRed,
     val search: R_SearchExplorer,
-    val searchNiches: R_SearchNiches,
     val isCollection: Boolean = false
 ) {
     companion object {
