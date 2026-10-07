@@ -7,6 +7,7 @@ import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.backup.XlrBackupType
+import com.client.xvideos.common.backup.XlrRestoreMode
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
@@ -41,7 +42,13 @@ interface BackupEngine {
 
     suspend fun inspect(uri: String, password: CharArray?): Result<List<XlrBackupItem>>
 
-    suspend fun restore(uri: String, paths: Set<String>, password: CharArray?): Result<XlrBackupReport>
+    /** Переносит папки [paths] из архива: заменяет ими текущие или добавляет к ним — по [mode]. */
+    suspend fun restore(
+        uri: String,
+        paths: Set<String>,
+        password: CharArray?,
+        mode: XlrRestoreMode,
+    ): Result<XlrBackupReport>
 
     /**
      * Перечитывает сохранённое в память и докачивает медиа восстановленных
@@ -81,8 +88,14 @@ class XlrBackupEngine @Inject constructor(
     override suspend fun inspect(uri: String, password: CharArray?): Result<List<XlrBackupItem>> =
         withContext(Dispatchers.IO) { XlrBackupManager.inspectBackup(context, Uri.parse(uri), password) }
 
-    override suspend fun restore(uri: String, paths: Set<String>, password: CharArray?): Result<XlrBackupReport> =
-        withContext(Dispatchers.IO) { XlrBackupManager.restoreBackup(context, Uri.parse(uri), paths, password) }
+    override suspend fun restore(
+        uri: String,
+        paths: Set<String>,
+        password: CharArray?,
+        mode: XlrRestoreMode,
+    ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
+        XlrBackupManager.restoreBackup(context, Uri.parse(uri), paths, password, mode)
+    }
 
     override suspend fun afterRestore(paths: Set<String>, log: (String) -> Unit) {
         // Восстановление меняет файлы мимо приложения, а хранилища сохранённого —

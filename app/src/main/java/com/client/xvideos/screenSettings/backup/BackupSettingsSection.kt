@@ -27,10 +27,10 @@ import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupType
+import com.client.xvideos.common.backup.XlrRestoreMode
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
-import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
@@ -39,6 +39,7 @@ import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.screenSettings.components.SettingsDivider2
+import com.client.xvideos.screenSettings.molecule.SettingsButtonRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -52,7 +53,8 @@ private val RESTORE_MIME_TYPES = arrayOf(
 /**
  * Страница бэкапа. Только рисует: состояние и операции держит [BackupController],
  * который живёт вне композиции — см. его описание. Здесь остаётся лишь то, что
- * принадлежит экрану: открытая вкладка и видимость диалога пароля.
+ * принадлежит экрану: открытая вкладка и видимость диалогов пароля и режима
+ * восстановления.
  *
  * @param controller держатель бэкапа; `null` — превью без DI.
  * @param onDataChanged файлы на диске изменились: пересчитать статистику.
@@ -69,6 +71,7 @@ internal fun BackupSettingsSection(
 
     var screen by rememberSaveable { mutableStateOf(BackupFlowScreen.CREATE) }
     var showCreatePasswordDialog by rememberSaveable { mutableStateOf(false) }
+    var showRestoreModeDialog by rememberSaveable { mutableStateOf(false) }
 
     val isWorking = backup.isWorking
     val isIdle = backup.isIdle
@@ -138,13 +141,31 @@ internal fun BackupSettingsSection(
     val onClearConsole = remember(backup) { { backup.clearConsole() } }
     val onDismissCreatePasswordDialog = remember { { showCreatePasswordDialog = false } }
     val onDismissRestorePasswordDialog = remember(backup) { { backup.dismissRestorePassword() } }
-    val onRestore = remember(backup) { { backup.restore() } }
+    // Вопрос о режиме задаётся, только когда восстановление может начаться:
+    // иначе пользователь выбирал бы режим ради сообщения «выберите папку».
+    val onAskRestoreMode = remember(backup) {
+        {
+            when {
+                !backup.isIdle -> Unit
+                backup.selectedRestorePaths.isEmpty() -> SnackBar.error(MSG_SELECT_AT_LEAST_ONE_FOLDER)
+                else -> showRestoreModeDialog = true
+            }
+        }
+    }
+    val onDismissRestoreModeDialog = remember { { showRestoreModeDialog = false } }
+    val onRestore = remember(backup) {
+        { mode: XlrRestoreMode ->
+            showRestoreModeDialog = false
+            backup.restore(mode)
+        }
+    }
 
     val backupHeaderValue = remember(screen) {
         if (screen == BackupFlowScreen.CREATE) {
             "Создание архива выбранных папок. DB, настройки и кеши не входят в ZIP."
         } else {
-            "Восстановление заменяет выбранные папки. Для R Download после restore автоматически проверяются .info."
+            "Восстановление заменяет выбранные папки или добавляет к ним содержимое архива — режим " +
+                "спрашивается перед запуском. Для R Download после restore автоматически проверяются .info."
         }
     }
     val backupSummaryText = remember(backupReport) { selectionSummaryText(backupReport) }
@@ -159,9 +180,6 @@ internal fun BackupSettingsSection(
     }
     val restoreSummaryText = remember(restoreReport) { selectionSummaryText(restoreReport) }
     val restoreValueText = busyText ?: restoreSummaryText
-    val restoreDialogBody = remember(restoreSummaryText) {
-        "Выбранные папки будут заменены данными из архива: $restoreSummaryText. DB, настройки и кеши не трогаются."
-    }
 
     val actionButtonColors = ButtonDefaults.buttonColors(
         containerColor = SettingsAccentColor,
@@ -293,14 +311,11 @@ internal fun BackupSettingsSection(
                         onToggle = onToggleRestorePath
                     )
                     SettingsDivider()
-                    SettingsButtonRowWithDialog(
+                    SettingsButtonRow(
                         icon = R.drawable.hard_drive_2_24,
                         text = "Восстановить выбранное",
                         value = if (isIdle) "Восстановить" else "Идет...",
-                        textDialogTitle = "Восстановить backup",
-                        textDialogBody = restoreDialogBody,
-                        textDialogButton = "Восстановить",
-                        onClick = onRestore
+                        onClick = onAskRestoreMode
                     )
                 }
             }
@@ -330,6 +345,14 @@ internal fun BackupSettingsSection(
             onConfirm = { password -> backup.decryptArchive(password) }
         )
     }
+
+    if (showRestoreModeDialog) {
+        BackupRestoreModeDialog(
+            summary = restoreSummaryText,
+            onDismiss = onDismissRestoreModeDialog,
+            onSelected = onRestore
+        )
+    }
 }
 
 /** Движок для превью: диска нет, папок нет. */
@@ -348,8 +371,12 @@ private object PreviewBackupEngine : BackupEngine {
     override suspend fun inspect(uri: String, password: CharArray?): Result<List<XlrBackupItem>> =
         Result.success(emptyList())
 
-    override suspend fun restore(uri: String, paths: Set<String>, password: CharArray?): Result<XlrBackupReport> =
-        Result.success(XlrBackupReport.EMPTY)
+    override suspend fun restore(
+        uri: String,
+        paths: Set<String>,
+        password: CharArray?,
+        mode: XlrRestoreMode,
+    ): Result<XlrBackupReport> = Result.success(XlrBackupReport.EMPTY)
 
     override suspend fun afterRestore(paths: Set<String>, log: (String) -> Unit) = Unit
 }

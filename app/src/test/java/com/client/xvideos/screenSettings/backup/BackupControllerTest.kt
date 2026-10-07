@@ -5,6 +5,7 @@ import com.client.xvideos.common.backup.XlrBackupItem
 import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.backup.XlrBackupType
+import com.client.xvideos.common.backup.XlrRestoreMode
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -41,6 +42,7 @@ class BackupControllerTest {
         val createdWith = mutableListOf<CharArray>()
         val inspectedWith = mutableListOf<String?>()
         val restoredWith = mutableListOf<String?>()
+        val restoredModes = mutableListOf<XlrRestoreMode>()
 
         override suspend fun currentItems(options: XlrBackupOptions): List<XlrBackupItem> = items
 
@@ -63,8 +65,14 @@ class BackupControllerTest {
             return Result.success(items)
         }
 
-        override suspend fun restore(uri: String, paths: Set<String>, password: CharArray?): Result<XlrBackupReport> {
+        override suspend fun restore(
+            uri: String,
+            paths: Set<String>,
+            password: CharArray?,
+            mode: XlrRestoreMode,
+        ): Result<XlrBackupReport> {
             restoredWith += password?.concatToString()
+            restoredModes += mode
             return if (password == null && archiveType == XlrBackupType.ENCRYPTED_XLR) {
                 Result.failure(IllegalStateException("Password required"))
             } else {
@@ -186,13 +194,34 @@ class BackupControllerTest {
         backup.decryptArchive("secret".toCharArray())
         advanceUntilIdle()
 
-        backup.restore()
+        backup.restore(XlrRestoreMode.REPLACE)
         advanceUntilIdle()
-        backup.restore()
+        backup.restore(XlrRestoreMode.REPLACE)
         advanceUntilIdle()
 
         assertEquals(listOf<String?>("secret", "secret"), engine.restoredWith)
         assertEquals(2, backup.restoreCount)
+    }
+
+    @Test
+    fun `выбранный режим восстановления доходит до движка и до консоли`() = runTest(dispatcher) {
+        val backup = controller()
+        advanceUntilIdle()
+        backup.openArchive("content://backup.xlr")
+        advanceUntilIdle()
+        backup.decryptArchive("secret".toCharArray())
+        advanceUntilIdle()
+
+        backup.restore(XlrRestoreMode.MERGE)
+        advanceUntilIdle()
+        backup.restore(XlrRestoreMode.REPLACE)
+        advanceUntilIdle()
+
+        assertEquals(listOf(XlrRestoreMode.MERGE, XlrRestoreMode.REPLACE), engine.restoredModes)
+        val started = backup.console.filter { it.startsWith("Восстановление backup") }
+        assertEquals(2, started.size)
+        assertTrue("в консоли не видно, что шло объединение: ${started[0]}", "объединение" in started[0])
+        assertTrue("в консоли не видно, что шла замена: ${started[1]}", "замена" in started[1])
     }
 
     @Test
@@ -205,7 +234,7 @@ class BackupControllerTest {
         advanceUntilIdle()
 
         backup.closeArchive()
-        backup.restore()
+        backup.restore(XlrRestoreMode.REPLACE)
         advanceUntilIdle()
 
         assertNull(backup.restoreUri)
@@ -259,12 +288,12 @@ class BackupControllerTest {
         backup.openArchive("content://backup.zip")
         advanceUntilIdle()
 
-        backup.restore()
+        backup.restore(XlrRestoreMode.REPLACE)
         advanceUntilIdle()
         assertFalse("архив уже распакован — страницу запирать незачем", backup.isWorking)
         assertTrue(backup.isRecovering)
 
-        backup.restore()
+        backup.restore(XlrRestoreMode.REPLACE)
         backup.setCreatePassword("secret".toCharArray())
         backup.createBackup("content://backup.xlr")
         advanceUntilIdle()

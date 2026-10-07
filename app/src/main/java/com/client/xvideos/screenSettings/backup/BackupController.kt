@@ -12,6 +12,7 @@ import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrInvalidPasswordException
+import com.client.xvideos.common.backup.XlrRestoreMode
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
@@ -58,7 +59,7 @@ class BackupController(
     /**
      * Идёт докачка медиа после восстановления. Страницу не запирает — докачка
      * долгая, — но новый бэкап и восстановление не начинаются: восстановление
-     * заменило бы папки под идущей докачкой, а бэкап прочитал бы их наполовину
+     * переложило бы папки под идущей докачкой, а бэкап прочитал бы их наполовину
      * записанными.
      */
     var isRecovering by mutableStateOf(false)
@@ -334,8 +335,13 @@ class BackupController(
 
     // --- Восстановление ---
 
-    /** Заменяет выбранные папки данными открытого архива и запускает докачку. */
-    fun restore() {
+    /**
+     * Переносит выбранные папки из открытого архива и запускает докачку.
+     *
+     * @param mode Заменить папки содержимым архива или добавить его к текущему.
+     * Значения по умолчанию нет намеренно: режим выбирает пользователь, а не код.
+     */
+    fun restore(mode: XlrRestoreMode) {
         val uri = restoreUri
         if (uri == null) {
             SnackBar.error("Сначала выберите архив")
@@ -352,8 +358,9 @@ class BackupController(
         scope.launch(mainDispatcher) {
             var restored = false
             try {
-                log("Восстановление backup: ${selectionSummaryText(XlrBackupManager.reportForSelection(restoreItems, paths))}")
-                engine.restore(uri, paths, restorePassword)
+                val selection = selectionSummaryText(XlrBackupManager.reportForSelection(restoreItems, paths))
+                log("Восстановление backup (${restoreModeTitle(mode)}): $selection")
+                engine.restore(uri, paths, restorePassword, mode)
                     .onSuccess { report ->
                         restored = true
                         loadBackupItems()

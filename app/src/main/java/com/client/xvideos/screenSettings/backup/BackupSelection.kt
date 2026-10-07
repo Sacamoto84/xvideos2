@@ -8,6 +8,7 @@ import androidx.compose.ui.state.ToggleableState
 
 import com.client.xvideos.common.backup.XlrBackupItem
 import com.client.xvideos.common.backup.XlrBackupReport
+import com.client.xvideos.common.backup.XlrRestoreMode
 import com.client.xvideos.common.util.formatBytes
 
 internal fun initialSectionSelection(items: List<XlrBackupItem>): Set<String> {
@@ -116,6 +117,12 @@ internal fun backupSectionToggleState(
 
 internal fun selectionSummaryText(report: XlrBackupReport): String {
     return "${report.files} файлов • ${formatBytes(report.bytes)}"
+}
+
+/** Режим восстановления словом для консоли: «замена» или «объединение». */
+internal fun restoreModeTitle(mode: XlrRestoreMode): String = when (mode) {
+    XlrRestoreMode.REPLACE -> "замена"
+    XlrRestoreMode.MERGE -> "объединение"
 }
 
 internal fun backupItemTitle(item: XlrBackupItem): String {
