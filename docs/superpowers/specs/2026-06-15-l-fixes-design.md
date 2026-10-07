@@ -3,7 +3,7 @@
 Date: 2026-06-15
 Module: `app/src/main/java/com/client/xvideos/l`
 
-Three independent, small fixes in the Luscious (L) section. Each has a confirmed
+Three independent, small fixes in the L section. Each has a confirmed
 root cause and a minimal fix. No shared state between them.
 
 ---

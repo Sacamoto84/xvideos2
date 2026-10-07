@@ -1,4 +1,4 @@
-# Как приложение разговаривает с API RedGifs
+# Как приложение разговаривает с API R
 
 Написано 06.08.2026, после того как текстовый поиск в разделе R перестал
 работать: адрес `/v2/search/gifs?query=…` начал отвечать 404. API меняется без
@@ -289,7 +289,7 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 Соответствие «константа — строка на проводе» прибито тестом
 `OrderWireValuesTest` в `:feature-r`.
 
-### «All time» — такой сортировки у RedGifs нет, сведена к `top`
+### «All time» — такой сортировки у R нет, сведена к `top`
 
 Был `Order.TOP_ALLTIME("alltime")` в меню ленты гифок. Значение проверено:
 `400 BadOrder`, в допустимый набор не входит и никогда не входило.
@@ -299,7 +299,7 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 которого `order=top7` зашит в путь. То есть «All time» показывал неделю —
 молча, и так было всегда.
 
-Настоящий «топ за всё время» у RedGifs называется `top`: `top7` — неделя,
+Настоящий «топ за всё время» у R называется `top`: `top7` — неделя,
 `top28` — месяц, `top` — без ограничения по времени. Поэтому `TOP_ALLTIME`
 удалён, в наборе ленты его место занял `Order.TOP`, а под него заведён
 `getTopAllTime` с `order=top`. Подпись в меню сменилась с «All time» на «Top» —
@@ -325,7 +325,7 @@ curl -s "https://api.redgifs.com/v2/gifs/search?query=zzzqqq&count=5&page=1&type
 ## Что известно про поломку
 
 `/v2/search/gifs?query=…&order=…&count=…&page=…` работал примерно до июля 2026.
-Потом стал возвращать 404 `HttpNotFoundException`: RedGifs перенёс поиск на
+Потом стал возвращать 404 `HttpNotFoundException`: R перенёс поиск на
 общий адрес лент `/v2/gifs/search`, а отдельную ветку убрал. **Имя параметра
 осталось прежним — `query`.**
 

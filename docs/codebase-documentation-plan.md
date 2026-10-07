@@ -74,7 +74,7 @@
    * База данных и общие утилиты: `database`, `model`, `utils` (`CollectionDB`, `FileDB`, `SafePath`).
 
 2. **Этап 2: Data & Domain слой фичей (`:feature-r`, `:feature-x`, `:feature-l`)**
-   * Сетевые API клиенты и парсеры (`RedApi`, Luscious GraphQL, HTML-парсеры).
+   * Сетевые API клиенты и парсеры (`RedApi`, L GraphQL, HTML-парсеры).
    * Репозитории и менеджеры данных (`BlockRed`, фильтры, кэши ниш/тегов).
    * Доменные сущности, мапперы и валидаторы.
 

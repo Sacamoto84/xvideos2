@@ -774,7 +774,7 @@ git commit -m "test(arch): сторож изменяемого глобальн�
    анонимных `object : Интерфейс {`. Уточнён до именованных `object`, прямых
    членов (глубина ровно 1) и без `by remember` — осталось 9 реальных точек.
    Все девять внесены в `ALLOWED` с причинами: поля `AppBuildInfo`, две
-   P2P-фабрики, `LSession.loginSkipped`, токен redgifs (`private set`), две
+   P2P-фабрики, `LSession.loginSkipped`, токен R (`private set`), две
    вкладки экранов R, выбранная страна X.
 2. **Дополнительно убран осиротевший импорт** `kotlinx.coroutines.Job` в `App.kt`
    и `remember` / `MutableStateFlow` в двух виджетах трафика — иначе detekt

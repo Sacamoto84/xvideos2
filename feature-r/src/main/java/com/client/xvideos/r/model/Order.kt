@@ -18,7 +18,7 @@ enum class Order(val value: String) {
     // принимает: /v2/gifs/search отвечает 400 BadOrder, профильный адрес молча
     // игнорирует и отдаёт выдачу в своём порядке. Ни в одном наборе сортировок
     // они не стояли — только подписи в SortByOrder. Проверено 06.08.2026,
-    // таблица в docs/redgifs-api.md.
+    // таблица в docs/r-api.md.
     /** Топ за последний месяц (28 дней). */
     TOP28("top28"),
 
@@ -43,7 +43,7 @@ enum class Order(val value: String) {
     // «Топ за всё время» — это [TOP]. Здесь стоял отдельный TOP_ALLTIME("alltime"),
     // но такого значения у R нет: /v2/gifs/search отвечает
     // 400 BadOrder и перечисляет набор — top, top7, top28, latest, score,
-    // trending. Проверено 06.08.2026, подробности в docs/redgifs-api.md.
+    // trending. Проверено 06.08.2026, подробности в docs/r-api.md.
     //
     // Ошибки пользователь не видел: ItemTopPagingSource уводил TOP_ALLTIME в
     // else и отдавал getTopThisWeek, где order=top7 зашит в путь. То есть
