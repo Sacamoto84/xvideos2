@@ -14,14 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.theme.collectionDeleteBody
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.CollectionCoverIcon
 
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogActions
@@ -108,13 +106,7 @@ fun R_CollectionDialogsHost(
         val onConfirm = remember(pending, actions.onConfirmDelete) {
             { actions.onConfirmDelete(pending) }
         }
-        val dialogBody = remember(pending) {
-            buildAnnotatedString {
-                append("Удалить «")
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending) }
-                append("» из коллекции")
-            }
-        }
+        val dialogBody = remember(pending) { collectionDeleteBody(pending) }
         LavenderDialog(
             title = "Удалить коллекцию?",
             onDismiss = actions.onDismissDelete,
