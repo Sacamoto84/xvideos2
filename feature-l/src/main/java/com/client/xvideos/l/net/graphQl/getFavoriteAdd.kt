@@ -18,7 +18,7 @@ private val FAVORITE_ADD_QUERY = """
 """.trimIndent()
 
 /**
- * Генерирует тело GraphQL POST-запроса для FavoriteAdd (добавление лайка на сервер Luscious).
+ * Генерирует тело GraphQL POST-запроса для FavoriteAdd (добавление лайка на сервер L).
  *
  * @param anchorId ID объекта (картинки, альбома и т.д.).
  * @param anchorType Тип объекта ("picture", "album"). По умолчанию "picture".

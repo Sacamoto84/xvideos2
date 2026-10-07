@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Тестирование вычисления пагинации и нормализации медиа-ссылок альбома Luscious.
+ * Тестирование вычисления пагинации и нормализации медиа-ссылок альбома L.
  */
 class AlbumPicsDetailsUtilsTest {
 

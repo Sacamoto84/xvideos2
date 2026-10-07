@@ -23,7 +23,7 @@ import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Менеджер пользовательских пресетов фильтрации каталога альбомов Luscious.
+ * Менеджер пользовательских пресетов фильтрации каталога альбомов L.
  *
  * Обеспечивает сохранение, удаление, реактивное наблюдение и персистентность
  * пресетов [SavedAlbumFilter] в [SharedPreferences] в формате JSON.

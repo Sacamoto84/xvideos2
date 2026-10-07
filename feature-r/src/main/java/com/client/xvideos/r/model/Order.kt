@@ -1,9 +1,9 @@
 package com.client.xvideos.r.model
 
 /**
- * Варианты сортировки контента в API RedGifs (для лент, поиска, профилей и ниш).
+ * Варианты сортировки контента в API R (для лент, поиска, профилей и ниш).
  *
- * @property value Строковое значение параметра `order`, принимаемое бэкендом RedGifs.
+ * @property value Строковое значение параметра `order`, принимаемое бэкендом R.
  */
 enum class Order(val value: String) {
     /** Трендовый контент. */
@@ -14,7 +14,7 @@ enum class Order(val value: String) {
     LATEST("latest"),
     /** Сначала старые. */
     OLDEST("oldest"),
-    // Были RECENT("recent") и BEST("best"). Ни один адрес RedGifs их не
+    // Были RECENT("recent") и BEST("best"). Ни один адрес R их не
     // принимает: /v2/gifs/search отвечает 400 BadOrder, профильный адрес молча
     // игнорирует и отдаёт выдачу в своём порядке. Ни в одном наборе сортировок
     // они не стояли — только подписи в SortByOrder. Проверено 06.08.2026,
@@ -41,7 +41,7 @@ enum class Order(val value: String) {
     TOP_MONTH("top28"),
 
     // «Топ за всё время» — это [TOP]. Здесь стоял отдельный TOP_ALLTIME("alltime"),
-    // но такого значения у RedGifs нет: /v2/gifs/search отвечает
+    // но такого значения у R нет: /v2/gifs/search отвечает
     // 400 BadOrder и перечисляет набор — top, top7, top28, latest, score,
     // trending. Проверено 06.08.2026, подробности в docs/redgifs-api.md.
     //
@@ -144,7 +144,7 @@ enum class Order(val value: String) {
 }
 
 /**
- * Тип медиаконтента для фильтрации запросов в RedGifs.
+ * Тип медиаконтента для фильтрации запросов в R.
  *
  * @property value Сетевой код типа медиаконтента.
  */

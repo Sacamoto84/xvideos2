@@ -55,7 +55,7 @@ data class LRepositoryProtectionUiState(
 }
 
 /**
- * Центральный сетевой репозиторий модуля Luscious.
+ * Центральный сетевой репозиторий модуля L.
  *
  * Отвечает за:
  * - управление сессией пользователя и авторизацией в [KtorRequestHandler];
@@ -83,7 +83,7 @@ open class Repository(
     private val retryBackoffMs: Long = RETRY_BACKOFF_MS,
 ) {
 
-    /** Точка входа для GraphQL API Luscious. */
+    /** Точка входа для GraphQL API L. */
     val apiUrl = LusciousEndpoints.API
 
     @Volatile
@@ -344,7 +344,7 @@ open class Repository(
     }
 
     /**
-     * Выполняет GraphQL-запрос [data] к серверу Luscious в соответствии с политикой кэширования [config].
+     * Выполняет GraphQL-запрос [data] к серверу L в соответствии с политикой кэширования [config].
      *
      * @param data Сериализованное тело GraphQL-запроса (JSON).
      * @param config Политика кэширования (напрямую в сеть, RAM или ROM кэш).

@@ -151,7 +151,7 @@ fun PicsDetails.lSavedFileName(): String? {
     return candidate.replace("..", "_")
 }
 
-/** Заголовки HTTP для запросов медиафайлов Luscious. */
+/** Заголовки HTTP для запросов медиафайлов L. */
 fun lMediaRequestHeaders(): Map<String, String> = L_MEDIA_REQUEST_HEADERS
 
 /** Заголовки загрузки для KDownloader. */

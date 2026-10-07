@@ -3,9 +3,9 @@ package com.client.xvideos.l.net.json
 import kotlinx.serialization.json.Json
 
 /**
- * Единый лояльный экземпляр Json для разбора сетевых ответов Luscious GraphQL и REST.
+ * Единый лояльный экземпляр Json для разбора сетевых ответов L GraphQL и REST.
  *
- * - ignoreUnknownKeys = true: GraphQL API и схема Luscious могут возвращать новые поля.
+ * - ignoreUnknownKeys = true: GraphQL API и схема L могут возвращать новые поля.
  * - coerceInputValues = true: если сервер присылает null в поле со значением по умолчанию,
  *   подставляется значение по умолчанию вместо сбоя десериализации.
  * - isLenient = true: устойчивость к нестандартному форматированию JSON.

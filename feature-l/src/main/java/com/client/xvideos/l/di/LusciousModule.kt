@@ -15,7 +15,7 @@ import javax.inject.Singleton
  * Hilt-модуль внедрения зависимостей для модуля `:feature-l`.
  *
  * Предоставляет синглтоны:
- * - [Repository]: репозиторий запросов к GraphQL API Luscious и кэширования.
+ * - [Repository]: репозиторий запросов к GraphQL API L и кэширования.
  * - [Luscious]: корневой фасад API раздела L.
  */
 @Module
@@ -34,7 +34,7 @@ object LusciousModule {
     }
 
     /**
-     * Предоставляет фасад доступа к API Luscious [Luscious].
+     * Предоставляет фасад доступа к API L [Luscious].
      */
     @Singleton
     @Provides

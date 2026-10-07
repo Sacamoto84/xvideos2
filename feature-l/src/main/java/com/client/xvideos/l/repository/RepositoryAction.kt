@@ -11,7 +11,7 @@ inline fun <reified T : RepositoryResult> Flow<RepositoryResult>.filterResult():
 }
 
 /**
- * Иерархия команд и действий для репозитория Luscious.
+ * Иерархия команд и действий для репозитория L.
  */
 sealed class RepositoryAction {
 
@@ -23,7 +23,7 @@ sealed class RepositoryAction {
     data class LoadAlbum(val id: Long) : RepositoryAction()
 
     /**
-     * Выполнить вход в аккаунт Luscious с сохраненными учетными данными.
+     * Выполнить вход в аккаунт L с сохраненными учетными данными.
      */
     data object Login : RepositoryAction()
 }

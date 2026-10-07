@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Этот класс держит только public API + Compose state и оркестрирует вызовы.
  *
  * @param scope Область корутин для выполнения дисковых и сетевых операций.
- * @param luscious Ссылка на сервис API Luscious.
+ * @param luscious Ссылка на сервис API L.
  */
 class SavedL_Collection(
     private val scope: CoroutineScope,

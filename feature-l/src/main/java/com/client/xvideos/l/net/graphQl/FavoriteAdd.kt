@@ -6,7 +6,7 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
- * Выполняет сетевой GraphQL-запрос FavoriteAdd для добавления лайка на сервер Luscious.
+ * Выполняет сетевой GraphQL-запрос FavoriteAdd для добавления лайка на сервер L.
  *
  * Мутация выполняется с [RepositoryUriConfig.DIRECT] в обход дискового/RAM кэша.
  *

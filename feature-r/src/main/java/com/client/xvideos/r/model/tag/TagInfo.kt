@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Модель описания тега из глобального каталога тегов RedGifs.
+ * Модель описания тега из глобального каталога тегов R.
  *
  * @property name Название тега.
  * @property count Количество материалов с этим тегом.

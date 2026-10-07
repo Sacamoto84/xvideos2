@@ -115,7 +115,7 @@ class App : Application(), SingletonImageLoader.Factory {
 
         val prefs = defaultSharedPreferences()
         // Контекст нужен, чтобы Settings открыл зашифрованное хранилище для
-        // учётных данных Luscious и перенёс туда старые открытые значения.
+        // учётных данных L и перенёс туда старые открытые значения.
         Settings.init(prefs, this)
         AppLockLifecycleObserver.install(this)
 

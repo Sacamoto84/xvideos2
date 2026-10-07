@@ -19,7 +19,7 @@ class AppFileDatabase @Inject constructor() {
     val lAlbumBundleCache = FileStringCacheTable(FolderTable("$root/l_album_bundle_cache"))
 
     /**
-     * Ответы лент RedGifs. Единственная таблица со сроком годности.
+     * Ответы лент R. Единственная таблица со сроком годности.
      *
      * Ключ здесь — полный URL вместе с номером страницы, то есть запись на
      * каждую страницу каждой ленты. Без срока эта папка не переставала расти, а

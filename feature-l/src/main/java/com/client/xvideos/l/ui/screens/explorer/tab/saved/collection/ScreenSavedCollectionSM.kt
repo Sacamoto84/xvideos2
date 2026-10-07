@@ -13,12 +13,12 @@ import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
 /**
- * [ScreenModel] для экрана списка сохраненных коллекций Luscious.
+ * [ScreenModel] для экрана списка сохраненных коллекций L.
  *
  * Управляет состоянием прокрутки сетки коллекций [gridState] и делегирует операции
  * переименования и удаления коллекций в [SavedL.collection].
  *
- * @property savedL Единый фасад локальных хранилищ Luscious.
+ * @property savedL Единый фасад локальных хранилищ L.
  */
 @Stable
 class ScreenSavedCollectionSM @Inject constructor(

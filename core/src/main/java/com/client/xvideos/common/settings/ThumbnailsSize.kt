@@ -5,7 +5,7 @@ package com.client.xvideos.common.settings
  * в списке выбора.
  *
  * Живёт рядом с настройками, а не в модели раздела: значение общее для
- * приложения, к разбору ответов Luscious отношения не имеет.
+ * приложения, к разбору ответов L отношения не имеет.
  */
 enum class ThumbnailsSize(
     val value: String,

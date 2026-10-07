@@ -73,13 +73,13 @@ data class AlbumListImplInfoAndListAndStatus(
 )
 
 /**
- * [ScreenModel] экрана списка альбомов Luscious с поддержкой фильтрации и пагинации.
+ * [ScreenModel] экрана списка альбомов L с поддержкой фильтрации и пагинации.
  *
  * Управляет постраничной загрузкой списка альбомов, агрегациями фильтров (жанры, теги, количество фото),
  * состоянием боковой шторки (drawer) фильтров и пейджером страниц.
  *
  * @property inFilter Начальный фильтр списка альбомов (или null для настроек по умолчанию).
- * @property luscious Экземпляр сетевого клиента Luscious.
+ * @property luscious Экземпляр сетевого клиента L.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Stable

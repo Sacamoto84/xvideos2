@@ -8,7 +8,7 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
- * [PagingSource] для ленты подписок RedGifs.
+ * [PagingSource] для ленты подписок R.
  *
  * Агрегирует новые работы от выбранных авторов через [SavedRed.subscriptions.refreshSubscription]
  * и сортирует их по убыванию даты создания.

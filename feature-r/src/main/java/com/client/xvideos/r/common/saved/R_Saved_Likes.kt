@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * Хранилище понравившихся роликов (лайков) RedGifs на базе [FileDB].
+ * Хранилище понравившихся роликов (лайков) R на базе [FileDB].
  *
  * Сохраняет JSON-файлы с метаданными [GifsInfo] в директорию `AppPath.r_likes` с расширением `.likes`.
  * Предоставляет реактивный Compose-список [list] для непосредственного отображения в UI.

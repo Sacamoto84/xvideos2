@@ -45,14 +45,14 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * [ScreenModel] экрана отдельного альбома Luscious.
+ * [ScreenModel] экрана отдельного альбома L.
  *
  * Управляет загрузкой страниц картинок альбома, добавлением/удалением в избранное на сервере,
  * локальным сохранением альбома и его картинок, системным шерингом и P2P-экспортом альбома.
  *
- * @property idAlbum Числовой идентификатор альбома Luscious.
- * @property luscious Ссылка на сервис сетевого API Luscious.
- * @property saved Локальные хранилища сохраненного контента Luscious.
+ * @property idAlbum Числовой идентификатор альбома L.
+ * @property luscious Ссылка на сервис сетевого API L.
+ * @property saved Локальные хранилища сохраненного контента L.
  * @property serverFavorites Репозиторий серверного избранного.
  * @property scope Долгоживущая корутинная область уровня приложения.
  * @property context Контекст приложения для системных интентов шаринга.
@@ -90,7 +90,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
     var showOnlyAnimated by mutableStateOf(false)
 
     /**
-     * Статус нахождения альбома в избранном на сервере Luscious.
+     * Статус нахождения альбома в избранном на сервере L.
      */
     var isServerFavorite by mutableStateOf<Boolean?>(null)
     /** Флаг выполнения запроса добавления/удаления избранного на сервере. */
@@ -106,7 +106,7 @@ class ScreenLAlbumSM @AssistedInject constructor(
     }
 
     /**
-     * Переключает состояние лайка/избранного альбома [album] на сервере Luscious.
+     * Переключает состояние лайка/избранного альбома [album] на сервере L.
      */
     fun toggleServerFavorite(album: AlbumDetails) {
         if (isServerFavoriteLoading) return

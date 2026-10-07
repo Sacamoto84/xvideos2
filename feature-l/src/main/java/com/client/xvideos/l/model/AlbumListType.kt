@@ -160,7 +160,7 @@ data class FacetCollectionInfo(
 }
 
 /**
- * Модель альбома в результатах поиска или ленте Luscious.
+ * Модель альбома в результатах поиска или ленте L.
  */
 @Serializable
 data class Album(

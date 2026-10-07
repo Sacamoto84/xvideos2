@@ -3,7 +3,7 @@ package com.client.xvideos.l.model.enum
 import kotlinx.serialization.Serializable
 
 /**
- * Тип альбома в фильтрах Luscious.
+ * Тип альбома в фильтрах L.
  *
  * @property value Строковое значение для GraphQL-запроса (`all`, `manga`, `pictures`).
  */

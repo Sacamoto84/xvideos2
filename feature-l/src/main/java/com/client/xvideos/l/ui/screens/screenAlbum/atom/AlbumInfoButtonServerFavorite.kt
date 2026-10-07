@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 
 /**
- * Кнопка «добавить/удалить альбом из избранного на сервере Luscious» в шапке ScreenLAlbum.
+ * Кнопка «добавить/удалить альбом из избранного на сервере L» в шапке ScreenLAlbum.
  */
 @Composable
 fun AlbumInfoButtonServerFavorite(

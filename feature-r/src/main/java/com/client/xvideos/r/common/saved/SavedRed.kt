@@ -9,7 +9,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Главный фасад сохраненного пользовательского контента в модуле RedGifs.
+ * Главный фасад сохраненного пользовательского контента в модуле R.
  *
  * Инкапсулирует доступ к локальным хранилищам:
  * - Лайков [likes] ([R_Saved_Likes]);
@@ -21,7 +21,7 @@ import javax.inject.Singleton
  *
  * Синглтон: инициализирует фоновую загрузку коллекций и проверку свежести кэша ниш при старте приложения.
  *
- * @property redApi Сетевой API RedGifs.
+ * @property redApi Сетевой API R.
  * @property scope Корутин-скоп уровня приложения.
  */
 @Singleton

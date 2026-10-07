@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 /**
- * Модель URL-адресов видеофайлов, превью и постеров для конкретного медиаобъекта RedGifs.
+ * Модель URL-адресов видеофайлов, превью и постеров для конкретного медиаобъекта R.
  *
  * Предоставляет ссылки на MP4 в различном качестве (SD, HD, Silent), а также изображения (thumbnail, poster).
  * Реализует [Serializable] вслед за [GifsInfo], в котором содержится.
@@ -133,10 +133,10 @@ fun URL1.sanitize(): URL1 {
 }
 
 //"urls": {
-//    "thumbnail": "https://media.redgifs.com/UnusualAttachedHorseshoecrab-mobile.jpg",
-//    "silent": "https://media.redgifs.com/UnusualAttachedHorseshoecrab-silent.mp4",
-//    "poster": "https://media.redgifs.com/UnusualAttachedHorseshoecrab-poster.jpg",
-//    "html": "https://www.redgifs.com/ifr/unusualattachedhorseshoecrab",
-//    "hd": "https://media.redgifs.com/UnusualAttachedHorseshoecrab.mp4",
-//    "sd": "https://media.redgifs.com/UnusualAttachedHorseshoecrab-mobile.mp4"
+//    "thumbnail": "https://media.R.com/UnusualAttachedHorseshoecrab-mobile.jpg",
+//    "silent": "https://media.R.com/UnusualAttachedHorseshoecrab-silent.mp4",
+//    "poster": "https://media.R.com/UnusualAttachedHorseshoecrab-poster.jpg",
+//    "html": "https://www.R.com/ifr/unusualattachedhorseshoecrab",
+//    "hd": "https://media.R.com/UnusualAttachedHorseshoecrab.mp4",
+//    "sd": "https://media.R.com/UnusualAttachedHorseshoecrab-mobile.mp4"
 //},

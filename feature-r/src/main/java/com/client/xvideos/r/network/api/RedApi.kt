@@ -43,7 +43,7 @@ private const val PATH_USER_SEARCH_TYPE_TAGS = "/v2/users/{username}/search?orde
 private const val PATH_USER_SEARCH_TYPE = "/v2/users/{username}/search?page={page}&count={count}&order={order}&type={type}"
 
 /**
- * Главный фасад API сервиса RedGifs.
+ * Главный фасад API сервиса R.
  *
  * Предоставляет методы для получения:
  * - Популярных и трендовых лент медиа (неделя, месяц, всё время, тренды, новые) с кэшированием в [mediaCache];
@@ -138,7 +138,7 @@ class RedApi @Inject constructor(
      * Получить топ GIF за всё время (`order=top`).
      *
      * `order=top` — именно он означает «без ограничения по времени»: рядом
-     * `top7` это неделя, `top28` месяц. Значения `alltime` у RedGifs нет,
+     * `top7` это неделя, `top28` месяц. Значения `alltime` у R нет,
      * `/v2/gifs/search` отвечает на него 400 BadOrder (проверено 06.08.2026,
      * docs/redgifs-api.md). До появления этого метода выбор «All time» в меню
      * уходил в `else` и молча отдавал неделю.

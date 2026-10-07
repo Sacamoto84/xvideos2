@@ -21,7 +21,7 @@ import okhttp3.ConnectionSpec
 import java.util.concurrent.TimeUnit
 
 /**
- * HTTP-клиент модуля RedGifs на базе Ktor и движка OkHttp.
+ * HTTP-клиент модуля R на базе Ktor и движка OkHttp.
  *
  * Инкапсулирует:
  * - Управление временным анонимным Bearer-токеном через [BearerAuth] (получение, кэширование, обновление при 401);

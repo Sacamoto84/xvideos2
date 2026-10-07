@@ -17,9 +17,9 @@ import dagger.multibindings.IntoMap
 import javax.inject.Inject
 
 /**
- * [ScreenModel] экрана серверных лайков картинок пользователя Luscious.
+ * [ScreenModel] экрана серверных лайков картинок пользователя L.
  *
- * Управляет постраничной подгрузкой лайкнутых картинок через GraphQL API Luscious,
+ * Управляет постраничной подгрузкой лайкнутых картинок через GraphQL API L,
  * обновлением состояния, удалением лайков и интеграцией с [LazyRowPictureDetailsHost].
  *
  * @param repository Репозиторий доступа к серверным подпискам и избранному.

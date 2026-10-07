@@ -17,7 +17,7 @@ import io.ktor.http.encodeURLParameter
 private val PLACEHOLDER = Regex("""\{(\w+)\}""")
 
 /**
- * Маршрут и параметры HTTP-запроса к API RedGifs.
+ * Маршрут и параметры HTTP-запроса к API R.
  *
  * Инкапсулирует HTTP-метод, шаблон пути с именованными плейсхолдерами вида `{param}`
  * и вариативный список аргументов подстановки.
@@ -111,7 +111,7 @@ class Route(val method: String, val path: String, vararg parameters: Pair<String
         }
 
     companion object {
-        /** Базовый хост API RedGifs. */
+        /** Базовый хост API R. */
         const val BASE = "https://api.redgifs.com"
 
         /** Создает GET-маршрут с параметрами подстановки. */

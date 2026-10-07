@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 /**
- * [ScreenModel] экрана управления черным списком заблокированных роликов RedGifs.
+ * [ScreenModel] экрана управления черным списком заблокированных роликов R.
  *
  * @param blockRed Синглтон управления блокировками.
  */

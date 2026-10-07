@@ -1,7 +1,7 @@
 package com.client.xvideos.l.net.graphQl
 
 /**
- * Фабрика формирования сырых GraphQL-запросов к API Luscious.
+ * Фабрика формирования сырых GraphQL-запросов к API L.
  */
 object GraphQlRequest {
 

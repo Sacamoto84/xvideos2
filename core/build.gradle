@@ -71,7 +71,7 @@ dependencies {
     api libs.androidx.hilt.navigation.compose
     api(libs.androidx.core.splashscreen)
     api libs.androidx.storage
-    // Только внутри :core — зашифрованные настройки (учётные данные Luscious).
+    // Только внутри :core — зашифрованные настройки (учётные данные L).
     implementation(libs.androidx.security.crypto)
     api(libs.androidx.paging.runtime)
     api(libs.androidx.paging.compose)

@@ -15,7 +15,7 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
- * Меню элемента в лайках на сервере Luscious.
+ * Меню элемента в лайках на сервере L.
  * Картинка уже лайкнута на сервере, поэтому доступно только удаление лайка ("Удалить лайк на сервере").
  * Опция "Лайк на сервере" отсутствует.
  */

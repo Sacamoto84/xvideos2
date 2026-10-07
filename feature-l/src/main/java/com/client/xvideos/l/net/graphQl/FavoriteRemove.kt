@@ -4,7 +4,7 @@ import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.RepositoryUriConfig
 
 /**
- * Исполнитель GraphQL-мутации FavoriteRemove для отзыва лайка или удаления из избранного на сервере Luscious.
+ * Исполнитель GraphQL-мутации FavoriteRemove для отзыва лайка или удаления из избранного на сервере L.
  *
  * @property repository Репозиторий сетевых запросов.
  */
@@ -12,7 +12,7 @@ class FavoriteRemove(
     val repository: Repository
 ) {
     /**
-     * Отправляет мутацию FavoriteRemove на сервер Luscious.
+     * Отправляет мутацию FavoriteRemove на сервер L.
      * Запрос выполняется напрямую (DIRECT), так как это изменяющая состояние мутация.
      *
      * @param anchorId Уникальный ID объекта (картинки, альбома).

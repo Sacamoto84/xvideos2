@@ -125,7 +125,7 @@ class LayerBoundariesTest {
                 "model" to "model",
                 "net" to "data",
                 // Не домен, хотя имя обещает обратное: `Repository` — это
-                // HTTP-клиент Luscious с RAM/ROM-кешем, авторизацией и
+                // HTTP-клиент L с RAM/ROM-кешем, авторизацией и
                 // антибот-кулдауном. Правил про альбомы в нём нет, только
                 // openURI/deleteCache/логин. Тот же слой, что и `net`.
                 "repository" to "data",

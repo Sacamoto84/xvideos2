@@ -52,7 +52,7 @@ private data class LRecoveryCandidate(
 )
 
 /**
- * Сканирует локальные директории лайков и коллекций Luscious и выполняет докачку
+ * Сканирует локальные директории лайков и коллекций L и выполняет докачку
  * отсутствующих или недокачанных файлов медиа и превью.
  *
  * @param onEvent Обратный вызов для логирования текстовых статусов восстановления в реальном времени.
@@ -157,7 +157,7 @@ private fun scanLIncompleteSavedMedia(): Pair<LDownloadRecoveryReport, List<LRec
 }
 
 /**
- * Находит все файлы `metadata.json` в корневых директориях лайков и коллекций Luscious.
+ * Находит все файлы `metadata.json` в корневых директориях лайков и коллекций L.
  */
 private fun lRecoveryMetadataFiles(): List<File> {
     val results = mutableListOf<File>()

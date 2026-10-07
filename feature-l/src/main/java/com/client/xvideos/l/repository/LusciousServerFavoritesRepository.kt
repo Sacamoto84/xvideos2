@@ -4,7 +4,7 @@ import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 
 /**
- * Контракт для работы с серверными подписками пользователя и лайками Luscious.
+ * Контракт для работы с серверными подписками пользователя и лайками L.
  */
 interface LusciousServerFavoritesRepository {
 
@@ -45,7 +45,7 @@ interface LusciousServerFavoritesRepository {
     suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>>
 
     /**
-     * Добавить лайк/избранное на сервер Luscious (мутация FavoriteAdd).
+     * Добавить лайк/избранное на сервер L (мутация FavoriteAdd).
      *
      * @param anchorId ID объекта (картинки, альбома).
      * @param anchorType Тип объекта ("picture", "album"). По умолчанию "picture".
@@ -58,25 +58,25 @@ interface LusciousServerFavoritesRepository {
     ): Result<Unit>
 
     /**
-     * Поставить лайк картинке на сервере Luscious.
+     * Поставить лайк картинке на сервере L.
      */
     suspend fun likePicture(pictureId: String): Result<Unit> =
         addFavorite(anchorId = pictureId, anchorType = "picture", favoriteType = "like")
 
     /**
-     * Добавить альбом в избранное/лайкнуть на сервере Luscious.
+     * Добавить альбом в избранное/лайкнуть на сервере L.
      */
     suspend fun likeAlbum(albumId: String): Result<Unit> =
         addFavorite(anchorId = albumId, anchorType = "album", favoriteType = "like")
 
     /**
-     * Попытаться разрешить ID картинки на сервере Luscious по ID альбома и URL/имени файла медиа.
+     * Попытаться разрешить ID картинки на сервере L по ID альбома и URL/имени файла медиа.
      * Используется для локально сохранённых лайков, у которых изначально не был сохранён ID.
      */
     suspend fun resolvePictureId(albumId: String, mediaUrlOrFileName: String): Result<String>
 
     /**
-     * Удалить лайк/избранное на сервере Luscious (мутация FavoriteRemove).
+     * Удалить лайк/избранное на сервере L (мутация FavoriteRemove).
      *
      * @param anchorId ID объекта (картинки, альбома).
      * @param anchorType Тип объекта ("picture", "album"). По умолчанию "picture".
@@ -89,13 +89,13 @@ interface LusciousServerFavoritesRepository {
     ): Result<Unit>
 
     /**
-     * Удалить лайк картинки на сервере Luscious.
+     * Удалить лайк картинки на сервере L.
      */
     suspend fun unlikePicture(pictureId: String): Result<Unit> =
         removeFavorite(anchorId = pictureId, anchorType = "picture", favoriteType = "like")
 
     /**
-     * Удалить альбом из избранного/убрать лайк на сервере Luscious.
+     * Удалить альбом из избранного/убрать лайк на сервере L.
      */
     suspend fun unlikeAlbum(albumId: String): Result<Unit> =
         removeFavorite(anchorId = albumId, anchorType = "album", favoriteType = "like")

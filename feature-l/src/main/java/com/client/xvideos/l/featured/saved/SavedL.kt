@@ -12,7 +12,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Единая точка доступа и фасад над локальными хранилищами модуля Luscious.
+ * Единая точка доступа и фасад над локальными хранилищами модуля L.
  *
  * Объединяет менеджеры:
  * - [collection] — пользовательские коллекции изображений и видео;
@@ -30,13 +30,13 @@ class SavedL @Inject constructor(
     luscious: Luscious
 ) {
 
-    /** Менеджер сохраненных пользовательских коллекций Luscious. */
+    /** Менеджер сохраненных пользовательских коллекций L. */
     val collection = SavedL_Collection(scope, luscious)
 
     /** Менеджер сохраненных альбомов в формате FileDB. */
     val albums = SavedL_Albums(db, scope)
 
-    /** Менеджер сохраненных лайков медиа Luscious. */
+    /** Менеджер сохраненных лайков медиа L. */
     val likes = SavedL_Likes(luscious, scope)
 
     /**

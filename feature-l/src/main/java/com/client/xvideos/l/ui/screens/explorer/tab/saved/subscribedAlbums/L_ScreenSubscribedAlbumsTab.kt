@@ -49,7 +49,7 @@ import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
- * Экран подписанных альбомов пользователя с сервера Luscious.
+ * Экран подписанных альбомов пользователя с сервера L.
  * Расположен в графе Savable (L_SavedTab).
  * Автоматически использует user_id текущей авторизованной сессии.
  */

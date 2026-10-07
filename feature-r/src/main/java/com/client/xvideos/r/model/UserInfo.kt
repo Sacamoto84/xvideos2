@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Модель профиля автора/создателя контента в RedGifs.
+ * Модель профиля автора/создателя контента в R.
  *
  * Содержит счетчики подписчиков, опубликованных постов, суммарных просмотров,
  * ссылки на аватар и сторонние социальные сети.
@@ -19,10 +19,10 @@ import kotlinx.serialization.Serializable
  *   "following": 0,
  *   "gifs": 2324,
  *   "name": "relative_rub",
- *   "profileImageUrl": "https://userpic.redgifs.com/.../avatar.png",
+ *   "profileImageUrl": "https://userpic.R.com/.../avatar.png",
  *   "profileUrl": "https://onlyfans.com/...",
  *   "publishedGifs": 2176,
- *   "url": "https://www.redgifs.com/users/relative_rub",
+ *   "url": "https://www.R.com/users/relative_rub",
  *   "username": "relative_rub",
  *   "verified": true,
  *   "views": 32986108
@@ -37,7 +37,7 @@ import kotlinx.serialization.Serializable
  * @property profileImageUrl URL аватара профиля.
  * @property profileUrl Внешняя ссылка на личный сайт/OnlyFans/linktree автора.
  * @property publishedGifs Количество публично опубликованных гифок.
- * @property url Прямая ссылка на страницу автора на redgifs.com.
+ * @property url Прямая ссылка на страницу автора на R.com.
  * @property username Уникальный никнейм автора в нижнем регистре.
  * @property verified Флаг подтвержденного (верифицированного) аккаунта.
  * @property views Общее число просмотров всех гифок автора.
@@ -50,10 +50,10 @@ data class UserInfo(
     @SerialName("followers")       val followers: Long = 0,               // * Количество подписчиков пользователя.                      > 68214
     @SerialName("gifs")            val gifs: Long = 0,                    // * Общее количество опубликованных пользователем GIF-файлов. > 439
     @SerialName("name")            val name: String = "",                 // * Имя пользователя. Большие буквы> "lilijunex"
-    @SerialName("profileImageUrl") val profileImageUrl: String? = null,   // * URL-адрес изображения профиля пользователя. > "https://userpic.redgifs.com/4/8c/48cc3668e114f878aafcc6dfd0a3d4f2.png"
-    @SerialName("profileUrl")      val profileUrl: String = "",           // * URL-адрес профиля пользователя. Это URL, который отображается в профиле, установленном пользователем. Это НЕ URL пользователя на "redgifs.com" >"https://beacons.ai/lilijunex"
+    @SerialName("profileImageUrl") val profileImageUrl: String? = null,   // * URL-адрес изображения профиля пользователя. > "https://userpic.R.com/4/8c/48cc3668e114f878aafcc6dfd0a3d4f2.png"
+    @SerialName("profileUrl")      val profileUrl: String = "",           // * URL-адрес профиля пользователя. Это URL, который отображается в профиле, установленном пользователем. Это НЕ URL пользователя на "R.com" >"https://beacons.ai/lilijunex"
     @SerialName("publishedGifs")   val publishedGifs: Long = 0,             // * Количество опубликованных публичных GIF-файлов.       > 421 (Отображается в профиле)
-    @SerialName("url")             val url: String = "",                              // * URL-адрес пользователя на сайте ``redgifs.com``. > "https://www.redgifs.com/users/lilijunex"
+    @SerialName("url")             val url: String = "",                              // * URL-адрес пользователя на сайте ``R.com``. > "https://www.R.com/users/lilijunex"
     @SerialName("username")        val username: String = "",                    // * Имя пользователя. маленькие буквы>"lilijunex"
     @SerialName("verified")        val verified: Boolean = false,                // *
     @SerialName("views")           val views: Long  = 0L,                           // * Общее количество просмотров всех опубликованных пользователем GIF. > 123194825

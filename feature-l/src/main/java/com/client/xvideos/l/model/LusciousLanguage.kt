@@ -3,7 +3,7 @@ package com.client.xvideos.l.model
 import kotlinx.serialization.Serializable
 
 /**
- * Идентификаторы языков для фильтрации альбомов на Luscious.
+ * Идентификаторы языков для фильтрации альбомов на L.
  *
  * @property id Числовой идентификатор языка в GraphQL API (`language_ids`).
  * @property title Отображаемое название языка.

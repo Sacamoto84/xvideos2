@@ -28,7 +28,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Отчет о сканировании и восстановлении поврежденных / неполных загрузок RedGifs.
+ * Отчет о сканировании и восстановлении поврежденных / неполных загрузок R.
  *
  * @property totalInfoFiles Всего найдено `.info` файлов на диске.
  * @property incompleteItems Количество элементов с отсутствующим видео или превью.
@@ -70,7 +70,7 @@ private data class RedDownloadRecoveryCandidate(
 )
 
 /**
- * Фасад управления скачанным контентом RedGifs.
+ * Фасад управления скачанным контентом R.
  *
  * Предоставляет:
  * - Реактивный список всех загруженных элементов [downloadList] (построенный по метаданным `.info`);
@@ -351,7 +351,7 @@ class DownloadRed @Inject constructor(
     }
 
     /**
-     * Удаляет все скачанные файлы RedGifs и очищает каталог загрузок.
+     * Удаляет все скачанные файлы R и очищает каталог загрузок.
      */
     fun deleteAll(onComplete: () -> Unit = {}) {
         downloader.kDownloader.cancelAll()

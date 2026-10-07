@@ -14,7 +14,7 @@ import androidx.compose.runtime.Stable
 import timber.log.Timber
 
 /**
- * Менеджер сохраненных альбомов Luscious в локальной файловой базе данных [FileDB].
+ * Менеджер сохраненных альбомов L в локальной файловой базе данных [FileDB].
  *
  * Предоставляет реактивный список [list], методы добавления, удаления и проверки наличия альбома.
  *
@@ -24,7 +24,7 @@ import timber.log.Timber
 @Stable
 class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
 
-    /** Хранилище [FileDB] для альбомов Luscious по пути `AppPath.l_albums`. */
+    /** Хранилище [FileDB] для альбомов L по пути `AppPath.l_albums`. */
     val albumDb = FileDB(AppPath.l_albums, "album", AlbumDetails.serializer())
     /** Реактивный список сохраненных альбомов. */
     val list = albumDb.list

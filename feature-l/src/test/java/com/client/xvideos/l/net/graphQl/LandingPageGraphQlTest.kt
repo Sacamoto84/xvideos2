@@ -10,7 +10,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Тестирование безопасной сериализации GraphQL-запросов лендингов Luscious.
+ * Тестирование безопасной сериализации GraphQL-запросов лендингов L.
  */
 class LandingPageGraphQlTest {
 

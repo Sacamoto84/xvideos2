@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * Хранилище избранных создателей контента (авторов) RedGifs на базе [FileDB].
+ * Хранилище избранных создателей контента (авторов) R на базе [FileDB].
  *
  * Файлы метаданных [UserInfo] сохраняются в `AppPath.r_creators` с расширением `.creator`.
  *

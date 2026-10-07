@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Обертка ответа API RedGifs на запрос информации об одной нише (`/v2/niches/{niche}`).
+ * Обертка ответа API R на запрос информации об одной нише (`/v2/niches/{niche}`).
  *
  * @property niche Детальная информация о нише [NichesInfo].
  */
@@ -24,21 +24,21 @@ data class NicheResponse(
 }
 
 /**
- * Модель категории/тематического раздела (ниши) в сервисе RedGifs.
+ * Модель категории/тематического раздела (ниши) в сервисе R.
  *
  * Содержит счетчики гифок и подписчиков, обложку, аватарку (thumbnail) и правила модерации раздела.
  *
  * Пример JSON из API:
  * ```json
  * {
- *   "cover": "https://userpic.redgifs.com/niches/covers/big-areolas.jpg",
+ *   "cover": "https://userpic.R.com/niches/covers/big-areolas.jpg",
  *   "description": "NSFW GIFs and images featuring women with large areolas.",
  *   "gifs": 29209,
  *   "id": "big-areolas",
  *   "name": "Big Areolas",
  *   "owner": "phpunit",
  *   "subscribers": 77917,
- *   "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/big-areolas.jpg",
+ *   "thumbnail": "https://userpic.R.com/niches/thumbnails/big-areolas.jpg",
  *   "rules": "1. Big Areolas 2. Porn featuring females with large areolas..."
  * }
  * ```

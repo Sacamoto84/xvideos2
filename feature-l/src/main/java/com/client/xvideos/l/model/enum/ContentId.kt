@@ -3,7 +3,7 @@ package com.client.xvideos.l.model.enum
 import kotlinx.serialization.Serializable
 
 /**
- * Идентификатор категории контента в фильтрах Luscious:
+ * Идентификатор категории контента в фильтрах L:
  *
  * - 0: All (все)
  * - 2: Hentai (хентай / аниме)

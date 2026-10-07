@@ -35,7 +35,7 @@ data class LSavedLikePreview(
 }
 
 /**
- * Полный набор сериализуемых метаданных сохраненного элемента Luscious (`metadata.json`).
+ * Полный набор сериализуемых метаданных сохраненного элемента L (`metadata.json`).
  *
  * Используется одинаково как для сохранения в «Лайки», так и для пользовательских «Коллекций».
  *
@@ -50,13 +50,13 @@ data class LSavedLikePreview(
  * @property sourcePreviewUrl Исходный сетевой адрес превью по умолчанию.
  * @property sourceOriginalUrl Исходный URL оригинального медиа высокого разрешения.
  * @property sourceVideoUrl Исходный URL видеофайла (если элемент анимированный).
- * @property albumId Идентификатор родительского альбома Luscious.
+ * @property albumId Идентификатор родительского альбома L.
  * @property albumTitle Название родительского альбома.
  * @property albumDescription Описание родительского альбома.
  * @property albumUrl Полный URL страницы альбома на сайте.
  * @property albumDownloadUrl Полный URL для скачивания архива альбома на сайте.
  * @property albumDetails Детальные метаданные родительского альбома [AlbumDetails].
- * @property pictureId Идентификатор картинки в системе Luscious.
+ * @property pictureId Идентификатор картинки в системе L.
  * @property pictureUrl URL страницы картинки.
  * @property picture Исходный объект [PicsDetails] с метаданными изображения.
  */

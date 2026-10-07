@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Детальная карточка изображения (или анимированного видео) в альбоме Luscious.
+ * Детальная карточка изображения (или анимированного видео) в альбоме L.
  *
  * @Immutable — обещание Compose, что объект после создания не меняется.
  *

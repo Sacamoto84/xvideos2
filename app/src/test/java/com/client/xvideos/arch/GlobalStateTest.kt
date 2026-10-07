@@ -131,7 +131,7 @@ class GlobalStateTest {
             "common/applock/AppLockSession.kt::lastBackgroundElapsedMs",
             // Сессионный признак разблокировки приложения (биометрия/пин-код).
             "common/applock/AppLockSession.kt::unlocked",
-            // Временный cache для шаринга Luscious (в cacheDir, вне бэкапа).
+            // Временный cache для шаринга L (в cacheDir, вне бэкапа).
             "common/AppPath.kt::l_cacheDownload",
             // Входящие файлы P2P Nearby (в cacheDir, вне бэкапа).
             "common/AppPath.kt::p2p_nearbyCache",
@@ -152,7 +152,7 @@ class GlobalStateTest {
             "common/settings/SecureCredentialStore.kt::lastFailureLooksLikeBrokenKeyset",
             // Экземпляр SharedPreferences для настроек приложения.
             "common/settings/Settings.kt::pref",
-            // Зашифрованное хранилище учетных данных Luscious.
+            // Зашифрованное хранилище учетных данных L.
             "common/settings/Settings.kt::securePref",
             // Процессный дисковый кеш видео предзагрузки ExoPlayer.
             "common/videoplayer/feed/FeedVideoCache.kt::instance",

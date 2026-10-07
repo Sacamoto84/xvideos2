@@ -12,7 +12,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Стейт-холдер поиска в каталоге ниш RedGifs.
+ * Стейт-холдер поиска в каталоге ниш R.
  *
  * Объединяет подсказки из двух источников:
  * 1. Сетевой API поиска ниш [RedApi.searchNichesShort];
@@ -20,7 +20,7 @@ import javax.inject.Singleton
  *
  * @param dao Хранилище истории поиска ниш.
  * @param savedRed Фасад локальных данных для доступа к кэшу ниш.
- * @param redApi Сетевой клиент RedGifs.
+ * @param redApi Сетевой клиент R.
  * @param scope Скоп уровня приложения.
  */
 @Singleton

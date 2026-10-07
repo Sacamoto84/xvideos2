@@ -26,7 +26,7 @@ import java.io.File
  * (`LMediaPersist`, `LCollectionFs`); этот класс держит публичный API и
  * Compose-state ([listUrl], [percentDownload]).
  *
- * @param luscious Ссылка на сервис API Luscious.
+ * @param luscious Ссылка на сервис API L.
  * @param scope Область корутин для выполнения фоновых дисковых операций.
  */
 @Stable

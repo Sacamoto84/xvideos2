@@ -31,9 +31,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Реализация репозитория серверных подписок и лайков Luscious.
+ * Реализация репозитория серверных подписок и лайков L.
  *
- * Осуществляет взаимодействие с GraphQL API Luscious для синхронизации
+ * Осуществляет взаимодействие с GraphQL API L для синхронизации
  * избранных альбомов и лайкнутых картинок пользователя, а также выполнения мутаций
  * добавления и удаления из избранного.
  *
@@ -396,7 +396,7 @@ internal fun extractSlugCandidate(input: String): String {
 @InstallIn(SingletonComponent::class)
 abstract class LusciousServerFavoritesModule {
 
-    /** Привязывает реализацию репозитория серверных подписок и лайков Luscious. */
+    /** Привязывает реализацию репозитория серверных подписок и лайков L. */
     @Binds
     @Singleton
     abstract fun bindLusciousServerFavoritesRepository(

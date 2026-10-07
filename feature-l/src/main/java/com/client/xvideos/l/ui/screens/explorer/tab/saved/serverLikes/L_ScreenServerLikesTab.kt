@@ -39,7 +39,7 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.molecule.S
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
- * Экран лайкнутых картинок пользователя с сервера Luscious.
+ * Экран лайкнутых картинок пользователя с сервера L.
  * Расположен в графе Savable (L_SavedTab).
  */
 object L_ScreenServerLikesTab : Screen {

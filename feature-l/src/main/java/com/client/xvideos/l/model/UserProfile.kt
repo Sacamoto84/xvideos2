@@ -3,7 +3,7 @@ package com.client.xvideos.l.model
 import kotlinx.serialization.Serializable
 
 /**
- * Модель учетных данных пользователя сервиса Luscious.
+ * Модель учетных данных пользователя сервиса L.
  *
  * Хранит связку логина (email) и пароля для прохождения аутентификации
  * и получения сессионных cookie/токенов в [com.client.xvideos.l.LSession].

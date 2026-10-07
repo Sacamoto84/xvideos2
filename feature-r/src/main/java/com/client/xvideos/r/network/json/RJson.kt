@@ -3,9 +3,9 @@ package com.client.xvideos.r.network.json
 import kotlinx.serialization.json.Json
 
 /**
- * Единый лояльный экземпляр Json для разбора сетевых ответов RedGifs.
+ * Единый лояльный экземпляр Json для разбора сетевых ответов R.
  *
- * - ignoreUnknownKeys = true: RedGifs API периодически расширяет ответы новыми полями.
+ * - ignoreUnknownKeys = true: R API периодически расширяет ответы новыми полями.
  * - coerceInputValues = true: если сервер присылает null в поле со значением по умолчанию,
  *   подставляется значение по умолчанию вместо падения с ошибкой сериализации.
  * - isLenient = true: устойчивость к нестандартному форматированию JSON.

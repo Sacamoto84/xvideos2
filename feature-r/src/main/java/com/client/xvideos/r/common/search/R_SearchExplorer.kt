@@ -13,7 +13,7 @@ import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
- * Стейт-холдер поиска в разделе Explorer RedGifs.
+ * Стейт-холдер поиска в разделе Explorer R.
  *
  * Управляет вводом поискового запроса, дебаунсом [SUGGESTIONS_DEBOUNCE_MS],
  * отменой устаревших запросов через `mapLatest` и получением тегов-подсказок из [RedApi.getTagSuggestions].
@@ -45,7 +45,7 @@ class R_SearchExplorer @Inject constructor(
     }
 
     /**
-     * Запрашивает подсказки тегов у сервера RedGifs для автодополнения строки поиска.
+     * Запрашивает подсказки тегов у сервера R для автодополнения строки поиска.
      */
     private suspend fun suggestionsFor(text: String): List<SuggestionItem> {
         return try {

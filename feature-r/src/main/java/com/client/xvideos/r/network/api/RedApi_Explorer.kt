@@ -4,11 +4,11 @@ import com.client.xvideos.r.model.NichesResponse
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
-/** Шаблон пути для постраничной выгрузки ниш RedGifs с предпросмотрами. */
+/** Шаблон пути для постраничной выгрузки ниш R с предпросмотрами. */
 private const val PATH_EXPLORER_NICHES = "/v2/niches?order=subscribers&previews=yes&sort=desc&page={page}&count={count}"
 
 /**
- * Подраздел API RedGifs для работы со списком ниш (раздел Explorer).
+ * Подраздел API R для работы со списком ниш (раздел Explorer).
  *
  * @property api HTTP-клиент модуля.
  */
@@ -19,11 +19,11 @@ class RedApi_Explorer(val api: ApiClient) {
      *
      * URL запроса:
      * ```
-     * https://api.redgifs.com/v2/niches?order=subscribers&previews=yes&sort=desc&page=1&count=100
+     * https://api.R.com/v2/niches?order=subscribers&previews=yes&sort=desc&page=1&count=100
      * ```
      *
      * Порядок сортировки зашит на уровне запроса (`order=subscribers`, `sort=desc`):
-     * сервер RedGifs не поддерживает сортировку по имени на бэкенде,
+     * сервер R не поддерживает сортировку по имени на бэкенде,
      * поэтому клиентская сортировка выполняется поверх всего загруженного кэша ниш.
      *
      * @param count Размер страницы (ограничивается диапазоном 1..100).

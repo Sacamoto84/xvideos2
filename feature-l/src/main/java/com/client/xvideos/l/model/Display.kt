@@ -38,7 +38,7 @@ const val byDate = "By Date"
 const val byTopRated = "By Top Rated"
 const val byFirstLetter = "First Letter"
 
-/** Полный список доступных вариантов сортировки и фильтрации отображения альбомов Luscious. */
+/** Полный список доступных вариантов сортировки и фильтрации отображения альбомов L. */
 val albumFilterDisplay = listOf(
 
     //-- By Top Rated

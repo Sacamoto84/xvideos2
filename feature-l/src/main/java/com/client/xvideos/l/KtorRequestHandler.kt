@@ -37,7 +37,7 @@ import kotlinx.serialization.json.contentOrNull
 import timber.log.Timber
 
 /**
- * Низкоуровневый HTTP-клиент на Ktor/OkHttp для взаимодействия с Luscious.
+ * Низкоуровневый HTTP-клиент на Ktor/OkHttp для взаимодействия с L.
  *
  * Обеспечивает:
  * - Безопасный DNS-over-HTTPS резолвинг через [AppDns].
@@ -214,7 +214,7 @@ class KtorRequestHandler(
     }
 
     /**
-     * Выполняет вход на сайт Luscious, отправляя учетные данные на endpoint логина.
+     * Выполняет вход на сайт L, отправляя учетные данные на endpoint логина.
      *
      * @return успех либо отказ с причиной для пользователя в `message`:
      * сеть, проверка Cloudflare, [LServerErrorException], неверные логин или пароль.

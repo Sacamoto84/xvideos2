@@ -17,7 +17,7 @@ private const val SEARCH_GIFS_PATH = "/v2/gifs/search?query={search_text}&order=
 private const val SEARCH_GIFS_VERIFIED_PATH = "/v2/gifs/search?query={search_text}&order={order}&count={count}&page={page}&type={type}&verified=yes"
 
 /**
- * Подраздел API RedGifs для поиска авторов и медиаконтента.
+ * Подраздел API R для поиска авторов и медиаконтента.
  *
  * @property api HTTP-клиент модуля.
  */
@@ -45,7 +45,7 @@ class RedApi_Search(val api: ApiClient) {
      * Эндпоинт: `/v2/gifs/search?query=...`
      * Поддерживает сортировку (top, trending, latest), пагинацию и фильтр по верифицированным создателям.
      *
-     * Внимание: параметр поиска на стороне RedGifs называется именно `query`. Если передать неверное имя параметра,
+     * Внимание: параметр поиска на стороне R называется именно `query`. Если передать неверное имя параметра,
      * сервер вернет HTTP 200, но отдаст общую дефолтную ленту без фильтрации.
      *
      * @param searchText Поисковая фраза.

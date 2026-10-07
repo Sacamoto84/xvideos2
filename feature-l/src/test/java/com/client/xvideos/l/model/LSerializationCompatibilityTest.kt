@@ -20,7 +20,7 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
 /**
- * Тесты сериализации моделей Luscious (:feature-l):
+ * Тесты сериализации моделей L (:feature-l):
  * 1. Разбор через kotlinx.serialization с лояльным парсером LJson (сетевой вход).
  * 2. Полная обратная совместимость с дисковыми кэшами (LAlbumBundleCache, LMediaPersist).
  * 3. Совместимость с Java Serializable (Voyager Navigation saved state).

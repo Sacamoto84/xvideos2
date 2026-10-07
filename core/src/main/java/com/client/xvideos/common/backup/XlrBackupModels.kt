@@ -109,8 +109,8 @@ enum class XlrRestoreMode {
 /**
  * Настройки экспорта бэкапа для различных разделов приложения.
  *
- * @property lMode Режим экспорта для раздела L (Luscious).
- * @property rMode Режим экспорта для раздела R (RedGifs).
+ * @property lMode Режим экспорта для раздела L.
+ * @property rMode Режим экспорта для раздела R.
  */
 @Immutable
 data class XlrBackupOptions(

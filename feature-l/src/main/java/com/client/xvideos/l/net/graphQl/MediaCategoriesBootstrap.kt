@@ -15,12 +15,12 @@ private const val mediaCategoriesBootstrap =
     """{"operationName":"MediaCategoriesBootstrap","query":"\n    query MediaCategoriesBootstrap {\n  media_categories {\n    genres {\n      id\n      title\n      slug\n      description\n      uploading_rules\n      poster_url\n      acts_as_warning\n      acts_as_default\n      represents_uncategorized\n      url\n      parent {\n        id\n      }\n      only_allows_model\n      only_content {\n        id\n        title\n        url\n      }\n    }\n    filter_settings {\n      user_id\n      has_custom_filters\n      uses_default_warnings\n      audience_ids\n      genres_blocked_ids\n      genres_subscribed_ids\n      preferred_language_ids\n      default_dashboard_content_id\n    }\n    languages {\n      id\n      title\n      url\n    }\n    content_types {\n      id\n      title\n      url\n    }\n    audiences {\n      id\n      title\n      description\n      poster_url\n      url\n    }\n  }\n}\n    ","variables":{}}"""
 
 /**
- * Глобальный реактивный поток справочника категорий, жанров, аудиторий и языков Luscious.
+ * Глобальный реактивный поток справочника категорий, жанров, аудиторий и языков L.
  */
 val mediaCategoriesFlow = MutableStateFlow<MediaCategories?>(null)
 
 /**
- * Загружает и обновляет справочник медиа-категорий Luscious через запрос `MediaCategoriesBootstrap`.
+ * Загружает и обновляет справочник медиа-категорий L через запрос `MediaCategoriesBootstrap`.
  *
  * @param repository Репозиторий сетевых запросов.
  * @param forceRefresh Если `true`, игнорирует ROM-кэш и запрашивает свежие данные по сети.
@@ -93,7 +93,7 @@ data class MediaCategories(
 // ссылается AlbumListFilter, то есть слой ниже сети.
 
 /**
- * Настройки фильтрации пользователя из профиля Luscious.
+ * Настройки фильтрации пользователя из профиля L.
  */
 @Serializable
 data class FilterSettings(

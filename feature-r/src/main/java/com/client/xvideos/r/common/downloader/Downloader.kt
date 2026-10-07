@@ -23,7 +23,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Описание элемента готового загруженного кэша RedGifs.
+ * Описание элемента готового загруженного кэша R.
  *
  * @property name Имя автора (соответствует имени подпапки).
  * @property id Уникальный идентификатор ролика (соответствует имени файла).
@@ -33,7 +33,7 @@ import javax.inject.Singleton
 data class ItemsRedDownload(
     val name: String = "",     //Название креатора соответствует папке
     val id: String,            //Имя файла уникально
-    val url: String = "",      //Создается на этапе закачки, и после успешной закачки не используется url mp4  //https://media.redgifs.com/VictoriousGlamorousStud.m4s
+    val url: String = "",      //Создается на этапе закачки, и после успешной закачки не используется url mp4  //https://media.R.com/VictoriousGlamorousStud.m4s
 )
 
 /**
@@ -65,7 +65,7 @@ data class RedDownloadEnqueueReport(
 }
 
 /**
- * Низкоуровневый сервис скачивания медиафайлов RedGifs на базе [KDownloader].
+ * Низкоуровневый сервис скачивания медиафайлов R на базе [KDownloader].
  *
  * Сохраняет видео (`.mp4`), превью (`.jpg`) и метаданные (`.info`) в каталог `AppPath.r_cache_download/<userName>/`.
  *

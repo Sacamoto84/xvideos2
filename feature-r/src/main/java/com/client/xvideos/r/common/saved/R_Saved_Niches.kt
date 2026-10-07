@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * Хранилище избранных ниш пользователя в RedGifs на базе [FileDB].
+ * Хранилище избранных ниш пользователя в R на базе [FileDB].
  *
  * Файлы метаданных [NichesInfo] сохраняются в `AppPath.r_niches` с расширением `.niches`.
  *

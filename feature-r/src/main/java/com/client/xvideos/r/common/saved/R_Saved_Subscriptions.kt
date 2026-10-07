@@ -33,7 +33,7 @@ import timber.log.Timber
 data class SelectedCreator(val name: String, val select: Boolean, val urlProfile : String?)
 
 /**
- * Менеджер подписок на авторов RedGifs.
+ * Менеджер подписок на авторов R.
  *
  * Позволяет:
  * - Подписываться / отписываться от авторов с сохранением в `AppPath.r_subscriptions`;
@@ -41,7 +41,7 @@ data class SelectedCreator(val name: String, val select: Boolean, val urlProfile
  * - Агрегировать свежие работы всех выбранных авторов ([refreshSubscription]).
  *
  * @property scope Скоп для корутин.
- * @property redApi Сетевой клиент RedGifs.
+ * @property redApi Сетевой клиент R.
  */
 class R_Saved_Subscriptions(
     val scope: CoroutineScope,

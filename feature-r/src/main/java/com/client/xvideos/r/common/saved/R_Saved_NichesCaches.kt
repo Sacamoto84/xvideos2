@@ -29,9 +29,9 @@ import timber.log.Timber
 import java.io.File
 
 /**
- * Локальный файловый кэш полного списка ниш RedGifs.
+ * Локальный файловый кэш полного списка ниш R.
  *
- * Поскольку API RedGifs не поддерживает сортировку по названию на сервере,
+ * Поскольку API R не поддерживает сортировку по названию на сервере,
  * для полноценного поиска и клиентской фильтрации каталог ниш выгружается целиком
  * и кэшируется в `AppPath.r_nichesCache/niches.json`.
  *
@@ -41,7 +41,7 @@ import java.io.File
  * - Реактивное уведомление UI через Compose [list] и ключ пересчета [version].
  *
  * @property scope Скоп корутин для выполнения фоновой загрузки.
- * @property redApi Сетевой клиент RedGifs.
+ * @property redApi Сетевой клиент R.
  */
 @Stable
 class R_Saved_NichesCaches(

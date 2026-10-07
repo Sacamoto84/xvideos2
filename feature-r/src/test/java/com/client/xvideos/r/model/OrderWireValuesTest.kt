@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Значения [Order] уходят в параметр `order` запроса к RedGifs, и сервер
+ * Значения [Order] уходят в параметр `order` запроса к R, и сервер
  * принимает не любые.
  *
  * Тест держит соответствие «константа — строка на проводе». Без него оно
@@ -34,7 +34,7 @@ class OrderWireValuesTest {
      * `docs/redgifs-api.md`.
      *
      * Сортировки, уходящие на этот адрес, обязаны лежать внутри набора. Так
-     * ушло `TOP_ALLTIME("alltime")`: значения с таким именем у RedGifs нет и не
+     * ушло `TOP_ALLTIME("alltime")`: значения с таким именем у R нет и не
      * было, «топ за всё время» — это `top`.
      */
     @Test

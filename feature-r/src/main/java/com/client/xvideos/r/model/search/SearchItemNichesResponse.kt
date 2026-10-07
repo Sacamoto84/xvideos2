@@ -80,7 +80,7 @@ data class SearchNichesShortResponse(
  *   "subscribers": 457411,
  *   "tags": ["Orgasm", "Orgasms", "Post Orgasm", "Real Orgasm"],
  *   "preferences": ["bisexual", "lesbian", "straight"],
- *   "thumbnail": "https://userpic.redgifs.com/niches/thumbnails/orgasms.jpg"
+ *   "thumbnail": "https://userpic.R.com/niches/thumbnails/orgasms.jpg"
  * }
  * ```
  *

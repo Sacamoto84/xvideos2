@@ -23,7 +23,7 @@ import timber.log.Timber
  * @property order Порядок сортировки в нише.
  * @property nichesName Имя или слаг просматриваемой ниши.
  * @property block Фильтр заблокированных материалов.
- * @property redApi Сетевой клиент RedGifs.
+ * @property redApi Сетевой клиент R.
  */
 class ItemNailsPagingSource (val order : Order, val nichesName : String, val block: BlockRed, val redApi: RedApi): PagingSource<Int, GifsInfo>() {
 

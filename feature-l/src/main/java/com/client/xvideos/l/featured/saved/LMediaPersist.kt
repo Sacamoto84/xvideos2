@@ -346,7 +346,7 @@ internal suspend fun lSaveMediaSourceTracked(
 /* ---------- Album info ---------- */
 
 /**
- * Получает детальные метаданные альбома Luscious по его [albumId], проверяя кэш бандлов перед обращением в сеть.
+ * Получает детальные метаданные альбома L по его [albumId], проверяя кэш бандлов перед обращением в сеть.
  */
 internal suspend fun lFetchAlbumDetails(luscious: Luscious, albumId: Int): AlbumDetails? {
     val cachedBundle = luscious.repository.getAlbumBundleCache(
@@ -404,7 +404,7 @@ private fun String.parseAlbumDetails(): AlbumDetails? = runCatching {
  *
  * @param item Сохраняемый элемент с изображениями/видео.
  * @param root Корневая папка (`AppPath.l_likes` или папка коллекции).
- * @param luscious Ссылка на сервис API Luscious.
+ * @param luscious Ссылка на сервис API L.
  * @param progress Трекер совокупного прогресса скачивания.
  * @return Результат [Result] с папкой [File] сохранённого элемента.
  */

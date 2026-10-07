@@ -4,11 +4,11 @@ import com.client.xvideos.r.model.tag.TagsResponse
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 
-/** Маршрут запроса полного справочника тегов RedGifs. */
+/** Маршрут запроса полного справочника тегов R. */
 private val ROUTE_TAGS = Route("GET", "/v1/tags")
 
 /**
- * Подраздел API RedGifs для работы с глобальным каталогом тегов.
+ * Подраздел API R для работы с глобальным каталогом тегов.
  *
  * @property api HTTP-клиент модуля.
  */

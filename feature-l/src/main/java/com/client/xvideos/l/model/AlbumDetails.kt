@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Подробная модель альбома Luscious, получаемая по запросу `getAlbumInfo`.
+ * Подробная модель альбома L, получаемая по запросу `getAlbumInfo`.
  *
  * Поддерживает разбор через kotlinx.serialization.
  * coerceInputValues в kotlinx.serialization безопасно подставляет дефолты

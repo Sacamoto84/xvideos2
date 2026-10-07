@@ -17,11 +17,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 /**
- * [ScreenModel] вкладки каталога ниш в разделе Explorer RedGifs.
+ * [ScreenModel] вкладки каталога ниш в разделе Explorer R.
  *
  * Управляет порядком сортировки ниш [sortType], связывает его с навигационным состоянием [navigationState].
  *
- * @param navigationState Глобальное навигационное состояние раздела RedGifs.
+ * @param navigationState Глобальное навигационное состояние раздела R.
  * @param savedRed Фасад локальных данных (включая кэш ниш).
  * @param search Стейт-холдер поиска ниш.
  */

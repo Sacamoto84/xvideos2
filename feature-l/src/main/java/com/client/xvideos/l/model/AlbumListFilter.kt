@@ -7,7 +7,7 @@ import com.client.xvideos.l.model.enum.PictureCountRank
 import java.io.Serializable
 
 /**
- * Модель фильтрации списка альбомов Luscious.
+ * Модель фильтрации списка альбомов L.
  *
  * `Serializable` обязателен: фильтр лежит в экране, который создаёт
  * `L_ScreenAlbumList.create`, а экраны Voyager (`Screen : Serializable`) целиком

@@ -1,7 +1,7 @@
 package com.client.xvideos.l.repository
 
 /**
- * Иерархия типизированных результатов репозитория Luscious для альбомов.
+ * Иерархия типизированных результатов репозитория L для альбомов.
  */
 sealed class AlbumResult : RepositoryResult() {
     /** Пустой результат без информации об альбоме. */
@@ -10,7 +10,7 @@ sealed class AlbumResult : RepositoryResult() {
     /**
      * Успешный результат получения информации об альбоме [albumInfo].
      *
-     * @property albumInfo Распарсенные метаданные альбома Luscious.
+     * @property albumInfo Распарсенные метаданные альбома L.
      */
     data class Albums(val albumInfo: com.client.xvideos.l.net.AlbumInfo) : AlbumResult()
 }

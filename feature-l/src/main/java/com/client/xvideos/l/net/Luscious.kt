@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Главный фасад API раздела Luscious (L).
+ * Главный фасад API раздела L.
  *
  * Предоставляет методы для получения:
  * - Подробностей конкретного альбома ([getAlbum]).
@@ -101,7 +101,7 @@ class Luscious(
 private val ALBUM_ID_REGEX = Regex("(?:^|/)albums/(?:[^/]*_)?(\\d+)")
 
 /**
- * Вспомогательная функция для извлечения числового ID альбома из произвольного URL Luscious.
+ * Вспомогательная функция для извлечения числового ID альбома из произвольного URL L.
  */
 internal fun extractIdFromUrl(url: String): String? {
     if (url.length < 8) return null
@@ -117,7 +117,7 @@ fun extractAlbumIdOrNull(input: String?): String? =
     if (input.isNullOrBlank()) null else extractIdFromUrl(input)
 
 /**
- * Проверяет, является ли строка корректным URL страницы альбома Luscious.
+ * Проверяет, является ли строка корректным URL страницы альбома L.
  */
 fun isValidAlbumUrl(url: String?): Boolean =
     !extractAlbumIdOrNull(url).isNullOrBlank()

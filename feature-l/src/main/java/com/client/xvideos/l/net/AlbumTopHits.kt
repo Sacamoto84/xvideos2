@@ -23,7 +23,7 @@ import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
 /**
- * Загрузчик и реактивный держатель топовых популярных альбомов Luscious (Top Hits).
+ * Загрузчик и реактивный держатель топовых популярных альбомов L (Top Hits).
  *
  * Выполняет запрос `getAlbumListTopHitsQuery()` и заполняет snapshot-список [items].
  * О сбое сообщает [loadError] — экран показывает его вместе с кнопкой повтора.

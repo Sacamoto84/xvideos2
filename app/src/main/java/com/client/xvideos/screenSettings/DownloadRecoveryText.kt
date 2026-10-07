@@ -4,7 +4,7 @@ import com.client.xvideos.l.featured.saved.LDownloadRecoveryReport
 import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 
 /**
- * Формирует компактный статус процесса восстановления загрузок RedGifs для отображения в плашке UI.
+ * Формирует компактный статус процесса восстановления загрузок R для отображения в плашке UI.
  *
  * @param report Результат сканирования/восстановления [RedDownloadRecoveryReport].
  * @param isWorking Выполняется ли сейчас фоновое сканирование.
@@ -21,9 +21,9 @@ internal fun redDownloadRecoveryText(
 }
 
 /**
- * Формирует детальный многострочный отчет восстановления RedGifs для вывода в консоль/лог диалога.
+ * Формирует детальный многострочный отчет восстановления R для вывода в консоль/лог диалога.
  *
- * @param report Итоговый отчет восстановления RedGifs.
+ * @param report Итоговый отчет восстановления R.
  * @return Форматированный текст с разделением по строкам.
  */
 internal fun redDownloadRecoveryConsoleText(report: RedDownloadRecoveryReport): String {
@@ -38,9 +38,9 @@ internal fun redDownloadRecoveryConsoleText(report: RedDownloadRecoveryReport): 
 }
 
 /**
- * Формирует детальный многострочный отчет восстановления Luscious для вывода в консоль/лог диалога.
+ * Формирует детальный многострочный отчет восстановления L для вывода в консоль/лог диалога.
  *
- * @param report Итоговый отчет восстановления Luscious.
+ * @param report Итоговый отчет восстановления L.
  * @return Форматированный текст с разделением по строкам.
  */
 internal fun lDownloadRecoveryConsoleText(report: LDownloadRecoveryReport): String {
@@ -55,7 +55,7 @@ internal fun lDownloadRecoveryConsoleText(report: LDownloadRecoveryReport): Stri
 }
 
 /**
- * Определяет, требуется ли автовосстановление медиа Luscious при восстановлении бэкапа по набору выбранных путей [selectedPaths].
+ * Определяет, требуется ли автовосстановление медиа L при восстановлении бэкапа по набору выбранных путей [selectedPaths].
  */
 internal fun shouldAutoRecoverL(selectedPaths: Set<String>): Boolean {
     return selectedPaths.any { path ->
@@ -65,7 +65,7 @@ internal fun shouldAutoRecoverL(selectedPaths: Set<String>): Boolean {
 }
 
 /**
- * Определяет, требуется ли автовосстановление медиа RedGifs при восстановлении бэкапа по набору выбранных путей [selectedPaths].
+ * Определяет, требуется ли автовосстановление медиа R при восстановлении бэкапа по набору выбранных путей [selectedPaths].
  */
 internal fun shouldAutoRecoverRedDownload(selectedPaths: Set<String>): Boolean {
     return selectedPaths.any { path ->

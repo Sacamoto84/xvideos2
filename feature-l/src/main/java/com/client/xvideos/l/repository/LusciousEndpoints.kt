@@ -1,7 +1,7 @@
 package com.client.xvideos.l.repository
 
 /**
- * Адреса источника данных Luscious.
+ * Адреса источника данных L.
  *
  * Лежат рядом с [Repository] — клиентом, который по ним и ходит, — а не внутри
  * `net.Luscious`. Раньше константы жили в `Luscious`, и `Repository` тянул их
@@ -17,7 +17,7 @@ object LusciousEndpoints {
      * cookies, и Cloudflare кэширует ответы.
      */
     const val API_ANONYMOUS = "https://www.luscious.net/graphql/nobatch/"
-    /** Базовый URL портала Luscious. */
+    /** Базовый URL портала L. */
     const val HOME = "https://members.luscious.net"
     /** Страница авторизации пользователя с формой логина. */
     const val LOGIN = "https://members.luscious.net/accounts/login/"
@@ -25,7 +25,7 @@ object LusciousEndpoints {
     /** Формирует канонический URL страницы альбома по слагу и ID. */
     fun albumUrl(slug: String, id: String): String = "$HOME/albums/${slug}_$id/"
 
-    /** Проверяет, принадлежит ли URL к доменам Luscious. */
+    /** Проверяет, принадлежит ли URL к доменам L. */
     fun isLusciousUrl(url: String?): Boolean =
         !url.isNullOrBlank() && (url.startsWith(HOME) || url.startsWith("https://luscious.net") || url.startsWith("https://members.luscious.net"))
 

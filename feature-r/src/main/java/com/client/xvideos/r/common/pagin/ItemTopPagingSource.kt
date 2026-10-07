@@ -12,7 +12,7 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
- * [PagingSource] для главной ленты Explorer и поиска медиа RedGifs.
+ * [PagingSource] для главной ленты Explorer и поиска медиа R.
  *
  * Обрабатывает:
  * - Полнотекстовый поиск при непустом [searchText];
@@ -24,7 +24,7 @@ import timber.log.Timber
  * @property sort Выбранный порядок сортировки [Order].
  * @property searchText Поисковая строка (если пустая — загружается стандартная лента).
  * @property block Фильтр заблокированных роликов.
- * @property redApi Сетевой клиент RedGifs.
+ * @property redApi Сетевой клиент R.
  */
 class ItemTopPagingSource(
     val sort: Order,
