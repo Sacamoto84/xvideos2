@@ -81,6 +81,14 @@ internal class LServerPagedList<T>(
     private var removedSinceLoad = 0
 
     /**
+     * Удаление пришло, пока шла загрузка. Страница, запрошенная до него, могла
+     * прийти уже сдвинутой: её первый прежний элемент переехал в конец
+     * предыдущей страницы. Отступить тогда нужно на страницу больше, иначе он
+     * не появится до обновления списка.
+     */
+    private var removedWhileLoading = false
+
+    /**
      * Ключи убранных через [removeIf] до следующей полной загрузки. Страница,
      * запрошенная повторно, может ещё содержать убранное — сервер отстал, — и в
      * список оно возвращаться не должно.
@@ -110,8 +118,10 @@ internal class LServerPagedList<T>(
             // Страница из одних повторов на экране ничего не меняет, поэтому за ней
             // сразу запрашивается следующая. Предел — чтобы один заход не перебирал
             // выдачу без конца, если сервер отвечает одним и тем же.
-            rewindForRemoved()
             repeat(MAX_PAGES_PER_LOAD) {
+                // Перед каждым запросом, а не один раз: удаление может прийти и
+                // пока идёт запрос этого же захода.
+                rewindForRemoved()
                 val page = nextPage
                 val list = request(page).getOrElse { error ->
                     Timber.e("LServerPagedList: next page $page failed: ${error.javaClass.simpleName}")
@@ -139,6 +149,7 @@ internal class LServerPagedList<T>(
         val (removed, kept) = _items.value.partition(predicate)
         removed.mapTo(removedKeys) { keyOf(it) }
         removedSinceLoad += removed.size
+        if (removed.isNotEmpty() && loadJob?.isActive == true) removedWhileLoading = true
         _items.value = kept
     }
 
@@ -149,13 +160,19 @@ internal class LServerPagedList<T>(
     private fun rewindForRemoved() {
         if (removedSinceLoad == 0) return
         val pageSize = firstPageSize.coerceAtLeast(1)
-        val shiftedPages = (removedSinceLoad + pageSize - 1) / pageSize
+        val shiftedPages = (removedSinceLoad + pageSize - 1) / pageSize + if (removedWhileLoading) 1 else 0
         nextPage = (nextPage - shiftedPages).coerceAtLeast(FIRST_PAGE)
         removedSinceLoad = 0
+        removedWhileLoading = false
     }
 
     /**
-     * Дописывает страницу [page] к списку.
+     * Добавляет в список новое со страницы [page].
+     *
+     * Новый элемент встаёт за своим соседом по странице, если тот уже показан,
+     * иначе — в конец. Обычная страница так дописывается целиком; страница,
+     * запрошенная повторно, приносит элемент из середины выдачи, и в конце
+     * списка он стоял бы не на своём месте.
      *
      * @return `false` — нового на странице нет: оно лежит дальше. Конец выдачи —
      * только пустая страница, как и раньше.
@@ -166,13 +183,24 @@ internal class LServerPagedList<T>(
             return true
         }
         nextPage = page + 1
-        val knownKeys = _items.value.mapTo(HashSet()) { keyOf(it) }
-        val fresh = list.filter { item ->
+        val merged = _items.value.toMutableList()
+        val knownKeys = merged.mapTo(HashSet()) { keyOf(it) }
+        var insertAt = merged.size
+        var added = false
+        for (item in list) {
             val key = keyOf(item)
-            key !in removedKeys && knownKeys.add(key)
+            when {
+                key in removedKeys -> Unit
+                key in knownKeys -> insertAt = merged.indexOfFirst { keyOf(it) == key } + 1
+                else -> {
+                    knownKeys += key
+                    merged.add(insertAt++, item)
+                    added = true
+                }
+            }
         }
-        if (fresh.isEmpty()) return false
-        publish(_items.value + fresh)
+        if (!added) return false
+        publish(merged)
         return true
     }
 
@@ -182,6 +210,7 @@ internal class LServerPagedList<T>(
                 nextPage = FIRST_PAGE + 1
                 firstPageSize = list.size
                 removedSinceLoad = 0
+                removedWhileLoading = false
                 removedKeys.clear()
                 hasMore = list.isNotEmpty()
                 _errorMessage.value = null

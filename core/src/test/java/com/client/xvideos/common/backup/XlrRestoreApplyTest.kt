@@ -100,7 +100,7 @@ class XlrRestoreApplyTest {
     }
 
     @Test
-    fun `отсутствующая в бэкапе папка становится пустой`() {
+    fun `папка, которой нет в распакованном, не трогается`() {
         val main = tmp.newFolder("main")
         val temp = tmp.newFolder("temp")
 
@@ -108,9 +108,10 @@ class XlrRestoreApplyTest {
 
         XlrBackupManager.applyRestoredPaths(main, temp, listOf("R"))
 
-        val target = File(main, "R")
-        assertTrue(target.isDirectory)
-        assertEquals(0, target.listFiles()?.size ?: -1)
+        // Раньше она становилась пустой: архив о ней ничего не знает, а данные пропадали.
+        assertEquals("старое", File(main, "R/файл.txt").readText())
+        assertFalse("отодвинутой копии быть не должно", File(main, ".xlr_old_R").exists())
+        assertFalse("журнала быть не должно", File(main, ".xlr_restore_journal").exists())
     }
 
     @Test

@@ -305,6 +305,18 @@ class SavedL_Collection(
         }
     }
 
+    /**
+     * Перечитывает с диска все коллекции, открытые за сеанс.
+     *
+     * Нужен после восстановления бэкапа. [refresh] перечитывает одну коллекцию
+     * — открытую сейчас, — а со страницы бэкапа открытой обычно нет: кэш
+     * оставался прежним, и коллекция показывала содержимое до восстановления,
+     * пока в ней что-нибудь не меняли.
+     */
+    fun refreshOpenedCollections() {
+        collectionCache.forEach { (name, flow) -> reloadCollectionItems(name, flow) }
+    }
+
     /** Перечитывания идут по одному: см. [reloadCollectionItems]. */
     private val reloadMutex = Mutex()
 

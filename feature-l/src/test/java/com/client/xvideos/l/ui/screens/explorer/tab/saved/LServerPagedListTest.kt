@@ -303,4 +303,64 @@ class LServerPagedListTest {
 
         assertEquals(listOf("a", "c", "d", "e", "f"), list.items.value)
     }
+
+    @Test
+    fun `удаление во время подгрузки не пропускает элемент`() = runTest {
+        var server = listOf("a", "b", "c", "d", "e", "f", "g", "h")
+        val thirdPage = CompletableDeferred<Unit>()
+        pages.respond = { page ->
+            if (page == 3) thirdPage.await()
+            // Страница собрана после ожидания: сервер уже учёл удаление, и «e»
+            // переехал с третьей страницы в конец второй.
+            Result.success(server.drop((page - 1) * 2).take(2))
+        }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        list.loadNextPage()
+        runCurrent()
+        server = server - "a"
+        list.removeIf { it == "a" }
+        thirdPage.complete(Unit)
+        advanceUntilIdle()
+        repeat(3) {
+            list.loadNextPage()
+            advanceUntilIdle()
+        }
+
+        assertEquals(listOf("b", "c", "d", "e", "f", "g", "h"), list.items.value)
+    }
+
+    @Test
+    fun `удаление во время подгрузки, собранной сервером до него, ничего не теряет`() = runTest {
+        var server = listOf("a", "b", "c", "d", "e", "f", "g", "h")
+        val thirdPage = CompletableDeferred<Unit>()
+        pages.respond = { page ->
+            // Страница собрана до ожидания: сервер ответил раньше, чем учёл удаление.
+            val content = server.drop((page - 1) * 2).take(2)
+            if (page == 3) thirdPage.await()
+            Result.success(content)
+        }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        list.loadNextPage()
+        runCurrent()
+        server = server - "a"
+        list.removeIf { it == "a" }
+        thirdPage.complete(Unit)
+        advanceUntilIdle()
+        repeat(3) {
+            list.loadNextPage()
+            advanceUntilIdle()
+        }
+
+        assertEquals(listOf("b", "c", "d", "e", "f", "g", "h"), list.items.value)
+    }
 }

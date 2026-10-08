@@ -262,12 +262,15 @@ class SavedX_History(
         refreshJob = scope.launch(writeDispatcher) {
             historyDb.refresh()
             withContext(Dispatchers.Main) {
+                // Карта чистится до проверки на пустоту: после восстановления
+                // бэкапа история на диске может оказаться пустой, и ранний выход
+                // оставлял в памяти позиции роликов, которых на диске уже нет.
+                historyMap.clear()
                 if (list.isEmpty()) return@withContext
                 // Сортировка по времени последнего просмотра от новых к старым
                 val sorted = list.sortedByDescending { it.updatedAt }
                 list.clear()
                 list.addAll(sorted)
-                historyMap.clear()
                 sorted.forEach { historyMap[it.item.id] = it }
                 pruneExcessItemsLocked()
             }

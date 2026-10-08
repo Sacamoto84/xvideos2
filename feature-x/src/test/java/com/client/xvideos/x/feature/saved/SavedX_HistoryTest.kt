@@ -5,6 +5,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.x.model.ItemsX
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
@@ -311,5 +312,25 @@ class SavedX_HistoryTest {
 
         assertEquals(1, history.list.size)
         assertNotNull(history.get(901L))
+    }
+
+    @Test
+    fun `refresh после опустевшей истории не оставляет позиции в памяти`() {
+        val history = SavedX_History(testScope, testDispatcher)
+        testDispatcher.scheduler.advanceUntilIdle()
+        val video = ItemsX(id = 500L, title = "Restored Away", duration = "5 мин.")
+        history.updateProgress(video, positionMs = 120_000L, totalDurationMs = 300_000L)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Восстановление бэкапа заменило папку истории пустой — мимо хранилища.
+        File(AppPath.x_history).listFiles()?.forEach { it.delete() }
+        history.refresh()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        var resume: Float? = -1f
+        testScope.launch { resume = history.resumePositionSeconds(500L) }
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(0, history.list.size)
+        assertNull("позиция просмотра осталась в памяти", resume)
     }
 }

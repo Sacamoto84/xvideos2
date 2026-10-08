@@ -285,25 +285,44 @@ object XlrBackupManager {
         mode: XlrRestoreMode = XlrRestoreMode.REPLACE,
     ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
         runCatching {
-            val safePaths = normalizeSelectedPaths(selectedPaths)
-            if (safePaths.isEmpty()) error("Select at least one folder")
-            // Прошлое восстановление могло оборваться: пока его след не убран,
-            // новое удалило бы отодвинутые копии — последние прежние данные.
-            check(recoverInterruptedRestore(File(AppPath.main))) {
-                "Не удалось завершить откат прошлого восстановления"
-            }
-            validateBackup(context, uri, password)
-            val tempRoot = File(AppPath.main, RESTORE_TEMP_DIR_NAME).apply {
-                deleteRecursively()
-                mkdirs()
-            }
-            try {
-                val report = extractBackup(context, uri, tempRoot, safePaths, password)
-                applyRestoredPaths(File(AppPath.main), tempRoot, safePaths, mode)
-                report
-            } finally {
-                tempRoot.deleteRecursively()
-            }
+            restoreArchive(File(AppPath.main), selectedPaths, mode) { openZipInputStream(context, uri, password) }
+        }
+    }
+
+    /**
+     * Восстановление из архива, который открывает [openZip]: проверка,
+     * распаковка во временную папку, перенос. Отделено от [restoreBackup],
+     * чтобы проверяться без Android — на обычном ZIP-файле.
+     *
+     * @param openZip Открывает архив заново: он читается дважды, при проверке и при распаковке.
+     */
+    internal fun restoreArchive(
+        mainRoot: File,
+        selectedPaths: Set<String>,
+        mode: XlrRestoreMode,
+        openZip: () -> ZipInputStream,
+    ): XlrBackupReport {
+        val safePaths = normalizeSelectedPaths(selectedPaths)
+        if (safePaths.isEmpty()) error("Select at least one folder")
+        // Прошлое восстановление могло оборваться: пока его след не убран,
+        // новое удалило бы отодвинутые копии — последние прежние данные.
+        check(recoverInterruptedRestore(mainRoot)) {
+            "Не удалось завершить откат прошлого восстановления"
+        }
+        // Раздел восстанавливается папками, которые есть в архиве: остальные
+        // его папки не трогаются — см. [XlrRestorePaths].
+        val restorePaths = XlrRestorePaths.expandSections(safePaths, validateBackup(openZip))
+        if (restorePaths.isEmpty()) error("В архиве нет данных для выбранных папок")
+        val tempRoot = File(mainRoot, RESTORE_TEMP_DIR_NAME).apply {
+            deleteRecursively()
+            mkdirs()
+        }
+        try {
+            val report = extractBackup(openZip, tempRoot, restorePaths)
+            applyRestoredPaths(mainRoot, tempRoot, restorePaths, mode)
+            return report
+        } finally {
+            tempRoot.deleteRecursively()
         }
     }
 
@@ -341,6 +360,10 @@ object XlrBackupManager {
             paths.forEach { path ->
                 val target = File(mainRoot, path)
                 requireInside(root, target.canonicalFile)
+                // Пути нет в распакованном — архив о нём ничего не знает. Раньше
+                // такая папка становилась пустой: прежние данные пропадали.
+                val restored = File(tempRoot, path)
+                if (!restored.exists()) return@forEach
 
                 // Запись в журнал — до первого изменения на диске.
                 journal += RestoreJournalEntry(path = path, hadTarget = target.exists())
@@ -360,13 +383,8 @@ object XlrBackupManager {
                 // copyRecursively оставляло полузаписанную папку, которой нет
                 // ни в written, ни в movedAside, и откат её не трогал.
                 written += target
-                val restored = File(tempRoot, path)
-                if (restored.exists()) {
-                    if (!restored.renameTo(target)) {
-                        restored.copyRecursively(target, overwrite = true)
-                    }
-                } else {
-                    target.mkdirs()
+                if (!restored.renameTo(target)) {
+                    restored.copyRecursively(target, overwrite = true)
                 }
             }
             // Все пути на месте: дальше только уборка отодвинутых копий.
@@ -587,8 +605,14 @@ object XlrBackupManager {
         return XlrBackupReport(files = 1, bytes = source.length())
     }
 
-    private fun validateBackup(context: Context, uri: Uri, password: CharArray? = null) {
-        openZipInputStream(context, uri, password).use { zip ->
+    /**
+     * Проверяет архив и возвращает его пути второго уровня (`X/Favorites`):
+     * по ним восстановление узнаёт, какие папки раздела в архиве есть.
+     * Записи со скрытыми сегментами в список не входят — распаковка их пропускает.
+     */
+    private fun validateBackup(openZip: () -> ZipInputStream): Set<String> {
+        val folders = sortedSetOf<String>()
+        openZip().use { zip ->
             var hasDataEntry = false
             while (true) {
                 val entry = zip.nextEntry ?: break
@@ -605,24 +629,26 @@ object XlrBackupManager {
                     error("Backup contains invalid section entry: $name")
                 }
                 hasDataEntry = true
+                if (name.split('/').none { it.startsWith(".") }) {
+                    childPathOrNull(name)?.let(folders::add)
+                }
                 zip.closeEntry()
             }
             if (!hasDataEntry) error("Backup does not contain X/L/R data")
         }
+        return folders
     }
 
     private fun extractBackup(
-        context: Context,
-        uri: Uri,
+        openZip: () -> ZipInputStream,
         destinationRoot: File,
         selectedPaths: List<String>,
-        password: CharArray? = null
     ): XlrBackupReport {
         var files = 0
         var bytes = 0L
         val root = destinationRoot.canonicalFile
 
-        openZipInputStream(context, uri, password).use { zip ->
+        openZip().use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
                 val name = normalizeRelativePath(entry.name)

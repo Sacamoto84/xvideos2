@@ -174,7 +174,7 @@ private fun lResolveCollectionPreviewUrl(collectionFolder: File, config: LCollec
 
     val itemFolders = collectionFolder.listFiles()
         ?.filter { it.isDirectory }
-        ?.sortedByDescending { it.lastModified() }
+        ?.sortedByDescending(::lItemSavedAt)
         ?: return null
 
     for (folder in itemFolders) {
@@ -242,14 +242,24 @@ private fun lResolveCollectionItemsCount(collectionFolder: File): Int {
 }
 
 /**
- * Вычисляет время последнего изменения коллекции как максимум среди дат папок элементов.
+ * Давность коллекции: время сохранения её последнего элемента; у пустой — время папки.
  */
 private fun lResolveCollectionLastModified(collectionFolder: File): Long {
     val newestItem = collectionFolder.listFiles()
         ?.filter { it.isDirectory }
-        ?.maxOfOrNull { it.lastModified() }
+        ?.maxOfOrNull(::lItemSavedAt)
     return newestItem ?: collectionFolder.lastModified()
 }
+
+/**
+ * Когда элемент сохранён: `savedAt` из его метаданных. Время папки для этого
+ * не годится — бэкап его не несёт, и после восстановления у всех папок время
+ * распаковки: порядок «Сначала новые» и автообложки становились случайными.
+ * Время папки остаётся запасным — для элемента, метаданные которого ещё не
+ * записаны или не читаются.
+ */
+private fun lItemSavedAt(itemFolder: File): Long =
+    lCachedStamp(File(itemFolder, L_METADATA_FILE_NAME))?.savedAt ?: itemFolder.lastModified()
 
 /**
  * Считывает конфигурационный файл `collection.json` из папки коллекции [collectionFolder].
@@ -328,8 +338,8 @@ internal fun lReadCollectionDuplicateGroups(collectionFolder: File): List<LColle
         .sortedByDescending { it.items.size }
 }
 
-/** Отпечаток файла метаданных и ключ элемента, вычисленный по нему. */
-private class LIdentityStamp(val lastModified: Long, val length: Long, val key: String?)
+/** Отпечаток файла метаданных и прочитанное из него: ключ элемента и время сохранения. */
+private class LIdentityStamp(val lastModified: Long, val length: Long, val key: String?, val savedAt: Long?)
 
 /** Предел кэша ключей: при переполнении уходят давно не читанные записи. */
 private const val L_IDENTITY_CACHE_MAX = 20_000
@@ -349,18 +359,22 @@ private val lIdentityCache = object : LinkedHashMap<String, LIdentityStamp>(256,
 }
 
 /** Ключ дедупликации элемента по его файлу метаданных; `null` — метаданных нет или они не читаются. */
-private fun lCachedIdentityKey(metadataFile: File): String? {
+private fun lCachedIdentityKey(metadataFile: File): String? = lCachedStamp(metadataFile)?.key
+
+/** Прочитанное из файла метаданных, без повторного разбора неизменённого файла; `null` — файла нет или он пуст. */
+private fun lCachedStamp(metadataFile: File): LIdentityStamp? {
     val length = metadataFile.length()
     if (length == 0L) return null
     val lastModified = metadataFile.lastModified()
     val path = metadataFile.path
     synchronized(lIdentityCache) {
         val cached = lIdentityCache[path]
-        if (cached != null && cached.lastModified == lastModified && cached.length == length) return cached.key
+        if (cached != null && cached.lastModified == lastModified && cached.length == length) return cached
     }
-    val key = readCollectionMetadata(metadataFile)?.let(::lMetadataIdentityKey)
-    synchronized(lIdentityCache) { lIdentityCache[path] = LIdentityStamp(lastModified, length, key) }
-    return key
+    val metadata = readCollectionMetadata(metadataFile)
+    val stamp = LIdentityStamp(lastModified, length, metadata?.let(::lMetadataIdentityKey), metadata?.savedAt)
+    synchronized(lIdentityCache) { lIdentityCache[path] = stamp }
+    return stamp
 }
 
 /** Число лишних копий в коллекции: для каждой группы одинаковых элементов — все, кроме одного. */
