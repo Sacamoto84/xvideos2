@@ -194,6 +194,36 @@ class RepositoryNetworkFailureTest {
     }
 
     @Test
+    fun `ответ 403 на вход не считается входом`() = runBlocking {
+        // Раньше неудачей были только страница защиты, 5xx и текст о неверном
+        // пароле: любой другой ответ, в том числе 403 и 429, считался входом.
+        val server = FakeServer().apply {
+            login = { respond("<html><body>Forbidden</body></html>", HttpStatusCode.Forbidden, HTML) }
+        }
+        val notices = mutableListOf<String>()
+        val repository = repository(server, SavedProfile(CREDENTIALS), notices)
+
+        repository.openURI(query("A"))
+
+        assertEquals("после отказа запрос идёт анонимно", HttpMethod.Get, server.apiCalls.single().method)
+        assertEquals("об отказе входа сообщается", 1, notices.size)
+    }
+
+    @Test
+    fun `после ответа 429 вход повторяется, когда пауза прошла`() = runBlocking {
+        val server = FakeServer().apply {
+            login = { respond("<html><body>Too Many Requests</body></html>", HttpStatusCode.TooManyRequests, HTML) }
+        }
+        val repository = repository(server, SavedProfile(CREDENTIALS))
+
+        repository.openURI(query("A"))
+        now += L_LOGIN_RETRY_INTERVAL_MS
+        repository.openURI(query("B"))
+
+        assertEquals(2, server.loginCalls.get())
+    }
+
+    @Test
     fun `повторный сбой входа не показывает второе предупреждение`() = runBlocking {
         val server = FakeServer().apply { login = { throw UnknownHostException("нет сети") } }
         val notices = mutableListOf<String>()

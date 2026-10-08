@@ -1,7 +1,5 @@
 package com.client.xvideos.common
 
-import com.client.xvideos.common.download.work.DownloadStatus
-import com.client.xvideos.common.download.work.DownloadWorkState
 import com.client.xvideos.common.gallery.GalleryTarget
 import com.client.xvideos.common.io.isSafeItemName
 import com.client.xvideos.common.io.isSafeRelativePath
@@ -17,7 +15,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.UUID
 
 class Batch68CoreNetworkAndUtilsTest {
 
@@ -64,29 +61,6 @@ class Batch68CoreNetworkAndUtilsTest {
             isDoh = true
         )
         assertEquals("Cloudflare: 1 IPs in 45ms", diag.summaryText)
-    }
-
-    @Test
-    fun `DownloadWorkState progress and status`() {
-        assertEquals(DownloadStatus.ENQUEUED, DownloadStatus.fromNameOrDefault("ENQUEUED"))
-        assertEquals(DownloadStatus.ENQUEUED, DownloadStatus.fromNameOrDefault("unknown"))
-        assertTrue(DownloadStatus.ENQUEUED.isPending)
-
-        val state = DownloadWorkState(
-            workId = UUID.randomUUID(),
-            tag = "video-1",
-            status = DownloadStatus.RUNNING,
-            progress = 40,
-            bytesDownloaded = 4000L,
-            totalBytes = 10000L
-        )
-
-        assertEquals(40, state.progressPercent)
-        assertTrue(state.hasProgress)
-
-        val updated = state.withProgress(80, 8000L, 10000L)
-        assertEquals(80, updated.progress)
-        assertEquals(8000L, updated.bytesDownloaded)
     }
 
     @Test

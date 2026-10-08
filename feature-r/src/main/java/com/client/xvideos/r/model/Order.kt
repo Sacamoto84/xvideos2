@@ -27,9 +27,6 @@ enum class Order(val value: String) {
 
     //NEW("new"),
 
-    /** Временное состояние сброса для принудительной перезагрузки страницы пагинации. */
-    FORCE_TEMP(""),
-
     // Значения именно top7/top28: столько же зашито в путь у getTopThisWeek и
     // getTopThisMonth. Раньше здесь стояли "week"/"month" — они никуда не
     // уходили, потому что для лент метод выбирается по самой константе, а не
@@ -92,9 +89,6 @@ enum class Order(val value: String) {
 
     /** Проверяет, выбрана ли сортировка за месяц (TOP_MONTH или TOP28). */
     val isTopMonth: Boolean get() = this == TOP_MONTH || this == TOP28
-
-    /** Проверяет, является ли сортировка служебным флагом сброса FORCE_TEMP. */
-    val isForceTemp: Boolean get() = this == FORCE_TEMP
 
     /** Переход к следующему варианту сортировки циклически. */
     fun next(): Order {

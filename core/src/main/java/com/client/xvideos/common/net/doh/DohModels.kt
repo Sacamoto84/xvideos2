@@ -121,15 +121,17 @@ data class DohAnswer(
  * @property host Запрашиваемый хост.
  * @property addresses Список успешно полученных IP-адресов.
  * @property elapsedMs Время выполнения запроса в миллисекундах.
- * @property providerTitle Название использованного провайдера (Cloudflare, Google, AdGuard или System).
- * @property isDoh Флаг использования протокола DNS-over-HTTPS (true) или системного DNS (false).
+ * @property providerTitle Название выбранного в настройках провайдера (Cloudflare, Google, AdGuard) или «Системный DNS», если DoH выключен.
+ * @property isDoh Ответ пришёл от резолвера DoH. `false` — отвечал системный DNS: DoH выключен либо не ответил.
+ * @property usedFallback DoH включён, но не ответил: имя нашёл системный DNS.
  */
 data class DohDiagnosticResult(
     val host: String,
     val addresses: List<String>,
     val elapsedMs: Long,
     val providerTitle: String,
-    val isDoh: Boolean
+    val isDoh: Boolean,
+    val usedFallback: Boolean = false,
 ) {
     /** Истина, если резолвинг завершился успешно и вернул хотя бы один адрес. */
     val isSuccess: Boolean get() = addresses.isNotEmpty()

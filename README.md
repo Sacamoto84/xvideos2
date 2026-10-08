@@ -99,15 +99,15 @@ Compose, detekt — лежит в `build-logic/src/main/groovy/xvideos.android-l
 |---|---|
 | [backup-format.md](docs/backup-format.md) | что попадает в бэкап, режимы «Мини» и «Полный», порядок восстановления с откатом, докачка по метаданным, расшифровка строк консоли |
 | [r-api.md](docs/r-api.md) | адреса R, допустимые значения `order` по каждому адресу, ловушки: 200 при проигнорированном параметре, неполный список в тексте ошибки |
-| [architecture/navigation.md](docs/architecture/navigation.md) | карта навигации: корневой `Navigator`, разделы, табы L, вложенный навигатор коллекции, fullscreen-оверлей |
+| architecture/navigation.md | карта навигации: корневой `Navigator`, разделы, табы L, вложенный навигатор коллекции, fullscreen-оверлей |
 
 ### Планы работ
 
 | файл | статус |
 |---|---|
-| [module-split-plan.md](docs/module-split-plan.md) | распил `:app` на модули — **сделано** |
-| [layer-split-plan.md](docs/layer-split-plan.md) | разделение разделов по слоям — **сделано** |
-| [storage-migration-plan.md](docs/storage-migration-plan.md) | миграция хранилища — **план, не реализовано** |
+| module-split-plan.md | распил `:app` на модули — **сделано** |
+| layer-split-plan.md | разделение разделов по слоям — **сделано** |
+| storage-migration-plan.md | миграция хранилища — **план, не реализовано** |
 
 ### Код-ревью
 
@@ -117,19 +117,19 @@ Compose, detekt — лежит в `build-logic/src/main/groovy/xvideos.android-l
 
 | файл | охват |
 |---|---|
-| [CODE_REVIEW_2026-07-30.md](docs/CODE_REVIEW_2026-07-30.md) | проход 1 |
-| [CODE_REVIEW_2026-07-30_v2.md](docs/CODE_REVIEW_2026-07-30_v2.md) | проход 2 |
-| [CODE_REVIEW_2026-08-01.md](docs/CODE_REVIEW_2026-08-01.md) | проход 3 |
-| [CODE_REVIEW_2026-08-04.md](docs/CODE_REVIEW_2026-08-04.md) | проход 4 |
-| [CODE_REVIEW_2026-08-06.md](docs/CODE_REVIEW_2026-08-06.md) | проходы 5 и 6 — границы модулей, поиск R, пути отказа, разбор X, слой L, скоупы, безопасность, сборка |
-| [DEVICE_CHECK_2026-08-06.md](docs/DEVICE_CHECK_2026-08-06.md) | 25 проверок на устройстве: что сделать, что должно быть, как выглядит поломка |
+| CODE_REVIEW_2026-07-30.md | проход 1 |
+| CODE_REVIEW_2026-07-30_v2.md | проход 2 |
+| CODE_REVIEW_2026-08-01.md | проход 3 |
+| CODE_REVIEW_2026-08-04.md | проход 4 |
+| CODE_REVIEW_2026-08-06.md | проходы 5 и 6 — границы модулей, поиск R, пути отказа, разбор X, слой L, скоупы, безопасность, сборка |
+| DEVICE_CHECK_2026-08-06.md | 25 проверок на устройстве: что сделать, что должно быть, как выглядит поломка |
 
 ### Прочее
 
 - [docs/superpowers/plans](docs/superpowers/plans) — планы отдельных фич
 - [docs/superpowers/specs](docs/superpowers/specs) — спецификации
-- [docs/design-copy](docs/design-copy) — выгрузка дизайна из Figma
-  ([как импортировать](docs/design-copy/README-figma-import.md))
+- docs/design-copy — выгрузка дизайна из Figma
+  (как импортировать)
 
 ---
 

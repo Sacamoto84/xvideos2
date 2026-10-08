@@ -17,12 +17,18 @@ import com.client.xvideos.common.kdownloader.internal.DownloadRequestQueue
  * Поддерживает:
  * - Потокобезопасную постановку в очередь и отслеживание прогресса.
  * - HTTP-докачку файлов (Range, ETag) с защитой от повреждений через временные `.temp` файлы.
- * - Приостановку, возобновление и групповую отмену по тегам.
+ * - Групповую отмену по тегам.
  * - Автоматическую очистку очереди по завершении или ошибке задачи.
  */
 class KDownloader private constructor(dbHelper: DbHelper, private val config: DownloaderConfig) {
 
     companion object {
+        /**
+         * Через сколько дней без движения оборванная загрузка считается брошенной:
+         * её запись и временный файл убирает [cleanUp].
+         */
+        const val STALE_DOWNLOAD_DAYS = 1
+
         /**
          * Фабричный метод инициализации [KDownloader] для рабочего окружения Android.
          *
@@ -175,21 +181,9 @@ class KDownloader private constructor(dbHelper: DbHelper, private val config: Do
     }
 
     /**
-     * Приостанавливает выполнение задачи по ID (для последующего возобновления).
-     */
-    fun pause(id: Int) {
-        reqQueue.pause(id)
-    }
-
-    /**
-     * Возобновляет приостановленную задачу.
-     */
-    fun resume(id: Int) {
-        reqQueue.resume(id)
-    }
-
-    /**
-     * Очищает временные файлы и записи БД старше [days] дней.
+     * Убирает записи загрузок, не обновлявшиеся более [days] дней, и их временные
+     * файлы. Файл, в который пишет идущая загрузка, не трогается. Вызывается
+     * разделами при запуске с [STALE_DOWNLOAD_DAYS].
      */
     fun cleanUp(days: Int) {
         downloader.cleanup(days)

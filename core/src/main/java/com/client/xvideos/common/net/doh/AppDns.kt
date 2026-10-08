@@ -79,7 +79,15 @@ object AppDns : Dns {
     /** Отказавшие адреса DoH: пока пауза не истекла, поиск идёт мимо них. */
     private val dohHealth = DohEndpointHealth(retryAfterMs = DOH_RETRY_AFTER_MS)
 
-    override fun lookup(hostname: String): List<InetAddress> {
+    override fun lookup(hostname: String): List<InetAddress> = resolve(hostname).addresses
+
+    /**
+     * Ищет имя и сообщает, кто его нашёл.
+     *
+     * @param fresh Проверка, а не рабочий запрос: кэш не читается и опрашиваются
+     * и те адреса DoH, что недавно отказали. Иначе проверка измеряла бы кэш.
+     */
+    private fun resolve(hostname: String, fresh: Boolean = false): DnsResolution<InetAddress> {
         val trimmed = hostname.trim().trimEnd('.')
 
         if (trimmed.isEmpty()) {
@@ -91,36 +99,20 @@ object AppDns : Dns {
 
         // Если это уже числовой IP-адрес — сразу возвращаем InetAddress без DNS
         if (isIpAddress(cleanHost)) {
-            return listOf(InetAddress.getByName(cleanHost))
-        }
-
-        // Локальные адреса не резолвим через публичный DoH
-        if (isLocalHost(cleanHost)) {
-            return Dns.SYSTEM.lookup(cleanHost)
+            return DnsResolution(listOf(InetAddress.getByName(cleanHost)), DnsSource.LITERAL)
         }
 
         val isDohEnabled = runCatching {
             Settings.isInitialized && Settings.doh_enabled.field.value
         }.getOrDefault(false)
 
-        if (!isDohEnabled) {
-            return Dns.SYSTEM.lookup(cleanHost)
+        // Локальные адреса не резолвим через публичный DoH; хост текущего
+        // DoH-сервера — тоже, иначе поиск ушёл бы в рекурсию.
+        if (isLocalHost(cleanHost) || !isDohEnabled || isDohServerHost(cleanHost)) {
+            return DnsResolution(Dns.SYSTEM.lookup(cleanHost), DnsSource.SYSTEM)
         }
 
-        // Защита от циклической рекурсии: если запрашивают хост текущего DoH-сервера
-        if (isDohServerHost(cleanHost)) {
-            return Dns.SYSTEM.lookup(cleanHost)
-        }
-
-        // Проверка кэша
         val now = System.currentTimeMillis()
-        cache[cleanHost]?.let { entry ->
-            if (now < entry.expiresAtMs) {
-                return entry.addresses
-            }
-            cache.remove(cleanHost, entry)
-        }
-
         val fallbackToSystem = runCatching {
             Settings.doh_fallback_to_system.field.value
         }.getOrDefault(true)
@@ -129,28 +121,38 @@ object AppDns : Dns {
             Settings.doh_ipv4_only.field.value
         }.getOrDefault(true)
 
-        val endpoints = getActiveEndpoints()
-
-        // Без отката на системный DNS другого способа найти имя нет — тогда
-        // опрашиваются и отказавшие адреса.
-        val doh = queryDohEndpoints(
-            endpoints = endpoints,
-            health = dohHealth,
-            skipDown = fallbackToSystem,
-            onFailure = { endpoint, e ->
-                Timber.w("AppDns: DoH запрос к $endpoint завершился ошибкой: ${e.javaClass.simpleName}")
+        return resolveViaDoh(
+            cached = if (fresh) null else cachedAddresses(cleanHost, now),
+            fallbackToSystem = fallbackToSystem,
+            queryDoh = {
+                // Без отката на системный DNS другого способа найти имя нет — тогда
+                // опрашиваются и отказавшие адреса.
+                queryDohEndpoints(
+                    endpoints = getActiveEndpoints(),
+                    health = dohHealth,
+                    skipDown = fallbackToSystem && !fresh,
+                    onFailure = { endpoint, e ->
+                        Timber.w("AppDns: DoH запрос к $endpoint завершился ошибкой: ${e.javaClass.simpleName}")
+                    },
+                ) { endpoint -> queryDoh(endpoint, cleanHost, ipv4Only, now) }
             },
-        ) { endpoint -> queryDoh(endpoint, cleanHost, ipv4Only, now) }
-        if (doh.addresses.isNotEmpty()) return doh.addresses
-        val lastException = doh.error
+            systemLookup = {
+                Timber.i("AppDns: DoH не ответил, переключаемся на системный DNS (fallback)")
+                Dns.SYSTEM.lookup(cleanHost)
+            },
+            onUnresolved = { lastException ->
+                throw UnknownHostException("Не удалось разрешить хост $cleanHost через DoH: ${lastException?.message}")
+                    .apply { if (lastException != null) initCause(lastException) }
+            },
+        )
+    }
 
-        if (fallbackToSystem) {
-            Timber.i("AppDns: DoH не ответил, переключаемся на системный DNS (fallback)")
-            return Dns.SYSTEM.lookup(cleanHost)
-        }
-
-        throw UnknownHostException("Не удалось разрешить хост $cleanHost через DoH: ${lastException?.message}")
-            .apply { if (lastException != null) initCause(lastException) }
+    /** Адреса из кэша; просроченная запись удаляется. */
+    private fun cachedAddresses(host: String, now: Long): List<InetAddress>? {
+        val entry = cache[host] ?: return null
+        if (now < entry.expiresAtMs) return entry.addresses
+        cache.remove(host, entry)
+        return null
     }
 
     private fun queryDoh(
@@ -310,6 +312,11 @@ object AppDns : Dns {
 
     /**
      * Диагностический тест резолвинга хоста с замером времени отклика.
+     *
+     * Имя ищется заново, мимо кэша, и результат подписан тем, кто ответил на
+     * самом деле. Раньше проверка шла обычным поиском: при молчащем DoH отвечал
+     * системный DNS, при повторе — кэш, а в итоге стояло название выбранного
+     * провайдера и «успех».
      */
     fun diagnose(hostname: String): Result<DohDiagnosticResult> {
         val startNs = System.nanoTime()
@@ -325,16 +332,17 @@ object AppDns : Dns {
                 "Системный DNS"
             }
 
-            val addresses = lookup(hostname)
+            val resolution = resolve(hostname, fresh = true)
             val elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
 
             Result.success(
                 DohDiagnosticResult(
                     host = hostname,
-                    addresses = addresses.mapNotNull { it.hostAddress?.takeIf { s -> s.isNotEmpty() } },
+                    addresses = resolution.addresses.mapNotNull { it.hostAddress?.takeIf { s -> s.isNotEmpty() } },
                     elapsedMs = elapsedMs,
                     providerTitle = providerTitle,
-                    isDoh = isDohEnabled
+                    isDoh = resolution.source == DnsSource.DOH,
+                    usedFallback = resolution.source == DnsSource.SYSTEM_FALLBACK,
                 )
             )
         } catch (e: Exception) {

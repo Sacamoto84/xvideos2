@@ -1,6 +1,7 @@
 package com.client.xvideos.r.common.saved
 
 import com.client.xvideos.common.fileDB.FileDB
+import com.client.xvideos.common.fileDB.putFirst
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.UserInfo
@@ -38,7 +39,7 @@ class R_Saved_Creator(
             creatorDb.insert(item.username, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.putLast(item) { it.username == item.username }
+                        list.putFirst(item) { it.username == item.username }
                     }
                     SnackBar.success("Автор добавлен")
                 }

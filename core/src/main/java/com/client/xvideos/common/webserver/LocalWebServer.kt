@@ -43,6 +43,9 @@ object LocalWebServer {
 
     fun isRunning(): Boolean = serverRef.get() != null
 
+    /** Токен доступа и порт работающего сервера: по ним адрес пересчитывается при смене сети. */
+    private val addressParams = AtomicReference<Pair<String, Int>?>(null)
+
     @Synchronized
     fun start(context: Context, port: Int = 8080): Result<String> {
         if (serverRef.get() != null) {
@@ -82,6 +85,7 @@ object LocalWebServer {
 
             newServer.start(wait = false)
             serverRef.set(newServer)
+            addressParams.set(token to port)
 
             val serverUrl = WebAccessToken.accessUrl(NetworkIpHelper.buildServerUrl(ip, port), token)
             WebServerState.updateRunning(
@@ -294,8 +298,39 @@ object LocalWebServer {
         }
     }
 
+    /**
+     * Пересчитывает адрес работающего сервера после смены сети.
+     *
+     * Сервер слушает все интерфейсы, поэтому сам он переезд переживает; прежним
+     * оставался только адрес, показанный пользователю, — ссылка и QR вели в
+     * сеть, которой уже нет.
+     *
+     * @return Новый адрес без токена — для уведомления; `null`, если сервер не
+     * работает, сети нет или адрес не изменился.
+     */
+    @Synchronized
+    fun refreshAddress(context: Context): String? {
+        if (serverRef.get() == null) return null
+        val (token, port) = addressParams.get() ?: return null
+        val appContext = context.applicationContext
+        val ip = NetworkIpHelper.getLocalIpAddress(appContext) ?: return null
+        if (ip == WebServerState.ipAddress.value) return null
+
+        val plainUrl = NetworkIpHelper.buildServerUrl(ip, port)
+        WebServerState.updateRunning(
+            running = true,
+            url = WebAccessToken.accessUrl(plainUrl, token),
+            ip = ip,
+            port = port,
+            netName = NetworkIpHelper.getNetworkName(appContext),
+        )
+        Timber.i("LocalWebServer: адрес обновлён после смены сети")
+        return plainUrl
+    }
+
     @Synchronized
     fun stop() {
+        addressParams.set(null)
         val current = serverRef.getAndSet(null) ?: return
         Timber.i("LocalWebServer: остановка сервера...")
         runCatching {

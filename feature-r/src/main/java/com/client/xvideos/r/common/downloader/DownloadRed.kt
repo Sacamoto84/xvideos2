@@ -4,6 +4,7 @@ import android.content.Context
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.gallery.GallerySaver
+import com.client.xvideos.common.kdownloader.utils.getTempPath
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.requireInside
 import com.client.xvideos.common.json.AppJson
@@ -383,23 +384,17 @@ class DownloadRed @Inject constructor(
             downloader.kDownloader.cancel(item.id)
             val baseDir = File(AppPath.r_cache_download)
             val userDir = File(baseDir, item.userName)
-            val fileMp4 = File(userDir, "${item.id}.mp4")
-            val fileInfo = File(userDir, "${item.id}.info")
-            val fileJpg = File(userDir, "${item.id}.jpg")
+            val files = downloadedItemFiles(userDir, item.id)
 
             try {
                 requireInside(baseDir, userDir)
-                requireInside(userDir, fileMp4)
-                requireInside(userDir, fileInfo)
-                requireInside(userDir, fileJpg)
+                files.forEach { requireInside(userDir, it) }
             } catch (e: Exception) {
                 Timber.w(e, "DownloadRed.delete -> Попытка выхода за пределы r_cache_download")
                 return@launch
             }
 
-            fileMp4.delete()
-            fileInfo.delete()
-            fileJpg.delete()
+            files.forEach { it.delete() }
 
             // Проверяем, осталась ли папка пользователя пустой
             if (userDir.exists() && userDir.isDirectory) {
@@ -465,6 +460,19 @@ class DownloadRed @Inject constructor(
         )
     }
 
+}
+
+/**
+ * Файлы скачанного ролика, которые уходят при его удалении: видео, обложка,
+ * `.info` и остатки их оборванной загрузки. Загрузчик качает во временный файл
+ * рядом; без этого остаток повторной загрузки оставался на диске без записи в
+ * списке.
+ */
+internal fun downloadedItemFiles(userDir: File, id: String): List<File> {
+    val downloaded = listOf("$id.mp4", "$id.jpg")
+    return downloaded.map { File(userDir, it) } +
+        downloaded.map { File(getTempPath(userDir.path, it)) } +
+        File(userDir, "$id.info")
 }
 
 /**

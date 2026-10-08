@@ -1,6 +1,7 @@
 package com.client.xvideos.r.common.saved
 
 import com.client.xvideos.common.fileDB.FileDB
+import com.client.xvideos.common.fileDB.putFirst
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.NichesInfo
@@ -37,7 +38,7 @@ class R_Saved_Niches(
             nichesDb.insert(item.id, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.putLast(item) { it.id == item.id }
+                        list.putFirst(item) { it.id == item.id }
                     }
                     SnackBar.info("Группа добавлена")
                 }

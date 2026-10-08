@@ -51,6 +51,7 @@ import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockScreen
 import com.client.xvideos.common.applock.AppLockSession
+import com.client.xvideos.common.applock.WindowPrivacy
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
@@ -58,7 +59,6 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.ui.statusbar.LocalStatusBarRequests
 import com.client.xvideos.common.ui.statusbar.StatusBarRequests
-import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.screenRoot.ScreenRoot
@@ -135,7 +135,13 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     override fun onPause() {
         super.onPause()
         isAppMinimized = true
-        if (AppLockRepository.shouldShowLock(this) || (Settings.isInitialized && Settings.blur_recent_tasks.field.value)) {
+        val needSecure = WindowPrivacy.needsSecureFlag(
+            isLockShown = AppLockRepository.shouldShowLock(this),
+            isMinimized = true,
+            blurRecentTasks = Settings.isInitialized && Settings.blur_recent_tasks.field.value,
+            lockEnabled = AppLockRepository.isEnabled(this),
+        )
+        if (needSecure) {
             window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
@@ -185,8 +191,14 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             val shouldBlur = (isAppMinimized && blurRecentTasks) || isAppLocked
 
             // SECURITY: динамическая аппаратная защита превью в Recent Apps через FLAG_SECURE
-            LaunchedEffect(isAppMinimized, blurRecentTasks, isAppLocked) {
-                val needSecure = isAppLocked || (isAppMinimized && blurRecentTasks)
+            val appLockEnabled by Settings.app_lock_enabled.field.collectAsStateWithLifecycle()
+            LaunchedEffect(isAppMinimized, blurRecentTasks, isAppLocked, appLockEnabled) {
+                val needSecure = WindowPrivacy.needsSecureFlag(
+                    isLockShown = isAppLocked,
+                    isMinimized = isAppMinimized,
+                    blurRecentTasks = blurRecentTasks,
+                    lockEnabled = appLockEnabled && AppLockRepository.isEnabled(this@MainActivity),
+                )
                 if (needSecure) {
                     window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
                 } else {
@@ -194,7 +206,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 }
             }
 
-            KeepScreenOn()
             XvideosTheme(darkTheme = true) {
                 Box(
                     modifier = Modifier

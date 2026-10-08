@@ -8,6 +8,7 @@ import com.client.xvideos.common.gallery.GallerySaver
 import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
+import com.client.xvideos.common.kdownloader.utils.getTempPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.x.normalizeXUrl
@@ -68,6 +69,13 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
 
     init {
         refresh()
+        // Остатки оборванных загрузок старше суток — раз за запуск и до первой
+        // загрузки. Убирать их было некому: уборка загрузчика не вызывалась, и
+        // недокачанные ролики копились на диске.
+        scope.launch(Dispatchers.IO) {
+            runCatching { kDownloader.cleanUp(KDownloader.STALE_DOWNLOAD_DAYS) }
+                .onFailure { Timber.w("X saved: уборка остатков загрузок не удалась: ${it.javaClass.simpleName}") }
+        }
     }
 
     /**
@@ -323,12 +331,23 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             kDownloader.cancel(item.id.toString())
             // Отменённая загрузка не должна держать id «качается» и общий прогресс.
             onVideoFinished(item.id, failed = false)
-            File(dir, "${item.id}.mp4").delete()
-            File(dir, "${item.id}.jpg").delete()
-            File(dir, "${item.id}.info").delete()
+            deleteFiles(item.id)
             loadFromDisk()
             SnackBar.info("Удалено из сохранённого")
         }
+    }
+
+    /**
+     * Удаляет с диска файлы ролика: видео, обложку, `.info` и остатки их
+     * оборванной загрузки. Загрузчик качает во временный файл рядом; без этого
+     * остаток повторной загрузки лежал на диске без записи в списке.
+     */
+    internal fun deleteFiles(id: Long) {
+        for (name in listOf("$id.mp4", "$id.jpg")) {
+            File(dir, name).delete()
+            File(getTempPath(dir, name)).delete()
+        }
+        File(dir, "$id.info").delete()
     }
 
     /**

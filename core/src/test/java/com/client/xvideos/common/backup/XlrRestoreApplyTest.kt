@@ -129,6 +129,20 @@ class XlrRestoreApplyTest {
     }
 
     @Test
+    fun `shouldIncludeBackupEntry не берёт в архив остатки оборванных загрузок`() {
+        val options = XlrBackupOptions()
+        // Недокачанный ролик — сотни мегабайт, которые нельзя ни открыть, ни докачать
+        // на другом устройстве; при восстановлении их и так отбрасывают.
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("X/Download/123.mp4.temp", options))
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("R/Download/author/abc.jpg.temp", options))
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("L/Likes/item/picture.jpg.part", options))
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("X/Favorites/1.favorites.tmp", options))
+
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry("X/Download/123.mp4", options))
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry("X/Download/template.info", options))
+    }
+
+    @Test
     fun `currentBackupItems исключает служебные папки с точкой из списка`() = runBlocking {
         val base = tmp.newFolder("backup_base")
         base.writeFile("L/visible_folder/data.txt", "123")

@@ -31,23 +31,18 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
-import com.client.xvideos.r.model.UserInfo
 
 @Composable
 fun ProfileInfo1(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     videoItem: GifsInfo,
-    listUsers: List<UserInfo>,
+    avatarUrl: String?,
     visibleUserName: Boolean = true,
     sizeIcon: Dp = 48.dp,
     cornerRadius: Dp = 12.dp,
     verticalAlignment: Alignment.Vertical = Alignment.Bottom
 ) {
-    val matchedUser = remember(listUsers, videoItem.userName) {
-        listUsers.firstOrNull { it.username == videoItem.userName }
-    }
-    val avatarUrl = matchedUser?.profileImageUrl
     val avatarShape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
 
     Row(
@@ -122,11 +117,5 @@ fun ProfileInfo1Preview() {
         hls = true,
         niches = null
     )
-    val listUsers = listOf(
-        UserInfo(
-            username = "userName",
-            url = "url"
-        )
-    )
-    ProfileInfo1(onClick = {}, videoItem = videoItem, listUsers = listUsers)
+    ProfileInfo1(onClick = {}, videoItem = videoItem, avatarUrl = null)
 }

@@ -1,6 +1,7 @@
 package com.client.xvideos.r.common.saved
 
 import com.client.xvideos.common.fileDB.FileDB
+import com.client.xvideos.common.fileDB.putFirst
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.replaceWith
@@ -46,7 +47,7 @@ class R_Saved_Likes(
             likesDb.insert(safeItem.id, safeItem)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        list.putLast(safeItem) { it.id == safeItem.id }
+                        list.putFirst(safeItem) { it.id == safeItem.id }
                     }
                     SnackBar.success("Like")
                 }

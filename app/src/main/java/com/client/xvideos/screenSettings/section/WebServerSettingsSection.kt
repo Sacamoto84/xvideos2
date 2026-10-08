@@ -1,5 +1,9 @@
 package com.client.xvideos.screenSettings.section
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,16 +14,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.R
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.NotificationPermission
 import com.client.xvideos.common.webserver.NetworkIpHelper
 import com.client.xvideos.common.webserver.QrCodeGenerator
 import com.client.xvideos.common.webserver.WebServerService
@@ -31,6 +38,7 @@ import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.client.xvideos.screenSettings.molecule.WebServerConnectionCard
+import com.client.xvideos.screenSettings.molecule.WebServerPortRow
 
 
 
@@ -63,21 +71,46 @@ internal fun WebServerSettingsSection(
         }
     }
 
-    val onToggleServer: (Boolean) -> Unit = remember(context, port) {
+    val startServer: () -> Unit = remember(context, port) {
+        {
+            WebServerService.start(context, port)
+            SnackBar.info("Запуск веб-сервера...")
+        }
+    }
+    // Разрешение объявлено в манифесте, но нигде не запрашивалось: на Android 13
+    // и новее уведомление сервера с кнопкой «Остановить» не показывалось, и
+    // сервер работал без видимого признака. Отказ запуску не мешает.
+    val currentStartServer by rememberUpdatedState(startServer)
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            SnackBar.warning("Без разрешения на уведомления сервер работает без значка и кнопки «Остановить» в шторке")
+        }
+        currentStartServer()
+    }
+    val onToggleServer: (Boolean) -> Unit = remember(context, startServer, notificationPermissionLauncher) {
         { enable ->
             if (enable) {
                 val ip = NetworkIpHelper.getLocalIpAddress(context)
+                val notificationsGranted = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
                 if (ip == null) {
                     SnackBar.error("Подключитесь к Wi-Fi или включите точку доступа")
+                } else if (NotificationPermission.shouldRequest(granted = notificationsGranted)) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 } else {
-                    WebServerService.start(context, port)
-                    SnackBar.info("Запуск веб-сервера...")
+                    startServer()
                 }
             } else {
                 WebServerService.stop(context)
                 SnackBar.info("Веб-сервер остановлен")
             }
         }
+    }
+    val onSavePort: (Int) -> Unit = remember {
+        { newPort -> Settings.web_server_port.setValue(newPort) }
     }
     val onKeepAwakeChange: (Boolean) -> Unit = remember {
         { enabled ->
@@ -110,6 +143,10 @@ internal fun WebServerSettingsSection(
                 value = keepAwake,
                 onValueChange = onKeepAwakeChange
             )
+
+            SettingsDivider()
+
+            WebServerPortRow(port = port, isRunning = isRunning, onSavePort = onSavePort)
         }
 
         if (lastError != null) {

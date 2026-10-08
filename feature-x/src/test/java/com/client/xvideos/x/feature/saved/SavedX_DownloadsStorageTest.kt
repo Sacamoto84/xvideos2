@@ -61,6 +61,24 @@ class SavedX_DownloadsStorageTest {
     }
 
     @Test
+    fun `удаление ролика убирает и остатки его оборванной загрузки`() {
+        // Загрузчик качает во временный файл рядом. Удаление убирало только
+        // готовые файлы, и остаток повторной загрузки лежал на диске без записи
+        // в списке — убрать его из приложения было нечем.
+        writeVideo(7L)
+        writeInfo(7L)
+        File(dir, "7.jpg").writeBytes(ByteArray(4) { 1 })
+        File(dir, "7.mp4.temp").writeBytes(ByteArray(8) { 1 })
+        File(dir, "7.jpg.temp").writeBytes(ByteArray(2) { 1 })
+        writeVideo(8L)
+
+        SavedX_Downloads(scope).deleteFiles(7L)
+
+        val left = dir.listFiles().orEmpty().map { it.name }.sorted()
+        assertTrue("остались файлы удалённого ролика: $left", left == listOf("8.mp4"))
+    }
+
+    @Test
     fun `видео без info не считается сохранённым`() {
         writeVideo(1L)
         writeInfo(1L)

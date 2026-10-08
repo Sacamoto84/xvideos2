@@ -12,7 +12,7 @@ import java.io.File
  */
 internal object XlrRestoreCleanup {
 
-    /** Суффиксы временных файлов загрузчиков: KDownloader, сохранение L, WorkManager. */
+    /** Суффиксы временных файлов: загрузчик KDownloader, сохранение L, атомарная запись. */
     private val PARTIAL_DOWNLOAD_SUFFIXES = listOf(".temp", ".part", ".tmp")
 
     /**
@@ -90,8 +90,8 @@ internal object XlrRestoreCleanup {
         XlrBackupManager.shouldIncludeBackupEntry(entryName, XlrBackupOptions.FULL) &&
             !XlrBackupManager.shouldIncludeBackupEntry(entryName, XlrBackupOptions.MINI)
 
-    /** Остаток прерванной загрузки: переносить его незачем. */
-    private fun isPartialDownloadName(name: String): Boolean =
+    /** Остаток прерванной загрузки: ни переносить его, ни класть в архив незачем. */
+    fun isPartialDownloadName(name: String): Boolean =
         PARTIAL_DOWNLOAD_SUFFIXES.any { name.endsWith(it, ignoreCase = true) }
 
     /**

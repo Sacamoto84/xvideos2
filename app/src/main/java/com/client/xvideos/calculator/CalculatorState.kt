@@ -71,7 +71,9 @@ class CalculatorState(
     fun onDigit(digit: String, haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
 
-        if (enteredPinDigits.length < MAX_INPUT_DIGITS) {
+        // Предел кода, а не дисплея: дисплей вмещает 15 цифр, и код длиннее
+        // обрезался — приложение с таким кодом было не открыть.
+        if (enteredPinDigits.length < MAX_CODE_DIGITS) {
             enteredPinDigits.append(digit)
         }
 
@@ -184,14 +186,22 @@ class CalculatorState(
         isNewEntry = true
     }
 
-    private fun isPinCandidate(s: String): Boolean = s.length >= 4 && s.all { it.isDigit() }
+    private fun isPinCandidate(s: String): Boolean = isEnterableCode(s)
 
+    /**
+     * Код, который «=» отправит на проверку, или `null`, если проверять нечего.
+     *
+     * Число на дисплее годится в коды, только пока его набирают. Результат
+     * вычисления кодом не считается: повтор операции по «=» (`1000 + 1000 = =`)
+     * уходил на проверку и копил ошибки до блокировки ввода, которую
+     * калькулятор не показывает.
+     */
     private fun getCandidatePin(codeToTest: String): String? {
         if (previousValue != null || pendingOperation != null) return null
         val rawPin = enteredPinDigits.toString()
         return when {
             isPinCandidate(rawPin) -> rawPin
-            isPinCandidate(codeToTest) -> codeToTest
+            !isNewEntry && isPinCandidate(codeToTest) -> codeToTest
             else -> null
         }
     }
@@ -377,6 +387,23 @@ class CalculatorState(
         /** Текст, отображаемый при ошибках вычислений (деление на ноль). */
         const val ERROR_TEXT = "Ошибка"
         private const val MAX_INPUT_DIGITS = 15
+
+        /** Самый короткий код доступа. */
+        const val MIN_CODE_DIGITS = 4
+
+        /**
+         * Самый длинный код, который можно набрать на калькуляторе. Больше, чем
+         * вмещает дисплей: цифры сверх дисплея на нём не видны, но в код идут.
+         */
+        const val MAX_CODE_DIGITS = 64
+
+        /**
+         * Можно ли набрать [code] на калькуляторе: только цифры 0–9 и длина в
+         * пределах буфера. Настройки проверяют этим код перед включением
+         * маскировки — иначе принятый код оказывался невводимым.
+         */
+        fun isEnterableCode(code: String): Boolean =
+            code.length in MIN_CODE_DIGITS..MAX_CODE_DIGITS && code.all { it in '0'..'9' }
         private const val CALC_SCALE = 12
         private val ONE_HUNDRED = BigDecimal("100")
 

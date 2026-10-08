@@ -507,6 +507,35 @@ class LusciousServerFavoritesTest {
     }
 
     @Test
+    fun `pictureMatchesSlug не принимает часть чужого имени за короткое имя файла`() {
+        // Имя без длинного идентификатора даёт короткий ключ — «0012». Раньше он
+        // искался подстрокой и находился в «…100127…» чужой картинки.
+        fun picture(original: String) = kotlinx.serialization.json.buildJsonObject {
+            put("url_to_original", kotlinx.serialization.json.JsonPrimitive(original))
+        }
+
+        assertFalse(pictureMatchesSlug(picture("https://cdn.example.com/user/1/album_100127_cover.jpg"), "0012"))
+        assertFalse(pictureMatchesSlug(picture("https://cdn.example.com/user/1/photo_00123.jpg"), "0012"))
+        assertTrue(pictureMatchesSlug(picture("https://cdn.example.com/user/1/photo_0012.jpg"), "0012"))
+        assertTrue(pictureMatchesSlug(picture("https://cdn.example.com/user/1/photo_0012.315x0.jpg"), "0012"))
+    }
+
+    @Test
+    fun `pictureMatchesSlug находит картинку по длинному идентификатору в миниатюре`() {
+        val ulid = "01KHBSB2THB9YFJCQT22P9NGCS"
+        val picture = kotlinx.serialization.json.buildJsonObject {
+            put("thumbnails", kotlinx.serialization.json.buildJsonArray {
+                add(kotlinx.serialization.json.buildJsonObject {
+                    put("url", kotlinx.serialization.json.JsonPrimitive("https://cdn.example.com/user/1/name_$ulid.315x0.jpg"))
+                })
+            })
+        }
+
+        assertTrue(pictureMatchesSlug(picture, ulid))
+        assertTrue(pictureMatchesSlug(picture, ulid.lowercase()))
+    }
+
+    @Test
     fun `getFavoriteRemove generates valid GraphQL mutation and variables`() {
         val queryJson = com.client.xvideos.l.net.graphQl.getFavoriteRemove(
             anchorId = "53066694",

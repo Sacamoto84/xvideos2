@@ -521,4 +521,58 @@ class CalculatorStateTest {
         assertTrue(canBackspace(state))
         assertFalse(canClear(state))
     }
+
+    @Test
+    fun `код длиннее дисплея вводится и проверяется целиком`() = runTest {
+        // Дисплей вмещает 15 цифр, а код доступа настройки длиной не ограничивали:
+        // шестнадцатая цифра отбрасывалась, и приложение с таким кодом не открывалось.
+        val code = "1234567890123456"
+        val state = CalculatorState()
+        code.forEach { state.onDigit(it.toString(), noOpHaptic) }
+
+        val checked = mutableListOf<String>()
+        state.onEquals(this, noOpHaptic) { checked += it; it == code }
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(code, checked.first())
+    }
+
+    @Test
+    fun `код для маскировки - только цифры 0-9 и не длиннее буфера калькулятора`() {
+        assertTrue(CalculatorState.isEnterableCode("1234"))
+        assertTrue(CalculatorState.isEnterableCode("1234567890123456"))
+        assertTrue(CalculatorState.isEnterableCode("9".repeat(CalculatorState.MAX_CODE_DIGITS)))
+
+        assertFalse(CalculatorState.isEnterableCode("123"))
+        assertFalse(CalculatorState.isEnterableCode("12a4"))
+        assertFalse(CalculatorState.isEnterableCode("9".repeat(CalculatorState.MAX_CODE_DIGITS + 1)))
+        // Арабско-индийские цифры проходят Char.isDigit(), но на калькуляторе их нет.
+        assertFalse(CalculatorState.isEnterableCode("١٢٣٤"))
+    }
+
+    @Test
+    fun `повтор равно на результате вычисления код не проверяет`() = runTest {
+        // 1000 + 1000 = = : на дисплее результат из четырёх цифр. Раньше он уходил на
+        // проверку как код, и повтор операции копил ошибки до блокировки ввода.
+        val state = CalculatorState()
+        "1000".forEach { state.onDigit(it.toString(), noOpHaptic) }
+        state.onOperator("+", noOpHaptic)
+        "1000".forEach { state.onDigit(it.toString(), noOpHaptic) }
+
+        val checked = mutableListOf<String>()
+        var failedAttempts = 0
+        repeat(3) {
+            state.onEquals(
+                scope = this,
+                haptic = noOpHaptic,
+                onUnlock = { checked += it; false },
+                onUnlockFailed = { failedAttempts++ }
+            )
+            testScheduler.advanceUntilIdle()
+        }
+
+        assertEquals("4 000", state.displayValue)
+        assertEquals(emptyList<String>(), checked)
+        assertEquals(0, failedAttempts)
+    }
 }

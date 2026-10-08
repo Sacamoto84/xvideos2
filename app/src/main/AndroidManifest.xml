@@ -134,12 +134,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Сервис Foreground Service для WorkManager загрузок -->
-        <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="dataSync"
-            tools:node="merge" />
-
         <!-- Сервис локального веб-сервера для трансляции по Wi-Fi -->
         <service
             android:name="com.client.xvideos.common.webserver.WebServerService"

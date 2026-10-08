@@ -46,7 +46,6 @@ private fun Order.toDisplayName(): String = when (this) {
     Order.TOP -> "Top"
     Order.LATEST -> "Latest"
     Order.TRENDING -> "Trending"
-    Order.FORCE_TEMP -> "Refresh"
     Order.OLDEST -> "Oldest"
     Order.TOP28 -> "Top28"
     Order.RELEVANT -> "Relevant"

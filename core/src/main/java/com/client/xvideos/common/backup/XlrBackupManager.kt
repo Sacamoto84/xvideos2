@@ -761,6 +761,11 @@ object XlrBackupManager {
         if (normalized.split('/').any { it.startsWith(".") }) {
             return false
         }
+        // Остаток оборванной загрузки: недокачанный ролик нельзя ни открыть, ни
+        // докачать на другом устройстве, а восстановление такие файлы отбрасывает.
+        if (XlrRestoreCleanup.isPartialDownloadName(normalized.substringAfterLast('/'))) {
+            return false
+        }
         if (options.rMode == XlrBackupContentMode.MINI && normalized.isInsideBackupPath(R_DOWNLOAD_PATH)) {
             return normalized == R_DOWNLOAD_PATH || normalized.endsWith(".info", ignoreCase = true)
         }

@@ -86,6 +86,13 @@ class Downloader @Inject constructor(
      */
     val percent = MutableStateFlow(-2f)
 
+    init {
+        // Остатки оборванных загрузок старше суток — раз за запуск, до первой
+        // загрузки: уборка загрузчика раньше не вызывалась, и недокачанные
+        // ролики копились на диске.
+        kDownloader.cleanUp(KDownloader.STALE_DOWNLOAD_DAYS)
+    }
+
     /** Проверяет, идет ли активный процесс скачивания. */
     fun isDownloading(): Boolean = percent.value in 0f..1f
 

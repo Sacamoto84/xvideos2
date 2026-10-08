@@ -328,16 +328,35 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
 }
 
 /**
- * Проверяет соответствие объекта картинки в GraphQL-ответе [picObj] искомому фрагменту слага [targetSlug].
+ * Проверяет соответствие адресов картинки в GraphQL-ответе [picObj] искомому ключу [targetSlug].
+ *
+ * Ключ должен стоять в адресе целиком, а не частью другого слова или числа.
+ * У файла без длинного идентификатора ключ короткий — хвост имени вроде `0012`,
+ * — и поиск подстрокой находил его в `…100127…` чужой картинки: лайк на
+ * сервере ставился или снимался не у той.
  */
-private fun pictureMatchesSlug(picObj: JsonObject, targetSlug: String): Boolean {
-    fun JsonElement?.mentionsSlug() = contentOrNull()?.contains(targetSlug, ignoreCase = true) == true
+internal fun pictureMatchesSlug(picObj: JsonObject, targetSlug: String): Boolean {
+    fun JsonElement?.mentionsSlug() = contentOrNull()?.containsWholeToken(targetSlug) == true
 
     if (picObj["url"].mentionsSlug()) return true
     if (picObj["url_to_original"].mentionsSlug()) return true
     if (picObj["url_to_video"].mentionsSlug()) return true
     val thumbnails = picObj["thumbnails"] as? JsonArray ?: return false
     return thumbnails.any { (it as? JsonObject)?.get("url").mentionsSlug() }
+}
+
+/** Есть ли в строке [token] целиком: по обе стороны от него не буква и не цифра. Регистр не важен. */
+private fun String.containsWholeToken(token: String): Boolean {
+    if (token.isEmpty()) return false
+    var from = 0
+    while (true) {
+        val at = indexOf(token, from, ignoreCase = true)
+        if (at < 0) return false
+        val before = getOrNull(at - 1)
+        val after = getOrNull(at + token.length)
+        if (before?.isLetterOrDigit() != true && after?.isLetterOrDigit() != true) return true
+        from = at + 1
+    }
 }
 
 /**

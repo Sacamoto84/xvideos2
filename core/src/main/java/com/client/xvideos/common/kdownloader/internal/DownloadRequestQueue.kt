@@ -137,27 +137,4 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
         }
         downloader.cancelAll()
     }
-
-    /**
-     * Переводит выполняющуюся задачу в статус [Status.PAUSED].
-     */
-    fun pause(id: Int) {
-        val req = idRequestMap[id] ?: return
-        if (req.status != Status.RUNNING && req.status != Status.QUEUED) {
-            return
-        }
-        req.status = Status.PAUSED
-    }
-
-    /**
-     * Возобновляет приостановленную задачу [Status.PAUSED], отправляя её обратно в диспетчер.
-     */
-    fun resume(id: Int) {
-        val req = idRequestMap[id] ?: return
-        if (req.status != Status.PAUSED) {
-            return
-        }
-        req.status = Status.QUEUED
-        downloader.enqueue(req)
-    }
 }

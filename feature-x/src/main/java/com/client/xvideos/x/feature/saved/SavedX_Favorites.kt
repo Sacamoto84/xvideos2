@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateSetOf
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
+import com.client.xvideos.common.fileDB.putFirst
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.x.model.ItemsX
 import kotlinx.coroutines.CoroutineScope
@@ -61,11 +62,7 @@ class SavedX_Favorites(val scope: CoroutineScope) {
             favoritesDb.insert(item.id.toString(), item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        val existingIndex = list.indexOfFirst { it.id == item.id }
-                        if (existingIndex >= 0) {
-                            list.removeAt(existingIndex)
-                        }
-                        list.add(item)
+                        list.putFirst(item) { it.id == item.id }
                         favoriteIds.add(item.id)
                     }
                     SnackBar.info("Добавлено в избранное")

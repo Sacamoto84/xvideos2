@@ -8,6 +8,9 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.ConnectivityManager
+import android.net.LinkProperties
+import android.net.Network
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.IBinder
@@ -60,7 +63,13 @@ class WebServerService : Service() {
         try {
             ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, foregroundType)
         } catch (e: Exception) {
+            // Система отказала в foreground-статусе — например, суточный предел
+            // работы сервиса уже исчерпан. Раньше отказ только писался в лог, и
+            // сервер запускался обычным фоновым сервисом, который система гасит.
             Timber.e(e, "WebServerService: не удалось запустить ForegroundService")
+            WebServerState.setError("Android не разрешил запустить веб-сервер в фоне")
+            stopSelf()
+            return
         }
 
         acquireLocks()
@@ -69,14 +78,67 @@ class WebServerService : Service() {
         if (result.isFailure) {
             Timber.e("WebServerService: ошибка старта Ktor сервера")
             stopSelf()
+            return
         }
+        watchNetwork()
     }
 
     private fun stopWebServer() {
+        unwatchNetwork()
         LocalWebServer.stop()
         releaseLocks()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    /**
+     * Android 15 и новее: сервису типа `dataSync` отведено шесть часов в сутки.
+     * Когда они истекли, система зовёт этот метод и ждёт остановки несколько
+     * секунд; сервис, который не остановился, она завершает исключением — вместе
+     * с приложением.
+     */
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        Timber.w("WebServerService: исчерпан суточный предел работы сервиса, останавливаем сервер")
+        stopWebServer()
+        WebServerState.setError("Android остановил веб-сервер: исчерпан суточный предел работы в фоне")
+    }
+
+    /**
+     * Сеть сменилась — у телефона другой адрес. Адрес и QR в настройках и текст
+     * уведомления считались один раз при запуске и оставались прежними, пока
+     * сервер не перезапускали.
+     */
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) = refreshAddress()
+        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) = refreshAddress()
+        override fun onLost(network: Network) = refreshAddress()
+    }
+    private var watchingNetwork = false
+
+    private fun watchNetwork() {
+        if (watchingNetwork) return
+        runCatching {
+            val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            manager?.registerDefaultNetworkCallback(networkCallback)
+            watchingNetwork = manager != null
+        }.onFailure { Timber.w(it, "WebServerService: не удалось подписаться на смену сети") }
+    }
+
+    private fun unwatchNetwork() {
+        if (!watchingNetwork) return
+        watchingNetwork = false
+        runCatching {
+            (getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager)
+                ?.unregisterNetworkCallback(networkCallback)
+        }
+    }
+
+    private fun refreshAddress() {
+        val url = LocalWebServer.refreshAddress(applicationContext) ?: return
+        runCatching {
+            (getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)
+                ?.notify(NOTIFICATION_ID, createNotification(url))
+        }
     }
 
     private fun acquireLocks() {
@@ -102,7 +164,10 @@ class WebServerService : Service() {
             if (wakeLock == null) {
                 wakeLock = powerManager?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Xvideos:WebServerWakeLock")?.apply {
                     setReferenceCounted(false)
-                    acquire(2 * 60 * 60 * 1000L) // 2 hours max
+                    // Без срока: живёт, пока работает сервер, и отпускается вместе с
+                    // ним. Раньше замок отпускался сам через два часа, а сервер и
+                    // уведомление оставались — с погашенным экраном он молчал.
+                    acquire()
                 }
             }
         }.onFailure {
@@ -174,6 +239,7 @@ class WebServerService : Service() {
     }
 
     override fun onDestroy() {
+        unwatchNetwork()
         LocalWebServer.stop()
         releaseLocks()
         super.onDestroy()

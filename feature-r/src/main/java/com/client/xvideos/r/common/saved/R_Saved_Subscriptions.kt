@@ -3,6 +3,7 @@ package com.client.xvideos.r.common.saved
 import androidx.compose.runtime.mutableStateListOf
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
+import com.client.xvideos.common.fileDB.putFirst
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.GifsInfo
@@ -69,23 +70,14 @@ class R_Saved_Subscriptions(
 
     /**
      * Синхронизирует [selectedListCreator] со списком сохраненных авторов [listCreators]:
-     * добавляет новых и удаляет отписанных.
+     * добавляет новых, удаляет отписанных и держит порядок списка авторов.
      */
     private fun syncSelectedList() {
-        val currentNames = HashSet<String>(selectedListCreator.size)
-        for (sc in selectedListCreator) {
-            currentNames.add(sc.name)
+        val synced = syncSelectedCreators(selectedListCreator, listCreators)
+        if (synced != selectedListCreator.toList()) {
+            selectedListCreator.clear()
+            selectedListCreator.addAll(synced)
         }
-        val creatorsSet = HashSet<String>(listCreators.size)
-        // Добавляем новых, которых нет в списке
-        for (creator in listCreators) {
-            creatorsSet.add(creator.username)
-            if (creator.username !in currentNames) {
-                selectedListCreator.add(SelectedCreator(creator.username, true, creator.profileImageUrl))
-            }
-        }
-        // Удаляем тех, кого больше нет в подписках
-        selectedListCreator.removeAll { it.name !in creatorsSet }
     }
 
     /**
@@ -98,11 +90,7 @@ class R_Saved_Subscriptions(
             creatorDb.insert(item.username, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        val existingIndex = listCreators.indexOfFirst { it.username == item.username }
-                        if (existingIndex >= 0) {
-                            listCreators.removeAt(existingIndex)
-                        }
-                        listCreators.add(item)
+                        listCreators.putFirst(item) { it.username == item.username }
                         syncSelectedList()
                     }
                     SnackBar.success("Автор добавлен")
@@ -220,6 +208,27 @@ class R_Saved_Subscriptions(
         return loaded.flatMap { it.getOrNull().orEmpty() }.filter { seenIds.add(it.id) }
     }
 
+}
+
+/**
+ * Выбор авторов для ленты подписок, приведённый к списку авторов.
+ *
+ * Порядок — как в [creators]: новый автор раньше дописывался в конец выбора, а
+ * после перезапуска оказывался в начале, потому что список с диска читается от
+ * новых к старым. Отметка уже известного автора сохраняется, новый автор
+ * отмечен, отписанный уходит.
+ *
+ * @param current Текущий выбор.
+ * @param creators Сохранённые авторы в порядке показа.
+ */
+internal fun syncSelectedCreators(
+    current: List<SelectedCreator>,
+    creators: List<UserInfo>,
+): List<SelectedCreator> {
+    val byName = current.associateBy { it.name }
+    return creators.map { creator ->
+        byName[creator.username] ?: SelectedCreator(creator.username, true, creator.profileImageUrl)
+    }
 }
 
 /** Сколько авторов лента подписок запрашивает одновременно. */

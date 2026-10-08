@@ -27,9 +27,6 @@ class Batch64RModelsAndSearchTest {
         assertTrue(Order.TOP28.isTopMonth)
         assertFalse(Order.TOP_WEEK.isTopMonth)
 
-        assertTrue(Order.FORCE_TEMP.isForceTemp)
-        assertFalse(Order.LATEST.isForceTemp)
-
         assertEquals(Order.TOP_WEEK, Order.fromNameOrNull("TOP_WEEK"))
         assertEquals(Order.LATEST, Order.fromNameOrNull("latest"))
         assertNull(Order.fromNameOrNull(null))

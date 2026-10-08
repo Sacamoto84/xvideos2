@@ -33,6 +33,7 @@ import androidx.media3.effect.ScaleAndRotateTransformation
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.ContentFrame
 import androidx.media3.ui.compose.lifecycle.rememberPooledPlayer
+import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.videoplayer.feed.FeedPlayerState
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.r.common.video.PlayerControls
@@ -147,6 +148,10 @@ fun RedPooledVideoPlayer(
         player?.playWhenReady = play && isCurrentPage
         onStopOrDispose { player?.playWhenReady = false }
     }
+
+    // Экран не гаснет, пока играет текущая страница ленты. Раньше это делал
+    // безусловный флаг на всё приложение; у плеера ленты своего не было.
+    KeepScreenOn(active = play && isCurrentPage)
 
     LaunchedEffect(player, isMute) {
         player?.volume = if (isMute) 0f else 1f

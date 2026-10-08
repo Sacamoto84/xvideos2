@@ -250,6 +250,10 @@ class KtorRequestHandler(
                 IllegalStateException("защита Cloudflare")
             response.status.value in SERVER_ERROR_CODES -> LServerErrorException(response.status.value)
             WRONG_CREDENTIALS_MARKER in body -> LWrongCredentialsException()
+            // 403, 404, 429 и прочие 4xx — отказ, а не вход: раньше всё, что не
+            // подошло под три случая выше, считалось входом.
+            response.status.value in CLIENT_ERROR_CODES ->
+                IllegalStateException("сервер отклонил вход (HTTP ${response.status.value})")
             else -> null
         }
         loggedIn = failure == null
@@ -289,6 +293,7 @@ class LHttpResponse(
 private const val CF_MITIGATED_HEADER = "cf-mitigated"
 private const val WRONG_CREDENTIALS_MARKER = "The username and/or password you specified are not correct."
 private val SERVER_ERROR_CODES = 500..599
+private val CLIENT_ERROR_CODES = 400..499
 
 private const val REQUESTED_WITH_HEADER = "X-Requested-With"
 private const val REQUESTED_WITH_XHR = "XMLHttpRequest"

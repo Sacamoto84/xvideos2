@@ -178,7 +178,9 @@ private fun LazyRow123GridItemContentStateless(
                         modifier = Modifier.padding(start = 2.dp, bottom = 2.dp).align(Alignment.BottomStart),
                         onClick = { onClickOpenProfile(item.userName) },
                         videoItem = item,
-                        listUsers = UsersRed.listAllUsers,
+                        // Поиск по ключу, а не listAllUsers: тот на каждую ячейку и
+                        // каждую перекомпозицию копировал весь кэш авторов.
+                        avatarUrl = UsersRed.findUser(item.userName)?.profileImageUrl,
                         visibleUserName = columns <= 2,
                         sizeIcon = 36.dp,
                         cornerRadius = 8.dp,

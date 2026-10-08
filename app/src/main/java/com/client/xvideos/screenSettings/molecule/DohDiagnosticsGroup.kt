@@ -19,6 +19,7 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
+import com.client.xvideos.screenSettings.model.dohDiagnosticsMessage
 import com.client.xvideos.x.urlStart
 import java.net.URI
 import kotlinx.coroutines.Dispatchers
@@ -49,15 +50,8 @@ internal fun DohDiagnosticsGroup(
                 val results = withContext(Dispatchers.IO) {
                     DIAGNOSED_HOSTS.map { (section, host) -> section to AppDns.diagnose(host) }
                 }
-                val provider = results.firstNotNullOfOrNull { it.second.getOrNull()?.providerTitle }
-                val summary = results.joinToString(", ") { (section, result) ->
-                    result.fold(
-                        onSuccess = { "$section ${it.elapsedMs} мс" },
-                        onFailure = { "$section не найден" },
-                    )
-                }
-                val text = if (provider != null) "$provider: $summary" else "Ошибка DNS: $summary"
-                if (results.all { it.second.isSuccess }) SnackBar.success(text) else SnackBar.error(text)
+                val message = dohDiagnosticsMessage(results)
+                if (message.isError) SnackBar.error(message.text) else SnackBar.success(message.text)
             }
         }
     }

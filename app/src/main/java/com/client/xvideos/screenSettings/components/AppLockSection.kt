@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.R
+import com.client.xvideos.calculator.CalculatorState
 import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockRepository
@@ -307,8 +308,11 @@ private fun CamouflageVerificationDialog(
     val onConfirmVerification = remember(pinInput, isVerifyingPin, context, onSuccess) {
         {
             if (!isVerifyingPin) {
-                if (!pinInput.all { ch -> ch.isDigit() }) {
-                    pinError = "Код доступа для калькулятора должен состоять только из цифр"
+                // Тем же правилом, что и калькулятор: код, который на нём не набрать,
+                // с маскировкой закрыл бы приложение навсегда.
+                if (!CalculatorState.isEnterableCode(pinInput)) {
+                    pinError = "Код доступа для калькулятора — только цифры, не длиннее " +
+                        "${CalculatorState.MAX_CODE_DIGITS}"
                 } else {
                     scope.launch {
                         isVerifyingPin = true
@@ -425,8 +429,9 @@ internal fun AppLockPasswordDialog(
                     return@launch
                 }
 
-                if (isCamouflage && needsNewPassword && !newPassword.all { ch -> ch.isDigit() }) {
-                    errorText = "При включённой маскировке код доступа должен состоять только из цифр"
+                if (isCamouflage && needsNewPassword && !CalculatorState.isEnterableCode(newPassword)) {
+                    errorText = "При включённой маскировке код доступа — только цифры, не длиннее " +
+                        "${CalculatorState.MAX_CODE_DIGITS}"
                     return@launch
                 }
 

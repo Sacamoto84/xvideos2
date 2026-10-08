@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateSetOf
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
+import com.client.xvideos.common.fileDB.putFirst
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.x.model.XSubscriptionItem
 import com.client.xvideos.x.xProfileSlug
@@ -71,9 +72,7 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
             channelsDb.insert(slug, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        val idx = channelsList.indexOfFirst { it.cleanSlug == slug }
-                        if (idx >= 0) channelsList.removeAt(idx)
-                        channelsList.add(item)
+                        channelsList.putFirst(item) { it.cleanSlug == slug }
                         channelSlugs.add(slug)
                     }
                     SnackBar.success("Канал добавлен в подписки")
@@ -116,9 +115,7 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
             modelsDb.insert(slug, item)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        val idx = modelsList.indexOfFirst { it.cleanSlug == slug }
-                        if (idx >= 0) modelsList.removeAt(idx)
-                        modelsList.add(item)
+                        modelsList.putFirst(item) { it.cleanSlug == slug }
                         modelSlugs.add(slug)
                     }
                     SnackBar.success("Актриса добавлена в подписки")

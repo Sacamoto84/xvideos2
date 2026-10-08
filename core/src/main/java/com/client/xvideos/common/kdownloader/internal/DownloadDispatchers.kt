@@ -152,21 +152,34 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
      * Фоновая очистка временных файлов и записей в БД, не обновлявшихся более [days] дней.
      */
     fun cleanup(days: Int) {
-        dbScope.launch {
-            val models: List<DownloadModel>? = dbHelper.getUnwantedModels(days)
-            if (models != null) {
-                for (model in models) {
-                    val tempPath: String = getTempPath(
-                        model.dirPath,
-                        model.fileName
-                    )
-                    dbHelper.remove(model.id)
-                    val file = File(tempPath)
-                    if (file.exists()) {
-                        file.delete()
-                    }
-                }
-            }
+        dbScope.launch { removeStaleDownloads(dbHelper, days) }
+    }
+}
+
+/**
+ * Убирает записи загрузок, не обновлявшиеся более [days] дней, и их временные файлы.
+ *
+ * Временный файл удаляется, только если и сам он столько же не менялся. Запись
+ * прежней попытки указывает на тот же `.temp`, что и новая: id загрузки
+ * считается от адреса, а адрес у повтора другой. Без этой проверки уборка
+ * стирала бы файл, в который прямо сейчас пишет идущая загрузка.
+ *
+ * @param nowMs Текущее время; подменяется в тестах.
+ */
+internal suspend fun removeStaleDownloads(
+    dbHelper: DbHelper,
+    days: Int,
+    nowMs: Long = System.currentTimeMillis(),
+) {
+    val models: List<DownloadModel> = dbHelper.getUnwantedModels(days) ?: return
+    val staleBefore = nowMs - days * MILLIS_PER_DAY
+    for (model in models) {
+        dbHelper.remove(model.id)
+        val file = File(getTempPath(model.dirPath, model.fileName))
+        if (file.exists() && file.lastModified() <= staleBefore) {
+            file.delete()
         }
     }
 }
+
+private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000

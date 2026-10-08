@@ -55,4 +55,15 @@ class DownloadedVideoKeysTest {
     fun `пустой список файлов возвращает пустое множество ключей`() {
         assertTrue(downloadedVideoKeys(emptyList()).isEmpty())
     }
+
+    @Test
+    fun `файлы ролика для удаления включают остатки оборванной загрузки`() {
+        // Удаление убирало mp4, info и jpg, а временные файлы загрузчика рядом
+        // оставались: в списке их нет, убрать из приложения было нечем.
+        val userDir = File("downloads", "author")
+
+        val names = downloadedItemFiles(userDir, "abc").map { it.name }.sorted()
+
+        assertEquals(listOf("abc.info", "abc.jpg", "abc.jpg.temp", "abc.mp4", "abc.mp4.temp"), names)
+    }
 }

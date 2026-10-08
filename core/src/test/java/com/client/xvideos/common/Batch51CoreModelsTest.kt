@@ -8,14 +8,11 @@ import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.collectionDB.CollectionName
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
-import com.client.xvideos.common.download.work.DownloadStatus
-import com.client.xvideos.common.download.work.DownloadWorkState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.UUID
 
 class Batch51CoreModelsTest {
 
@@ -65,28 +62,6 @@ class Batch51CoreModelsTest {
         assertEquals("default", CollectionName.normalizeOrDefault("..", "default"))
         assertEquals("default", CollectionName.normalizeOrDefault(".hidden", "default"))
         assertEquals("default", CollectionName.normalizeOrDefault("invalid/name", "default"))
-    }
-
-    @Test
-    fun `DownloadStatus and DownloadWorkState activity and byte calculations`() {
-        assertTrue(DownloadStatus.ENQUEUED.isActive)
-        assertTrue(DownloadStatus.RUNNING.isActive)
-        assertFalse(DownloadStatus.SUCCEEDED.isActive)
-        assertTrue(DownloadStatus.SUCCEEDED.isTerminal)
-        assertTrue(DownloadStatus.FAILED.isTerminal)
-        assertTrue(DownloadStatus.CANCELLED.isTerminal)
-
-        val workState = DownloadWorkState(
-            workId = UUID.randomUUID(),
-            tag = "video_1",
-            status = DownloadStatus.RUNNING,
-            bytesDownloaded = 200L,
-            totalBytes = 1000L
-        )
-        assertTrue(workState.isActive)
-        assertFalse(workState.isTerminal)
-        assertTrue(workState.hasTotalBytes)
-        assertEquals(800L, workState.remainingBytes)
     }
 
     @Test

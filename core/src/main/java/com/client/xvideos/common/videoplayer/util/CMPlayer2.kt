@@ -1,6 +1,5 @@
 package com.client.xvideos.common.videoplayer.util
 
-import android.view.View
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.ScaleAndRotateTransformation
 import androidx.media3.ui.compose.ContentFrame
@@ -25,10 +23,10 @@ import com.client.xvideos.common.videoplayer.model.PlayerPlaybackCallbacks
 import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
+import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.util.WeakHashMap
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -105,20 +103,8 @@ fun CMPPlayer2(
         }
     }
 
-    // Экран не гасим только пока реально идёт воспроизведение. Флаг живёт на
-    // host-view всей Compose-иерархии, а плееров на экране может быть несколько
-    // (списки с UrlVideoLite), поэтому считаем играющих: снимать флаг можно лишь
-    // когда замолчал последний. Раньше он висел на своём PlayerView и такой
-    // проблемы не было.
-    val view = LocalView.current
-    DisposableEffect(view, config.isPause) {
-        if (config.isPause) {
-            onDispose { }
-        } else {
-            KeepScreenOnCounter.acquire(view)
-            onDispose { KeepScreenOnCounter.release(view) }
-        }
-    }
+    // Экран не гасим только пока реально идёт воспроизведение.
+    KeepScreenOn(active = !config.isPause)
 
     // modifier — корню: раньше он уходил рамке видео, а чёрная подложка всегда
     // занимала всё доступное место, каким бы ни был заданный размер.
@@ -158,35 +144,6 @@ fun CMPPlayer2(
                 exoPlayer.clearMediaItems()
                 exoPlayer.removeListener(listener)
             }
-        }
-    }
-}
-
-/**
- * Счётчик играющих плееров на одном host-view: `keepScreenOn` — свойство view,
- * а не плеера, поэтому владельцев у флага может быть несколько.
- * Только главный поток — Compose-эффекты выполняются на нём.
- */
-private object KeepScreenOnCounter {
-
-    // WeakHashMap, а не mutableMapOf: карта переживает свои View (счётчик —
-    // process-wide object), и непарный release превратил бы её в утечку всей
-    // Compose-иерархии. Слабый ключ делает такую утечку невозможной.
-    private val counts = WeakHashMap<View, Int>()
-
-    fun acquire(view: View) {
-        val next = (counts[view] ?: 0) + 1
-        counts[view] = next
-        view.keepScreenOn = true
-    }
-
-    fun release(view: View) {
-        val next = (counts[view] ?: 1) - 1
-        if (next <= 0) {
-            counts.remove(view)
-            view.keepScreenOn = false
-        } else {
-            counts[view] = next
         }
     }
 }
