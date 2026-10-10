@@ -2,6 +2,8 @@ package com.client.xvideos.calculator
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.displayCutoutPadding
@@ -49,6 +51,11 @@ fun CalculatorScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            )
             .background(Color.Black)
             .displayCutoutPadding()
             .padding(horizontal = 16.dp, vertical = 12.dp),

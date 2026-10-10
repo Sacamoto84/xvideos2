@@ -7,11 +7,15 @@ import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -221,11 +225,19 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                         color = Color.Black,
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
+                            val shouldHideProtectedContent = isAppLocked || (isAppMinimized && blurRecentTasks)
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .then(
-                                        if (shouldBlur) {
+                                        if (shouldHideProtectedContent) {
+                                            Modifier
+                                                .clearAndSetSemantics { }
+                                                .drawWithContent {
+                                                    // Глушим отрисовку пикселей и очищаем Semantics-дерево
+                                                    // для защиты от Accessibility Services и UI Automator
+                                                }
+                                        } else if (shouldBlur) {
                                             Modifier.blur(25.dp)
                                         } else {
                                             Modifier
@@ -292,10 +304,15 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     @Composable
     private fun MinimizedPrivacyOverlay() {
         val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
-        val scrimAlpha = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 0.45f else 0.88f
+        val scrimAlpha = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 0.45f else 1.0f
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {}
+                )
                 .background(Color.Black.copy(alpha = scrimAlpha)),
             contentAlignment = Alignment.Center
         ) {
@@ -314,38 +331,48 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     @Composable
     private fun AppLockOverlay(onUnlockSuccess: () -> Unit) {
         val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
-        if (isCamouflage) {
-            CalculatorScreen(
-                onUnlock = { password ->
-                    if (AppLockRepository.lockoutRemainingMillis(this@MainActivity) > 0L) {
-                        false
-                    } else if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
-                        AppLockRepository.resetFailedAttempts(this@MainActivity)
-                        AppLockSession.unlock()
-                        onUnlockSuccess()
-                        true
-                    } else {
-                        false
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {}
+                )
+        ) {
+            if (isCamouflage) {
+                CalculatorScreen(
+                    onUnlock = { password ->
+                        if (AppLockRepository.lockoutRemainingMillis(this@MainActivity) > 0L) {
+                            false
+                        } else if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                            AppLockRepository.resetFailedAttempts(this@MainActivity)
+                            AppLockSession.unlock()
+                            onUnlockSuccess()
+                            true
+                        } else {
+                            false
+                        }
+                    },
+                    onUnlockFailed = {
+                        AppLockRepository.registerFailedAttempt(this@MainActivity)
+                    },
+                    onBack = { moveTaskToBack(true) }
+                )
+            } else {
+                BackHandler { moveTaskToBack(true) }
+                AppLockScreen(
+                    onUnlock = { password ->
+                        if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
+                            AppLockSession.unlock()
+                            onUnlockSuccess()
+                            true
+                        } else {
+                            false
+                        }
                     }
-                },
-                onUnlockFailed = {
-                    AppLockRepository.registerFailedAttempt(this@MainActivity)
-                },
-                onBack = { moveTaskToBack(true) }
-            )
-        } else {
-            BackHandler { moveTaskToBack(true) }
-            AppLockScreen(
-                onUnlock = { password ->
-                    if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
-                        AppLockSession.unlock()
-                        onUnlockSuccess()
-                        true
-                    } else {
-                        false
-                    }
-                }
-            )
+                )
+            }
         }
     }
 }
