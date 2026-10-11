@@ -48,8 +48,10 @@ internal fun WebServerActionButtons(
                 putExtra(Intent.EXTRA_TEXT, serverUrl)
                 type = "text/plain"
             }
-            val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой")
-            context.startActivity(shareIntent)
+            val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            runCatching { context.startActivity(shareIntent) }
         }
     }
 
