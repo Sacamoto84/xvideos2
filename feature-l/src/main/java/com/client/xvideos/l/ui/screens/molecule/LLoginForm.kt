@@ -55,8 +55,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.ui.IncognitoKeyboard
 import timber.log.Timber
 
 private const val URL_LUSCIOUS = "https://www.luscious.net"
@@ -196,7 +198,7 @@ fun LLoginForm(
                 .fillMaxWidth()
                 .semantics { contentType = ContentType.Username },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(
+            keyboardOptions = IncognitoKeyboard.options(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
             ),
@@ -215,23 +217,26 @@ fun LLoginForm(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = password,
-            onValueChange = onPasswordChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentType = ContentType.Password },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = passwordTrailingIcon,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = keyboardActions,
-            singleLine = true,
-            colors = textFieldColors,
-            textStyle = FIELD_TEXT_STYLE
-        )
+        SecurePasswordToolbar {
+            OutlinedTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentType = ContentType.Password },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = passwordTrailingIcon,
+                keyboardOptions = IncognitoKeyboard.options(
+                    forceIncognito = true,
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = keyboardActions,
+                singleLine = true,
+                colors = textFieldColors,
+                textStyle = FIELD_TEXT_STYLE
+            )
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 

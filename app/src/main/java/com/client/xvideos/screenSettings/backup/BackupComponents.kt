@@ -53,6 +53,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.applock.DisableAppLockAutofill
+import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -474,53 +475,57 @@ internal fun BackupCreatePasswordDialog(
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text(TEXT_PASSWORD_LABEL) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
-                            tint = dialogTheme.bodyColor
-                        )
-                    }
-                },
-                keyboardOptions = IncognitoKeyboard.options(
-                    forceIncognito = true,
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
+            SecurePasswordToolbar {
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(TEXT_PASSWORD_LABEL) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (passwordVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
+                                tint = dialogTheme.bodyColor
+                            )
+                        }
+                    },
+                    keyboardOptions = IncognitoKeyboard.options(
+                        forceIncognito = true,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    )
                 )
-            )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = passwordConfirm,
-                onValueChange = { passwordConfirm = it },
-                label = { Text("Подтверждение пароля") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { passwordConfirmVisible = !passwordConfirmVisible }) {
-                        Icon(
-                            imageVector = if (passwordConfirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordConfirmVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
-                            tint = dialogTheme.bodyColor
-                        )
-                    }
-                },
-                keyboardOptions = IncognitoKeyboard.options(
-                    forceIncognito = true,
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
+            SecurePasswordToolbar {
+                OutlinedTextField(
+                    value = passwordConfirm,
+                    onValueChange = { passwordConfirm = it },
+                    label = { Text("Подтверждение пароля") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordConfirmVisible = !passwordConfirmVisible }) {
+                            Icon(
+                                imageVector = if (passwordConfirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (passwordConfirmVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
+                                tint = dialogTheme.bodyColor
+                            )
+                        }
+                    },
+                    keyboardOptions = IncognitoKeyboard.options(
+                        forceIncognito = true,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    )
                 )
-            )
+            }
 
             if (password.isNotEmpty() && !isLengthValid) {
                 Spacer(modifier = Modifier.height(6.dp))
@@ -577,35 +582,37 @@ internal fun BackupRestorePasswordDialog(
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text(TEXT_PASSWORD_LABEL) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
-                            tint = dialogTheme.bodyColor
-                        )
-                    }
-                },
-                keyboardOptions = IncognitoKeyboard.options(
-                    forceIncognito = true,
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = {
-                    if (isValid) {
-                        val chars = password.toCharArray()
-                        password = ""
-                        onConfirm(chars)
-                    }
-                })
-            )
+            SecurePasswordToolbar {
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(TEXT_PASSWORD_LABEL) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (passwordVisible) TEXT_PASSWORD_HIDE else TEXT_PASSWORD_SHOW,
+                                tint = dialogTheme.bodyColor
+                            )
+                        }
+                    },
+                    keyboardOptions = IncognitoKeyboard.options(
+                        forceIncognito = true,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (isValid) {
+                            val chars = password.toCharArray()
+                            password = ""
+                            onConfirm(chars)
+                        }
+                    })
+                )
+            }
 
             if (!errorMessage.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
