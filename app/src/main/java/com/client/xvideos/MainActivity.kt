@@ -49,6 +49,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.calculator.CalculatorScreen
+import com.client.xvideos.calculator.LauncherAliasManager
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
@@ -173,6 +174,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         super.onCreate(savedInstanceState)
 
         configureWindow()
+        LauncherAliasManager.updateTaskDescription(this, Settings.camouflage_calculator_enabled.field.value)
 
         val shouldShowAppLock = AppLockRepository.shouldShowLock(this)
         if (shouldShowAppLock) {
@@ -190,6 +192,11 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                     if (AppLockRepository.shouldShowLock(this@MainActivity)) isAppLocked = true
                 }
+            }
+
+            val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
+            LaunchedEffect(isCamouflage) {
+                LauncherAliasManager.updateTaskDescription(this@MainActivity, isCamouflage)
             }
 
             val blurRecentTasks by Settings.blur_recent_tasks.field.collectAsStateWithLifecycle()

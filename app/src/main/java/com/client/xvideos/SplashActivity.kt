@@ -5,9 +5,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
 import dagger.hilt.android.AndroidEntryPoint
@@ -52,6 +54,7 @@ class SplashActivity : ComponentActivity() {
         // включаем API
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        LauncherAliasManager.updateTaskDescription(this, Settings.camouflage_calculator_enabled.field.value)
 
         // Возврат в уже запущенное приложение по иконке лаунчера.
         //

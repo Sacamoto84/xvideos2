@@ -1,8 +1,11 @@
 package com.client.xvideos.calculator
 
+import android.app.Activity
+import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import com.client.xvideos.R
 import timber.log.Timber
 
 /**
@@ -53,6 +56,34 @@ object LauncherAliasManager {
             }
         } catch (e: Exception) {
             Timber.e(e, "Не удалось переключить состояние launcher alias")
+        }
+    }
+
+    /**
+     * Динамически обновляет заголовок и значок задачи в списке недавних приложений (Overview / Recents).
+     *
+     * При включенном камуфляже заменяет системное имя и иконку на «Калькулятор»,
+     * чтобы приложение не демаскировало себя в диспетчере задач Android.
+     */
+    fun updateTaskDescription(activity: Activity, isCamouflage: Boolean) {
+        try {
+            val label = if (isCamouflage) {
+                activity.getString(R.string.app_name_calculator)
+            } else {
+                activity.getString(R.string.app_name)
+            }
+            val icon = if (isCamouflage) {
+                R.drawable.ic_launcher_calculator
+            } else {
+                R.mipmap.ic_launcher
+            }
+            val taskDescription = ActivityManager.TaskDescription.Builder()
+                .setLabel(label)
+                .setIcon(icon)
+                .build()
+            activity.setTaskDescription(taskDescription)
+        } catch (e: Exception) {
+            Timber.e(e, "LauncherAliasManager: не удалось обновить TaskDescription")
         }
     }
 }
