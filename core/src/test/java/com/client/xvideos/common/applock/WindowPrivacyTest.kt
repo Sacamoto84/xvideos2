@@ -70,4 +70,17 @@ class WindowPrivacyTest {
             )
         )
     }
+
+    @Test
+    fun `свёрнутый камуфляж калькулятора не ставит FLAG_SECURE при активном замке`() {
+        assertFalse(
+            WindowPrivacy.needsSecureFlag(
+                isLockShown = true,
+                isMinimized = true,
+                blurRecentTasks = true,
+                lockEnabled = true,
+                isCamouflage = true,
+            )
+        )
+    }
 }

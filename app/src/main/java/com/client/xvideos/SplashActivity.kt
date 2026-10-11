@@ -102,7 +102,9 @@ class SplashActivity : ComponentActivity() {
             val intent = Intent(this@SplashActivity, MainActivity::class.java).apply {
                 this@SplashActivity.intent.action?.let { action = it }
                 this@SplashActivity.intent.data?.let { data = it }
-                this@SplashActivity.intent.extras?.let { putExtras(it) }
+                runCatching {
+                    this@SplashActivity.intent.extras?.let { putExtras(it) }
+                }
             }
             startActivity(intent)
             @Suppress("DEPRECATION")
