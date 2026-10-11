@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import com.client.xvideos.common.ui.IncognitoKeyboard
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -57,9 +58,10 @@ fun AppLockInputForm(
             label = { Text("Код доступа") },
             isError = errorText != null || isLockedOut,
             visualTransformation = if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
+            keyboardOptions = IncognitoKeyboard.options(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done,
+                forceIncognito = true
             ),
             keyboardActions = KeyboardActions(onDone = { if (password.isNotBlank() && !isLockedOut) onSubmit() }),
             textStyle = Theme.L.Type.body.copy(color = MaterialTheme.colorScheme.onSurface),

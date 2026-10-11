@@ -53,6 +53,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.IncognitoKeyboard
 import kotlinx.coroutines.launch
 
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
@@ -579,9 +580,10 @@ fun PasswordSettingField(
     val dialogTheme = Theme.DialogLavande
     val onToggleShowPassword = remember { { showPassword = !showPassword } }
     val keyboardOptions = remember(keyboardType) {
-        androidx.compose.foundation.text.KeyboardOptions(
+        IncognitoKeyboard.options(
             keyboardType = keyboardType,
-            imeAction = ImeAction.Done
+            imeAction = ImeAction.Done,
+            forceIncognito = true
         )
     }
     val keyboardActions = remember(onDone) {
