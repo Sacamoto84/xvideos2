@@ -74,6 +74,9 @@ object LocalWebServer {
                 install(ContentNegotiation) { json(AppJson) }
 
                 intercept(ApplicationCallPipeline.Plugins) {
+                    call.response.header("X-Content-Type-Options", "nosniff")
+                    call.response.header("X-Frame-Options", "DENY")
+
                     if (AppLockRepository.isAppLocked(appContext)) {
                         val isApi = call.request.uri.startsWith("/api/")
                         if (isApi) {

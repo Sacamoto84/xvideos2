@@ -1,5 +1,6 @@
 package com.client.xvideos.l.featured.saved
 
+import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.l.model.AlbumDetails
@@ -219,6 +220,15 @@ internal suspend fun lDownloadToFile(
     file: File,
     onProgress: (downloadedBytes: Long, totalBytes: Long?) -> Unit = { _, _ -> }
 ) {
+    require(url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)) {
+        "Unsupported or unsafe URL scheme: $url"
+    }
+    require(!isUnsafeItemName(file.name)) {
+        "Unsafe file name: ${file.name}"
+    }
+    require(!file.path.split('/', '\\').any { it == ".." }) {
+        "Path traversal detected in file path: ${file.path}"
+    }
     if (file.exists() && file.length() > 0L) return
     file.parentFile?.mkdirs()
 

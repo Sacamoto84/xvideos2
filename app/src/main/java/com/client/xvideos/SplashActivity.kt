@@ -54,7 +54,11 @@ class SplashActivity : ComponentActivity() {
         // включаем API
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        LauncherAliasManager.updateTaskDescription(this, Settings.camouflage_calculator_enabled.field.value)
+        val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
+        LauncherAliasManager.updateTaskDescription(this, isCamouflage)
+        if (Settings.isInitialized && Settings.blur_recent_tasks.field.value && (!isCamouflage || !AppLockRepository.isEnabled(this))) {
+            window?.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        }
 
         // Возврат в уже запущенное приложение по иконке лаунчера.
         //
