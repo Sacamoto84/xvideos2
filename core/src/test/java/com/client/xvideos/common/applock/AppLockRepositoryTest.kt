@@ -88,7 +88,7 @@ class AppLockRepositoryTest {
         AppLockRepository.setPassword(null, "1111")
         assertEquals(0L, AppLockRepository.lockoutRemainingMillis())
 
-        for (i in 1..4) {
+        repeat(4) {
             AppLockRepository.registerFailedAttempt()
         }
         assertEquals(0L, AppLockRepository.lockoutRemainingMillis())
