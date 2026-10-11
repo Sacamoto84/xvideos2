@@ -212,10 +212,14 @@ class WebServerService : Service() {
             )
         }
 
+        val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
+        val title = if (isCamouflage) "Служба передачи данных" else "Веб-сервер активен"
+        val text = if (isCamouflage) url else "$url — трансляция на ПК"
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.logo)
-            .setContentTitle("Веб-сервер активен")
-            .setContentText("$url — трансляция на ПК")
+            .setSmallIcon(R.drawable.ic_stat_web_server)
+            .setContentTitle(title)
+            .setContentText(text)
             .setOngoing(true)
             .setContentIntent(contentPendingIntent)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Остановить", stopPendingIntent)
@@ -226,9 +230,11 @@ class WebServerService : Service() {
     private fun ensureNotificationChannel() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
         if (nm.getNotificationChannel(CHANNEL_ID) == null) {
+            val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
+            val channelName = if (isCamouflage) "Служба передачи данных" else "Локальный веб-сервер"
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Локальный веб-сервер",
+                channelName,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Уведомления о работе локального HTTP-сервера для трансляции на ПК"
