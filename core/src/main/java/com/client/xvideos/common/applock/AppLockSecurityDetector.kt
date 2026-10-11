@@ -2,6 +2,7 @@ package com.client.xvideos.common.applock
 
 import android.os.Build
 import android.os.Debug
+import com.client.xvideos.common.AppBuildInfo
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
@@ -146,8 +147,15 @@ object AppLockSecurityDetector {
 
     /**
      * Проверяет, скомпрометирована ли безопасность процесса активными инструментами анализа/взлома.
+     *
+     * В debug-сборках ([AppBuildInfo.debug]) подключение отладчика Android Studio является
+     * штатным процессом разработки, поэтому проверка отладчика активна только в release-режиме,
+     * сохраняя при этом защиту от Frida/Xposed.
      */
     fun isProcessCompromised(): Boolean {
+        if (AppBuildInfo.debug) {
+            return isHookFrameworkDetected()
+        }
         return isDebuggerAttached() || isHookFrameworkDetected()
     }
 }

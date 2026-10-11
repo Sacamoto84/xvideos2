@@ -8,6 +8,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+import com.client.xvideos.common.AppBuildInfo
+
 class AppLockSecurityDetectorTest {
 
     @Before
@@ -15,6 +17,7 @@ class AppLockSecurityDetectorTest {
     fun tearDown() {
         AppLockSecurityDetector.resetForTesting()
         AppLockRepository.resetForTesting()
+        AppBuildInfo.resetForTesting()
     }
 
     @Test
@@ -103,5 +106,18 @@ class AppLockSecurityDetectorTest {
 
         // Проверяем, что была начислена штрафная попытка
         assertEquals(1, prefs.getInt("app_lock_failed_attempts", 0))
+    }
+
+    @Test
+    fun `isProcessCompromised в debug сборке разрешает отладчик Android Studio`() {
+        AppBuildInfo.init(debug = true, versionName = "test")
+        AppLockSecurityDetector.setTestDebuggerAttached(true)
+        AppLockSecurityDetector.setTestMapsContent("clean")
+
+        assertFalse("В debug-сборке отладчик не должен блокировать процесс", AppLockSecurityDetector.isProcessCompromised())
+
+        // Но фреймворки хукинга (Frida) всё равно блокируются
+        AppLockSecurityDetector.setTestMapsContent("frida-agent.so")
+        assertTrue(AppLockSecurityDetector.isProcessCompromised())
     }
 }
