@@ -21,5 +21,12 @@ object WindowPrivacy {
         isMinimized: Boolean,
         blurRecentTasks: Boolean,
         lockEnabled: Boolean,
-    ): Boolean = isLockShown || (isMinimized && (blurRecentTasks || lockEnabled))
+        isCamouflage: Boolean = false,
+    ): Boolean {
+        // Если открыт калькулятор, не глушим окно черным экраном в Recent Apps,
+        // позволяя системе сформировать естественную миниатюру калькулятора.
+        if (isCamouflage && isLockShown) return false
+
+        return isLockShown || (isMinimized && (blurRecentTasks || lockEnabled))
+    }
 }

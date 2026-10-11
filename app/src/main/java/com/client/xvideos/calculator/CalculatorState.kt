@@ -291,7 +291,10 @@ class CalculatorState(
                 } finally {
                     isVerifying = false
                 }
-                if (success) return@launch
+                if (success) {
+                    resetState()
+                    return@launch
+                }
                 onUnlockFailed()
             }
             enteredPinDigits.clear()
@@ -302,22 +305,31 @@ class CalculatorState(
     }
 
     /**
+     * Полностью сбрасывает все состояние вычислений, дисплей и накопленные цифры кода доступа.
+     * Вызывается при успешной разблокировке или для безопасной очистки калькулятора.
+     */
+    fun resetState() {
+        enteredPinDigits.clear()
+        displayValue = "0"
+        previousValue = null
+        pendingOperation = null
+        lastOperand = null
+        lastOperator = null
+        expressionHistory = ""
+        isNewEntry = true
+    }
+
+    /**
      * Очищает дисплей (Clear) или сбрасывает все состояние вычислений (All Clear).
      */
     fun onClear(haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        enteredPinDigits.clear()
         if (!isAllClear && displayValue != "0") {
+            enteredPinDigits.clear()
             displayValue = "0"
             isNewEntry = true
         } else {
-            displayValue = "0"
-            previousValue = null
-            pendingOperation = null
-            lastOperand = null
-            lastOperator = null
-            expressionHistory = ""
-            isNewEntry = true
+            resetState()
         }
     }
 
@@ -410,8 +422,16 @@ class CalculatorState(
         /** [Saver] для сохранения состояния калькулятора при смене конфигурации Android. */
         val Saver: Saver<CalculatorState, List<String?>> = Saver(
             save = {
+                // SECURITY: Если на дисплее набран потенциальный PIN-код без математических операций,
+                // заменяем его на "0", чтобы не сохранять секретный код в незашифрованный системный Bundle.
+                val rawDigits = it.displayValue.replace(" ", "")
+                val isSecretCandidate = it.previousValue == null &&
+                    it.pendingOperation == null &&
+                    (it.isPinCandidate(rawDigits) || it.enteredPinDigits.isNotEmpty())
+                val safeDisplay = if (isSecretCandidate) "0" else it.displayValue
+
                 listOf(
-                    it.displayValue,
+                    safeDisplay,
                     it.expressionHistory,
                     it.previousValue?.toPlainString(),
                     it.pendingOperation,

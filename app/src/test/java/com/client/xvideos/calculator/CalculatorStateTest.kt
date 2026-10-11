@@ -168,6 +168,29 @@ class CalculatorStateTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals("7788", unlockedCode)
+        assertEquals("0", state.displayValue)
+        assertTrue(state.isAllClear)
+    }
+
+    @Test
+    fun `Saver заменяет потенциальный PIN на 0, защищая от утечки в Bundle`() {
+        val state = CalculatorState()
+        state.onDigit("1", noOpHaptic)
+        state.onDigit("2", noOpHaptic)
+        state.onDigit("3", noOpHaptic)
+        state.onDigit("4", noOpHaptic)
+
+        val saverScope = androidx.compose.runtime.saveable.SaverScope { true }
+        val savedList = with(CalculatorState.Saver) { saverScope.save(state) }
+        assertEquals("0", savedList?.get(0))
+
+        // Для обычных вычислений значение сохраняется
+        val mathState = CalculatorState()
+        mathState.onDigit("5", noOpHaptic)
+        mathState.onOperator("+", noOpHaptic)
+        mathState.onDigit("6", noOpHaptic)
+        val savedMath = with(CalculatorState.Saver) { saverScope.save(mathState) }
+        assertEquals("6", savedMath?.get(0))
     }
 
     @Test

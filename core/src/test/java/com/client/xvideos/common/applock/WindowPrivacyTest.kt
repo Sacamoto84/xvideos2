@@ -57,4 +57,17 @@ class WindowPrivacyTest {
             )
         )
     }
+
+    @Test
+    fun `камуфляж калькулятора не ставит FLAG_SECURE для естественной миниатюры в недавних`() {
+        assertFalse(
+            WindowPrivacy.needsSecureFlag(
+                isLockShown = true,
+                isMinimized = false,
+                blurRecentTasks = false,
+                lockEnabled = true,
+                isCamouflage = true,
+            )
+        )
+    }
 }

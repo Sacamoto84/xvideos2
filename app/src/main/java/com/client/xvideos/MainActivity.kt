@@ -204,17 +204,28 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
             // SECURITY: динамическая аппаратная защита превью в Recent Apps через FLAG_SECURE
             val appLockEnabled by Settings.app_lock_enabled.field.collectAsStateWithLifecycle()
-            LaunchedEffect(isAppMinimized, blurRecentTasks, isAppLocked, appLockEnabled) {
+            LaunchedEffect(isAppMinimized, blurRecentTasks, isAppLocked, appLockEnabled, isCamouflage) {
                 val needSecure = WindowPrivacy.needsSecureFlag(
                     isLockShown = isAppLocked,
                     isMinimized = isAppMinimized,
                     blurRecentTasks = blurRecentTasks,
                     lockEnabled = appLockEnabled && AppLockRepository.isEnabled(this@MainActivity),
+                    isCamouflage = isCamouflage,
                 )
                 if (needSecure) {
                     window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
                 } else {
                     window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
+            // SECURITY: Отключение P2P радиоэфира и приема файлов при активном замке
+            val p2pBackgroundReceive by Settings.p2p_background_receive.field.collectAsStateWithLifecycle()
+            LaunchedEffect(isAppLocked, p2pBackgroundReceive) {
+                if (isAppLocked) {
+                    toggleP2pService(this@MainActivity, false)
+                } else if (p2pBackgroundReceive && P2pPermissions.allGranted(this@MainActivity)) {
+                    toggleP2pService(this@MainActivity, true)
                 }
             }
 
@@ -306,7 +317,10 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
             savedRed.nichesCache.refreshIfStale()
 
-            if (Settings.p2p_background_receive.field.value && P2pPermissions.allGranted(applicationContext)) {
+            if (!AppLockRepository.shouldShowLock(applicationContext) &&
+                Settings.p2p_background_receive.field.value &&
+                P2pPermissions.allGranted(applicationContext)
+            ) {
                 toggleP2pService(applicationContext, true)
             }
         }
