@@ -122,7 +122,8 @@ fun AppLockScreen(
         }
     }
 
-    // При возвращении в приложение из фона фокус и клавиатура также возвращаются в поле ввода
+    // При возвращении в приложение из фона фокус и клавиатура также возвращаются в поле ввода,
+    // а при уходе в фон введенный незавершенный пароль стирается для защиты от компрометации.
     DisposableEffect(lifecycleOwner, isLockedOut) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME && !isLockedOut) {
@@ -131,6 +132,10 @@ fun AppLockScreen(
                     runCatching { focusRequester.requestFocus() }
                     keyboardController?.show()
                 }
+            } else if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
+                password = ""
+                showPassword = false
+                errorText = null
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

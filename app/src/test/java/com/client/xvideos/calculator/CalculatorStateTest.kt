@@ -598,4 +598,31 @@ class CalculatorStateTest {
         assertEquals(emptyList<String>(), checked)
         assertEquals(0, failedAttempts)
     }
+
+    @Test
+    fun `resetState полностью очищает дисплей введенные цифры кода и операнды`() = runTest {
+        val state = CalculatorState()
+        state.onDigit("1", noOpHaptic)
+        state.onDigit("2", noOpHaptic)
+        state.onOperator("+", noOpHaptic)
+        state.onDigit("3", noOpHaptic)
+        state.onDigit("4", noOpHaptic)
+        assertEquals("34", state.displayValue)
+        assertEquals("12 +", state.expressionHistory)
+
+        state.resetState()
+
+        assertEquals("0", state.displayValue)
+        assertEquals("", state.expressionHistory)
+        assertTrue(state.isNewEntry)
+        assertTrue(state.isAllClear)
+
+        var testedPin: String? = null
+        state.onEquals(this, noOpHaptic) { pin ->
+            testedPin = pin
+            true
+        }
+        testScheduler.advanceUntilIdle()
+        assertEquals(null, testedPin)
+    }
 }
