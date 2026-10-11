@@ -1,5 +1,6 @@
 package com.client.xvideos.common.kdownloader.internal
 
+import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.kdownloader.Constants
 import com.client.xvideos.common.kdownloader.Status
 import com.client.xvideos.common.kdownloader.utils.getUniqueId
@@ -79,6 +80,7 @@ class DownloadRequest private constructor(
 
         /** Создает сконфигурированный экземпляр [DownloadRequest] с вычислением детерминированного ID. */
         fun build(): DownloadRequest {
+            require(!isUnsafeItemName(fileName)) { "Unsafe fileName in DownloadRequest: $fileName" }
             return DownloadRequest(
                 url = url,
                 tag = tag,

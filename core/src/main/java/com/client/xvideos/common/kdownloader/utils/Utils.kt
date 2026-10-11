@@ -4,6 +4,8 @@ import com.client.xvideos.common.kdownloader.Constants
 import com.client.xvideos.common.kdownloader.internal.DownloadRequest
 import com.client.xvideos.common.kdownloader.httpclient.DefaultHttpClient
 import com.client.xvideos.common.kdownloader.httpclient.HttpClient
+import com.client.xvideos.common.io.isUnsafeItemName
+import com.client.xvideos.common.io.requireInside
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -20,7 +22,16 @@ private const val MAX_REDIRECTION = 10
  * @param fileName Имя файла.
  */
 fun getPath(dirPath: String, fileName: String): String {
-    return dirPath + File.separator + fileName
+    require(!isUnsafeItemName(fileName)) { "Unsafe fileName: $fileName" }
+    val base = File(dirPath).canonicalFile
+    val target = File(base, fileName).canonicalFile
+    requireInside(base, target)
+    return if (dirPath.endsWith(File.separator) || dirPath.endsWith("/")) {
+        dirPath + fileName
+    } else {
+        val sep = if (dirPath.contains('/')) "/" else File.separator
+        dirPath + sep + fileName
+    }
 }
 
 /**
@@ -105,6 +116,14 @@ fun getRedirectedConnectionIfAny(
         val resolvedLocation = runCatching {
             java.net.URI(req.url).resolve(location).toString()
         }.getOrDefault(location)
+        val resolvedUri = runCatching { java.net.URI(resolvedLocation) }.getOrNull()
+        val scheme = resolvedUri?.scheme?.lowercase()
+        if (scheme != "https" && scheme != "http") {
+            throw IOException("Unsupported or unsafe redirect scheme: $scheme")
+        }
+        if (req.url.startsWith("https://", ignoreCase = true) && scheme == "http") {
+            throw IOException("Insecure HTTPS to HTTP redirect downgrade rejected")
+        }
         req.url = resolvedLocation
         val nextClient = DefaultHttpClient().clone()
         httpClient = nextClient
