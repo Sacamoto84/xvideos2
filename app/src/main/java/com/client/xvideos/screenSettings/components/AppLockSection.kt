@@ -49,6 +49,7 @@ import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.DisableAppLockAutofill
+import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
@@ -609,28 +610,30 @@ fun PasswordSettingField(
         Theme.L.Type.body.copy(color = dialogTheme.bodyColor)
     }
 
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = fieldModifier,
-        label = labelComposable,
-        singleLine = true,
-        visualTransformation =
-            if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        textStyle = fieldTextStyle,
-        trailingIcon = trailingIconComposable,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = dialogTheme.bodyColor,
-            unfocusedTextColor = dialogTheme.bodyColor,
-            cursorColor = dialogTheme.dismissTextColor,
-            focusedBorderColor = dialogTheme.dismissTextColor,
-            unfocusedBorderColor = Color(0xFF9A9A9A),
-            focusedLabelColor = dialogTheme.dismissTextColor,
-            unfocusedLabelColor = Color(0xFF6E6E6E)
+    SecurePasswordToolbar {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = fieldModifier,
+            label = labelComposable,
+            singleLine = true,
+            visualTransformation =
+                if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            textStyle = fieldTextStyle,
+            trailingIcon = trailingIconComposable,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = dialogTheme.bodyColor,
+                unfocusedTextColor = dialogTheme.bodyColor,
+                cursorColor = dialogTheme.dismissTextColor,
+                focusedBorderColor = dialogTheme.dismissTextColor,
+                unfocusedBorderColor = Color(0xFF9A9A9A),
+                focusedLabelColor = dialogTheme.dismissTextColor,
+                unfocusedLabelColor = Color(0xFF6E6E6E)
+            )
         )
-    )
+    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF353535)

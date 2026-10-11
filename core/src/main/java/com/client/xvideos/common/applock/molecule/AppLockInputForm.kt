@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
+import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -47,59 +48,61 @@ fun AppLockInputForm(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = password,
-            onValueChange = onPasswordChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
-            singleLine = true,
-            enabled = !isLockedOut,
-            label = { Text("Код доступа") },
-            isError = errorText != null || isLockedOut,
-            visualTransformation = if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
-            keyboardOptions = IncognitoKeyboard.options(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done,
-                forceIncognito = true
-            ),
-            keyboardActions = KeyboardActions(onDone = { if (password.isNotBlank() && !isLockedOut) onSubmit() }),
-            textStyle = Theme.L.Type.body.copy(color = MaterialTheme.colorScheme.onSurface),
-            trailingIcon = {
-                IconButton(onClick = onShowPasswordToggle) {
-                    Icon(
-                        imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                        contentDescription = if (showPassword) "Скрыть код доступа" else "Показать код доступа",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+        SecurePasswordToolbar {
+            OutlinedTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                singleLine = true,
+                enabled = !isLockedOut,
+                label = { Text("Код доступа") },
+                isError = errorText != null || isLockedOut,
+                visualTransformation = if (showPassword) VisualTransformation.None else AccessCodeVisualTransformation,
+                keyboardOptions = IncognitoKeyboard.options(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done,
+                    forceIncognito = true
+                ),
+                keyboardActions = KeyboardActions(onDone = { if (password.isNotBlank() && !isLockedOut) onSubmit() }),
+                textStyle = Theme.L.Type.body.copy(color = MaterialTheme.colorScheme.onSurface),
+                trailingIcon = {
+                    IconButton(onClick = onShowPasswordToggle) {
+                        Icon(
+                            imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (showPassword) "Скрыть код доступа" else "Показать код доступа",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    errorBorderColor = MaterialTheme.colorScheme.error,
+                    errorLabelColor = MaterialTheme.colorScheme.error,
+                    errorCursorColor = MaterialTheme.colorScheme.error,
+                    errorTextColor = MaterialTheme.colorScheme.onSurface,
+                    errorTrailingIconColor = MaterialTheme.colorScheme.primary,
+                ),
+                supportingText = {
+                    if (errorText != null || isLockedOut) {
+                        Text(
+                            text = if (isLockedOut) "Повторите через $lockoutSeconds с" else (errorText ?: ""),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                cursorColor = MaterialTheme.colorScheme.primary,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                errorBorderColor = MaterialTheme.colorScheme.error,
-                errorLabelColor = MaterialTheme.colorScheme.error,
-                errorCursorColor = MaterialTheme.colorScheme.error,
-                errorTextColor = MaterialTheme.colorScheme.onSurface,
-                errorTrailingIconColor = MaterialTheme.colorScheme.primary,
-            ),
-            supportingText = {
-                if (errorText != null || isLockedOut) {
-                    Text(
-                        text = if (isLockedOut) "Повторите через $lockoutSeconds с" else (errorText ?: ""),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        )
+            )
+        }
 
         Spacer(Modifier.height(16.dp))
 
