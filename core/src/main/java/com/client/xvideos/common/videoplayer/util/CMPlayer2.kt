@@ -23,6 +23,7 @@ import com.client.xvideos.common.videoplayer.model.PlayerPlaybackCallbacks
 import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
+import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.videoplayer.rememberExoPlayerWithLifecycle
 import kotlinx.coroutines.delay
@@ -89,10 +90,17 @@ fun CMPPlayer2(
         rotationEffectsApplied = true
     }
 
-    // Раньше эти четыре строки жили в `update` у AndroidView. Теперь это обычные
+    val isAppLockActive = LocalAppLockActive.current
+
+    // Раньше эти строки жили в `update` у AndroidView. Теперь это обычные
     // эффекты: применяются при изменении своего входа, а не на каждый layout.
-    LaunchedEffect(exoPlayer, config.isPause) { exoPlayer.playWhenReady = !config.isPause }
-    LaunchedEffect(exoPlayer, config.volume) { exoPlayer.volume = config.volume }
+    // При блокировке приложения немедленно снимаем воспроизведение и глушим звук.
+    LaunchedEffect(exoPlayer, config.isPause, isAppLockActive) {
+        exoPlayer.playWhenReady = !config.isPause && !isAppLockActive
+    }
+    LaunchedEffect(exoPlayer, config.volume, isAppLockActive) {
+        exoPlayer.volume = if (isAppLockActive) 0f else config.volume
+    }
     LaunchedEffect(exoPlayer, config.speed) { exoPlayer.setPlaybackSpeed(config.speed.toFloat()) }
     LaunchedEffect(exoPlayer, config.seekToTime) {
         config.seekToTime?.let {
@@ -103,8 +111,8 @@ fun CMPPlayer2(
         }
     }
 
-    // Экран не гасим только пока реально идёт воспроизведение.
-    KeepScreenOn(active = !config.isPause)
+    // Экран не гасим только пока реально идёт воспроизведение и приложение не заблокировано.
+    KeepScreenOn(active = !config.isPause && !isAppLockActive)
 
     // modifier — корню: раньше он уходил рамке видео, а чёрная подложка всегда
     // занимала всё доступное место, каким бы ни был заданный размер.

@@ -55,6 +55,7 @@ import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockScreen
 import com.client.xvideos.common.applock.AppLockSession
+import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.applock.WindowPrivacy
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.p2p.P2pPermissions
@@ -244,7 +245,10 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                         }
                                     )
                             ) {
-                                CompositionLocalProvider(LocalStatusBarRequests provides statusBarRequests) {
+                                CompositionLocalProvider(
+                                    LocalStatusBarRequests provides statusBarRequests,
+                                    LocalAppLockActive provides (isAppLocked || (isAppMinimized && blurRecentTasks)),
+                                ) {
                                     ScreenRoot.Content()
                                 }
                                 P2pBackgroundOverlay()

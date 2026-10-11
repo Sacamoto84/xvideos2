@@ -33,6 +33,7 @@ import androidx.media3.effect.ScaleAndRotateTransformation
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.ContentFrame
 import androidx.media3.ui.compose.lifecycle.rememberPooledPlayer
+import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.videoplayer.feed.FeedPlayerState
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
@@ -135,6 +136,8 @@ fun RedPooledVideoPlayer(
     var isBuffering by remember(player) { mutableStateOf(true) }
     LaunchedEffect(isBuffering) { onBufferingChanged(isBuffering) }
 
+    val isAppLockActive = LocalAppLockActive.current
+
     // Именно LifecycleStartEffect, а не LaunchedEffect: прежний путь ленты вешал
     // `LifecycleEventObserver` (см. `ExoPlayerLifecycle.rememberExoPlayerWithLifecycle`)
     // и снимал playWhenReady на ON_PAUSE/ON_STOP. Без этого свёрнутое приложение
@@ -144,17 +147,17 @@ fun RedPooledVideoPlayer(
     // (заблокированный уходит из ленты). Пул при этом возвращает тот же экземпляр
     // плеера, а `PlayerPool.yield()` перед тем снимает с него playWhenReady. С
     // ключом только по `player` эффект не перезапускался, и новый ролик не стартовал.
-    LifecycleStartEffect(player, mediaItem, play, isCurrentPage) {
-        player?.playWhenReady = play && isCurrentPage
+    LifecycleStartEffect(player, mediaItem, play, isCurrentPage, isAppLockActive) {
+        player?.playWhenReady = play && isCurrentPage && !isAppLockActive
         onStopOrDispose { player?.playWhenReady = false }
     }
 
-    // Экран не гаснет, пока играет текущая страница ленты. Раньше это делал
-    // безусловный флаг на всё приложение; у плеера ленты своего не было.
-    KeepScreenOn(active = play && isCurrentPage)
+    // Экран не гаснет, пока играет текущая страница ленты и приложение не заблокировано.
+    // Раньше это делал безусловный флаг на всё приложение; у плеера ленты своего не было.
+    KeepScreenOn(active = play && isCurrentPage && !isAppLockActive)
 
-    LaunchedEffect(player, isMute) {
-        player?.volume = if (isMute) 0f else 1f
+    LaunchedEffect(player, isMute, isAppLockActive) {
+        player?.volume = if (isMute || isAppLockActive) 0f else 1f
     }
 
     LaunchedEffect(player, speed) {
