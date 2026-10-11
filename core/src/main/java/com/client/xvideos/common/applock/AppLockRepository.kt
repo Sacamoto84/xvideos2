@@ -204,6 +204,11 @@ object AppLockRepository {
 
     /** См. [setPassword]: считает столько же, поэтому тоже не на главном потоке. */
     suspend fun verifyPassword(context: Context? = null, password: String): Boolean {
+        if (AppLockSecurityDetector.isProcessCompromised()) {
+            Timber.w("AppLockRepository: обнаружена скомпрометированная среда (Frida/Debugger/Tracer), проверка пароля отклонена")
+            registerFailedAttempt(context)
+            return false
+        }
         val prefs = getPrefs(context) ?: return false
         val salt = prefs.getString(KEY_PASSWORD_SALT, null)?.fromBase64() ?: return false
         val expectedHash = prefs.getString(KEY_PASSWORD_HASH, null)?.fromBase64() ?: return false

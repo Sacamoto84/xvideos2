@@ -201,7 +201,7 @@ class AppLockRepositoryTest {
         assertFalse(AppLockSession.isUnlocked())
     }
 
-    private class InMemorySharedPreferences : SharedPreferences {
+    internal class InMemorySharedPreferences : SharedPreferences {
         val map = mutableMapOf<String, Any?>()
 
         override fun getAll(): MutableMap<String, *> = HashMap(map)
