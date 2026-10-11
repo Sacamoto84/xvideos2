@@ -133,6 +133,74 @@ class AppLockRepositoryTest {
         assertFalse(legacyPrefs.contains("app_lock_failed_attempts"))
     }
 
+    @Test
+    fun `isAppLocked возвращает false если пароль не задан`() {
+        val prefs = InMemorySharedPreferences()
+        AppLockRepository.setTestPreferencesForTesting(prefs)
+        AppLockSession.lock()
+
+        assertFalse(AppLockRepository.isAppLocked())
+    }
+
+    @Test
+    fun `isAppLocked возвращает true если замок включен и сессия заблокирована`() {
+        val prefs = InMemorySharedPreferences().apply {
+            edit()
+                .putString("app_lock_password_hash", "dGVzdEhhc2g=")
+                .putString("app_lock_password_salt", "dGVzdFNhbHQ=")
+                .putBoolean("app_lock_secure_enabled", true)
+                .apply()
+        }
+        AppLockRepository.setTestPreferencesForTesting(prefs)
+        AppLockSession.lock()
+
+        assertTrue(AppLockRepository.isAppLocked())
+        assertTrue(AppLockRepository.shouldShowLock())
+    }
+
+    @Test
+    fun `isAppLocked возвращает false если замок включен и сессия разблокирована`() {
+        val prefs = InMemorySharedPreferences().apply {
+            edit()
+                .putString("app_lock_password_hash", "dGVzdEhhc2g=")
+                .putString("app_lock_password_salt", "dGVzdFNhbHQ=")
+                .putBoolean("app_lock_secure_enabled", true)
+                .apply()
+        }
+        AppLockRepository.setTestPreferencesForTesting(prefs)
+        AppLockSession.unlock()
+
+        assertFalse(AppLockRepository.isAppLocked())
+        assertFalse(AppLockRepository.shouldShowLock())
+    }
+
+    @Test
+    fun `isAppLocked блокирует сессию если таймаут в фоне истёк`() {
+        val prefs = InMemorySharedPreferences().apply {
+            edit()
+                .putString("app_lock_password_hash", "dGVzdEhhc2g=")
+                .putString("app_lock_password_salt", "dGVzdFNhbHQ=")
+                .putBoolean("app_lock_secure_enabled", true)
+                .apply()
+        }
+        AppLockRepository.setTestPreferencesForTesting(prefs)
+        AppLockSession.unlock()
+
+        val bgTime = 10_000L
+        AppLockSession.onAppBackgrounded(elapsedNow = bgTime)
+
+        var currentTime = bgTime + 5_000L
+        AppLockRepository.setTestElapsedRealtimeForTesting { currentTime }
+
+        // До таймаута — не заблокировано
+        assertFalse(AppLockRepository.isAppLocked())
+
+        // После таймаута (по умолчанию 60с - MINUTES_1) — блокируется
+        currentTime = bgTime + 65_000L
+        assertTrue(AppLockRepository.isAppLocked())
+        assertFalse(AppLockSession.isUnlocked())
+    }
+
     private class InMemorySharedPreferences : SharedPreferences {
         val map = mutableMapOf<String, Any?>()
 

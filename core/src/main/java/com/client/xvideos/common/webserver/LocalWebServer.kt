@@ -28,6 +28,8 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import com.client.xvideos.common.applock.AppLockRepository
+import io.ktor.server.request.uri
 import timber.log.Timber
 import java.net.BindException
 import java.util.concurrent.atomic.AtomicReference
@@ -37,6 +39,8 @@ object LocalWebServer {
     private val HTML_UTF8 = ContentType.Text.Html.withCharset(Charsets.UTF_8)
     private const val UNAUTHORIZED_HTML =
         "<h3>Нет доступа</h3><p>Откройте ссылку или QR-код из настроек приложения.</p>"
+    private const val LOCKED_HTML =
+        "<h3>Доступ заблокирован</h3><p>Приложение заблокировано на устройстве. Разблокируйте экран для продолжения работы.</p>"
     private val cachedIndexHtml = AtomicReference<ByteArray?>(null)
 
     private val serverRef = AtomicReference<EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>?>(null)
@@ -70,6 +74,21 @@ object LocalWebServer {
                 install(ContentNegotiation) { json(AppJson) }
 
                 intercept(ApplicationCallPipeline.Plugins) {
+                    if (AppLockRepository.isAppLocked(appContext)) {
+                        val isApi = call.request.uri.startsWith("/api/")
+                        if (isApi) {
+                            call.respondText(
+                                "{\"error\":\"app_locked\",\"message\":\"Приложение заблокировано\"}",
+                                ContentType.Application.Json,
+                                HttpStatusCode.Forbidden
+                            )
+                        } else {
+                            call.respondText(LOCKED_HTML, HTML_UTF8, HttpStatusCode.Forbidden)
+                        }
+                        finish()
+                        return@intercept
+                    }
+
                     if (!isAuthorized(call, token)) {
                         call.respondText(UNAUTHORIZED_HTML, HTML_UTF8, HttpStatusCode.Unauthorized)
                         finish()

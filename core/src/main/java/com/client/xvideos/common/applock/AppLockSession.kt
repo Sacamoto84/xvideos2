@@ -25,7 +25,7 @@ object AppLockSession {
     /**
      * Фиксирует момент ухода приложения в фон по монотонным часам.
      */
-    fun onAppBackgrounded(elapsedNow: Long = SystemClock.elapsedRealtime()) {
+    fun onAppBackgrounded(elapsedNow: Long = currentElapsed()) {
         lastBackgroundElapsedMs = elapsedNow
     }
 
@@ -40,7 +40,7 @@ object AppLockSession {
     fun onAppForegrounded(
         timeoutSeconds: Int,
         isLockConfigured: Boolean,
-        elapsedNow: Long = SystemClock.elapsedRealtime()
+        elapsedNow: Long = currentElapsed()
     ): Boolean {
         if (!isLockConfigured || !unlocked || lastBackgroundElapsedMs == 0L) {
             lastBackgroundElapsedMs = 0L
@@ -63,5 +63,41 @@ object AppLockSession {
         return false
     }
 
+    /**
+     * Проверяет, активна ли разблокированная сессия с учётом таймаута нахождения в фоне.
+     * Если приложение находится в фоне дольше установленного таймаута [timeoutSeconds],
+     * сессия автоматически блокируется.
+     *
+     * Используется фоновыми сервисами (например, локальным веб-сервером) для моментального
+     * закрытия доступа к данным при блокировке устройства.
+     */
+    fun checkSessionValid(
+        timeoutSeconds: Int,
+        isLockConfigured: Boolean = true,
+        elapsedNow: Long = currentElapsed()
+    ): Boolean {
+        if (!isLockConfigured) return true
+        if (!unlocked) return false
+        if (lastBackgroundElapsedMs == 0L) return true
+
+        val timeout = AppLockTimeout.fromSeconds(timeoutSeconds)
+        if (timeout == AppLockTimeout.NEVER) return true
+
+        val elapsed = elapsedNow - lastBackgroundElapsedMs
+        if (elapsed >= timeout.durationMillis) {
+            lock()
+            return false
+        }
+        return true
+    }
+
     fun lastBackgroundTime(): Long = lastBackgroundElapsedMs
+
+    private fun currentElapsed(): Long {
+        return try {
+            SystemClock.elapsedRealtime()
+        } catch (_: Throwable) {
+            System.currentTimeMillis()
+        }
+    }
 }

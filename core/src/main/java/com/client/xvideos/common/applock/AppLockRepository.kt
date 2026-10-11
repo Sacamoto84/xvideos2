@@ -152,8 +152,27 @@ object AppLockRepository {
         return secureLockEnabled || settingsLockEnabled
     }
 
+    /**
+     * Проверяет, заблокировано ли приложение в текущий момент с учётом таймаута нахождения в фоне.
+     * Если защита включена и сессия не активна (или истёк фоновый таймаут), возвращает `true`.
+     */
+    fun isAppLocked(context: Context? = null): Boolean {
+        if (!isEnabled(context)) return false
+        val timeoutSeconds = if (Settings.isInitialized) {
+            Settings.app_lock_timeout_seconds.field.value
+        } else {
+            AppLockTimeout.DEFAULT.seconds
+        }
+        val elapsedNow = currentElapsedRealtime()
+        return !AppLockSession.checkSessionValid(
+            timeoutSeconds = timeoutSeconds,
+            isLockConfigured = true,
+            elapsedNow = elapsedNow
+        )
+    }
+
     fun shouldShowLock(context: Context? = null): Boolean {
-        return isEnabled(context) && !AppLockSession.isUnlocked()
+        return isAppLocked(context)
     }
 
     /**

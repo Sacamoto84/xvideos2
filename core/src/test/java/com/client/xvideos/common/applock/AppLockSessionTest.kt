@@ -122,4 +122,80 @@ class AppLockSessionTest {
         AppLockSession.lock()
         assertEquals(0L, AppLockSession.lastBackgroundTime())
     }
+
+    @Test
+    fun `checkSessionValid возвращает true если блокировка не настроена`() {
+        AppLockSession.lock()
+        val valid = AppLockSession.checkSessionValid(
+            timeoutSeconds = AppLockTimeout.SECONDS_30.seconds,
+            isLockConfigured = false
+        )
+        assertTrue(valid)
+    }
+
+    @Test
+    fun `checkSessionValid возвращает false если сессия заблокирована`() {
+        AppLockSession.lock()
+        val valid = AppLockSession.checkSessionValid(
+            timeoutSeconds = AppLockTimeout.SECONDS_30.seconds,
+            isLockConfigured = true
+        )
+        assertFalse(valid)
+    }
+
+    @Test
+    fun `checkSessionValid возвращает true если приложение активно на переднем плане`() {
+        AppLockSession.unlock()
+        val valid = AppLockSession.checkSessionValid(
+            timeoutSeconds = AppLockTimeout.SECONDS_30.seconds,
+            isLockConfigured = true
+        )
+        assertTrue(valid)
+        assertTrue(AppLockSession.isUnlocked())
+    }
+
+    @Test
+    fun `checkSessionValid возвращает true если приложение в фоне меньше таймаута`() {
+        AppLockSession.unlock()
+        val bgTime = 20_000L
+        AppLockSession.onAppBackgrounded(elapsedNow = bgTime)
+
+        val valid = AppLockSession.checkSessionValid(
+            timeoutSeconds = AppLockTimeout.SECONDS_30.seconds,
+            isLockConfigured = true,
+            elapsedNow = bgTime + 15_000L
+        )
+        assertTrue(valid)
+        assertTrue(AppLockSession.isUnlocked())
+    }
+
+    @Test
+    fun `checkSessionValid блокирует сессию и возвращает false если таймаут в фоне истёк`() {
+        AppLockSession.unlock()
+        val bgTime = 20_000L
+        AppLockSession.onAppBackgrounded(elapsedNow = bgTime)
+
+        val valid = AppLockSession.checkSessionValid(
+            timeoutSeconds = AppLockTimeout.SECONDS_30.seconds,
+            isLockConfigured = true,
+            elapsedNow = bgTime + 30_000L
+        )
+        assertFalse(valid)
+        assertFalse(AppLockSession.isUnlocked())
+    }
+
+    @Test
+    fun `checkSessionValid не блокирует сессию при таймауте Никогда`() {
+        AppLockSession.unlock()
+        val bgTime = 20_000L
+        AppLockSession.onAppBackgrounded(elapsedNow = bgTime)
+
+        val valid = AppLockSession.checkSessionValid(
+            timeoutSeconds = AppLockTimeout.NEVER.seconds,
+            isLockConfigured = true,
+            elapsedNow = bgTime + 1_000_000L
+        )
+        assertTrue(valid)
+        assertTrue(AppLockSession.isUnlocked())
+    }
 }
