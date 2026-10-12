@@ -58,6 +58,7 @@ import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.ui.IncognitoKeyboard
+import com.client.xvideos.common.util.getTopInsetDp
 import timber.log.Timber
 
 private const val URL_LUSCIOUS = "https://www.luscious.net"
@@ -150,6 +151,11 @@ fun LLoginForm(
     }
 
     val scrollState = rememberScrollState()
+    // Форма занимает весь экран, а статус-бар и вырез камеры лежат поверх неё.
+    // Пока клавиатура закрыта, содержимое стоит по центру и до них не достаёт;
+    // с открытой клавиатурой оно начинается от верхнего края, и первая строка
+    // оказывалась под значками статус-бара.
+    val topInset = getTopInsetDp()
 
     Column(
         modifier = modifier
@@ -157,6 +163,7 @@ fun LLoginForm(
             .fillMaxSize()
             .imePadding()
             .verticalScroll(scrollState)
+            .padding(top = topInset)
             .padding(horizontal = 16.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
