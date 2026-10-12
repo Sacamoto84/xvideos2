@@ -73,10 +73,13 @@ class SplashActivity : ComponentActivity() {
         // Если задача уже существует, эта Activity оказывается не её корнем.
         // Тогда уходим сразу: снизу поднимется прежняя MainActivity со всем
         // своим стеком экранов.
-        if (!isTaskRoot &&
-            intent.action == Intent.ACTION_MAIN &&
-            intent.hasCategory(Intent.CATEGORY_LAUNCHER)
-        ) {
+        //
+        // Вид intent при этом не проверяется. Раньше уходили только для
+        // MAIN/LAUNCHER, а Activity экспортирована: запуск с любым другим
+        // intent — из adb или чужого приложения — проходил полный старт и клал
+        // вторую MainActivity поверх первой. Заодно это отказ запускаться
+        // внутри чужой задачи: там эта Activity тоже не корень.
+        if (!isTaskRoot) {
             // Замок ведёт себя как раньше: возврат по иконке снова его взводит,
             // а MainActivity подхватывает это в onResume.
             if (AppLockRepository.isEnabled(this)) AppLockSession.lock()

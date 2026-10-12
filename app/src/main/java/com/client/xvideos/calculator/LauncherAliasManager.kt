@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import com.client.xvideos.R
 import timber.log.Timber
 
@@ -77,10 +78,19 @@ object LauncherAliasManager {
             } else {
                 R.mipmap.ic_launcher
             }
-            val taskDescription = ActivityManager.TaskDescription.Builder()
-                .setLabel(label)
-                .setIcon(icon)
-                .build()
+            // Builder появился в Android 13. На 10–12 его класса нет вовсе: вызов
+            // бросал NoClassDefFoundError — это Error, блок catch ниже его не
+            // ловит, — и приложение падало в SplashActivity.onCreate, не успев
+            // показать первый экран.
+            val taskDescription = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ActivityManager.TaskDescription.Builder()
+                    .setLabel(label)
+                    .setIcon(icon)
+                    .build()
+            } else {
+                @Suppress("DEPRECATION")
+                ActivityManager.TaskDescription(label, icon)
+            }
             activity.setTaskDescription(taskDescription)
         } catch (e: Exception) {
             Timber.e(e, "LauncherAliasManager: не удалось обновить TaskDescription")

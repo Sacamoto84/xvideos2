@@ -1,13 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 12+: что уходит в облачный бэкап и на другое устройство при переносе.
+    Ничего — ни файлы, ни настройки.
+
+    У каждого правила обязателен domain. Раньше здесь стояло <exclude path="." />
+    без него: такая запись недействительна (lint: FullBackupContent), и правила,
+    задуманные как «исключить всё», не исключали ничего. Для облака это прикрывал
+    android:allowBackup="false", а перенос с устройства на устройство он на
+    Android 12+ отключает не везде — для него эти правила и нужны.
+
+    Переносить настройки нельзя ещё и потому, что с ними уехала бы отметка
+    «замок взведён» вместе с хранилищем кода, ключ от которого остаётся в
+    Keystore старого устройства: на новом приложение оказалось бы закрыто без
+    способа ввести код.
+
+    Для Android 11 и ниже то же самое задаёт backup_rules.xml.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude path="." />
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_root" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
     </cloud-backup>
     <device-transfer>
-        <exclude path="." />
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_root" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
     </device-transfer>
 </data-extraction-rules>

@@ -88,8 +88,18 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
+        android:taskAffinity=""
         android:theme="@style/Theme.Xvideos"
         tools:targetApi="33">
+
+        <!--
+            taskAffinity пустой у всех Activity. По умолчанию он равен имени
+            пакета, и на Android 10 чужое приложение, объявив у своей Activity
+            такой же, попадало ею в задачу этого приложения — поверх замка. С
+            пустым значением совпасть не с чем. Свои экраны остаются в одной
+            задаче: они запускаются без NEW_TASK, а значок находит её по
+            корневому intent.
+        -->
 
         <activity
             android:name=".SplashActivity"
