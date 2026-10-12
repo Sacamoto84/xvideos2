@@ -42,9 +42,9 @@ detekt {
 }
 
 
-// Ключ для release-подписи берём из keystore.properties в корне проекта.
-// Файл в .gitignore — пароли не должны лежать в репозитории (раньше здесь был
-// закомментированный signingConfigs с паролем открытым текстом).
+// Ключ подписи берём из keystore.properties в корне проекта. Им подписываются
+// и release, и debug (см. buildTypes).
+// Файл в .gitignore — пароли не должны лежать в репозитории
 // Пример содержимого:
 //   storeFile=D:/AndroidKey/MyKey.jks
 //   storePassword=...
@@ -90,6 +90,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Тем же ключом, что и release: на устройстве одну сборку можно
+            // ставить поверх другой без удаления приложения и потери данных.
+            // Без keystore.properties остаётся обычный debug-ключ.
+            //
+            // Цена: такой debug-APK отлаживаемый и встаёт поверх release с
+            // сохранением данных, после чего adb run-as читает их без кода
+            // замка. Отдавать debug-APK наружу нельзя.
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.release
+            }
+        }
         release {
             minifyEnabled = true
             shrinkResources = true
