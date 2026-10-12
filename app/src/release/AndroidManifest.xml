@@ -11,9 +11,14 @@
             рядом с замком приложению не нужна: в релизе запускаться снаружи
             должен только экран-заставка. В debug запись остаётся — через неё
             Android Studio показывает превью на устройстве.
+
+            tools:ignore: в релизе lint этого класса не находит и считает
+            ссылку на него ошибкой (MissingClass). Запись при этом не объявляет
+            Activity, а убирает объявление, пришедшее из библиотеки.
         -->
         <activity
             android:name="androidx.compose.ui.tooling.PreviewActivity"
+            tools:ignore="MissingClass"
             tools:node="remove" />
     </application>
 </manifest>
