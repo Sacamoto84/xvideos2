@@ -34,6 +34,7 @@ object AppLockRepository {
     private const val KEY_PASSWORD_SALT = "app_lock_password_salt"
     private const val KEY_SECURE_LOCK_ENABLED = "app_lock_secure_enabled"
     private const val KEY_LEGACY_SETTINGS_ENABLED = "app_lock_enabled"
+    private const val KEY_ARMED = "app_lock_armed"
     private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
     private const val HASH_BITS = 256
     private const val ITERATIONS = 120_000
@@ -72,22 +73,53 @@ object AppLockRepository {
             migrateLegacyIfNeeded(context, testPrefs)
             return testPrefs
         }
-        val securePrefs = AppLockSecureStore.getOrNull(context)
+        val securePrefs = AppLockSecureStore.getOrNull(context, mayRecreate = { !isArmed(context) })
         if (securePrefs != null) {
             migrateLegacyIfNeeded(context, securePrefs)
             return securePrefs
         }
+        return plainPrefs(context)
+    }
+
+    /** Обычные, незашифрованные настройки приложения. */
+    private fun plainPrefs(context: Context?): SharedPreferences? {
         testLegacyPrefsRef.get()?.let { return it }
         return runCatching { context?.applicationContext?.defaultSharedPreferences() }.getOrNull()
     }
 
     /**
+     * Отметка «замок взведён» в открытых настройках, рядом с защищённым
+     * хранилищем, а не внутри него. По ней отличается «кода никогда не было» от
+     * «код был, но хранилище с ним не открылось или опустело»: во втором случае
+     * замок остаётся закрытым, а не снимается.
+     *
+     * Ставится после того, как код записан, снимается до того, как он стёрт:
+     * гибель процесса посередине оставляет либо код без отметки (её вернёт
+     * [isEnabled]), либо ни того ни другого. Отметки без кода — состояния, из
+     * которого не выйти, — этот порядок не допускает.
+     */
+    private fun isArmed(context: Context?): Boolean =
+        plainPrefs(context)?.getBoolean(KEY_ARMED, false) == true
+
+    private fun setArmed(context: Context?, armed: Boolean) {
+        val prefs = plainPrefs(context) ?: return
+        if (prefs.getBoolean(KEY_ARMED, false) == armed) return
+        prefs.edit(commit = true) { putBoolean(KEY_ARMED, armed) }
+    }
+
+    /**
+     * Замок взведён, а проверить код нечем: защищённое хранилище не открылось
+     * или открылось без кода. Приложение остаётся закрытым; экран замка вместо
+     * поля ввода объясняет, что произошло.
+     */
+    fun isSecretLost(context: Context? = null): Boolean =
+        !isPasswordSet(context) && isArmed(context)
+
+    /**
      * Однократная бесшовная миграция данных из открытого SharedPreferences в Keystore.
      */
     private fun migrateLegacyIfNeeded(context: Context?, securePrefs: SharedPreferences) {
-        val defaultPrefs = testLegacyPrefsRef.get() ?: runCatching {
-            context?.applicationContext?.defaultSharedPreferences()
-        }.getOrNull() ?: return
+        val defaultPrefs = plainPrefs(context) ?: return
 
         val legacyHash = defaultPrefs.getString(KEY_PASSWORD_HASH, null) ?: return
         val legacySalt = defaultPrefs.getString(KEY_PASSWORD_SALT, null) ?: return
@@ -97,13 +129,21 @@ object AppLockRepository {
         val legacyLockoutElapsed = defaultPrefs.getLong(KEY_LOCKOUT_UNTIL_ELAPSED, 0L)
         val legacyEnabled = defaultPrefs.getBoolean(KEY_LEGACY_SETTINGS_ENABLED, false)
 
-        securePrefs.edit {
+        // Синхронно и с проверкой результата: открытая копия стирается ниже, и
+        // стирать её можно только после того, как код точно лёг на диск в новом
+        // месте. Иначе гибель процесса между двумя записями оставила бы
+        // взведённый замок без кода.
+        val moved = securePrefs.edit().apply {
             putString(KEY_PASSWORD_HASH, legacyHash)
             putString(KEY_PASSWORD_SALT, legacySalt)
             putBoolean(KEY_SECURE_LOCK_ENABLED, legacyEnabled)
             if (legacyAttempts > 0) putInt(KEY_FAILED_ATTEMPTS, legacyAttempts)
             if (legacyLockoutWall > 0L) putLong(KEY_LOCKOUT_UNTIL, legacyLockoutWall)
             if (legacyLockoutElapsed > 0L) putLong(KEY_LOCKOUT_UNTIL_ELAPSED, legacyLockoutElapsed)
+        }.commit()
+        if (!moved) {
+            Timber.w("AppLockRepository: перенос кода в защищённое хранилище не записался, открытая копия оставлена")
+            return
         }
 
         // Затираем открытые секреты из обычного SharedPreferences файла
@@ -136,7 +176,9 @@ object AppLockRepository {
         val settingsInitialized = Settings.isInitialized
         val settingsLockEnabled = settingsInitialized && Settings.app_lock_enabled.field.value
 
-        if (!isPasswordSet(context)) return false
+        // Кода нет. Если замок при этом был взведён, значит хранилище с кодом
+        // не открылось или опустело — и это не повод открыть приложение.
+        if (!isPasswordSet(context)) return isArmed(context)
 
         val prefs = getPrefs(context) ?: return settingsLockEnabled
         val secureLockEnabled = prefs.getBoolean(KEY_SECURE_LOCK_ENABLED, false)
@@ -146,10 +188,14 @@ object AppLockRepository {
             if (settingsInitialized) {
                 Settings.app_lock_enabled.setValue(true)
             }
+            setArmed(context, true)
             return true
         }
 
-        return secureLockEnabled || settingsLockEnabled
+        val enabled = secureLockEnabled || settingsLockEnabled
+        // Код мог задать прежний выпуск, который отметку не ставил.
+        if (enabled) setArmed(context, true)
+        return enabled
     }
 
     /**
@@ -190,10 +236,28 @@ object AppLockRepository {
         val hash = withContext(Dispatchers.Default) { hashPassword(password, salt) }
         val prefs = getPrefs(context) ?: error("Хранилище настроек недоступно для сохранения пароля")
 
-        prefs.edit {
-            putString(KEY_PASSWORD_SALT, salt.toBase64())
-            putString(KEY_PASSWORD_HASH, hash.toBase64())
-            putBoolean(KEY_SECURE_LOCK_ENABLED, true)
+        withContext(Dispatchers.IO) {
+            // Синхронно и именно в этом порядке — см. [isArmed].
+            val previousSalt = prefs.getString(KEY_PASSWORD_SALT, null)
+            val previousHash = prefs.getString(KEY_PASSWORD_HASH, null)
+            val previousEnabled = prefs.getBoolean(KEY_SECURE_LOCK_ENABLED, false)
+            val saved = prefs.edit().apply {
+                putString(KEY_PASSWORD_SALT, salt.toBase64())
+                putString(KEY_PASSWORD_HASH, hash.toBase64())
+                putBoolean(KEY_SECURE_LOCK_ENABLED, true)
+            }.commit()
+            if (!saved) {
+                // На диск новый код не лёг, а в памяти уже лежит. Оставить так —
+                // значит до конца сеанса считать замок включённым и поставить
+                // отметку, которой после перезапуска не будет соответствовать код.
+                prefs.edit {
+                    putString(KEY_PASSWORD_SALT, previousSalt)
+                    putString(KEY_PASSWORD_HASH, previousHash)
+                    putBoolean(KEY_SECURE_LOCK_ENABLED, previousEnabled)
+                }
+                error("Не удалось сохранить код доступа")
+            }
+            setArmed(context, true)
         }
         if (Settings.isInitialized) {
             Settings.app_lock_enabled.setValue(true)
@@ -217,6 +281,26 @@ object AppLockRepository {
     }
 
     /**
+     * Проверка кода с учётом блокировки ввода — для мест, где код спрашивают уже
+     * внутри открытого приложения (смена и отключение кода, включение маскировки).
+     *
+     * Раньше эти диалоги звали [verifyPassword] напрямую, а счётчик попыток вёл
+     * только экран замка. Тот, кому телефон достался с открытым приложением, мог
+     * перебирать код в настройках без единой задержки, а подобрав — отключить
+     * замок или прийти с этим кодом позже. Счётчик общий с экраном замка: код
+     * один, и предел попыток на него тоже один.
+     */
+    suspend fun verifyPasswordThrottled(context: Context? = null, password: String): AppLockCheckResult {
+        val remainingBefore = lockoutRemainingMillis(context)
+        if (remainingBefore > 0L) return AppLockCheckResult.LockedOut(remainingBefore)
+        if (verifyPassword(context, password)) {
+            resetFailedAttempts(context)
+            return AppLockCheckResult.Success
+        }
+        return AppLockCheckResult.Wrong(lockoutRemainingMs = registerFailedAttempt(context))
+    }
+
+    /**
      * Сколько миллисекунд осталось до конца блокировки ввода (0 — ввод разрешён).
      * Срок хранится и настенными, и монотонными часами — см. [AppLockThrottle]:
      * перезапуск приложения задержку не сбрасывает, перевод системного времени
@@ -228,16 +312,27 @@ object AppLockRepository {
         elapsedNow: Long = currentElapsedRealtime()
     ): Long {
         val prefs = getPrefs(context) ?: return 0L
-        val state = AppLockThrottle.State(
+        return AppLockThrottle.remainingMillis(
+            state = readThrottleState(prefs, elapsedNow),
+            wallNow = wallNow,
+            elapsedNow = elapsedNow,
+        )
+    }
+
+    /**
+     * Читает состояние блокировки ввода. Если с момента её назначения телефон
+     * перезагружали, монотонный срок отсчитывается заново и сразу сохраняется —
+     * см. [AppLockThrottle.reanchorAfterReboot].
+     */
+    private fun readThrottleState(prefs: SharedPreferences, elapsedNow: Long): AppLockThrottle.State {
+        val stored = AppLockThrottle.State(
             attempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0),
             lockoutUntilWall = prefs.getLong(KEY_LOCKOUT_UNTIL, 0L),
             lockoutUntilElapsed = prefs.getLong(KEY_LOCKOUT_UNTIL_ELAPSED, 0L),
         )
-        return AppLockThrottle.remainingMillis(
-            state = state,
-            wallNow = wallNow,
-            elapsedNow = elapsedNow,
-        )
+        val reanchored = AppLockThrottle.reanchorAfterReboot(stored, elapsedNow) ?: return stored
+        prefs.edit { putLong(KEY_LOCKOUT_UNTIL_ELAPSED, reanchored.lockoutUntilElapsed) }
+        return reanchored
     }
 
     /**
@@ -253,11 +348,7 @@ object AppLockRepository {
     ): Long {
         val prefs = getPrefs(context) ?: return 0L
         val state = AppLockThrottle.registerFailure(
-            state = AppLockThrottle.State(
-                attempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0),
-                lockoutUntilWall = prefs.getLong(KEY_LOCKOUT_UNTIL, 0L),
-                lockoutUntilElapsed = prefs.getLong(KEY_LOCKOUT_UNTIL_ELAPSED, 0L),
-            ),
+            state = readThrottleState(prefs, elapsedNow),
             wallNow = wallNow,
             elapsedNow = elapsedNow,
         )
@@ -281,6 +372,8 @@ object AppLockRepository {
 
     fun clearPassword(context: Context? = null) {
         val prefs = getPrefs(context)
+        // Отметка снимается раньше, чем стирается код, — см. [isArmed].
+        setArmed(context, false)
         prefs?.edit {
             remove(KEY_PASSWORD_SALT)
             remove(KEY_PASSWORD_HASH)

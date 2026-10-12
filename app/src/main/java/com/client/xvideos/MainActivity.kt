@@ -1,9 +1,9 @@
 package com.client.xvideos
 
 import com.client.xvideos.common.p2p.ui.P2pBackgroundOverlay
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -17,7 +17,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -36,26 +35,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.client.xvideos.calculator.CalculatorScreen
 import com.client.xvideos.calculator.LauncherAliasManager
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import com.client.xvideos.common.applock.AppLockRepository
-import com.client.xvideos.common.applock.AppLockScreen
-import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.applock.WindowPrivacy
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
@@ -102,32 +91,39 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     private var isAppMinimized by mutableStateOf(false)
 
+    /**
+     * Сеанс закрыт замком. Источник правды — `AppLockSession` в памяти процесса,
+     * поэтому значение перечитывается в `onCreate` и при каждом `onResume`, а не
+     * хранится в сохранённом состоянии Activity: оно переживает гибель процесса,
+     * и система восстанавливала оттуда «замок снят» — первый кадр после возврата
+     * из «Недавних» рисовал содержимое без кода.
+     *
+     * Сам экран замка — [LockActivity]. Здесь по этому флагу содержимое только
+     * прячется: оно остаётся в композиции под чёрной заглушкой, чтобы после
+     * ввода кода открыться сразу.
+     */
+    private var isAppLocked by mutableStateOf(false)
+
     /** Последнее решение `StatusBarHost`: переприменяется в `onResume`. */
     private var statusBarVisible = false
 
     private fun applyStatusBarVisibility(visible: Boolean) {
         statusBarVisible = visible
-        val currentWindow = window ?: return
-        val controller = WindowCompat.getInsetsController(currentWindow, currentWindow.decorView)
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        if (visible) {
-            controller.show(WindowInsetsCompat.Type.statusBars())
-        } else {
-            controller.hide(WindowInsetsCompat.Type.statusBars())
-        }
+        window?.setStatusBarVisible(visible)
     }
 
     /**
-     * Есть ли вырез сверху — до первой композиции, чтобы бар не мигал при запуске.
+     * Показывает замок, пока сеанс закрыт. Вызывается из каждого `onResume`:
+     * если замок закрыли, не введя код, он появится снова. `SINGLE_TOP` — чтобы
+     * повторный вызов не положил второй экран поверх первого.
      */
-    @Suppress("DEPRECATION")
-    private fun hasTopCutoutAtStart(): Boolean {
-        val cutout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            display?.cutout
-        } else {
-            windowManager.defaultDisplay.cutout
-        }
-        return (cutout?.safeInsetTop ?: 0) > 0
+    private fun showLockScreenIfLocked() {
+        isAppLocked = AppLockRepository.shouldShowLock(this)
+        if (!isAppLocked) return
+        startActivity(
+            Intent(this, LockActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        )
     }
 
     override fun onUserLeaveHint() {
@@ -177,6 +173,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
         applyStatusBarVisibility(statusBarVisible)
+        showLockScreenIfLocked()
     }
 
     /**
@@ -194,23 +191,14 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         configureWindow()
         LauncherAliasManager.updateTaskDescription(this, Settings.camouflage_calculator_enabled.field.value)
 
-        val shouldShowAppLock = AppLockRepository.shouldShowLock(this)
-        if (shouldShowAppLock) {
-            window?.decorView?.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
-        }
+        // До первого кадра: содержимое обязано быть спрятано раньше, чем onResume
+        // запустит экран замка.
+        isAppLocked = AppLockRepository.shouldShowLock(this)
 
         launchStartupCleanup()
 
         setContent {
-            var isAppLocked by rememberSaveable { mutableStateOf(shouldShowAppLock) }
             val statusBarRequests = remember { StatusBarRequests() }
-
-            val lifecycleOwner = LocalLifecycleOwner.current
-            LaunchedEffect(lifecycleOwner) {
-                lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                    if (AppLockRepository.shouldShowLock(this@MainActivity)) isAppLocked = true
-                }
-            }
 
             val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
             LaunchedEffect(isCamouflage) {
@@ -299,7 +287,18 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                             }
 
                             if (isAppLocked) {
-                                AppLockOverlay(onUnlockSuccess = { isAppLocked = false })
+                                // Заглушка на то время, пока поверх открывается
+                                // LockActivity, и на случай, если она не открылась.
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black)
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = {}
+                                        )
+                                )
                             }
                         }
                     }
@@ -310,17 +309,8 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     private fun configureWindow() {
         val currentWindow = this.window ?: return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            currentWindow.isNavigationBarContrastEnforced = false
-        }
-
-        applyStatusBarVisibility(hasTopCutoutAtStart())
-
-        currentWindow.attributes = currentWindow.attributes?.apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            }
-        }
+        currentWindow.applyAppWindowStyle()
+        applyStatusBarVisibility(hasTopCutout())
 
         val isCamouflageAtStart = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShownAtStart = AppLockRepository.shouldShowLock(this)
@@ -377,54 +367,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                 modifier = Modifier.size(72.dp),
                 tint = Color.White.copy(alpha = 0.8f)
             )
-        }
-    }
-
-    @Composable
-    private fun AppLockOverlay(onUnlockSuccess: () -> Unit) {
-        val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {}
-                )
-        ) {
-            if (isCamouflage) {
-                CalculatorScreen(
-                    onUnlock = { password ->
-                        if (AppLockRepository.lockoutRemainingMillis(this@MainActivity) > 0L) {
-                            false
-                        } else if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
-                            AppLockRepository.resetFailedAttempts(this@MainActivity)
-                            AppLockSession.unlock()
-                            onUnlockSuccess()
-                            true
-                        } else {
-                            false
-                        }
-                    },
-                    onUnlockFailed = {
-                        AppLockRepository.registerFailedAttempt(this@MainActivity)
-                    },
-                    onBack = { moveTaskToBack(true) }
-                )
-            } else {
-                BackHandler { moveTaskToBack(true) }
-                AppLockScreen(
-                    onUnlock = { password ->
-                        if (AppLockRepository.verifyPassword(this@MainActivity, password)) {
-                            AppLockSession.unlock()
-                            onUnlockSuccess()
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                )
-            }
         }
     }
 }

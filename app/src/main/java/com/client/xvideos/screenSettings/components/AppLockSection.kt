@@ -47,6 +47,7 @@ import com.client.xvideos.R
 import com.client.xvideos.calculator.CalculatorState
 import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
+import com.client.xvideos.common.applock.AppLockCheckResult
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.DisableAppLockAutofill
 import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
@@ -56,6 +57,7 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
 
 internal enum class AppLockDialogMode { SET, CHANGE, DISABLE }
 
@@ -65,6 +67,10 @@ private val TIMEOUT_ITEM_FULL_MODIFIER = Modifier
     .clip(RoundedCornerShape(12.dp))
     .padding(horizontal = 8.dp, vertical = 10.dp)
 private val ERROR_TEXT_STYLE = Theme.L.Type.dialogBody.copy(color = appLockErrorColor)
+
+/** Счётчик попыток общий с экраном замка, поэтому срок здесь тот же, что покажет он. */
+private fun lockedOutMessage(remainingMs: Long): String =
+    "Слишком много попыток. Повторите через ${ceil(remainingMs / 1000.0).toInt()} с"
 
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -319,15 +325,18 @@ private fun CamouflageVerificationDialog(
                     scope.launch {
                         isVerifyingPin = true
                         try {
-                            val ok = AppLockRepository.verifyPassword(context, pinInput)
-                            if (ok) {
-                                Settings.camouflage_calculator_enabled.setValue(true)
-                                LauncherAliasManager.setCalculatorAliasEnabled(context, true)
-                                pinInput = ""
-                                onSuccess()
-                                SnackBar.success("Маскировка под калькулятор включена")
-                            } else {
-                                pinError = "Неверный код доступа. Если текущий пароль содержит буквы, сначала измените его на числовой PIN."
+                            when (val check = AppLockRepository.verifyPasswordThrottled(context, pinInput)) {
+                                AppLockCheckResult.Success -> {
+                                    Settings.camouflage_calculator_enabled.setValue(true)
+                                    LauncherAliasManager.setCalculatorAliasEnabled(context, true)
+                                    pinInput = ""
+                                    onSuccess()
+                                    SnackBar.success("Маскировка под калькулятор включена")
+                                }
+                                is AppLockCheckResult.Wrong ->
+                                    pinError = "Неверный код доступа. Если текущий пароль содержит буквы, сначала измените его на числовой PIN."
+                                is AppLockCheckResult.LockedOut ->
+                                    pinError = lockedOutMessage(check.remainingMs)
                             }
                         } finally {
                             isVerifyingPin = false
@@ -419,11 +428,16 @@ internal fun AppLockPasswordDialog(
         scope.launch {
             isSubmitting = true
             try {
-                if (needsCurrentPassword &&
-                    !AppLockRepository.verifyPassword(context, currentPassword)
-                ) {
-                    errorText = "Текущий код доступа не подходит"
-                    return@launch
+                if (needsCurrentPassword) {
+                    val check = AppLockRepository.verifyPasswordThrottled(context, currentPassword)
+                    if (check is AppLockCheckResult.LockedOut) {
+                        errorText = lockedOutMessage(check.remainingMs)
+                        return@launch
+                    }
+                    if (check is AppLockCheckResult.Wrong) {
+                        errorText = "Текущий код доступа не подходит"
+                        return@launch
+                    }
                 }
 
                 if (needsNewPassword && newPassword != confirmPassword) {

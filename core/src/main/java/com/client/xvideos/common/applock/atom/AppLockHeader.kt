@@ -22,7 +22,8 @@ import com.client.xvideos.core.R
 
 @Composable
 fun AppLockHeader(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = "Введите код доступа",
 ) {
     Column(
         modifier = modifier,
@@ -42,7 +43,7 @@ fun AppLockHeader(
         )
         Spacer(Modifier.height(10.dp))
         Text(
-            text = "Введите код доступа",
+            text = title,
             color = MaterialTheme.colorScheme.onBackground,
             style = Theme.L.Type.heroTitle.copy(textAlign = TextAlign.Center)
         )

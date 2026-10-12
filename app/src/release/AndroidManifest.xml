@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!--
+            PreviewActivity из compose ui-tooling попадает в релиз транзитивно
+            (в :core он объявлен только как debugApi) и приносит с собой
+            exported="true" без разрешения. В неотлаживаемой сборке она сама
+            себя закрывает в onCreate, но вторая экспортированная Activity
+            рядом с замком приложению не нужна: в релизе запускаться снаружи
+            должен только экран-заставка. В debug запись остаётся — через неё
+            Android Studio показывает превью на устройстве.
+        -->
+        <activity
+            android:name="androidx.compose.ui.tooling.PreviewActivity"
+            tools:node="remove" />
+    </application>
+</manifest>

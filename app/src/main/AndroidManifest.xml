@@ -10,6 +10,13 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <!--
+        Экран замка прячет окна других приложений, нарисованные поверх него
+        (Window.setHideOverlayWindows, Android 12+): иначе поле кода можно накрыть
+        поддельным и собрать введённое. Разрешение обычное, запроса не требует.
+    -->
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+
+    <!--
         Разрешений на хранилище нет намеренно. Данные приложения лежат во
         внутренней памяти (filesDir/store) — туда доступ не выдаётся отдельно, и
         именно поэтому пароль на приложении закрывает сами файлы, а не только UI.
@@ -123,6 +130,20 @@
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize">
 
         </activity>
+
+        <!--
+            Экран замка. Отдельная Activity, а не слой в MainActivity: только так
+            система сама скрывает под ним диалоги и меню и не пускает туда
+            клавиатуру. Запускает её MainActivity; снаружи она недоступна.
+        -->
+        <activity
+            android:name=".LockActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Xvideos"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

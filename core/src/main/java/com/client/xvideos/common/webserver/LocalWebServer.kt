@@ -81,6 +81,15 @@ object LocalWebServer {
                         call.response.header("Pragma", "no-cache")
                     }
 
+                    // Сначала токен, потом замок. В обратном порядке любой узел сети
+                    // без токена получал «приложение заблокировано» и по одному
+                    // запросу узнавал, открыто ли оно сейчас у владельца.
+                    if (!isAuthorized(call, token)) {
+                        call.respondText(UNAUTHORIZED_HTML, HTML_UTF8, HttpStatusCode.Unauthorized)
+                        finish()
+                        return@intercept
+                    }
+
                     if (AppLockRepository.isAppLocked(appContext)) {
                         val isApi = call.request.uri.startsWith("/api/")
                         if (isApi) {
@@ -92,12 +101,6 @@ object LocalWebServer {
                         } else {
                             call.respondText(LOCKED_HTML, HTML_UTF8, HttpStatusCode.Forbidden)
                         }
-                        finish()
-                        return@intercept
-                    }
-
-                    if (!isAuthorized(call, token)) {
-                        call.respondText(UNAUTHORIZED_HTML, HTML_UTF8, HttpStatusCode.Unauthorized)
                         finish()
                     }
                 }

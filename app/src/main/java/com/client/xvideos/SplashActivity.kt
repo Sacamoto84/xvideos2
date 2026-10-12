@@ -105,14 +105,12 @@ class SplashActivity : ComponentActivity() {
             // Extra про необходимость замка сюда больше не кладём: MainActivity
             // сознательно определяет это сама через AppLockRepository.shouldShowLock,
             // чтобы прямой запуск Activity (напр. через adb) не обходил замок.
-            val intent = Intent(this@SplashActivity, MainActivity::class.java).apply {
-                this@SplashActivity.intent.action?.let { action = it }
-                this@SplashActivity.intent.data?.let { data = it }
-                runCatching {
-                    this@SplashActivity.intent.extras?.let { putExtras(it) }
-                }
-            }
-            startActivity(intent)
+            //
+            // Action, data и extras входящего intent дальше не передаются. Эта
+            // Activity экспортирована, её запускает кто угодно с чем угодно, а
+            // MainActivity закрыта от внешних вызовов — пересылка делала её
+            // достижимой для чужих данных. Читать их там некому.
+            startActivity(Intent(this@SplashActivity, MainActivity::class.java))
             @Suppress("DEPRECATION")
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()

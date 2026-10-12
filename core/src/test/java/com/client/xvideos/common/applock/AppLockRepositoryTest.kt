@@ -104,6 +104,154 @@ class AppLockRepositoryTest {
     }
 
     @Test
+    fun `перезагрузка и перевод часов вперёд не снимают блокировку ввода`() = runTest {
+        AppLockRepository.setPassword(null, "1111")
+        val wall = 1_000_000L
+        val uptime = 36_000_000L // десять часов с загрузки телефона
+        repeat(AppLockThrottle.FREE_ATTEMPTS + 1) {
+            AppLockRepository.registerFailedAttempt(wallNow = wall, elapsedNow = uptime)
+        }
+        assertEquals(
+            AppLockThrottle.BASE_LOCKOUT_MS,
+            AppLockRepository.lockoutRemainingMillis(wallNow = wall, elapsedNow = uptime)
+        )
+
+        // Телефон перезагрузили — монотонные часы пошли заново — и перевели
+        // время на сутки вперёд. Раньше оба срока отбрасывались, остаток был 0.
+        val afterReboot = 60_000L
+        val remaining = AppLockRepository.lockoutRemainingMillis(
+            wallNow = wall + 86_400_000L,
+            elapsedNow = afterReboot,
+        )
+
+        assertEquals(AppLockThrottle.BASE_LOCKOUT_MS, remaining)
+        assertEquals(
+            afterReboot + AppLockThrottle.BASE_LOCKOUT_MS,
+            securePrefs.getLong("app_lock_lockout_until_elapsed", 0L)
+        )
+        // Срок перенесён один раз, а не при каждой проверке.
+        assertEquals(
+            AppLockThrottle.BASE_LOCKOUT_MS - 10_000L,
+            AppLockRepository.lockoutRemainingMillis(
+                wallNow = wall + 86_400_000L,
+                elapsedNow = afterReboot + 10_000L,
+            )
+        )
+    }
+
+    @Test
+    fun `verifyPasswordThrottled считает ошибки и после предела код не проверяет`() = runTest {
+        AppLockRepository.setPassword(null, "2468")
+
+        repeat(AppLockThrottle.FREE_ATTEMPTS) {
+            assertEquals(
+                AppLockCheckResult.Wrong(lockoutRemainingMs = 0L),
+                AppLockRepository.verifyPasswordThrottled(null, "0000")
+            )
+        }
+        val overLimit = AppLockRepository.verifyPasswordThrottled(null, "0000")
+        assertTrue(overLimit is AppLockCheckResult.Wrong && overLimit.lockoutRemainingMs > 0L)
+
+        // Блокировка действует: верный код тоже не принимается.
+        assertTrue(AppLockRepository.verifyPasswordThrottled(null, "2468") is AppLockCheckResult.LockedOut)
+        assertEquals(AppLockThrottle.FREE_ATTEMPTS + 1, securePrefs.getInt("app_lock_failed_attempts", 0))
+    }
+
+    @Test
+    fun `verifyPasswordThrottled при верном коде сбрасывает счётчик`() = runTest {
+        AppLockRepository.setPassword(null, "2468")
+
+        AppLockRepository.verifyPasswordThrottled(null, "0000")
+        assertEquals(1, securePrefs.getInt("app_lock_failed_attempts", 0))
+
+        assertEquals(AppLockCheckResult.Success, AppLockRepository.verifyPasswordThrottled(null, "2468"))
+        assertFalse(securePrefs.contains("app_lock_failed_attempts"))
+    }
+
+    @Test
+    fun `замок остаётся закрытым, если защищённое хранилище не открылось`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockSession.lock()
+
+        // Keystore отказал: защищённого хранилища нет, остались только открытые настройки.
+        AppLockRepository.setTestPreferencesForTesting(null)
+
+        assertFalse(AppLockRepository.isPasswordSet())
+        assertTrue("замок не должен сниматься от сбоя хранилища", AppLockRepository.isEnabled())
+        assertTrue(AppLockRepository.isAppLocked())
+        assertTrue(AppLockRepository.isSecretLost())
+        assertFalse(AppLockRepository.verifyPassword(null, "1234"))
+
+        // Хранилище снова открылось — код на месте, замок работает как обычно.
+        AppLockRepository.setTestPreferencesForTesting(securePrefs)
+
+        assertFalse(AppLockRepository.isSecretLost())
+        assertTrue(AppLockRepository.verifyPassword(null, "1234"))
+    }
+
+    @Test
+    fun `замок остаётся закрытым, если хранилище открылось пустым`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockSession.lock()
+
+        // Файл хранилища удалён или пересоздан: открывается, но кода в нём нет.
+        AppLockRepository.setTestPreferencesForTesting(InMemorySharedPreferences())
+
+        assertTrue(AppLockRepository.isEnabled())
+        assertTrue(AppLockRepository.isAppLocked())
+    }
+
+    @Test
+    fun `код, заданный прежней версией, тоже защищён от пропажи хранилища`() {
+        // Прежняя версия писала только в защищённое хранилище, без отметки рядом.
+        securePrefs.edit()
+            .putString("app_lock_password_hash", "dGVzdEhhc2g=")
+            .putString("app_lock_password_salt", "dGVzdFNhbHQ=")
+            .putBoolean("app_lock_secure_enabled", true)
+            .apply()
+        assertTrue(AppLockRepository.isEnabled())
+
+        AppLockRepository.setTestPreferencesForTesting(null)
+
+        assertTrue(AppLockRepository.isEnabled())
+    }
+
+    @Test
+    fun `после отключения кода пропажа хранилища замок не закрывает`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockRepository.clearPassword(null)
+
+        AppLockRepository.setTestPreferencesForTesting(null)
+
+        assertFalse(AppLockRepository.isEnabled())
+        assertFalse(AppLockRepository.isAppLocked())
+    }
+
+    @Test
+    fun `код, не записавшийся на диск, замок не взводит`() = runTest {
+        AppLockRepository.setTestPreferencesForTesting(InMemorySharedPreferences(failCommits = true))
+
+        val result = AppLockRepository.setPassword(null, "1234")
+
+        assertTrue(result.isFailure)
+        assertFalse(AppLockRepository.isPasswordSet())
+        assertFalse(AppLockRepository.isEnabled())
+        // После перезапуска кода на диске не окажется. Отметка без него закрыла
+        // бы приложение навсегда.
+        AppLockRepository.setTestPreferencesForTesting(null)
+        assertFalse(AppLockRepository.isEnabled())
+    }
+
+    @Test
+    fun `без заданного кода недоступное хранилище замок не закрывает`() {
+        AppLockRepository.setTestPreferencesForTesting(null)
+
+        assertFalse(AppLockRepository.isEnabled())
+        assertFalse(AppLockRepository.isAppLocked())
+        assertFalse(AppLockRepository.isSecretLost())
+    }
+
+    @Test
     fun `legacy migration moves unencrypted password and salts into secure store`() = runTest {
         // Заполняем legacyPrefs старыми открытыми данными
         legacyPrefs.edit()
@@ -201,7 +349,14 @@ class AppLockRepositoryTest {
         assertFalse(AppLockSession.isUnlocked())
     }
 
-    internal class InMemorySharedPreferences : SharedPreferences {
+    /**
+     * @param failCommits `commit()` сообщает об отказе, как при сбое записи на
+     *   диск. В памяти значения при этом меняются — так ведёт себя и настоящая
+     *   реализация.
+     */
+    internal class InMemorySharedPreferences(
+        private val failCommits: Boolean = false
+    ) : SharedPreferences {
         val map = mutableMapOf<String, Any?>()
 
         override fun getAll(): MutableMap<String, *> = HashMap(map)
@@ -273,7 +428,7 @@ class AppLockRepositoryTest {
 
             override fun commit(): Boolean {
                 apply()
-                return true
+                return !failCommits
             }
 
             override fun apply() {

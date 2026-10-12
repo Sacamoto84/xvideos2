@@ -44,6 +44,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.client.xvideos.common.applock.atom.AppLockHeader
+import com.client.xvideos.common.applock.atom.AppLockUnavailableNotice
 import com.client.xvideos.common.applock.molecule.AppLockInputForm
 import com.client.xvideos.ui.theme.Pink80
 import com.client.xvideos.ui.theme.Purple80
@@ -53,9 +54,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
-// Здесь была отдельная AppLockActivity: она значилась в манифесте, но её никто
-// никогда не запускал — замок рисуется прямо в MainActivity через [AppLockScreen].
-// Мёртвый Activity удалён вместе с записью в AndroidManifest.xml.
+// Экран показывает LockActivity — отдельная Activity поверх MainActivity. Рисовать
+// замок слоем внутри MainActivity нельзя: диалоги и меню — отдельные окна и
+// остаются поверх такого слоя, а содержимое под ним доступно с клавиатуры.
 
 private val AppLockDarkColorScheme = darkColorScheme(
     primary = Purple80,               // 0xFFD0BCFF - стандартный лавандовый цвет Material 3
@@ -82,10 +83,13 @@ private val AppLockDarkColorScheme = darkColorScheme(
  *   итераций PBKDF2: раньше она считалась синхронно в колбэке и подвешивала
  *   интерфейс на сотни миллисекунд при каждой попытке. Экран показывается при
  *   каждом запуске приложения, так что это была самая заметная заморозка в нём.
+ * @param secretLost замок взведён, а проверить код нечем: вместо поля ввода
+ *   показывается объяснение — см. `AppLockRepository.isSecretLost`.
  */
 @Composable
 fun AppLockScreen(
-    onUnlock: suspend (String) -> Boolean
+    onUnlock: suspend (String) -> Boolean,
+    secretLost: Boolean = false,
 ) {
     DisableAppLockAutofill()
 
@@ -106,7 +110,9 @@ fun AppLockScreen(
 
     // Пока действует блокировка — обновляем обратный отсчёт раз в полсекунды.
     val isLockedOut = lockoutRemainingMs > 0L
-    LaunchedEffect(isLockedOut) {
+    LaunchedEffect(isLockedOut, secretLost) {
+        // Поля ввода нет — ни отсчёт, ни клавиатура не нужны.
+        if (secretLost) return@LaunchedEffect
         if (isLockedOut) {
             while (AppLockRepository.lockoutRemainingMillis(context) > 0L) {
                 lockoutRemainingMs = AppLockRepository.lockoutRemainingMillis(context)
@@ -124,9 +130,9 @@ fun AppLockScreen(
 
     // При возвращении в приложение из фона фокус и клавиатура также возвращаются в поле ввода,
     // а при уходе в фон введенный незавершенный пароль стирается для защиты от компрометации.
-    DisposableEffect(lifecycleOwner, isLockedOut) {
+    DisposableEffect(lifecycleOwner, isLockedOut, secretLost) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && !isLockedOut) {
+            if (event == Lifecycle.Event.ON_RESUME && !isLockedOut && !secretLost) {
                 scope.launch {
                     delay(100)
                     runCatching { focusRequester.requestFocus() }
@@ -187,7 +193,8 @@ fun AppLockScreen(
         errorText = errorText,
         lockoutRemainingMs = lockoutRemainingMs,
         onSubmit = ::submit,
-        focusRequester = focusRequester
+        focusRequester = focusRequester,
+        secretLost = secretLost,
     )
 }
 
@@ -201,7 +208,8 @@ private fun AppLockScreenContent(
     errorText: String?,
     lockoutRemainingMs: Long,
     onSubmit: () -> Unit,
-    focusRequester: FocusRequester = remember { FocusRequester() }
+    focusRequester: FocusRequester = remember { FocusRequester() },
+    secretLost: Boolean = false,
 ) {
     val isLockedOut = lockoutRemainingMs > 0L
     val lockoutSeconds = ceil(lockoutRemainingMs / 1000.0).toInt()
@@ -229,19 +237,25 @@ private fun AppLockScreenContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                AppLockHeader()
-                Spacer(Modifier.height(22.dp))
-                AppLockInputForm(
-                    password = password,
-                    onPasswordChange = onPasswordChange,
-                    showPassword = showPassword,
-                    onShowPasswordToggle = onShowPasswordToggle,
-                    errorText = errorText,
-                    isLockedOut = isLockedOut,
-                    lockoutSeconds = lockoutSeconds,
-                    onSubmit = onSubmit,
-                    focusRequester = focusRequester
-                )
+                if (secretLost) {
+                    AppLockHeader(title = "Код проверить нечем")
+                    Spacer(Modifier.height(22.dp))
+                    AppLockUnavailableNotice()
+                } else {
+                    AppLockHeader()
+                    Spacer(Modifier.height(22.dp))
+                    AppLockInputForm(
+                        password = password,
+                        onPasswordChange = onPasswordChange,
+                        showPassword = showPassword,
+                        onShowPasswordToggle = onShowPasswordToggle,
+                        errorText = errorText,
+                        isLockedOut = isLockedOut,
+                        lockoutSeconds = lockoutSeconds,
+                        onSubmit = onSubmit,
+                        focusRequester = focusRequester
+                    )
+                }
                 Spacer(Modifier.height(28.dp))
                 Text(
                     text = "XVIDEOS",

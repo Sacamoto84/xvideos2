@@ -7,6 +7,7 @@ import androidx.security.crypto.MasterKey
 import timber.log.Timber
 import java.io.IOException
 import java.security.GeneralSecurityException
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Зашифрованное хранилище параметров замка приложения на базе Android Keystore.
@@ -22,6 +23,14 @@ object AppLockSecureStore {
 
     private const val FILE_NAME = "app_lock_secure_prefs"
 
+    /**
+     * Открытое хранилище живёт до конца процесса. Раньше оно открывалось заново
+     * при каждом обращении — `MasterKey` и разбор keyset на каждый `onPause` и
+     * `onResume`, на главном потоке, — и каждый такой раз мог попасть на сбой
+     * Keystore. Неудача не запоминается: следующее обращение пробует снова.
+     */
+    private val openedRef = AtomicReference<SharedPreferences?>(null)
+
     private class BuildResult(
         val prefs: SharedPreferences?,
         val isBrokenKeyset: Boolean
@@ -32,14 +41,31 @@ object AppLockSecureStore {
      *
      * Возвращает `null`, если аппаратный Keystore недоступен (например, в Compose Preview,
      * JVM юнит-тестах или на прошивках без Keystore-провайдера).
+     *
+     * @param mayRecreate можно ли стереть файл, который не расшифровывается, и
+     *   начать с пустого. Спрашивается только в этом случае. Пока замок взведён,
+     *   ответ обязан быть «нет»: в файле код доступа, а за «испорченный keyset»
+     *   принимается и временный отказ Keystore (`KeyStoreException` — подкласс
+     *   `GeneralSecurityException`). Стёртый файл означал бы приложение без замка.
      */
-    fun getOrNull(context: Context?): SharedPreferences? {
+    fun getOrNull(context: Context?, mayRecreate: () -> Boolean): SharedPreferences? {
+        openedRef.get()?.let { return it }
         val appContext = runCatching { context?.applicationContext }.getOrNull() ?: return null
+        return synchronized(this) {
+            openedRef.get() ?: open(appContext, mayRecreate)?.also { openedRef.set(it) }
+        }
+    }
+
+    private fun open(appContext: Context, mayRecreate: () -> Boolean): SharedPreferences? {
         val firstAttempt = build(appContext)
         if (firstAttempt.prefs != null) return firstAttempt.prefs
 
         if (!firstAttempt.isBrokenKeyset) {
             Timber.w("AppLockSecureStore: Keystore недоступен, $FILE_NAME оставлен как есть")
+            return null
+        }
+        if (!mayRecreate()) {
+            Timber.w("AppLockSecureStore: $FILE_NAME не расшифровывается, замок взведён — файл не трогаю")
             return null
         }
 

@@ -1,6 +1,7 @@
 package com.client.xvideos.common.applock
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -109,6 +110,33 @@ class AppLockThrottleTest {
         )
         assertTrue(remaining > 0L)
         assertTrue("после перезагрузки срок ограничен настенными часами", remaining <= 30 * 60_000L)
+    }
+
+    @Test
+    fun `после перезагрузки монотонный срок отсчитывается заново на полную длительность`() {
+        // Блокировку назначили через десять часов после загрузки телефона.
+        val state = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS + 5, 1_000L, 36_000_000L)
+        val duration = AppLockThrottle.calculateLockoutDurationMs(state.attempts)
+
+        val reanchored = AppLockThrottle.reanchorAfterReboot(state, elapsedNow = 60_000L)
+
+        assertEquals(60_000L + duration, reanchored?.lockoutUntilElapsed)
+        assertEquals(state.lockoutUntilWall, reanchored?.lockoutUntilWall)
+        assertEquals(state.attempts, reanchored?.attempts)
+        // Настенные часы переведены на сутки вперёд — держит монотонный срок.
+        assertEquals(
+            duration,
+            AppLockThrottle.remainingMillis(reanchored!!, wallNow = 1_000L + 86_400_000L, elapsedNow = 60_000L)
+        )
+    }
+
+    @Test
+    fun `без перезагрузки срок не переносится`() {
+        val state = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS + 5, 1_000L, 36_000_000L)
+
+        assertNull(AppLockThrottle.reanchorAfterReboot(state, elapsedNow = 36_000_000L + 10_000L))
+        assertNull(AppLockThrottle.reanchorAfterReboot(state, elapsedNow = state.lockoutUntilElapsed + 1L))
+        assertNull(AppLockThrottle.reanchorAfterReboot(AppLockThrottle.State.INITIAL, elapsedNow = 5L))
     }
 
     @Test
