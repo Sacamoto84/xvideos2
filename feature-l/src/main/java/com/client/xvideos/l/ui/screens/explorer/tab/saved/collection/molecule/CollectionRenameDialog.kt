@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun CollectionRenameDialog(
@@ -35,7 +36,7 @@ fun CollectionRenameDialog(
                 value = renameValue,
                 onValueChange = onValueChange,
                 singleLine = true,
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxWidth().excludedFromAutofill(),
                 label = { Text("Название коллекции") },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,

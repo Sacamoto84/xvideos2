@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.ActressesIndexDropdownType
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun DropdownOptionsSearchField(
@@ -73,6 +74,7 @@ fun DropdownOptionsSearchField(
         modifier = modifier
             .fillMaxWidth()
             .height(44.dp)
+            .excludedFromAutofill()
     )
 }
 

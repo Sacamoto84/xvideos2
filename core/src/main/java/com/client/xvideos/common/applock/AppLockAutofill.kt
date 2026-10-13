@@ -6,12 +6,8 @@ import android.view.autofill.AutofillManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentDataType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.semantics.contentDataType
-import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun DisableAppLockAutofill() {
@@ -36,18 +32,6 @@ fun DisableAppLockAutofill() {
         }
     }
 }
-
-/**
- * Поле вообще не участвует в автозаполнении — для полей кода доступа.
- *
- * [DisableAppLockAutofill] убирает поля из структуры, которую получает служба
- * автозаполнения, но сам сеанс не отменяет: Compose сообщает системе о фокусе
- * в любом редактируемом поле, и служба при каждом показе замка узнавала, что в
- * приложении открыто поле ввода (история запросов в `dumpsys autofill`). С
- * этой пометкой о фокусе не сообщается, и сеанс не открывается.
- */
-fun Modifier.excludedFromAutofill(): Modifier =
-    semantics { contentDataType = ContentDataType.None }
 
 private fun View.collectViewTree(): List<View> {
     val result = mutableListOf<View>()

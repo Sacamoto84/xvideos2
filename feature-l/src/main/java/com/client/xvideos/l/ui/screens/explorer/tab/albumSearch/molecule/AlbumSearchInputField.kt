@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.IncognitoKeyboard
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun AlbumSearchInputField(
@@ -49,7 +50,8 @@ fun AlbumSearchInputField(
         modifier = modifier
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp)
+            .excludedFromAutofill(),
         singleLine = true,
         label = { Text("Search") },
         textStyle = searchTextStyle,

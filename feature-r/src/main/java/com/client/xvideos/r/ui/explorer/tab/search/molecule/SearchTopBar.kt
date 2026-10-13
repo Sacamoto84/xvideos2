@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun SearchTopBar(
@@ -43,7 +44,7 @@ fun SearchTopBar(
         OutlinedTextField(
             value = searchText,
             onValueChange = onSearchTextChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
             placeholder = { Text("Поиск авторов...") },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = "Поиск", tint = Color.Gray)

@@ -24,6 +24,7 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.CollectionCoverIcon
 
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogActions
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogData
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun R_CollectionDialogsHost(
@@ -91,7 +92,7 @@ fun R_CollectionDialogsHost(
                     value = dialogData.renameValue,
                     onValueChange = actions.onRenameValueChange,
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
                     label = { Text("Название коллекции") },
                     colors = textFieldColors,
                 )

@@ -50,7 +50,7 @@ import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockCheckResult
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.DisableAppLockAutofill
-import com.client.xvideos.common.applock.excludedFromAutofill
+import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar

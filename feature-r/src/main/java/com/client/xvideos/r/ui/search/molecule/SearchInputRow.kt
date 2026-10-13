@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import com.client.xvideos.r.ui.search.atom.SearchIconButton
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun SearchInputRow(
@@ -54,7 +55,8 @@ fun SearchInputRow(
             ),
             modifier = Modifier
                 .weight(1f)
-                .onFocusChanged { onFocusChanged(it.isFocused) },
+                .onFocusChanged { onFocusChanged(it.isFocused) }
+                .excludedFromAutofill(),
             cursorBrush = SolidColor(Theme.R.colorYellow),
             keyboardOptions = IncognitoKeyboard.options(imeAction = ImeAction.Done, keyboardType = KeyboardType.Text),
             keyboardActions = KeyboardActions(onDone = { onDone(value.text) })

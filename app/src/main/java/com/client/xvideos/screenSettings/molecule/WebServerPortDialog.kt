@@ -22,6 +22,7 @@ import com.client.xvideos.common.webserver.WEB_SERVER_MAX_PORT
 import com.client.xvideos.common.webserver.WEB_SERVER_MIN_PORT
 import com.client.xvideos.common.webserver.parseWebServerPort
 import com.client.xvideos.screenSettings.components.SettingsPreview
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 /**
  * Окно смены порта веб-сервера. Отдаёт наружу только проверенный порт.
@@ -59,7 +60,7 @@ internal fun WebServerPortDialog(
                     onValueChange = onPortChange,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().excludedFromAutofill()
                 )
             }
         }

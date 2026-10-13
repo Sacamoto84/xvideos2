@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
-import com.client.xvideos.common.applock.excludedFromAutofill
+import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
 

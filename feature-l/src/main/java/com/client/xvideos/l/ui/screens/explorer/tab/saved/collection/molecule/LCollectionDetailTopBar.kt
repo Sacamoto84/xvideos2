@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun LCollectionDetailTopBar(
@@ -73,7 +74,7 @@ fun LCollectionDetailTopBar(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
                 singleLine = true,
                 label = { Text("Поиск в коллекции") },
                 textStyle = searchTextStyle

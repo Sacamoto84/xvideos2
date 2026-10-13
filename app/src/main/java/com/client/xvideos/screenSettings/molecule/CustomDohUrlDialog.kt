@@ -18,6 +18,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.screenSettings.components.SettingsPreview
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 internal fun CustomDohUrlDialog(
@@ -53,7 +54,7 @@ internal fun CustomDohUrlDialog(
                     onValueChange = onUrlChange,
                     placeholder = placeholderContent,
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().excludedFromAutofill()
                 )
             }
         }

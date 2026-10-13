@@ -70,6 +70,7 @@ import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsTopBarColor
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.util.formatBytes
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 private val BACKUP_SELECTOR_BASE_MODIFIER = Modifier
     .fillMaxWidth()
@@ -481,7 +482,7 @@ internal fun BackupCreatePasswordDialog(
                     onValueChange = { password = it },
                     label = { Text(TEXT_PASSWORD_LABEL) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -508,7 +509,7 @@ internal fun BackupCreatePasswordDialog(
                     onValueChange = { passwordConfirm = it },
                     label = { Text("Подтверждение пароля") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
                     visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { passwordConfirmVisible = !passwordConfirmVisible }) {
@@ -588,7 +589,7 @@ internal fun BackupRestorePasswordDialog(
                     onValueChange = { password = it },
                     label = { Text(TEXT_PASSWORD_LABEL) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {

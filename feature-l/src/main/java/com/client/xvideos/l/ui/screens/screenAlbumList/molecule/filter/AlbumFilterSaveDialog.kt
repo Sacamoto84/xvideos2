@@ -35,6 +35,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.filter.AlbumFilterPresetManager
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun AlbumFilterSaveDialog(
@@ -123,7 +124,7 @@ fun AlbumFilterSaveDialog(
                         singleLine = true,
                         textStyle = rowValueStyle,
                         cursorBrush = SolidColor(palette.accent),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().excludedFromAutofill()
                     )
                 }
 

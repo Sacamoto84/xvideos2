@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.IncognitoKeyboard
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
 fun DialogNewCollection(
@@ -55,7 +56,7 @@ fun DialogNewCollection(
             OutlinedTextField(
                 value = text,
                 onValueChange = onTextChange,
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).excludedFromAutofill(),
                 singleLine = true,
                 keyboardOptions = IncognitoKeyboard.options(),
                 label = { Text("Название коллекции") },

@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.screens.search.SearchUiMode
+import com.client.xvideos.common.ui.excludedFromAutofill
 
 /**
  * Верхняя строка поиска X с кнопками действий и индикатором загрузки.
@@ -57,7 +58,7 @@ fun SearchTopBar(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
             placeholder = { Text("Поиск видео, моделей или каналов...", color = Color.Gray, fontSize = 14.sp) },
             leadingIcon = {
                 if (uiMode == SearchUiMode.RESULTS) {
