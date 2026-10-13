@@ -2,7 +2,6 @@ package com.client.xvideos.common.ui
 
 import android.view.View
 import android.view.ViewParent
-import android.view.autofill.AutofillManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalView
@@ -16,10 +15,13 @@ import androidx.compose.ui.platform.LocalView
  * которому менеджер паролей нужен, снимает запрет со всей цепочки предков на
  * время своего показа и возвращает прежние значения, когда уходит.
  *
- * Незавершённый сеанс автозаполнения при уходе закрывается: сохранять поля
- * экрана, которого уже нет, незачем. Сеанс, завершённый через
- * `AutofillManager.commit()`, к этому моменту уже закрыт, и на предложение
- * сохранить пароль отмена не влияет.
+ * Сеанс автозаполнения здесь не трогается. Когда поля с типом содержимого
+ * уходят с экрана, Compose сам завершает сеанс (`commit`) — и после
+ * сохранения формы, и если из неё вышли без сохранения: менеджер паролей
+ * вправе предложить запомнить введённое. Раньше при уходе здесь вызывался
+ * `cancel()` «для незавершённого сеанса», но он выполнялся уже после этого
+ * завершения и ничего не отменял — по журналу автозаполнения на телефоне и на
+ * эмуляторе `commit` всякий раз шёл первым.
  */
 @Composable
 fun AllowWindowAutofill() {
@@ -39,7 +41,6 @@ fun AllowWindowAutofill() {
         }
         onDispose {
             blocking.forEach { (ancestor, previous) -> ancestor.importantForAutofill = previous }
-            view.context.getSystemService(AutofillManager::class.java)?.cancel()
         }
     }
 }
