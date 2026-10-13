@@ -50,6 +50,7 @@ import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.AppLockCheckResult
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.DisableAppLockAutofill
+import com.client.xvideos.common.applock.excludedFromAutofill
 import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
@@ -619,7 +620,8 @@ fun PasswordSettingField(
             }
         }
     }
-    val fieldModifier = if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth()
+    val fieldModifier = (if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth())
+        .excludedFromAutofill()
     val fieldTextStyle = remember(dialogTheme.bodyColor) {
         Theme.L.Type.body.copy(color = dialogTheme.bodyColor)
     }

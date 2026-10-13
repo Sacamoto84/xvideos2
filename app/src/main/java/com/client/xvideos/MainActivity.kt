@@ -4,6 +4,9 @@ import com.client.xvideos.common.p2p.ui.P2pBackgroundOverlay
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -93,7 +96,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     /**
      * Сеанс закрыт замком. Источник правды — `AppLockSession` в памяти процесса,
-     * поэтому значение перечитывается в `onCreate` и при каждом `onResume`, а не
+     * поэтому значение перечитывается в `onCreate`, `onStart` и `onResume`, а не
      * хранится в сохранённом состоянии Activity: оно переживает гибель процесса,
      * и система восстанавливала оттуда «замок снят» — первый кадр после возврата
      * из «Недавних» рисовал содержимое без кода.
@@ -112,10 +115,21 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         window?.setStatusBarVisible(visible)
     }
 
+    /** Между `onResume` и `onPause`: Activity на переднем плане. */
+    private var isInForeground = false
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     /**
      * Показывает замок, пока сеанс закрыт. Вызывается из каждого `onResume`:
-     * если замок закрыли, не введя код, он появится снова. `SINGLE_TOP` — чтобы
-     * повторный вызов не положил второй экран поверх первого.
+     * если замок закрыли, не введя код, он появится снова.
+     *
+     * `SINGLE_TOP` бережёт от второго экрана поверх первого, только когда первый
+     * уже создан. Два вызова подряд, пока он ещё запускается, кладут в задачу
+     * две записи (проверено на эмуляторе с Android 12) — поэтому за один выход
+     * на экран вызов должен быть один, см. `onStart`. Лишнюю запись, если она
+     * всё же появится, закрывает сама `LockActivity`: после ввода кода она
+     * создаётся, видит открытый сеанс и уходит.
      */
     private fun showLockScreenIfLocked() {
         isAppLocked = AppLockRepository.shouldShowLock(this)
@@ -140,6 +154,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     override fun onPause() {
         super.onPause()
+        isInForeground = false
         isAppMinimized = true
         val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShown = AppLockRepository.shouldShowLock(this)
@@ -157,8 +172,32 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         }
     }
 
+    /**
+     * Activity уже видна, но может так и не выйти на передний план: поверх стоит
+     * полупрозрачное системное окно — запрос разрешения, выбор приложения для
+     * ссылки. `onResume` тогда не приходит, пока это окно не закроют. Пока замок
+     * проверялся только в нём, после возврата в приложение с истёкшим сроком
+     * сеанса экран замка под таким окном не появлялся: на сам запрос можно было
+     * ответить без кода, а при выключенной «Защите в диспетчере задач» под ним
+     * было видно и содержимое.
+     *
+     * Содержимое прячется сразу. Экран замка запускается следующим сообщением
+     * главного потока и только если `onResume` так и не пришёл: обычно он
+     * приходит в том же сообщении, что и `onStart`, и запускает замок сам, а
+     * второй запуск подряд положил бы в задачу второй экран.
+     */
+    override fun onStart() {
+        super.onStart()
+        isAppLocked = AppLockRepository.shouldShowLock(this)
+        if (!isAppLocked) return
+        mainHandler.post {
+            if (!isInForeground && !isFinishing && !isDestroyed) showLockScreenIfLocked()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        isInForeground = true
         isAppMinimized = false
         val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShown = AppLockRepository.shouldShowLock(this)
@@ -311,6 +350,16 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         val currentWindow = this.window ?: return
         currentWindow.applyAppWindowStyle()
         applyStatusBarVisibility(hasTopCutout())
+
+        // Окно закрыто от системной службы автозаполнения целиком: текст поиска
+        // ей отдавать незачем. Раньше это получалось побочно и только при
+        // включённом замке — строка стояла здесь ради экрана замка и уехала
+        // вместе с ним в LockActivity, после чего поля снова стали ей видны.
+        // Запрет действует на всех потомков корня; экран, которому менеджер
+        // паролей нужен (форма входа L), снимает его на время своего показа —
+        // см. AllowWindowAutofill. Диалоги — отдельные окна, на них он не
+        // распространяется.
+        currentWindow.decorView.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
 
         val isCamouflageAtStart = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShownAtStart = AppLockRepository.shouldShowLock(this)

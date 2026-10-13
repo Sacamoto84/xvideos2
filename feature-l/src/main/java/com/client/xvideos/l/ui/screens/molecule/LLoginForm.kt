@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.ui.AllowWindowAutofill
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import com.client.xvideos.common.util.getTopInsetDp
 import timber.log.Timber
@@ -93,6 +94,11 @@ fun LLoginForm(
     onSkip: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
+    // Форма рассчитана на менеджер паролей: поля ниже объявлены как логин и
+    // пароль, а сохранение завершает сеанс автозаполнения. Окно приложения от
+    // автозаполнения закрыто, здесь запрет снимается на время показа формы.
+    AllowWindowAutofill()
+
     var passwordVisible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current

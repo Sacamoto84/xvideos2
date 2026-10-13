@@ -131,6 +131,42 @@ class AppLockThrottleTest {
     }
 
     @Test
+    fun `после перезагрузки срок не длиннее назначенного, если телефон до неё работал недолго`() {
+        val minute = 60_000L
+        val wall = 1_800_000_000_000L
+        // Пятая ошибка на 25-й минуте работы телефона: блокировка на 30 секунд.
+        val state = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS, wall, 25 * minute)
+        val duration = AppLockThrottle.calculateLockoutDurationMs(state.attempts)
+        assertEquals(AppLockThrottle.BASE_LOCKOUT_MS, duration)
+
+        // Перезагрузка: телефон работает полминуты. Срок от прошлой загрузки
+        // отстоит на 25 минут — меньше потолка, и раньше принимался как есть.
+        val elapsedNow = 30_000L
+        val reanchored = AppLockThrottle.reanchorAfterReboot(state, elapsedNow)
+
+        assertEquals(elapsedNow + duration, reanchored?.lockoutUntilElapsed)
+        assertEquals(
+            duration,
+            AppLockThrottle.remainingMillis(reanchored!!, wallNow = wall + 90_000L, elapsedNow = elapsedNow)
+        )
+    }
+
+    @Test
+    fun `срок от прошлой загрузки короче назначенного остаётся как есть`() {
+        // Блокировку назначили на десятой секунде работы телефона, после
+        // перезагрузки он работает двадцать секунд: остаток по старому сроку —
+        // 20 с из 30. Он не больше назначенного, от перезагрузки неотличим и
+        // настоящий остаток не занижает.
+        val state = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS, 1_000L, 10_000L)
+
+        assertNull(AppLockThrottle.reanchorAfterReboot(state, elapsedNow = 20_000L))
+        assertEquals(
+            20_000L,
+            AppLockThrottle.remainingMillis(state, wallNow = 1_000L + 86_400_000L, elapsedNow = 20_000L)
+        )
+    }
+
+    @Test
     fun `без перезагрузки срок не переносится`() {
         val state = AppLockThrottle.onFailedAttempt(AppLockThrottle.FREE_ATTEMPTS + 5, 1_000L, 36_000_000L)
 

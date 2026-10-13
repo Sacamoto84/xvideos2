@@ -99,18 +99,22 @@ object AppLockThrottle {
      * на полную длительность: сколько прошло до перезагрузки, достоверно узнать
      * уже нечем.
      *
+     * Признак перезагрузки — остаток больше назначенной длительности: в
+     * пределах одной загрузки `elapsedRealtime` не убывает, и остаток может
+     * только уменьшаться. Раньше остаток сравнивался с потолком в полчаса, и
+     * телефон, проработавший до перезагрузки меньше получаса, признака не
+     * давал: срок от прошлой загрузки принимался как есть, и блокировка на
+     * 30 секунд оборачивалась ожиданием до получаса.
+     *
      * @return состояние с новым монотонным сроком или `null`, если перезагрузки
      *   не было. Вызывающий обязан сохранить результат, иначе срок будет
      *   отсчитываться заново при каждой проверке.
      */
     fun reanchorAfterReboot(state: State, elapsedNow: Long): State? {
         if (state.lockoutUntilElapsed <= 0L) return null
-        // Срок дальше потолка возможен, только если `elapsedRealtime` начался
-        // заново: в пределах одной загрузки он не убывает.
-        if (state.lockoutUntilElapsed - elapsedNow <= MAX_LOCKOUT_MS) return null
-        return state.copy(
-            lockoutUntilElapsed = elapsedNow + calculateLockoutDurationMs(state.attempts)
-        )
+        val duration = calculateLockoutDurationMs(state.attempts)
+        if (state.lockoutUntilElapsed - elapsedNow <= duration) return null
+        return state.copy(lockoutUntilElapsed = elapsedNow + duration)
     }
 
     /**
