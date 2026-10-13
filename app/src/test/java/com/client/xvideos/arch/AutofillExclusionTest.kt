@@ -86,21 +86,37 @@ class AutofillExclusionTest {
                 .map { file -> file.relativeTo(root).invariantPath() to file.codeWithoutComments() }
         }
 
-    /** Комментарии описывают прежние поля и сами вызовы — считать их нельзя. */
+    /**
+     * Комментарии описывают прежние поля и сами вызовы — считать их нельзя.
+     * Блочные убираются целиком, а не по первому символу строки: пометка,
+     * закомментированная внутри такого блока, иначе сошла бы за настоящую.
+     */
     private fun File.codeWithoutComments(): String =
-        readLines()
-            .filterNot { line ->
-                val start = line.trimStart()
-                start.startsWith("//") || start.startsWith("*") || start.startsWith("/*")
-            }
+        readText()
+            .replace(BLOCK_COMMENT, "")
+            .lineSequence()
+            .filterNot { it.trimStart().startsWith("//") }
             .joinToString("\n")
 
     private companion object {
         /**
          * Поля ввода Compose. Граница слова отсекает свои обёртки вроде
          * `RSearchTextField(...)`: они зовут помеченное поле, а не являются им.
+         * `InputField` — поле строки поиска Material 3; сейчас его в проекте
+         * нет, но появиться оно должно сразу с пометкой.
          */
-        val FIELD_CALL = Regex("""\b(?:Basic|Outlined|BasicSecure|OutlinedSecure|Secure)?TextField\s*\(""")
+        val FIELD_CALL = Regex(
+            """\b(?:(?:Basic|Outlined|BasicSecure|OutlinedSecure|Secure)?TextField|InputField)\s*\("""
+        )
+
+        // Блочный комментарий, начатый с начала строки. Внутри строки его
+        // открывающая пара символов встречается и в коде — в MIME-типах со
+        // звёздочкой, — и вырезать от неё до ближайшего закрытия значило бы
+        // выбросить настоящий код вместе с полями и пометками.
+        val BLOCK_COMMENT = Regex(
+            """^[ \t]*/\*.*?\*/""",
+            setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE),
+        )
 
         val EXCLUSION_MARK = Regex("""\.excludedFromAutofill\(\)""")
 
