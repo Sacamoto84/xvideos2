@@ -1,6 +1,7 @@
 package com.client.xvideos.common.applock
 
 import android.os.SystemClock
+import java.util.concurrent.CopyOnWriteArrayList
 
 object AppLockSession {
 
@@ -10,6 +11,31 @@ object AppLockSession {
     @Volatile
     private var lastBackgroundElapsedMs: Long = 0L
 
+    /**
+     * Узнаёт о том, что открытый сеанс закрыли.
+     *
+     * Экран, который показывает содержимое, обязан слушать это событие, а не
+     * только проверять сеанс в `onStart` и `onResume`. Сеанс может закрыться,
+     * пока экран остаётся видимым и ни одного вызова жизненного цикла не
+     * получает: повторный запуск приложения закрывает сеанс, а `MainActivity`
+     * под полупрозрачным системным окном как стояла на паузе, так и стоит.
+     *
+     * Вызывается на том потоке, который закрыл сеанс.
+     */
+    fun interface OnLockedListener {
+        fun onSessionLocked()
+    }
+
+    private val lockedListeners = CopyOnWriteArrayList<OnLockedListener>()
+
+    fun addOnLockedListener(listener: OnLockedListener) {
+        lockedListeners.addIfAbsent(listener)
+    }
+
+    fun removeOnLockedListener(listener: OnLockedListener) {
+        lockedListeners.remove(listener)
+    }
+
     fun isUnlocked(): Boolean = unlocked
 
     fun unlock() {
@@ -18,8 +44,12 @@ object AppLockSession {
     }
 
     fun lock() {
+        val wasUnlocked = unlocked
         unlocked = false
         lastBackgroundElapsedMs = 0L
+        // Повторное закрытие уже закрытого сеанса — не событие: экран замка
+        // либо показан, либо появится при выходе экрана с содержимым.
+        if (wasUnlocked) lockedListeners.forEach { it.onSessionLocked() }
     }
 
     /**

@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -45,9 +46,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.calculator.LauncherAliasManager
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import com.client.xvideos.common.applock.AppLockRepository
+import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.applock.WindowPrivacy
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
@@ -96,8 +99,8 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     /**
      * Сеанс закрыт замком. Источник правды — `AppLockSession` в памяти процесса,
-     * поэтому значение перечитывается в `onCreate`, `onStart` и `onResume`, а не
-     * хранится в сохранённом состоянии Activity: оно переживает гибель процесса,
+     * поэтому значение перечитывается в `onCreate`, `onStart`, `onResume` и по
+     * событию «сеанс закрыли», а не хранится в сохранённом состоянии Activity: оно переживает гибель процесса,
      * и система восстанавливала оттуда «замок снят» — первый кадр после возврата
      * из «Недавних» рисовал содержимое без кода.
      *
@@ -115,25 +118,33 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         window?.setStatusBarVisible(visible)
     }
 
-    /** Между `onResume` и `onPause`: Activity на переднем плане. */
-    private var isInForeground = false
-
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
-     * Показывает замок, пока сеанс закрыт. Вызывается из каждого `onResume`:
-     * если замок закрыли, не введя код, он появится снова.
-     *
-     * `SINGLE_TOP` бережёт от второго экрана поверх первого, только когда первый
-     * уже создан. Два вызова подряд, пока он ещё запускается, кладут в задачу
-     * две записи (проверено на эмуляторе с Android 12) — поэтому за один выход
-     * на экран вызов должен быть один, см. `onStart`. Лишнюю запись, если она
-     * всё же появится, закрывает сама `LockActivity`: после ввода кода она
-     * создаётся, видит открытый сеанс и уходит.
+     * Сеанс закрыли, пока Activity на экране. Вызова жизненного цикла при этом
+     * может не быть вовсе: под полупрозрачным системным окном `MainActivity`
+     * стоит на паузе, повторный запуск приложения закрывает сеанс, новая
+     * заставка тут же уходит — и `MainActivity` остаётся видимой, как была
+     * (проверено на телефоне с Android 16). Событие приходит на потоке, который
+     * закрыл сеанс, поэтому показ замка уходит на главный.
+     */
+    private val onSessionLocked = AppLockSession.OnLockedListener {
+        mainHandler.post {
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) showLockScreenIfLocked()
+        }
+    }
+
+    /**
+     * Показывает замок, пока сеанс закрыт. Зовётся отовсюду, где сеанс мог
+     * оказаться закрытым при видимой Activity: `onStart`, `onResume`, событие
+     * «сеанс закрыли». Вызовы приходят вплотную, а `SINGLE_TOP` второй запуск
+     * с первым не объединяет, пока первый экран не создан, — поэтому запускает
+     * тот, кто первым получил разрешение у [LockScreenPresence].
      */
     private fun showLockScreenIfLocked() {
         isAppLocked = AppLockRepository.shouldShowLock(this)
         if (!isAppLocked) return
+        if (!LockScreenPresence.claim(taskId, SystemClock.elapsedRealtime())) return
         startActivity(
             Intent(this, LockActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
@@ -154,7 +165,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     override fun onPause() {
         super.onPause()
-        isInForeground = false
         isAppMinimized = true
         val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShown = AppLockRepository.shouldShowLock(this)
@@ -180,24 +190,20 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
      * сеанса экран замка под таким окном не появлялся: на сам запрос можно было
      * ответить без кода, а при выключенной «Защите в диспетчере задач» под ним
      * было видно и содержимое.
-     *
-     * Содержимое прячется сразу. Экран замка запускается следующим сообщением
-     * главного потока и только если `onResume` так и не пришёл: обычно он
-     * приходит в том же сообщении, что и `onStart`, и запускает замок сам, а
-     * второй запуск подряд положил бы в задачу второй экран.
      */
     override fun onStart() {
         super.onStart()
-        isAppLocked = AppLockRepository.shouldShowLock(this)
-        if (!isAppLocked) return
-        mainHandler.post {
-            if (!isInForeground && !isFinishing && !isDestroyed) showLockScreenIfLocked()
-        }
+        AppLockSession.addOnLockedListener(onSessionLocked)
+        showLockScreenIfLocked()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        AppLockSession.removeOnLockedListener(onSessionLocked)
     }
 
     override fun onResume() {
         super.onResume()
-        isInForeground = true
         isAppMinimized = false
         val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShown = AppLockRepository.shouldShowLock(this)

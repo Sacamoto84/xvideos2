@@ -198,4 +198,60 @@ class AppLockSessionTest {
         assertTrue(valid)
         assertTrue(AppLockSession.isUnlocked())
     }
+
+    @Test
+    fun `о закрытии открытого сеанса слушатель узнаёт один раз`() {
+        var calls = 0
+        val listener = AppLockSession.OnLockedListener { calls++ }
+        AppLockSession.addOnLockedListener(listener)
+        try {
+            AppLockSession.unlock()
+            AppLockSession.lock()
+            assertEquals(1, calls)
+
+            // Сеанс уже закрыт: повторное закрытие — не событие.
+            AppLockSession.lock()
+            assertEquals(1, calls)
+        } finally {
+            AppLockSession.removeOnLockedListener(listener)
+        }
+    }
+
+    @Test
+    fun `закрытие по сроку в фоне тоже событие`() {
+        var calls = 0
+        val listener = AppLockSession.OnLockedListener { calls++ }
+        AppLockSession.addOnLockedListener(listener)
+        try {
+            AppLockSession.unlock()
+            AppLockSession.onAppBackgrounded(elapsedNow = 10_000L)
+            AppLockSession.checkSessionValid(
+                timeoutSeconds = AppLockTimeout.SECONDS_30.seconds,
+                isLockConfigured = true,
+                elapsedNow = 10_000L + 30_000L
+            )
+            assertEquals(1, calls)
+        } finally {
+            AppLockSession.removeOnLockedListener(listener)
+        }
+    }
+
+    @Test
+    fun `снятый слушатель о закрытии не узнаёт, повторная подписка не удваивает вызов`() {
+        var calls = 0
+        val listener = AppLockSession.OnLockedListener { calls++ }
+        AppLockSession.addOnLockedListener(listener)
+        AppLockSession.addOnLockedListener(listener)
+        try {
+            AppLockSession.unlock()
+            AppLockSession.lock()
+            assertEquals(1, calls)
+        } finally {
+            AppLockSession.removeOnLockedListener(listener)
+        }
+
+        AppLockSession.unlock()
+        AppLockSession.lock()
+        assertEquals(1, calls)
+    }
 }

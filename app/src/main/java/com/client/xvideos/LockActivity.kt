@@ -53,13 +53,25 @@ class LockActivity : ComponentActivity() {
     private val isCamouflage: Boolean
         get() = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
 
+    /**
+     * Задача, в которой этот экран учтён в [LockScreenPresence] как показанный.
+     * Запоминается при учёте: к `onDestroy` Activity может уже не числиться в
+     * задаче, и `taskId` тогда вернёт не её — экран остался бы «показанным»
+     * навсегда, и замок в этой задаче больше не запустился бы.
+     */
+    private var countedInTask: Int? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(0xFF212121.toInt()),
         )
         super.onCreate(savedInstanceState)
-        if (finishIfUnlocked()) return
+        if (finishIfUnlocked()) {
+            LockScreenPresence.onRequestDropped(taskId)
+            return
+        }
+        countedInTask = taskId.also(LockScreenPresence::onShown)
 
         window.applyAppWindowStyle()
         window.setStatusBarVisible(hasTopCutout())
@@ -122,7 +134,24 @@ class LockActivity : ComponentActivity() {
         return true
     }
 
+    override fun onDestroy() {
+        markGone()
+        super.onDestroy()
+    }
+
+    /**
+     * Снимает экран с учёта уже при закрытии, не дожидаясь `onDestroy`: тот
+     * приходит с задержкой, а сеанс за это время могут закрыть снова — и новый
+     * экран замка должен запуститься, а не счесть уходящий показанным.
+     */
+    private fun markGone() {
+        val task = countedInTask ?: return
+        countedInTask = null
+        LockScreenPresence.onGone(task)
+    }
+
     private fun finishWithoutAnimation() {
+        markGone()
         finish()
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)
