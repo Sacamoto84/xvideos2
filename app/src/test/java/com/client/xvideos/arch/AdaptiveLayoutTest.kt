@@ -60,13 +60,6 @@ class AdaptiveLayoutTest {
             "l/ui/screens/explorer/tab/saved/collection/CollectionsGrid.kt: колонки числом",
             "l/ui/screens/explorer/tab/saved/subscribedAlbums/molecule/SubscribedAlbumsGrid.kt: колонки числом",
             "l/ui/screens/screenAlbumList/molecule/AlbumListPageGrid.kt: колонки числом",
-            "x/screens/actresses/molecule/ActressesIndexGrid.kt: колонки числом",
-            "x/screens/actresses/molecule/ActressesIndexGrid.kt: строка сетки числом",
-            "x/screens/channel/molecule/ChannelVideosPager.kt: колонки числом",
-            "x/screens/dashboards/molecule/DashboardsPaginatedListContent.kt: колонки числом",
-            "x/screens/favorites/molecule/FavoritesContent.kt: колонки числом",
-            "x/screens/history/molecule/HistoryGrid.kt: колонки числом",
-            "x/screens/tags/molecule/TagsPaginatedListScreen.kt: ориентация экрана",
         )
     }
 }

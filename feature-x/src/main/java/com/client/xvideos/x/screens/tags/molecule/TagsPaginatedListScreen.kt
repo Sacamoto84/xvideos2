@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.tags.molecule
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,9 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.tags.atom.TagGridCell
@@ -78,8 +77,7 @@ fun TagsPaginatedListScreen(
         }
     }
 
-    val orientation = LocalConfiguration.current.orientation
-    val itemsPerRow = if (orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
+    val itemsPerRow = adaptiveGridColumns()
 
     Box(modifier = modifier.fillMaxSize()) {
         if (loaded == null) {

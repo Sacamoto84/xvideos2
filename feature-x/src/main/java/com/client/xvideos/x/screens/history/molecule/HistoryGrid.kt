@@ -1,4 +1,5 @@
 package com.client.xvideos.x.screens.history.molecule
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.x.screens.history.model.HistoryRowActions
 
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -31,7 +32,7 @@ fun HistoryGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(adaptiveGridColumns()),
         state = gridState,
         modifier = modifier,
     ) {

@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelModelFilterItem
@@ -135,7 +136,7 @@ fun ChannelVideosPager(
                 }
             } else if (pageVideos != null) {
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                    columns = GridCells.Fixed(adaptiveGridColumns()),
                     state = gridState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)

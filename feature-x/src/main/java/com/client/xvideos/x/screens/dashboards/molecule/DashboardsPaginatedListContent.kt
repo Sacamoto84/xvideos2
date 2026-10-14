@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
@@ -36,7 +37,7 @@ fun DashboardsPaginatedListContent(
     val topCutout = getTopInsetDp()
     val actualContentPadding = contentPadding ?: remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(adaptiveGridColumns()),
         modifier = modifier.fillMaxSize(),
         state = gridState,
         contentPadding = actualContentPadding,

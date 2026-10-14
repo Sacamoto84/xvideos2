@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.favorites.atom.FavoritesHeader
@@ -99,7 +100,7 @@ fun FavoritesContent(
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(adaptiveGridColumns()),
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()

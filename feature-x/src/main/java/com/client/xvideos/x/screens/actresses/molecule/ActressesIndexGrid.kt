@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.x.model.ActressesIndexItem
 import com.client.xvideos.x.model.ActressesIndexUiState
@@ -43,13 +44,13 @@ fun ActressesIndexGrid(
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Fixed(adaptiveGridColumns()),
             state = gridState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
         ) {
             if (uiState.isLoadingInitial) {
-                item(span = { GridItemSpan(2) }) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -60,7 +61,7 @@ fun ActressesIndexGrid(
                     }
                 }
             } else if (uiState.error != null) {
-                item(span = { GridItemSpan(2) }) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -83,7 +84,7 @@ fun ActressesIndexGrid(
                     }
                 }
             } else if (uiState.isEmpty) {
-                item(span = { GridItemSpan(2) }) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -110,7 +111,7 @@ fun ActressesIndexGrid(
                 }
 
                 if (uiState.isLoadingMore) {
-                    item(span = { GridItemSpan(2) }) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -126,13 +127,13 @@ fun ActressesIndexGrid(
                 }
 
                 if (uiState.loadMoreError != null) {
-                    item(span = { GridItemSpan(2) }) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         LoadMoreErrorFooter(message = uiState.loadMoreError, onRetry = onRetryLoadMore)
                     }
                 }
 
                 if (uiState.isEndReached && uiState.items.isNotEmpty()) {
-                    item(span = { GridItemSpan(2) }) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
                             text = "Все модели каталога загружены",
                             color = Color(0xFF666666),
