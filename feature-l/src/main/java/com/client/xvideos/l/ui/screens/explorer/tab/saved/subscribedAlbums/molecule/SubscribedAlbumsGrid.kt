@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.atom.SubscribedAlbumGridItem
 
@@ -34,7 +35,7 @@ fun SubscribedAlbumsGrid(
 ) {
     LazyVerticalGrid(
         state = state,
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(adaptiveGridColumns()),
         modifier = modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

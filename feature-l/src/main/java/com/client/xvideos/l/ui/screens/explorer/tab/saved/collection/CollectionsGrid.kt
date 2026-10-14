@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.atom.CollectionGridCell
 
 /**
@@ -61,7 +62,7 @@ fun CollectionsGrid(
                 .fillMaxSize()
                 .padding(padding),
             state = gridState,
-            columns = GridCells.Fixed(2)
+            columns = GridCells.Fixed(adaptiveGridColumns())
         ) {
             itemsIndexed(
                 items = collections,

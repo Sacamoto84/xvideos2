@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumGridItem
 import my.nanihadesuka.compose.LazyVerticalGridScrollbar
@@ -52,7 +53,11 @@ fun AlbumListPageGrid(
             alwaysShowScrollbar = false
         )
     ) {
-        LazyVerticalGrid(state = stateGrid, modifier = Modifier.fillMaxSize(), columns = GridCells.Fixed(2)) {
+        LazyVerticalGrid(
+            state = stateGrid,
+            modifier = Modifier.fillMaxSize(),
+            columns = GridCells.Fixed(adaptiveGridColumns())
+        ) {
             item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
                 if (title.isNotEmpty()) {
                     Box(

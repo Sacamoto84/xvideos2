@@ -38,6 +38,7 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 
 /**
  * Универсальная сетка коллекций c заголовком и кнопкой «+».
@@ -92,7 +93,7 @@ fun CollectionsGrid(
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 state = gridState,
-                columns = GridCells.Fixed(2)
+                columns = GridCells.Fixed(adaptiveGridColumns())
             ) {
                 items(collections, key = { it.name }) { collection ->
                     CollectionGridCard(

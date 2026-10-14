@@ -52,14 +52,9 @@ class AdaptiveLayoutTest {
 
         /** Ещё не исправленные места. Каждая задача плана убирает свои строки. */
         val BASELINE = sortedSetOf(
-            "common/collectionDB/ui/CollectionsGrid.kt: колонки числом",
             "l/ui/screens/albumLandingTag/ScreenLAlbumLandingTag.kt: ширина экрана",
             "l/ui/screens/explorer/tab/albumSearch/L_ScreenAlbumSearch.kt: ширина экрана",
             "l/ui/screens/explorer/tab/albumTopHits/L_ScreenAlbumTopHits.kt: ширина экрана",
-            "l/ui/screens/explorer/tab/saved/albums/L_ScreenSavedAlbumsTab.kt: колонки числом",
-            "l/ui/screens/explorer/tab/saved/collection/CollectionsGrid.kt: колонки числом",
-            "l/ui/screens/explorer/tab/saved/subscribedAlbums/molecule/SubscribedAlbumsGrid.kt: колонки числом",
-            "l/ui/screens/screenAlbumList/molecule/AlbumListPageGrid.kt: колонки числом",
         )
     }
 }

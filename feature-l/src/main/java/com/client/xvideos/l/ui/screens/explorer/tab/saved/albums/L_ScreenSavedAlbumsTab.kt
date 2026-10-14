@@ -31,6 +31,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
@@ -110,7 +111,7 @@ fun SavedAlbumsTabContent(
 
             LazyVerticalGrid(
                 state = state,
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(adaptiveGridColumns()),
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
