@@ -36,6 +36,36 @@ internal object ProjectSources {
     /** Путь через `/` независимо от платформы — чтобы записи сторожей читались одинаково. */
     fun File.invariantPath(): String = path.replace(File.separatorChar, '/')
 
+    // Блочный комментарий, начатый с начала строки. Внутри строки его
+    // открывающая пара символов встречается и в коде — в MIME-типах со
+    // звёздочкой, — и вырезать от неё до ближайшего закрытия значило бы
+    // выбросить настоящий код вместе с вызовами.
+    private val BLOCK_COMMENT = Regex(
+        """^[ \t]*/\*.*?\*/""",
+        setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE),
+    )
+
+    /**
+     * Исходники всех модулей: пары «путь от `com/client/xvideos` — код без комментариев».
+     *
+     * Комментарии описывают прежний код и сами запрещённые вызовы — считать их
+     * нельзя. Блочные убираются целиком, а не по первому символу строки: вызов,
+     * закомментированный внутри такого блока, иначе сошёл бы за настоящий.
+     */
+    fun kotlinSourcesWithoutComments(): Sequence<Pair<String, String>> =
+        roots().flatMap { root ->
+            root.walkTopDown()
+                .filter { it.isFile && it.extension == "kt" }
+                .map { file -> file.relativeTo(root).invariantPath() to file.codeWithoutComments() }
+        }
+
+    private fun File.codeWithoutComments(): String =
+        readText()
+            .replace(BLOCK_COMMENT, "")
+            .lineSequence()
+            .filterNot { it.trimStart().startsWith("//") }
+            .joinToString("\n")
+
     val IMPORT = Regex("""^\s*import\s+([\w.]+)""")
 
     const val PACKAGE_PREFIX = "com.client.xvideos."

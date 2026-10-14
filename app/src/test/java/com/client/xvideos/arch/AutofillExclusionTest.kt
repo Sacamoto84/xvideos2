@@ -1,10 +1,8 @@
 package com.client.xvideos.arch
 
-import com.client.xvideos.arch.ProjectSources.invariantPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.File
 
 /**
  * Сторож автозаполнения.
@@ -79,24 +77,7 @@ class AutofillExclusionTest {
     }
 
     /** Пары «путь от `com/client/xvideos` — код без комментариев». */
-    private fun sources(): Sequence<Pair<String, String>> =
-        ProjectSources.roots().flatMap { root ->
-            root.walkTopDown()
-                .filter { it.isFile && it.extension == "kt" }
-                .map { file -> file.relativeTo(root).invariantPath() to file.codeWithoutComments() }
-        }
-
-    /**
-     * Комментарии описывают прежние поля и сами вызовы — считать их нельзя.
-     * Блочные убираются целиком, а не по первому символу строки: пометка,
-     * закомментированная внутри такого блока, иначе сошла бы за настоящую.
-     */
-    private fun File.codeWithoutComments(): String =
-        readText()
-            .replace(BLOCK_COMMENT, "")
-            .lineSequence()
-            .filterNot { it.trimStart().startsWith("//") }
-            .joinToString("\n")
+    private fun sources(): Sequence<Pair<String, String>> = ProjectSources.kotlinSourcesWithoutComments()
 
     private companion object {
         /**
@@ -107,15 +88,6 @@ class AutofillExclusionTest {
          */
         val FIELD_CALL = Regex(
             """\b(?:(?:Basic|Outlined|BasicSecure|OutlinedSecure|Secure)?TextField|InputField)\s*\("""
-        )
-
-        // Блочный комментарий, начатый с начала строки. Внутри строки его
-        // открывающая пара символов встречается и в коде — в MIME-типах со
-        // звёздочкой, — и вырезать от неё до ближайшего закрытия значило бы
-        // выбросить настоящий код вместе с полями и пометками.
-        val BLOCK_COMMENT = Regex(
-            """^[ \t]*/\*.*?\*/""",
-            setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE),
         )
 
         val EXCLUSION_MARK = Regex("""\.excludedFromAutofill\(\)""")
