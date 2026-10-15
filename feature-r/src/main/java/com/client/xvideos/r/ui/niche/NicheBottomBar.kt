@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.Order
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.atom.TabBarPoints
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -42,6 +43,7 @@ fun NicheBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .adaptiveContentWidth()
                 .height(48.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween

@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListPageSelector
 
 @Composable
@@ -41,7 +42,8 @@ fun AlbumListBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
-                .background(Theme.tabLevel1),
+                .background(Theme.tabLevel1)
+                .adaptiveContentWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

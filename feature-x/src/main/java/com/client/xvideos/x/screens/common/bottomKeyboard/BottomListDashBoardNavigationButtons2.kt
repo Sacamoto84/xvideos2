@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.keyboard.KeyboardNumber
 import com.client.xvideos.common.ui.keyboard.KeyboardNumberTheme
 import com.client.xvideos.x.screens.common.bottomKeyboard.atom.ArrowNavigationButton
@@ -84,7 +85,8 @@ fun BottomListDashBoardNavigationButtons2(
     Row(
         modifier = modifier
             .height(48.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .adaptiveContentWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

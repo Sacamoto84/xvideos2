@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.atom.ButtonUp
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
@@ -54,6 +55,7 @@ fun NichesBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .adaptiveContentWidth()
                 .padding(vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom

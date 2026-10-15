@@ -1,6 +1,7 @@
 package com.client.xvideos.common.ui
 
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -69,10 +70,15 @@ fun TabRow(
 
     var state by remember(value) { mutableIntStateOf(value) }
 
+    // Фон — на всю ширину, вкладки — не шире 640dp по центру. Цвет рисует
+    // внешний background, а не сам ряд: при прозрачном ряде цвет не ложится дважды.
     SecondaryTabRow(
-        modifier = Modifier.height(48.dp),
+        modifier = Modifier
+            .background(containerColor)
+            .adaptiveContentWidth()
+            .height(48.dp),
         selectedTabIndex = state,
-        containerColor = containerColor,
+        containerColor = Color.Transparent,
         contentColor = Color.White,
         indicator = {
             TabRowDefaults.SecondaryIndicator(
