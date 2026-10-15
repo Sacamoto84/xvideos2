@@ -9,16 +9,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 
 /**
- * Ширина окна в целых dp, округлённая вниз — как `Configuration.screenWidthDp`,
- * поэтому на телефоне в портрете значения совпадают.
+ * Ширина окна в целых dp; правило — [windowWidthDp].
  *
  * Окно, а не экран: в разделённом экране раскрытого складного окно уже экрана.
- * Без окна (редкие превью) — ширина из конфигурации, как было до адаптации.
  */
 @Composable
-fun currentWindowWidthDp(): Int {
-    val width = LocalWindowInfo.current.containerDpSize.width
-    return if (width.isSpecified) width.value.toInt() else LocalConfiguration.current.screenWidthDp
+fun currentWindowWidthDp(): Int =
+    windowWidthDp(LocalWindowInfo.current.containerDpSize.width, LocalConfiguration.current.screenWidthDp)
+
+/**
+ * Ширина окна в целых dp из размера окна [containerWidth] и
+ * `Configuration.screenWidthDp` ([configWidthDp]).
+ *
+ * Класс ширины решает окно, округлённое вниз. Когда Compact и окно, и
+ * конфигурация, берётся конфигурация: на телефоне значения ровно прежние, а
+ * `screenWidthDp` на новых API округляется к ближайшему, не вниз. Во время
+ * сложения или раскрытия конфигурация может отставать от окна — тогда она
+ * класс не меняет. Без окна (редкие превью) — конфигурация.
+ */
+fun windowWidthDp(containerWidth: Dp, configWidthDp: Int): Int {
+    if (!containerWidth.isSpecified) return configWidthDp
+    val windowDp = containerWidth.value.toInt()
+    val bothCompact = widthClassOf(windowDp) == WidthClass.Compact &&
+        widthClassOf(configWidthDp) == WidthClass.Compact
+    return if (bothCompact) configWidthDp else windowDp
 }
 
 @Composable

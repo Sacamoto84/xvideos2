@@ -62,11 +62,13 @@ internal fun LCollectionsTopBar(
             .padding(top = topInset)
     }
 
+    // Ряд — не шире 640dp по центру, разделитель под ним — на всю ширину.
     Column(
-        modifier = columnModifier.adaptiveContentWidth()
+        modifier = columnModifier
     ) {
         Row(
             modifier = Modifier
+                .adaptiveContentWidth()
                 .fillMaxWidth()
                 .padding(start = 8.dp),
             verticalAlignment = Alignment.CenterVertically

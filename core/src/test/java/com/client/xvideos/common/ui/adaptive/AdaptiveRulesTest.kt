@@ -1,9 +1,13 @@
 package com.client.xvideos.common.ui.adaptive
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
 
@@ -79,6 +83,38 @@ class AdaptiveRulesTest {
         assertEquals(200, centeredOffsetPx(availablePx = 1000, contentPx = 600))
         assertEquals(0, centeredOffsetPx(availablePx = 600, contentPx = 600))
         assertEquals(0, centeredOffsetPx(availablePx = 500, contentPx = 600))
+    }
+
+    @Test
+    fun `пока родитель не шире лимита, ограничения не меняются`() {
+        assertNull(contentWidthConstraints(Constraints(maxWidth = 640), capPx = 640))
+        assertNull(contentWidthConstraints(Constraints(minWidth = 500, maxWidth = 500), capPx = 640))
+        // Неограниченная ширина (горизонтальный скролл): ограничивать нечего.
+        assertNull(contentWidthConstraints(Constraints(), capPx = 640))
+    }
+
+    @Test
+    fun `шире лимита - содержимое не шире лимита, высота прежняя`() {
+        assertEquals(
+            Constraints(minWidth = 640, maxWidth = 640, minHeight = 10, maxHeight = 2000),
+            contentWidthConstraints(
+                Constraints(minWidth = 1000, maxWidth = 1000, minHeight = 10, maxHeight = 2000),
+                capPx = 640,
+            ),
+        )
+        // Нестрогая ширина остаётся нестрогой.
+        assertEquals(
+            Constraints(minWidth = 0, maxWidth = 640),
+            contentWidthConstraints(Constraints(maxWidth = 1000), capPx = 640),
+        )
+    }
+
+    @Test
+    fun `модификатор с тем же лимитом равен себе`() {
+        // Равенство даёт Compose пропускать обновление узла при перекомпоновке.
+        assertEquals(Modifier.adaptiveContentWidth(), Modifier.adaptiveContentWidth())
+        assertEquals(Modifier.adaptiveContentWidth(420.dp), Modifier.adaptiveContentWidth(420.dp))
+        assertNotEquals(Modifier.adaptiveContentWidth(420.dp), Modifier.adaptiveContentWidth())
     }
 
     @Test

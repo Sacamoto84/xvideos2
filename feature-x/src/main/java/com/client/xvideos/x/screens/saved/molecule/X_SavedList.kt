@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.saved.atom.SavedHeader
@@ -40,7 +41,9 @@ fun X_SavedList(
     ) {
         if (list.isEmpty()) {
             Column(modifier = Modifier.fillMaxSize()) {
-                SavedHeader(topCutout = topCutout)
+                // В той же полосе 640dp, что и шапка-строка списка ниже: иначе
+                // при удалении последнего ролика шапка раздвигалась бы на всю ширину.
+                SavedHeader(topCutout = topCutout, modifier = Modifier.adaptiveContentWidth())
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Пусто", color = Color.Gray, fontSize = 16.sp)
                 }

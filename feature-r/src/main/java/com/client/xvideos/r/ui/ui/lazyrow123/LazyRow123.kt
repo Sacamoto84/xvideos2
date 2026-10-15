@@ -157,6 +157,7 @@ fun LazyRow123(
         LazyRow123Content(
             host = host,
             listGifs = listGifs,
+            columns = gridColumns,
             modifier = modifier.hazeSource(hazeState),
             onClickOpenProfile = onClickOpenProfile,
             contentPadding = contentPadding,
@@ -201,11 +202,13 @@ fun LazyRow123(
 
 }
 
+/** @param columns колонки сетки, уже с запасом широкого окна — их считает [LazyRow123]. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LazyRow123Content(
     host: LazyRow123Host,
     listGifs: LazyPagingItems<GifsInfo>,
+    columns: Int,
     modifier: Modifier = Modifier,
     onClickOpenProfile: (String) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -256,7 +259,7 @@ fun LazyRow123Content(
     val pagingItemKey = listGifs.itemKey { it.id }
 
     LazyRow123ContentStateless(
-        columns = adaptiveUserGridColumns(host.columns),
+        columns = columns,
         state = state,
         itemCount = listGifs.itemCount,
         loadState = loadState,

@@ -59,12 +59,16 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.ui.AllowWindowAutofill
 import com.client.xvideos.common.ui.IncognitoKeyboard
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.adaptive.capOutsideCompactDp
+import com.client.xvideos.common.ui.adaptive.currentWidthClass
 import com.client.xvideos.common.util.getTopInsetDp
 import timber.log.Timber
 
 private const val URL_LUSCIOUS = "https://www.luscious.net"
 private val TEXT_COLOR_MUTED = Color(0xFFB8B7B7)
 private val FIELD_TEXT_STYLE = TextStyle(fontSize = 24.sp)
+private const val LOGIN_FORM_MAX_WIDTH_DP = 420
 
 
 /**
@@ -163,12 +167,17 @@ fun LLoginForm(
     // оказывалась под значками статус-бара.
     val topInset = getTopInsetDp()
 
+    // На широком окне форма не шире 420dp по центру, как форма замка; фон и
+    // прокрутка — на всю ширину. На телефоне null: разметка прежняя.
+    val formCap = capOutsideCompactDp(currentWidthClass(), LOGIN_FORM_MAX_WIDTH_DP)
+
     Column(
         modifier = modifier
             .background(Color(0xFF212121))
             .fillMaxSize()
             .imePadding()
             .verticalScroll(scrollState)
+            .then(formCap?.let { Modifier.adaptiveContentWidth(it.dp) } ?: Modifier)
             .padding(top = topInset)
             .padding(horizontal = 16.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

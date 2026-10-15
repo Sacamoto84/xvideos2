@@ -29,8 +29,15 @@ class KeypadWidthTest {
     }
 
     @Test
-    fun `не шире доступной ширины и не отрицательная`() {
+    fun `не шире доступной ширины`() {
         assertEquals(380, keypadWidthDp(WidthClass.Medium, availableWidthDp = 380, availableHeightDp = 900))
-        assertEquals(0, keypadWidthDp(WidthClass.Medium, availableWidthDp = 600, availableHeightDp = 100))
+    }
+
+    @Test
+    fun `в очень низком окне кнопки не меньше 48dp`() {
+        // Четыре кнопки по 48dp и три отступа: клавиатура не схлопывается в ноль.
+        assertEquals(228, keypadWidthDp(WidthClass.Medium, availableWidthDp = 600, availableHeightDp = 100))
+        assertEquals(228, keypadWidthDp(WidthClass.Expanded, availableWidthDp = 808, availableHeightDp = 224))
+        assertEquals(228, keypadWidthDp(WidthClass.Expanded, availableWidthDp = 808, availableHeightDp = 460))
     }
 }

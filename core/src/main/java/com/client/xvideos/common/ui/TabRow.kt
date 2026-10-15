@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material.icons.Icons
@@ -70,59 +71,64 @@ fun TabRow(
 
     var state by remember(value) { mutableIntStateOf(value) }
 
-    // Фон — на всю ширину, вкладки — не шире 640dp по центру. Цвет рисует
-    // внешний background, а не сам ряд: при прозрачном ряде цвет не ложится дважды.
-    SecondaryTabRow(
-        modifier = Modifier
-            .background(containerColor)
-            .adaptiveContentWidth()
-            .height(48.dp),
-        selectedTabIndex = state,
-        containerColor = Color.Transparent,
-        contentColor = Color.White,
-        indicator = {
-            TabRowDefaults.SecondaryIndicator(
-                Modifier.tabIndicatorOffset(state, matchContentSize = false),
-                height = 4.dp,
-                color = Theme.R.colorRed
-            )
-        }
-    ) {
-        titlesIcon.forEachIndexed { index, item ->
-            Box(modifier = Modifier.background(Color.Transparent)) {
-                Tab(
-                    modifier = Modifier.then(
-                        if (tags.isNotEmpty()) {
-                            Modifier.testTag(tags[index])
-                        } else
-                            Modifier
-                    ),
-                    selected = index == state,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        state = index
-                        onChangeState.invoke(index)
-                    },
-                    icon = {
-                        Icon(
-                            item, contentDescription = null,
-                            tint = if (index == state) Color.White else Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+    // Фон и разделитель — на всю ширину, вкладки — не шире 640dp по центру.
+    // Цвет рисует внешний Box, а не сам ряд: при прозрачном ряде цвет не
+    // ложится дважды. Разделитель ряда выключен и нарисован первым в Box:
+    // индикатор лежит поверх него, как и прежде.
+    Box(modifier = Modifier.background(containerColor)) {
+        HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
+        SecondaryTabRow(
+            modifier = Modifier
+                .adaptiveContentWidth()
+                .height(48.dp),
+            selectedTabIndex = state,
+            containerColor = Color.Transparent,
+            contentColor = Color.White,
+            indicator = {
+                TabRowDefaults.SecondaryIndicator(
+                    Modifier.tabIndicatorOffset(state, matchContentSize = false),
+                    height = 4.dp,
+                    color = Theme.R.colorRed
                 )
+            },
+            divider = {}
+        ) {
+            titlesIcon.forEachIndexed { index, item ->
+                Box(modifier = Modifier.background(Color.Transparent)) {
+                    Tab(
+                        modifier = Modifier.then(
+                            if (tags.isNotEmpty()) {
+                                Modifier.testTag(tags[index])
+                            } else
+                                Modifier
+                        ),
+                        selected = index == state,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            state = index
+                            onChangeState.invoke(index)
+                        },
+                        icon = {
+                            Icon(
+                                item, contentDescription = null,
+                                tint = if (index == state) Color.White else Color.Gray,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    )
 
-                Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                    when (index) {
-                        0 -> overlay0.invoke()
-                        1 -> overlay1.invoke()
-                        2 -> overlay2.invoke()
-                        3 -> overlay3.invoke()
-                        4 -> overlay4.invoke()
-                        5 -> overlay5.invoke()
+                    Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                        when (index) {
+                            0 -> overlay0.invoke()
+                            1 -> overlay1.invoke()
+                            2 -> overlay2.invoke()
+                            3 -> overlay3.invoke()
+                            4 -> overlay4.invoke()
+                            5 -> overlay5.invoke()
+                        }
                     }
-                }
 
+                }
             }
         }
     }
