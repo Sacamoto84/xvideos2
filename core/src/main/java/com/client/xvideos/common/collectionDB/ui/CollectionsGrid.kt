@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -45,6 +47,9 @@ import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
  *
  * Если [selectedCollection] не null, вместо сетки рендерится [navigationContent]
  * (контент конкретной коллекции — список её элементов).
+ *
+ * [header] — шапка первым элементом сетки, на всю ширину, уезжает с ней. С
+ * шапкой полоска выреза сверху не рисуется: вырез — отступ самой шапки.
  */
 @Composable
 fun CollectionsGrid(
@@ -56,13 +61,14 @@ fun CollectionsGrid(
     onCollectionLongClick: (String) -> Unit,
     onCreateNewCollectionClick: () -> Unit,
     topBar: @Composable (() -> Unit)? = null,
+    header: @Composable (() -> Unit)? = null,
     navigationContent: @Composable () -> Unit
 ) {
     Scaffold(
         topBar = {
             if (topBar != null) {
                 topBar()
-            } else {
+            } else if (header == null) {
 
                 Box(
                     modifier = Modifier
@@ -86,6 +92,9 @@ fun CollectionsGrid(
                 }
             }
         },
+        // Без верхней панели Scaffold отдал бы сетке отступ выреза, и с шапкой
+        // он удвоился бы.
+        contentWindowInsets = if (header != null) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
         containerColor = style.backgroundColor
     ) { padding ->
 
@@ -95,6 +104,11 @@ fun CollectionsGrid(
                 state = gridState,
                 columns = GridCells.Fixed(adaptiveGridColumns())
             ) {
+                if (header != null) {
+                    item(key = "header", contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
+                        header()
+                    }
+                }
                 items(collections, key = { it.name }) { collection ->
                     CollectionGridCard(
                         collection = collection,

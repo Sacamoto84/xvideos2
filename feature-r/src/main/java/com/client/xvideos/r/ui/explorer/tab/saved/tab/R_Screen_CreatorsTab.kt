@@ -2,11 +2,9 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,18 +19,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
@@ -81,7 +77,7 @@ object R_Screen_CreatorsTab : Screen {
         )
 
         val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
-            gridState = state, itemsToIgnore = 0
+            gridState = state, itemsToIgnore = 1
         )
         val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
@@ -110,35 +106,21 @@ fun CreatorsTabContent(
         modifier = modifier,
         containerColor = Theme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = topInset)
-                    .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Авторы",
-                    modifier = Modifier,
-                    color = Theme.R.colorYellow,
-                    fontSize = 18.sp,
-                    fontFamily = Theme.R.fontFamilyPopinsRegular,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
     ) { padding ->
         Box(
             modifier = Modifier
-                .padding(top = padding.calculateTopPadding())
+                .padding(padding)
                 .fillMaxSize()
         ) {
             LazyColumn(
                 state = state,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = adaptiveListPadding()
+                modifier = Modifier.fillMaxSize()
             ) {
+                // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
+                // полосе 640dp по одной, чтобы список свайпался по всей ширине.
+                item(key = "header", contentType = "header") {
+                    SavedTabHeader(title = "Авторы", topCutout = topInset)
+                }
                 items(
                     items = creators,
                     key = { it.username },
@@ -147,7 +129,8 @@ fun CreatorsTabContent(
                     CreatorListItem(
                         item = item,
                         onClick = onCreatorClick,
-                        onDelete = onDeleteRequest
+                        onDelete = onDeleteRequest,
+                        modifier = Modifier.adaptiveContentWidth()
                     )
                 }
             }

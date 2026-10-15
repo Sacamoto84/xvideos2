@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.x.screens.common.atom.SavedTabHeader
+import com.client.xvideos.common.ui.atom.SavedTabHeader
 
 @Composable
 fun FavoritesHeader(

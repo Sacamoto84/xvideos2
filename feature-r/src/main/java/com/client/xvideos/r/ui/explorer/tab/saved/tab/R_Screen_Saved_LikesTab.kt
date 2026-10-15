@@ -20,6 +20,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
@@ -86,6 +87,10 @@ fun SavedLikesTabContent(
                 modifier = Modifier.fillMaxSize(),
                 onClickOpenProfile = onClickOpenProfile,
                 contentPadding = contentPadding,
+                // Шапка — первым элементом сетки: на всю ширину и уезжает со
+                // списком, как в X. Вырез — отступом списка, под ним и индикатор
+                // обновления.
+                contentBeforeList = { SavedTabHeader(title = "Лайки") },
                 isRunLike = true
             )
         }

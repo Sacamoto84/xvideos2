@@ -3,6 +3,7 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.common.saved.SelectedCreator
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.CreatorsHeader
@@ -127,11 +129,15 @@ fun SubscriptionsTabContent(
         onLongClick
     ) {
         {
-            CreatorsHeader(
-                listCreators = listCreatorSelectedCreator,
-                onCreatorClick = onSelectCreator,
-                onLongClick = onLongClick
-            )
+            // Шапка — на всю ширину и уезжает со списком, как в X; чипы авторов под ней.
+            Column {
+                SavedTabHeader(title = "Подписки")
+                CreatorsHeader(
+                    listCreators = listCreatorSelectedCreator,
+                    onCreatorClick = onSelectCreator,
+                    onLongClick = onLongClick
+                )
+            }
         }
     }
 

@@ -14,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -28,6 +30,8 @@ import com.client.xvideos.common.collectionDB.ui.CollectionsGrid
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.atom.SavedTabHeader
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.collection.ScreenCollectionName
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogActions
@@ -147,6 +151,7 @@ object R_Screen_CollectionTab : Screen {
             selectedCollection = selectedCollection,
             collectionList = savedRed.collections.collectionList,
             gridState = vm.gridState,
+            topInset = getTopInsetDp(),
             onCollectionClick = onCollectionClick,
             onCollectionLongClick = onCollectionLongClick,
             onCreateNewCollectionClick = onCreateNewCollectionClick,
@@ -160,6 +165,7 @@ fun R_SavedCollectionTabContent(
     selectedCollection: String?,
     collectionList: List<CollectionEntity<GifsInfo>>,
     gridState: LazyGridState,
+    topInset: Dp,
     onCollectionClick: (String) -> Unit,
     onCollectionLongClick: (String) -> Unit,
     onCreateNewCollectionClick: () -> Unit,
@@ -192,6 +198,10 @@ fun R_SavedCollectionTabContent(
             addButtonBackground = Theme.R.colorYellow
         )
     }
+    // Шапка — первым элементом сетки: на всю ширину и уезжает с ней, как в X.
+    val header: @Composable () -> Unit = remember(topInset) {
+        { SavedTabHeader(title = "Коллекции", topCutout = topInset) }
+    }
     Box(modifier = modifier) {
         CollectionsGrid(
             selectedCollection = selectedCollection,
@@ -201,6 +211,7 @@ fun R_SavedCollectionTabContent(
             onCollectionClick = onCollectionClick,
             onCollectionLongClick = onCollectionLongClick,
             onCreateNewCollectionClick = onCreateNewCollectionClick,
+            header = header,
             navigationContent = navigationContent
         )
     }
@@ -220,6 +231,7 @@ private fun R_SavedCollectionTabPreview() {
             selectedCollection = null,
             collectionList = sampleCollections,
             gridState = rememberLazyGridState(),
+            topInset = 24.dp,
             onCollectionClick = {},
             onCollectionLongClick = {},
             onCreateNewCollectionClick = {},

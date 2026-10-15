@@ -2,11 +2,9 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,14 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
@@ -55,7 +52,7 @@ object SavedNichesTab : Screen {
         val state = rememberLazyListState()
 
         val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
-            gridState = state, itemsToIgnore = 0
+            gridState = state, itemsToIgnore = 1
         )
 
         var itemPendingDelete by remember { mutableStateOf<NichesInfo?>(null) }
@@ -106,40 +103,29 @@ fun SavedNichesTabContent(
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .padding(top = topInset)
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Группы",
-                    color = Theme.R.colorYellow,
-                    fontSize = 18.sp,
-                    fontFamily = Theme.R.fontFamilyPopinsRegular
-                )
-            }
-        },
         containerColor = Theme.background,
         modifier = modifier
     ) { padding ->
         Box(
             modifier = Modifier
-                .padding(top = padding.calculateTopPadding())
+                .padding(padding)
                 .fillMaxSize()
         ) {
             LazyColumn(
                 state = state,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = adaptiveListPadding()
+                modifier = Modifier.fillMaxSize()
             ) {
+                // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
+                // полосе 640dp по одной, чтобы список свайпался по всей ширине.
+                item(key = "header", contentType = "header") {
+                    SavedTabHeader(title = "Группы", topCutout = topInset)
+                }
                 items(niches, key = { it.id }, contentType = { "saved_niche" }) { item ->
                     SavedNicheRow(
                         item = item,
                         onClick = onNicheClick,
-                        onDeleteClick = onDeleteClick
+                        onDeleteClick = onDeleteClick,
+                        modifier = Modifier.adaptiveContentWidth()
                     )
                 }
             }
