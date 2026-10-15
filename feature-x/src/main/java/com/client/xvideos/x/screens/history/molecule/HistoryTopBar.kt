@@ -29,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.composables.core.HorizontalSeparator
 
 /**
@@ -56,8 +55,7 @@ fun HistoryTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Theme.L.grey6)
-                .adaptiveContentWidth(),
+                .background(Theme.L.grey6),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {

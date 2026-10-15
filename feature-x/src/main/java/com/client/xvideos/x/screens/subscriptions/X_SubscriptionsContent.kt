@@ -11,9 +11,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.XSubscriptionItem
@@ -75,7 +75,7 @@ fun X_SubscriptionsContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF040404))
+            .background(Theme.L.grey6)
     ) {
         X_SubscriptionsList(
             itemsList = itemsList,

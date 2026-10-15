@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.saved.atom.SavedHeader
 
@@ -41,9 +40,7 @@ fun X_SavedList(
     ) {
         if (list.isEmpty()) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // В той же полосе 640dp, что и шапка-строка списка ниже: иначе
-                // при удалении последнего ролика шапка раздвигалась бы на всю ширину.
-                SavedHeader(topCutout = topCutout, modifier = Modifier.adaptiveContentWidth())
+                SavedHeader(topCutout = topCutout)
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Пусто", color = Color.Gray, fontSize = 16.sp)
                 }
@@ -51,9 +48,10 @@ fun X_SavedList(
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = adaptiveListPadding()
+                modifier = Modifier.fillMaxSize()
             ) {
+                // Шапка — на всю ширину, как у «Избранного»; строки — в полосе 640dp
+                // по одной, чтобы список свайпался по всей ширине.
                 item(key = "header", contentType = "header") {
                     SavedHeader(topCutout = topCutout)
                 }
@@ -68,6 +66,7 @@ fun X_SavedList(
                         onPlay = onPlayItem,
                         onDelete = onDeleteItem,
                         onShareP2p = onShareP2pItem,
+                        modifier = Modifier.adaptiveContentWidth(),
                     )
                 }
             }
