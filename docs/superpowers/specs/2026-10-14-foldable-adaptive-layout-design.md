@@ -100,6 +100,11 @@ fun currentWidthClass(): WidthClass
 Где `Compact`, там все правила возвращают нынешние значения. Адаптация
 включается только начиная с `Medium`.
 
+Класс ширины решает окно, округлённое вниз (`windowWidthDp`). Когда Compact
+и окно, и `Configuration.screenWidthDp`, ширина берётся из конфигурации:
+на новых API `screenWidthDp` округляется к ближайшему, и без этого карточки
+рядов L на телефоне стали бы на пиксель уже прежних.
+
 ### 3.2. Сетки и ряды
 
 **а) Сетки с жёсткими двумя колонками.** Правило:
@@ -181,8 +186,13 @@ fun Modifier.adaptiveContentWidth(): Modifier
 | R | `explorer/tab/niches/R_ScreenNichesTab.kt`, `explorer/tab/saved/tab/R_Screen_CreatorsTab.kt`, `explorer/tab/saved/tab/R_Screen_Saved_DownloadTab.kt`, `explorer/tab/saved/tab/savedNiche/SavedNichesTab.kt`, `explorer/tab/search/molecule/SearchCreatorsList.kt`, `manager_block/molecule/BlockedUsersList.kt`, `search/molecule/SuggestionList.kt` |
 | L | `screenAlbumList/molecule/AlbumListFilterOverlay.kt` — заодно `screenHeightDp` заменяется высотой окна |
 
+`adaptiveContentWidth()` — узел `LayoutModifierNode`; решение «оставить или
+ограничить» принимает чистая функция `contentWidthConstraints`.
+
 **б) Шапки, верхние панели, поля ввода** — `adaptiveContentWidth()` на
-текстовые блоки, кнопки и поле; фон и баннер остаются на всю ширину:
+текстовые блоки, кнопки и поле; фон, баннер и разделитель под панелью
+остаются на всю ширину. Шапка, которая в списке идёт первой строкой (X —
+«Сохранённое»), и в пустом списке стоит в той же полосе:
 
 - X — шапка канала (`channel/molecule/ChannelHeader*.kt`, баннер на всю
   ширину), верхние панели и строки поиска (`search/molecule/SearchTopBar.kt`,
@@ -196,7 +206,8 @@ fun Modifier.adaptiveContentWidth(): Modifier
 
 **в) Нижние панели** — фон и разделитель на всю ширину, ряд вкладок и
 вторичные элементы (страницы, колонки, индикатор загрузки) через
-`adaptiveContentWidth()`:
+`adaptiveContentWidth()`. У общего `TabRow` собственный разделитель
+`SecondaryTabRow` выключен и нарисован на всю ширину под рядом:
 
 - X — `dashboards/ScreenXDashBoards.kt` (`DashboardSecondaryControls`,
   `TabRow`), `dashboards/bottomBar/DashboardControlsRow.kt`,
@@ -228,9 +239,14 @@ fun keypadWidthDp(windowWidthDp: Int, keypadAvailableHeightDp: Int): Int
 ```
 
 Клавиатура стоит по центру; дисплей калькулятора — в пределах той же ширины.
-На `Compact` функция возвращает ширину окна, как сейчас. Это первый экран
+На `Compact` функция возвращает ширину окна, как сейчас. В низком широком
+окне кнопка не меньше 48dp (граница действует ниже 460dp высоты): иначе
+ниже ~224dp клавиатура сжималась бы в ноль. Это первый экран
 при запуске под маскировкой, поэтому он проверяется в обеих ориентациях
 внутреннего экрана.
+
+Форма замка и форма входа L — не шире 420dp вне `Compact`
+(`capOutsideCompactDp`); фон и прокрутка — на всю ширину.
 
 ---
 
@@ -261,19 +277,26 @@ fun keypadWidthDp(windowWidthDp: Int, keypadAvailableHeightDp: Int): Int
 - `contentSidePaddingDp`: 411 → 0, 640 → 0, 700 → 30, 852 → 106.
 - `keypadWidthDp`: Compact — ширина окна; широкое окно с запасом по высоте —
   420; широкое низкое окно — ширина, при которой пять рядов квадратных кнопок
-  равны доступной высоте.
+  равны доступной высоте; очень низкое окно — кнопки 48dp.
+- `windowWidthDp`: Compact — конфигурация; вне Compact — окно вниз; при
+  отстающей конфигурации класс решает окно.
+- `contentWidthConstraints`: родитель не шире лимита — `null`; шире — ширина
+  не больше лимита, высота прежняя. Модификаторы с тем же лимитом равны.
 
 ### 5.2. Сторож (`app/src/test/.../arch/AdaptiveLayoutTest.kt`)
 
 Читает исходники через `ProjectSources`, как `AutofillExclusionTest`, и
 запрещает в UI-коде:
 
-- `GridCells.Fixed(<число>)` и `StaggeredGridCells.Fixed(<число>)`;
+- `GridCells.Fixed(<число>)` и `StaggeredGridCells.Fixed(<число>)`, в том
+  числе с именем аргумента; `GridItemSpan(<число>)`, кроме одной ячейки;
+  `FlowRow(maxItemsInEachRow = <число>)` и `chunked(<число>)`;
 - `LocalConfiguration.current.screenWidthDp`, `.screenHeightDp`,
   `.orientation`.
 
 Исключения перечислены явно с причиной: пакет `common/ui/adaptive/`, функции
-`@Preview`, плеер X (раздел 4). Тест падает в обе стороны: и на новом
+`@Preview`, плеер X (раздел 4), цифровая клавиатура (три кнопки в ряду) и
+разбор hex-строки по два символа. Тест падает в обе стороны: и на новом
 нарушении, и на исключении, которое больше ничего не исключает.
 
 ### 5.3. Превью
