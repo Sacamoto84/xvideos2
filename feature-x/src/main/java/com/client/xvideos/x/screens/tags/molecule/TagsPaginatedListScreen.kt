@@ -79,6 +79,22 @@ fun TagsPaginatedListScreen(
 
     val itemsPerRow = adaptiveGridColumns()
 
+    // Список хранит позицию по номеру ряда: после смены числа видео в ряду
+    // (раскрытие, сложение, поворот) наверх возвращается то же видео.
+    var shownPerRow by remember { mutableIntStateOf(itemsPerRow) }
+    LaunchedEffect(itemsPerRow) {
+        if (itemsPerRow != shownPerRow) {
+            val target = tagListIndexAfterColumnsChange(
+                firstVisibleIndex = listState.firstVisibleItemIndex,
+                headerCount = if (header != null) 1 else 0,
+                oldPerRow = shownPerRow,
+                newPerRow = itemsPerRow,
+            )
+            shownPerRow = itemsPerRow
+            listState.scrollToItem(target)
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         if (loaded == null) {
             TagsStatusLayout(header = header) {

@@ -47,6 +47,8 @@ import com.client.xvideos.common.applock.atom.AppLockHeader
 import com.client.xvideos.common.applock.atom.AppLockUnavailableNotice
 import com.client.xvideos.common.applock.molecule.AppLockInputForm
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.adaptive.capOutsideCompactDp
+import com.client.xvideos.common.ui.adaptive.currentWidthClass
 import com.client.xvideos.ui.theme.Pink80
 import com.client.xvideos.ui.theme.Purple80
 import com.client.xvideos.ui.theme.PurpleGrey80
@@ -54,6 +56,9 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
+
+/** Наибольшая ширина формы кода на широком окне (раскрытый складной). */
+private const val LOCK_FORM_MAX_WIDTH_DP = 420
 
 // Экран показывает LockActivity — отдельная Activity поверх MainActivity. Рисовать
 // замок слоем внутри MainActivity нельзя: диалоги и меню — отдельные окна и
@@ -215,6 +220,8 @@ private fun AppLockScreenContent(
     val isLockedOut = lockoutRemainingMs > 0L
     val lockoutSeconds = ceil(lockoutRemainingMs / 1000.0).toInt()
 
+    val lockFormCap = capOutsideCompactDp(currentWidthClass(), LOCK_FORM_MAX_WIDTH_DP)
+
     MaterialTheme(colorScheme = AppLockDarkColorScheme) {
         Box(
             modifier = Modifier
@@ -235,7 +242,8 @@ private fun AppLockScreenContent(
                     .fillMaxWidth()
                     .padding(top = 24.dp, bottom = 16.dp)
                     .verticalScroll(rememberScrollState())
-                    .adaptiveContentWidth(maxWidth = 420.dp),
+                    // Только вне Compact: на широком телефоне форма прежняя.
+                    .then(lockFormCap?.let { Modifier.adaptiveContentWidth(it.dp) } ?: Modifier),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {

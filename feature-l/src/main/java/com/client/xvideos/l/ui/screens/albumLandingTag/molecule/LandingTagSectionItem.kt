@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.sectionRowFillers
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.ui.screens.albumLandingTag.atom.LandingTagAlbumItem
 
@@ -61,6 +64,8 @@ fun LandingTagSectionItem(
                     onAlbumClick = onAlbumClick
                 )
             }
+            // Пустые места неполной последней строки: иначе SpaceBetween разносит её к краям.
+            repeat(sectionRowFillers(displayAlbums.size, itemsPerRow)) { Spacer(Modifier.width(itemWidth)) }
         }
 
         Box(

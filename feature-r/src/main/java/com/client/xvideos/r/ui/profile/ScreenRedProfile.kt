@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.molecule.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.molecule.TagsBlock
@@ -130,7 +131,7 @@ fun ScreenRedProfileContent(
                 }
 
                 if ((creator != null) && (tags.isNotEmpty())) {
-                    TagsBlock(tags = tags, tagsSelect = tagsSelect, onClick = onTagClick)
+                    TagsBlock(tags = tags, tagsSelect = tagsSelect, modifier = Modifier.adaptiveContentWidth(), onClick = onTagClick)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }

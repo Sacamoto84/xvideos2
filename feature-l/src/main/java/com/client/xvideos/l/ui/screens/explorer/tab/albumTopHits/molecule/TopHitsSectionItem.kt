@@ -3,8 +3,10 @@ package com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.molecule
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -16,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.sectionRowFillers
 import com.client.xvideos.l.model.AlbumListTopHits
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.atom.ButtonSeeAll
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.atom.TopHitsAlbumItem
@@ -56,6 +59,8 @@ fun TopHitsSectionItem(
                     )
                 }
             }
+            // Пустые места неполной последней строки: иначе SpaceBetween разносит её к краям.
+            repeat(sectionRowFillers(albums.size, itemsPerRow)) { Spacer(Modifier.width(itemWidth)) }
         }
 
         val onSeeAll = remember(item.url, item.title, onSeeAllClick) {

@@ -53,6 +53,28 @@ class AdaptiveRulesTest {
     }
 
     @Test
+    fun `пустые места добивают неполную строку секции, но не на телефоне`() {
+        // Телефон, 3 в строке: прежняя раскладка, даже если строка неполная.
+        assertEquals(0, sectionRowFillers(itemCount = 9, itemsPerRow = 3))
+        assertEquals(0, sectionRowFillers(itemCount = 7, itemsPerRow = 3))
+        // Широкое окно: последняя строка добивается до полной.
+        assertEquals(1, sectionRowFillers(itemCount = 9, itemsPerRow = 5))
+        assertEquals(3, sectionRowFillers(itemCount = 12, itemsPerRow = 5))
+        assertEquals(3, sectionRowFillers(itemCount = 9, itemsPerRow = 4))
+        assertEquals(0, sectionRowFillers(itemCount = 10, itemsPerRow = 5))
+        assertEquals(0, sectionRowFillers(itemCount = 0, itemsPerRow = 5))
+    }
+
+    @Test
+    fun `узкий лимит действует только вне Compact`() {
+        // Форма замка 420dp: на широком телефоне (окно ~500dp, Compact) она
+        // обязана остаться прежней, а не сузиться.
+        assertEquals(null, capOutsideCompactDp(WidthClass.Compact, 420))
+        assertEquals(420, capOutsideCompactDp(WidthClass.Medium, 420))
+        assertEquals(420, capOutsideCompactDp(WidthClass.Expanded, 420))
+    }
+
+    @Test
     fun `смещение по центру не бывает отрицательным`() {
         assertEquals(200, centeredOffsetPx(availablePx = 1000, contentPx = 600))
         assertEquals(0, centeredOffsetPx(availablePx = 600, contentPx = 600))
