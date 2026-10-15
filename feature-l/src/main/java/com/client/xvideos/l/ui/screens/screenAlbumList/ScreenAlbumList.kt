@@ -29,6 +29,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.common.util.getTopInsetDp
@@ -84,6 +85,8 @@ private fun Screen.ScreenAlbumListContent(
     val requestsInFlight by vm.requestsInFlight.collectAsStateWithLifecycle()
     val filterGCount by vm.filterGenreStateCount.collectAsStateWithLifecycle()
     val filterTagsCount by vm.filterTaggedStateCount.collectAsStateWithLifecycle()
+    // Выбор колонок — повторный тап по вкладке списка альбомов в проводнике L.
+    val selectedColumns by Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     var totalPages by remember { mutableIntStateOf(1) }
@@ -185,7 +188,8 @@ private fun Screen.ScreenAlbumListContent(
                         title = title,
                         topInset = topInset,
                         haptic = haptic,
-                        onAlbumClick = onAlbumClick
+                        onAlbumClick = onAlbumClick,
+                        columns = albumListColumns(selectedColumns)
                     )
                 }
             }

@@ -6,6 +6,7 @@ import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -109,25 +110,33 @@ fun TabRow(
                             onChangeState.invoke(index)
                         },
                         icon = {
-                            Icon(
-                                item, contentDescription = null,
-                                tint = if (index == state) Color.White else Color.Gray,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            Box {
+                                Icon(
+                                    item, contentDescription = null,
+                                    tint = if (index == state) Color.White else Color.Gray,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                // Оверлей (точки числа колонок) — вплотную справа от
+                                // верхнего края иконки, а не в углу вкладки: на широкой
+                                // вкладке угол далеко от иконки. offset не меняет размер,
+                                // иконка остаётся по центру вкладки.
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 26.dp, y = (-8).dp)
+                                ) {
+                                    when (index) {
+                                        0 -> overlay0.invoke()
+                                        1 -> overlay1.invoke()
+                                        2 -> overlay2.invoke()
+                                        3 -> overlay3.invoke()
+                                        4 -> overlay4.invoke()
+                                        5 -> overlay5.invoke()
+                                    }
+                                }
+                            }
                         }
                     )
-
-                    Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                        when (index) {
-                            0 -> overlay0.invoke()
-                            1 -> overlay1.invoke()
-                            2 -> overlay2.invoke()
-                            3 -> overlay3.invoke()
-                            4 -> overlay4.invoke()
-                            5 -> overlay5.invoke()
-                        }
-                    }
-
                 }
             }
         }
