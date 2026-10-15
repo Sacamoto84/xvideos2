@@ -9,7 +9,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.x.feature.country.molecule.ComposeCountry
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import kotlinx.coroutines.launch
@@ -31,7 +30,7 @@ fun DashboardControlsRow(
     }
 
     Row(
-        modifier = modifier.fillMaxWidth().adaptiveContentWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ComposeCountry()

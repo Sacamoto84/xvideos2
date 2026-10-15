@@ -32,7 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.adaptive.currentWidthClass
 import com.client.xvideos.common.ui.keyboard.KeyboardNumber
 import com.client.xvideos.common.ui.keyboard.KeyboardNumberTheme
 import com.client.xvideos.x.screens.common.bottomKeyboard.atom.ArrowNavigationButton
@@ -68,8 +68,12 @@ fun BottomListDashBoardNavigationButtons2(
         showKeyboardDialog = false
     }
 
+    // Лента страниц — на всю ширину окна: на широком окне номеров больше, а не шире кнопки.
+    val pageFraction = 1f / visiblePageNumbers(currentWidthClass())
     val state = rememberLazyListState()
-    LaunchedEffect(value, safeMax) {
+    // pageFraction — ключ: после раскрытия складного ширина номеров другая, и текущую
+    // страницу надо снова поставить по центру.
+    LaunchedEffect(value, safeMax, pageFraction) {
         val indexToScroll = value.coerceIn(0, maxPageIndex)
         val offset = calculateCenterOffset(state, indexToScroll)
         state.animateScrollToItem(index = indexToScroll, scrollOffset = -offset)
@@ -85,8 +89,7 @@ fun BottomListDashBoardNavigationButtons2(
     Row(
         modifier = modifier
             .height(48.dp)
-            .fillMaxWidth()
-            .adaptiveContentWidth(),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -126,7 +129,7 @@ fun BottomListDashBoardNavigationButtons2(
                     isSelected = value == index,
                     onClick = onPageClick,
                     onLongClick = onPageLongClick,
-                    modifier = Modifier.fillParentMaxWidth(0.2f)
+                    modifier = Modifier.fillParentMaxWidth(pageFraction)
                 )
             }
         }
