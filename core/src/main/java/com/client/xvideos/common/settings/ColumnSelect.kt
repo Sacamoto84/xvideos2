@@ -77,11 +77,12 @@ fun calculatePrevColumn(
  * выбор. Ключи настроек приходят параметрами: помощник ничего не знает про
  * конкретный раздел и одинаково работает и для L, и для R.
  *
- * Если ни один вариант не включён, значение не меняется.
+ * Если ни один вариант не включён, значение не меняется. [minCol] — наименьшее
+ * число колонок, которое перебор вообще предлагает (список альбомов L — от двух).
  */
-fun ColumnSelect_AddColumn(pref: SettingElementInt, list: SettingElementList<Boolean>) {
+fun ColumnSelect_AddColumn(pref: SettingElementInt, list: SettingElementList<Boolean>, minCol: Int = 1) {
     val current = pref.field.value
-    val next = calculateNextColumn(current, list.field.value)
+    val next = calculateNextColumn(current, list.field.value, minCol = minCol)
     if (next != current) {
         pref.setValue(next)
     }

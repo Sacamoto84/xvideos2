@@ -27,7 +27,9 @@ import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.L_ScreenAlbumSea
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.L_ScreenAlbumTopHits
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.L_SavedTab
 import com.client.xvideos.l.ui.screens.molecule.LLoginForm
+import com.client.xvideos.l.ui.screens.screenAlbumList.ALBUM_LIST_MIN_COLUMNS
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
+import com.client.xvideos.l.ui.screens.screenAlbumList.albumListColumns
 
 class L_ScreenExplorer : Screen {
 
@@ -82,7 +84,7 @@ class L_ScreenExplorer : Screen {
             { tab ->
                 if (tab == vm.screenType) {
                     when (tab) {
-                        0 -> { ColumnSelect_AddColumn(Settings.l_gifsTab_column_current_count, Settings.l_gifsTab_G_0_4) }
+                        0 -> { ColumnSelect_AddColumn(Settings.l_gifsTab_column_current_count, Settings.l_gifsTab_G_0_4, minCol = ALBUM_LIST_MIN_COLUMNS) }
                     }
                 }
                 vm.screenType = tab
@@ -92,7 +94,8 @@ class L_ScreenExplorer : Screen {
         L_ScreenExplorerContent(
             screenType = vm.screenType,
             percentDownload = percentDownload,
-            columnGifsTab = columnGifsTab,
+            // Точки на вкладке — столько колонок, сколько реально у сетки.
+            columnGifsTab = albumListColumns(columnGifsTab),
             onTabChange = onTabChange
         )
     }
