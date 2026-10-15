@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.x.screens.search.atom.SearchHistoryItem
 
 /**
@@ -50,7 +51,7 @@ fun SearchHistoryView(
     } else {
         LazyColumn(
             modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 8.dp)
+            contentPadding = adaptiveListPadding(PaddingValues(vertical = 8.dp))
         ) {
             item {
                 Row(

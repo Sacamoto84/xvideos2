@@ -40,6 +40,7 @@ import com.client.xvideos.common.p2p.export.RCollectionExporter
 import com.client.xvideos.common.p2p.export.LExporter
 import com.client.xvideos.common.p2p.mirrorRoot
 import com.client.xvideos.common.p2p.nearby.NearbyClientImpl
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -176,6 +177,7 @@ data class ScreenP2pSend(val source: P2pSendSource) : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .adaptiveContentWidth()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {

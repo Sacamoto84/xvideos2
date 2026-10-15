@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.saved.atom.SavedHeader
 
@@ -47,7 +48,8 @@ fun X_SavedList(
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = adaptiveListPadding()
             ) {
                 item(key = "header", contentType = "header") {
                     SavedHeader(topCutout = topCutout)

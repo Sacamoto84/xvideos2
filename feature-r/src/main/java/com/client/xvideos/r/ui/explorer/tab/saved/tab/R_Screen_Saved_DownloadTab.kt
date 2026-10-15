@@ -38,6 +38,7 @@ import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
@@ -156,7 +157,7 @@ fun SavedDownloadTabContent(
             LazyColumn(
                 state = state,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(4.dp)
+                contentPadding = adaptiveListPadding(PaddingValues(4.dp))
             ) {
                 items(downloadList, key = { it.id }, contentType = { "download_item" }) { item ->
                     DownloadListItem(

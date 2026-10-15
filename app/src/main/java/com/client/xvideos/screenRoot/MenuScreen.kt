@@ -20,6 +20,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.HapticDemoScreen
 import com.client.xvideos.R
 import com.client.xvideos.common.p2p.ui.ScreenP2pReceive
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
 import com.client.xvideos.r.ui.root.R_Screen_Root
 import com.client.xvideos.screenRoot.atom.MenuButtonSelect
@@ -85,7 +86,8 @@ fun MenuScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF353535))
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .adaptiveContentWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {

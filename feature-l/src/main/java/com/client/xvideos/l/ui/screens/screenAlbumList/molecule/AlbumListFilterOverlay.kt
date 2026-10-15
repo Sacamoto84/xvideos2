@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.adaptive.CONTENT_MAX_WIDTH_DP
 import com.client.xvideos.l.model.AlbumListFilter as LAlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.filter.AlbumListFilter
@@ -58,6 +60,7 @@ fun AlbumListFilterOverlay(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
+                    .widthIn(max = CONTENT_MAX_WIDTH_DP.dp)
                     .heightIn(max = screenHeight * 0.9f)
                     .wrapContentHeight()
                     .align(Alignment.TopCenter),

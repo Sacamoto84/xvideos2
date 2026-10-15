@@ -33,6 +33,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
@@ -135,7 +136,8 @@ fun CreatorsTabContent(
         ) {
             LazyColumn(
                 state = state,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = adaptiveListPadding()
             ) {
                 items(
                     items = creators,

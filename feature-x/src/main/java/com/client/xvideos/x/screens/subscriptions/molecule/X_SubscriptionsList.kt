@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.x.model.XSubscriptionItem
 import com.client.xvideos.x.screens.subscriptions.atom.SubscriptionsEmptyState
 import com.client.xvideos.x.screens.subscriptions.atom.SubscriptionsHeader
@@ -35,7 +36,7 @@ fun X_SubscriptionsList(
         LazyColumn(
             state = listState,
             modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = topCutout, bottom = 24.dp)
+            contentPadding = adaptiveListPadding(PaddingValues(top = topCutout, bottom = 24.dp))
         ) {
             item(key = "header", contentType = "header") {
                 SubscriptionsHeader(

@@ -29,6 +29,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getFolderSize
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.ui.screens.LLoginFormState
@@ -255,7 +256,8 @@ internal fun AppSettingsScreenContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
-                    .verticalScroll(scrollState),
+                    .verticalScroll(scrollState)
+                    .adaptiveContentWidth(),
                 topCutout = topCutout,
                 onOpenPage = onOpenPage
             )

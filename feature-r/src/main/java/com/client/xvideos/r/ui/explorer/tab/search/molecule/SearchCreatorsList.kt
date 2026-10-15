@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
 import com.client.xvideos.r.ui.explorer.tab.search.atom.SearchCreatorItem
 
@@ -41,7 +42,7 @@ fun SearchCreatorsList(
         LazyColumn(
             state = listState,
             modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 4.dp)
+            contentPadding = adaptiveListPadding(PaddingValues(vertical = 4.dp))
         ) {
             // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
             itemsIndexed(

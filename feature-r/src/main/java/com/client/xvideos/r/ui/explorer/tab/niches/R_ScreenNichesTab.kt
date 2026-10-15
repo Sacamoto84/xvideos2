@@ -41,6 +41,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
@@ -220,7 +221,7 @@ fun R_ScreenNichesTabContent(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = getTopInsetDp())
+                    contentPadding = adaptiveListPadding(PaddingValues(top = getTopInsetDp()))
                 ) {
                     item(key = "refresh_mini", contentType = "refresh_mini") {
                         AnimatedVisibility(cacheState.lastModifiedHour > 72, enter = fadeIn(), exit = fadeOut()) {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.manager_block.atom.BlockedEmptyState
 import com.client.xvideos.r.ui.manager_block.atom.BlockedUserRow
@@ -24,7 +25,8 @@ fun BlockedUsersList(
     } else {
         LazyColumn(
             state = listState,
-            modifier = modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize(),
+            contentPadding = adaptiveListPadding()
         ) {
             items(blockList, key = { it.id }) { item ->
                 BlockedUserRow(

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.x.screens.search.atom.ChannelSuggestionItem
 import com.client.xvideos.x.screens.search.atom.KeywordSuggestionItem
 import com.client.xvideos.x.screens.search.atom.ModelSuggestionItem
@@ -53,7 +54,7 @@ fun SearchSuggestionsView(
     } else {
         LazyColumn(
             modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = adaptiveListPadding(PaddingValues(bottom = 16.dp))
         ) {
             // 1. Поисковые фразы
             if (keywords.isNotEmpty()) {
