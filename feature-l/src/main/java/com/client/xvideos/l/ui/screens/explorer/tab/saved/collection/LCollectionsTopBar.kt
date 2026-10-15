@@ -70,29 +70,12 @@ internal fun LCollectionsTopBar(
             modifier = Modifier
                 .adaptiveContentWidth()
                 .fillMaxWidth()
-                .padding(start = 8.dp),
+                // Кнопка сортировки сама даёт поле 12dp вокруг значка: значок —
+                // на 16dp от края, как стрелка «назад» в шапках.
+                .padding(start = if (selectedCollection == null) 4.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                if (collectionTitle != null) {
-                    Text(
-                        collectionTitle,
-                        color = Theme.L.primaryColor,
-                        fontSize = 18.sp,
-                        fontFamily = Theme.L.fontFamilyPopinsRegular
-                    )
-                }
-
-                if (selectedCollection == null) {
-                    Text(
-                        sortOrder.title,
-                        color = Theme.L.grey2,
-                        fontSize = 12.sp,
-                        fontFamily = Theme.L.fontFamilyDMsanss
-                    )
-                }
-            }
-
+            // Сначала значок сортировки, за ним — что выбрано.
             if (selectedCollection == null) {
                 Box {
                     IconButton(onClick = onOpenMenu) {
@@ -137,6 +120,25 @@ internal fun LCollectionsTopBar(
                             }
                         }
                     }
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                if (collectionTitle != null) {
+                    Text(
+                        collectionTitle,
+                        color = Theme.L.primaryColor,
+                        fontSize = 18.sp,
+                        fontFamily = Theme.L.fontFamilyPopinsRegular
+                    )
+                }
+
+                if (selectedCollection == null) {
+                    Text(
+                        sortOrder.title,
+                        color = Theme.L.grey2,
+                        fontSize = 12.sp,
+                        fontFamily = Theme.L.fontFamilyDMsanss
+                    )
                 }
             }
         }
