@@ -43,10 +43,19 @@ object L_SavedTab : Screen {
     override fun Content() {
         val vm = getScreenModel<L_SavedTabSM>()
         val scope = rememberCoroutineScope()
+        // Без аккаунта L серверных вкладок (подписки, лайки на сервере) нет.
+        val savedProfile by Settings.l_profile.field.collectAsStateWithLifecycle()
+        val pageCount = savedTabPageCount(savedProfile.isComplete)
         val pagerState = rememberPagerState(
-            initialPage = vm.screenType.coerceIn(0, 4),
-            pageCount = { 5 }
+            initialPage = savedTabPage(vm.screenType, pageCount),
+            pageCount = { pageCount }
         )
+
+        // Вышли из аккаунта, стоя на серверной вкладке, — на последнюю видимую.
+        LaunchedEffect(pageCount) {
+            val visible = savedTabPage(pagerState.currentPage, pageCount)
+            if (visible != pagerState.currentPage) pagerState.scrollToPage(visible)
+        }
 
         LaunchedEffect(pagerState.currentPage) {
             vm.screenType = pagerState.currentPage
@@ -85,6 +94,7 @@ object L_SavedTab : Screen {
 
         L_SavedTabContent(
             pagerState = pagerState,
+            pageCount = pageCount,
             columnLikes = columnLikes,
             columnCollection = columnCollection,
             isInsideCollection = isInsideCollection,
@@ -96,6 +106,7 @@ object L_SavedTab : Screen {
 @Composable
 fun L_SavedTabContent(
     pagerState: PagerState,
+    pageCount: Int,
     columnLikes: Int,
     columnCollection: Int,
     isInsideCollection: Boolean,
@@ -106,7 +117,8 @@ fun L_SavedTabContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             L_SavedBottomBar(
-                currentPage = pagerState.currentPage,
+                currentPage = savedTabPage(pagerState.currentPage, pageCount),
+                tabCount = pageCount,
                 columnLikes = columnLikes,
                 columnCollection = columnCollection,
                 onTabChange = onTabChange
@@ -143,6 +155,7 @@ private fun L_SavedTabContentPreview() {
     val pagerState = rememberPagerState(initialPage = 0) { 5 }
     L_SavedTabContent(
         pagerState = pagerState,
+        pageCount = 5,
         columnLikes = 2,
         columnCollection = 2,
         isInsideCollection = false,

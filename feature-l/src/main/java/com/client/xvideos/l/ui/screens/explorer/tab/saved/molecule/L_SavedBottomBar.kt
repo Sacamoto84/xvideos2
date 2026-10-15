@@ -16,6 +16,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.common.ui.atom.TabBarPoints
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 private val SAVED_TAB_ICONS = persistentListOf(
     Icons.Outlined.Save,
@@ -28,6 +29,7 @@ private val SAVED_TAB_ICONS = persistentListOf(
 @Composable
 fun L_SavedBottomBar(
     currentPage: Int,
+    tabCount: Int,
     columnLikes: Int,
     columnCollection: Int,
     onTabChange: (Int) -> Unit,
@@ -46,12 +48,15 @@ fun L_SavedBottomBar(
         { TabBarPoints(columnLikes, isPage4) }
     }
 
+    // Без аккаунта L серверных вкладок нет: показываются только первые tabCount.
+    val icons = remember(tabCount) { SAVED_TAB_ICONS.take(tabCount).toPersistentList() }
+
     Column(modifier = modifier) {
         HorizontalDivider()
         TabRow(
             value = currentPage,
             containerColor = Theme.tabLevel1,
-            titlesIcon = SAVED_TAB_ICONS,
+            titlesIcon = icons,
             onChangeState = onTabChange,
             overlay0 = overlay0Composable,
             overlay2 = overlay2Composable,
@@ -65,6 +70,7 @@ fun L_SavedBottomBar(
 private fun L_SavedBottomBarPreview() {
     L_SavedBottomBar(
         currentPage = 0,
+        tabCount = 5,
         columnLikes = 2,
         columnCollection = 2,
         onTabChange = {}
