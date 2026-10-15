@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.NichesResponse
 import com.client.xvideos.r.model.Order
@@ -53,6 +54,7 @@ fun NicheHeaderContent(
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
             .fillMaxWidth()
             .background(Theme.background)
+            .adaptiveContentWidth()
     ) {
         NicheProfileContent(
             niche = { niche },

@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.common.ui.excludedFromAutofill
 
@@ -40,6 +41,7 @@ fun LCollectionDetailTopBar(
         modifier = modifier
             .fillMaxWidth()
             .background(Theme.background)
+            .adaptiveContentWidth()
             .padding(top = topInset)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {

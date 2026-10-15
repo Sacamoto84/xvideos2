@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
@@ -52,7 +53,7 @@ fun ScreenLAlbumDetailsHeader(
     onTagClick: (String) -> Unit,
     onRequestDelete: (AlbumDetails) -> Unit
 ) {
-    Column {
+    Column(modifier = Modifier.adaptiveContentWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             UrlImage(
                 parsed.cover?.url.orEmpty(),

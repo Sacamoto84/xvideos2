@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
@@ -39,6 +40,7 @@ fun SearchTopBar(
         modifier = modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
+            .adaptiveContentWidth()
             .padding(horizontal = 8.dp, vertical = 6.dp)
     ) {
         OutlinedTextField(

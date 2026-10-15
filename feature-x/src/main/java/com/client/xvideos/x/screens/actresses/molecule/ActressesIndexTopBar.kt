@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.x.model.ActressesIndexCatalog
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
@@ -47,6 +48,7 @@ fun ActressesIndexTopBar(
             .fillMaxWidth()
             .background(Color(0xFF0B0B0E))
             .padding(top = topCutout)
+            .adaptiveContentWidth()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

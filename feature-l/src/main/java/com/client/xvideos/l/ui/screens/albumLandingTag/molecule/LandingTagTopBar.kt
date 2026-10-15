@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 
 private val CutoutTopInsets: WindowInsets
     @Composable get() = WindowInsets.displayCutout.only(WindowInsetsSides.Top)
@@ -39,6 +40,7 @@ fun LandingTagTopBar(
         modifier = modifier
             .fillMaxWidth()
             .background(Theme.background)
+            .adaptiveContentWidth()
             .windowInsetsPadding(CutoutTopInsets)
             .padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically

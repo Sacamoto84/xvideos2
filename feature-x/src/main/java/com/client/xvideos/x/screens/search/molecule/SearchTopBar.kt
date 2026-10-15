@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.screens.search.SearchUiMode
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.excludedFromAutofill
 
 /**
@@ -53,6 +54,7 @@ fun SearchTopBar(
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
             .background(Color(0xFF222222))
+            .adaptiveContentWidth()
             .padding(horizontal = 8.dp, vertical = 6.dp)
     ) {
         OutlinedTextField(

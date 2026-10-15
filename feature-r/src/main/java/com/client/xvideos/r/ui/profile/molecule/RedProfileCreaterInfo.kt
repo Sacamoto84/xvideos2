@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.atom.CreatorStatsRow
@@ -39,7 +40,7 @@ fun RedProfileCreaterInfo(
     val aboutTitle = remember(item.username) { "About ${item.username}:" }
     val descriptionTrimmed = remember(item.description) { item.description?.trimMargin() }
 
-    Column(modifier = modifier.padding(horizontal = 4.dp).fillMaxWidth()) {
+    Column(modifier = modifier.adaptiveContentWidth().padding(horizontal = 4.dp).fillMaxWidth()) {
         CreatorTopInfoRow(
             item = item,
             isFollow = isFollow,

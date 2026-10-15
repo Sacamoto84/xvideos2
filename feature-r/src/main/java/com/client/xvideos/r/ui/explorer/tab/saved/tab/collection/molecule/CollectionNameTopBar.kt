@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getTopInsetDp
 
 @Composable
@@ -25,6 +26,7 @@ fun CollectionNameTopBar(
 ) {
     Row(
         modifier = modifier
+            .adaptiveContentWidth()
             .fillMaxWidth()
             .padding(
                 start = 4.dp,
