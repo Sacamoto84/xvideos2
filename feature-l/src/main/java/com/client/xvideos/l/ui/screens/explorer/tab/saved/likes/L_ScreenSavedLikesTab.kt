@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -24,6 +25,7 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.atom.LikesEmptyMessage
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.molecule.LikesFilterSegmentedRow
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -106,6 +108,10 @@ fun SavedLikesTabContent(
             tag = "lLikes",
             itemBefore = renderItemBefore
         )
+        // Прямое чтение SnapshotStateList: надпись уходит, как только появится элемент.
+        if (host.filteredPic.isEmpty()) {
+            LikesEmptyMessage(modifier = Modifier.align(Alignment.Center))
+        }
     }
 }
 
