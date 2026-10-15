@@ -28,14 +28,14 @@ import com.client.xvideos.l.ui.screens.albumLandingTag.atom.LandingTagAlbumItem
 @Composable
 fun LandingTagSectionItem(
     item: Landing_page_albumSection,
-    screenWidth: Dp,
+    itemWidth: Dp,
+    itemsPerRow: Int,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (Landing_page_albumSection) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val onSeeAll = remember(item, onSeeAllClick) { { onSeeAllClick(item) } }
-    val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
-    val displayAlbums = remember(item.items) { item.items.take(9) }
+    val displayAlbums = remember(item.items, itemsPerRow) { item.items.take(itemsPerRow * 3) }
 
     Column(modifier = modifier) {
         Text(
@@ -48,7 +48,7 @@ fun LandingTagSectionItem(
         )
 
         FlowRow(
-            maxItemsInEachRow = 3,
+            maxItemsInEachRow = itemsPerRow,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 2.dp),
@@ -95,7 +95,8 @@ private fun LandingTagSectionItemPreview() {
             url = "",
             items = emptyList()
         ),
-        screenWidth = 360.dp,
+        itemWidth = 117.dp,
+        itemsPerRow = 3,
         onAlbumClick = {},
         onSeeAllClick = {}
     )

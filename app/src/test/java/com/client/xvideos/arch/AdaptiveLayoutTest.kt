@@ -50,11 +50,7 @@ class AdaptiveLayoutTest {
             "ориентация экрана" to Regex("""\bConfiguration\.ORIENTATION_(?:LANDSCAPE|PORTRAIT)\b"""),
         )
 
-        /** Ещё не исправленные места. Каждая задача плана убирает свои строки. */
-        val BASELINE = sortedSetOf(
-            "l/ui/screens/albumLandingTag/ScreenLAlbumLandingTag.kt: ширина экрана",
-            "l/ui/screens/explorer/tab/albumSearch/L_ScreenAlbumSearch.kt: ширина экрана",
-            "l/ui/screens/explorer/tab/albumTopHits/L_ScreenAlbumTopHits.kt: ширина экрана",
-        )
+        /** Неисправленных мест нет: новое нарушение исправляется, а не вписывается сюда. */
+        val BASELINE = sortedSetOf<String>()
     }
 }

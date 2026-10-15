@@ -19,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -32,6 +31,9 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.currentWidthClass
+import com.client.xvideos.common.ui.adaptive.rowItemWidth
+import com.client.xvideos.common.ui.adaptive.rowVisibleItems
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.model.Landing_page_albumType
 import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.molecule.AlbumSearchInputField
@@ -56,7 +58,8 @@ object L_ScreenAlbumSearch : Screen {
         BackHandler(enabled = searchText.isNotEmpty(), onBack = onClearSearch)
         val result by vm.result.collectAsStateWithLifecycle()
         val isLoading by vm.isLoading.collectAsStateWithLifecycle()
-        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        val itemWidth = rowItemWidth()
+        val itemsPerRow = rowVisibleItems(currentWidthClass())
 
         val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.updateSearchText(it) } }
         val onSearch: () -> Unit = remember(vm) { { vm.search() } }
@@ -79,7 +82,8 @@ object L_ScreenAlbumSearch : Screen {
             isLoading = isLoading,
             result = result,
             state = vm.state,
-            screenWidth = screenWidth,
+            itemWidth = itemWidth,
+            itemsPerRow = itemsPerRow,
             onSearchTextChange = onSearchTextChange,
             onSearch = onSearch,
             onAlbumClick = onAlbumClick,
@@ -94,7 +98,8 @@ fun L_ScreenAlbumSearchContent(
     isLoading: Boolean,
     result: Landing_page_albumType?,
     state: LazyListState,
-    screenWidth: Dp,
+    itemWidth: Dp,
+    itemsPerRow: Int,
     onSearchTextChange: (String) -> Unit,
     onSearch: () -> Unit,
     onAlbumClick: (Long) -> Unit,
@@ -168,7 +173,8 @@ fun L_ScreenAlbumSearchContent(
             ) { _, section ->
                 AlbumSearchSectionBlock(
                     section = section,
-                    screenWidth = screenWidth,
+                    itemWidth = itemWidth,
+                    itemsPerRow = itemsPerRow,
                     onAlbumClick = onAlbumClick,
                     onSeeAllClick = onSeeAllClick
                 )
@@ -189,7 +195,8 @@ private fun L_ScreenAlbumSearchContentPreview() {
         isLoading = false,
         result = null,
         state = rememberLazyListState(),
-        screenWidth = 360.dp,
+        itemWidth = 117.dp,
+        itemsPerRow = 3,
         onSearchTextChange = {},
         onSearch = {},
         onAlbumClick = {},

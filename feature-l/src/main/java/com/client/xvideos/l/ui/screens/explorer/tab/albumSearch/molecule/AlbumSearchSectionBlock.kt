@@ -29,13 +29,13 @@ import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.atom.AlbumSearch
 @Composable
 fun AlbumSearchSectionBlock(
     section: Landing_page_albumSection,
-    screenWidth: Dp,
+    itemWidth: Dp,
+    itemsPerRow: Int,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (Landing_page_albumSection) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val handleSeeAll = remember(section, onSeeAllClick) { { onSeeAllClick(section) } }
-    val itemWidth = remember(screenWidth) { (screenWidth - 8.dp) / 3 }
     val seeAllShape = remember { RoundedCornerShape(8.dp) }
 
     Column(modifier = modifier) {
@@ -49,13 +49,13 @@ fun AlbumSearchSectionBlock(
         )
 
         FlowRow(
-            maxItemsInEachRow = 3,
+            maxItemsInEachRow = itemsPerRow,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val albums = remember(section.items) { section.items.take(9) }
+            val albums = remember(section.items, itemsPerRow) { section.items.take(itemsPerRow * 3) }
             albums.forEach { album ->
                 key(album.id) {
                     AlbumSearchGridItem(
@@ -100,7 +100,8 @@ private fun AlbumSearchSectionBlockPreview() {
             url = "",
             items = emptyList()
         ),
-        screenWidth = 360.dp,
+        itemWidth = 117.dp,
+        itemsPerRow = 3,
         onAlbumClick = {},
         onSeeAllClick = {}
     )

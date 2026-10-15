@@ -24,6 +24,7 @@ import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.atom.TopHitsAlb
 fun TopHitsSectionItem(
     item: AlbumListTopHits,
     itemWidth: Dp,
+    itemsPerRow: Int,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (String, String) -> Unit,
     modifier: Modifier = Modifier,
@@ -39,13 +40,13 @@ fun TopHitsSectionItem(
         )
 
         FlowRow(
-            maxItemsInEachRow = 3,
+            maxItemsInEachRow = itemsPerRow,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 1.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val albums = remember(item.items) { item.items.take(9) }
+            val albums = remember(item.items, itemsPerRow) { item.items.take(itemsPerRow * 3) }
             albums.forEach { album ->
                 key(album.id) {
                     TopHitsAlbumItem(
@@ -74,6 +75,7 @@ private fun TopHitsSectionItemPreview() {
             items = emptyList()
         ),
         itemWidth = 120.dp,
+        itemsPerRow = 3,
         onAlbumClick = {},
         onSeeAllClick = { _, _ -> }
     )
