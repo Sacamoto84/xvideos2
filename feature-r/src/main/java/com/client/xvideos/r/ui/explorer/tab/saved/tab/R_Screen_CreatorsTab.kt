@@ -118,8 +118,13 @@ fun CreatorsTabContent(
             ) {
                 // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
                 // полосе 640dp по одной, чтобы список свайпался по всей ширине.
+                // 4dp под шапкой плюс 2dp поля строки — сверху 6dp, как слева.
                 item(key = "header", contentType = "header") {
-                    SavedTabHeader(title = "Авторы", topCutout = topInset)
+                    SavedTabHeader(
+                        title = "Авторы",
+                        topCutout = topInset,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
                 }
                 items(
                     items = creators,

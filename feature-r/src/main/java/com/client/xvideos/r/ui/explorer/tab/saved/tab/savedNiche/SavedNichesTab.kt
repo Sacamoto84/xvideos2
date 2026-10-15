@@ -117,8 +117,13 @@ fun SavedNichesTabContent(
             ) {
                 // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
                 // полосе 640dp по одной, чтобы список свайпался по всей ширине.
+                // 4dp под шапкой плюс 2dp поля строки — сверху 6dp, как слева.
                 item(key = "header", contentType = "header") {
-                    SavedTabHeader(title = "Группы", topCutout = topInset)
+                    SavedTabHeader(
+                        title = "Группы",
+                        topCutout = topInset,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
                 }
                 items(niches, key = { it.id }, contentType = { "saved_niche" }) { item ->
                     SavedNicheRow(

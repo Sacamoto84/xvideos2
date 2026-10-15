@@ -3,6 +3,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,7 +63,10 @@ fun CollectionsGrid(
                 .fillMaxSize()
                 .padding(padding),
             state = gridState,
-            columns = GridCells.Fixed(adaptiveGridColumns())
+            columns = GridCells.Fixed(adaptiveGridColumns()),
+            // Сверху у первой строки то же поле, что слева (8dp): 4dp здесь плюс
+            // 4dp поля плитки и кнопки «+».
+            contentPadding = PaddingValues(top = 4.dp)
         ) {
             itemsIndexed(
                 items = collections,

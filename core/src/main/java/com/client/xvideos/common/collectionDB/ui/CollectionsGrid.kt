@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -102,11 +103,14 @@ fun CollectionsGrid(
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 state = gridState,
-                columns = GridCells.Fixed(adaptiveGridColumns())
+                columns = GridCells.Fixed(adaptiveGridColumns()),
+                // Сверху у первой строки то же поле, что слева (8dp): 4dp здесь или
+                // под шапкой плюс 4dp поля плитки и кнопки «+».
+                contentPadding = PaddingValues(top = if (header == null) 4.dp else 0.dp)
             ) {
                 if (header != null) {
                     item(key = "header", contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
-                        header()
+                        Box(modifier = Modifier.padding(bottom = 4.dp)) { header() }
                     }
                 }
                 items(collections, key = { it.name }) { collection ->
