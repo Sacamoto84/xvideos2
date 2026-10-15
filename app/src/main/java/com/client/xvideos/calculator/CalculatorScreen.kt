@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.calculator.molecule.CalculatorDisplay
 import com.client.xvideos.calculator.molecule.CalculatorKeypad
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.adaptive.currentWidthClass
 
 /**
  * Экран-камуфляж «Калькулятор».
@@ -65,7 +68,8 @@ fun CalculatorScreen(
     BackHandler(enabled = canClear, onBack = onClearAction)
     BackHandler(enabled = !canBackspace && !canClear, onBack = onBackAction)
 
-    Column(
+    val widthClass = currentWidthClass()
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .clickable(
@@ -75,21 +79,29 @@ fun CalculatorScreen(
             )
             .background(Color.Black)
             .displayCutoutPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.Bottom
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        CalculatorDisplay(
-            displayValue = state.displayValue,
-            expressionHistory = state.expressionHistory,
-            modifier = Modifier.weight(1f)
-        )
-        CalculatorKeypad(
-            state = state,
-            scope = scope,
-            haptic = haptic,
-            onUnlock = onUnlock,
-            onUnlockFailed = onUnlockFailed
-        )
+        // На телефоне null: Column получает ровно прежнюю геометрию.
+        val keypadWidth = keypadWidthDp(widthClass, maxWidth.value.toInt(), maxHeight.value.toInt())
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (keypadWidth != null) Modifier.adaptiveContentWidth(keypadWidth.dp) else Modifier),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            CalculatorDisplay(
+                displayValue = state.displayValue,
+                expressionHistory = state.expressionHistory,
+                modifier = Modifier.weight(1f)
+            )
+            CalculatorKeypad(
+                state = state,
+                scope = scope,
+                haptic = haptic,
+                onUnlock = onUnlock,
+                onUnlockFailed = onUnlockFailed
+            )
+        }
     }
 }
 

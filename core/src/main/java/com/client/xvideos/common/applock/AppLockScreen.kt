@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.client.xvideos.common.applock.atom.AppLockHeader
 import com.client.xvideos.common.applock.atom.AppLockUnavailableNotice
 import com.client.xvideos.common.applock.molecule.AppLockInputForm
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.ui.theme.Pink80
 import com.client.xvideos.ui.theme.Purple80
 import com.client.xvideos.ui.theme.PurpleGrey80
@@ -233,7 +234,8 @@ private fun AppLockScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 24.dp, bottom = 16.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .adaptiveContentWidth(maxWidth = 420.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
