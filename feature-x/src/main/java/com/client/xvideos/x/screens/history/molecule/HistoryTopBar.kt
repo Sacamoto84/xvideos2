@@ -4,13 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
@@ -29,6 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.x.screens.common.atom.SAVED_TAB_HEADER_HEIGHT
 import com.composables.core.HorizontalSeparator
 
 /**
@@ -50,11 +48,14 @@ fun HistoryTopBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
+            // Тот же отступ, что у шапок остальных вкладок сохранённого.
+            .padding(top = getTopInsetDp())
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // Высота как у SavedTabHeader: кнопки справа не опускают разделитель.
+                .height(SAVED_TAB_HEADER_HEIGHT)
                 .background(Theme.L.grey6),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -100,7 +101,7 @@ fun HistoryTopBar(
                     text = "История",
                     color = Color.White,
                     fontSize = 24.sp,
-                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(start = 16.dp),
                 )
                 if (hasItems) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

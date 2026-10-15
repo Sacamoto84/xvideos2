@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,9 @@ import com.composables.core.HorizontalSeparator
  * обычной толщины (как у «Истории»), разделитель на всю ширину окна — шапка не
  * ограничивается полосой 640dp и на раскрытом складном. [trailing] — справа от
  * заголовка (число подписок).
+ *
+ * Высота ряда фиксирована ([SAVED_TAB_HEADER_HEIGHT]): кнопки справа (у «Истории»)
+ * и шрифт не сдвигают разделитель — при переключении вкладок он не прыгает.
  */
 @Composable
 fun SavedTabHeader(
@@ -39,7 +43,8 @@ fun SavedTabHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                .height(SAVED_TAB_HEADER_HEIGHT)
+                .padding(start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -53,6 +58,9 @@ fun SavedTabHeader(
         HorizontalSeparator(color = Color(0xFF9E9E9E))
     }
 }
+
+/** Высота ряда шапки вкладок сохранённого — с ней же ряд «Истории». */
+val SAVED_TAB_HEADER_HEIGHT = 48.dp
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
