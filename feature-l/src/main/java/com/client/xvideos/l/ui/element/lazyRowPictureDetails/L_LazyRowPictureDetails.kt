@@ -31,6 +31,7 @@ import com.client.xvideos.common.di.rememberApplicationScope
 import com.client.xvideos.common.navigation.LocalMainNavigator
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
@@ -100,8 +101,11 @@ fun L_LazyRowPictureDetails(
         }
     }
 
+    // Выбор пользователя плюс запас широкого окна; сам выбор в host не меняется.
+    val gridColumns = adaptiveUserGridColumns(host.columns)
+
     /** Активный диапазон элементов для загрузки: видимые на экране + буфер перед и после скролла */
-    val activeItemRange by rememberActiveItemRange(host, showInitialLoading)
+    val activeItemRange by rememberActiveItemRange(host, showInitialLoading, gridColumns)
 
     val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
@@ -110,7 +114,7 @@ fun L_LazyRowPictureDetails(
 
         LazyVerticalStaggeredGrid(
             state = host.state,
-            columns = StaggeredGridCells.Fixed(host.columns),
+            columns = StaggeredGridCells.Fixed(gridColumns),
             modifier = Modifier.fillMaxSize().hazeSource(hazeState).then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)
         ) {
 
@@ -236,9 +240,12 @@ private fun L_LazyRowPictureDetailsPreview() {
 @Composable
 private fun rememberActiveItemRange(
     host: LazyRowPictureDetailsHost,
-    showInitialLoading: Boolean
+    showInitialLoading: Boolean,
+    columns: Int,
 ): State<IntRange> {
-    return remember(host, showInitialLoading) {
+    // columns — ключ: derivedStateOf читает его как обычный параметр, без ключа
+    // после раскрытия складного буферы остались бы от прежнего числа колонок.
+    return remember(host, showInitialLoading, columns) {
         derivedStateOf {
             val visible = host.state.layoutInfo.visibleItemsInfo
             if (visible.isEmpty()) {
@@ -247,8 +254,8 @@ private fun rememberActiveItemRange(
                 val headerOffset = if (showInitialLoading) 2 else 1
                 val first = (visible.minOf { it.index } - headerOffset).coerceAtLeast(0)
                 val last = (visible.maxOf { it.index } - headerOffset).coerceAtLeast(0)
-                val bufferBefore = host.columns
-                val bufferAfter = host.columns * 2
+                val bufferBefore = columns
+                val bufferAfter = columns * 2
                 ((first - bufferBefore).coerceAtLeast(0))..(last + bufferAfter)
             }
         }

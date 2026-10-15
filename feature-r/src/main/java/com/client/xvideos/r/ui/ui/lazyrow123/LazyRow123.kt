@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
+import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.r.network.toRUserMessage
@@ -101,12 +102,15 @@ fun LazyRow123(
     }
     val pullToRefreshState = rememberPullToRefreshState()
 
+    // Выбор пользователя плюс запас широкого окна; сам выбор в host не меняется.
+    val gridColumns = adaptiveUserGridColumns(host.columns)
+
     // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
     // перекомпоновывало бы весь экран на каждом кадре.
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
         gridState = host.state,
         itemsToIgnore = if (contentBeforeList != null) 1 else 0,
-        numberOfColumns = host.columns
+        numberOfColumns = gridColumns
     )
 
     /** Показывать ли кнопку "вверх" */
@@ -252,7 +256,7 @@ fun LazyRow123Content(
     val pagingItemKey = listGifs.itemKey { it.id }
 
     LazyRow123ContentStateless(
-        columns = host.columns,
+        columns = adaptiveUserGridColumns(host.columns),
         state = state,
         itemCount = listGifs.itemCount,
         loadState = loadState,
