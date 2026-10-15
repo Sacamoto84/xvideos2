@@ -210,8 +210,7 @@ fun Modifier.adaptiveContentWidth(): Modifier
 `SecondaryTabRow` выключен и нарисован на всю ширину под рядом:
 
 - X — `dashboards/ScreenXDashBoards.kt` (`DashboardSecondaryControls`,
-  `TabRow`), `dashboards/bottomBar/DashboardControlsRow.kt`,
-  `channel/molecule/ChannelPagerBottomBar.kt`;
+  `TabRow`);
 - L — `explorer/molecule/L_ExplorerBottomBar.kt`,
   `explorer/tab/saved/molecule/L_SavedBottomBar.kt`,
   `screenAlbumList/bottomBar/AlbumListBottomBar.kt`;
@@ -220,6 +219,14 @@ fun Modifier.adaptiveContentWidth(): Modifier
   `niche/NicheBottomBar.kt`.
 
 Нижние панели плеера X сюда не входят (раздел 4).
+
+**Исключение — лента страниц X** (`common/bottomKeyboard/BottomListDashBoardNavigationButtons2.kt`
+и ряд дашбордов с выбором страны `dashboards/bottomBar/DashboardControlsRow.kt`;
+та же лента у канала, поиска по страницам и страницы тега). Решение владельца
+от 15.10.2026: лента идёт на всю ширину окна, а номеров страниц видно больше —
+5 на телефоне, 9 на Medium, 11 на Expanded (`visiblePageNumbers`). Ограничение
+640dp ей не ставится: место по краям отдаётся номерам, кнопка остаётся
+~62–67dp, а не растягивается.
 
 **г) Без изменений.** Диалоги: 54 из 60 файлов с `Dialog(` идут на
 системной ширине, которую ограничивает сама платформа; у остальных шести
