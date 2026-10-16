@@ -2,6 +2,7 @@ package com.client.xvideos.x.screens.subscriptions.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -19,7 +20,7 @@ import com.client.xvideos.common.ui.atom.SavedTabHeader
 
 /**
  * Заголовок вкладки подписок со счётчиком — та же шапка, что у «Избранного»
- * и «Сохранённого», счётчик справа.
+ * и «Сохранённого», счётчик справа. [actions] — после счётчика (сортировка).
  */
 @Composable
 fun SubscriptionsHeader(
@@ -28,6 +29,7 @@ fun SubscriptionsHeader(
     isModel: Boolean,
     modifier: Modifier = Modifier,
     topCutout: Dp = 0.dp,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     SavedTabHeader(title = title, topCutout = topCutout, modifier = modifier) {
         if (count > 0) {
@@ -46,6 +48,7 @@ fun SubscriptionsHeader(
                 )
             }
         }
+        actions()
     }
 }
 

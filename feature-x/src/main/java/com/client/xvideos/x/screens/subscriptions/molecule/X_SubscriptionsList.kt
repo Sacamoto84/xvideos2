@@ -11,11 +11,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.x.model.XSubscriptionItem
+import com.client.xvideos.x.screens.subscriptions.XSubscriptionsOrder
 import com.client.xvideos.x.screens.subscriptions.atom.SubscriptionsEmptyState
 import com.client.xvideos.x.screens.subscriptions.atom.SubscriptionsHeader
 
 /**
  * Список подписок на каналы или моделей с шапкой и счётчиком; пустой — заглушка.
+ * [itemsList] уже в порядке [order]; значок сортировки в шапке меняет его через
+ * [onOrderChange].
  */
 @Composable
 fun X_SubscriptionsList(
@@ -25,6 +28,8 @@ fun X_SubscriptionsList(
     listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
     onOpenCreator: (XSubscriptionItem) -> Unit = {},
     onDeleteRequest: (XSubscriptionItem) -> Unit = {},
+    order: XSubscriptionsOrder = XSubscriptionsOrder.NEWEST,
+    onOrderChange: (XSubscriptionsOrder) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val title = if (isModel) "Подписки на актрис" else "Подписки на каналы"
@@ -50,6 +55,7 @@ fun X_SubscriptionsList(
                     title = title,
                     count = itemsList.size,
                     isModel = isModel,
+                    actions = { SubscriptionsSortButton(order = order, onOrderChange = onOrderChange) }
                 )
             }
 
