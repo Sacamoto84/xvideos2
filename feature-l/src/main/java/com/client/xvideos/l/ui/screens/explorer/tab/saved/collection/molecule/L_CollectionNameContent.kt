@@ -23,6 +23,7 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionItemsOrder
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionTypeFilter
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.lCollectionVisibleItems
 import kotlinx.coroutines.launch
@@ -42,10 +43,10 @@ fun L_CollectionNameContent(
 
     // Отбор и порядок — на время, пока коллекция открыта.
     var typeFilter by rememberSaveable(collectionName) { mutableStateOf(LCollectionTypeFilter.ALL) }
-    var newestFirst by rememberSaveable(collectionName) { mutableStateOf(true) }
+    var order by rememberSaveable(collectionName) { mutableStateOf(LCollectionItemsOrder.NEWEST) }
 
-    LaunchedEffect(host, collectionItems, typeFilter, newestFirst) {
-        host.replaceFilteredPictures(lCollectionVisibleItems(collectionItems ?: emptyList(), typeFilter, newestFirst))
+    LaunchedEffect(host, collectionItems, typeFilter, order) {
+        host.replaceFilteredPictures(lCollectionVisibleItems(collectionItems ?: emptyList(), typeFilter, order))
     }
 
     // Новый отбор или порядок — с начала списка: на прежней позиции оказались бы
@@ -59,21 +60,21 @@ fun L_CollectionNameContent(
             }
         }
     }
-    val onNewestFirstChange: (Boolean) -> Unit = remember(host, scope) {
+    val onOrderChange: (LCollectionItemsOrder) -> Unit = remember(host, scope) {
         { value ->
-            if (value != newestFirst) {
-                newestFirst = value
+            if (value != order) {
+                order = value
                 scope.launch { host.state.scrollToItem(0) }
             }
         }
     }
-    val filterBar: @Composable () -> Unit = remember(typeFilter, newestFirst, onTypeChange, onNewestFirstChange) {
+    val filterBar: @Composable () -> Unit = remember(typeFilter, order, onTypeChange, onOrderChange) {
         {
             LCollectionFilterBar(
                 typeFilter = typeFilter,
-                newestFirst = newestFirst,
+                order = order,
                 onTypeChange = onTypeChange,
-                onNewestFirstChange = onNewestFirstChange
+                onOrderChange = onOrderChange
             )
         }
     }

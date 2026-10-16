@@ -1,65 +1,102 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.choice.ChoiceRow
+import com.client.xvideos.common.ui.choice.ChoiceRowStyle
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionItemsOrder
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionTypeFilter
-import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.molecule.LikesFilterSegmentedRow
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
 private val TYPE_OPTIONS: ImmutableList<String> = LCollectionTypeFilter.entries.map { it.title }.toPersistentList()
-private val ORDER_OPTIONS: ImmutableList<String> = persistentListOf("Сначала новые", "Сначала старые")
 
 /**
- * Над плитками открытой коллекции: отбор по типу (Все / Картинки / Gif) и
- * порядок (сначала новые / сначала старые) — теми же переключателями, что на
- * «Лайках».
+ * Над плитками открытой коллекции, одной строкой: отбор по типу (Все / Картинки /
+ * Gif) рядом выбора в стиле F и значок сортировки с меню порядков. Значок
+ * акцентный, пока выбран не порядок по умолчанию.
  */
 @Composable
 fun LCollectionFilterBar(
     typeFilter: LCollectionTypeFilter,
-    newestFirst: Boolean,
+    order: LCollectionItemsOrder,
     onTypeChange: (LCollectionTypeFilter) -> Unit,
-    onNewestFirstChange: (Boolean) -> Unit,
+    onOrderChange: (LCollectionItemsOrder) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
     val onSelectType = remember(onTypeChange) {
         { index: Int -> onTypeChange(LCollectionTypeFilter.entries[index]) }
     }
-    val onSelectOrder = remember(onNewestFirstChange) {
-        { index: Int -> onNewestFirstChange(index == 0) }
-    }
-    // Ряды — на ширину полосы шапки: сам по себе ряд Material3 сжимает кнопки
-    // до самого длинного слова, и «Сначала новые» переносилось на две строки.
-    Column(
+    Row(
         modifier = modifier
             .adaptiveContentWidth()
-            .padding(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .fillMaxWidth()
+            .padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        LikesFilterSegmentedRow(
+        ChoiceRow(
             options = TYPE_OPTIONS,
             selectedIndex = typeFilter.ordinal,
             onSelectIndex = onSelectType,
-            topInset = 0.dp,
-            modifier = Modifier.fillMaxWidth()
+            style = ChoiceRowStyle.UNDERLINE,
+            accent = Theme.L.primaryColor,
+            modifier = Modifier.weight(1f)
         )
-        LikesFilterSegmentedRow(
-            options = ORDER_OPTIONS,
-            selectedIndex = if (newestFirst) 0 else 1,
-            onSelectIndex = onSelectOrder,
-            topInset = 0.dp,
-            modifier = Modifier.fillMaxWidth()
-        )
+        Box {
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(
+                    Icons.Default.FilterList,
+                    contentDescription = "Порядок: ${order.title}",
+                    tint = if (order == LCollectionItemsOrder.NEWEST) Theme.L.textColor else Theme.L.primaryColor
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+                containerColor = Theme.L.grey3
+            ) {
+                val baseStyle = Theme.L.Type.menuItem
+                LCollectionItemsOrder.entries.forEach { item ->
+                    key(item.name) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    item.title,
+                                    style = baseStyle.copy(color = if (item == order) Color.White else Theme.L.grey2)
+                                )
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onOrderChange(item)
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -68,8 +105,8 @@ fun LCollectionFilterBar(
 private fun LCollectionFilterBarPreview() {
     LCollectionFilterBar(
         typeFilter = LCollectionTypeFilter.ALL,
-        newestFirst = true,
+        order = LCollectionItemsOrder.NEWEST,
         onTypeChange = {},
-        onNewestFirstChange = {}
+        onOrderChange = {}
     )
 }

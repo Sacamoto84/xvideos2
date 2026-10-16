@@ -17,14 +17,17 @@ class LCollectionVisibleItemsTest {
 
     @Test
     fun `все, сначала новые - как с диска`() {
-        assertEquals(ids(items), ids(lCollectionVisibleItems(items, LCollectionTypeFilter.ALL, newestFirst = true)))
+        assertEquals(
+            ids(items),
+            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.ALL, LCollectionItemsOrder.NEWEST))
+        )
     }
 
     @Test
     fun `картинки - без gif и видео`() {
         assertEquals(
             listOf("1", "4"),
-            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.IMAGES, newestFirst = true))
+            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.IMAGES, LCollectionItemsOrder.NEWEST))
         )
     }
 
@@ -32,7 +35,7 @@ class LCollectionVisibleItemsTest {
     fun `gif - анимированные и с видео`() {
         assertEquals(
             listOf("2", "3"),
-            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.GIFS, newestFirst = true))
+            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.GIFS, LCollectionItemsOrder.NEWEST))
         )
     }
 
@@ -40,11 +43,11 @@ class LCollectionVisibleItemsTest {
     fun `сначала старые - обратный порядок и вместе с отбором по типу`() {
         assertEquals(
             listOf("4", "3", "2", "1"),
-            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.ALL, newestFirst = false))
+            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.ALL, LCollectionItemsOrder.OLDEST))
         )
         assertEquals(
             listOf("4", "1"),
-            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.IMAGES, newestFirst = false))
+            ids(lCollectionVisibleItems(items, LCollectionTypeFilter.IMAGES, LCollectionItemsOrder.OLDEST))
         )
     }
 
@@ -52,12 +55,17 @@ class LCollectionVisibleItemsTest {
     fun `пустая коллекция - пустой список`() {
         assertEquals(
             emptyList<String>(),
-            ids(lCollectionVisibleItems(emptyList(), LCollectionTypeFilter.GIFS, newestFirst = false))
+            ids(lCollectionVisibleItems(emptyList(), LCollectionTypeFilter.GIFS, LCollectionItemsOrder.OLDEST))
         )
     }
 
     @Test
     fun `подписи фильтров - по порядку вкладок`() {
         assertEquals(listOf("Все", "Картинки", "Gif"), LCollectionTypeFilter.entries.map { it.title })
+    }
+
+    @Test
+    fun `порядки в меню - сначала новые, потом старые`() {
+        assertEquals(listOf("Сначала новые", "Сначала старые"), LCollectionItemsOrder.entries.map { it.title })
     }
 }

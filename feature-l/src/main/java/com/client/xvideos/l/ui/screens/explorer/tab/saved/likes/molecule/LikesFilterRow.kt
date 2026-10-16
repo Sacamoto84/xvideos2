@@ -6,61 +6,45 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.choice.ChoiceRow
+import com.client.xvideos.common.ui.choice.ChoiceRowStyle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+/** Отбор на «Лайках» L: ряд выбора дизайн-системы в стиле F, в полосе до 640dp. */
 @Composable
-fun LikesFilterSegmentedRow(
+fun LikesFilterRow(
     options: ImmutableList<String>,
     selectedIndex: Int,
     onSelectIndex: (Int) -> Unit,
     topInset: Dp,
     modifier: Modifier = Modifier
 ) {
-    val buttonColors = SegmentedButtonDefaults.colors(
-        activeContainerColor = Color(0xFF938F99)
-    )
-
-    SingleChoiceSegmentedButtonRow(
+    ChoiceRow(
+        options = options,
+        selectedIndex = selectedIndex,
+        onSelectIndex = onSelectIndex,
+        style = ChoiceRowStyle.UNDERLINE,
+        accent = Theme.L.primaryColor,
         modifier = modifier
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
             .padding(top = topInset)
+            .adaptiveContentWidth()
             .padding(horizontal = 4.dp)
-    ) {
-        options.forEachIndexed { index, label ->
-            key(label) {
-                val onClick = remember(index, onSelectIndex) { { onSelectIndex(index) } }
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = options.size
-                    ),
-                    onClick = onClick,
-                    selected = index == selectedIndex,
-                    label = { Text(label) },
-                    colors = buttonColors
-                )
-            }
-        }
-    }
+    )
 }
 
-@Preview
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun LikesFilterSegmentedRowPreview() {
-    LikesFilterSegmentedRow(
+private fun LikesFilterRowPreview() {
+    LikesFilterRow(
         options = persistentListOf("All", "Image", "Gif"),
         selectedIndex = 0,
         onSelectIndex = {},
