@@ -1,32 +1,15 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,9 +17,14 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.LSortMenuButton
 import com.client.xvideos.ui.theme.XvideosTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 
+
+private val SORT_TITLES: ImmutableList<String> = LCollectionSortOrder.entries.map { it.title }.toPersistentList()
 
 @Composable
 internal fun LCollectionsTopBar(
@@ -45,9 +33,9 @@ internal fun LCollectionsTopBar(
     onSortOrderClick: (LCollectionSortOrder) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var menuExpanded by remember { mutableStateOf(false) }
-    val onOpenMenu = remember { { menuExpanded = true } }
-    val onDismissMenu = remember { { menuExpanded = false } }
+    val onSelectSort = remember(onSortOrderClick) {
+        { index: Int -> onSortOrderClick(LCollectionSortOrder.entries[index]) }
+    }
     val collectionTitle = remember(selectedCollection) {
         selectedCollection?.let { ">$it" }
     }
@@ -80,67 +68,13 @@ internal fun LCollectionsTopBar(
                 .padding(start = if (selectedCollection == null) 4.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Значок и выбранный порядок — одна кнопка: меню открывает нажатие
-            // и на значок, и на текст.
             if (selectedCollection == null) {
-                Box {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(role = Role.Button, onClick = onOpenMenu)
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.FilterList,
-                            contentDescription = "Сортировка коллекций",
-                            tint = Theme.L.textColor
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            sortOrder.title,
-                            color = Theme.L.grey2,
-                            fontSize = 16.sp,
-                            fontFamily = Theme.L.fontFamilyDMsanss,
-                            maxLines = 1
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = onDismissMenu,
-                        containerColor = Theme.L.grey3
-                    ) {
-                        val baseMenuItemStyle = Theme.L.Type.menuItem
-                        val selectedMenuItemStyle = remember(baseMenuItemStyle) {
-                            baseMenuItemStyle.copy(color = Color.White)
-                        }
-                        val unselectedMenuItemStyle = remember(baseMenuItemStyle) {
-                            baseMenuItemStyle.copy(color = Theme.L.grey2)
-                        }
-                        LCollectionSortOrder.entries.forEach { order ->
-                            key(order.name) {
-                                val isSelected = order == sortOrder
-                                val menuItemStyle = if (isSelected) selectedMenuItemStyle else unselectedMenuItemStyle
-                                val handleOrderClick = remember(order, onSortOrderClick) {
-                                    {
-                                        onSortOrderClick(order)
-                                        menuExpanded = false
-                                    }
-                                }
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            order.title,
-                                            style = menuItemStyle
-                                        )
-                                    },
-                                    onClick = handleOrderClick
-                                )
-                            }
-                        }
-                    }
-                }
+                LSortMenuButton(
+                    options = SORT_TITLES,
+                    selectedIndex = sortOrder.ordinal,
+                    onSelectIndex = onSelectSort,
+                    contentDescription = "Сортировка коллекций"
+                )
             }
             Column(modifier = Modifier.weight(1f)) {
                 if (collectionTitle != null) {
