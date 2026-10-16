@@ -260,8 +260,4 @@ object Settings {
     val x_subscriptions_channels_order by lazy { SettingElementInt(pref, "x_subscriptions_channels_order", 0) }
     val x_subscriptions_models_order by lazy { SettingElementInt(pref, "x_subscriptions_models_order", 0) }
 
-    //-- web server ---
-    val web_server_port by lazy { SettingElementInt(pref, "web_server_port", 8080) }
-    val web_server_keep_awake by lazy { SettingElementBoolean(pref, "web_server_keep_awake", true) }
-
 }

@@ -11,7 +11,6 @@ import com.client.xvideos.common.videoplayer.model.PlayerOption
 import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
-import com.client.xvideos.common.webserver.WebServerState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -116,28 +115,5 @@ class Batch76CoreUtilsAndDohTest {
         assertEquals(123L, "123".toSecondsOrZero())
         assertEquals(0L, "".toSecondsOrZero())
         assertEquals(0L, null.toSecondsOrZero())
-    }
-
-    @Test
-    fun `WebServerState error tracking and reset`() {
-        WebServerState.reset()
-        assertFalse(WebServerState.isRunning.value)
-        assertFalse(WebServerState.isOnline)
-        assertFalse(WebServerState.hasError)
-
-        WebServerState.updateRunning(running = true, url = "http://192.168.1.10:8080", ip = "192.168.1.10", port = 8080)
-        assertTrue(WebServerState.isRunning.value)
-        assertTrue(WebServerState.isOnline)
-        assertFalse(WebServerState.hasError)
-
-        WebServerState.setError("Port in use")
-        assertTrue(WebServerState.hasError)
-        assertEquals("Port in use", WebServerState.lastError.value)
-
-        WebServerState.reset()
-        assertFalse(WebServerState.isRunning.value)
-        assertFalse(WebServerState.isOnline)
-        assertFalse(WebServerState.hasError)
-        assertNull(WebServerState.lastError.value)
     }
 }

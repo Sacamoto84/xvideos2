@@ -30,11 +30,6 @@ internal enum class SettingsPage(
         icon = R.drawable.ic_dns_24,
         subtitle = "DNS-over-HTTPS, IPv4/IPv6"
     ),
-    WebServer(
-        title = "Просмотр на ПК",
-        icon = R.drawable.hard_drive_2_24,
-        subtitle = "Локальный Web-сервер по Wi-Fi"
-    ),
     Cache(
         title = "Кэш",
         icon = R.drawable.hard_disk_24,
@@ -76,7 +71,6 @@ internal enum class SettingsPage(
             Appearance,
             Privacy,
             Network,
-            WebServer,
             Cache,
             Storage,
             Backup,
