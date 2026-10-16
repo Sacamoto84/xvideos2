@@ -9,7 +9,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,6 +23,9 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionTypeFilter
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.lCollectionVisibleItems
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
@@ -33,8 +40,42 @@ fun L_CollectionNameContent(
         .collectAsStateWithLifecycle()
     val collectionItems = collectionItemsState.value
 
-    LaunchedEffect(host, collectionItems) {
-        host.replaceFilteredPictures(collectionItems ?: emptyList())
+    // Отбор и порядок — на время, пока коллекция открыта.
+    var typeFilter by rememberSaveable(collectionName) { mutableStateOf(LCollectionTypeFilter.ALL) }
+    var newestFirst by rememberSaveable(collectionName) { mutableStateOf(true) }
+
+    LaunchedEffect(host, collectionItems, typeFilter, newestFirst) {
+        host.replaceFilteredPictures(lCollectionVisibleItems(collectionItems ?: emptyList(), typeFilter, newestFirst))
+    }
+
+    // Новый отбор или порядок — с начала списка: на прежней позиции оказались бы
+    // другие элементы. Прокрутка — только по нажатию, не при возврате на экран.
+    val scope = rememberCoroutineScope()
+    val onTypeChange: (LCollectionTypeFilter) -> Unit = remember(host, scope) {
+        { type ->
+            if (type != typeFilter) {
+                typeFilter = type
+                scope.launch { host.state.scrollToItem(0) }
+            }
+        }
+    }
+    val onNewestFirstChange: (Boolean) -> Unit = remember(host, scope) {
+        { value ->
+            if (value != newestFirst) {
+                newestFirst = value
+                scope.launch { host.state.scrollToItem(0) }
+            }
+        }
+    }
+    val filterBar: @Composable () -> Unit = remember(typeFilter, newestFirst, onTypeChange, onNewestFirstChange) {
+        {
+            LCollectionFilterBar(
+                typeFilter = typeFilter,
+                newestFirst = newestFirst,
+                onTypeChange = onTypeChange,
+                onNewestFirstChange = onNewestFirstChange
+            )
+        }
     }
 
     val selectedCollection = savedL.collection.currentCollectionName
@@ -66,6 +107,7 @@ fun L_CollectionNameContent(
         Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
             L_LazyRowPictureDetails(
                 host = host,
+                itemBefore = filterBar,
                 expandMenu = ExpandMenuType.LIKES,
                 tag = "lCollection",
                 isCollection = true
