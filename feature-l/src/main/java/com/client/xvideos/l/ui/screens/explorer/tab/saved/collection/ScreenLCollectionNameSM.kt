@@ -16,25 +16,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 
-private val WHITESPACE_REGEX = Regex("\\s+")
-
-fun PicsDetails.matchesCollectionSearch(query: String): Boolean {
-    val normalized = query.trim()
-    if (normalized.isBlank()) return true
-
-    val haystack = buildList {
-        add(album.orEmpty())
-        add(url_to_original.orEmpty())
-        add(url_to_video.orEmpty())
-        thumbnails?.forEach { add(it.url.orEmpty()) }
-    }.joinToString(" ").lowercase()
-
-    return normalized
-        .lowercase()
-        .split(WHITESPACE_REGEX)
-        .all { it in haystack }
-}
-
 @Stable
 class ScreenLCollectionNameSM @AssistedInject constructor(
     @Assisted val collectionName: String,

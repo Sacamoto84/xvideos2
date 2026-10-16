@@ -48,10 +48,6 @@ class ScreenCollectionName(
 private fun ScreenCollectionNamePreview() {
     LCollectionDetailTopBar(
         collectionName = "Preview Collection",
-        searchQuery = "",
-        searchVisible = false,
-        onSearchChange = {},
-        onToggleSearch = {},
         onExitCollection = {}
     )
 }

@@ -49,9 +49,6 @@ class LazyRowPictureDetailsHost(
     /** Список отфильтрованных картинок для текущего отображения. */
     var filteredPic = mutableStateListOf<PicsDetails>()
 
-    /** Текущий поисковый запрос для локальной фильтрации элементов. */
-    var collectionSearchQuery by mutableStateOf("")
-
     /** Обратный вызов, срабатывающий при успешном удалении элемента из списка. */
     var onItemRemoved: ((PicsDetails) -> Unit)? = null
 
