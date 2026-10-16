@@ -18,7 +18,7 @@ import com.client.xvideos.common.ui.choice.ChoiceRowStyle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-/** Отбор на «Лайках» L: ряд выбора дизайн-системы в стиле F, в полосе до 640dp. */
+/** Отбор на «Лайках» L: ряд выбора дизайн-системы в стиле C, в полосе до 640dp. */
 @Composable
 fun LikesFilterRow(
     options: ImmutableList<String>,
@@ -31,7 +31,7 @@ fun LikesFilterRow(
         options = options,
         selectedIndex = selectedIndex,
         onSelectIndex = onSelectIndex,
-        style = ChoiceRowStyle.UNDERLINE,
+        style = ChoiceRowStyle.TABS,
         accent = Theme.L.primaryColor,
         modifier = modifier
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))

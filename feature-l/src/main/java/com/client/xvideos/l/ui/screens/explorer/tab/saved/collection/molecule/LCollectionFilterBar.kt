@@ -35,7 +35,7 @@ private val TYPE_OPTIONS: ImmutableList<String> = LCollectionTypeFilter.entries.
 
 /**
  * Над плитками открытой коллекции, одной строкой: отбор по типу (Все / Картинки /
- * Gif) рядом выбора в стиле F и значок сортировки с меню порядков. Значок
+ * Gif) рядом выбора в стиле C и значок сортировки с меню порядков. Значок
  * акцентный, пока выбран не порядок по умолчанию.
  */
 @Composable
@@ -61,7 +61,7 @@ fun LCollectionFilterBar(
             options = TYPE_OPTIONS,
             selectedIndex = typeFilter.ordinal,
             onSelectIndex = onSelectType,
-            style = ChoiceRowStyle.UNDERLINE,
+            style = ChoiceRowStyle.TABS,
             accent = Theme.L.primaryColor,
             modifier = Modifier.weight(1f)
         )
