@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule
+package com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box

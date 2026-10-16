@@ -89,6 +89,17 @@ class SavedL_AlbumsQueueTest {
     }
 
     @Test
+    fun `новый альбом встаёт в начало списка - как при чтении с диска`() {
+        albums.add(album("401"))
+        assertTrue(awaitUntil { albums.list.any { it.id == "401" } })
+
+        albums.add(album("402"))
+
+        val newestFirst = awaitUntil { albums.list.map { it.id } == listOf("402", "401") }
+        assertTrue("новый альбом должен быть первым, есть: ${albums.list.map { it.id }}", newestFirst)
+    }
+
+    @Test
     fun `удаление во время сохранения другого альбома выполняются оба`() {
         albums.add(album("201"))
         assertTrue(awaitUntil { albums.list.any { it.id == "201" } })

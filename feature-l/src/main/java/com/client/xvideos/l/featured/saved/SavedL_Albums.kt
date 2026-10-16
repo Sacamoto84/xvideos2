@@ -53,7 +53,10 @@ class SavedL_Albums(val db: AppFileDatabase, val scope: CoroutineScope) {
                 .onSuccess {
                     withContext(Dispatchers.Main) {
                         list.removeAll { it.id == item.id }
-                        list.add(item)
+                        // В начало: с диска список читается от новых файлов к
+                        // старым, и порядок «сначала новые» не должен ломаться
+                        // до следующего чтения.
+                        list.add(0, item)
                     }
                     SnackBar.info("Альбом сохранен")
                 }

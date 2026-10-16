@@ -241,6 +241,9 @@ object Settings {
      */
     val l_collectionTab_column_current_count by lazy { SettingElementInt(pref, "l_collectionTab_column_current_count", 2) }
 
+    //Порядок сохранённых альбомов L: номер в LSavedAlbumsOrder (0 — сначала новые)
+    val l_savedAlbums_order by lazy { SettingElementInt(pref, "l_savedAlbums_order", 0) }
+
 
 
 

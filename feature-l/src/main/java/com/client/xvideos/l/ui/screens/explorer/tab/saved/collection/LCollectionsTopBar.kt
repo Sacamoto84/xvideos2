@@ -17,7 +17,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
-import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.LSortMenuButton
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.LSortMenuButton
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
