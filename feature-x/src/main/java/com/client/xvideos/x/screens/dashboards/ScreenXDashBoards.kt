@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -47,6 +48,7 @@ import com.client.xvideos.x.screens.search.ScreenXSearchTabContent
 import com.client.xvideos.x.screens.search.SearchUiMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.launch
 
 private val mainTabs: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Dashboard,
@@ -86,10 +88,11 @@ class ScreenXDashBoards : Screen {
         BackHandler(enabled = vm.mainTab != 0, onBack = onBack)
 
         val favoritesScreen = remember { ScreenFavorites() }
+        val scope = rememberCoroutineScope()
 
         ScreenXDashBoardsContent(
             mainTab = vm.mainTab,
-            savedTab = vm.savedTab,
+            savedPagerState = vm.savedPagerState,
             pagerState = vm.pagerState,
             saved = vm.saved,
             searchVm = searchVm,
@@ -100,7 +103,7 @@ class ScreenXDashBoards : Screen {
             favoritesScreen = favoritesScreen,
             navigator = navigator,
             onMainTabChange = { vm.mainTab = it },
-            onSavedTabChange = { vm.savedTab = it },
+            onSavedTabChange = { tab -> scope.launch { vm.savedPagerState.scrollToPage(tab) } },
             onOpenVideoPlayer = { item -> vm.openVideoPlayer(item, navigator) },
             onIsFavorite = { itemId -> vm.isFavorite(itemId) },
             onFavoriteAdd = { item -> vm.addFavorite(item) },
@@ -120,7 +123,7 @@ class ScreenXDashBoards : Screen {
 @Composable
 fun ScreenXDashBoardsContent(
     mainTab: Int,
-    savedTab: Int,
+    savedPagerState: PagerState,
     pagerState: PagerState,
     saved: SavedX,
     searchVm: ScreenXSearchSM,
@@ -172,7 +175,7 @@ fun ScreenXDashBoardsContent(
 
                 DashboardSecondaryControls(
                     mainTab = mainTab,
-                    savedTab = savedTab,
+                    savedTab = savedPagerState.currentPage,
                     searchUiMode = searchUiMode,
                     searchPage = searchPage,
                     searchMaxPages = searchMaxPages,
@@ -203,7 +206,7 @@ fun ScreenXDashBoardsContent(
         ) {
             when (mainTab) {
                 MAIN_TAB_SAVABLE -> SavedTabContent(
-                    savedTab = savedTab,
+                    pagerState = savedPagerState,
                     favoritesScreen = favoritesScreen,
                     saved = saved
                 )

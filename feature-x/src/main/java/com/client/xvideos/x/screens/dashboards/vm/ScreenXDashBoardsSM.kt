@@ -18,6 +18,7 @@ import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.screens.common.PageCache
 import com.client.xvideos.x.screens.dashboards.buildDashboardUrl
+import com.client.xvideos.x.screens.dashboards.molecule.SAVED_TAB_COUNT
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import dagger.Binds
 import dagger.Module
@@ -51,8 +52,8 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
     /** Текущий главный таб нижней панели: 0 — Dashboards, 1 — Savable (сохранённое). */
     var mainTab by mutableIntStateOf(0)
 
-    /** Текущий под-таб раздела Savable: 0 — Favorites (пока единственный). */
-    var savedTab by mutableIntStateOf(0)
+    /** Пейджер под-вкладок раздела Savable; текущая страница — выбранный под-таб. */
+    val savedPagerState: PagerState = PagerState(0) { SAVED_TAB_COUNT }
 
     /**
      * Открывает экран видеоплеера по карточке ролика.
