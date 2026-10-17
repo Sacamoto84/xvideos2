@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
+import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
 import kotlinx.coroutines.delay
@@ -72,6 +73,8 @@ fun LocalVideoPlayerContent(
             isMuted = true, // видео X всегда без звука
             isLooping = false,
             startTimeInSeconds = resumePosition,
+            // Переключателя Fit/Fill здесь нет, а Crop срезал бы края кадра в портрете
+            initialVideoFitMode = ScreenResize.FIT,
         )
     }
 

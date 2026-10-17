@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
+import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
@@ -177,6 +178,12 @@ fun VideoPlayerContentView(
     // При смене режима экрана (полноэкранный/обычный) сбрасываем видимость контроллеров в активное состояние
     LaunchedEffect(isFullScreen) {
         areControlsVisible = true
+    }
+
+    // Портрет — Fit: окно выше кадра, Crop растянул бы видео по высоте и срезал края.
+    // Полноэкранный — Fill, его переключает FitModeToggle (в портрете переключателя нет).
+    LaunchedEffect(host, isFullScreen) {
+        host.videoFitMode = if (isFullScreen) ScreenResize.FILL else ScreenResize.FIT
     }
 
     // Автоматическое скрытие контроллеров через 3.5 секунды неактивности при воспроизведении на полном экране (если меню не открыто)
