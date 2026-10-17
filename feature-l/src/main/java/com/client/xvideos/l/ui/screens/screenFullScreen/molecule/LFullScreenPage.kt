@@ -105,9 +105,10 @@ fun LFullScreenPage(
     } else {
         1f
     }
+    // Без fillMaxSize: при жёстких ограничениях aspectRatio брал полную ширину,
+    // и портретный кадр на квадратном или альбомном окне уходил за верх и низ.
     Box(
         modifier = Modifier
-            .fillMaxSize()
             .aspectRatio(pageRatio, matchHeightConstraintsFirst = false)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
