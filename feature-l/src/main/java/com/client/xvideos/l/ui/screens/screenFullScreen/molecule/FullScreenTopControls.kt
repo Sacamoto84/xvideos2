@@ -19,13 +19,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.getDisplayCutoutBounds
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.l.ui.screens.screenFullScreen.model.cutoutShiftLeft
+import com.client.xvideos.common.ui.edge.avoidCamera
 
 @Composable
 fun FullScreenTopControls(
@@ -77,23 +74,9 @@ fun FullScreenTopControls(
             }
 
             // Камера раскрытого складного — в правом верхнем углу: группа встаёт
-            // левее выреза, ряд не опускается. Вырезы — в координатах группы.
+            // левее выреза, ряд не опускается.
             Row(
-                modifier = Modifier.layout { measurable, constraints ->
-                    val placeable = measurable.measure(constraints)
-                    layout(placeable.width, placeable.height) {
-                        val cutouts = getDisplayCutoutBounds().map {
-                            Rect(
-                                it.left.current(Float.NaN),
-                                it.top.current(Float.NaN),
-                                it.right.current(Float.NaN),
-                                it.bottom.current(Float.NaN),
-                            )
-                        }
-                        val shift = cutoutShiftLeft(cutouts, placeable.width, placeable.height, 4.dp.roundToPx())
-                        placeable.place(-shift, 0)
-                    }
-                },
+                modifier = Modifier.avoidCamera(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onShowInfoDialog) {

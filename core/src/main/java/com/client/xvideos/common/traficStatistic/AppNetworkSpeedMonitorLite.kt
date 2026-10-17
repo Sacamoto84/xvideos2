@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.client.xvideos.common.ui.edge.avoidCameraAndCorner
 import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlin.math.roundToInt
@@ -82,13 +83,16 @@ fun AppNetworkSpeedMonitorLiteContent(
 
     Row( modifier = Modifier.padding(end = 16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End )
     {
-        Box() {
-            Text( formattedSpeed, style = style, modifier = Modifier.offset(0.5.dp, 0.5.dp))
-            Text( formattedSpeed, style = styleW )
-        }
-        Box {
-            Text( " / $formattedBytes", style = style, modifier = Modifier.offset(0.5.dp, 0.5.dp))
-            Text( " / $formattedBytes", style = styleW )
+        // Отдельный ряд по ширине текста: сдвиг считается от его правого края.
+        Row(modifier = Modifier.avoidCameraAndCorner()) {
+            Box() {
+                Text( formattedSpeed, style = style, modifier = Modifier.offset(0.5.dp, 0.5.dp))
+                Text( formattedSpeed, style = styleW )
+            }
+            Box {
+                Text( " / $formattedBytes", style = style, modifier = Modifier.offset(0.5.dp, 0.5.dp))
+                Text( " / $formattedBytes", style = styleW )
+            }
         }
     }
 }
