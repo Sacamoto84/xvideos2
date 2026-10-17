@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -13,7 +12,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,7 +33,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.noRippleClickable
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.statusbar.HideStatusBarEffect
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenu
@@ -43,10 +40,10 @@ import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuP2pHost
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuViewModel
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
+import com.client.xvideos.l.ui.screens.screenFullScreen.atom.FullScreenPositionLabel
 import com.client.xvideos.l.ui.screens.screenFullScreen.atom.checkerboardBackground
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.FullScreenUiState
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.LFullScreenPayload
-import com.client.xvideos.l.ui.screens.screenFullScreen.model.lPicturePositionLabel
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveInitialIndex
 import com.client.xvideos.l.ui.screens.screenFullScreen.model.resolveScrollIndex
 import com.client.xvideos.l.ui.screens.screenFullScreen.molecule.FullScreenBottomThumbnails
@@ -261,14 +258,11 @@ fun FullScreenImageContent(
             }
         }
 
-        Box(modifier = Modifier.align(Alignment.TopStart)) {
-            Text(
-                text = lPicturePositionLabel(state.currentIndex, state.filteredPic.size),
-                color = Color.Gray,
-                modifier = Modifier.padding(start = 8.dp),
-                fontFamily = Theme.L.fontFamilyKarla
-            )
-        }
+        FullScreenPositionLabel(
+            position = state.currentIndex,
+            total = state.filteredPic.size,
+            modifier = Modifier.align(Alignment.TopStart)
+        )
 
         val onRotateToggle = remember { { rotate = !rotate } }
         val onVerticalPagerToggle = remember(state.verticalPager) {

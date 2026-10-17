@@ -15,6 +15,9 @@ internal fun cutoutShiftLeft(cutouts: List<Rect>, width: Int, height: Int, gap: 
         .filter { it.left < width && it.right > 0 && it.top < height && it.bottom > 0 }
         .maxOfOrNull { (width - it.left).roundToInt() + gap } ?: 0
 
+/** Отражение по горизонтали внутри блока шириной [width]: левый край сводится к правому. */
+internal fun Rect.mirroredIn(width: Int): Rect = Rect(width - right, top, width - left, bottom)
+
 /**
  * Сдвиг влево (px), чтобы правый верхний угол блока шириной [width] не ушёл под
  * скругление правого верхнего угла экрана. Центр скругления ([centerX], [centerY])

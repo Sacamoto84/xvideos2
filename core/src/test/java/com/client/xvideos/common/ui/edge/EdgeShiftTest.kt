@@ -37,6 +37,20 @@ class EdgeShiftTest {
         assertEquals(0, cutoutShiftLeft(listOf(unknown), width = 234, height = 117, gap = 10))
     }
 
+    // Левый край (номер картинки L): расчёт в зеркальных координатах.
+
+    @Test
+    fun `камера слева от подписи у левого края сдвигает её вправо за вырез`() {
+        // Подпись 120x29 с отступом 20 px; камера в окне 0..136 — в координатах подписи -20..116.
+        val camera = Rect(left = -20f, top = 0f, right = 116f, bottom = 136f)
+        assertEquals(126, cutoutShiftLeft(listOf(camera.mirroredIn(120)), width = 120, height = 29, gap = 10))
+    }
+
+    @Test
+    fun `отражение меняет местами левую и правую стороны`() {
+        assertEquals(Rect(70f, 5f, 110f, 15f), Rect(10f, 5f, 50f, 15f).mirroredIn(120))
+    }
+
     // Скругление: блок шириной 300, радиус 100.
 
     @Test

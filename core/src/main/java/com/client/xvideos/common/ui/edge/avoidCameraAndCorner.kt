@@ -20,69 +20,75 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Сдвигает элемент у правого верхнего края влево, если он попадает под вырез
- * камеры или под скругление угла экрана. Размер и место в разметке не меняются —
- * сдвигаются только отрисовка и область нажатия; на прямоугольном экране без
- * камеры у края сдвига нет.
+ * Сдвигает элемент у верхнего края прочь от выреза камеры и скругления угла
+ * экрана: у правого края — влево, при [atStart] (элемент у левого края) — вправо.
+ * Размер и место в разметке не меняются — сдвигаются только отрисовка и область
+ * нажатия; на прямоугольном экране без камеры у края сдвига нет.
  *
  * Где камера и какой радиус угла, знает только система: Compose отдаёт лишь
  * толщину полосы выреза. Вырезы берутся из рулеров инсетов (их чтение заодно
  * перезапускает размещение при сложении и повороте), скругление — из инсетов
  * окна (Android 12+).
  */
-fun Modifier.avoidCameraAndCorner(gap: Dp = 4.dp): Modifier =
-    this then AvoidCameraAndCornerElement(gap, avoidCorner = true)
+fun Modifier.avoidCameraAndCorner(gap: Dp = 4.dp, atStart: Boolean = false): Modifier =
+    this then AvoidCameraAndCornerElement(gap, avoidCorner = true, atStart = atStart)
 
 /**
- * Как [avoidCameraAndCorner], но только от выреза камеры: для кнопок, которым
- * скругление не мешает, — на телефоне их место не меняется.
+ * Как [avoidCameraAndCorner] у правого края, но только от выреза камеры: для
+ * кнопок, которым скругление не мешает, — на телефоне их место не меняется.
  */
 fun Modifier.avoidCamera(gap: Dp = 4.dp): Modifier =
-    this then AvoidCameraAndCornerElement(gap, avoidCorner = false)
+    this then AvoidCameraAndCornerElement(gap, avoidCorner = false, atStart = false)
 
 private data class AvoidCameraAndCornerElement(
     val gap: Dp,
     val avoidCorner: Boolean,
+    val atStart: Boolean,
 ) : ModifierNodeElement<AvoidCameraAndCornerNode>() {
-    override fun create() = AvoidCameraAndCornerNode(gap, avoidCorner)
+    override fun create() = AvoidCameraAndCornerNode(gap, avoidCorner, atStart)
 
     override fun update(node: AvoidCameraAndCornerNode) {
         node.gap = gap
         node.avoidCorner = avoidCorner
+        node.atStart = atStart
     }
 }
 
-private class AvoidCameraAndCornerNode(var gap: Dp, var avoidCorner: Boolean) :
+private class AvoidCameraAndCornerNode(var gap: Dp, var avoidCorner: Boolean, var atStart: Boolean) :
     Modifier.Node(), LayoutModifierNode, CompositionLocalConsumerModifierNode {
 
     override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
         val placeable = measurable.measure(constraints)
         val gapPx = gap.roundToPx()
         return layout(placeable.width, placeable.height) {
+            val width = placeable.width
+            // У левого края расчёт тот же, что у правого, в зеркальных координатах.
             val cutouts = getDisplayCutoutBounds().map {
-                Rect(
+                val rect = Rect(
                     it.left.current(Float.NaN),
                     it.top.current(Float.NaN),
                     it.right.current(Float.NaN),
                     it.bottom.current(Float.NaN),
                 )
+                if (atStart) rect.mirroredIn(width) else rect
             }
             val shift = maxOf(
-                cutoutShiftLeft(cutouts, placeable.width, placeable.height, gapPx),
-                if (avoidCorner) topEndCornerShift(placeable.width, gapPx) else 0,
+                cutoutShiftLeft(cutouts, width, placeable.height, gapPx),
+                if (avoidCorner) topCornerShift(width, gapPx) else 0,
             )
-            placeable.place(-shift, 0)
+            placeable.place(if (atStart) shift else -shift, 0)
         }
     }
 
-    private fun Placeable.PlacementScope.topEndCornerShift(width: Int, gap: Int): Int {
+    private fun Placeable.PlacementScope.topCornerShift(width: Int, gap: Int): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return 0
-        val corner = currentValueOf(LocalView).rootWindowInsets
-            ?.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT) ?: return 0
+        val position = if (atStart) RoundedCorner.POSITION_TOP_LEFT else RoundedCorner.POSITION_TOP_RIGHT
+        val corner = currentValueOf(LocalView).rootWindowInsets?.getRoundedCorner(position) ?: return 0
         val origin = coordinates?.positionInWindow() ?: return 0
+        val centerX = corner.center.x - origin.x
         return roundedCornerShiftLeft(
             width = width,
-            centerX = corner.center.x - origin.x,
+            centerX = if (atStart) width - centerX else centerX,
             centerY = corner.center.y - origin.y,
             radius = corner.radius.toFloat(),
             gap = gap,
