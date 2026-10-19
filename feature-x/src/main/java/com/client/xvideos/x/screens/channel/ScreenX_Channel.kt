@@ -10,8 +10,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -130,6 +132,7 @@ class ScreenX_Channel(
             onRetryPage = vm::retryPage,
             initialPage = vm.currentPage,
             onCurrentPageChange = { page -> vm.currentPage = page },
+            headerOffset = vm.headerOffset,
             onBack = onBack,
             isSubscribed = vm.isSubscribed,
             onToggleSubscription = vm::toggleSubscription,
@@ -162,6 +165,7 @@ fun ScreenX_ChannelContent(
     onRetryPage: (Int) -> Unit,
     initialPage: Int,
     onCurrentPageChange: (Int) -> Unit,
+    headerOffset: MutableFloatState,
     onBack: () -> Unit,
     isSubscribed: Boolean = false,
     onToggleSubscription: () -> Unit = {},
@@ -210,7 +214,7 @@ fun ScreenX_ChannelContent(
     }
     BackHandler(onBack = handleBack)
 
-    val collapse = rememberChannelHeaderCollapseState { getGridState(pagerState.currentPage) }
+    val collapse = rememberChannelHeaderCollapseState(headerOffset) { getGridState(pagerState.currentPage) }
     val topCutout = getTopInsetDp()
     val density = LocalDensity.current
     val topCutoutPx = with(density) { topCutout.roundToPx() }
@@ -337,6 +341,7 @@ private fun ScreenX_ChannelContentPreview() {
             onRetryPage = {},
             initialPage = 0,
             onCurrentPageChange = {},
+            headerOffset = remember { mutableFloatStateOf(0f) },
             onBack = {},
             onSortChange = {},
             onRetryInitial = {},

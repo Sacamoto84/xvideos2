@@ -3,6 +3,7 @@ package com.client.xvideos.x.screens.actresses
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -68,6 +69,7 @@ class ScreenX_ActressesIndex(
 
         ScreenX_ActressesIndexContent(
             uiState = vm.uiState,
+            gridState = vm.gridState,
             onBack = onBack,
             onActressClick = onActressClick,
             onLoadMore = vm::loadNextPage,
@@ -84,6 +86,7 @@ class ScreenX_ActressesIndex(
 @Composable
 fun ScreenX_ActressesIndexContent(
     uiState: ActressesIndexUiState,
+    gridState: LazyGridState,
     onBack: () -> Unit,
     onActressClick: (ActressesIndexItem) -> Unit,
     onLoadMore: () -> Unit,
@@ -95,7 +98,6 @@ fun ScreenX_ActressesIndexContent(
     onCloseDropdown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val gridState = rememberLazyGridState()
     val topCutout = getTopInsetDp()
 
     // Бесконечная пагинация при прокрутке вниз
@@ -147,6 +149,7 @@ fun ScreenX_ActressesIndexContent(
 private fun ScreenX_ActressesIndexContentPreview() {
     ScreenX_ActressesIndexContent(
         uiState = ActressesIndexUiState(),
+        gridState = rememberLazyGridState(),
         onBack = {},
         onActressClick = {},
         onLoadMore = {},

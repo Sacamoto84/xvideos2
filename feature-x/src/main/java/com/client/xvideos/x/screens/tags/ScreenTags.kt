@@ -11,10 +11,12 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -44,8 +46,11 @@ class ScreenTags(val tag: String) : Screen {
 
         // Число страниц приходит с нулевой страницей; до её разбора пейджер
         // держит одну. pageCount читается лениво, поэтому рост с 1 до 149
-        // пейджер подхватывает без пересоздания состояния.
-        val pagerState = rememberPagerState(initialPage = 0) { vm.screen.lastPage.coerceAtLeast(1) }
+        // пейджер подхватывает без пересоздания состояния. Страница — из ScreenModel.
+        val pagerState = rememberPagerState(initialPage = vm.currentPage) { vm.screen.lastPage.coerceAtLeast(1) }
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.currentPage }.collect { page -> vm.currentPage = page }
+        }
 
         val onBack: () -> Unit = remember(navigator) { { navigator.pop().let {} } }
         BackHandler(onBack = onBack)

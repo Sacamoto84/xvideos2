@@ -73,6 +73,12 @@ class ScreenTagsViewModel @AssistedInject constructor(
      */
     val shownPerRow: MutableMap<Int, MutableIntState> = HashMap()
 
+    /**
+     * Страница пейджера. Живёт здесь по той же причине: корневой навигатор не хранит
+     * состояние экрана, с которого ушли, и после ролика лента вставала на первую страницу.
+     */
+    var currentPage: Int = 0
+
     init {
         // Раньше здесь был runBlocking { readHtmlFromURLDirect(...) } — сетевой запрос
         // блокировал поток создания ScreenModel (UI-поток) → ANR на медленной сети.

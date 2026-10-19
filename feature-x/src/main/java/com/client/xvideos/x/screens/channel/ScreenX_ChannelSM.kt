@@ -2,6 +2,7 @@ package com.client.xvideos.x.screens.channel
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -198,6 +199,12 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     val gridStates = mutableMapOf<Int, LazyGridState>()
 
     fun getGridState(page: Int): LazyGridState = gridStates.getOrPut(page) { LazyGridState() }
+
+    /**
+     * Смещение схлопывающейся шапки: 0 — раскрыта. Живёт здесь рядом с сетками, а не в
+     * композиции: после ролика шапка разворачивалась над прокрученной сеткой.
+     */
+    val headerOffset = mutableFloatStateOf(0f)
 
     init {
         loadInitial()

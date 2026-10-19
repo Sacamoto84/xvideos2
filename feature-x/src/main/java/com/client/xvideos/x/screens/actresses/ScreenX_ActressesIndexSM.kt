@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.actresses
 
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,12 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
         )
     )
         private set
+
+    /**
+     * Прокрутка сетки. Живёт здесь, а не в композиции: корневой навигатор не хранит
+     * состояние экрана, с которого ушли, и после профиля модели сетка вставала в начало.
+     */
+    val gridState = LazyGridState()
 
     @AssistedFactory
     interface Factory : ScreenModelFactory {
