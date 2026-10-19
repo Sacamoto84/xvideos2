@@ -18,6 +18,7 @@ import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.screens.common.PageCache
 import com.client.xvideos.x.screens.dashboards.buildDashboardUrl
+import com.client.xvideos.x.screens.dashboards.model.SavedTabListStates
 import com.client.xvideos.x.screens.dashboards.molecule.SAVED_TAB_COUNT
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import dagger.Binds
@@ -54,6 +55,9 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
 
     /** Пейджер под-вкладок раздела Savable; текущая страница — выбранный под-таб. */
     val savedPagerState: PagerState = PagerState(0) { SAVED_TAB_COUNT }
+
+    /** Прокрутка страниц раздела Savable, см. [SavedTabListStates]. */
+    val savedListStates = SavedTabListStates()
 
     /**
      * Открывает экран видеоплеера по карточке ролика.

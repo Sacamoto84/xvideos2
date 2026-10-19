@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -35,10 +36,13 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
  * Контент экрана «История просмотров» раздела X.
  *
  * Отображается как 3-я подвкладка в панели Savable (`ScreenXDashBoards`).
+ *
+ * @param gridState Прокрутка сетки из ScreenModel дашбордов.
  */
 @Composable
 fun ScreenXHistory(
     saved: SavedX,
+    gridState: LazyGridState,
     modifier: Modifier = Modifier,
 ) {
     val navigator = LocalNavigator.currentOrThrow
@@ -76,6 +80,7 @@ fun ScreenXHistory(
         onSaveToGallery = remember(saved.downloads) { { saved.downloads.saveToGallery(it) } },
         onPlayLocal = remember(navigator) { { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) } },
         onOpenVideo = remember(navigator) { { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) } },
+        gridState = gridState,
         modifier = modifier,
         onDeleteBatch = remember(saved.history) { { items -> saved.history.deleteBatch(items) } },
     )
@@ -84,6 +89,7 @@ fun ScreenXHistory(
 /**
  * Корневая компоновка экрана истории просмотров.
  */
+@Suppress("LongParameterList")
 @Composable
 fun ScreenXHistoryContent(
     history: List<XHistoryItem>,
@@ -97,6 +103,7 @@ fun ScreenXHistoryContent(
     onSaveToGallery: (ItemsX) -> Unit,
     onPlayLocal: (String, ItemsX) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
+    gridState: LazyGridState,
     modifier: Modifier = Modifier,
     onDeleteBatch: (Collection<ItemsX>) -> Unit = {},
 ) {
@@ -105,8 +112,6 @@ fun ScreenXHistoryContent(
     var pendingDelete by remember { mutableStateOf<ItemsX?>(null) }
     var showClearAllConfirm by remember { mutableStateOf(false) }
     var showBatchDeleteConfirm by remember { mutableStateOf(false) }
-
-    val gridState = rememberLazyGridState()
 
     val isAnyDialogOpen = pendingDelete != null || showClearAllConfirm || showBatchDeleteConfirm
     BackHandler(enabled = isAnyDialogOpen) {
@@ -230,6 +235,7 @@ private fun ScreenXHistoryContentPreview() {
         onSaveToGallery = {},
         onPlayLocal = { _, _ -> },
         onOpenVideo = {},
+        gridState = rememberLazyGridState(),
         onDeleteBatch = {}
     )
 }

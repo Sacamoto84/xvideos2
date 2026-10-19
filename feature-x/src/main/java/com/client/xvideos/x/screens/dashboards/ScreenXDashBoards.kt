@@ -37,6 +37,7 @@ import com.client.xvideos.common.ui.atom.DownloadIndicator
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
+import com.client.xvideos.x.screens.dashboards.model.SavedTabListStates
 import com.client.xvideos.x.screens.dashboards.molecule.DashboardSecondaryControls
 import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_SAVABLE
 import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_SEARCH
@@ -93,6 +94,7 @@ class ScreenXDashBoards : Screen {
         ScreenXDashBoardsContent(
             mainTab = vm.mainTab,
             savedPagerState = vm.savedPagerState,
+            savedListStates = vm.savedListStates,
             pagerState = vm.pagerState,
             saved = vm.saved,
             searchVm = searchVm,
@@ -124,6 +126,7 @@ class ScreenXDashBoards : Screen {
 fun ScreenXDashBoardsContent(
     mainTab: Int,
     savedPagerState: PagerState,
+    savedListStates: SavedTabListStates,
     pagerState: PagerState,
     saved: SavedX,
     searchVm: ScreenXSearchSM,
@@ -208,6 +211,7 @@ fun ScreenXDashBoardsContent(
                 MAIN_TAB_SAVABLE -> SavedTabContent(
                     pagerState = savedPagerState,
                     favoritesScreen = favoritesScreen,
+                    listStates = savedListStates,
                     saved = saved
                 )
                 MAIN_TAB_SEARCH -> ScreenXSearchTabContent(

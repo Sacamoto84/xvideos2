@@ -4,7 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -37,11 +37,13 @@ import kotlinx.coroutines.launch
  *
  * @param saved Фасад локальных данных X ([SavedX]).
  * @param isModel `true` для вкладки актрис/моделей, `false` для вкладки каналов.
+ * @param listState Прокрутка списка из ScreenModel дашбордов.
  */
 @Composable
 fun X_SubscriptionsContent(
     saved: SavedX,
     isModel: Boolean,
+    listState: LazyListState,
     modifier: Modifier = Modifier,
 ) {
     val navigator = LocalNavigator.currentOrThrow
@@ -61,7 +63,6 @@ fun X_SubscriptionsContent(
     }
 
     var itemToDelete by remember { mutableStateOf<XSubscriptionItem?>(null) }
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
     // Новый порядок — с начала списка.

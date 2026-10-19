@@ -62,6 +62,7 @@ fun ScreenFavoritesContent(
         onSaveToGallery = remember(vm) { { item -> vm.saveToGallery(item) } },
         onPlayLocal = remember(navigator) { { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) } },
         onOpenVideo = remember(navigator) { { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) } },
+        gridState = vm.gridState,
         modifier = modifier,
     )
 }
