@@ -14,6 +14,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -86,17 +87,23 @@ fun TagsPaginatedListScreen(
     // приходит из ScreenModel вместе с listState: лента уходит из композиции (плеер
     // поверх, дальняя страница пейджера), а rememberSaveable страницы пейджер при
     // этом стирает. 0 — первый показ страницы, пересчитывать нечего.
-    LaunchedEffect(itemsPerRow) {
+    // SideEffect, а не LaunchedEffect: он выполняется до перемера с новыми рядами.
+    // Эффект-корутина стартовала после перемера, и у конца страницы список успевал
+    // упереться в конец и сдвинуть верхний ряд — пересчёт брал уже его. Новая
+    // позиция применяется при ближайшем перемере вместе с новыми рядами.
+    SideEffect {
         val oldPerRow = shownPerRow.intValue
-        shownPerRow.intValue = itemsPerRow
-        if (oldPerRow != 0 && oldPerRow != itemsPerRow) {
-            val target = tagListIndexAfterColumnsChange(
-                firstVisibleIndex = listState.firstVisibleItemIndex,
-                headerCount = if (header != null) 1 else 0,
-                oldPerRow = oldPerRow,
-                newPerRow = itemsPerRow,
-            )
-            listState.scrollToItem(target)
+        if (oldPerRow != itemsPerRow) {
+            shownPerRow.intValue = itemsPerRow
+            if (oldPerRow != 0) {
+                val target = tagListIndexAfterColumnsChange(
+                    firstVisibleIndex = listState.firstVisibleItemIndex,
+                    headerCount = if (header != null) 1 else 0,
+                    oldPerRow = oldPerRow,
+                    newPerRow = itemsPerRow,
+                )
+                listState.requestScrollToItem(target)
+            }
         }
     }
 
