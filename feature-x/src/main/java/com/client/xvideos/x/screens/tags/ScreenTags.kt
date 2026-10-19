@@ -11,6 +11,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -68,6 +70,7 @@ class ScreenTags(val tag: String) : Screen {
             topCutout = topCutout,
             pagerState = pagerState,
             listStates = vm.listStates,
+            shownPerRow = vm.shownPerRow,
             loadPage = loadPage,
             cachedItems = vm::cachedItems,
             onOpenVideo = onOpenVideo,
@@ -85,6 +88,7 @@ fun ScreenTagsContent(
     topCutout: Dp,
     pagerState: PagerState,
     listStates: MutableMap<Int, LazyListState>,
+    shownPerRow: MutableMap<Int, MutableIntState>,
     loadPage: suspend (Int) -> List<ItemsX>,
     onOpenVideo: (ItemsX) -> Unit,
     onPageChange: (Int) -> Unit,
@@ -135,6 +139,7 @@ fun ScreenTagsContent(
                     initialItems = cachedItems(pageIndex),
                     onOpenVideo = onOpenVideo,
                     listState = listStates.getOrPut(pageIndex) { LazyListState() },
+                    shownPerRow = remember(pageIndex) { shownPerRow.getOrPut(pageIndex) { mutableIntStateOf(0) } },
                     header = renderHeader
                 )
             }

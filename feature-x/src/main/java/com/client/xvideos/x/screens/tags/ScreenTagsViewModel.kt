@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.tags
 
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +65,13 @@ class ScreenTagsViewModel @AssistedInject constructor(
      * неё при переходе в плеер, и список после возврата вставал в начало.
      */
     val listStates: MutableMap<Int, LazyListState> = HashMap()
+
+    /**
+     * Сколько видео в ряду было у страницы при её прокрутке: позиция в [listStates] —
+     * номер ряда, и после раскрытия или сложения её пересчитывают. Живёт рядом с
+     * прокруткой по той же причине. 0 — страницу ещё не показывали.
+     */
+    val shownPerRow: MutableMap<Int, MutableIntState> = HashMap()
 
     init {
         // Раньше здесь был runBlocking { readHtmlFromURLDirect(...) } — сетевой запрос

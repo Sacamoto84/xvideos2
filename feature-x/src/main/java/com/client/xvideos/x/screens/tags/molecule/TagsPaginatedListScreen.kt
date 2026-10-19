@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +46,7 @@ fun TagsPaginatedListScreen(
     onOpenVideo: (ItemsX) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
+    shownPerRow: MutableIntState = remember { mutableIntStateOf(0) },
     header: (@Composable () -> Unit)? = null,
     initialItems: List<ItemsX>? = null,
 ) {
@@ -80,17 +82,20 @@ fun TagsPaginatedListScreen(
     val itemsPerRow = adaptiveGridColumns()
 
     // Список хранит позицию по номеру ряда: после смены числа видео в ряду
-    // (раскрытие, сложение, поворот) наверх возвращается то же видео.
-    var shownPerRow by remember { mutableIntStateOf(itemsPerRow) }
+    // (раскрытие, сложение, поворот) наверх возвращается то же видео. Прежнее число
+    // приходит из ScreenModel вместе с listState: лента уходит из композиции (плеер
+    // поверх, дальняя страница пейджера), а rememberSaveable страницы пейджер при
+    // этом стирает. 0 — первый показ страницы, пересчитывать нечего.
     LaunchedEffect(itemsPerRow) {
-        if (itemsPerRow != shownPerRow) {
+        val oldPerRow = shownPerRow.intValue
+        shownPerRow.intValue = itemsPerRow
+        if (oldPerRow != 0 && oldPerRow != itemsPerRow) {
             val target = tagListIndexAfterColumnsChange(
                 firstVisibleIndex = listState.firstVisibleItemIndex,
                 headerCount = if (header != null) 1 else 0,
-                oldPerRow = shownPerRow,
+                oldPerRow = oldPerRow,
                 newPerRow = itemsPerRow,
             )
-            shownPerRow = itemsPerRow
             listState.scrollToItem(target)
         }
     }
