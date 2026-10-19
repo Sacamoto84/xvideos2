@@ -49,8 +49,9 @@ fun X_SubscriptionsList(
             modifier = modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = topCutout, bottom = 24.dp)
         ) {
-            // Шапка — на всю ширину, строки — в полосе 640dp по одной.
-            item(key = "header", contentType = "header") {
+            // Шапка — на всю ширину, строки — в полосе 640dp по одной. Без ключа:
+            // строка "header" совпала бы со слагом подписки и уронила бы список.
+            item(contentType = "header") {
                 SubscriptionsHeader(
                     title = title,
                     count = itemsList.size,

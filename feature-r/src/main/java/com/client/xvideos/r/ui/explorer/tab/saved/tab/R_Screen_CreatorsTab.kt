@@ -119,7 +119,8 @@ fun CreatorsTabContent(
                 // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
                 // полосе 640dp по одной, чтобы список свайпался по всей ширине.
                 // 4dp под шапкой плюс 2dp поля строки — сверху 6dp, как слева.
-                item(key = "header", contentType = "header") {
+                // Без ключа: строка "header" совпала бы с username автора и уронила бы список.
+                item(contentType = "header") {
                     SavedTabHeader(
                         title = "Авторы",
                         topCutout = topInset,

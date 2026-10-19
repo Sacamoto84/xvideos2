@@ -108,8 +108,10 @@ fun CollectionsGrid(
                 // под шапкой плюс 4dp поля плитки и кнопки «+».
                 contentPadding = PaddingValues(top = if (header == null) 4.dp else 0.dp)
             ) {
+                // Шапка и «+» без ключей: строка-ключ совпала бы с именем коллекции
+                // («header», «add_new_collection») и уронила бы сетку.
                 if (header != null) {
-                    item(key = "header", contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
+                    item(contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
                         Box(modifier = Modifier.padding(bottom = 4.dp)) { header() }
                     }
                 }
@@ -122,7 +124,7 @@ fun CollectionsGrid(
                     )
                 }
 
-                item(key = "add_new_collection") {
+                item {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         Box(
                             modifier = Modifier
