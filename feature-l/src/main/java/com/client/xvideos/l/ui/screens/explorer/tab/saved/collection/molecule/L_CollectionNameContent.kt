@@ -9,11 +9,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,28 +19,34 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
-import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionItemsOrder
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionTypeFilter
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.lCollectionVisibleItems
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.LCollectionViewState
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+/**
+ * Открытая коллекция L.
+ *
+ * @param view Сетка, отбор и порядок коллекции из ScreenModel.
+ */
 @Composable
 fun L_CollectionNameContent(
-    collectionName: String,
+    view: LCollectionViewState,
     savedL: SavedL,
     modifier: Modifier = Modifier,
-    host: LazyRowPictureDetailsHost = remember(collectionName) { LazyRowPictureDetailsHost(collectionName) },
     onExitCollection: (() -> Unit)? = null
 ) {
+    val collectionName = view.collectionName
+    val host = view.host
     val collectionItemsState = savedL.collection.getCollectionItems(collectionName)
         .collectAsStateWithLifecycle()
     val collectionItems = collectionItemsState.value
 
     // Отбор и порядок — на время, пока коллекция открыта.
-    var typeFilter by rememberSaveable(collectionName) { mutableStateOf(LCollectionTypeFilter.ALL) }
-    var order by rememberSaveable(collectionName) { mutableStateOf(LCollectionItemsOrder.NEWEST) }
+    val typeFilter = view.typeFilter
+    val order = view.order
 
     LaunchedEffect(host, collectionItems, typeFilter, order) {
         host.replaceFilteredPictures(lCollectionVisibleItems(collectionItems ?: emptyList(), typeFilter, order))
@@ -52,19 +55,19 @@ fun L_CollectionNameContent(
     // Новый отбор или порядок — с начала списка: на прежней позиции оказались бы
     // другие элементы. Прокрутка — только по нажатию, не при возврате на экран.
     val scope = rememberCoroutineScope()
-    val onTypeChange: (LCollectionTypeFilter) -> Unit = remember(host, scope) {
+    val onTypeChange: (LCollectionTypeFilter) -> Unit = remember(view, scope) {
         { type ->
-            if (type != typeFilter) {
-                typeFilter = type
-                scope.launch { host.state.scrollToItem(0) }
+            if (type != view.typeFilter) {
+                view.typeFilter = type
+                scope.launch { view.host.state.scrollToItem(0) }
             }
         }
     }
-    val onOrderChange: (LCollectionItemsOrder) -> Unit = remember(host, scope) {
+    val onOrderChange: (LCollectionItemsOrder) -> Unit = remember(view, scope) {
         { value ->
-            if (value != order) {
-                order = value
-                scope.launch { host.state.scrollToItem(0) }
+            if (value != view.order) {
+                view.order = value
+                scope.launch { view.host.state.scrollToItem(0) }
             }
         }
     }

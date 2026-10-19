@@ -25,6 +25,7 @@ import com.client.xvideos.common.p2p.ui.ScreenP2pSend
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.CollectionDialogData
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.LCollectionViewState
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.CollectionDialogsHost
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.L_CollectionNameContent
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.L_SavedCollectionTabContent
@@ -125,8 +126,8 @@ object L_Screen_CollectionTab : Screen {
         val onSortOrderClick: (LCollectionSortOrder) -> Unit = remember(savedL) {
             { order -> savedL.collection.applySortOrder(order) }
         }
-        val onCollectionClick: (String) -> Unit = remember(savedL) {
-            { name -> savedL.collection.setCollection(name) }
+        val onCollectionClick: (String) -> Unit = remember(vm) {
+            { name -> vm.openCollection(name) }
         }
         val onCollectionLongClick: (String) -> Unit = remember {
             { name -> itemPendingAction = name }
@@ -142,6 +143,7 @@ object L_Screen_CollectionTab : Screen {
             selectedCollection = selectedCollection,
             savedL = savedL,
             gridState = vm.gridState,
+            collectionView = vm::collectionView,
             onSortOrderClick = onSortOrderClick,
             onCollectionClick = onCollectionClick,
             onCollectionLongClick = onCollectionLongClick,
@@ -156,6 +158,7 @@ fun CollectionTabContent(
     selectedCollection: String?,
     savedL: SavedL,
     gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
+    collectionView: (String) -> LCollectionViewState,
     onSortOrderClick: (LCollectionSortOrder) -> Unit,
     onCollectionClick: (String) -> Unit,
     onCollectionLongClick: (String) -> Unit,
@@ -184,7 +187,7 @@ fun CollectionTabContent(
             )
         } else {
             L_CollectionNameContent(
-                collectionName = collectionName,
+                view = collectionView(collectionName),
                 savedL = savedL,
                 onExitCollection = onExitCollection
             )

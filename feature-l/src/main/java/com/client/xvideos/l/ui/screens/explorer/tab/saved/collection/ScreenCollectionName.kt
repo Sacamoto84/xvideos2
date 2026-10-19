@@ -34,9 +34,8 @@ class ScreenCollectionName(
         }
 
         L_CollectionNameContent(
-            collectionName = collectionName,
+            view = vm.view,
             savedL = vm.savedL,
-            host = vm.host,
             onExitCollection = onExitCollection
         )
 

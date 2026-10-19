@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.l.featured.saved.SavedL
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.LCollectionViewState
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,6 +28,23 @@ class ScreenSavedCollectionSM @Inject constructor(
 
     /** Состояние скролла сетки коллекций. */
     val gridState = LazyGridState()
+
+    /**
+     * Открытая коллекция. Живёт здесь, а не в композиции: полноэкранный просмотр
+     * открывается в корневом навигаторе, и проводник L уходит из композиции.
+     */
+    private var openedView: LCollectionViewState? = null
+
+    /** Состояние коллекции [name]: прежнее, пока открыта она же, иначе новое. */
+    fun collectionView(name: String): LCollectionViewState =
+        openedView?.takeIf { it.collectionName == name }
+            ?: LCollectionViewState(name).also { openedView = it }
+
+    /** Открывает коллекцию из списка — с начала и без прежнего отбора. */
+    fun openCollection(name: String) {
+        openedView = null
+        savedL.collection.setCollection(name)
+    }
 
     /**
      * Переименование коллекции (выполняется асинхронно на пуле IO).

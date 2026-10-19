@@ -6,7 +6,7 @@ import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.LCollectionViewState
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -27,7 +27,7 @@ class ScreenLCollectionNameSM @AssistedInject constructor(
         fun create(collectionName: String): ScreenLCollectionNameSM
     }
 
-    val host = LazyRowPictureDetailsHost(collectionName)
+    val view = LCollectionViewState(collectionName)
 
     init {
         ensureCollectionLoaded()
