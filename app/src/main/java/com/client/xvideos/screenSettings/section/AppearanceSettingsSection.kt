@@ -15,6 +15,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -23,12 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.R
+import com.client.xvideos.common.rotation.SystemRotationSettings
 import com.client.xvideos.common.settings.ScrollButtonEffect
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
@@ -40,6 +45,7 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
+import com.client.xvideos.screenSettings.molecule.RotationLockRow
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -62,7 +68,8 @@ private val PREVIEW_CARD_BASE_MODIFIER = Modifier
 
 /**
  * Экран настроек «Отображение» (Appearance).
- * Содержит интерактивное превью и переключатель режима кнопок быстрой прокрутки (Заливка, Блюр, Стекло).
+ * Содержит интерактивное превью, переключатель режима кнопок быстрой прокрутки (Заливка, Блюр, Стекло)
+ * и строку права на возврат блокировки поворота.
  */
 @Composable
 internal fun AppearanceSettingsSection(
@@ -74,6 +81,17 @@ internal fun AppearanceSettingsSection(
 
     val onSelectEffect: (ScrollButtonEffect) -> Unit = remember {
         { effect -> Settings.scroll_buttons_effect.setValue(effect.name) }
+    }
+
+    // Право выдают на системном экране: перечитываем его при каждом возврате в приложение.
+    val context = LocalContext.current
+    val isPreview = LocalInspectionMode.current
+    val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+    val canWriteSettings = remember(lifecycleState, isPreview) {
+        !isPreview && SystemRotationSettings(context).canWrite()
+    }
+    val onOpenRotationPermission: () -> Unit = remember(context) {
+        { SystemRotationSettings.openPermissionScreen(context) }
     }
 
     Column(modifier = if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth()) {
@@ -99,6 +117,16 @@ internal fun AppearanceSettingsSection(
                     )
                 }
             }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        SettingsSectionTitle("Поворот экрана")
+        SettingsGroup {
+            RotationLockRow(
+                canWriteSettings = canWriteSettings,
+                onOpenPermission = onOpenRotationPermission
+            )
         }
     }
 }

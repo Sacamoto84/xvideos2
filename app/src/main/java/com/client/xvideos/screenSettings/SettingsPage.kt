@@ -18,7 +18,7 @@ internal enum class SettingsPage(
     Appearance(
         title = "Отображение",
         icon = R.drawable.ic_blur_24,
-        subtitle = "Стиль кнопок скролла и эффекты"
+        subtitle = "Кнопки скролла, эффекты, поворот экрана"
     ),
     Privacy(
         title = "Приватность",
