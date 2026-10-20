@@ -1,7 +1,7 @@
 package com.client.xvideos.x.screens.saved
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,10 +34,10 @@ import java.io.File
  * Рендерится инлайн как под-вкладка раздела Savable (рядом с «Избранным»).
  * Список наблюдается из [SavedX] (`downloads.list`), удаление — с подтверждением.
  *
- * @param listState Прокрутка списка из ScreenModel дашбордов.
+ * @param gridState Сетка; позицию держит ScreenModel дашбордов.
  */
 @Composable
-fun X_SavedContent(saved: SavedX, listState: LazyListState, modifier: Modifier = Modifier) {
+fun X_SavedContent(saved: SavedX, gridState: LazyGridState, modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.currentOrThrow
     val coroutineScope = rememberCoroutineScope()
     val list by saved.downloads.list.collectAsStateWithLifecycle()
@@ -96,7 +96,7 @@ fun X_SavedContent(saved: SavedX, listState: LazyListState, modifier: Modifier =
     X_SavedList(
         list = list,
         topCutout = topCutout,
-        listState = listState,
+        gridState = gridState,
         onPlayItem = onPlayItem,
         onDeleteItem = onDeleteItem,
         onShareP2pItem = onShareP2pItem,

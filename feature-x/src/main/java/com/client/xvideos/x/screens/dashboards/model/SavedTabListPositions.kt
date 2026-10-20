@@ -12,7 +12,7 @@ import com.client.xvideos.common.ui.scroll.LazyListPosition
  */
 @Stable
 class SavedTabListPositions {
-    val downloads = LazyListPosition()
+    val downloads = LazyGridPosition()
     val history = LazyGridPosition()
     val channels = LazyListPosition()
     val models = LazyListPosition()

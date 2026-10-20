@@ -4,8 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,18 +20,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.saved.atom.SavedHeader
 
 /**
- * Список скачанных роликов с шапкой; пустой список — надпись «Пусто».
+ * Сетка скачанных роликов с шапкой: две колонки на телефоне, больше на широком
+ * окне — как у «Избранного». Пустой список — надпись «Пусто».
  */
 @Composable
 fun X_SavedList(
     list: List<ItemsX>,
     topCutout: androidx.compose.ui.unit.Dp,
-    listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
+    gridState: LazyGridState = rememberLazyGridState(),
     onPlayItem: (ItemsX) -> Unit = {},
     onDeleteItem: (ItemsX) -> Unit = {},
     onShareP2pItem: (ItemsX) -> Unit = {},
@@ -46,13 +52,13 @@ fun X_SavedList(
                 }
             }
         } else {
-            LazyColumn(
-                state = listState,
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(adaptiveGridColumns()),
+                state = gridState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Шапка — на всю ширину, как у «Избранного»; строки — в полосе 640dp
-                // по одной, чтобы список свайпался по всей ширине.
-                item(key = "header", contentType = "header") {
+                // Шапка — на всю строку сетки, как у «Избранного».
+                item(key = "header", contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
                     SavedHeader(topCutout = topCutout)
                 }
                 items(
@@ -66,7 +72,7 @@ fun X_SavedList(
                         onPlay = onPlayItem,
                         onDelete = onDeleteItem,
                         onShareP2p = onShareP2pItem,
-                        modifier = Modifier.adaptiveContentWidth(),
+                        modifier = Modifier.padding(horizontal = 1.dp),
                     )
                 }
             }
