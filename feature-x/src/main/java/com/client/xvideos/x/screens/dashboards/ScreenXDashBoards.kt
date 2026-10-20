@@ -37,10 +37,11 @@ import com.client.xvideos.common.ui.atom.DownloadIndicator
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
-import com.client.xvideos.x.screens.dashboards.model.SavedTabListStates
+import com.client.xvideos.x.screens.dashboards.model.SavedTabListPositions
 import com.client.xvideos.x.screens.dashboards.molecule.DashboardSecondaryControls
 import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_SAVABLE
 import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_SEARCH
+import com.client.xvideos.x.screens.dashboards.molecule.SAVED_TAB_COUNT
 import com.client.xvideos.x.screens.dashboards.molecule.SavedTabContent
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
@@ -90,12 +91,14 @@ class ScreenXDashBoards : Screen {
 
         val favoritesScreen = remember { ScreenFavorites() }
         val scope = rememberCoroutineScope()
+        val pagerState = vm.pagerPosition.rememberState { 20000 }
+        val savedPagerState = vm.savedPagerPosition.rememberState { SAVED_TAB_COUNT }
 
         ScreenXDashBoardsContent(
             mainTab = vm.mainTab,
-            savedPagerState = vm.savedPagerState,
-            savedListStates = vm.savedListStates,
-            pagerState = vm.pagerState,
+            savedPagerState = savedPagerState,
+            savedListPositions = vm.savedListPositions,
+            pagerState = pagerState,
             saved = vm.saved,
             searchVm = searchVm,
             searchUiMode = searchUiMode,
@@ -105,7 +108,7 @@ class ScreenXDashBoards : Screen {
             favoritesScreen = favoritesScreen,
             navigator = navigator,
             onMainTabChange = { vm.mainTab = it },
-            onSavedTabChange = { tab -> scope.launch { vm.savedPagerState.scrollToPage(tab) } },
+            onSavedTabChange = { tab -> scope.launch { savedPagerState.scrollToPage(tab) } },
             onOpenVideoPlayer = { item -> vm.openVideoPlayer(item, navigator) },
             onIsFavorite = { itemId -> vm.isFavorite(itemId) },
             onFavoriteAdd = { item -> vm.addFavorite(item) },
@@ -126,7 +129,7 @@ class ScreenXDashBoards : Screen {
 fun ScreenXDashBoardsContent(
     mainTab: Int,
     savedPagerState: PagerState,
-    savedListStates: SavedTabListStates,
+    savedListPositions: SavedTabListPositions,
     pagerState: PagerState,
     saved: SavedX,
     searchVm: ScreenXSearchSM,
@@ -211,7 +214,7 @@ fun ScreenXDashBoardsContent(
                 MAIN_TAB_SAVABLE -> SavedTabContent(
                     pagerState = savedPagerState,
                     favoritesScreen = favoritesScreen,
-                    listStates = savedListStates,
+                    listPositions = savedListPositions,
                     saved = saved
                 )
                 MAIN_TAB_SEARCH -> ScreenXSearchTabContent(

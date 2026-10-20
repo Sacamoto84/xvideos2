@@ -1,19 +1,17 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
+import com.client.xvideos.common.ui.scroll.PagerPosition
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.FacetCollectionInfo
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
@@ -133,15 +131,12 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     /** Состояние шторки (Drawer) боковой панели фильтрации. */
     val drawerState = DrawerState(DrawerValue.Closed)
 
-    /** Сохраненный индекс страницы пейджера. */
-    var savedPagerPage by mutableIntStateOf(0)
-
-    // Одна страница до первого ответа сети, а не десять: реальное число ставит
-    // экран через pageCountState, когда придёт totalPages. Заглушка «10»
-    // означала, что пейджер до загрузки считает, будто страниц ровно десять, и
-    // разрешает листать в пустоту.
-    /** Состояние горизонтального пейджера страниц каталога. */
-    val statePager = DefaultPagerState1(0, 0f) { 1 }
+    /**
+     * Страница пейджера каталога. Сам пейджер создаёт экран, число страниц — его
+     * `totalPages` (одна до первого ответа сети). Только страница: состояние
+     * пейджера держало бы старую Activity, см. [PagerPosition].
+     */
+    val pagerPosition = PagerPosition()
 
     private val _requestsInFlight = MutableStateFlow(0)
     /**
@@ -150,8 +145,8 @@ class ScreenLAlbumListSM @AssistedInject constructor(
      */
     val requestsInFlight: StateFlow<Int> = _requestsInFlight.asStateFlow()
 
-    /** Карта состояний скролла для каждой страницы альбомов: номер страницы -> [LazyGridState]. */
-    val stateGrid = mutableStateMapOf<Int, LazyGridState>()
+    /** Позиции сеток по страницам альбомов: номер страницы -> [LazyGridPosition]. */
+    val gridPositions = mutableStateMapOf<Int, LazyGridPosition>()
 
     init {
         Timber.d("ScreenLAlbumListSM init")

@@ -142,7 +142,7 @@ object L_Screen_CollectionTab : Screen {
         CollectionTabContent(
             selectedCollection = selectedCollection,
             savedL = savedL,
-            gridState = vm.gridState,
+            gridState = vm.gridPosition.rememberState(),
             collectionView = vm::collectionView,
             onSortOrderClick = onSortOrderClick,
             onCollectionClick = onCollectionClick,

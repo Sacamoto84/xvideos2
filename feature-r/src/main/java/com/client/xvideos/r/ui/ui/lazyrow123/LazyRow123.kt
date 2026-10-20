@@ -85,6 +85,7 @@ fun LazyRow123(
 
     val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
+    val gridState = host.position.rememberState()
     val haptic = LocalHapticFeedback.current
     // Индикатор жеста обновления держится, пока идёт загрузка. Раньше это был
     // таймер на полсекунды: на медленной сети он гас раньше данных, а при сбое
@@ -108,20 +109,20 @@ fun LazyRow123(
     // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
     // перекомпоновывало бы весь экран на каждом кадре.
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
-        gridState = host.state,
+        gridState = gridState,
         itemsToIgnore = if (contentBeforeList != null) 1 else 0,
         numberOfColumns = gridColumns
     )
 
     /** Показывать ли кнопку "вверх" */
-    val showScrollToTop by remember(host.state) {
-        derivedStateOf { host.state.firstVisibleItemIndex > 2 }
+    val showScrollToTop by remember(gridState) {
+        derivedStateOf { gridState.firstVisibleItemIndex > 2 }
     }
 
     /** Показывать ли кнопку "вниз" */
-    val showScrollToBottom by remember(host.state) {
+    val showScrollToBottom by remember(gridState) {
         derivedStateOf {
-            val layoutInfo = host.state.layoutInfo
+            val layoutInfo = gridState.layoutInfo
             val totalItems = layoutInfo.totalItemsCount
             val visible = layoutInfo.visibleItemsInfo
             if (totalItems <= 4 || visible.isEmpty()) {
@@ -155,6 +156,7 @@ fun LazyRow123(
     ) {
 
         LazyRow123Content(
+            gridState = gridState,
             host = host,
             listGifs = listGifs,
             columns = gridColumns,
@@ -183,14 +185,14 @@ fun LazyRow123(
             contentColor = Theme.ScrollFab.contentColorR,
             onScrollToTop = {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                scope.launch { host.state.scrollToItem(0) }
+                scope.launch { gridState.scrollToItem(0) }
             },
             onScrollToBottom = {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 scope.launch {
-                    val totalItems = host.state.layoutInfo.totalItemsCount
+                    val totalItems = gridState.layoutInfo.totalItemsCount
                     if (totalItems > 0) {
-                        host.state.scrollToItem(totalItems - 1)
+                        gridState.scrollToItem(totalItems - 1)
                     }
                 }
             },
@@ -209,6 +211,7 @@ fun LazyRow123Content(
     host: LazyRow123Host,
     listGifs: LazyPagingItems<GifsInfo>,
     columns: Int,
+    gridState: LazyGridState,
     modifier: Modifier = Modifier,
     onClickOpenProfile: (String) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -219,7 +222,7 @@ fun LazyRow123Content(
     SideEffect { Timber.d("!!! LazyRow123::SideEffect columns: ${host.columns}") }
 
     val isConnected by host.isConnected.collectAsStateWithLifecycle()
-    val state = host.state
+    val state = gridState
 
     val navigator = LocalNavigator.current
     val navigationState = LocalRNavigationState.current

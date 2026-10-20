@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.actresses
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +8,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.util.pathForLog
 import com.client.xvideos.x.feature.net.fetchHtml
 import com.client.xvideos.x.feature.net.logLabel
@@ -61,10 +61,11 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
         private set
 
     /**
-     * Прокрутка сетки. Живёт здесь, а не в композиции: корневой навигатор не хранит
+     * Позиция сетки. Живёт здесь, а не в композиции: корневой навигатор не хранит
      * состояние экрана, с которого ушли, и после профиля модели сетка вставала в начало.
+     * Только позиция — см. [LazyGridPosition].
      */
-    val gridState = LazyGridState()
+    val gridPosition = LazyGridPosition()
 
     @AssistedFactory
     interface Factory : ScreenModelFactory {

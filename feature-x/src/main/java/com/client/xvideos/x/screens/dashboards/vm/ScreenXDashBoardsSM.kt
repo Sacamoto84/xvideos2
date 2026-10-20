@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.dashboards.vm
 
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -9,6 +8,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.navigator.Navigator
+import com.client.xvideos.common.ui.scroll.PagerPosition
 import com.client.xvideos.x.feature.country.CountryState
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.feature.saved.SavedX
@@ -18,8 +18,7 @@ import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.screens.common.PageCache
 import com.client.xvideos.x.screens.dashboards.buildDashboardUrl
-import com.client.xvideos.x.screens.dashboards.model.SavedTabListStates
-import com.client.xvideos.x.screens.dashboards.molecule.SAVED_TAB_COUNT
+import com.client.xvideos.x.screens.dashboards.model.SavedTabListPositions
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import dagger.Binds
 import dagger.Module
@@ -47,17 +46,17 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
     val saved : SavedX
 ) : ScreenModel {
 
-    /** Состояние горизонтального пейджера страниц выдачи. */
-    val pagerState: PagerState = PagerState(0) { 20000 }
+    /** Страница горизонтального пейджера выдачи; сам пейджер создаёт экран, см. [PagerPosition]. */
+    val pagerPosition = PagerPosition()
 
     /** Текущий главный таб нижней панели: 0 — Dashboards, 1 — Savable (сохранённое). */
     var mainTab by mutableIntStateOf(0)
 
-    /** Пейджер под-вкладок раздела Savable; текущая страница — выбранный под-таб. */
-    val savedPagerState: PagerState = PagerState(0) { SAVED_TAB_COUNT }
+    /** Под-вкладка раздела Savable — страница его пейджера. */
+    val savedPagerPosition = PagerPosition()
 
-    /** Прокрутка страниц раздела Savable, см. [SavedTabListStates]. */
-    val savedListStates = SavedTabListStates()
+    /** Позиции списков страниц раздела Savable, см. [SavedTabListPositions]. */
+    val savedListPositions = SavedTabListPositions()
 
     /**
      * Открывает экран видеоплеера по карточке ролика.

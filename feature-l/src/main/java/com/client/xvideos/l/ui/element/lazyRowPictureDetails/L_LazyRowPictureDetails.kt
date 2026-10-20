@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
@@ -75,21 +76,22 @@ fun L_LazyRowPictureDetails(
     // screenModelScope корневого экрана, что то же самое по времени жизни.
     val appScope = rememberApplicationScope()
     val haptic = LocalHapticFeedback.current
+    val gridState = host.position.rememberState()
 
     // Без `by`: позиция скролла меняется каждый кадр, и разворачивать её здесь
     // нельзя — чтение на этом уровне перекомпоновывало бы весь экран на каждом
     // кадре прокрутки. State отдаётся скроллбару лямбдой, см. VerticalScrollbar.
-    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid( host.state, 0 )
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid( gridState, 0 )
 
     val thumbnailsSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
 
     /** Показывать ли кнопку "вверх" */
-    val showScrollToTop by remember(host.state) { derivedStateOf { host.state.firstVisibleItemIndex > 2 } }
+    val showScrollToTop by remember(gridState) { derivedStateOf { gridState.firstVisibleItemIndex > 2 } }
 
     /** Показывать ли кнопку "вниз" */
-    val showScrollToBottom by remember(host.state) {
+    val showScrollToBottom by remember(gridState) {
         derivedStateOf {
-            val layoutInfo = host.state.layoutInfo
+            val layoutInfo = gridState.layoutInfo
             val totalItems = layoutInfo.totalItemsCount
             val visible = layoutInfo.visibleItemsInfo
             if (totalItems <= 4 || visible.isEmpty()) {
@@ -105,7 +107,7 @@ fun L_LazyRowPictureDetails(
     val gridColumns = adaptiveUserGridColumns(host.columns)
 
     /** Активный диапазон элементов для загрузки: видимые на экране + буфер перед и после скролла */
-    val activeItemRange by rememberActiveItemRange(host, showInitialLoading, gridColumns)
+    val activeItemRange by rememberActiveItemRange(gridState, showInitialLoading, gridColumns)
 
     val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
@@ -113,7 +115,7 @@ fun L_LazyRowPictureDetails(
     Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
         LazyVerticalStaggeredGrid(
-            state = host.state,
+            state = gridState,
             columns = StaggeredGridCells.Fixed(gridColumns),
             modifier = Modifier.fillMaxSize().hazeSource(hazeState).then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)
         ) {
@@ -151,7 +153,8 @@ fun L_LazyRowPictureDetails(
                                 if (targetIndex != null) {
                                     appScope.launch {
                                         withContext(Dispatchers.Main) {
-                                            host.state.scrollToItem(targetIndex)
+                                            // Через позицию: сетки в этот момент может не быть на экране.
+                                            host.position.scrollToItem(targetIndex)
                                         }
                                     }
                                 }
@@ -186,13 +189,13 @@ fun L_LazyRowPictureDetails(
         /** Вертикальный индикатор прокрутки */
         Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
 
-        val onScrollToTop: () -> Unit = remember(haptic, scope, host) {
+        val onScrollToTop: () -> Unit = remember(haptic, scope, gridState) {
             {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                scope.launch { host.state.scrollToItem(0) }
+                scope.launch { gridState.scrollToItem(0) }
             }
         }
-        val onScrollToBottom: () -> Unit = remember(haptic, scope, host, showInitialLoading) {
+        val onScrollToBottom: () -> Unit = remember(haptic, scope, host, gridState, showInitialLoading) {
             {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 scope.launch {
@@ -203,7 +206,7 @@ fun L_LazyRowPictureDetails(
                             itemCount = host.filteredPic.size,
                             showInitialLoading = showInitialLoading
                         ) ?: (host.filteredPic.size + 1)
-                        host.state.scrollToItem(target)
+                        gridState.scrollToItem(target)
                     }
                 }
             }
@@ -239,15 +242,15 @@ private fun L_LazyRowPictureDetailsPreview() {
 
 @Composable
 private fun rememberActiveItemRange(
-    host: LazyRowPictureDetailsHost,
+    gridState: LazyStaggeredGridState,
     showInitialLoading: Boolean,
     columns: Int,
 ): State<IntRange> {
     // columns — ключ: derivedStateOf читает его как обычный параметр, без ключа
     // после раскрытия складного буферы остались бы от прежнего числа колонок.
-    return remember(host, showInitialLoading, columns) {
+    return remember(gridState, showInitialLoading, columns) {
         derivedStateOf {
-            val visible = host.state.layoutInfo.visibleItemsInfo
+            val visible = gridState.layoutInfo.visibleItemsInfo
             if (visible.isEmpty()) {
                 0..15
             } else {

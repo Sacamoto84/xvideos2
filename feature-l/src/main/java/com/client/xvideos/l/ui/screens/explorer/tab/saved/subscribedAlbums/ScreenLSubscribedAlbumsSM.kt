@@ -1,10 +1,10 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
@@ -33,8 +33,8 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
     private val repository: LusciousServerFavoritesRepository
 ) : ScreenModel {
 
-    /** Состояние прокрутки сетки подписанных альбомов. */
-    val state = LazyGridState()
+    /** Позиция сетки подписанных альбомов; состояние сетки создаёт экран, см. [LazyGridPosition]. */
+    val gridPosition = LazyGridPosition()
 
     private val list = LServerPagedList(
         scope = screenModelScope,

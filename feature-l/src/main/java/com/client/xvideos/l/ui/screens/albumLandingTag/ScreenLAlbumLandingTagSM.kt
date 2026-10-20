@@ -1,11 +1,11 @@
 package com.client.xvideos.l.ui.screens.albumLandingTag
 
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.common.navigation.NavigationDepthState
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Landing_page_albumSection
@@ -42,7 +42,7 @@ class ScreenLAlbumLandingTagSM @AssistedInject constructor(
         fun create(tag: String): ScreenLAlbumLandingTagSM
     }
 
-    val state = LazyListState()
+    val listPosition = LazyListPosition()
 
     private val _albumTopHits = MutableStateFlow<Landing_page_albumType?>(null)
     val albumTopHits: StateFlow<Landing_page_albumType?> = _albumTopHits.asStateFlow()

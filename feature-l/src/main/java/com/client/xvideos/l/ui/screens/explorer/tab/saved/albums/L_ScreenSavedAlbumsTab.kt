@@ -59,7 +59,7 @@ object L_ScreenSavedAlbumsTab : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLSavedAlbumsSM = getScreenModel()
-        val state = vm.state
+        val state = vm.gridPosition.rememberState()
         val orderOrdinal by Settings.l_savedAlbums_order.field.collectAsStateWithLifecycle()
         val order = lSavedAlbumsOrderOf(orderOrdinal)
         // Список хранилища читается внутри derivedStateOf: новое или удалённое

@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -21,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -46,7 +46,7 @@ fun ChannelVideosPager(
     currentSort: ChannelSortOrder,
     selectedModel: ChannelModelFilterItem?,
     isModel: Boolean,
-    getGridState: (Int) -> LazyGridState,
+    getGridPosition: (Int) -> LazyGridPosition,
     onLoadPage: (Int) -> Unit,
     onRetryPage: (Int) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
@@ -68,7 +68,7 @@ fun ChannelVideosPager(
         val pageVideos = pagesCache[page]
         val isPageLoading = page in loadingPages
         val pageError = errorPages[page]
-        val gridState = getGridState(page)
+        val gridState = getGridPosition(page).rememberState()
 
         // Ключ — сама потребность в загрузке: повтор первой загрузки очищает кэш и
         // ошибки, не меняя сортировку и фильтр, и страница, уже стоящая в композиции,
@@ -180,7 +180,7 @@ private fun ChannelVideosPagerPreview() {
             linkProfile = "/channels/channel"
         )
     }
-    val gridState = rememberLazyGridState()
+    val gridPosition = remember { LazyGridPosition() }
     val pagerState = rememberPagerState { 1 }
 
     XvideosTheme(darkTheme = true) {
@@ -192,7 +192,7 @@ private fun ChannelVideosPagerPreview() {
             currentSort = ChannelSortOrder.NEW,
             selectedModel = null,
             isModel = false,
-            getGridState = { gridState },
+            getGridPosition = { gridPosition },
             onLoadPage = {},
             onRetryPage = {},
             onOpenVideo = {},

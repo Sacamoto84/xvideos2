@@ -1,9 +1,9 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.albums
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.AlbumDetails
 import dagger.Binds
@@ -19,7 +19,7 @@ class ScreenLSavedAlbumsSM @Inject constructor(
     val saved: SavedL
 ) : ScreenModel {
 
-    val state = LazyGridState()
+    val gridPosition = LazyGridPosition()
 
     val albums: List<AlbumDetails>
         get() = saved.albums.list.filter { it.id.toLongOrNull() != null }

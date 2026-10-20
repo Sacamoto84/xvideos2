@@ -69,11 +69,14 @@ object L_ScreenServerLikesTab : Screen {
         val topInset = getTopInsetDp()
         val pullToRefreshState = rememberPullToRefreshState()
 
-        // Пагинация: автоматическая подгрузка следующей страницы при прокрутке к концу
-        val shouldLoadMore by remember(vm.host.state) {
+        // Пагинация: автоматическая подгрузка следующей страницы при прокрутке к концу.
+        // Состояние сетки создаёт сама сетка; пока её нет на экране — грузить нечего.
+        val gridState = vm.host.position.state
+        val shouldLoadMore by remember(gridState) {
             derivedStateOf {
-                val totalItems = vm.host.state.layoutInfo.totalItemsCount
-                val lastVisibleItem = vm.host.state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                val layoutInfo = gridState?.layoutInfo ?: return@derivedStateOf false
+                val totalItems = layoutInfo.totalItemsCount
+                val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
                 totalItems > 1 && lastVisibleItem >= totalItems - 4
             }
         }

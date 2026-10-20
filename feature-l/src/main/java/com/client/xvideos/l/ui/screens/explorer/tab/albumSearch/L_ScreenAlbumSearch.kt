@@ -81,7 +81,7 @@ object L_ScreenAlbumSearch : Screen {
             searchText = searchText,
             isLoading = isLoading,
             result = result,
-            state = vm.state,
+            state = vm.listPosition.rememberState(),
             itemWidth = itemWidth,
             itemsPerRow = itemsPerRow,
             onSearchTextChange = onSearchTextChange,

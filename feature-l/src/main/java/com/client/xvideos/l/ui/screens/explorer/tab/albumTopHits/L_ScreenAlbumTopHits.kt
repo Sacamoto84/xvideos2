@@ -64,7 +64,7 @@ object L_ScreenAlbumTopHits : Screen {
         L_ScreenAlbumTopHitsContent(
             items = items.orEmpty(),
             loadError = loadError,
-            state = vm.state,
+            state = vm.listPosition.rememberState(),
             itemWidth = itemWidth,
             itemsPerRow = itemsPerRow,
             onAlbumClick = onAlbumClick,

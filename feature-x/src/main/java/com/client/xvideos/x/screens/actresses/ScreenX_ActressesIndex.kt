@@ -69,7 +69,7 @@ class ScreenX_ActressesIndex(
 
         ScreenX_ActressesIndexContent(
             uiState = vm.uiState,
-            gridState = vm.gridState,
+            gridState = vm.gridPosition.rememberState(),
             onBack = onBack,
             onActressClick = onActressClick,
             onLoadMore = vm::loadNextPage,

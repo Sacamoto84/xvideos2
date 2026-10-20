@@ -23,7 +23,7 @@ import com.client.xvideos.x.parcer.parseChannelVideosResponse
 import com.client.xvideos.x.parcer.parserChannelHeader
 import com.client.xvideos.x.parcer.parserChannelRanksJson
 import com.client.xvideos.x.urlStart
-import androidx.compose.foundation.lazy.grid.LazyGridState
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateSetOf
 import com.client.xvideos.x.feature.saved.SavedX
@@ -195,10 +195,13 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     /** Карта ошибок загрузки страниц: pageIndex -> текст ошибки. */
     val errorPages = mutableStateMapOf<Int, String>()
 
-    /** Сохранённые состояния скролла для каждой страницы. */
-    val gridStates = mutableMapOf<Int, LazyGridState>()
+    /**
+     * Позиции сеток по страницам. Только позиции: само состояние сетки держало бы
+     * старую Activity после её пересоздания, см. [LazyGridPosition].
+     */
+    val gridPositions = mutableMapOf<Int, LazyGridPosition>()
 
-    fun getGridState(page: Int): LazyGridState = gridStates.getOrPut(page) { LazyGridState() }
+    fun gridPosition(page: Int): LazyGridPosition = gridPositions.getOrPut(page) { LazyGridPosition() }
 
     /**
      * Смещение схлопывающейся шапки: 0 — раскрыта. Живёт здесь рядом с сетками, а не в
@@ -283,7 +286,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         pagesCache.clear()
         loadingPages.clear()
         errorPages.clear()
-        gridStates.clear()
+        gridPositions.clear()
 
         uiState = uiState.copy(
             error = null,
@@ -398,7 +401,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     val farPages = pagesCache.keys.filter { kotlin.math.abs(it - targetPage) > 8 }
                     farPages.forEach { farPage ->
                         pagesCache.remove(farPage)
-                        gridStates.remove(farPage)
+                        gridPositions.remove(farPage)
                     }
                 }
             } catch (e: CancellationException) {

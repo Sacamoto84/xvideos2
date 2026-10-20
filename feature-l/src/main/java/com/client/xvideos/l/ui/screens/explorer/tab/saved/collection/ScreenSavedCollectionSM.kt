@@ -1,9 +1,9 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
 import androidx.compose.runtime.Stable
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.LCollectionViewState
 import dagger.Binds
@@ -16,7 +16,7 @@ import javax.inject.Inject
 /**
  * [ScreenModel] для экрана списка сохраненных коллекций L.
  *
- * Управляет состоянием прокрутки сетки коллекций [gridState] и делегирует операции
+ * Хранит позицию сетки коллекций [gridPosition] и делегирует операции
  * переименования и удаления коллекций в [SavedL.collection].
  *
  * @property savedL Единый фасад локальных хранилищ L.
@@ -26,8 +26,8 @@ class ScreenSavedCollectionSM @Inject constructor(
     val savedL: SavedL,
 ) : ScreenModel {
 
-    /** Состояние скролла сетки коллекций. */
-    val gridState = LazyGridState()
+    /** Позиция сетки коллекций; состояние сетки создаёт экран, см. [LazyGridPosition]. */
+    val gridPosition = LazyGridPosition()
 
     /**
      * Открытая коллекция. Живёт здесь, а не в композиции: полноэкранный просмотр

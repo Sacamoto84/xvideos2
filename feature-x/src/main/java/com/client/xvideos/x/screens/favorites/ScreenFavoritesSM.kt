@@ -1,10 +1,10 @@
 package com.client.xvideos.x.screens.favorites
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.feature.saved.SavedX
 import dagger.Binds
@@ -31,11 +31,11 @@ class ScreenFavoritesSM @Inject constructor(
     val favorites = saved.favorites.list
 
     /**
-     * Прокрутка сетки. Живёт здесь, а не в композиции: ролик открывается в корневом
+     * Позиция сетки. Живёт здесь, а не в композиции: ролик открывается в корневом
      * навигаторе, «Сохранённое» уходит из композиции, и после «Назад» сетка вставала
-     * в начало.
+     * в начало. Только позиция — см. [LazyGridPosition].
      */
-    val gridState = LazyGridState()
+    val gridPosition = LazyGridPosition()
 
     /** Добавить ролик в избранное. */
     fun addFavorite(item: ItemsX) = screenModelScope.launch { saved.favorites.add(item) }

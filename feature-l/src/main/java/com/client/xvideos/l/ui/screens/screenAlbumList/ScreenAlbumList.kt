@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -30,6 +29,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.common.util.getTopInsetDp
@@ -89,7 +89,9 @@ private fun Screen.ScreenAlbumListContent(
     val selectedColumns by Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    var totalPages by remember { mutableIntStateOf(1) }
+    // С числом из ScreenModel, а не с единицы: пейджер создаётся на сохранённой
+    // странице, и при одной странице первый замер прижал бы её к нулевой.
+    var totalPages by remember { mutableIntStateOf(info?.totalPages ?: 1) }
 
     var showFilterDialog by remember { mutableStateOf(false) }
     val onFilterClose: () -> Unit = remember { { showFilterDialog = false } }
@@ -100,19 +102,21 @@ private fun Screen.ScreenAlbumListContent(
 
     LaunchedEffect(info) { totalPages = info?.totalPages ?: 1 }
 
+    // Пейджер — в композиции, в ScreenModel только страница: состояние пейджера
+    // держало бы старую Activity. Число страниц читается лениво и растёт с ответом сети.
+    val pagerState = vm.pagerPosition.rememberState { totalPages }
+
     // Ключ — и число страниц: оно приходит с первым ответом и сбрасывается при
     // смене фильтра. По одной смене страницы соседние не подгружались, пока
     // пользователь не листнёт: и при открытии, и после фильтра пейджер стоит на
     // нулевой странице.
-    LaunchedEffect(vm.statePager.currentPage, totalPages) {
-        vm.statePager.pageCountState.value = { totalPages }
-        vm.savedPagerPage = vm.statePager.currentPage
-        val currentPage = vm.statePager.currentPage
+    LaunchedEffect(pagerState.currentPage, totalPages) {
+        val currentPage = pagerState.currentPage
         val pagesToLoad = setOf(
             maxOf(0, currentPage - 1),
             currentPage,
-            minOf(vm.statePager.pageCount - 1, currentPage + 1),
-            minOf(vm.statePager.pageCount - 1, currentPage + 2)
+            minOf(pagerState.pageCount - 1, currentPage + 1),
+            minOf(pagerState.pageCount - 1, currentPage + 2)
         )
         pagesToLoad.forEach { page -> vm.loadAlbumList(page) }
     }
@@ -123,9 +127,9 @@ private fun Screen.ScreenAlbumListContent(
             showFilterDialog = true
         }
     }
-    val onPageChange: (Int) -> Unit = remember(vm, scope, haptic) {
+    val onPageChange: (Int) -> Unit = remember(vm, scope, haptic, pagerState) {
         { page ->
-            scope.launch { vm.statePager.scrollToPage(page) }
+            scope.launch { pagerState.scrollToPage(page) }
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             vm.loadAlbumList(page)
         }
@@ -136,8 +140,8 @@ private fun Screen.ScreenAlbumListContent(
     val onFilterApply: (LAlbumListFilter) -> Unit = remember(vm) {
         { newFilter ->
             vm.screenModelScope.launch {
-                vm.stateGrid.clear()
-                vm.statePager.scrollToPage(0)
+                vm.gridPositions.clear()
+                vm.pagerPosition.scrollToPage(0)
                 vm.filterUpdate(newFilter)
                 vm.loadInitialData()
             }
@@ -156,7 +160,7 @@ private fun Screen.ScreenAlbumListContent(
             bottomBar = {
                 AlbumListBottomBar(
                     onClickVisibleFilter = onClickVisibleFilter,
-                    currentPage = vm.statePager.currentPage,
+                    currentPage = pagerState.currentPage,
                     totalPages = info?.totalPages ?: 1,
                     onChange = onPageChange
                 )
@@ -165,7 +169,7 @@ private fun Screen.ScreenAlbumListContent(
         ) { padding ->
 
             HorizontalPager(
-                vm.statePager,
+                pagerState,
                 Modifier
                     .padding(bottom = padding.calculateBottomPadding())
                     .fillMaxSize(),
@@ -183,7 +187,7 @@ private fun Screen.ScreenAlbumListContent(
                     onRetry = remember(vm, page) { { vm.loadAlbumList(page) } },
                 ) {
                     AlbumListPageGrid(
-                        stateGrid = vm.stateGrid.getOrPut(page) { LazyGridState() },
+                        stateGrid = vm.gridPositions.getOrPut(page) { LazyGridPosition() }.rememberState(),
                         pageItems = pageItems,
                         title = title,
                         topInset = topInset,

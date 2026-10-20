@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -24,6 +23,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
@@ -74,7 +74,7 @@ class ScreenTags(val tag: String) : Screen {
             lastPage = vm.screen.lastPage,
             topCutout = topCutout,
             pagerState = pagerState,
-            listStates = vm.listStates,
+            listPositions = vm.listPositions,
             shownPerRow = vm.shownPerRow,
             loadPage = loadPage,
             cachedItems = vm::cachedItems,
@@ -92,7 +92,7 @@ fun ScreenTagsContent(
     lastPage: Int,
     topCutout: Dp,
     pagerState: PagerState,
-    listStates: MutableMap<Int, LazyListState>,
+    listPositions: MutableMap<Int, LazyListPosition>,
     shownPerRow: MutableMap<Int, MutableIntState>,
     loadPage: suspend (Int) -> List<ItemsX>,
     onOpenVideo: (ItemsX) -> Unit,
@@ -143,7 +143,8 @@ fun ScreenTagsContent(
                     loadPage = loadPage,
                     initialItems = cachedItems(pageIndex),
                     onOpenVideo = onOpenVideo,
-                    listState = listStates.getOrPut(pageIndex) { LazyListState() },
+                    listState = remember(pageIndex) { listPositions.getOrPut(pageIndex) { LazyListPosition() } }
+                        .rememberState(),
                     shownPerRow = remember(pageIndex) { shownPerRow.getOrPut(pageIndex) { mutableIntStateOf(0) } },
                     header = renderHeader
                 )

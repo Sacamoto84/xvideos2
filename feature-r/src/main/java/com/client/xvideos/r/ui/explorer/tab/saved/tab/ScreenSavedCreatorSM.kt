@@ -1,6 +1,5 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -30,8 +29,6 @@ class ScreenSavedCreatorSM @Inject constructor(
     val downloadRed: DownloadRed,
     val search: R_SearchExplorer,
 ) : ScreenModel {
-
-    val gridState = LazyGridState()
 
     val likedHost = LazyRow123Host(
         connectivityObserver = connectivityObserver,

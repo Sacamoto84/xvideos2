@@ -1,9 +1,9 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
 import dagger.Binds
@@ -21,7 +21,8 @@ class ScreenSavedCollectionSM @Inject constructor(
     val savedRed: SavedRed,
 ) : ScreenModel {
 
-    val gridState = LazyGridState()
+    /** Позиция сетки коллекций; состояние сетки создаёт экран, см. [LazyGridPosition]. */
+    val gridPosition = LazyGridPosition()
 
     /**
      * Переименование коллекции на пуле IO.

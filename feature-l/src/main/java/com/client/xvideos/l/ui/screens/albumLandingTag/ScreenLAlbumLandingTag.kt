@@ -74,7 +74,7 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
             title = topBarTitle,
             sections = items.orEmpty(),
             loadError = loadError,
-            state = vm.state,
+            state = vm.listPosition.rememberState(),
             itemWidth = itemWidth,
             itemsPerRow = itemsPerRow,
             onBack = onBack,

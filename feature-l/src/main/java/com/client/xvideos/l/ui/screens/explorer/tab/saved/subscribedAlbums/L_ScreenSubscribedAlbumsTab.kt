@@ -71,7 +71,7 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         val isRefreshing by vm.isRefreshing.collectAsStateWithLifecycle()
         val errorMessage by vm.errorMessage.collectAsStateWithLifecycle()
 
-        val state = vm.state
+        val state = vm.gridPosition.rememberState()
         val topInset = getTopInsetDp()
         val pullToRefreshState = rememberPullToRefreshState()
 

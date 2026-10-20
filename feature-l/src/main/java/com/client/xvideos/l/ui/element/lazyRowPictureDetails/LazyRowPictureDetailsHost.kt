@@ -1,42 +1,34 @@
 package com.client.xvideos.l.ui.element.lazyRowPictureDetails
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.scroll.LazyStaggeredGridPosition
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
 
 /**
  * Хост состояния для списков и сеток картинок/медиа в альбомах и коллекциях L.
  *
- * Инкапсулирует состояние скролла (StaggeredGrid и LazyList), выбранную картинку,
+ * Инкапсулирует позицию сетки, выбранную картинку,
  * фильтрованный список элементов и обработку удаления элементов.
  *
  * @property albumName Название отображаемого альбома или псевдоальбома.
  * @property idAlbum Строковый идентификатор альбома (по умолчанию пустой).
  */
-@OptIn(ExperimentalFoundationApi::class)
 class LazyRowPictureDetailsHost(
     val albumName: String,
     val idAlbum: String = ""
 ) {
 
-    /** Окно упреждающего кэширования для плавного скролла списка. */
-    val dpCacheWindow = LazyLayoutCacheWindow(ahead = 150.dp, behind = 100.dp)
-
-    /** Состояние скролла для ступенчатой сетки (staggered grid). */
-    @OptIn(ExperimentalFoundationApi::class)
-    val state = LazyStaggeredGridState()
-
-    /** Альтернативное состояние скролла для линейного списка с кастомным окном кэширования. */
-    val state1 = LazyListState(cacheWindow = dpCacheWindow)
+    /**
+     * Позиция ступенчатой сетки. Хост живёт в ScreenModel, поэтому здесь только
+     * позиция: само состояние сетки держало бы старую Activity, см.
+     * [LazyStaggeredGridPosition]. Состояние создаёт `L_LazyRowPictureDetails`.
+     */
+    val position = LazyStaggeredGridPosition()
 
     /**
      * Количество отображаемых столбцов в сетке.

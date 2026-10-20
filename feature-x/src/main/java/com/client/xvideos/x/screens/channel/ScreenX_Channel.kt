@@ -4,8 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -30,6 +28,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelCollaborator
@@ -127,7 +126,7 @@ class ScreenX_Channel(
             pagesCache = vm.pagesCache,
             loadingPages = vm.loadingPages,
             errorPages = vm.errorPages,
-            getGridState = vm::getGridState,
+            getGridPosition = vm::gridPosition,
             onLoadPage = vm::loadPage,
             onRetryPage = vm::retryPage,
             initialPage = vm.currentPage,
@@ -160,7 +159,7 @@ fun ScreenX_ChannelContent(
     pagesCache: Map<Int, List<ItemsX>>,
     loadingPages: Set<Int>,
     errorPages: Map<Int, String>,
-    getGridState: (Int) -> LazyGridState,
+    getGridPosition: (Int) -> LazyGridPosition,
     onLoadPage: (Int) -> Unit,
     onRetryPage: (Int) -> Unit,
     initialPage: Int,
@@ -214,7 +213,7 @@ fun ScreenX_ChannelContent(
     }
     BackHandler(onBack = handleBack)
 
-    val collapse = rememberChannelHeaderCollapseState(headerOffset) { getGridState(pagerState.currentPage) }
+    val collapse = rememberChannelHeaderCollapseState(headerOffset) { getGridPosition(pagerState.currentPage).state }
     val topCutout = getTopInsetDp()
     val density = LocalDensity.current
     val topCutoutPx = with(density) { topCutout.roundToPx() }
@@ -276,7 +275,7 @@ fun ScreenX_ChannelContent(
                     currentSort = uiState.currentSort,
                     selectedModel = uiState.selectedModel,
                     isModel = uiState.header.isModel,
-                    getGridState = getGridState,
+                    getGridPosition = getGridPosition,
                     onLoadPage = onLoadPage,
                     onRetryPage = onRetryPage,
                     onOpenVideo = onOpenVideo,
@@ -328,7 +327,7 @@ private fun ScreenX_ChannelContentPreview() {
         ),
         totalVideosCount = 36,
     )
-    val gridState = rememberLazyGridState()
+    val gridPosition = remember { LazyGridPosition() }
 
     XvideosTheme(darkTheme = true) {
         ScreenX_ChannelContent(
@@ -336,7 +335,7 @@ private fun ScreenX_ChannelContentPreview() {
             pagesCache = mapOf(0 to sampleVideos),
             loadingPages = emptySet(),
             errorPages = emptyMap(),
-            getGridState = { gridState },
+            getGridPosition = { gridPosition },
             onLoadPage = {},
             onRetryPage = {},
             initialPage = 0,

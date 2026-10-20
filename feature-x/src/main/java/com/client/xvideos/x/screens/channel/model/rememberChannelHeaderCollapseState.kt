@@ -15,12 +15,12 @@ import androidx.compose.runtime.rememberUpdatedState
  * @param offsetState Смещение шапки из ScreenModel: корневой навигатор не хранит
  *   состояние экрана, с которого ушли, и после ролика шапка разворачивалась над
  *   прокрученной сеткой.
- * @param currentGrid Сетка текущей страницы пейджера; берётся последняя переданная.
+ * @param currentGrid Сетка текущей страницы пейджера, если она на экране; берётся последняя переданная.
  */
 @Composable
 fun rememberChannelHeaderCollapseState(
     offsetState: MutableFloatState,
-    currentGrid: () -> LazyGridState,
+    currentGrid: () -> LazyGridState?,
 ): ChannelHeaderCollapseState {
     val scope = rememberCoroutineScope()
     val latestGrid by rememberUpdatedState(currentGrid)

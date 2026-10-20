@@ -150,7 +150,7 @@ object R_Screen_CollectionTab : Screen {
         R_SavedCollectionTabContent(
             selectedCollection = selectedCollection,
             collectionList = savedRed.collections.collectionList,
-            gridState = vm.gridState,
+            gridState = vm.gridPosition.rememberState(),
             topInset = getTopInsetDp(),
             onCollectionClick = onCollectionClick,
             onCollectionLongClick = onCollectionLongClick,

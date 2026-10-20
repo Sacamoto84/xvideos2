@@ -1,10 +1,10 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits
 
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.l.net.AlbumTopHitsImpl
 import com.client.xvideos.l.net.Luscious
 import dagger.Binds
@@ -23,7 +23,7 @@ class ScreenLAlbumTopHitsSM @Inject constructor(
     val luscious: Luscious
 ) : ScreenModel {
 
-    val state = LazyListState()
+    val listPosition = LazyListPosition()
 
     // Запрос идёт в области экрана: раньше он жил в области приложения, и
     // сообщение о сбое появлялось уже на другом экране.

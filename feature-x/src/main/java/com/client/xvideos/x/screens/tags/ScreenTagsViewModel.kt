@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.tags
 
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -10,6 +9,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ModelScreenTag
 import com.client.xvideos.x.parcer.parserScreenTags
@@ -61,13 +61,14 @@ class ScreenTagsViewModel @AssistedInject constructor(
     private val pages = PageCache<ModelScreenTag>(maxPages = MAX_CACHED_PAGES)
 
     /**
-     * Прокрутка страниц пейджера. Живёт здесь, а не в композиции: экран уходит из
-     * неё при переходе в плеер, и список после возврата вставал в начало.
+     * Позиции страниц пейджера. Живут здесь, а не в композиции: экран уходит из
+     * неё при переходе в плеер, и список после возврата вставал в начало. Только
+     * позиции: само состояние списка держало бы старую Activity, см. [LazyListPosition].
      */
-    val listStates: MutableMap<Int, LazyListState> = HashMap()
+    val listPositions: MutableMap<Int, LazyListPosition> = HashMap()
 
     /**
-     * Сколько видео в ряду было у страницы при её прокрутке: позиция в [listStates] —
+     * Сколько видео в ряду было у страницы при её прокрутке: позиция в [listPositions] —
      * номер ряда, и после раскрытия или сложения её пересчитывают. Живёт рядом с
      * прокруткой по той же причине. 0 — страницу ещё не показывали.
      */

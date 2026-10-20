@@ -1,10 +1,10 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.albumSearch
 
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Landing_page_albumSection
@@ -31,7 +31,7 @@ class ScreenLAlbumSearchSM @Inject constructor(
     val luscious: Luscious
 ) : ScreenModel {
 
-    val state = LazyListState()
+    val listPosition = LazyListPosition()
 
     private val _searchText = MutableStateFlow("")
     val searchText: StateFlow<String> = _searchText.asStateFlow()

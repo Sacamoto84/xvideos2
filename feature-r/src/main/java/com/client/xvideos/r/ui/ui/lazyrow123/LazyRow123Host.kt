@@ -1,8 +1,6 @@
 package com.client.xvideos.r.ui.ui.lazyrow123
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -13,6 +11,7 @@ import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.cachedIn
 import androidx.paging.filter
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.r.model.GifsInfo
@@ -95,7 +94,7 @@ internal fun Flow<PagingData<GifsInfo>>.withoutBlocked(
  *
  * Управляет:
  * - Потоком пагинации [pager] на базе AndroidX Paging 3;
- * - Состоянием скролла сетки [state] ([LazyGridState]) и одиночной колонки [stateColumn] ([LazyListState]);
+ * - Позицией сетки [position] (само состояние сетки создаёт `LazyRow123`);
  * - Размером окна предзагрузки [cacheWindow] (ahead 0.5f, behind 0.15f) для гладкой работы пула видеоплееров;
  * - Динамическим числом колонок [columns] (от 2 до 4);
  * - Реакцией на изменение поискового запроса, сортировки и выбранных тегов с автосбросом скролла вверх;
@@ -152,12 +151,13 @@ class LazyRow123Host(
     @OptIn(ExperimentalFoundationApi::class)
     val cacheWindow = viewportFractionCacheWindow(ahead = 0.5f, behind = 0.15f)
 
-    /** Состояние скролла для сеточного режима (2-4 колонки). */
+    /**
+     * Позиция сетки (2-4 колонки). Хост живёт в ScreenModel, поэтому здесь только
+     * позиция: само состояние сетки держало бы старую Activity, см.
+     * [LazyGridPosition]. Состояние создаёт `LazyRow123`.
+     */
     @OptIn(ExperimentalFoundationApi::class)
-    val state: LazyGridState = LazyGridState(cacheWindow = cacheWindow)
-
-    /** Состояние скролла для одноколоночного режима. */
-    val stateColumn = LazyListState()
+    val position = LazyGridPosition(cacheWindow = cacheWindow)
 
     /** Реактивный флаг наличия интернет-соединения. */
     val isConnected = connectivityObserver.isConnected.stateIn( scope, SharingStarted.WhileSubscribed(5000L), false )
@@ -202,7 +202,6 @@ class LazyRow123Host(
                         if (shouldResetScroll && !resetScrollConsumed) {
                             resetScrollConsumed = true
                             gotoUp()
-                            gotoUpColumn()
                         }
                         createPager(
                             typePager = typePager,  sort = params.sort,
@@ -246,11 +245,8 @@ class LazyRow123Host(
     var announcedRefreshFailure: Throwable? = null
     private var lastPagerParams: SearchParams? = null
 
-    /** Прокрутить сетку в самый верх. */
-    fun gotoUp() { scope.launch { state.scrollToItem(0) } }
-
-    /** Прокрутить одиночную колонку в самый верх. */
-    fun gotoUpColumn() { scope.launch { stateColumn.scrollToItem(0) } }
+    /** Прокрутить сетку в самый верх; без экрана — показать её с начала. */
+    fun gotoUp() { scope.launch { position.scrollToItem(0) } }
 
     init {
         RFeedSessionStore.register(this)

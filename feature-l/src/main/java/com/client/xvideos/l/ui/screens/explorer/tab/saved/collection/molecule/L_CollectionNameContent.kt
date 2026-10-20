@@ -59,7 +59,7 @@ fun L_CollectionNameContent(
         { type ->
             if (type != view.typeFilter) {
                 view.typeFilter = type
-                scope.launch { view.host.state.scrollToItem(0) }
+                scope.launch { view.host.position.scrollToItem(0) }
             }
         }
     }
@@ -67,7 +67,7 @@ fun L_CollectionNameContent(
         { value ->
             if (value != view.order) {
                 view.order = value
-                scope.launch { view.host.state.scrollToItem(0) }
+                scope.launch { view.host.position.scrollToItem(0) }
             }
         }
     }

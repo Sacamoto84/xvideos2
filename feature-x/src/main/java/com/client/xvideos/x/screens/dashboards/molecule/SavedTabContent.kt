@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.x.feature.saved.SavedX
-import com.client.xvideos.x.screens.dashboards.model.SavedTabListStates
+import com.client.xvideos.x.screens.dashboards.model.SavedTabListPositions
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
 import com.client.xvideos.x.screens.history.ScreenXHistory
 import com.client.xvideos.x.screens.saved.X_SavedContent
@@ -33,7 +33,7 @@ const val SAVED_TAB_COUNT = 5
 fun SavedTabContent(
     pagerState: PagerState,
     favoritesScreen: ScreenFavorites,
-    listStates: SavedTabListStates,
+    listPositions: SavedTabListPositions,
     saved: SavedX? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -56,10 +56,10 @@ fun SavedTabContent(
         ) { page ->
             when (page) {
                 SAVED_TAB_FAVORITES -> favoritesScreen.Content()
-                SAVED_TAB_DOWNLOADS -> X_SavedContent(saved, listStates.downloads)
-                SAVED_TAB_HISTORY -> ScreenXHistory(saved, listStates.history)
-                SAVED_TAB_CHANNELS -> X_SubscriptionsContent(saved = saved, isModel = false, listState = listStates.channels)
-                SAVED_TAB_MODELS -> X_SubscriptionsContent(saved = saved, isModel = true, listState = listStates.models)
+                SAVED_TAB_DOWNLOADS -> X_SavedContent(saved, listPositions.downloads.rememberState())
+                SAVED_TAB_HISTORY -> ScreenXHistory(saved, listPositions.history.rememberState())
+                SAVED_TAB_CHANNELS -> X_SubscriptionsContent(saved = saved, isModel = false, listState = listPositions.channels.rememberState())
+                SAVED_TAB_MODELS -> X_SubscriptionsContent(saved = saved, isModel = true, listState = listPositions.models.rememberState())
             }
         }
     }
@@ -71,7 +71,7 @@ private fun SavedTabContentPreview() {
     SavedTabContent(
         pagerState = rememberPagerState { SAVED_TAB_COUNT },
         favoritesScreen = ScreenFavorites(),
-        listStates = remember { SavedTabListStates() },
+        listPositions = remember { SavedTabListPositions() },
         saved = null
     )
 }

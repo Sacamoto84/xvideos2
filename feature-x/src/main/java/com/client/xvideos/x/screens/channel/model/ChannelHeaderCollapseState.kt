@@ -34,13 +34,13 @@ import kotlinx.coroutines.launch
  * @param offsetState Смещение шапки в пикселях: 0 — раскрыта, минус путь схлопывания —
  *   схлопнута (см. [onCollapseRangeChanged]).
  * @param scope Область для анимации доводки шапки.
- * @param currentGrid Сетка текущей страницы пейджера.
+ * @param currentGrid Сетка текущей страницы пейджера, если она на экране.
  */
 @Stable
 class ChannelHeaderCollapseState(
     offsetState: MutableFloatState,
     private val scope: CoroutineScope,
-    private val currentGrid: () -> LazyGridState,
+    private val currentGrid: () -> LazyGridState?,
 ) {
     private var headerOffsetPxState by offsetState
     private var collapseRangePx by mutableFloatStateOf(0f)
@@ -99,7 +99,7 @@ class ChannelHeaderCollapseState(
             // Если шапка уже схлопнута, передаем скролл в сетку видео
             val remaining = delta - consumed
             if (remaining < 0f) {
-                val gridConsumed = currentGrid().dispatchRawDelta(remaining)
+                val gridConsumed = currentGrid()?.dispatchRawDelta(remaining) ?: 0f
                 consumed += gridConsumed
             }
         } else if (delta > 0f) {
