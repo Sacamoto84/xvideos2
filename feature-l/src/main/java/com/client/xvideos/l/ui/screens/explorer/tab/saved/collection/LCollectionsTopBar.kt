@@ -45,15 +45,9 @@ internal fun LCollectionsTopBar(
     // Likes) отступают от выреза сами; этот бар при миграции на Material3
     // потерял displayCutoutPadding и рендерился от y=0, под камерой.
     val topInset = getTopInsetDp()
-    val columnModifier = if (modifier == Modifier) {
-        Modifier
-            .fillMaxWidth()
-            .padding(top = topInset)
-    } else {
-        modifier
-            .fillMaxWidth()
-            .padding(top = topInset)
-    }
+    val columnModifier = modifier
+        .fillMaxWidth()
+        .padding(top = topInset)
 
     // Ряд — не шире 640dp по центру, разделитель под ним — на всю ширину.
     Column(

@@ -143,7 +143,7 @@ fun ComposeTags(
         Modifier
     }
 
-    val baseModifier = if (modifier == Modifier) containerModifier else modifier.then(containerModifier)
+    val baseModifier = modifier.then(containerModifier)
 
     Box(
         modifier = baseModifier.animateContentSize()

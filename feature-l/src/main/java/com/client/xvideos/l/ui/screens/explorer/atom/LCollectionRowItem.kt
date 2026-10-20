@@ -34,11 +34,7 @@ fun LCollectionRowItem(
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(12.dp)
-    val rowModifier = if (modifier == Modifier) {
-        Modifier.fillMaxWidth().padding(4.dp).clip(shape)
-    } else {
-        modifier.then(Modifier.fillMaxWidth().padding(4.dp).clip(shape))
-    }
+    val rowModifier = modifier.fillMaxWidth().padding(4.dp).clip(shape)
     Row(
         modifier = rowModifier
             .clickable(onClick = onClick)

@@ -54,7 +54,7 @@ fun AlbumInfoButtonServerFavorite(
             .border(1.dp, Theme.L.grey3, shape)
             .background(backgroundColor)
     }
-    val baseModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
+    val baseModifier = modifier.then(styledBase)
 
     Box(
         modifier = baseModifier.clickable(enabled = !isLoading, onClick = onClick),

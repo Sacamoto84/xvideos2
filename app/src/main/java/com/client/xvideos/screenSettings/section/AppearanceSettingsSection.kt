@@ -94,7 +94,7 @@ internal fun AppearanceSettingsSection(
         { SystemRotationSettings.openPermissionScreen(context) }
     }
 
-    Column(modifier = if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         SettingsSectionTitle("Предпросмотр")
         ScrollButtonPreviewCard(
             hazeState = previewHazeState,
@@ -174,7 +174,7 @@ private fun ScrollButtonPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = if (modifier == Modifier) PREVIEW_CARD_BASE_MODIFIER else modifier.then(PREVIEW_CARD_BASE_MODIFIER)
+        modifier = modifier.then(PREVIEW_CARD_BASE_MODIFIER)
     ) {
         // Цветной имитационный фон галереи, помеченный как hazeSource
         Box(

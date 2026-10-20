@@ -31,7 +31,7 @@ fun AlbumTagChip(
             .clip(shape)
             .border(1.dp, borderColor, shape)
     }
-    val chipModifier = if (modifier == Modifier) chipBorderModifier else modifier.then(chipBorderModifier)
+    val chipModifier = modifier.then(chipBorderModifier)
 
     Text(
         text = label,

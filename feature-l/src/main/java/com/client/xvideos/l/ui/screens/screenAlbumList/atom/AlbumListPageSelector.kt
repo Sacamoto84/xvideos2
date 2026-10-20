@@ -98,7 +98,7 @@ fun AlbumListPageSelector(
         .height(48.dp)
 
     Row(
-        modifier = if (modifier == Modifier) rowBaseModifier else modifier.then(rowBaseModifier),
+        modifier = modifier.then(rowBaseModifier),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

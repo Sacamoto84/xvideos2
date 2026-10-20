@@ -620,7 +620,7 @@ fun PasswordSettingField(
             }
         }
     }
-    val fieldModifier = (if (modifier == Modifier) Modifier.fillMaxWidth() else modifier.fillMaxWidth())
+    val fieldModifier = modifier.fillMaxWidth()
         .excludedFromAutofill()
     val fieldTextStyle = remember(dialogTheme.bodyColor) {
         Theme.L.Type.body.copy(color = dialogTheme.bodyColor)
@@ -714,7 +714,7 @@ private fun AppLockTimeoutItem(
             else -> timeout.displayName
         }
     }
-    val itemBaseModifier = if (modifier == Modifier) TIMEOUT_ITEM_FULL_MODIFIER else modifier.then(TIMEOUT_ITEM_FULL_MODIFIER)
+    val itemBaseModifier = modifier.then(TIMEOUT_ITEM_FULL_MODIFIER)
     val itemTextStyle = if (isSelected) {
         Theme.L.Type.dialogBody.copy(
             color = SettingsAccentColor,

@@ -70,7 +70,7 @@ fun ScreenLRootBottomNavigator(
             .height(48.dp)
             .background(Theme.L.grey4)
     }
-    val boxModifier = if (modifier == Modifier) navBarBase else modifier.then(navBarBase)
+    val boxModifier = modifier.then(navBarBase)
 
     val itemTextStyle = remember(Theme.L.textColor, Theme.L.fontFamilyKarla) {
         androidx.compose.ui.text.TextStyle(

@@ -62,7 +62,7 @@ internal fun AppSettingsScreenBody(
             )
     }
 
-    val bodyModifier = if (modifier == Modifier) BODY_COLUMN_BASE_MODIFIER else modifier.then(BODY_COLUMN_BASE_MODIFIER)
+    val bodyModifier = modifier.then(BODY_COLUMN_BASE_MODIFIER)
     Column(
         modifier = bodyModifier
     ) {

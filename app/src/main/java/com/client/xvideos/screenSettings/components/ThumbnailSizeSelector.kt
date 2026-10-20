@@ -32,7 +32,7 @@ fun ThumbnailSizeSelector(
 
     val onOpen = remember { { expanded = true } }
     val onDismiss = remember { { expanded = false } }
-    val boxModifier = if (modifier == Modifier) SELECTOR_BOX_MODIFIER else modifier.then(SELECTOR_BOX_MODIFIER)
+    val boxModifier = modifier.then(SELECTOR_BOX_MODIFIER)
 
     Box(modifier = boxModifier) {
         Button(onClick = onOpen) {

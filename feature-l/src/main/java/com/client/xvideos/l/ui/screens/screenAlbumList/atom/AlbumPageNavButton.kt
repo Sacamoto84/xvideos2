@@ -25,7 +25,7 @@ fun AlbumPageNavButton(
     val navButtonBase = Modifier
         .fillMaxHeight()
         .background(Theme.L.red)
-    val baseModifier = if (modifier == Modifier) navButtonBase else modifier.then(navButtonBase)
+    val baseModifier = modifier.then(navButtonBase)
     Box(
         modifier = baseModifier.clickable(onClick = onClick),
         contentAlignment = Alignment.Center

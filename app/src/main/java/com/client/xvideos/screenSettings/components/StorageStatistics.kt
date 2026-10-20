@@ -106,7 +106,7 @@ internal fun StorageProgressRow(
         .fillMaxWidth()
         .background(SettingsCardColor)
         .padding(horizontal = 16.dp, vertical = 12.dp)
-    val rowModifier = if (modifier == Modifier) rowBaseModifier else modifier.then(rowBaseModifier)
+    val rowModifier = modifier.then(rowBaseModifier)
     Row(
         modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically

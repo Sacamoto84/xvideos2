@@ -154,11 +154,7 @@ fun SettingsGroup(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val groupModifier = if (modifier == Modifier) {
-        SETTINGS_GROUP_BASE_MODIFIER
-    } else {
-        modifier.then(SETTINGS_GROUP_BASE_MODIFIER)
-    }
+    val groupModifier = modifier.then(SETTINGS_GROUP_BASE_MODIFIER)
     Column(
         modifier = groupModifier
     ) {
@@ -209,11 +205,10 @@ fun SettingsListItem(
 ) {
     val inGroup = LocalSettingsInGroup.current
     val baseModifier = if (inGroup) SETTINGS_ITEM_IN_GROUP_BASE_MODIFIER else SETTINGS_ITEM_STANDALONE_BASE_MODIFIER
-    val rowModifier = when {
-        onClick != null && modifier == Modifier -> baseModifier.clickable(onClick = onClick)
-        onClick != null -> modifier.then(baseModifier).clickable(onClick = onClick)
-        modifier == Modifier -> baseModifier
-        else -> modifier.then(baseModifier)
+    val rowModifier = if (onClick != null) {
+        modifier.then(baseModifier).clickable(onClick = onClick)
+    } else {
+        modifier.then(baseModifier)
     }
 
     val titleStyle = remember(Theme.L.Type.rowTitle) {

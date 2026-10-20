@@ -44,11 +44,7 @@ fun CollectionGridCell(
     val countText = remember(collection.itemsCount) {
         collection.itemsCount?.let { "Элементов: $it" }
     }
-    val rowModifier = if (modifier == Modifier) {
-        CELL_BASE_MODIFIER
-    } else {
-        modifier.then(CELL_BASE_MODIFIER)
-    }.combinedClickable(
+    val rowModifier = modifier.then(CELL_BASE_MODIFIER).combinedClickable(
         onClick = handleClick,
         onLongClick = handleLongClick
     )

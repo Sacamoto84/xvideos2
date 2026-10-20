@@ -30,7 +30,7 @@ fun AudienceChip(
             .clip(RoundedCornerShape(4.dp))
             .border(1.dp, borderColor, RoundedCornerShape(4.dp))
     }
-    val chipModifier = if (modifier == Modifier) chipBorderModifier else modifier.then(chipBorderModifier)
+    val chipModifier = modifier.then(chipBorderModifier)
 
     Text(
         text = item.title,

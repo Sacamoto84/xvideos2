@@ -38,7 +38,7 @@ fun AlbumInfoButtonShareAlbum(
             .border(1.dp, Theme.L.grey3, shape)
             .background(Theme.L.grey6)
     }
-    val boxModifier = if (modifier == Modifier) styledBase else modifier.then(styledBase)
+    val boxModifier = modifier.then(styledBase)
 
     Box(
         modifier = boxModifier

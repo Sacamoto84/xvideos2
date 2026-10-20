@@ -36,7 +36,7 @@ fun PageSelectorDialogContent(
         .background(Color(0xFF373737))
         .padding(16.dp)
     Box(
-        modifier = if (modifier == Modifier) dialogBaseModifier else modifier.then(dialogBaseModifier),
+        modifier = modifier.then(dialogBaseModifier),
         contentAlignment = Alignment.Center
     ) {
         KeyboardNumber(
