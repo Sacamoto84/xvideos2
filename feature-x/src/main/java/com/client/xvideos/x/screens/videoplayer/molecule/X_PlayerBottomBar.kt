@@ -133,6 +133,8 @@ fun X_PlayerBottomBar(
             onValueChangeFinished = onSeekBarValueChangeFinished,
             thumbRadius = 6.dp,
             trackHeight = 3.dp,
+            // В портрете (не на весь экран) бегунок виден всегда, на весь экран — пока тянут.
+            showThumbAlways = !isFullScreen,
         )
 
         // Общее время

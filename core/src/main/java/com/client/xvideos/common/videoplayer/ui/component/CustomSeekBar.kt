@@ -78,6 +78,13 @@ fun CustomSeekBar(
         label = "Ripple Animation"
     )
 
+    // Пока бегунок тянут, он крупнее: видно, что его взяли.
+    val thumbScale by animateFloatAsState(
+        targetValue = if (isDragging) DRAG_THUMB_SCALE else 1f,
+        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+        label = "Thumb Scale"
+    )
+
     LaunchedEffect(progress, maxProgress) {
         if (!isDragging) {
             localProgress = progress
@@ -128,7 +135,7 @@ fun CustomSeekBar(
                 .align(Alignment.CenterStart)
         ) {
             val trackWidthPx = size.width
-            val thumbPx = with(density) { thumbRadius.toPx() }
+            val thumbPx = with(density) { thumbRadius.toPx() } * thumbScale
             val progressX = calculateCustomSeekBarProgressX(localProgress, maxProgress, trackWidthPx)
 
             // Inactive track
@@ -167,6 +174,9 @@ fun CustomSeekBar(
         }
     }
 }
+
+/** Во сколько раз бегунок крупнее, пока его тянут. */
+private const val DRAG_THUMB_SCALE = 1.5f
 
 internal fun calculateCustomSeekBarProgressX(
     localProgress: Float,
