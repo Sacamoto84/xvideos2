@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.screens.tags.atom.TagGridCell
 import com.client.xvideos.x.screens.tags.atom.TagsStateMessage
+import com.client.xvideos.x.screens.tags.model.TagCellActions
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
@@ -44,7 +44,7 @@ import timber.log.Timber
 fun TagsPaginatedListScreen(
     pageIndex: Int,
     loadPage: suspend (Int) -> List<ItemsX>,
-    onOpenVideo: (ItemsX) -> Unit,
+    actions: TagCellActions,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     shownPerRow: MutableIntState = remember { mutableIntStateOf(0) },
@@ -149,7 +149,7 @@ fun TagsPaginatedListScreen(
                             key(cell.id) {
                                 TagGridCell(
                                     cell = cell,
-                                    onOpenVideo = onOpenVideo,
+                                    actions = actions,
                                     modifier = Modifier.weight(1f),
                                 )
                             }
@@ -198,6 +198,6 @@ private fun TagsPaginatedListScreenPreview() {
                 )
             )
         },
-        onOpenVideo = {}
+        actions = TagCellActions.None,
     )
 }

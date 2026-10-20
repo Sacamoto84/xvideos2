@@ -30,6 +30,7 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.tags.atom.TagsHeader
+import com.client.xvideos.x.screens.tags.model.TagCellActions
 import com.client.xvideos.x.screens.tags.molecule.TagsPaginatedListScreen
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.launch
@@ -63,8 +64,15 @@ class ScreenTags(val tag: String) : Screen {
         val loadPage: suspend (Int) -> List<ItemsX> = remember(vm) {
             { page -> vm.loadPage(page).items }
         }
-        val onOpenVideo: (ItemsX) -> Unit = remember(navigator) {
-            { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) }
+        val cellActions = remember(navigator, vm) {
+            TagCellActions(
+                onOpenVideo = { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) },
+                isFavorite = vm::isFavorite,
+                onFavoriteAdd = vm::addFavorite,
+                onFavoriteRemove = vm::removeFavorite,
+                onDownload = vm::download,
+                onSaveToGallery = vm::saveToGallery,
+            )
         }
 
         ScreenTagsContent(
@@ -78,7 +86,7 @@ class ScreenTags(val tag: String) : Screen {
             shownPerRow = vm.shownPerRow,
             loadPage = loadPage,
             cachedItems = vm::cachedItems,
-            onOpenVideo = onOpenVideo,
+            cellActions = cellActions,
             onPageChange = onPageChange
         )
     }
@@ -95,7 +103,7 @@ fun ScreenTagsContent(
     listPositions: MutableMap<Int, LazyListPosition>,
     shownPerRow: MutableMap<Int, MutableIntState>,
     loadPage: suspend (Int) -> List<ItemsX>,
-    onOpenVideo: (ItemsX) -> Unit,
+    cellActions: TagCellActions,
     onPageChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
     cachedItems: (Int) -> List<ItemsX>? = { null },
@@ -142,7 +150,7 @@ fun ScreenTagsContent(
                     pageIndex = pageIndex,
                     loadPage = loadPage,
                     initialItems = cachedItems(pageIndex),
-                    onOpenVideo = onOpenVideo,
+                    actions = cellActions,
                     listState = remember(pageIndex) { listPositions.getOrPut(pageIndex) { LazyListPosition() } }
                         .rememberState(),
                     shownPerRow = remember(pageIndex) { shownPerRow.getOrPut(pageIndex) { mutableIntStateOf(0) } },

@@ -10,6 +10,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.ui.scroll.LazyListPosition
+import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ModelScreenTag
 import com.client.xvideos.x.parcer.parserScreenTags
@@ -38,10 +39,12 @@ import timber.log.Timber
  * поддерживает пагинацию и форматирование имени тега для формирования корректного URL.
  *
  * @property tag Исходное имя тега.
+ * @property saved Избранное и загрузки X — для меню роликов выдачи.
  */
 @Stable
 class ScreenTagsViewModel @AssistedInject constructor(
     @Assisted val tag: String,
+    val saved: SavedX,
 ) : ScreenModel {
 
     /** Фабрика assisted injection для передачи параметра [tag]. */
@@ -97,6 +100,21 @@ class ScreenTagsViewModel @AssistedInject constructor(
             }
         }
     }
+
+    /** Ролик в избранном. */
+    fun isFavorite(id: Long): Boolean = saved.favorites.contains(id)
+
+    /** Добавить ролик в избранное. */
+    fun addFavorite(item: ItemsX) = saved.favorites.add(item)
+
+    /** Убрать ролик из избранного. */
+    fun removeFavorite(item: ItemsX) = saved.favorites.remove(item)
+
+    /** Скачать ролик в «Сохранённое». */
+    fun download(item: ItemsX) = saved.downloads.download(item)
+
+    /** Сохранить ролик в галерею устройства. */
+    fun saveToGallery(item: ItemsX) = saved.downloads.saveToGallery(item)
 
     /** Ролики уже загруженной страницы [index] или `null` — страницу надо грузить. */
     fun cachedItems(index: Int): List<ItemsX>? = pages[index]?.items
