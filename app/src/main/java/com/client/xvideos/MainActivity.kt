@@ -56,6 +56,7 @@ import com.client.xvideos.common.applock.WindowPrivacy
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
+import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.ui.statusbar.LocalStatusBarRequests
@@ -200,6 +201,12 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     override fun onStop() {
         super.onStop()
         AppLockSession.removeOnLockedListener(onSessionLocked)
+    }
+
+    // Возврат системной блокировки поворота при уходе из приложения, см. RotationLockKeeper.
+    override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
+        super.onTopResumedActivityChanged(isTopResumedActivity)
+        RotationLockKeeper.onTopResumedActivityChanged(this, isTopResumedActivity)
     }
 
     override fun onResume() {

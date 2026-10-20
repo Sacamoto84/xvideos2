@@ -2,7 +2,7 @@ package com.client.xvideos.common.rotation
 
 /**
  * Системная блокировка поворота экрана, которую читает и возвращает
- * [RotationLockLifecycleObserver]. Интерфейс отделяет логику от `android.provider.Settings`,
+ * [RotationLockKeeper]. Интерфейс отделяет логику от `android.provider.Settings`,
  * чтобы её можно было проверить юнит-тестом.
  */
 interface RotationSettings {

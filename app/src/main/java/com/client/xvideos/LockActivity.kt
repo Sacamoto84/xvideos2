@@ -27,6 +27,7 @@ import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.applock.WindowPrivacy
+import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.ui.theme.XvideosTheme
 import timber.log.Timber
@@ -112,6 +113,12 @@ class LockActivity : ComponentActivity() {
         if (finishIfUnlocked()) return
         secretLost = AppLockRepository.isSecretLost(this)
         applyPrivacy()
+    }
+
+    // Возврат системной блокировки поворота при уходе из приложения, см. RotationLockKeeper.
+    override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
+        super.onTopResumedActivityChanged(isTopResumedActivity)
+        RotationLockKeeper.onTopResumedActivityChanged(this, isTopResumedActivity)
     }
 
     /**

@@ -1,12 +1,10 @@
 package com.client.xvideos.common.rotation
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class RotationLockLifecycleObserverTest {
+class RotationLockKeeperTest {
 
     private class FakeRotationSettings(
         var autoRotate: Boolean,
@@ -25,42 +23,37 @@ class RotationLockLifecycleObserverTest {
         }
     }
 
-    private val owner = object : LifecycleOwner {
-        override val lifecycle: Lifecycle
-            get() = throw UnsupportedOperationException("Not needed for observer callbacks")
-    }
-
     @Test
-    fun `lock enabled at start and lifted during use is restored on stop`() {
+    fun `lock enabled on top and lifted during use is restored on leaving top`() {
         val settings = FakeRotationSettings(autoRotate = false, rotation = 0)
-        val observer = RotationLockLifecycleObserver(settings)
+        val keeper = RotationLockKeeper(settings)
 
-        observer.onStart(owner)
+        keeper.onTop()
         settings.autoRotate = true
         settings.rotation = 1
-        observer.onStop(owner)
+        keeper.onLeftTop()
 
         assertEquals(listOf(0), settings.locks)
     }
 
     @Test
-    fun `lock still enabled on stop is left alone`() {
+    fun `lock still enabled on leaving top is left alone`() {
         val settings = FakeRotationSettings(autoRotate = false, rotation = 0)
-        val observer = RotationLockLifecycleObserver(settings)
+        val keeper = RotationLockKeeper(settings)
 
-        observer.onStart(owner)
-        observer.onStop(owner)
+        keeper.onTop()
+        keeper.onLeftTop()
 
         assertTrue(settings.locks.isEmpty())
     }
 
     @Test
-    fun `auto-rotate on at start stays on`() {
+    fun `auto-rotate on when app got on top stays on`() {
         val settings = FakeRotationSettings(autoRotate = true)
-        val observer = RotationLockLifecycleObserver(settings)
+        val keeper = RotationLockKeeper(settings)
 
-        observer.onStart(owner)
-        observer.onStop(owner)
+        keeper.onTop()
+        keeper.onLeftTop()
 
         assertTrue(settings.locks.isEmpty())
     }
@@ -68,36 +61,51 @@ class RotationLockLifecycleObserverTest {
     @Test
     fun `without write permission nothing is written`() {
         val settings = FakeRotationSettings(autoRotate = false, writable = false)
-        val observer = RotationLockLifecycleObserver(settings)
+        val keeper = RotationLockKeeper(settings)
 
-        observer.onStart(owner)
+        keeper.onTop()
         settings.autoRotate = true
-        observer.onStop(owner)
+        keeper.onLeftTop()
 
         assertTrue(settings.locks.isEmpty())
     }
 
     @Test
-    fun `each foreground session reads the lock again`() {
+    fun `each time on top the lock is read again`() {
         val settings = FakeRotationSettings(autoRotate = false)
-        val observer = RotationLockLifecycleObserver(settings)
+        val keeper = RotationLockKeeper(settings)
 
-        observer.onStart(owner)
-        observer.onStop(owner)
-        // Между сессиями блокировку сняли вне приложения: следующая сессия её не возвращает.
+        keeper.onTop()
+        keeper.onLeftTop()
+        // Пока приложение было не наверху, блокировку сняли: её не возвращают.
         settings.autoRotate = true
-        observer.onStart(owner)
-        observer.onStop(owner)
+        keeper.onTop()
+        keeper.onLeftTop()
 
         assertTrue(settings.locks.isEmpty())
     }
 
     @Test
-    fun `stop without start does nothing`() {
-        val settings = FakeRotationSettings(autoRotate = true)
-        val observer = RotationLockLifecycleObserver(settings)
+    fun `switch between own activities restores and remembers again`() {
+        val settings = FakeRotationSettings(autoRotate = false, rotation = 0)
+        val keeper = RotationLockKeeper(settings)
 
-        observer.onStop(owner)
+        keeper.onTop()
+        settings.autoRotate = true
+        // Прежняя верхняя Activity получает false, новая — true.
+        keeper.onLeftTop()
+        keeper.onTop()
+        keeper.onLeftTop()
+
+        assertEquals(listOf(0), settings.locks)
+    }
+
+    @Test
+    fun `leaving top without being on top does nothing`() {
+        val settings = FakeRotationSettings(autoRotate = true)
+        val keeper = RotationLockKeeper(settings)
+
+        keeper.onLeftTop()
 
         assertTrue(settings.locks.isEmpty())
     }

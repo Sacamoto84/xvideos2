@@ -9,6 +9,7 @@ import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -123,6 +124,12 @@ class SplashActivity : ComponentActivity() {
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()
         }
+    }
+
+    // Возврат системной блокировки поворота при уходе из приложения, см. RotationLockKeeper.
+    override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
+        super.onTopResumedActivityChanged(isTopResumedActivity)
+        RotationLockKeeper.onTopResumedActivityChanged(this, isTopResumedActivity)
     }
 
     /**

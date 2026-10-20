@@ -13,7 +13,6 @@ import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pSendPreparers
-import com.client.xvideos.common.rotation.RotationLockLifecycleObserver
 import com.client.xvideos.common.applock.AppLockLifecycleObserver
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
@@ -119,7 +118,6 @@ class App : Application(), SingletonImageLoader.Factory {
         // учётных данных L и перенёс туда старые открытые значения.
         Settings.init(prefs, this)
         AppLockLifecycleObserver.install(this)
-        RotationLockLifecycleObserver.install(this)
 
         // P2P знает про разделы только отсюда: базовый слой умеет передавать
         // байты, но не знает, куда их класть и как скачать несохранённый item.

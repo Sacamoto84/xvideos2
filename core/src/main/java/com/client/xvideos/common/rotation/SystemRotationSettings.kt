@@ -6,7 +6,9 @@ import android.content.Intent
 import android.provider.Settings
 import android.view.Surface
 import androidx.core.net.toUri
+import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * [RotationSettings] поверх системных настроек `ACCELEROMETER_ROTATION` и `USER_ROTATION`.
@@ -15,7 +17,9 @@ import timber.log.Timber
  * настроек» (`WRITE_SETTINGS`), которое пользователь включает сам на системном экране
  * ([openPermissionScreen]).
  */
-class SystemRotationSettings(private val context: Context) : RotationSettings {
+class SystemRotationSettings @Inject constructor(
+    @ApplicationContext private val context: Context,
+) : RotationSettings {
 
     override fun isAutoRotateOn(): Boolean =
         Settings.System.getInt(context.contentResolver, Settings.System.ACCELEROMETER_ROTATION, 0) == 1
