@@ -38,8 +38,8 @@ fun L_ExplorerBottomBar(
     onTabChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val renderOverlay0: @Composable () -> Unit = remember(columnGifsTab, screenType) {
-        { TabBarPoints(columnGifsTab, screenType == 0) }
+    val renderOverlay: @Composable (Int) -> Unit = remember(columnGifsTab, screenType) {
+        { index -> if (index == 0) TabBarPoints(columnGifsTab, screenType == 0) }
     }
 
     Column(modifier = modifier) {
@@ -49,7 +49,7 @@ fun L_ExplorerBottomBar(
             titlesIcon = EXPLORER_ICONS,
             value = screenType,
             onChangeState = onTabChange,
-            overlay0 = renderOverlay0,
+            overlay = renderOverlay,
             tags = EXPLORER_TAGS
         )
     }

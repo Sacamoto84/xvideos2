@@ -35,11 +35,13 @@ fun SavedBottomBar(
     onTabChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val overlay0Content: @Composable () -> Unit = remember(overlay0, currentPage) {
-        { TabBarPoints(overlay0, currentPage == 0) }
-    }
-    val overlay4Content: @Composable () -> Unit = remember(overlay4, currentPage) {
-        { TabBarPoints(overlay4, currentPage == 4) }
+    val renderOverlay: @Composable (Int) -> Unit = remember(overlay0, overlay4, currentPage) {
+        { index ->
+            when (index) {
+                0 -> TabBarPoints(overlay0, currentPage == 0)
+                4 -> TabBarPoints(overlay4, currentPage == 4)
+            }
+        }
     }
 
     Column(modifier = modifier) {
@@ -49,8 +51,7 @@ fun SavedBottomBar(
             containerColor = Theme.tabLevel1,
             titlesIcon = SAVED_TAB_ICONS,
             onChangeState = onTabChange,
-            overlay0 = overlay0Content,
-            overlay4 = overlay4Content,
+            overlay = renderOverlay,
         )
     }
 }

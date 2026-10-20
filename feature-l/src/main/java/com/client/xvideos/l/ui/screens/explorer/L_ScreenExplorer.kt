@@ -94,7 +94,10 @@ class L_ScreenExplorer : Screen {
         L_ScreenExplorerContent(
             screenType = vm.screenType,
             percentDownload = percentDownload,
-            // Точки на вкладке — столько колонок, сколько реально у сетки.
+            // Точки на вкладке — выбранное число колонок (как у сетки на телефоне).
+            // На широком окне у сетки на одну-две колонки больше
+            // (`adaptiveUserGridColumns`), а точки по-прежнему показывают выбор —
+            // так задумано спекой складных.
             columnGifsTab = albumListColumns(columnGifsTab),
             onTabChange = onTabChange
         )

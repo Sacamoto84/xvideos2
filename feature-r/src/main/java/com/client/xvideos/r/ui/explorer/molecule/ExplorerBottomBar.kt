@@ -29,8 +29,8 @@ fun ExplorerBottomBar(
     onTabChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val renderOverlay0: @Composable () -> Unit = remember(overlay0, screenType) {
-        { TabBarPoints(overlay0, screenType == 0) }
+    val renderOverlay: @Composable (Int) -> Unit = remember(overlay0, screenType) {
+        { index -> if (index == 0) TabBarPoints(overlay0, screenType == 0) }
     }
 
     Box(modifier = modifier) {
@@ -39,7 +39,7 @@ fun ExplorerBottomBar(
             titlesIcon = EXPLORER_TAB_ICONS,
             value = screenType,
             onChangeState = onTabChange,
-            overlay0 = renderOverlay0,
+            overlay = renderOverlay,
         )
     }
 }

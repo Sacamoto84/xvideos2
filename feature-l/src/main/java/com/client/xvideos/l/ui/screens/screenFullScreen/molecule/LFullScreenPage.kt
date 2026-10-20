@@ -26,6 +26,7 @@ import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.lAnimationVideoUrl
 import com.client.xvideos.l.model.lFullScreenImageUrls
 import com.client.xvideos.l.model.lPreviewImageUrl
+import com.client.xvideos.l.model.safeAspectRatio
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
@@ -99,12 +100,8 @@ fun LFullScreenPage(
         modifier = Modifier.fillMaxSize().clipToBounds(),
         contentAlignment = Alignment.Center
     ) {
-    val pageRatio = if (pageItem.width > 0 && pageItem.height > 0) {
-        if (rotate) pageItem.height.toFloat() / pageItem.width
-        else pageItem.width.toFloat() / pageItem.height
-    } else {
-        1f
-    }
+    // Повёрнутый на 90° кадр меняет стороны местами.
+    val pageRatio = pageItem.safeAspectRatio().let { if (rotate) 1f / it else it }
     // Без fillMaxSize: при жёстких ограничениях aspectRatio брал полную ширину,
     // и портретный кадр на квадратном или альбомном окне уходил за верх и низ.
     Box(

@@ -31,6 +31,7 @@ import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.isLVideoFileUrl
 import com.client.xvideos.l.model.lAnimationVideoUrl
 import com.client.xvideos.l.model.lPreviewImageUrl
+import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.atom.AnimatedVideoPlaceholder
 
 @Composable
@@ -45,11 +46,7 @@ fun LPictureGridItem(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        val aspect = if (item.width > 0 && item.height > 0) {
-            item.width.toFloat() / item.height
-        } else {
-            1f
-        }
+        val aspect = item.safeAspectRatio()
 
         val previewUrl = item.lPreviewImageUrl(thumbnailsSize)
         val videoUrl = item.lAnimationVideoUrl()

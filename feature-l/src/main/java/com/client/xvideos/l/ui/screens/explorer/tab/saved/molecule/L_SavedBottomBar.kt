@@ -35,17 +35,13 @@ fun L_SavedBottomBar(
     onTabChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isPage0 = currentPage == 0
-    val isPage2 = currentPage == 2
-    val isPage4 = currentPage == 4
-    val overlay0Composable: @Composable () -> Unit = remember(columnLikes, isPage0) {
-        { TabBarPoints(columnLikes, isPage0) }
-    }
-    val overlay2Composable: @Composable () -> Unit = remember(columnCollection, isPage2) {
-        { TabBarPoints(columnCollection, isPage2) }
-    }
-    val overlay4Composable: @Composable () -> Unit = remember(columnLikes, isPage4) {
-        { TabBarPoints(columnLikes, isPage4) }
+    val renderOverlay: @Composable (Int) -> Unit = remember(columnLikes, columnCollection, currentPage) {
+        { index ->
+            when (index) {
+                0, 4 -> TabBarPoints(columnLikes, currentPage == index)
+                2 -> TabBarPoints(columnCollection, currentPage == index)
+            }
+        }
     }
 
     // Без аккаунта L серверных вкладок нет: показываются только первые tabCount.
@@ -58,9 +54,7 @@ fun L_SavedBottomBar(
             containerColor = Theme.tabLevel1,
             titlesIcon = icons,
             onChangeState = onTabChange,
-            overlay0 = overlay0Composable,
-            overlay2 = overlay2Composable,
-            overlay4 = overlay4Composable
+            overlay = renderOverlay
         )
     }
 }

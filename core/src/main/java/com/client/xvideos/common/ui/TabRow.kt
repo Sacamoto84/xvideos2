@@ -50,6 +50,8 @@ import kotlinx.collections.immutable.toPersistentList
  * [ImmutableList] в сигнатуре не косметика: обычный `List` для Compose
  * нестабилен, и вызов перекомпоновывался чаще, чем нужно.
  *
+ * @param overlay значок поверх иконки вкладки по её номеру (точки числа
+ *   колонок). Один параметр вместо прежних шести слотов `overlay0`…`overlay5`.
  * @param tags тестовые теги вкладок. Пустой список — теги не навешиваются,
  *   поведение ровно как у прежней L-версии.
  */
@@ -59,12 +61,7 @@ fun TabRow(
     onChangeState: (Int) -> Unit,
     value: Int,
     containerColor: Color = Theme.background,
-    overlay0: @Composable () -> Unit = {},
-    overlay1: @Composable () -> Unit = {},
-    overlay2: @Composable () -> Unit = {},
-    overlay3: @Composable () -> Unit = {},
-    overlay4: @Composable () -> Unit = {},
-    overlay5: @Composable () -> Unit = {},
+    overlay: @Composable (index: Int) -> Unit = {},
     tags: ImmutableList<String> = persistentListOf()
 ) {
 
@@ -125,14 +122,7 @@ fun TabRow(
                                         .align(Alignment.TopEnd)
                                         .offset(x = 26.dp, y = (-8).dp)
                                 ) {
-                                    when (index) {
-                                        0 -> overlay0.invoke()
-                                        1 -> overlay1.invoke()
-                                        2 -> overlay2.invoke()
-                                        3 -> overlay3.invoke()
-                                        4 -> overlay4.invoke()
-                                        5 -> overlay5.invoke()
-                                    }
+                                    overlay(index)
                                 }
                             }
                         }
