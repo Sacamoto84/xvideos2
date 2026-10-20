@@ -34,6 +34,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
@@ -204,15 +208,24 @@ fun VideoPlayerContentView(
         }
     }
 
-    // Периодическое сохранение прогресса во время активного воспроизведения
-    LaunchedEffect(host.isPaused) {
+    // Периодическое сохранение прогресса во время воспроизведения — только пока экран
+    // запущен. `isPaused` — пауза с экрана, уход в фон её не ставит: раньше цикл и в
+    // свёрнутом приложении каждые 3 с переписывал ту же запись истории на диск
+    // (проход 204, T1). На уходе прогресс сохраняется один раз (`ON_STOP`).
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(host.isPaused, lifecycleOwner) {
         if (!host.isPaused) {
-            onSaveProgress(host.currentTime, host.totalTime)
-            while (isActive) {
-                delay(3000L)
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 onSaveProgress(host.currentTime, host.totalTime)
+                while (isActive) {
+                    delay(3000L)
+                    onSaveProgress(host.currentTime, host.totalTime)
+                }
             }
         }
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        onSaveProgress(host.currentTime, host.totalTime)
     }
 
     // Финальное сохранение текущей позиции при закрытии экрана
