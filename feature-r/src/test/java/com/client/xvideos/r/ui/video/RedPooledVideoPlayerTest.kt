@@ -1,11 +1,19 @@
 package com.client.xvideos.r.ui.video
 
 import androidx.media3.common.C
+import androidx.media3.common.Player
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Proxy
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class RedPooledVideoPlayerTest {
 
     @Test
@@ -80,5 +88,82 @@ class RedPooledVideoPlayerTest {
         assertFalse(com.client.xvideos.common.videoplayer.ui.isZoomActive(1.01f))
         assertTrue(com.client.xvideos.common.videoplayer.ui.isZoomActive(1.03f))
         assertTrue(com.client.xvideos.common.videoplayer.ui.isZoomActive(2.0f))
+    }
+
+    /** Плеер, у которого есть только playWhenReady и слушатели. */
+    private class FakePlayer(var playWhenReady: Boolean) {
+        val listeners = mutableListOf<Player.Listener>()
+
+        val player: Player = Proxy.newProxyInstance(
+            Player::class.java.classLoader,
+            arrayOf(Player::class.java),
+            InvocationHandler { _, method, args ->
+                when (method.name) {
+                    "getPlayWhenReady" -> playWhenReady
+                    "addListener" -> listeners.add(args[0] as Player.Listener).let { null }
+                    "removeListener" -> listeners.remove(args[0] as Player.Listener).let { null }
+                    "toString" -> "FakePlayer"
+                    "hashCode" -> 1
+                    "equals" -> false
+                    else -> when (method.returnType) {
+                        Boolean::class.javaPrimitiveType -> false
+                        Int::class.javaPrimitiveType -> 0
+                        Long::class.javaPrimitiveType -> 0L
+                        Float::class.javaPrimitiveType -> 0f
+                        else -> null
+                    }
+                }
+            }
+        ) as Player
+
+        fun changePlayWhenReady(value: Boolean) {
+            playWhenReady = value
+            listeners.toList().forEach {
+                it.onPlayWhenReadyChanged(value, Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
+            }
+        }
+    }
+
+    @Test
+    fun `awaitPlayWhenReady returns at once when the player already plays`() = runTest {
+        val fake = FakePlayer(playWhenReady = true)
+
+        fake.player.awaitPlayWhenReady()
+
+        assertTrue(fake.listeners.isEmpty())
+    }
+
+    @Test
+    fun `awaitPlayWhenReady waits until playWhenReady is set again and removes its listener`() = runTest {
+        val fake = FakePlayer(playWhenReady = false)
+
+        // Ушли в фон: LifecycleStartEffect снял playWhenReady (проход 203, C1)
+        val wait = launch { fake.player.awaitPlayWhenReady() }
+        runCurrent()
+        assertTrue(wait.isActive)
+        assertEquals(1, fake.listeners.size)
+
+        fake.changePlayWhenReady(false)
+        runCurrent()
+        assertTrue(wait.isActive)
+
+        // Вернулись: ON_START снова поставил playWhenReady
+        fake.changePlayWhenReady(true)
+        runCurrent()
+        assertTrue(wait.isCompleted)
+        assertTrue(fake.listeners.isEmpty())
+    }
+
+    @Test
+    fun `cancelled awaitPlayWhenReady removes its listener`() = runTest {
+        val fake = FakePlayer(playWhenReady = false)
+
+        val wait = launch { fake.player.awaitPlayWhenReady() }
+        runCurrent()
+        wait.cancel()
+        runCurrent()
+
+        assertTrue(wait.isCancelled)
+        assertTrue(fake.listeners.isEmpty())
     }
 }

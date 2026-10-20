@@ -46,8 +46,10 @@ import com.client.xvideos.common.videoplayer.ui.VideoZoomHud
 import com.client.xvideos.common.videoplayer.ui.isZoomActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import kotlin.coroutines.resume
 import kotlin.math.absoluteValue
 import com.client.xvideos.common.videoplayer.util.rotationToApply
 
@@ -70,6 +72,33 @@ internal fun calculateDragDeltaMs(seekDragAmount: Float): Long {
 
 internal fun isValidABRange(enableAB: Boolean, timeA: Float, timeB: Float): Boolean {
     return enableAB && timeA.isFinite() && timeB.isFinite() && timeA >= 0f && timeB > timeA
+}
+
+/**
+ * Ждёт, пока плееру снова поставят `playWhenReady`, без опроса.
+ *
+ * Снятый `playWhenReady` — не всегда пауза пользователя: его снимают уход в фон
+ * (`LifecycleStartEffect`) и замок, а при возврате ставят обратно, не трогая
+ * ключей цикла времени. Цикл, который на этом выходил, больше не запускался:
+ * время стояло, петля A-B не работала (проход 203, C1).
+ *
+ * Слушатель снимается в `finally`, то есть на потоке корутины, а не в
+ * `invokeOnCancellation`: плеер принимает вызовы только со своего потока.
+ */
+internal suspend fun Player.awaitPlayWhenReady() {
+    if (playWhenReady) return
+    var listener: Player.Listener? = null
+    try {
+        suspendCancellableCoroutine { continuation ->
+            listener = object : Player.Listener {
+                override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                    if (playWhenReady && continuation.isActive) continuation.resume(Unit)
+                }
+            }.also(::addListener)
+        }
+    } finally {
+        listener?.let(::removeListener)
+    }
 }
 
 private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long =
@@ -208,9 +237,9 @@ fun RedPooledVideoPlayer(
 
     // Время/длительность и петля A-B. Шаг 50 мс — как в прежнем CMPPlayer2,
     // чтобы поведение полосы времени и A-B не изменилось.
-    // mediaItem в ключах — по той же причине, что у эффекта playWhenReady выше:
-    // цикл выходит, увидев снятый playWhenReady, и на том же экземпляре плеера
-    // сам уже не начался бы.
+    // mediaItem в ключах: ролик под страницей может смениться на том же экземпляре
+    // плеера (см. эффект playWhenReady выше), и цикл начинается заново — первым
+    // проходом отдаёт время уже нового ролика.
     LaunchedEffect(player, mediaItem, isCurrentPage, enableAB, timeA, timeB, play) {
         val exo = player ?: return@LaunchedEffect
         // Нетекущие страницы не играют (playWhenReady = play && isCurrentPage), время на них
@@ -235,10 +264,12 @@ fun RedPooledVideoPlayer(
             if (isValidABRange(enableAB, timeA, timeB) && position >= timeB) {
                 exo.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
             }
-            // Останавливаем цикл при паузе: `play` — состояние Compose-параметра,
-            // `exo.playWhenReady` — фактическое состояние плеера (например, при паузе через PlayerControls).
-            if (!play || !exo.playWhenReady) break
-            delay(50)
+            // Выходим только по `play` — паузе с экрана: её снятие меняет ключ, и цикл
+            // запустится заново. Снятый `playWhenReady` (уход в фон, замок) цикл
+            // пережидает без опроса: при возврате его ставят обратно, ключи не
+            // меняются, и вышедший цикл сам бы уже не начался (проход 203, C1).
+            if (!play) break
+            if (exo.playWhenReady) delay(50) else exo.awaitPlayWhenReady()
         }
     }
 
