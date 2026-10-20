@@ -165,9 +165,6 @@ fun ScreenXHistoryContent(
     val onToggleSelect: (Long) -> Unit = remember(selectedIds) {
         { id -> if (id in selectedIds) selectedIds.remove(id) else selectedIds.add(id) }
     }
-    val onStartSelection: (Long) -> Unit = remember(selectedIds) {
-        { id -> isSelectionMode = true; if (id !in selectedIds) selectedIds.add(id) }
-    }
     val onDeleteRequest: (ItemsX) -> Unit = remember { { item -> pendingDelete = item } }
 
     val actions = remember(onToggleFavorite, onDeleteRequest, onDownload, onPlayLocal, onOpenVideo, onSaveToGallery) {
@@ -213,7 +210,6 @@ fun ScreenXHistoryContent(
                 posterUrlOf = posterUrlOf,
                 actions = actions,
                 onToggleSelect = onToggleSelect,
-                onStartSelection = onStartSelection,
                 modifier = Modifier.padding(padding),
             )
         }

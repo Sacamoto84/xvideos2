@@ -28,7 +28,6 @@ fun HistoryGrid(
     posterUrlOf: (ItemsX) -> String,
     actions: HistoryRowActions,
     onToggleSelect: (Long) -> Unit,
-    onStartSelection: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -54,7 +53,6 @@ fun HistoryGrid(
                 isSelectionMode = isSelectionMode,
                 isSelected = isSelected,
                 onToggleSelect = onToggleSelect,
-                onStartSelection = onStartSelection,
                 actions = actions,
             )
         }
@@ -83,6 +81,5 @@ private fun HistoryGridPreview() {
             onSaveToGallery = {},
         ),
         onToggleSelect = {},
-        onStartSelection = {},
     )
 }

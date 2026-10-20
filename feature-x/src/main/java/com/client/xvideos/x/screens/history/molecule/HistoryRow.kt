@@ -40,18 +40,16 @@ fun HistoryRow(
     isSelectionMode: Boolean,
     isSelected: Boolean,
     onToggleSelect: (Long) -> Unit,
-    onStartSelection: (Long) -> Unit,
     actions: HistoryRowActions,
     modifier: Modifier = Modifier,
 ) {
     val item = historyItem.item
 
-    val selectionState = remember(isSelectionMode, isSelected, item.id, onToggleSelect, onStartSelection) {
+    val selectionState = remember(isSelectionMode, isSelected, item.id, onToggleSelect) {
         HistorySelectionState(
             isSelectionMode = isSelectionMode,
             isSelected = isSelected,
             onToggleSelect = { onToggleSelect(item.id) },
-            onStartSelection = { onStartSelection(item.id) },
         )
     }
     val handleToggleFavorite = remember(item, actions.onToggleFavorite) { { actions.onToggleFavorite(item) } }
@@ -83,7 +81,6 @@ fun HistoryRow(
             posterUrl = posterUrl,
             isSelectionMode = selectionState.isSelectionMode,
             onToggleSelect = selectionState.onToggleSelect,
-            onStartSelection = selectionState.onStartSelection,
             onPlayLocal = handlePlayLocal,
             onOpenVideo = handleOpenVideo,
         )
@@ -152,7 +149,6 @@ private fun HistoryRowPreview() {
         isSelectionMode = false,
         isSelected = false,
         onToggleSelect = {},
-        onStartSelection = {},
         actions = HistoryRowActions(
             onToggleFavorite = {},
             onDelete = {},

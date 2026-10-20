@@ -7,5 +7,4 @@ data class HistorySelectionState(
     val isSelectionMode: Boolean = false,
     val isSelected: Boolean = false,
     val onToggleSelect: () -> Unit = {},
-    val onStartSelection: () -> Unit = {},
 )
