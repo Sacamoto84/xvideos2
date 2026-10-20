@@ -136,7 +136,8 @@ fun RedPooledVideoPlayer(
     var isBuffering by remember(player) { mutableStateOf(true) }
     LaunchedEffect(isBuffering) { onBufferingChanged(isBuffering) }
 
-    val isAppLockActive = LocalAppLockActive.current
+    val appLockActive = LocalAppLockActive.current
+    val isAppLockActive = appLockActive.value
 
     // Именно LifecycleStartEffect, а не LaunchedEffect: прежний путь ленты вешал
     // `LifecycleEventObserver` (см. `ExoPlayerLifecycle.rememberExoPlayerWithLifecycle`)
@@ -147,8 +148,12 @@ fun RedPooledVideoPlayer(
     // (заблокированный уходит из ленты). Пул при этом возвращает тот же экземпляр
     // плеера, а `PlayerPool.yield()` перед тем снимает с него playWhenReady. С
     // ключом только по `player` эффект не перезапускался, и новый ролик не стартовал.
+    //
+    // Замок — на момент ON_START (`appLockActive.value`), а не из прошлой композиции:
+    // MainActivity закрывает сеанс в onStart, и значение композиции ещё старое —
+    // лента под экраном замка могла заиграть со звуком (проход 201, S1).
     LifecycleStartEffect(player, mediaItem, play, isCurrentPage, isAppLockActive) {
-        player?.playWhenReady = play && isCurrentPage && !isAppLockActive
+        player?.playWhenReady = play && isCurrentPage && !appLockActive.value
         onStopOrDispose { player?.playWhenReady = false }
     }
 

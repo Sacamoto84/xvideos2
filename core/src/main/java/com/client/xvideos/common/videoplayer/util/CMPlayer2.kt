@@ -90,7 +90,7 @@ fun CMPPlayer2(
         rotationEffectsApplied = true
     }
 
-    val isAppLockActive = LocalAppLockActive.current
+    val isAppLockActive = LocalAppLockActive.current.value
 
     // Раньше эти строки жили в `update` у AndroidView. Теперь это обычные
     // эффекты: применяются при изменении своего входа, а не на каждый layout.

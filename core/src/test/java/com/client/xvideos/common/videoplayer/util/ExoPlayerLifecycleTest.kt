@@ -106,6 +106,44 @@ class ExoPlayerLifecycleTest {
     }
 
     @Test
+    fun `onResume under app lock does not start playback`() {
+        val holder = FakeExoPlayerHolder()
+        holder.playWhenReady = true
+
+        var isAppLocked = false
+        val observer = getExoPlayerLifecycleObserver(
+            exoPlayer = holder.player,
+            isPause = { false },
+            isAppLocked = { isAppLocked },
+        )
+
+        observer.onStateChanged(fakeLifecycleOwner, Lifecycle.Event.ON_STOP)
+        // Сеанс закрыли в onStart вернувшейся Activity — до ON_RESUME (проход 201, S1)
+        isAppLocked = true
+        observer.onStateChanged(fakeLifecycleOwner, Lifecycle.Event.ON_RESUME)
+        assertFalse(holder.playWhenReady)
+    }
+
+    @Test
+    fun `onResume after unlock restores playback`() {
+        val holder = FakeExoPlayerHolder()
+        holder.playWhenReady = true
+
+        var isAppLocked = true
+        val observer = getExoPlayerLifecycleObserver(
+            exoPlayer = holder.player,
+            isPause = { false },
+            isAppLocked = { isAppLocked },
+        )
+
+        // Экран замка накрыл Activity, код введён, Activity вернулась наверх
+        observer.onStateChanged(fakeLifecycleOwner, Lifecycle.Event.ON_PAUSE)
+        isAppLocked = false
+        observer.onStateChanged(fakeLifecycleOwner, Lifecycle.Event.ON_RESUME)
+        assertTrue(holder.playWhenReady)
+    }
+
+    @Test
     fun `multiple resumes without prior pause do not force playWhenReady`() {
         val holder = FakeExoPlayerHolder()
         holder.playWhenReady = false

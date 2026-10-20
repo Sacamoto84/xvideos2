@@ -17,6 +17,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerError
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSource
@@ -127,11 +128,14 @@ fun rememberExoPlayerWithLifecycle(
     }
 
     val currentIsPause by rememberUpdatedState(isPause)
+    // Объект состояния замка, а не значение: ON_RESUME читает его в момент события.
+    val currentAppLockActive by rememberUpdatedState(LocalAppLockActive.current)
 
     DisposableEffect(lifecycleOwner, exoPlayer) {
         val lifecycleObserver = getExoPlayerLifecycleObserver(
             exoPlayer = exoPlayer,
             isPause = { currentIsPause },
+            isAppLocked = { currentAppLockActive.value },
         )
         lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
         onDispose { lifecycleOwner.lifecycle.removeObserver(lifecycleObserver) }

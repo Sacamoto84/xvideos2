@@ -36,6 +36,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -259,6 +260,9 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
             val blurRecentTasks by Settings.blur_recent_tasks.field.collectAsStateWithLifecycle()
             val shouldBlur = (isAppMinimized && blurRecentTasks) || isAppLocked
+            // Плеерам — объектом состояния: обработчики их жизненного цикла читают его в
+            // момент события, а не ждут перекомпоновки после onStart (проход 201, S1).
+            val appLockActive = remember { derivedStateOf { isAppLocked || (isAppMinimized && blurRecentTasks) } }
 
             // SECURITY: динамическая аппаратная защита превью в Recent Apps через FLAG_SECURE
             val appLockEnabled by Settings.app_lock_enabled.field.collectAsStateWithLifecycle()
@@ -323,7 +327,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                             ) {
                                 CompositionLocalProvider(
                                     LocalStatusBarRequests provides statusBarRequests,
-                                    LocalAppLockActive provides (isAppLocked || (isAppMinimized && blurRecentTasks)),
+                                    LocalAppLockActive provides appLockActive,
                                 ) {
                                     ScreenRoot.Content()
                                 }
