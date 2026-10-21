@@ -11,7 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.net.SiteMaintenanceReporter
-import com.client.xvideos.common.net.isMaintenancePage
+import com.client.xvideos.common.net.isMaintenanceStatus
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.builtins.serializer
@@ -140,6 +140,25 @@ private suspend fun loadHtmlInWebView(url: String): String =
                 }
             }
 
+            // Сайт на техобслуживании отвечает 503 своей страницей. Ошибку HTTP
+            // WebView шлёт сюда, а не в onReceivedError, и без этого страница
+            // техобслуживания уходила вызывающему как удачная: поиск X писал
+            // «ничего не найдено» без «Повторить» (проход 210, C1).
+            override fun onReceivedHttpError(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?,
+                errorResponse: android.webkit.WebResourceResponse?
+            ) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                val statusCode = errorResponse?.statusCode ?: return
+                if (isMainFrameMaintenance(request?.isForMainFrame == true, statusCode)) {
+                    Timber.w("readHtmlFromURLWebView: main frame HTTP $statusCode for ${request?.url?.path}")
+                    SiteMaintenanceReporter.report("X")
+                    if (continuation.isActive) continuation.resume("")
+                    destroyWebView()
+                }
+            }
+
             override fun onPageFinished(view: WebView?, finishedUrl: String?) {
                 super.onPageFinished(view, finishedUrl)
 
@@ -157,8 +176,6 @@ private suspend fun loadHtmlInWebView(url: String): String =
                     Timber.d("readHtmlFromURL end %s", url.pathForLog())
 
                     val result = decodeJsStringResult(html)
-                    // Кода ответа WebView не отдаёт — техобслуживание видно по самой странице.
-                    if (isMaintenancePage(result)) SiteMaintenanceReporter.report("X")
                     if (continuation.isActive) continuation.resume(result)
                     destroyWebView()
                 }
@@ -167,6 +184,13 @@ private suspend fun loadHtmlInWebView(url: String): String =
         webView.loadUrl(url)
         continuation.invokeOnCancellation { destroyWebView() }
     }
+
+/**
+ * Сайт на техобслуживании: ответ 503 самой страницы. Картинка или скрипт с 503
+ * загрузку страницы не обрывают.
+ */
+internal fun isMainFrameMaintenance(isForMainFrame: Boolean, statusCode: Int): Boolean =
+    isForMainFrame && isMaintenanceStatus(statusCode)
 
 /**
  * Результат `evaluateJavascript` — JSON-литерал строки. Разбираем его парсером

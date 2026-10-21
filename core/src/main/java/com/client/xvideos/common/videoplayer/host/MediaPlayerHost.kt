@@ -35,6 +35,11 @@ class MediaPlayerHost(
     var url by mutableStateOf(mediaUrl)
     var speed by mutableStateOf(initialSpeed)
     var videoFitMode by mutableStateOf(initialVideoFitMode)
+    /**
+     * Перемотка на ходу, пока палец ведёт ползунок (плеер скачанного ролика X).
+     * [seekTo] её не пишет: у него свой канал [seekRequest], иначе плеер
+     * перематывал бы дважды.
+     */
     var seekToTime: Float? by mutableStateOf(null)
 
     /**
@@ -115,7 +120,6 @@ class MediaPlayerHost(
     fun seekTo(seconds: Float?) {
         val validSeconds = seconds?.takeIf { it.isFinite() && it >= 0f }
         isSliding = true
-        seekToTime = validSeconds
         validSeconds?.let {
             currentTime = it
             seekRequest = SeekRequest(it, ++lastSeekRequestId)

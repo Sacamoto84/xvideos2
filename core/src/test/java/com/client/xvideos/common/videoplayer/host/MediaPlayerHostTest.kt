@@ -18,12 +18,15 @@ class MediaPlayerHostTest {
         isMuted = isMuted,
     )
 
+    // Раньше seekTo писал ещё и seekToTime, и плеер перематывал дважды: по
+    // запросу и по seekToTime (проход 210, A1).
     @Test
-    fun `seekTo with valid seconds updates seekToTime and currentTime`() {
+    fun `seekTo ставит запрос перемотки и время, а seekToTime не трогает`() {
         val host = createHost(mediaUrl = "http://test.mp4")
         host.seekTo(15.5f)
 
-        assertEquals(15.5f, host.seekToTime)
+        assertEquals(15.5f, host.seekRequest?.seconds)
+        assertNull(host.seekToTime)
         assertEquals(15.5f, host.currentTime, 0.001f)
         assertFalse(host.isSliding)
         host.dispose()
@@ -129,14 +132,16 @@ class MediaPlayerHostTest {
         host.seekTo(30f)
         host.onPlayerPosition(10f)
         assertEquals(30f, host.currentTime)
-        assertEquals(30f, host.seekToTime)
         assertEquals(30f, host.seekRequest?.seconds)
         host.dispose()
     }
 
     @Test
-    fun `после выполнения перемотки позиция от плеера снова обновляет время`() {
+    fun `после выполнения перемотки позиция от плеера снова обновляет время и снимает перемотку на ходу`() {
         val host = createHost()
+        // Перетаскивание с перемоткой на ходу, затем отпускание.
+        host.isSliding = true
+        host.seekToTime = 30f
         host.seekTo(30f)
         host.onSeekApplied(host.seekRequest!!.id)
         host.onPlayerPosition(31f)

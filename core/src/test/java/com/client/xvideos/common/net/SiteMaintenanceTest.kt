@@ -62,20 +62,6 @@ class SiteMaintenanceTest {
     }
 
     @Test
-    fun `страница техобслуживания распознаётся по заголовку`() {
-        val page = "<html><head><title>Maintenance in progress</title><meta http-equiv=\"refresh\" content=\"60\"></head>" +
-            "<body><h1>We'll be right back</h1></body></html>"
-        assertTrue(isMaintenancePage(page))
-        assertTrue(isMaintenancePage("<TITLE>Site MAINTENANCE</TITLE>"))
-    }
-
-    @Test
-    fun `обычная страница и пустой ответ — не техобслуживание`() {
-        assertFalse(isMaintenancePage("<html><head><title>Videos</title></head><body>maintenance tips</body></html>"))
-        assertFalse(isMaintenancePage(""))
-    }
-
-    @Test
     fun `о техобслуживании сайта сообщаем не чаще раза в интервал`() {
         val throttle = SiteMaintenanceThrottle(intervalMs = 120_000L)
 

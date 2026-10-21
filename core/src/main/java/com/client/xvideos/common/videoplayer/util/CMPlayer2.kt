@@ -102,18 +102,19 @@ fun CMPPlayer2(
         exoPlayer.volume = if (isAppLockActive) 0f else config.volume
     }
     LaunchedEffect(exoPlayer, config.speed) { exoPlayer.setPlaybackSpeed(config.speed.toFloat()) }
+    // Перемотка на ходу, пока палец ведёт ползунок. Время на полосе здесь не
+    // трогаем: пока ползунок держат, хост позицию от плеера всё равно не берёт.
     LaunchedEffect(exoPlayer, config.seekToTime) {
         config.seekToTime?.let {
             if (it.isFinite() && it >= 0f) {
                 exoPlayer.seekTo((it * 1000).toLong())
-                currentCallbacks.currentTime(it)
             }
         }
     }
-    // Перемотка из MediaPlayerHost.seekTo. Ключ — запрос с номером, а не
-    // seekToTime: тот сбрасывает опрос позиции, и перемотка при отпускании
-    // ползунка могла не дойти до плеера. После seekTo плеер уже отдаёт новую
-    // позицию, и подтверждение снимает запрет на опрос.
+    // Перемотка из MediaPlayerHost.seekTo — только этим эффектом. Ключ — запрос
+    // с номером, а не seekToTime: тот сбрасывает опрос позиции, и перемотка при
+    // отпускании ползунка могла не дойти до плеера. После seekTo плеер уже
+    // отдаёт новую позицию, и подтверждение снимает запрет на опрос.
     LaunchedEffect(exoPlayer, config.seekRequest) {
         config.seekRequest?.let { request ->
             exoPlayer.seekTo((request.seconds * 1000).toLong())

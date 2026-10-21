@@ -12,16 +12,15 @@ import okhttp3.Response
  * и было не понять, что лежит сервер, а не приложение или сеть.
  */
 private const val HTTP_SERVICE_UNAVAILABLE = 503
-private val MAINTENANCE_TITLE = Regex("<title>[^<]*maintenance[^<]*</title>", RegexOption.IGNORE_CASE)
 
-/** Страница техобслуживания — по заголовку `<title>`: «Maintenance in progress» и подобные. */
-fun isMaintenancePage(html: String): Boolean = MAINTENANCE_TITLE.containsMatchIn(html)
+/** Код ответа сайта на техобслуживании: 503. */
+fun isMaintenanceStatus(code: Int): Boolean = code == HTTP_SERVICE_UNAVAILABLE
 
 /** Ответ 503 → [onMaintenance]; сам ответ уходит дальше без изменений. */
 class SiteMaintenanceInterceptor(private val onMaintenance: () -> Unit) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
-        if (response.code == HTTP_SERVICE_UNAVAILABLE) onMaintenance()
+        if (isMaintenanceStatus(response.code)) onMaintenance()
         return response
     }
 }
