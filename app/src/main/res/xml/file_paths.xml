@@ -12,8 +12,10 @@
 -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Файлы, скачанные для отправки из R: filesDir/store/R/Download -->
-    <files-path name="app_store" path="store/" />
+    <!-- Файлы, скачанные для отправки из R: filesDir/store/R/Download.
+         Было path="store/" — весь каталог данных приложения (история и загрузки X,
+         коллекции L, сохранённое R), хотя отдаются только загрузки R (проход 207, A1). -->
+    <files-path name="app_store" path="store/R/Download/" />
 
     <!-- Файлы, скачанные для отправки из L: cacheDir/L/Share -->
     <cache-path name="l_share_cache" path="L/Share/" />
