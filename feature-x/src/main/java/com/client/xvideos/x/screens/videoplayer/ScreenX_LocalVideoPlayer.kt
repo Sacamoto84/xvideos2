@@ -14,6 +14,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.videoplayer.molecule.LocalVideoPlayerContent
+import com.client.xvideos.x.screens.videoplayer.atom.OrientationAndSystemBarsEffect
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerLoadingView
 import java.io.File
 
@@ -38,6 +39,9 @@ class ScreenX_LocalVideoPlayer(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val sm: ScreenX_LocalVideoPlayerSM = getScreenModel()
+
+        // Ориентация и системные панели на весь экран — как у плеера ролика из сети.
+        OrientationAndSystemBarsEffect(sm.isFullScreen)
 
         ScreenX_LocalVideoPlayerContent(
             fileUrl = fileUrl,
@@ -102,6 +106,10 @@ fun ScreenX_LocalVideoPlayerContent(
             onPopBack = onPopBack,
             modifier = modifier,
             storyboard = storyboard,
+            isFullScreen = sm.isFullScreen,
+            title = resolvedItem.title,
+            onToggleFullScreen = sm::toggleFullScreen,
+            onExitFullScreen = sm::exitFullScreen,
         )
     }
 }

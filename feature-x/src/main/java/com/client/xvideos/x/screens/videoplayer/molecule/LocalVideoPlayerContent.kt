@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
 import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
 import com.client.xvideos.x.screens.videoplayer.model.rememberStoryboardImage
+import com.client.xvideos.x.screens.videoplayer.model.shouldAutoHideControls
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.io.File
@@ -48,8 +50,13 @@ import java.io.File
  * @param onPopBack Колбэк возврата назад.
  * @param storyboard Сетка кадров ролика для превью при перемотке; `null` — её
  * ещё собирают или собрать не удалось, превью показывает только время.
+ * @param isFullScreen На весь экран (альбомный режим) — как у плеера ролика из сети.
+ * @param title Название ролика для верхней панели на весь экран.
+ * @param onToggleFullScreen Кнопка полного экрана в нижней панели.
+ * @param onExitFullScreen Выход из полного экрана («назад» сверху и системный «Назад»).
  */
 @OptIn(UnstableApi::class)
+@Suppress("LongMethod")
 @Composable
 fun LocalVideoPlayerContent(
     fileUrl: String,
@@ -58,6 +65,10 @@ fun LocalVideoPlayerContent(
     onPopBack: () -> Unit,
     modifier: Modifier = Modifier,
     storyboard: File? = null,
+    isFullScreen: Boolean = false,
+    title: String = "",
+    onToggleFullScreen: () -> Unit = {},
+    onExitFullScreen: () -> Unit = {},
 ) {
     if (LocalInspectionMode.current) {
         Box(
@@ -83,16 +94,44 @@ fun LocalVideoPlayerContent(
             isMuted = true, // видео X всегда без звука
             isLooping = false,
             startTimeInSeconds = resumePosition,
-            // Переключателя Fit/Fill здесь нет, а Crop срезал бы края кадра в портрете
+            // В портрете Crop срезал бы края кадра; на весь экран — Fill (ниже).
             initialVideoFitMode = ScreenResize.FIT,
         )
     }
 
+    // Видимость панелей: на весь экран они прячутся по таймеру и возвращаются тапом.
+    var areControlsVisible by remember { mutableStateOf(true) }
+
     // Палец ведёт ползунок: позиция под пальцем для превью кадра из сетки,
     // собранной из самого файла. Ролик перематывается один раз — при отпускании.
+    // Захват ползунка возвращает панель, чтобы она не дотухла под пальцем.
     var scrub by remember { mutableStateOf<SeekScrub?>(null) }
-    val onScrub: (SeekScrub?) -> Unit = remember { { scrub = it } }
+    val onScrub: (SeekScrub?) -> Unit = remember {
+        { value ->
+            scrub = value
+            if (value != null) areControlsVisible = true
+        }
+    }
     val storyboardImage = rememberStoryboardImage(storyboard)
+
+    // При смене режима панели снова видны.
+    LaunchedEffect(isFullScreen) {
+        areControlsVisible = true
+    }
+
+    // Портрет — Fit, на весь экран — Fill; его переключает FitModeToggle в панели.
+    LaunchedEffect(host, isFullScreen) {
+        host.videoFitMode = if (isFullScreen) ScreenResize.FILL else ScreenResize.FIT
+    }
+
+    // Автоскрытие панелей через 3,5 с на весь экран, пока ролик играет и палец не ведёт ползунок.
+    val isScrubbing = scrub != null
+    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused, isScrubbing) {
+        if (shouldAutoHideControls(isFullScreen, areControlsVisible, host.isPaused, false, isScrubbing)) {
+            delay(3500)
+            areControlsVisible = false
+        }
+    }
 
     // Авто-скрытие плашки о возобновлении через 4 секунды
     LaunchedEffect(resumeNoticeText) {
@@ -134,12 +173,22 @@ fun LocalVideoPlayerContent(
 
     val onResetZoom: () -> Unit = remember { { resetZoomTrigger++ } }
 
-    // Нажатие кнопки «Назад» при зуме сбрасывает масштаб, иначе выходит из плеера
+    // «Назад»: зум сбрасывает масштаб, затем выход из полного экрана, затем из плеера.
     BackHandler(enabled = isZoomed, onBack = onResetZoom)
-    BackHandler(enabled = !isZoomed, onBack = onPopBack)
+    BackHandler(enabled = !isZoomed && isFullScreen, onBack = onExitFullScreen)
+    BackHandler(enabled = !isZoomed && !isFullScreen, onBack = onPopBack)
 
     val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
-    val onTap: () -> Unit = remember(host) { { host.togglePlayPause() } }
+    // Тап по видео: на весь экран — показать или спрятать панели, в портрете — пауза.
+    val onTap: () -> Unit = remember(isFullScreen, host) {
+        {
+            if (isFullScreen) {
+                areControlsVisible = !areControlsVisible
+            } else {
+                host.togglePlayPause()
+            }
+        }
+    }
     val onRestartPlayback: () -> Unit = remember(host) {
         {
             host.seekTo(0f)
@@ -157,9 +206,23 @@ fun LocalVideoPlayerContent(
             // Свайп по видео влево-вправо — ±5 с.
             swipeSeekSeconds = 5,
             overlay = {
+                // На весь экран сверху — «назад» (выход из полного экрана) и название.
+                if (isFullScreen) {
+                    AnimatedVisibility(
+                        visible = areControlsVisible,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                    ) {
+                        LocalPlayerFullScreenTopBar(title = title, onBack = onExitFullScreen)
+                    }
+                }
+
                 // Плашка возобновления
                 AnimatedVisibility(
-                    visible = resumeNoticeText != null,
+                    visible = resumeNoticeText != null && (!isFullScreen || areControlsVisible),
                     enter = fadeIn(),
                     exit = fadeOut(),
                     modifier = Modifier
@@ -181,9 +244,19 @@ fun LocalVideoPlayerContent(
                     durationSec = host.totalTime
                 )
 
-                Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                    // Локальный файл — отдельный полноэкранный режим не требуется
-                    X_PlayerBottomBar(host = host, onScrub = onScrub)
+                // Нижняя панель; на весь экран прячется по таймеру.
+                AnimatedVisibility(
+                    visible = !isFullScreen || areControlsVisible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    X_PlayerBottomBar(
+                        host = host,
+                        isFullScreen = isFullScreen,
+                        onFullScreen = onToggleFullScreen,
+                        onScrub = onScrub
+                    )
                 }
             }
         )

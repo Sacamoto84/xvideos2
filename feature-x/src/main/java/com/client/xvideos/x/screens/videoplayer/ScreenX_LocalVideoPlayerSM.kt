@@ -1,6 +1,9 @@
 package com.client.xvideos.x.screens.videoplayer
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.x.feature.saved.SavedX
@@ -23,6 +26,23 @@ import javax.inject.Inject
 class ScreenX_LocalVideoPlayerSM @Inject constructor(
     val saved: SavedX
 ) : ScreenModel {
+
+    /**
+     * Полноэкранный (альбомный) режим — как у плеера ролика из сети. Здесь, а
+     * не в `remember`: корневой навигатор не хранит состояние экранов.
+     */
+    var isFullScreen: Boolean by mutableStateOf(false)
+        private set
+
+    /** Переключает полноэкранный режим. */
+    fun toggleFullScreen() {
+        isFullScreen = !isFullScreen
+    }
+
+    /** Выходит из полноэкранного режима. */
+    fun exitFullScreen() {
+        isFullScreen = false
+    }
 
     fun saveProgress(
         item: ItemsX,
