@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -86,13 +88,22 @@ private data class RedDownloadRecoveryCandidate(
  * @property downloader Низкоуровневый загрузчик файлов.
  * @param scope Скоп приложения для долгоживущих операций.
  * @param appContext Контекст приложения.
+ * @param readDownloads Чтение каталога загрузок; тест подменяет его, чтобы
+ * управлять порядком обходов.
  */
 @Singleton
-class DownloadRed @Inject constructor(
+class DownloadRed internal constructor(
     val downloader: Downloader,
-    @ApplicationScope private val scope: CoroutineScope,
-    @ApplicationContext private val appContext: Context,
+    private val scope: CoroutineScope,
+    private val appContext: Context,
+    private val readDownloads: () -> RedDownloadsScan,
 ) {
+    @Inject
+    constructor(
+        downloader: Downloader,
+        @ApplicationScope scope: CoroutineScope,
+        @ApplicationContext appContext: Context,
+    ) : this(downloader, scope, appContext, { readRedDownloads(File(AppPath.r_cache_download)) })
 
     //var downloadList = mutableStateSetOf<String>()
 
@@ -127,6 +138,15 @@ class DownloadRed @Inject constructor(
 
     /** Количество готовых видеофайлов в локальном хранилище. */
     fun getDownloadedCount(): Int = downloadedVideoKeys.value?.size ?: 0
+
+    /**
+     * Обходы каталога идут по одному: чтение и публикация — под одним замком,
+     * как в `BlockRed`. Отмена прежнего обхода его не останавливает (в обходе
+     * нет точек приостановки, а `emit` отмену не проверяет), и без очереди
+     * ранний обход, закончив позже, клал устаревший список поверх свежего
+     * (проход 209, T1). Объявлен до `init`: первый обход запускается оттуда.
+     */
+    private val refreshMutex = Mutex()
 
     init {
         refreshDownloadList()
@@ -263,48 +283,11 @@ class DownloadRed @Inject constructor(
     fun refreshDownloadList() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {
-            val rootDir = File(AppPath.r_cache_download)
-            if (!rootDir.exists() || !rootDir.isDirectory) {
-                _downloadList.emit(emptyList())
-                _downloadedVideoKeys.emit(emptySet())
-                return@launch
+            refreshMutex.withLock {
+                val scan = readDownloads()
+                _downloadList.emit(scan.list)
+                _downloadedVideoKeys.emit(scan.videoKeys)
             }
-
-            // Один обход на оба результата: собираем .info и .mp4 сразу без
-            // промежуточного списка всех файлов и двойной фильтрации.
-            val infoFiles = ArrayList<File>()
-            val mp4Files = ArrayList<File>()
-            for (f in rootDir.walkTopDown()) {
-                if (!f.isFile || f.length() <= 0L) continue
-                when (f.extension) {
-                    "info" -> infoFiles.add(f)
-                    "mp4" -> mp4Files.add(f)
-                }
-            }
-
-            if (infoFiles.isEmpty() && mp4Files.isEmpty()) {
-                _downloadList.emit(emptyList())
-                _downloadedVideoKeys.emit(emptySet())
-                return@launch
-            }
-
-            if (infoFiles.size > 1) {
-                infoFiles.sortByDescending { it.lastModified() }
-            }
-            val result = ArrayList<GifsInfo>(infoFiles.size)
-            for (file in infoFiles) {
-                try {
-                    val content = file.readText()
-                    val obj = AppJson.decodeFromString<GifsInfo>(content)
-                    result.add(obj)
-                } catch (e: Exception) {
-                    // Битый .info пропускаем, но в лог приложения, а не в stdout.
-                    Timber.w(e, "Ошибка при чтении файла ${file.absolutePath}")
-                }
-            }
-
-            _downloadList.emit(result)
-            _downloadedVideoKeys.emit(downloadedVideoKeys(mp4Files))
         }.apply {
             // Сбой обхода ловит обработчик области приложения, и без этого набор
             // так и остался бы непрочитанным: полноэкранный R ждал бы его вечно.
@@ -509,4 +492,45 @@ internal fun downloadedVideoKeys(videoFiles: List<File>): Set<String> {
     return videoFiles.mapTo(HashSet(videoFiles.size)) {
         downloadedVideoKey(it.parentFile?.name.orEmpty(), it.nameWithoutExtension)
     }
+}
+
+/** Результат одного обхода каталога загрузок R: ролики по `.info` и ключи готовых `.mp4`. */
+internal class RedDownloadsScan(val list: List<GifsInfo>, val videoKeys: Set<String>)
+
+/**
+ * Обходит [rootDir] одним проходом: собирает `.info` и `.mp4` сразу, без
+ * промежуточного списка всех файлов и двойной фильтрации. Список — по убыванию
+ * даты изменения `.info`; битый `.info` пропускается.
+ */
+internal fun readRedDownloads(rootDir: File): RedDownloadsScan {
+    if (!rootDir.exists() || !rootDir.isDirectory) return RedDownloadsScan(emptyList(), emptySet())
+
+    val infoFiles = ArrayList<File>()
+    val mp4Files = ArrayList<File>()
+    for (f in rootDir.walkTopDown()) {
+        if (!f.isFile || f.length() <= 0L) continue
+        when (f.extension) {
+            "info" -> infoFiles.add(f)
+            "mp4" -> mp4Files.add(f)
+        }
+    }
+
+    if (infoFiles.isEmpty() && mp4Files.isEmpty()) return RedDownloadsScan(emptyList(), emptySet())
+
+    if (infoFiles.size > 1) {
+        infoFiles.sortByDescending { it.lastModified() }
+    }
+    val result = ArrayList<GifsInfo>(infoFiles.size)
+    for (file in infoFiles) {
+        try {
+            val content = file.readText()
+            val obj = AppJson.decodeFromString<GifsInfo>(content)
+            result.add(obj)
+        } catch (e: Exception) {
+            // Битый .info пропускаем, но в лог приложения, а не в stdout.
+            Timber.w(e, "Ошибка при чтении файла ${file.absolutePath}")
+        }
+    }
+
+    return RedDownloadsScan(result, downloadedVideoKeys(mp4Files))
 }
