@@ -48,7 +48,10 @@ fun SeekPreviewFollow(
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // Размер — от ширины области плеера: на раскрытом складном кадр крупнее.
-        val frameWidth = (maxWidth * 0.22f).coerceIn(120.dp, 240.dp)
+        // Нижняя граница 180dp: в портрете телефона 22% ширины — около 87dp, и
+        // кадр был слишком мелким (владелец, 21.10.2026). На весь экран 22% и так
+        // больше 180dp, там размер не меняется.
+        val frameWidth = (maxWidth * 0.22f).coerceIn(180.dp, 240.dp)
         val density = LocalDensity.current
         val left = with(density) {
             seekPreviewFollowLeft(anchorX, frameWidth.toPx(), maxWidth.toPx(), 8.dp.toPx())

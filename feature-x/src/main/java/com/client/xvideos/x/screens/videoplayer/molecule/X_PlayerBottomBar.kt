@@ -38,9 +38,7 @@ import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import com.client.xvideos.x.screens.videoplayer.atom.FitModeToggle
-import com.client.xvideos.x.screens.videoplayer.atom.SeekPreviewModeToggle
 import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
-import com.client.xvideos.x.screens.videoplayer.model.XSeekPreviewMode
 import com.client.xvideos.x.screens.videoplayer.model.finishSeekDrag
 import com.client.xvideos.x.screens.videoplayer.model.finishSeekDragIfActive
 import java.util.Locale
@@ -56,12 +54,10 @@ import java.util.Locale
  * @param onFullScreen переход в полноэкранный режим (текущую позицию прокидывает экран).
  * @param seekWhileDragging перематывать видео на каждое движение пальца. `false` —
  * видео перематывается один раз при отпускании, а позицию под пальцем видно по
- * превью кадра (полноэкранный плеер ролика из сети).
+ * превью кадра (плеер ролика из сети).
  * @param onScrub позиция под пальцем и границы полосы, пока палец ведёт ползунок;
  * `null` — палец отпущен.
- * @param seekPreviewMode вид превью для временной кнопки переключения; `null` — кнопки нет.
  */
-@Suppress("LongParameterList")
 @Composable
 fun X_PlayerBottomBar(
     host: MediaPlayerHost,
@@ -69,8 +65,6 @@ fun X_PlayerBottomBar(
     onFullScreen: (() -> Unit)? = null,
     seekWhileDragging: Boolean = true,
     onScrub: (SeekScrub?) -> Unit = {},
-    seekPreviewMode: XSeekPreviewMode? = null,
-    onToggleSeekPreviewMode: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
@@ -169,8 +163,9 @@ fun X_PlayerBottomBar(
             onValueChangeFinished = onSeekBarValueChangeFinished,
             thumbRadius = 6.dp,
             trackHeight = 3.dp,
-            // В портрете (не на весь экран) бегунок виден всегда, на весь экран — пока тянут.
-            showThumbAlways = !isFullScreen,
+            // Бегунок виден всегда: и в портрете, и на весь экран (решение владельца
+            // от 21.10.2026 — раньше на весь экран он появлялся, только пока тянут).
+            showThumbAlways = true,
         )
 
         // Общее время
@@ -188,9 +183,6 @@ fun X_PlayerBottomBar(
             currentSpeed = host.speed,
             onSpeedSelected = onSpeedSelected
         )
-
-        // ВРЕМЕННО: переключатель вида превью для теста (спека 2026-10-21-x-seek-preview).
-        if (isFullScreen && seekPreviewMode != null) SeekPreviewModeToggle(seekPreviewMode, onToggleSeekPreviewMode)
 
         // Переключатель режима масштабирования Fit / Fill
         if (isFullScreen) {

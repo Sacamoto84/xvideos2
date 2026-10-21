@@ -47,7 +47,6 @@ import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
 import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
-import com.client.xvideos.x.screens.videoplayer.model.XSeekPreviewMode
 import com.client.xvideos.x.screens.videoplayer.model.rememberStoryboardImage
 import com.client.xvideos.x.screens.videoplayer.model.shouldAutoHideControls
 import kotlinx.coroutines.delay
@@ -79,8 +78,6 @@ private val CutoutTopStartInsets: WindowInsets
  * @param onToggleFullScreen Переключение полноэкранного режима.
  * @param onSaveProgress Периодическое сохранение прогресса просмотра в историю.
  * @param storyboardUrl Раскадровка ролика (`thumbSlideBig`) для превью кадра при перемотке.
- * @param seekPreviewMode Вид превью кадра при перемотке на весь экран.
- * @param onToggleSeekPreviewMode Временная кнопка переключения вида превью.
  */
 @OptIn(UnstableApi::class)
 @Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
@@ -109,8 +106,6 @@ fun VideoPlayerContentView(
     onChannelClick: (TagsMainUploaderPornstar) -> Unit = {},
     onPornstarClick: (TagsMainUploaderPornstar) -> Unit = {},
     storyboardUrl: String? = null,
-    seekPreviewMode: XSeekPreviewMode = XSeekPreviewMode.FOLLOW,
-    onToggleSeekPreviewMode: () -> Unit = {},
 ) {
     // Режим предпросмотра в IDE (Android Studio @Preview или Layout Inspector).
     // Реальный ExoPlayer (MediaPlayerHost) и системные декодеры не могут инициализироваться в JVM среды IDE.
@@ -180,7 +175,7 @@ fun VideoPlayerContentView(
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
     // Палец ведёт ползунок: позиция под пальцем для превью кадра. Раскадровка
-    // грузится и в портрете — к переходу на весь экран картинка уже есть.
+    // грузится вместе с роликом, чтобы при первом касании кадр уже был.
     var scrub by remember { mutableStateOf<SeekScrub?>(null) }
     // Захват ползунка возвращает панель: если таймер автоскрытия сработал в тот же
     // кадр, панель не дотухнет и не уйдёт из композиции под пальцем.
@@ -391,21 +386,17 @@ fun VideoPlayerContentView(
                     }
                 }
 
-                // Превью кадра при перемотке — только на весь экран; ниже нижней панели,
-                // чтобы полоса оставалась видна поверх кадра B.
-                if (isFullScreen) {
-                    SeekPreviewOverlay(
-                        mode = seekPreviewMode,
-                        storyboard = storyboard,
-                        scrub = scrub,
-                        durationSec = host.totalTime,
-                        videoFitMode = host.videoFitMode
-                    )
-                }
+                // Превью кадра при перемотке — и в портрете, и на весь экран (решение
+                // владельца от 21.10.2026); ниже нижней панели, чтобы полоса была поверх.
+                SeekPreviewOverlay(
+                    storyboard = storyboard,
+                    scrub = scrub,
+                    durationSec = host.totalTime
+                )
 
                 // Панель управления снизу с автоскрытием в полноэкранном режиме.
-                // На весь экран видео перематывается только при отпускании пальца:
-                // куда попадёшь, показывает превью.
+                // Видео перематывается только при отпускании пальца: куда попадёшь,
+                // показывает превью.
                 AnimatedVisibility(
                     visible = !isFullScreen || areControlsVisible,
                     enter = fadeIn(),
@@ -416,10 +407,8 @@ fun VideoPlayerContentView(
                         host = host,
                         isFullScreen = isFullScreen,
                         onFullScreen = onToggleFullScreen,
-                        seekWhileDragging = !isFullScreen,
-                        onScrub = onScrub,
-                        seekPreviewMode = seekPreviewMode.takeIf { isFullScreen },
-                        onToggleSeekPreviewMode = onToggleSeekPreviewMode
+                        seekWhileDragging = false,
+                        onScrub = onScrub
                     )
                 }
             }
