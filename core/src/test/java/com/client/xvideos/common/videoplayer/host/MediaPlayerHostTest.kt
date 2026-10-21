@@ -191,4 +191,59 @@ class MediaPlayerHostTest {
         assertNull(host.seekRequest)
         host.dispose()
     }
+
+    // Свайп по видео перематывает на шаг от текущего времени (спека
+    // 2026-10-21-x-player-swipe-seek-local-fullscreen-design.md).
+
+    @Test
+    fun `seekBy сдвигает от текущего времени и складывается до выполнения перемотки`() {
+        val host = createHost()
+        host.updateTotalTime(100)
+        host.updateCurrentTime(10f)
+
+        host.seekBy(5f)
+        host.seekBy(5f)
+
+        assertEquals(20f, host.currentTime, 0.001f)
+        assertEquals(20f, host.seekRequest?.seconds)
+        host.dispose()
+    }
+
+    @Test
+    fun `seekBy не выходит за начало и конец`() {
+        val host = createHost()
+        host.updateTotalTime(100)
+
+        host.updateCurrentTime(3f)
+        host.seekBy(-5f)
+        assertEquals(0f, host.currentTime, 0.001f)
+
+        host.updateCurrentTime(98f)
+        host.seekBy(5f)
+        assertEquals(100f, host.currentTime, 0.001f)
+        host.dispose()
+    }
+
+    @Test
+    fun `seekBy без длительности ничего не делает`() {
+        val host = createHost()
+        host.updateCurrentTime(10f)
+
+        host.seekBy(5f)
+
+        assertEquals(10f, host.currentTime, 0.001f)
+        assertNull(host.seekRequest)
+        host.dispose()
+    }
+
+    @Test
+    fun `seekBy не трогает паузу`() {
+        val host = createHost(isPaused = true)
+        host.updateTotalTime(100)
+
+        host.seekBy(5f)
+
+        assertTrue(host.isPaused)
+        host.dispose()
+    }
 }
