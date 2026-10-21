@@ -21,6 +21,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -106,20 +107,26 @@ class DownloadRed @Inject constructor(
      * существует и у оборванной закачки без видео. Нужен, чтобы окно
      * предзагрузки ленты не дёргало `File.exists()` на главном потоке для
      * каждого индекса — набор перестраивается тем же обходом, что и список.
+     *
+     * `null` — каталог ещё не прочитан: первый обход идёт из `init` на IO, а
+     * экран, создавший этот синглтон (полноэкранный R после смерти процесса),
+     * компонуется раньше, чем он закончится. Пустой набор вместо `null` нельзя
+     * было отличить от «скачанного нет», и страница навсегда запоминала адрес
+     * HLS у скачанного ролика (проход 208, C1).
      */
-    private val _downloadedVideoKeys = MutableStateFlow<Set<String>>(emptySet())
-    val downloadedVideoKeys: StateFlow<Set<String>> = _downloadedVideoKeys.asStateFlow()
+    private val _downloadedVideoKeys = MutableStateFlow<Set<String>?>(null)
+    val downloadedVideoKeys: StateFlow<Set<String>?> = _downloadedVideoKeys.asStateFlow()
 
     /** Проверяет, скачан ли видеофайл ролика по имени автора и id. */
     fun isDownloaded(userName: String, id: String): Boolean =
-        downloadedVideoKey(userName, id) in downloadedVideoKeys.value
+        downloadedVideoKeys.value?.contains(downloadedVideoKey(userName, id)) == true
 
     /** Проверяет, скачан ли ролик [item]. */
     fun isDownloaded(item: GifsInfo): Boolean =
         isDownloaded(item.userName, item.id)
 
     /** Количество готовых видеофайлов в локальном хранилище. */
-    fun getDownloadedCount(): Int = downloadedVideoKeys.value.size
+    fun getDownloadedCount(): Int = downloadedVideoKeys.value?.size ?: 0
 
     init {
         refreshDownloadList()
@@ -298,6 +305,15 @@ class DownloadRed @Inject constructor(
 
             _downloadList.emit(result)
             _downloadedVideoKeys.emit(downloadedVideoKeys(mp4Files))
+        }.apply {
+            // Сбой обхода ловит обработчик области приложения, и без этого набор
+            // так и остался бы непрочитанным: полноэкранный R ждал бы его вечно.
+            // Отмену пропускаем — обход прерывает следующий, и набор отдаст он.
+            invokeOnCompletion { cause ->
+                if (cause != null && cause !is CancellationException) {
+                    _downloadedVideoKeys.update { it ?: emptySet() }
+                }
+            }
         }
     }
 

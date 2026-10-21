@@ -72,7 +72,11 @@ fun RedFullScreenFeed(
         },
     )
 
-    LaunchedEffect(listGifs, feedState) {
+    // keysLoaded в ключах: пока набор скачанных не прочитан, peekUrl отдаёт null и
+    // индексы окна ждут. Набор пришёл — эффект перезапускается и догревает их
+    // (проход 208, C1).
+    val keysLoaded = downloadedKeys != null
+    LaunchedEffect(listGifs, feedState, keysLoaded) {
         snapshotFlow { listGifs.itemCount }
             .distinctUntilChanged()
             .collect {

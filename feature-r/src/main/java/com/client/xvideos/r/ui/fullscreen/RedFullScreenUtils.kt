@@ -9,10 +9,15 @@ import com.client.xvideos.r.model.GifsInfo
  * Url элемента ленты по индексу для окна предзагрузки. `peek` (а не `get`) —
  * намеренно: он не дёргает пейджинг на подгрузку соседних страниц. Границу всё
  * равно проверяем: `peek` за пределами `itemCount` бросает IndexOutOfBoundsException.
+ *
+ * Пока набор скачанных не прочитан ([downloadedKeys] == null), url тоже нет:
+ * индекс ждёт, как неподгруженный, иначе прогрев взял бы HLS у скачанного
+ * ролика, а страница потом — файл (проход 208, C1).
  */
-internal fun LazyPagingItems<GifsInfo>.peekUrl(index: Int, downloadedKeys: Set<String>): String? {
+internal fun LazyPagingItems<GifsInfo>.peekUrl(index: Int, downloadedKeys: Set<String>?): String? {
     if (index < 0 || index >= itemCount) return null
-    return peek(index)?.let { redVideoUrl(it, downloadedKeys) }
+    val keys = downloadedKeys ?: return null
+    return peek(index)?.let { redVideoUrl(it, keys) }
 }
 
 /**
