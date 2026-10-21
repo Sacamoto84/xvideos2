@@ -10,6 +10,8 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.client.xvideos.common.AppContextHolder
+import com.client.xvideos.common.net.SiteMaintenanceReporter
+import com.client.xvideos.common.net.isMaintenancePage
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.builtins.serializer
@@ -155,6 +157,8 @@ private suspend fun loadHtmlInWebView(url: String): String =
                     Timber.d("readHtmlFromURL end %s", url.pathForLog())
 
                     val result = decodeJsStringResult(html)
+                    // Кода ответа WebView не отдаёт — техобслуживание видно по самой странице.
+                    if (isMaintenancePage(result)) SiteMaintenanceReporter.report("X")
                     if (continuation.isActive) continuation.resume(result)
                     destroyWebView()
                 }

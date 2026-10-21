@@ -1,5 +1,7 @@
 package com.client.xvideos.x.feature.net
 
+import com.client.xvideos.common.net.SiteMaintenanceInterceptor
+import com.client.xvideos.common.net.SiteMaintenanceReporter
 import com.client.xvideos.common.net.doh.AppDns
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -33,6 +35,8 @@ private val htmlClient: HttpClient by lazy {
         engine {
             config {
                 dns(AppDns)
+                // Сайт на техобслуживании отвечает 503 — плашка вместо безликой ошибки.
+                addInterceptor(SiteMaintenanceInterceptor { SiteMaintenanceReporter.report("X") })
             }
         }
         install(HttpTimeout) {

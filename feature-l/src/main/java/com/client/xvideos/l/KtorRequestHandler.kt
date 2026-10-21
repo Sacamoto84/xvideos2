@@ -1,6 +1,8 @@
 package com.client.xvideos.l
 
 import com.client.xvideos.common.AppBuildInfo
+import com.client.xvideos.common.net.SiteMaintenanceInterceptor
+import com.client.xvideos.common.net.SiteMaintenanceReporter
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.l.repository.LusciousEndpoints.LOGIN
 import com.client.xvideos.common.net.UserAgentProvider
@@ -87,6 +89,8 @@ class KtorRequestHandler(
                 engine {
                     config {
                         dns(AppDns)
+                        // Сайт на техобслуживании отвечает 503 — плашка вместо безликой ошибки.
+                        addInterceptor(SiteMaintenanceInterceptor { SiteMaintenanceReporter.report("L") })
                     }
                 }
                 configure(withCookies)

@@ -15,6 +15,11 @@ sealed class Event {
 
     object ArchiveCountIncrement : Event()
 
+    /** Сайт раздела [site] (`X`, `R`, `L`) на техобслуживании; корневой экран показывает плашку [text]. */
+    data class SiteMaintenance(val site: String) : Event() {
+        val text: String get() = "Сайт $site на техобслуживании, обещают вернуться через пару минут"
+    }
+
 
     val isSnackBar: Boolean get() = this is ShowSnackBar
     val isLog: Boolean get() = this is Log

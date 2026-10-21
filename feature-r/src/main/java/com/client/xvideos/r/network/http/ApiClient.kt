@@ -1,5 +1,7 @@
 package com.client.xvideos.r.network.http
 
+import com.client.xvideos.common.net.SiteMaintenanceInterceptor
+import com.client.xvideos.common.net.SiteMaintenanceReporter
 import com.client.xvideos.common.net.UserAgentProvider
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.r.network.json.RJson
@@ -57,6 +59,8 @@ object ApiClient {
                 writeTimeout(30, TimeUnit.SECONDS)
                 followRedirects(true)
                 connectionSpecs(listOf(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+                // Сайт на техобслуживании отвечает 503 — плашка вместо безликой ошибки.
+                addInterceptor(SiteMaintenanceInterceptor { SiteMaintenanceReporter.report("R") })
             }
         }
         install(ContentNegotiation) {

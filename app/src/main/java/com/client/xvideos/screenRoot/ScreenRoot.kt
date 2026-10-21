@@ -24,13 +24,14 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
+import com.client.xvideos.common.snackbar.UiMessage
 import com.client.xvideos.common.navigation.LocalMainNavigator
 import com.client.xvideos.common.snackbar.show
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.screens.explorer.molecule.LCollectionDialogs
-import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.mapNotNull
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 
 /**
@@ -63,10 +64,17 @@ object ScreenRoot : Screen {
 
         LaunchedEffect(Unit) {
             EventBus.events
-                .filterIsInstance<Event.ShowSnackBar>()
-                .collect { event ->
+                .mapNotNull { event ->
+                    when (event) {
+                        is Event.ShowSnackBar -> event.message
+                        // Сайт раздела на техобслуживании: причина вместо безликой ошибки экрана.
+                        is Event.SiteMaintenance -> UiMessage.Warning(event.text)
+                        else -> null
+                    }
+                }
+                .collect { message ->
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    snackBarHostState.show(event.message)
+                    snackBarHostState.show(message)
                 }
         }
 
