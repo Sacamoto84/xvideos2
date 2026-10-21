@@ -1,6 +1,8 @@
 package com.client.xvideos.x.screens.videoplayer.model
 
 import androidx.compose.ui.unit.IntRect
+import com.client.xvideos.x.model.STORYBOARD_COLUMNS
+import com.client.xvideos.x.model.STORYBOARD_ROWS
 import kotlin.math.floor
 
 /**
@@ -8,8 +10,6 @@ import kotlin.math.floor
  * по строкам слева направо; кадр `i` — позиция `i`% длины ролика. Так же номер
  * кадра считает плеер сайта.
  */
-private const val STORYBOARD_COLUMNS = 10
-private const val STORYBOARD_ROWS = 10
 private const val STORYBOARD_FRAMES = STORYBOARD_COLUMNS * STORYBOARD_ROWS
 private const val PERCENT = 100f
 
