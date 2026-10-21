@@ -159,12 +159,15 @@ fun UrlImage(
     // будил корутину 5 раз в секунду на каждую картинку и каждую миниатюру.
     // Стало: подписка на snapshot-состояние с тем же троттлингом 200 мс —
     // когда прогресс не меняется, корутина просто спит.
+    //
+    // Начальное значение — пустой прогресс, а не rawProgress: аргумент вычисляется
+    // в теле composable, и чтение rawProgress подписывало UrlImage на каждую порцию
+    // загрузки (обычно по 8 КБ) в обход троттлинга — даже там, где прогресс не
+    // нужен вовсе (проход 206, T2). rawProgress читается только в snapshotFlow, и
+    // композицию будит лишь progress: не чаще раза в 200 мс и только при needProgress.
     val needProgress = isVisibleProgressText || isAnimated
-    val progress by produceState(rawProgress, url, needProgress) {
-        if (!needProgress) {
-            value = rawProgress
-            return@produceState
-        }
+    val progress by produceState(CoilProgressItem(url, 0L, 0L, false), url, needProgress) {
+        if (!needProgress) return@produceState
         snapshotFlow { rawProgress }
             .conflate()
             .collect {
