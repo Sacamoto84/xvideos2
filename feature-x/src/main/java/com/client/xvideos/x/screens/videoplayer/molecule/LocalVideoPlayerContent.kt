@@ -33,8 +33,11 @@ import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
+import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
+import com.client.xvideos.x.screens.videoplayer.model.rememberStoryboardImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import java.io.File
 
 /**
  * Основной компонент воспроизведения локального видеофайла.
@@ -43,6 +46,8 @@ import kotlinx.coroutines.isActive
  * @param resumePosition Позиция возобновления в секундах.
  * @param onSaveProgress Колбэк сохранения позиции воспроизведения.
  * @param onPopBack Колбэк возврата назад.
+ * @param storyboard Сетка кадров ролика для превью при перемотке; `null` — её
+ * ещё собирают или собрать не удалось, превью показывает только время.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -52,6 +57,7 @@ fun LocalVideoPlayerContent(
     onSaveProgress: (currentTimeSeconds: Float, totalTimeSeconds: Int) -> Unit,
     onPopBack: () -> Unit,
     modifier: Modifier = Modifier,
+    storyboard: File? = null,
 ) {
     if (LocalInspectionMode.current) {
         Box(
@@ -81,6 +87,12 @@ fun LocalVideoPlayerContent(
             initialVideoFitMode = ScreenResize.FIT,
         )
     }
+
+    // Палец ведёт ползунок: позиция под пальцем для превью кадра из сетки,
+    // собранной из самого файла. Ролик перематывается один раз — при отпускании.
+    var scrub by remember { mutableStateOf<SeekScrub?>(null) }
+    val onScrub: (SeekScrub?) -> Unit = remember { { scrub = it } }
+    val storyboardImage = rememberStoryboardImage(storyboard)
 
     // Авто-скрытие плашки о возобновлении через 4 секунды
     LaunchedEffect(resumeNoticeText) {
@@ -160,9 +172,16 @@ fun LocalVideoPlayerContent(
                     }
                 }
 
+                // Превью кадра при перемотке — ниже панели, чтобы полоса была поверх.
+                SeekPreviewOverlay(
+                    storyboard = storyboardImage,
+                    scrub = scrub,
+                    durationSec = host.totalTime
+                )
+
                 Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                     // Локальный файл — отдельный полноэкранный режим не требуется
-                    X_PlayerBottomBar(host = host)
+                    X_PlayerBottomBar(host = host, onScrub = onScrub)
                 }
             }
         )

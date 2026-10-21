@@ -407,7 +407,6 @@ fun VideoPlayerContentView(
                         host = host,
                         isFullScreen = isFullScreen,
                         onFullScreen = onToggleFullScreen,
-                        seekWhileDragging = false,
                         onScrub = onScrub
                     )
                 }

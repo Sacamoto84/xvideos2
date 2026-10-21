@@ -6,6 +6,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.size.Size
@@ -13,22 +14,29 @@ import coil3.toBitmap
 import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
+import java.io.File
 
 /**
- * Картинка раскадровки ролика X ([url] — `thumbSlideBig`), целиком, без
- * уменьшения: из неё по пикселям вырезаются кадры превью при перемотке.
- * Грузится через общий загрузчик (DoH, кеш на диске). Нет адреса или картинка
- * не загрузилась — `null`, превью тогда показывает только время.
+ * Картинка раскадровки ролика X целиком, без уменьшения: из неё по пикселям
+ * вырезаются кадры превью при перемотке. [data] — адрес раскадровки сайта
+ * (`thumbSlideBig`, ролик из сети) или файл сетки скачанного ролика
+ * (`<id>.storyboard.jpg`). Грузится через общий загрузчик (DoH, кеш на диске).
+ * Нет данных или картинка не загрузилась — `null`, превью тогда показывает
+ * только время.
+ *
+ * Файл сетки в память Coil не кладётся: ролик могут удалить и скачать заново
+ * под тем же id, и сетка по тому же пути будет уже другой.
  */
 @Composable
-fun rememberStoryboardImage(url: String?): ImageBitmap? {
+fun rememberStoryboardImage(data: Any?): ImageBitmap? {
     val context = LocalContext.current
-    val image by produceState<ImageBitmap?>(initialValue = null, url) {
+    val image by produceState<ImageBitmap?>(initialValue = null, data) {
         value = null
-        if (url.isNullOrBlank()) return@produceState
+        if (data == null || (data is String && data.isBlank())) return@produceState
         val request = ImageRequest.Builder(context)
-            .data(url)
+            .data(data)
             .size(Size.ORIGINAL)
+            .apply { if (data is File) memoryCachePolicy(CachePolicy.DISABLED) }
             .build()
         value = try {
             val result = CoilImageLoaderFactory.getImageLoader(context).execute(request)

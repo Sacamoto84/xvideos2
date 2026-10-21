@@ -47,14 +47,12 @@ import java.util.Locale
  * Нижняя панель управления X-плеером поверх видео.
  *
  * Время в [MediaPlayerHost] хранится в секундах: `currentTime` — Float, `totalTime` — Int.
- * Перемотка реализована через тот же контракт, что и в R-плеере: на время перетаскивания
- * выставляем `isSliding = true` и (при `seekWhileDragging`) пишем позицию в `seekToTime` —
- * видео перематывается на ходу; по отпусканию фиксируем её через [MediaPlayerHost.seekTo].
+ * Пока палец ведёт ползунок, видео стоит (`isSliding = true`), а позицию под
+ * пальцем видно по превью кадра; по отпусканию — одна перемотка через
+ * [MediaPlayerHost.seekTo]. Перемотка на ходу убрана и у плеера скачанного
+ * ролика: на каждое движение пальца он залипал в буферизации.
  *
  * @param onFullScreen переход в полноэкранный режим (текущую позицию прокидывает экран).
- * @param seekWhileDragging перематывать видео на каждое движение пальца. `false` —
- * видео перематывается один раз при отпускании, а позицию под пальцем видно по
- * превью кадра (плеер ролика из сети).
  * @param onScrub позиция под пальцем и границы полосы, пока палец ведёт ползунок;
  * `null` — палец отпущен.
  */
@@ -63,7 +61,6 @@ fun X_PlayerBottomBar(
     host: MediaPlayerHost,
     isFullScreen: Boolean = false,
     onFullScreen: (() -> Unit)? = null,
-    seekWhileDragging: Boolean = true,
     onScrub: (SeekScrub?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -73,7 +70,6 @@ fun X_PlayerBottomBar(
     var trackStartPx by remember { mutableFloatStateOf(0f) }
     var trackWidthPx by remember { mutableFloatStateOf(0f) }
 
-    val currentSeekWhileDragging by rememberUpdatedState(seekWhileDragging)
     val currentOnScrub by rememberUpdatedState(onScrub)
 
     val onTogglePlayPause = remember(host) { { host.togglePlayPause() } }
@@ -81,7 +77,6 @@ fun X_PlayerBottomBar(
         { v ->
             sliderValue = v
             host.isSliding = true
-            if (currentSeekWhileDragging) host.seekToTime = v
             currentOnScrub(SeekScrub(v, trackStartPx, trackWidthPx))
         }
     }

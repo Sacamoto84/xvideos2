@@ -15,6 +15,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.videoplayer.molecule.LocalVideoPlayerContent
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerLoadingView
+import java.io.File
 
 /**
  * Плеер локального (скачанного) файла X.
@@ -77,6 +78,13 @@ fun ScreenX_LocalVideoPlayerContent(
         value = sm.startPositionSeconds(videoId)
     }
 
+    // Сетка кадров для превью перемотки: готовая с диска или собранная сейчас
+    // (ролик скачан до появления превью). Лежит на диске, поэтому при возврате
+    // на экран стоит одного обращения к файлу — в ScreenModel её не держим.
+    val storyboard by produceState<File?>(initialValue = null, videoId) {
+        value = sm.saved.downloads.storyboards.obtain(videoId)
+    }
+
     val onSaveProgress: (Float, Int) -> Unit = remember(sm, resolvedItem) {
         { currentTimeSeconds, totalTimeSeconds ->
             sm.saveProgress(resolvedItem, currentTimeSeconds, totalTimeSeconds)
@@ -92,7 +100,8 @@ fun ScreenX_LocalVideoPlayerContent(
             resumePosition = start.takeIf { it > 0f },
             onSaveProgress = onSaveProgress,
             onPopBack = onPopBack,
-            modifier = modifier
+            modifier = modifier,
+            storyboard = storyboard,
         )
     }
 }
