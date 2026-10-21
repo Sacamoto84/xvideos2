@@ -36,6 +36,18 @@ class ProgressResponseBody(
                 )
                 return bytesRead
             }
+
+            // Отменённую или прерванную загрузку закрывают, не дочитав: read() до -1
+            // не доходит, и без этого сигнала запись в карте прогресса осталась бы
+            // навсегда (проход 206, T1). После дочитанного тела сигнал приходит
+            // второй раз — карте это безразлично.
+            override fun close() {
+                try {
+                    super.close()
+                } finally {
+                    progressListener(totalBytesRead, totalLength, true)
+                }
+            }
         }
     }
 }
