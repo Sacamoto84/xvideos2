@@ -11,6 +11,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.serialization.encodeToString
 import org.junit.After
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -116,5 +117,53 @@ class SavedX_DownloadsStorageTest {
         assertTrue(File(dir, "7.info").exists())
         assertTrue(downloads.contains(7L))
         assertTrue(downloads.isIdle)
+    }
+
+    // Сетка кадров для превью перемотки собирается из самого скачанного файла
+    // и лежит рядом с роликом (спека 2026-10-21-x-local-seek-preview-design.md).
+
+    private val fakeRenderer = StoryboardRenderer { _, out ->
+        out.writeBytes(byteArrayOf(7))
+        true
+    }
+
+    @Test
+    fun `после скачивания собирается сетка`() {
+        val downloads = SavedX_Downloads(scope, fakeRenderer)
+        writeVideo(7L)
+        downloads.markStarted(7L)
+
+        downloads.completeDownload(item(7L))
+
+        val storyboard = File(dir, "7.storyboard.jpg")
+        val deadline = System.currentTimeMillis() + 3_000
+        while (!storyboard.exists() && System.currentTimeMillis() < deadline) Thread.sleep(10)
+        assertTrue("сетка не собралась после скачивания", storyboard.exists())
+    }
+
+    @Test
+    fun `удаление ролика убирает и его сетку`() {
+        writeVideo(7L)
+        writeInfo(7L)
+        File(dir, "7.storyboard.jpg").writeBytes(ByteArray(4) { 1 })
+        File(dir, "7.storyboard.jpg.temp").writeBytes(ByteArray(2) { 1 })
+        writeVideo(8L)
+
+        SavedX_Downloads(scope, fakeRenderer).deleteFiles(7L)
+
+        val left = dir.listFiles().orEmpty().map { it.name }.sorted()
+        assertTrue("остались файлы удалённого ролика: $left", left == listOf("8.mp4"))
+    }
+
+    @Test
+    fun `сетка не считается обложкой`() {
+        writeVideo(9L)
+        writeInfo(9L)
+        File(dir, "9.storyboard.jpg").writeBytes(ByteArray(4) { 1 })
+
+        val downloads = SavedX_Downloads(scope, fakeRenderer)
+        downloads.awaitSaved(9L)
+
+        assertNull(downloads.localPosterPath(9L))
     }
 }

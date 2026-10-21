@@ -41,11 +41,18 @@ import java.io.File
  * `KDownloader` создаётся напрямую через фабрику (DI-модуль в проекте отключён).
  *
  * @property scope CoroutineScope для выполнения сетевых и файловых операций загрузки.
+ * @param storyboardRenderer сборщик сетки кадров для превью перемотки (в тестах — подделка).
  */
 @Stable
-class SavedX_Downloads(private val scope: CoroutineScope) {
+class SavedX_Downloads(
+    private val scope: CoroutineScope,
+    storyboardRenderer: StoryboardRenderer = RetrieverStoryboardRenderer,
+) {
 
     private val dir: String = AppPath.x_cache_download
+
+    /** Сетки кадров скачанных роликов для превью перемотки, рядом с `.mp4`. */
+    val storyboards = LocalStoryboards(dir, scope, storyboardRenderer)
     private val kDownloader by lazy { KDownloader.create(AppContextHolder.applicationContext) }
 
     /** `0f..1f` — прогресс, `-2f` — простой/готово, `-3f` — ошибка. */
@@ -253,6 +260,9 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
         onVideoFinished(item.id, failed = false)
         SnackBar.success("Скачано")
         loadFromDisk()
+        // Сетка кадров для превью перемотки — сразу, в фоне: к первому
+        // открытию ролика она обычно уже готова.
+        storyboards.prepare(item.id)
     }
 
     /**
@@ -331,6 +341,7 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
             kDownloader.cancel(item.id.toString())
             // Отменённая загрузка не должна держать id «качается» и общий прогресс.
             onVideoFinished(item.id, failed = false)
+            storyboards.cancel(item.id)
             deleteFiles(item.id)
             loadFromDisk()
             SnackBar.info("Удалено из сохранённого")
@@ -338,12 +349,14 @@ class SavedX_Downloads(private val scope: CoroutineScope) {
     }
 
     /**
-     * Удаляет с диска файлы ролика: видео, обложку, `.info` и остатки их
-     * оборванной загрузки. Загрузчик качает во временный файл рядом; без этого
-     * остаток повторной загрузки лежал на диске без записи в списке.
+     * Удаляет с диска файлы ролика: видео, обложку, сетку кадров, `.info` и
+     * остатки их оборванной загрузки или сборки. Загрузчик качает во временный
+     * файл рядом; без этого остаток повторной загрузки лежал на диске без
+     * записи в списке. Сетка — после видео: сборка переименовывает временный
+     * файл в готовый, только пока видео на диске.
      */
     internal fun deleteFiles(id: Long) {
-        for (name in listOf("$id.mp4", "$id.jpg")) {
+        for (name in listOf("$id.mp4", "$id.jpg", localStoryboardFileName(id))) {
             File(dir, name).delete()
             File(getTempPath(dir, name)).delete()
         }
