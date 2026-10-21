@@ -120,6 +120,27 @@ class LocalStoryboardsTest {
         assertFalse(temp(5L).exists())
     }
 
+    // Сразу после обновления у старых загрузок сеток нет: пролистал несколько
+    // роликов подряд — и сборки, которые переживают закрытие плеера, шли бы все
+    // разом, по декодеру и листу 8 МБ на каждую, рядом с воспроизведением
+    // (финальное ревью плана, M1).
+    @Test
+    fun `сборки разных роликов — не больше двух сразу`() {
+        listOf(5L, 6L, 7L).forEach(::writeVideo)
+        val gate = CompletableDeferred<Unit>()
+        val storyboards = storyboards(renderer(gate, results = ArrayDeque(List(3) { { true } })))
+
+        val results = listOf(5L, 6L, 7L).map { storyboards.obtainAsync(it) }
+        scheduler.advanceUntilIdle()
+        assertEquals(2, renders)
+
+        gate.complete(Unit)
+        scheduler.advanceUntilIdle()
+
+        assertEquals(3, renders)
+        assertEquals(listOf(ready(5L), ready(6L), ready(7L)), results.map { it.getCompleted() })
+    }
+
     @Test
     fun `сбой сборки — null, следующий запрос собирает заново`() {
         writeVideo(5L)

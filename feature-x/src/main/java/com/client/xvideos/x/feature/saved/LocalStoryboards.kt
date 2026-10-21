@@ -10,9 +10,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+
+private const val MAX_PARALLEL_RENDERS = 2
 
 /** Собирает картинку-сетку кадров ролика [video] в [out] (JPEG). `false` — собрать не удалось. */
 fun interface StoryboardRenderer {
@@ -38,6 +42,14 @@ class LocalStoryboards(
 ) {
     /** Идущие сборки по id ролика; запись снимается, когда сборка закончилась. */
     private val builds = HashMap<Long, Deferred<File?>>()
+
+    /**
+     * Не больше двух рендеров сразу. Сборка переживает закрытие плеера, и без
+     * предела пролистанные подряд старые загрузки собирались бы все разом — по
+     * декодеру и листу 8 МБ на каждую, рядом с воспроизведением. Два, а не один:
+     * сетка только что открытого ролика не ждёт всю очередь.
+     */
+    private val renderPermits = Semaphore(MAX_PARALLEL_RENDERS)
 
     /** Файл сетки ролика [id], готовый или нет. */
     fun file(id: Long): File = File(dir, localStoryboardFileName(id))
@@ -87,7 +99,7 @@ class LocalStoryboards(
         val temp = File(getTempPath(dir, localStoryboardFileName(id)))
         try {
             val rendered = try {
-                renderer.render(video, temp)
+                renderPermits.withPermit { renderer.render(video, temp) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
