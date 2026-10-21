@@ -110,6 +110,16 @@ fun CMPPlayer2(
             }
         }
     }
+    // Перемотка из MediaPlayerHost.seekTo. Ключ — запрос с номером, а не
+    // seekToTime: тот сбрасывает опрос позиции, и перемотка при отпускании
+    // ползунка могла не дойти до плеера. После seekTo плеер уже отдаёт новую
+    // позицию, и подтверждение снимает запрет на опрос.
+    LaunchedEffect(exoPlayer, config.seekRequest) {
+        config.seekRequest?.let { request ->
+            exoPlayer.seekTo((request.seconds * 1000).toLong())
+            currentCallbacks.seekApplied(request.id)
+        }
+    }
 
     // Экран не гасим только пока реально идёт воспроизведение и приложение не заблокировано.
     KeepScreenOn(active = !config.isPause && !isAppLockActive)

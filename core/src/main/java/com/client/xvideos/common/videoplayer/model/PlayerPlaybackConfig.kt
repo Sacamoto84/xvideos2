@@ -25,6 +25,8 @@ data class PlayerPlaybackConfig(
     val drmConfig: DrmConfig? = null,
     val autoRotate: Boolean = false,
     val playFromTime: Float? = null,
+    /** Перемотка, которую плеер должен выполнить и подтвердить через [PlayerPlaybackCallbacks.seekApplied]. */
+    val seekRequest: SeekRequest? = null,
 ) {
     val isValid: Boolean get() = url.isNotBlank()
     val isEmpty: Boolean get() = url.isEmpty()
@@ -86,7 +88,9 @@ data class PlayerPlaybackCallbacks(
     val bufferCallback: (Boolean) -> Unit = {},
     val didEndVideo: () -> Unit = {},
     val error: (MediaPlayerError) -> Unit = {},
-    val poster: (Boolean) -> Unit = {}
+    val poster: (Boolean) -> Unit = {},
+    /** Плеер выполнил [SeekRequest] с этим номером. */
+    val seekApplied: (Long) -> Unit = {},
 ) {
     companion object {
         val EMPTY = PlayerPlaybackCallbacks()
@@ -102,6 +106,7 @@ fun MediaPlayerHost.toPlaybackConfig(autoRotate: Boolean = false): PlayerPlaybac
         isPause = isPaused,
         isSliding = isSliding,
         seekToTime = seekToTime,
+        seekRequest = seekRequest,
         playFromTime = playFromTime,
         speed = speed,
         size = videoFitMode,

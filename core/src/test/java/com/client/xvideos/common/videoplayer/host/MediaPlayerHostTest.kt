@@ -117,4 +117,73 @@ class MediaPlayerHostTest {
         assertNull(host.drmConfig)
         host.dispose()
     }
+
+    // Опрос позиции плеера (раз в 50 мс) раньше сбрасывал цель перемотки, если
+    // успевал до перекомпоновки: перемотка при отпускании ползунка терялась, а
+    // время откатывалось к старой позиции. Запрос держится, пока плеер его не
+    // выполнит.
+
+    @Test
+    fun `позиция от плеера до выполнения перемотки не сбрасывает её и не откатывает время`() {
+        val host = createHost()
+        host.seekTo(30f)
+        host.onPlayerPosition(10f)
+        assertEquals(30f, host.currentTime)
+        assertEquals(30f, host.seekToTime)
+        assertEquals(30f, host.seekRequest?.seconds)
+        host.dispose()
+    }
+
+    @Test
+    fun `после выполнения перемотки позиция от плеера снова обновляет время`() {
+        val host = createHost()
+        host.seekTo(30f)
+        host.onSeekApplied(host.seekRequest!!.id)
+        host.onPlayerPosition(31f)
+        assertEquals(31f, host.currentTime)
+        assertNull(host.seekToTime)
+        assertNull(host.seekRequest)
+        host.dispose()
+    }
+
+    @Test
+    fun `повторная перемотка в ту же точку — новый запрос`() {
+        val host = createHost()
+        host.seekTo(30f)
+        val first = host.seekRequest!!.id
+        host.onSeekApplied(first)
+        host.seekTo(30f)
+        assertTrue(host.seekRequest!!.id != first)
+        host.dispose()
+    }
+
+    @Test
+    fun `подтверждение старого запроса не снимает новый`() {
+        val host = createHost()
+        host.seekTo(10f)
+        val old = host.seekRequest!!.id
+        host.seekTo(20f)
+        host.onSeekApplied(old)
+        assertEquals(20f, host.seekRequest?.seconds)
+        host.dispose()
+    }
+
+    @Test
+    fun `пока ползунок держат, позиция от плеера не меняет время`() {
+        val host = createHost()
+        host.updateCurrentTime(50f)
+        host.isSliding = true
+        host.onPlayerPosition(5f)
+        assertEquals(50f, host.currentTime)
+        host.dispose()
+    }
+
+    @Test
+    fun `невалидная перемотка запроса не создаёт`() {
+        val host = createHost()
+        host.seekTo(Float.NaN)
+        host.seekTo(-1f)
+        assertNull(host.seekRequest)
+        host.dispose()
+    }
 }

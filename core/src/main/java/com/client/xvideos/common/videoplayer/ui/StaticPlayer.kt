@@ -19,12 +19,8 @@ fun StaticPlayer(
         config = playerHost.toPlaybackConfig(autoRotate),
         callbacks = PlayerPlaybackCallbacks(
             totalTime = { playerHost.updateTotalTime(it) },
-            currentTime = {
-                if (!playerHost.isSliding) {
-                    playerHost.updateCurrentTime(it)
-                    playerHost.seekToTime = null
-                }
-            },
+            currentTime = { playerHost.onPlayerPosition(it) },
+            seekApplied = { playerHost.onSeekApplied(it) },
             bufferCallback = { playerHost.setBufferingStatus(it) },
             didEndVideo = {
                 playerHost.triggerMediaEnd()

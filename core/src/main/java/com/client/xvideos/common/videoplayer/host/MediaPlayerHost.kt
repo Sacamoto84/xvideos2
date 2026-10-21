@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
+import com.client.xvideos.common.videoplayer.model.SeekRequest
 
 /**
  * Состояние плеера, которым управляет экран.
@@ -35,6 +36,16 @@ class MediaPlayerHost(
     var speed by mutableStateOf(initialSpeed)
     var videoFitMode by mutableStateOf(initialVideoFitMode)
     var seekToTime: Float? by mutableStateOf(null)
+
+    /**
+     * Перемотка из [seekTo], которую плеер ещё не выполнил. Отдельно от
+     * [seekToTime]: тот сбрасывает опрос позиции, и если опрос успевал до
+     * перекомпоновки, перемотка при отпускании ползунка терялась.
+     */
+    var seekRequest: SeekRequest? by mutableStateOf(null)
+        private set
+    private var lastSeekRequestId = 0L
+
     var isSliding by mutableStateOf(false)
     var isPaused by mutableStateOf(isPaused)
     internal var isMuted by mutableStateOf(isMuted)
@@ -105,8 +116,27 @@ class MediaPlayerHost(
         val validSeconds = seconds?.takeIf { it.isFinite() && it >= 0f }
         isSliding = true
         seekToTime = validSeconds
-        validSeconds?.let { currentTime = it }
+        validSeconds?.let {
+            currentTime = it
+            seekRequest = SeekRequest(it, ++lastSeekRequestId)
+        }
         isSliding = false
+    }
+
+    /**
+     * Позиция от плеера (опрос раз в 50 мс). Пока ползунок держат или
+     * перемотка ещё не дошла до плеера, позиция старая — её не берём, иначе
+     * бегунок прыгал бы назад.
+     */
+    fun onPlayerPosition(seconds: Float) {
+        if (isSliding || seekRequest != null) return
+        updateCurrentTime(seconds)
+        seekToTime = null
+    }
+
+    /** Плеер выполнил перемотку [requestId]; более ранний номер новый запрос не снимает. */
+    fun onSeekApplied(requestId: Long) {
+        if (seekRequest?.id == requestId) seekRequest = null
     }
 
 //    fun setVideoFitMode(mode: ScreenResize) {
