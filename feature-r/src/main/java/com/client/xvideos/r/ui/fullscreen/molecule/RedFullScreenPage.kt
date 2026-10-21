@@ -31,7 +31,13 @@ fun RedFullScreenPage(
     resetZoomTrigger: Int = 0,
     overlay: @Composable () -> Unit = {},
 ) {
-    val videoUri = remember(item.id, item.userName, downloadedKeys) { redVideoUrl(item, downloadedKeys) }
+    // Адрес — на момент входа страницы, `downloadedKeys` в ключах нет. Иначе
+    // ролик, скачанный во время просмотра, менял адрес с HLS на файл, а с ним
+    // MediaItem — ключ rememberPooledPlayer: плеер возвращался в пул и начинал
+    // ролик заново после спиннера (проход 203, C2). Скачанный файл заиграет при
+    // следующем входе страницы. Прогрев индекса этим не сбивается: окно
+    // предзагрузки перечитывает адрес, только когда индекс входит в окно заново.
+    val videoUri = remember(item.id, item.userName) { redVideoUrl(item, downloadedKeys) }
 
     Box(Modifier.fillMaxSize()) {
         RedPooledVideoPlayer(
