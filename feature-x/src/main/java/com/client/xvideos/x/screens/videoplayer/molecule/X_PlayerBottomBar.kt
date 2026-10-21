@@ -15,13 +15,18 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +38,11 @@ import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import com.client.xvideos.x.screens.videoplayer.atom.FitModeToggle
+import com.client.xvideos.x.screens.videoplayer.atom.SeekPreviewModeToggle
+import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
+import com.client.xvideos.x.screens.videoplayer.model.XSeekPreviewMode
+import com.client.xvideos.x.screens.videoplayer.model.finishSeekDrag
+import com.client.xvideos.x.screens.videoplayer.model.finishSeekDragIfActive
 import java.util.Locale
 
 /**
@@ -40,33 +50,57 @@ import java.util.Locale
  *
  * Время в [MediaPlayerHost] хранится в секундах: `currentTime` — Float, `totalTime` — Int.
  * Перемотка реализована через тот же контракт, что и в R-плеере: на время перетаскивания
- * выставляем `isSliding = true` и пишем превью-позицию в `seekToTime`, а по отпусканию
- * фиксируем её через [MediaPlayerHost.seekTo].
+ * выставляем `isSliding = true` и (при `seekWhileDragging`) пишем позицию в `seekToTime` —
+ * видео перематывается на ходу; по отпусканию фиксируем её через [MediaPlayerHost.seekTo].
  *
  * @param onFullScreen переход в полноэкранный режим (текущую позицию прокидывает экран).
+ * @param seekWhileDragging перематывать видео на каждое движение пальца. `false` —
+ * видео перематывается один раз при отпускании, а позицию под пальцем видно по
+ * превью кадра (полноэкранный плеер ролика из сети).
+ * @param onScrub позиция под пальцем и границы полосы, пока палец ведёт ползунок;
+ * `null` — палец отпущен.
+ * @param seekPreviewMode вид превью для временной кнопки переключения; `null` — кнопки нет.
  */
+@Suppress("LongParameterList")
 @Composable
 fun X_PlayerBottomBar(
     host: MediaPlayerHost,
     isFullScreen: Boolean = false,
     onFullScreen: (() -> Unit)? = null,
+    seekWhileDragging: Boolean = true,
+    onScrub: (SeekScrub?) -> Unit = {},
+    seekPreviewMode: XSeekPreviewMode? = null,
+    onToggleSeekPreviewMode: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
     var sliderValue by remember(host) { mutableFloatStateOf(0f) }
+    // Границы полосы в координатах корня: по ним оверлей ставит кадр A над бегунком.
+    var trackStartPx by remember { mutableFloatStateOf(0f) }
+    var trackWidthPx by remember { mutableFloatStateOf(0f) }
+
+    val currentSeekWhileDragging by rememberUpdatedState(seekWhileDragging)
+    val currentOnScrub by rememberUpdatedState(onScrub)
 
     val onTogglePlayPause = remember(host) { { host.togglePlayPause() } }
     val onSeekBarValueChange: (Float) -> Unit = remember(host) {
         { v ->
             sliderValue = v
             host.isSliding = true
-            host.seekToTime = v
+            if (currentSeekWhileDragging) host.seekToTime = v
+            currentOnScrub(SeekScrub(v, trackStartPx, trackWidthPx))
         }
     }
     val onSeekBarValueChangeFinished: () -> Unit = remember(host) {
-        {
-            host.seekTo(sliderValue)
-        }
+        { host.finishSeekDrag(sliderValue, currentOnScrub) }
+    }
+    // Панель может уйти из композиции прямо под пальцем, и жест тогда не
+    // доходит до onValueChangeFinished — завершаем начатое перетаскивание сами.
+    DisposableEffect(host) {
+        onDispose { host.finishSeekDragIfActive(sliderValue, currentOnScrub) }
+    }
+    val onSeekBarPositioned: (LayoutCoordinates) -> Unit = remember {
+        { trackStartPx = it.positionInRoot().x; trackWidthPx = it.size.width.toFloat() }
     }
     val onSpeedSelected: (PlayerSpeed) -> Unit = remember(host) {
         { newSpeed -> host.speed = newSpeed }
@@ -126,7 +160,9 @@ fun X_PlayerBottomBar(
         val safeMaxProgress = if (safeTotalTime > 0f) safeTotalTime else 0.1f
 
         CustomSeekBar(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .onGloballyPositioned(onSeekBarPositioned),
             progress = safeCurrentTime,
             maxProgress = safeMaxProgress,
             onValueChange = onSeekBarValueChange,
@@ -152,6 +188,9 @@ fun X_PlayerBottomBar(
             currentSpeed = host.speed,
             onSpeedSelected = onSpeedSelected
         )
+
+        // ВРЕМЕННО: переключатель вида превью для теста (спека 2026-10-21-x-seek-preview).
+        if (isFullScreen && seekPreviewMode != null) SeekPreviewModeToggle(seekPreviewMode, onToggleSeekPreviewMode)
 
         // Переключатель режима масштабирования Fit / Fill
         if (isFullScreen) {

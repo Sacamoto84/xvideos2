@@ -46,6 +46,10 @@ import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
+import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
+import com.client.xvideos.x.screens.videoplayer.model.XSeekPreviewMode
+import com.client.xvideos.x.screens.videoplayer.model.rememberStoryboardImage
+import com.client.xvideos.x.screens.videoplayer.model.shouldAutoHideControls
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -74,6 +78,9 @@ private val CutoutTopStartInsets: WindowInsets
  * @param onRestartFromBeginning Перезапуск видео с начала.
  * @param onToggleFullScreen Переключение полноэкранного режима.
  * @param onSaveProgress Периодическое сохранение прогресса просмотра в историю.
+ * @param storyboardUrl Раскадровка ролика (`thumbSlideBig`) для превью кадра при перемотке.
+ * @param seekPreviewMode Вид превью кадра при перемотке на весь экран.
+ * @param onToggleSeekPreviewMode Временная кнопка переключения вида превью.
  */
 @OptIn(UnstableApi::class)
 @Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
@@ -101,6 +108,9 @@ fun VideoPlayerContentView(
     onSaveToGallery: () -> Unit = {},
     onChannelClick: (TagsMainUploaderPornstar) -> Unit = {},
     onPornstarClick: (TagsMainUploaderPornstar) -> Unit = {},
+    storyboardUrl: String? = null,
+    seekPreviewMode: XSeekPreviewMode = XSeekPreviewMode.FOLLOW,
+    onToggleSeekPreviewMode: () -> Unit = {},
 ) {
     // Режим предпросмотра в IDE (Android Studio @Preview или Layout Inspector).
     // Реальный ExoPlayer (MediaPlayerHost) и системные декодеры не могут инициализироваться в JVM среды IDE.
@@ -169,6 +179,19 @@ fun VideoPlayerContentView(
     var isZoomed by remember { mutableStateOf(false) }
     var resetZoomTrigger by remember { mutableIntStateOf(0) }
 
+    // Палец ведёт ползунок: позиция под пальцем для превью кадра. Раскадровка
+    // грузится и в портрете — к переходу на весь экран картинка уже есть.
+    var scrub by remember { mutableStateOf<SeekScrub?>(null) }
+    // Захват ползунка возвращает панель: если таймер автоскрытия сработал в тот же
+    // кадр, панель не дотухнет и не уйдёт из композиции под пальцем.
+    val onScrub: (SeekScrub?) -> Unit = remember {
+        { value ->
+            scrub = value
+            if (value != null) areControlsVisible = true
+        }
+    }
+    val storyboard = rememberStoryboardImage(storyboardUrl)
+
     val onResetZoom: () -> Unit = remember { { resetZoomTrigger++ } }
 
     // Иерархия «Назад»:
@@ -190,11 +213,11 @@ fun VideoPlayerContentView(
         host.videoFitMode = if (isFullScreen) ScreenResize.FILL else ScreenResize.FIT
     }
 
-    // Автоматическое скрытие контроллеров через 3.5 секунды неактивности при воспроизведении на полном экране (если меню не открыто)
-    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused, isMenuExpanded) {
-        val shouldAutoHide = isFullScreen && areControlsVisible
-        val canAutoHide = !host.isPaused && !isMenuExpanded
-        if (shouldAutoHide && canAutoHide) {
+    // Автоматическое скрытие контроллеров через 3.5 секунды неактивности при воспроизведении на полном экране
+    // (если меню не открыто и палец не ведёт ползунок)
+    val isScrubbing = scrub != null
+    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused, isMenuExpanded, isScrubbing) {
+        if (shouldAutoHideControls(isFullScreen, areControlsVisible, host.isPaused, isMenuExpanded, isScrubbing)) {
             delay(3500)
             areControlsVisible = false
         }
@@ -368,7 +391,21 @@ fun VideoPlayerContentView(
                     }
                 }
 
-                // Панель управления снизу с автоскрытием в полноэкранном режиме
+                // Превью кадра при перемотке — только на весь экран; ниже нижней панели,
+                // чтобы полоса оставалась видна поверх кадра B.
+                if (isFullScreen) {
+                    SeekPreviewOverlay(
+                        mode = seekPreviewMode,
+                        storyboard = storyboard,
+                        scrub = scrub,
+                        durationSec = host.totalTime,
+                        videoFitMode = host.videoFitMode
+                    )
+                }
+
+                // Панель управления снизу с автоскрытием в полноэкранном режиме.
+                // На весь экран видео перематывается только при отпускании пальца:
+                // куда попадёшь, показывает превью.
                 AnimatedVisibility(
                     visible = !isFullScreen || areControlsVisible,
                     enter = fadeIn(),
@@ -378,7 +415,11 @@ fun VideoPlayerContentView(
                     X_PlayerBottomBar(
                         host = host,
                         isFullScreen = isFullScreen,
-                        onFullScreen = onToggleFullScreen
+                        onFullScreen = onToggleFullScreen,
+                        seekWhileDragging = !isFullScreen,
+                        onScrub = onScrub,
+                        seekPreviewMode = seekPreviewMode.takeIf { isFullScreen },
+                        onToggleSeekPreviewMode = onToggleSeekPreviewMode
                     )
                 }
             }

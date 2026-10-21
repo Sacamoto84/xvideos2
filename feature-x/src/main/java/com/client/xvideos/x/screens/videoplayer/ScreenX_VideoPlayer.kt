@@ -2,17 +2,21 @@ package com.client.xvideos.x.screens.videoplayer
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.videoplayer.atom.OrientationAndSystemBarsEffect
+import com.client.xvideos.x.screens.videoplayer.model.XSeekPreviewMode
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerContentView
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerErrorView
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerLoadingView
@@ -47,6 +51,13 @@ class ScreenX_VideoPlayer(
         val onRetryLoad: () -> Unit = remember(vm) { { vm.loadVideo(forceReload = true) } }
         val onPopBack: () -> Unit = remember(navigator) { { navigator.pop() } }
 
+        // Вид превью кадра при перемотке: та же настройка, что в «Настройках» → X.
+        val seekPreviewValue by Settings.x_seek_preview_mode.field.collectAsStateWithLifecycle()
+        val seekPreviewMode = XSeekPreviewMode.fromSetting(seekPreviewValue)
+        val onToggleSeekPreviewMode: () -> Unit = remember(seekPreviewMode) {
+            { Settings.x_seek_preview_mode.setValue(seekPreviewMode.toggled().settingValue) }
+        }
+
         // Нажатие кнопки «Назад» при ошибке или загрузке закрывает экран
         BackHandler(enabled = vm.isError || vm.isLoading || vm.passedHLS.isBlank(), onBack = onPopBack)
 
@@ -77,6 +88,9 @@ class ScreenX_VideoPlayer(
                 vm.saveProgress(positionSeconds, durationSeconds)
             },
             onRetryLoad = onRetryLoad,
+            storyboardUrl = vm.playerConfig?.thumbSlideBig?.takeIf { it.isNotBlank() },
+            seekPreviewMode = seekPreviewMode,
+            onToggleSeekPreviewMode = onToggleSeekPreviewMode,
         )
     }
 }
@@ -113,6 +127,9 @@ fun ScreenX_VideoPlayerContent(
     onSaveToGallery: () -> Unit = {},
     onChannelClick: (TagsMainUploaderPornstar) -> Unit = {},
     onPornstarClick: (TagsMainUploaderPornstar) -> Unit = {},
+    storyboardUrl: String? = null,
+    seekPreviewMode: XSeekPreviewMode = XSeekPreviewMode.FOLLOW,
+    onToggleSeekPreviewMode: () -> Unit = {},
 ) {
     when {
         isError -> {
@@ -151,6 +168,9 @@ fun ScreenX_VideoPlayerContent(
                 onRestartFromBeginning = onRestartFromBeginning,
                 onToggleFullScreen = onToggleFullScreen,
                 onSaveProgress = onSaveProgress,
+                storyboardUrl = storyboardUrl,
+                seekPreviewMode = seekPreviewMode,
+                onToggleSeekPreviewMode = onToggleSeekPreviewMode,
                 modifier = modifier
             )
         }

@@ -260,4 +260,7 @@ object Settings {
     val x_subscriptions_channels_order by lazy { SettingElementInt(pref, "x_subscriptions_channels_order", 0) }
     val x_subscriptions_models_order by lazy { SettingElementInt(pref, "x_subscriptions_models_order", 0) }
 
+    //Вид превью кадра при перемотке в полноэкранном плеере: номер в XSeekPreviewMode (0 — у ползунка, 1 — на весь экран)
+    val x_seek_preview_mode by lazy { SettingElementInt(pref, "x_seek_preview_mode", 0) }
+
 }
