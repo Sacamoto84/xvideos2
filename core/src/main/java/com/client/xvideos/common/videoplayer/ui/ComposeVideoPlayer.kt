@@ -18,7 +18,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
+import com.client.xvideos.common.videoplayer.model.swipeSeekDirection
+import com.client.xvideos.common.videoplayer.ui.component.SwipeSeekBadge
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
@@ -35,6 +45,9 @@ import net.engawapg.lib.zoomable.zoomable
  *
  * @param onTap одиночный тап по видео (обычно play/pause или переключение оверлея).
  * @param onZoomChanged уведомление вызывающей стороны об активности масштабирования.
+ * @param swipeSeekSeconds шаг перемотки свайпом по видео влево-вправо, в
+ *                секундах; `null` — свайпа нет. При увеличенной картинке свайп
+ *                двигает её, а не перематывает.
  * @param overlay UI поверх видео; выполняется в [BoxScope] корневого Box,
  *                поэтому внутри доступен `Modifier.align(...)`.
  */
@@ -47,10 +60,30 @@ fun ComposeVideoPlayer(
     zoomEnabled: Boolean = true,
     resetZoomTrigger: Int = 0,
     onZoomChanged: ((Boolean) -> Unit)? = null,
+    swipeSeekSeconds: Int? = null,
     overlay: @Composable BoxScope.() -> Unit = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val zoomState = rememberZoomState(maxScale = 3f)
+
+    // Значок шага свайпа. Номер свайпа перезапускает таймер скрытия, чтобы у
+    // свайпов подряд значок не гас посреди серии.
+    var swipeCount by remember { mutableIntStateOf(0) }
+    var swipeLabel by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(swipeCount) {
+        if (swipeLabel != null) {
+            delay(SWIPE_BADGE_MS)
+            swipeLabel = null
+        }
+    }
+    val onSwipeSeek: (Int) -> Unit = remember(playerHost, swipeSeekSeconds) {
+        { direction ->
+            val seconds = swipeSeekSeconds ?: 0
+            playerHost.seekBy((direction * seconds).toFloat())
+            swipeLabel = if (direction > 0) "+$seconds с" else "−$seconds с"
+            swipeCount++
+        }
+    }
 
     // При смене режима вписывания (FIT/FILL) или смене видеопотока сбрасываем зум.
     LaunchedEffect(playerHost.videoFitMode, playerHost.url) {
@@ -76,9 +109,15 @@ fun ComposeVideoPlayer(
     Box(modifier = modifier.clipToBounds()) {
 
         // Видео-поверхность с зум-жестом. Одиночный и двойной тапы обрабатываются zoomable.
+        // Свайп — снаружи zoomable: тот при масштабе 1 перетаскивание не забирает.
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .swipeSeekGesture(
+                    enabled = swipeSeekSeconds != null,
+                    isZoomed = { isZoomActive(zoomState.scale) },
+                    onSwipe = onSwipeSeek,
+                )
                 .zoomable(
                     zoomState = zoomState,
                     zoomEnabled = zoomEnabled,
@@ -121,7 +160,59 @@ fun ComposeVideoPlayer(
             }
         }
 
+        // Шаг перемотки свайпом — над серединой: в самой середине после
+        // перемотки ролика из сети крутится индикатор буферизации.
+        swipeLabel?.let { label ->
+            SwipeSeekBadge(
+                text = label,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(bottom = 120.dp)
+            )
+        }
+
         // Слой UI поверх видео (теги/панель управления) — в scope корневого Box.
         overlay()
     }
 }
+
+/** Сколько видно значок шага свайпа. */
+private const val SWIPE_BADGE_MS = 600L
+
+/**
+ * Свайп по видео одним пальцем: по отпусканию — направление из
+ * [swipeSeekDirection] (порог 48dp), если картинка не увеличена. Касания не
+ * забирает: тапы и двойной тап остаются у `zoomable`, а тот при масштабе 1
+ * перетаскивание не забирает. Касание двумя пальцами (щипок) — не свайп.
+ */
+private fun Modifier.swipeSeekGesture(
+    enabled: Boolean,
+    isZoomed: () -> Boolean,
+    onSwipe: (Int) -> Unit,
+): Modifier {
+    if (!enabled) return this
+    return pointerInput(onSwipe) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            var last = down.position
+            var multiTouch = false
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Final)
+                if (event.changes.count { it.pressed } > 1) multiTouch = true
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                last = change.position
+                if (!change.pressed) break
+            }
+            if (multiTouch || isZoomed()) return@awaitEachGesture
+            val direction = swipeSeekDirection(
+                dx = last.x - down.position.x,
+                dy = last.y - down.position.y,
+                minDistancePx = SWIPE_MIN_DISTANCE.toPx(),
+            )
+            if (direction != 0) onSwipe(direction)
+        }
+    }
+}
+
+/** Короче — тап, а не свайп. */
+private val SWIPE_MIN_DISTANCE = 48.dp

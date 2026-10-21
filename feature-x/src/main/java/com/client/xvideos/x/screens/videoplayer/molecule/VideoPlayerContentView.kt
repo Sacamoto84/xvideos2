@@ -307,6 +307,8 @@ fun VideoPlayerContentView(
             resetZoomTrigger = resetZoomTrigger,
             onZoomChanged = onZoomChanged,
             onTap = onTap,
+            // Свайп по видео влево-вправо — ±5 с.
+            swipeSeekSeconds = 5,
             overlay = {
                 // Верхняя панель:
                 // В полноэкранном режиме: Back, Название ролика, Кнопка 3-точки с выпадающим меню.

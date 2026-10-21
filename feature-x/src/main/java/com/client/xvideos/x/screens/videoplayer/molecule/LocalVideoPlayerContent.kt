@@ -154,6 +154,8 @@ fun LocalVideoPlayerContent(
             resetZoomTrigger = resetZoomTrigger,
             onZoomChanged = onZoomChanged,
             onTap = onTap,
+            // Свайп по видео влево-вправо — ±5 с.
+            swipeSeekSeconds = 5,
             overlay = {
                 // Плашка возобновления
                 AnimatedVisibility(
