@@ -22,6 +22,7 @@ import androidx.media3.ui.compose.ContentFrame
 import com.client.xvideos.common.videoplayer.model.PlayerPlaybackCallbacks
 import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
+import com.client.xvideos.common.videoplayer.model.playerBufferWindow
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.util.KeepScreenOn
@@ -37,8 +38,12 @@ fun CMPPlayer2(
     callbacks: PlayerPlaybackCallbacks = PlayerPlaybackCallbacks()
 ) {
     val context = LocalContext.current
-    val minBufferMs = 12_000
-    val maxBufferMs = 45_000
+    // Буфер берётся при создании плеера (remember(context)), поэтому превью
+    // из отрезков приходит сюда уже со списком отрезков (LocalVideoPreview
+    // создаёт хост после чтения длительности).
+    val bufferWindow = playerBufferWindow(hasClips = config.clips.isNotEmpty())
+    val minBufferMs = bufferWindow.minMs
+    val maxBufferMs = bufferWindow.maxMs
 
     val exoPlayer = rememberExoPlayerWithLifecycle(
         config.url,
