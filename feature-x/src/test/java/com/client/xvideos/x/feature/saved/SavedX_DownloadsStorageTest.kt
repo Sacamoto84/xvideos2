@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.serialization.encodeToString
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -153,6 +154,26 @@ class SavedX_DownloadsStorageTest {
 
         val left = dir.listFiles().orEmpty().map { it.name }.sorted()
         assertTrue("остались файлы удалённого ролика: $left", left == listOf("8.mp4"))
+    }
+
+    // Карточка сохранённого ролика играет превью из файла и показывает
+    // скачанную обложку (спека 2026-10-22-x-saved-card-local-preview-design.md).
+    @Test
+    fun `сведения о скачанном файле — только для сохранённого ролика`() {
+        writeVideo(5L)
+        writeInfo(5L)
+        File(dir, "5.jpg").writeBytes(ByteArray(4) { 1 })
+        writeVideo(6L)
+        writeInfo(6L)
+
+        val downloads = SavedX_Downloads(scope, fakeRenderer)
+        downloads.awaitSaved(5L)
+        downloads.awaitSaved(6L)
+
+        assertEquals(downloads.localUrl(5L), downloads.localVideo(5L)?.fileUrl)
+        assertEquals(File(dir, "5.jpg").absolutePath, downloads.localVideo(5L)?.posterPath)
+        assertNull(downloads.localVideo(6L)?.posterPath)
+        assertNull(downloads.localVideo(7L))
     }
 
     @Test

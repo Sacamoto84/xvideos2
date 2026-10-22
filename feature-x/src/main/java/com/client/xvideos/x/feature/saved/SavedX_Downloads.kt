@@ -1,7 +1,6 @@
 package com.client.xvideos.x.feature.saved
 
 import androidx.compose.runtime.Stable
-import android.net.Uri
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.gallery.GallerySaver
@@ -138,10 +137,13 @@ class SavedX_Downloads(
 
     /**
      * Возвращает `file://`-URI скачанного видеофайла (для передачи в ExoPlayer).
+     * Тот же адрес, что давал `Uri.fromFile`: каталог загрузок — приватный путь
+     * приложения (`filesDir/store/X/Download`), кодировать в нём нечего; без
+     * `android.net.Uri` строка проверяется юнит-тестами.
      *
      * @param id Числовой ID видео.
      */
-    fun localUrl(id: Long): String = Uri.fromFile(File(dir, "$id.mp4")).toString()
+    fun localUrl(id: Long): String = "file://" + File(dir, "$id.mp4").absolutePath
 
     /**
      * Абсолютный путь к локальной картинке превью (`<id>.jpg`), если она скачана, иначе null.
@@ -152,6 +154,13 @@ class SavedX_Downloads(
     fun localPosterPath(id: Long): String? {
         return if (id > 0L && _downloadedPosterIds.value.contains(id)) File(dir, "$id.jpg").absolutePath else null
     }
+
+    /**
+     * Скачанный ролик [id] для карточки — файл и обложка; `null`, если ролик не
+     * сохранён. Карточка по нему играет превью из файла и открывает скачанный.
+     */
+    fun localVideo(id: Long): SavedLocalVideo? =
+        if (contains(id)) SavedLocalVideo(localUrl(id), localPosterPath(id)) else null
 
     /**
      * Скачать оригинальное видео в наилучшем качестве (`videoUrlHigh`, прямой mp4)
