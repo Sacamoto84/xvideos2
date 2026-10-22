@@ -16,8 +16,8 @@
 #
 # Чего это НЕ отменяет: keep-правила ниже по-прежнему обязательны. Они защищают
 # от *вырезания*, а не от переименования. Краш на старте (R8 вырезал
-# конструктор WorkDatabase_Impl) случился именно из-за вырезания и повторится
-# без правила для Room, даже с выключенной обфускацией.
+# конструктор WorkDatabase_Impl, пока в сборке был WorkManager) случился именно
+# из-за вырезания — выключенная обфускация от него не защитила бы.
 #
 # Включить обратно — убрать эту строку. Тогда вернуть и архивирование
 # mapping.txt на каждую выпущенную сборку, иначе стектрейсы из продакшена
@@ -72,27 +72,6 @@
 -keep class com.client.xvideos.r.model.** { *; }
 -keep class com.client.xvideos.x.model.** { *; }
 -keep class com.client.xvideos.common.collectionDB.model.** { *; }
-
-# ---------- Room ----------
-
-# Room ищет сгенерированную реализацию базы по имени класса и создаёт её
-# рефлексией: Class.forName("<БазаДанных>_Impl").getDeclaredConstructor().newInstance().
-# R8 этого вызова не видит, считает класс неинстанцируемым и вырезает у него
-# конструктор — а следом, как «недостижимые», и createInvalidationTracker()
-# с clearAllTables().
-#
-# Room 2.5.0 (приходит транзитивно через androidx.work) везёт неполное
-# consumer-правило:
-#     -keep class * extends androidx.room.RoomDatabase
-# без блока членов, то есть сохраняет только имя класса. В 2.6+ его починили,
-# дописав конструктор; здесь повторяем эту версию.
-#
-# Симптом без правила — краш на старте, ещё до первого экрана:
-#     Unable to get provider androidx.startup.InitializationProvider:
-#     Failed to create an instance of class androidx.work.impl.WorkDatabase
--keep class * extends androidx.room.RoomDatabase {
-    <init>();
-}
 
 # ---------- kotlinx.serialization ----------
 

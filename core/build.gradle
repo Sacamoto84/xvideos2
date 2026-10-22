@@ -55,7 +55,6 @@ dependencies {
     api(libs.material3)
     api libs.androidx.material.icons.core
     api libs.androidx.material.icons.extended
-    api libs.androidx.adaptive
     api libs.haze
     api libs.haze.glass
     api libs.haze.blur
@@ -66,7 +65,9 @@ dependencies {
     api libs.androidx.lifecycle.runtime.ktx
     api libs.androidx.lifecycle.viewmodel.compose
     api(libs.androidx.lifecycle.process)
-    api libs.androidx.hilt.navigation.compose
+    // hiltViewModel() для ViewModel в L. Не hilt-navigation-compose: та тянет ещё
+    // Navigation Compose, а навигация в приложении на Voyager.
+    api libs.androidx.hilt.lifecycle.viewmodel.compose
     api(libs.androidx.core.splashscreen)
     // Только внутри :core — зашифрованные настройки (учётные данные L).
     implementation(libs.androidx.security.crypto)
@@ -97,6 +98,9 @@ dependencies {
     implementation libs.androidx.media3.datasource.ktor
     implementation libs.androidx.media3.database
     api(libs.androidx.media3.ui.compose)
+    // androidx.annotation.OptIn для UnstableApi media3 импортируют :core, X и R.
+    // Транзитивно библиотека приходит версии 1.4.1, явная запись держит 1.5.1.
+    api libs.androidx.annotation.experimental
     api libs.androidx.media3.effect
 
     api(libs.coil.compose)
@@ -112,7 +116,6 @@ dependencies {
     api(libs.ktor.client.content.negotiation)
     api(libs.ktor.serialization.kotlinx.json)
     api libs.kotlinx.serialization.json
-    api libs.androidx.work.runtime.ktx
 
     api libs.jsoup
     api libs.timber

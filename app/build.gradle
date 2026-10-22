@@ -163,10 +163,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 
-    debugImplementation libs.androidx.ui.test.manifest
-
-    androidTestImplementation platform(libs.androidx.compose.bom)
-
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test
 }

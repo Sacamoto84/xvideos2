@@ -8,16 +8,16 @@ core = "1.49.9"
 coreSplashscreen = "1.2.0"
 desugar_jdk_libs = "2.1.5"
 
-work = "2.12.0"
 hiltAndroid = "2.60.1"
 hiltAndroidCompiler = "2.60.1"
-hiltNavigationCompose = "1.4.0"
+hiltLifecycleViewmodelCompose = "1.4.0"
 haze = "2.0.1"
 jsoup = "1.23.2"
 kotlin = "2.4.20"
 detekt = "1.23.8"
 ksp = "2.3.10"
 coreKtx = "1.19.1"
+annotationExperimental = "1.5.1"
 junit = "4.13.2"
 androidxCollection = "1.6.0"
 kotlinxCollectionsImmutable = "0.5.2"
@@ -51,13 +51,13 @@ kotlinxCoroutinesTest = "1.11.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
-androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive" }
 androidx-compose-ui-android = { module = "androidx.compose.ui:ui-android", version.ref = "uiAndroid" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-annotation-experimental = { module = "androidx.annotation:annotation-experimental", version.ref = "annotationExperimental" }
 
 #Material
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
-androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "hiltLifecycleViewmodelCompose" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
@@ -121,7 +121,6 @@ androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 
@@ -138,7 +137,6 @@ timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 
 #Storage
-androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 
 voyager-hilt = { module = "cafe.adriel.voyager:voyager-hilt", version.ref = "voyager" }
