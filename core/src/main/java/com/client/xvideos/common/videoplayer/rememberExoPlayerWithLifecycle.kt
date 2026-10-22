@@ -23,6 +23,7 @@ import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerError
 import com.client.xvideos.common.videoplayer.model.MediaClip
 import com.client.xvideos.common.videoplayer.model.playerRepeatMode
+import com.client.xvideos.common.videoplayer.model.withAudioDisabledForClips
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSource
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSourceWithDrm
 import com.client.xvideos.common.videoplayer.util.createProgressiveMediaSource
@@ -120,6 +121,9 @@ fun rememberExoPlayerWithLifecycle(
             exoPlayer.apply {
                 stop()
                 clearMediaItems()
+                // У превью из отрезков звук не нужен: без звуковой дорожки нет и
+                // AudioTrack, который иначе пересоздавался на каждой смене отрезка.
+                trackSelectionParameters = trackSelectionParameters.withAudioDisabledForClips(clips.isNotEmpty())
                 if (clips.isEmpty()) {
                     setMediaSource(newMediaSource())
                     prepare()

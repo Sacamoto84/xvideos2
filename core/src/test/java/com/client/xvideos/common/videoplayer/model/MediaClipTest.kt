@@ -1,7 +1,10 @@
 package com.client.xvideos.common.videoplayer.model
 
+import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.common.TrackSelectionParameters
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -21,6 +24,17 @@ class MediaClipTest {
         assertTrue(clips.minMs <= clips.maxMs)
 
         assertEquals(BufferWindow(minMs = 12_000, maxMs = 45_000), playerBufferWindow(hasClips = false))
+    }
+
+    // Превью из отрезков без звука, но плеер всё равно декодировал звук и
+    // создавал новый AudioTrack на каждой смене отрезка (телефон: 32 за ~20 с
+    // на два превью).
+    @Test
+    fun `у превью из отрезков звуковая дорожка выключена, у ролика — нет`() {
+        val base = TrackSelectionParameters.DEFAULT
+
+        assertTrue(C.TRACK_TYPE_AUDIO in base.withAudioDisabledForClips(hasClips = true).disabledTrackTypes)
+        assertFalse(C.TRACK_TYPE_AUDIO in base.withAudioDisabledForClips(hasClips = false).disabledTrackTypes)
     }
 
     @Test
