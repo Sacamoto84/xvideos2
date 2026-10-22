@@ -115,7 +115,10 @@ fun UrlVideoLite(
                 playerHost = playerHost,
                 onClick = onClick,
                 onLongClick = onLongClick,
-                autoRotate = false
+                autoRotate = false,
+                // Карточки X лежат в горизонтальных пейджерах (лента, теги, канал,
+                // «Сохранённое»): зона перемотки забирала бы листание (проход 212, C1).
+                seekDragEnabled = false,
             )
         }
 

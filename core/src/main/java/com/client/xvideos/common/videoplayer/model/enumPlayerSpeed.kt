@@ -9,7 +9,6 @@ enum class PlayerSpeed(val speed: Float, val displayName: String) {
     X1_5(1.5f, "1.5x"),
     X2(2.0f, "2.0x");
 
-    val isNormal: Boolean get() = this == X1
     val isSlow: Boolean get() = speed < 1.0f
     val isFast: Boolean get() = speed > 1.0f
     val isFastest: Boolean get() = this == X2

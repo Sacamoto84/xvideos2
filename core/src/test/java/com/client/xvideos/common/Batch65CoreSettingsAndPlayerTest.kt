@@ -8,7 +8,6 @@ import com.client.xvideos.common.settings.calculatePrevColumn
 import com.client.xvideos.common.settings.getEnabledColumns
 import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.videoplayer.model.PlayerOption
-import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -130,48 +129,6 @@ class Batch65CoreSettingsAndPlayerTest {
 
         assertTrue(PlayerOption.SPEED.hasSubmenu)
         assertFalse(PlayerOption.NONE.hasSubmenu)
-    }
-
-    @Test
-    fun `PlayerPlaybackConfig mutations and status`() {
-        val config = PlayerPlaybackConfig(url = "https://example.com/video.mp4")
-
-        val muted = config.withVolume(0f)
-        assertTrue(muted.isMuted)
-        assertFalse(muted.isAudioEnabled)
-
-        val unmuted = muted.withVolume(0.8f)
-        assertEquals(0.8f, unmuted.volume, 0.001f)
-        assertTrue(unmuted.isAudioEnabled)
-
-        val fast = config.withSpeed(PlayerSpeed.X1_5)
-        assertEquals(PlayerSpeed.X1_5, fast.speed)
-
-        val playedFrom = config.withPlayFromTime(3.0f)
-        assertEquals(3.0f, playedFrom.playFromTime ?: 0f, 0.001f)
-
-        val paused = config.toggledPlayPause()
-        assertTrue(paused.isPause)
-        assertFalse(paused.isPlaying)
-
-        val unpaused = paused.toggledPlayPause()
-        assertFalse(unpaused.isPause)
-        assertTrue(unpaused.isPlaying)
-
-        val looped = config.toggledLoop()
-        assertTrue(looped.loop)
-
-        val resized = config.toggledScreenResize()
-        assertEquals(ScreenResize.FILL, resized.size)
-
-        val outOfBounds = PlayerPlaybackConfig(
-            url = "https://example.com/video.mp4",
-            volume = 2.5f,
-            playFromTime = -5f
-        ).sanitized()
-
-        assertEquals(1.0f, outOfBounds.volume, 0.001f)
-        assertEquals(0f, outOfBounds.playFromTime ?: -1f, 0.001f)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

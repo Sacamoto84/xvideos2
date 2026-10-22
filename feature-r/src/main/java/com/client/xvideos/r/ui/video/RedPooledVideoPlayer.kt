@@ -3,6 +3,7 @@ package com.client.xvideos.r.ui.video
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -360,6 +362,16 @@ fun RedPooledVideoPlayer(
         )
     }
 
+    // Зона перемотки лежит поверх видео, и тап по ней до `zoomable(onTap)` не
+    // доходил: пауза по нижней трети не ставилась (проход 212, C2). Предков с
+    // тапом у страницы нет, так что зона ловит тап сама. Перетаскивание от этого
+    // не страдает: после порога его забирает детектор перемотки, и тап
+    // отменяется.
+    val currentOnClick by rememberUpdatedState(onClick)
+    val seekZoneTapModifier = Modifier.pointerInput(Unit) {
+        detectTapGestures(onTap = { currentOnClick() })
+    }
+
     // clipToBounds — как в прежнем `Box(modifier.clipToBounds())`: увеличенный зумом кадр
     // не должен выезжать поверх оверлея и нижней панели.
     Box(modifier = modifier.fillMaxSize().clipToBounds().background(Color.Black)) {
@@ -406,6 +418,7 @@ fun RedPooledVideoPlayer(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
                     .then(seekDragModifier)
+                    .then(seekZoneTapModifier)
             )
         }
 

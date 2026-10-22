@@ -28,51 +28,7 @@ data class PlayerPlaybackConfig(
     val seekRequest: SeekRequest? = null,
     /** Отрезки файла вместо файла целиком; пусто — весь файл. */
     val clips: List<MediaClip> = emptyList(),
-) {
-    val isValid: Boolean get() = url.isNotBlank()
-    val isEmpty: Boolean get() = url.isEmpty()
-    val isNotEmpty: Boolean get() = url.isNotEmpty()
-    val isMuted: Boolean get() = volume <= 0f
-    val isAudioEnabled: Boolean get() = !isMuted
-    val isPlaying: Boolean get() = isNotEmpty && !isPause
-    val hasHeaders: Boolean get() = !headers.isNullOrEmpty()
-    val hasDrm: Boolean get() = drmConfig != null
-    val isNormalSpeed: Boolean get() = speed.isNormal
-    val hasCustomSpeed: Boolean get() = !speed.isNormal
-
-    fun withVolume(newVolume: Float): PlayerPlaybackConfig =
-        copy(volume = newVolume.coerceIn(0f, 1f))
-
-    fun withSpeed(newSpeed: PlayerSpeed): PlayerPlaybackConfig =
-        copy(speed = newSpeed)
-
-    fun withFitMode(resize: ScreenResize): PlayerPlaybackConfig =
-        copy(size = resize)
-
-    fun withUrl(newUrl: String): PlayerPlaybackConfig =
-        copy(url = newUrl)
-
-    fun withPlayFromTime(time: Float?): PlayerPlaybackConfig =
-        copy(playFromTime = time?.coerceAtLeast(0f))
-
-    fun toggledPlayPause(): PlayerPlaybackConfig =
-        copy(isPause = !isPause)
-
-    fun toggledLoop(): PlayerPlaybackConfig =
-        copy(loop = !loop)
-
-    fun toggledScreenResize(): PlayerPlaybackConfig =
-        copy(size = size.toggle())
-
-    fun sanitized(): PlayerPlaybackConfig = copy(
-        volume = volume.coerceIn(0f, 1f),
-        playFromTime = playFromTime?.coerceAtLeast(0f)
-    )
-
-    companion object {
-        val EMPTY = PlayerPlaybackConfig()
-    }
-}
+)
 
 /**
  * Колбэки событий воспроизведения для [com.client.xvideos.common.videoplayer.util.CMPPlayer2].
@@ -87,11 +43,7 @@ data class PlayerPlaybackCallbacks(
     val poster: (Boolean) -> Unit = {},
     /** Плеер выполнил [SeekRequest] с этим номером. */
     val seekApplied: (Long) -> Unit = {},
-) {
-    companion object {
-        val EMPTY = PlayerPlaybackCallbacks()
-    }
-}
+)
 
 /**
  * Конвертирует состояние [MediaPlayerHost] в неизменяемый [PlayerPlaybackConfig].

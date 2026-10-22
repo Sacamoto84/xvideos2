@@ -8,9 +8,7 @@ import com.client.xvideos.common.util.isValidByteString
 import com.client.xvideos.common.util.toHoursMinSec
 import com.client.xvideos.common.util.toSecondsOrZero
 import com.client.xvideos.common.videoplayer.model.PlayerOption
-import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
-import com.client.xvideos.common.videoplayer.model.ScreenResize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -69,23 +67,6 @@ class Batch76CoreUtilsAndDohTest {
         assertEquals(listOf("0.25x", "0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x"), PlayerSpeed.allDisplayNames)
         assertEquals(5, PlayerOption.allOptions.size)
         assertTrue(PlayerOption.allOptions.contains(PlayerOption.SPEED))
-    }
-
-    @Test
-    fun `PlayerPlaybackConfig speed checks and mutators`() {
-        val normalConfig = PlayerPlaybackConfig(url = "https://cdn.example.com/v.mp4")
-        assertTrue(normalConfig.isNormalSpeed)
-        assertFalse(normalConfig.hasCustomSpeed)
-
-        val fastConfig = normalConfig.withSpeed(PlayerSpeed.X1_5)
-        assertFalse(fastConfig.isNormalSpeed)
-        assertTrue(fastConfig.hasCustomSpeed)
-
-        val fillConfig = normalConfig.withFitMode(ScreenResize.FILL)
-        assertEquals(ScreenResize.FILL, fillConfig.size)
-
-        val updatedUrl = normalConfig.withUrl("https://new.cdn.com/v2.mp4")
-        assertEquals("https://new.cdn.com/v2.mp4", updatedUrl.url)
     }
 
     @Test

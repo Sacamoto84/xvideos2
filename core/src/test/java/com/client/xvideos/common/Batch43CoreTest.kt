@@ -6,9 +6,7 @@ import com.client.xvideos.common.net.UserAgentProvider
 import com.client.xvideos.common.settings.ScrollButtonEffect
 import com.client.xvideos.common.settings.ThumbnailsSize
 import com.client.xvideos.common.storage.StorageCleanupGate
-import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.model.PlayerOption
-import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import org.junit.Assert.assertEquals
@@ -74,28 +72,6 @@ class Batch43CoreTest {
         assertTrue(PlayerOption.QUALITY.isQuality)
         assertTrue(PlayerOption.AUDIO_TRACK.isAudioTrack)
         assertTrue(PlayerOption.SUBTITLES.isSubtitles)
-    }
-
-    @Test
-    fun `PlayerPlaybackConfig helpers operate correctly`() {
-        val empty = PlayerPlaybackConfig.EMPTY
-        assertFalse(empty.isValid)
-        assertTrue(empty.isEmpty)
-        assertFalse(empty.isMuted)
-        assertFalse(empty.hasHeaders)
-        assertFalse(empty.hasDrm)
-
-        val mutedConfig = PlayerPlaybackConfig(
-            url = "https://example/v.mp4",
-            volume = 0f,
-            headers = mapOf("Authorization" to "Bearer 123"),
-            drmConfig = DrmConfig("kid1", "key1"),
-            isSliding = true
-        )
-        assertTrue(mutedConfig.isValid)
-        assertTrue(mutedConfig.isMuted)
-        assertTrue(mutedConfig.hasHeaders)
-        assertTrue(mutedConfig.hasDrm)
     }
 
     @Test
