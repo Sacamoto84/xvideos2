@@ -12,7 +12,7 @@
 фоне и под замком, освобождение). `SavedX_Downloads.localVideo(id)` даёт
 сведения о скачанном файле. Общая карточка `UrlVideoImageAndLongClickX`
 получает их и выбирает превью из файла; куда вести удержание, решает
-`xVideoScreen(item, local)`. Экраны собирают `downloadedVideoIds` и
+`playerScreenFor(item, local)`. Экраны собирают `downloadedVideoIds` и
 передают карточкам поиск сведений.
 
 **Tech Stack:** Kotlin, Jetpack Compose, Media3 1.11.1 (`ClippingMediaSource`), Voyager, JUnit 4.
@@ -151,15 +151,15 @@
 
 **Files:**
 - Create: `feature-x/src/main/java/com/client/xvideos/x/screens/common/LocalVideoPreview.kt`
-- Create: `feature-x/src/main/java/com/client/xvideos/x/screens/common/xVideoScreen.kt`
+- Create: `feature-x/src/main/java/com/client/xvideos/x/screens/common/playerScreenFor.kt`
 - Modify: `feature-x/src/main/java/com/client/xvideos/x/screens/common/UrlVideoImageAndLongClickX.kt`
 - Modify: `dashboards/molecule/DashboardsPaginatedListContent.kt`, `dashboards/molecule/DashboardGridCell.kt`, `dashboards/vm/ScreenXDashBoardsSM.kt` и экран ленты; `search/molecule/SearchResultsView.kt`, `search/ScreenXSearchTab.kt`; `tags/model/TagCellActions.kt`, `tags/molecule/TagGridCell.kt`, `tags/ScreenTags.kt`; `channel/molecule/ChannelVideoItem.kt`, `channel/molecule/ChannelVideosPager.kt`, `channel/ScreenX_Channel.kt` (все — в `feature-x/.../x/screens/`)
-- Test: `feature-x/src/test/java/com/client/xvideos/x/screens/common/XVideoScreenTest.kt`
+- Test: `feature-x/src/test/java/com/client/xvideos/x/screens/common/PlayerScreenForTest.kt`
 
 **Interfaces:**
 - Consumes: `SavedLocalVideo`, `SavedX_Downloads.localVideo`, `localPreviewClips`, `videoDurationMs` (Task 2); `MediaPlayerHost(clips = …)` (Task 1).
 - Produces:
-  - `fun xVideoScreen(item: ItemsX, local: SavedLocalVideo?): Screen` — `ScreenX_LocalVideoPlayer(local.fileUrl, item)` при `local != null`, иначе `ScreenX_VideoPlayer(normalizeXUrl(item.href), item)`;
+  - `fun playerScreenFor(item: ItemsX, local: SavedLocalVideo?): Screen` — `ScreenX_LocalVideoPlayer(local.fileUrl, item)` при `local != null`, иначе `ScreenX_VideoPlayer(normalizeXUrl(item.href), item)`;
   - `@Composable fun LocalVideoPreview(video: SavedLocalVideo, posterUrl: String, onClick: () -> Unit, modifier: Modifier = Modifier)` — длительность `videoDurationMs` на `Dispatchers.IO` (`produceState`), затем `MediaPlayerHost(mediaUrl = video.fileUrl, isMuted = true, clips = localPreviewClips(…))`, `FILL`, `VideoPlayerWithMenuContent(…, seekDragEnabled = false, onClick)`, постер поверх, пока `playerHost.poster`, — как `UrlVideoLite`; с `@Preview`;
   - `UrlVideoImageAndLongClickX(…, localVideo: SavedLocalVideo? = null)` — при `localVideo`: постер `localVideo.posterPath ?: item.previewImage`, превью — `LocalVideoPreview`; удержание и двойной тап — по-прежнему колбэки вызывающего;
   - `DashboardsPaginatedListContent(…, localVideoOf: (ItemsX) -> SavedLocalVideo? = { null })`, `DashboardGridCell(…, localVideo: SavedLocalVideo? = null)`, `TagCellActions.localVideoOf` (в `None` — `{ null }`), `ChannelVideoItem(…, localVideo: SavedLocalVideo?)` вместо `isDownloaded` (значок — при `localVideo != null`), `ChannelVideosPager(…, localVideoOf)` вместо `isDownloaded`.
@@ -170,15 +170,15 @@
 @Test fun `сохранённый ролик открывается скачанным файлом, остальные — из сети`() {
     val item = ItemsX(id = 5L, href = "/video5/x")
     val local = SavedLocalVideo(fileUrl = "file:///d/5.mp4", posterPath = null)
-    assertEquals("file:///d/5.mp4", (xVideoScreen(item, local) as ScreenX_LocalVideoPlayer).fileUrl)
-    assertTrue(xVideoScreen(item, null) is ScreenX_VideoPlayer)
+    assertEquals("file:///d/5.mp4", (playerScreenFor(item, local) as ScreenX_LocalVideoPlayer).fileUrl)
+    assertTrue(playerScreenFor(item, null) is ScreenX_VideoPlayer)
 }
 ```
 
-- [ ] **Step 2: Run, expect FAIL** — `--tests *XVideoScreenTest*` → `Unresolved reference 'xVideoScreen'`.
-- [ ] **Step 3: Implement** `xVideoScreen`, `LocalVideoPreview`, параметр карточки.
-- [ ] **Step 4: Экраны ленты, поиска, тегов и канала** — каждый собирает `saved.downloads.downloadedVideoIds` (`collectAsStateWithLifecycle`), строит `localVideoOf = remember(ids) { { item -> if (item.id in ids) saved.downloads.localVideo(item.id) else null } }` и передаёт вниз; переход в плеер вместо `ScreenX_VideoPlayer(...)` — `xVideoScreen(item, saved.downloads.localVideo(item.id))` (в `ScreenXDashBoardsSM.openVideo` — так же).
-- [ ] **Step 5: Run** — `XVideoScreenTest` зелёный; полный гейт.
+- [ ] **Step 2: Run, expect FAIL** — `--tests *PlayerScreenForTest*` → `Unresolved reference 'playerScreenFor'`.
+- [ ] **Step 3: Implement** `playerScreenFor`, `LocalVideoPreview`, параметр карточки.
+- [ ] **Step 4: Экраны ленты, поиска, тегов и канала** — каждый собирает `saved.downloads.downloadedVideoIds` (`collectAsStateWithLifecycle`), строит `localVideoOf = remember(ids) { { item -> if (item.id in ids) saved.downloads.localVideo(item.id) else null } }` и передаёт вниз; переход в плеер вместо `ScreenX_VideoPlayer(...)` — `playerScreenFor(item, saved.downloads.localVideo(item.id))` (в `ScreenXDashBoardsSM.openVideo` — так же).
+- [ ] **Step 5: Run** — `PlayerScreenForTest` зелёный; полный гейт.
 - [ ] **Step 6: Commit** — `feat(x): превью сохранённого ролика из файла в ленте, поиске, тегах и канале`.
 
 ### Task 4: «Избранное», «История», «Сохранённое»
@@ -189,12 +189,12 @@
 - Modify: `saved/molecule/SavedRow.kt`, `saved/molecule/X_SavedList.kt`, `saved/X_SavedContent.kt`
 
 **Interfaces:**
-- Consumes: Task 2 и Task 3 (`localVideoOf`, `xVideoScreen`, `UrlVideoImageAndLongClickX(localVideo)`).
+- Consumes: Task 2 и Task 3 (`localVideoOf`, `playerScreenFor`, `UrlVideoImageAndLongClickX(localVideo)`).
 - Produces:
   - `FavoriteRow(item, localVideo: SavedLocalVideo?, onDelete, onDownload, onOpenVideo, …)` — без `localUrl`, `posterUrl`, `onPlayLocal`; всегда `UrlVideoImageAndLongClickX(item, localVideo = localVideo, onLongClick/onDoubleClick = onOpenVideo)`, значок `IconSave18` при `localVideo != null`; `FavoritesContent` — `localVideoOf` вместо `localUrlOf`;
   - `HistoryCardMedia(item, localVideo: SavedLocalVideo?, posterUrl, isSelectionMode, onToggleSelect, onOpenVideo, …)` — без `localUrl`/`onPlayLocal`; в режиме выбора у сохранённой — прежняя ветка «постер + `combinedClickable` переключает выбор»; вне режима — `UrlVideoImageAndLongClickX(localVideo = …)`; `posterUrlOf` остаётся для диалогов;
   - `SavedRow(item, localVideo: SavedLocalVideo, onOpen: (ItemsX) -> Unit, onDelete, onShareP2p, …)` — вместо `clickable` + `UrlImage` — `UrlVideoImageAndLongClickX(item, localVideo = localVideo, onLongClick/onDoubleClick = onOpen)`; меню и длительность прежние.
-  - Переход в плеер во всех трёх экранах — `xVideoScreen(item, saved.downloads.localVideo(item.id))`.
+  - Переход в плеер во всех трёх экранах — `playerScreenFor(item, saved.downloads.localVideo(item.id))`.
 
 - [ ] **Step 1: Переписать молекулы и экраны** по Interfaces; превью-функции — с `localVideo = null` / `SavedLocalVideo("file:///v.mp4", null)`.
 - [ ] **Step 2: Verify** — полный гейт (тесты «Истории» и «Избранного», если есть, остаются зелёными; detekt `LongParameterList` — параметры только убираются).
